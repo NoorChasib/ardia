@@ -7,11 +7,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "android": {
-      "package": "com.ardia.browser.android",
+      "package": "com.nilladigital.nilla.android",
       "edgeToEdgeEnabled": true
     },
     "ios": {
-      "bundleIdentifier": "com.ardia.browser.ios",
+      "bundleIdentifier": "com.nilladigital.nilla.ios",
       "supportsTablet": true
     },
     "experiments": {

@@ -69,6 +69,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A7D3C0DE00000000000000F1 /* Nilla.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Nilla.xcconfig; path = Config/Nilla.xcconfig; sourceTree = "<group>"; };
 		09CE5C51DF5E57B4681F6F1E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1E2787D929803092B234BAE9 /* libPods-Ardia.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Ardia.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F4DDAC9D3853A29800877EF /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
@@ -216,6 +217,7 @@
 		A7333FB8D37A78466BEEBDE0 = {
 			isa = PBXGroup;
 			children = (
+				A7D3C0DE00000000000000F1 /* Nilla.xcconfig */,
 				B6838BB2DAD53AEA560C0E56 /* Action */,
 				E5D3BCCC73C5C2AE0D9D57F9 /* App */,
 				92BAAB3973651DBF28BC5E2E /* Ardia */,
@@ -378,19 +380,15 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					AF56FEA9443A3F2A9D139653 = {
-						DevelopmentTeam = U5L5T3NGVV;
 						ProvisioningStyle = Automatic;
 					};
 					CF60F2D18AB253CC46A4E428 = {
-						DevelopmentTeam = U5L5T3NGVV;
 						ProvisioningStyle = Automatic;
 					};
 					DD52C294A990971E005E6738 = {
-						DevelopmentTeam = U5L5T3NGVV;
 						ProvisioningStyle = Automatic;
 					};
 					DD96EB2018C132DC7649EED8 = {
-						DevelopmentTeam = U5L5T3NGVV;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -647,7 +645,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios.share;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID).share";
 				PRODUCT_NAME = ArdiaShare;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -661,6 +659,7 @@
 		};
 		3D426F71D100D08DAE349E2B /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7D3C0DE00000000000000F1 /* Nilla.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -696,7 +695,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = U5L5T3NGVV;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -753,7 +751,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios.share;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID).share";
 				PRODUCT_NAME = ArdiaShare;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -779,7 +777,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID).widgets";
 				PRODUCT_NAME = ArdiaWidgets;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -814,7 +812,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID)";
 				PRODUCT_NAME = Ardia;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -841,7 +839,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios.open;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID).open";
 				PRODUCT_NAME = ArdiaOpen;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -855,6 +853,7 @@
 		};
 		9F8E00AE98322C4CD5881181 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7D3C0DE00000000000000F1 /* Nilla.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -890,7 +889,6 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = U5L5T3NGVV;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -940,7 +938,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios.widgets;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID).widgets";
 				PRODUCT_NAME = ArdiaWidgets;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -975,7 +973,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID)";
 				PRODUCT_NAME = Ardia;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -1002,7 +1000,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser.ios.open;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NILLA_PHONE_BUNDLE_ID).open";
 				PRODUCT_NAME = ArdiaOpen;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;

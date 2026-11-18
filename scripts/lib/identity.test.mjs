@@ -68,3 +68,22 @@ test("the release check and the Dock tile build read their ids from identity.sh"
     assert.doesNotMatch(script, /com\.ardia\.browser|U5L5T3NGVV/, path);
   }
 });
+
+test("the phone apps take their ids from the prefix: the iOS targets, app group, Expo config and Android applicationId", () => {
+  const project = read("apps/phone/ios/Ardia.xcodeproj/project.pbxproj");
+  assert.doesNotMatch(project, /com\.ardia\.browser|DEVELOPMENT_TEAM|DevelopmentTeam|U5L5T3NGVV/);
+  assert.equal([...project.matchAll(/baseConfigurationReference = (\w+) \/\* Nilla\.xcconfig \*\/;/g)].length, 2);
+  const ids = [...project.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = "?([^";]*)"?;/g)].map((m) => m[1]);
+  assert.deepEqual([...new Set(ids)].sort(), ["$(NILLA_PHONE_BUNDLE_ID)", "$(NILLA_PHONE_BUNDLE_ID).open", "$(NILLA_PHONE_BUNDLE_ID).share", "$(NILLA_PHONE_BUNDLE_ID).widgets"]);
+  const group = `group.${PREFIX}.nilla.ios`;
+  for (const name of ["Ardia", "Ardia-DefaultBrowser", "Open", "Share", "Widgets"]) {
+    const entitlements = read(`apps/phone/ios/Config/${name}.entitlements`);
+    assert.deepEqual([...entitlements.matchAll(/<string>(group\.[^<]+)<\/string>/g)].map((m) => m[1]), [group], name);
+  }
+  assert.match(read("packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Models/BrowserSchema.swift"), new RegExp(`appGroupIdentifier = "${group.replace(/\./g, "\\.")}"`));
+  const expo = JSON.parse(read("apps/phone/app.json")).expo;
+  assert.equal(expo.ios.bundleIdentifier, `${PREFIX}.nilla.ios`);
+  assert.equal(expo.android.package, `${PREFIX}.nilla.android`);
+  assert.match(read("apps/phone/android/app/build.gradle"), /^ {8}applicationId "\$\{nillaIdPrefix\}\.nilla\.android"$/m);
+  assert.doesNotMatch(read("apps/phone/ios/Config/ExportOptions-TestFlight.plist"), /teamID/);
+});
