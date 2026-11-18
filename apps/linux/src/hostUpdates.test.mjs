@@ -160,13 +160,15 @@ test("the kill-switch file comes through the native host and every other fetch i
   await assert.rejects(refused("https://ardia.dev/switches.json"), TypeError);
 });
 
-test("the switch refresh through the native host updates the cached switches", async () => {
+test("with no switches URL the switch refresh is off and never asks the native host", async () => {
   globalThis.__DEV__ = false;
   await import("../../browser/src/test-native/index.ts");
   const { refreshSwitches, resetRefreshForTests } = await import("../../browser/src/platform/killSwitches.ts");
   resetRefreshForTests();
-  const host = { bootstrap: { capabilities: [] }, invoke: async () => ({ status: 200, body: JSON.stringify({ version: 1, switches: { newTabPrewarm: false } }) }) };
-  assert.equal(await refreshSwitches(linuxSwitchesFetch(host, async () => { throw new Error("the shell can't fetch"); })), "updated");
+  const asked = [];
+  const host = { bootstrap: { capabilities: [] }, invoke: async (method) => (asked.push(method), { status: 200, body: JSON.stringify({ version: 1, switches: { newTabPrewarm: false } }) }) };
+  assert.equal(await refreshSwitches(linuxSwitchesFetch(host, async () => { throw new Error("the shell can't fetch"); })), "off");
+  assert.deepEqual(asked, []);
 });
 
 test("a launch started with --no-sandbox says why once, in the window that ran the launch, and counts it", async () => {
