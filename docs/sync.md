@@ -541,7 +541,7 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
 
 ## Tests
 
-- `pnpm --filter @ardia/sync test` runs four things:
+- `bun run --cwd packages/sync test` runs four things:
   - `swift test` (`packages/sync/tests`):
     - `SyncCoreTests`: BIP39 reference vectors; tampering and truncation are detected; the wrong phrase opens nothing;
       the folder holds no plaintext in names or contents; deleting one chain leaves another; a missing scope reads
@@ -561,7 +561,7 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
       replaced; a test instance's key file is never wider than 0600 and nothing is left beside it.
     - `SharedFolderDirectoryTests`: the shared folders' reads and writes (symlinks, conflicts, size caps, permissions).
     - `LegacyMigrationTests`, `LegacyKeychainTests`, `LegacyDockTileTests`: the Netnyahoo → Ardia migration.
-  - `node --test` (`packages/sync/src/**/*.test.ts`):
+  - `bun test` (`packages/sync/src/**/*.test.ts`):
     - `scope.test.ts`, `fileHealth.test.ts`: concurrent edits converge in any order; deletes, re-adds and
       edit-after-delete; clock skew; late, out-of-order, half-copied and given-up files; an edit during a read; an
       old snapshot put back after its tombstones were collected; a tombstone kept past its age limit while an older
@@ -576,7 +576,7 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
     - `companion/companion.test.ts`: the iPhone's adapters and cycle.
   - `apps/phone/scripts/bundle-shared.mjs --check`: the iPhone's bundle of this code is up to date.
   - `scripts/legacy-migration-e2e.mjs`: the migration tool run end to end on a scratch install.
-- `pnpm --filter @ardia/browser test` runs `src/state/sync/adapters.test.mjs` (4 tests against the real
+- `bun run --cwd apps/browser test` runs `src/state/sync/adapters.test.mjs` (4 tests against the real
   store: delete versus add, concurrent moves that would make a cycle, parked pinned tabs, passwords
   both ways), `src/state/sync/send.test.mjs` (sent tabs: one addressed elsewhere is never touched; it opens once and
   is deleted by its receiver; dropped by its sender after 7 days; waits while it can't open; a crash opens it twice

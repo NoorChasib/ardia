@@ -9,7 +9,7 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
 | Piece | What it does |
 | --- | --- |
 | [`.github/workflows/linux.yml`](../.github/workflows/linux.yml) | Runs on pull requests, pushes to `main` and by hand: a vouch `gate` job, then a `checks` job and a `package` job on `ubuntu-24.04` |
-| [`.github/actions/linux-setup`](../.github/actions/linux-setup/action.yml) | Ubuntu packages for the fixtures (clang, dbus, NSS tools, gnome-keyring, PyGObject), Node 24, pnpm and `pnpm install --frozen-lockfile` |
+| [`.github/actions/linux-setup`](../.github/actions/linux-setup/action.yml) | Ubuntu packages for the fixtures (clang, dbus, NSS tools, gnome-keyring, PyGObject), Bun from `package.json`'s `packageManager` and Node 24 through [`.github/actions/bun-install`](../.github/actions/bun-install/action.yml), its cache of `~/.bun/install/cache`, and `bun install --frozen-lockfile` |
 | [`scripts/linux/ci-checks.sh`](../scripts/linux/ci-checks.sh) | The engine-free checks; the `engine/ardiacore-linux/tests` modules run in parallel because the suite takes well over five minutes serially |
 | [`scripts/linux/publish-engine.sh`](../scripts/linux/publish-engine.sh) | Builder side: stages, strips and archives an engine from a Chromium out dir; `--upload` publishes it and adds its table row |
 | [`packages/ardiacore/prebuilt-engines-linux.tsv`](../packages/ardiacore/prebuilt-engines-linux.tsv) | `key<TAB>tag<TAB>sha256` for each Linux engine published in ardia-browser/ardia |
@@ -89,7 +89,7 @@ package job red after almost every merge.
 ## Jobs
 
 - **`checks`.** It needs no engine. It runs:
-  - the `apps/linux` typecheck, host, symbol, module-graph and acceptance self-tests;
+  - the `apps/linux` type check, host, symbol, module-graph and acceptance self-tests;
   - the UI build;
   - the Python and Node suites under `engine/patches/build/tests`, `engine/chromium/src/chrome/browser/ardia/tests` and
     `engine/ardiacore-linux/tests`.

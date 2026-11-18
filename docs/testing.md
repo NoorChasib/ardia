@@ -1,31 +1,41 @@
 # Testing
 
-`pnpm test` at the root runs every package's tests through Turbo, then the root's own `node --test` over
+`bun run test` at the root runs every package's tests through Turbo, then `bun run test:root` over
 `extras/raycast-ardia/src/scripts.test.ts`, `scripts/**/*.test.mjs` and `apps/site/src/**/*.test.ts`. Turbo caches the
-results; a cold run spends most of its time in `swift test`'s first build. Each package also runs its own:
+results; a cold run spends most of its time in `swift test`'s first build. `bun run test:portable` runs only what needs
+no Mac (CI's Linux jobs and `scripts/linux/ci-checks.sh`). Each package also runs its own:
 
 | Package | Command | What runs |
 | --- | --- | --- |
-| `apps/browser` | `pnpm --filter @ardia/browser test` | Every `src/**/*.test.mjs` under the test loader (below) |
-| `packages/core` | `pnpm --filter @ardia/core test` | `apps/phone/scripts/bundle-shared.mjs --check`, then `src/**/*.test.ts` |
-| `packages/sync` | `pnpm --filter @ardia/sync test` | `swift test`, `node --test`, the shared bundle check, then the rename's launch migration end to end (`scripts/legacy-migration-e2e.mjs`) |
-| `packages/import` | `pnpm --filter @ardia/import test` | `swift test` |
-| `packages/shell` | `pnpm --filter @ardia/shell test` | `swift test` (the updater's channel switch among them) |
-| `packages/shaders` | `pnpm --filter @ardia/shaders test` | `scripts/meadow.mjs --check` |
-| `packages/ardiacore` | `pnpm --filter @ardia/ardiacore test` | `node --test` on the engine API table, page events and the WebKit page script, then the native programs in `tests/`, each compiled with `clang++` (the transfer ledger under ThreadSanitizer) |
-| `extras/raycast-ardia` | `node --test extras/raycast-ardia/src/scripts.test.ts` | The AppleScript quoting and parsing |
+| `apps/browser` | `bun run --cwd apps/browser test` | Every `src/**/*.test.mjs` and `scripts/**/*.test.mjs`, under `bun test` with the test preload, and the few that need Node under `node --test` (below) |
+| `packages/core` | `bun run --cwd packages/core test` | `apps/phone/scripts/bundle-shared.mjs --check` (on Node), then `src/**/*.test.ts` |
+| `packages/sync` | `bun run --cwd packages/sync test` | `swift test`, its JavaScript tests, the shared bundle check, then the rename's launch migration end to end (`scripts/legacy-migration-e2e.mjs`) |
+| `packages/import` | `bun run --cwd packages/import test` | `swift test` |
+| `packages/shell` | `bun run --cwd packages/shell test` | `swift test` (the updater's channel switch among them) |
+| `packages/shaders` | `bun run --cwd packages/shaders test` | `scripts/meadow.mjs --check` |
+| `packages/ardiacore` | `bun run --cwd packages/ardiacore test` | The tests of the engine API table, page events and the WebKit page script, then the native programs in `tests/`, each compiled with `clang++` (the transfer ledger under ThreadSanitizer) |
+| `extras/raycast-ardia` | `bun run test:root` | The AppleScript quoting and parsing |
+| `.github/vouch` | `bun run test:vouch` | The vouch bot's labels and gates |
 
-`apps/browser` runs its TypeScript under plain Node, with the real `@ardia/shell` and `@ardia/ardiacore` code:
-`src/test-loader.mjs` swaps only the native side. `expo-modules-core` becomes `src/test-native/expo.ts`, which hands
-each package the fake of every native module it asks for (`src/test-native/shell.ts`, `src/test-native/ardiacore.ts`),
-and `react-native` inert views: `View` renders its children and every `Pressable` a render passes is kept in
-`pressables` so a test can press it (rendered with `react-dom/server`, `src/components/site/siteExtensionsManage.test.mjs`); the packages' `.tsx` files are transpiled with TypeScript on the way in (cached in
-`node_modules/.cache/ardia-test-tsx`). The native surface is listed once per package, in `src/nativeModules.ts`
-(`ShellNativeModules`, `ArdiaCoreNativeModules`), and the packages can only ask for modules listed there. Each fake is
-typed against that list, so `pnpm -C apps/browser typecheck` fails when a native method is added, removed or changed
-and the fake isn't. Tests drive the fakes through `src/test-native/index.ts` (`docs`, `chromeVisit`, `windows`,
-`engineEvent`, …). One file: `node --no-warnings --import ./src/test-loader.mjs --test src/state/tabs/tabs.test.mjs` (from
-`apps/browser`).
+`apps/browser` runs its TypeScript with the real `@ardia/shell` and `@ardia/ardiacore` code and swaps only the native
+side. Under `bun test`, `src/test-preload.mjs` does it with `mock.module`; under Node, `src/test-loader.mjs` does the
+same with loader hooks. `expo-modules-core` becomes `src/test-native/expo.ts`, which hands each package the fake of
+every native module it asks for (`src/test-native/shell.ts`, `src/test-native/ardiacore.ts`), and `react-native` inert
+views: `View` renders its children and every `Pressable` a render passes is kept in `pressables` so a test can press it
+(rendered with `react-dom/server`, `src/components/site/siteExtensionsManage.test.mjs`). `bun test --parallel` gives
+each file a fresh global and module registry, as `node --test`'s process per file did. The native surface is listed
+once per package, in `src/nativeModules.ts` (`ShellNativeModules`, `ArdiaCoreNativeModules`), and the packages can only
+ask for modules listed there. Each fake is typed against that list, so `bun run --cwd apps/browser check` fails when a
+native method is added, removed or changed and the fake isn't. Tests drive the fakes through `src/test-native/index.ts`
+(`docs`, `chromeVisit`, `windows`, `engineEvent`, …).
+
+The files that need Node (a stub for one importer only, `--expose-gc`, V8's native-function printing) are listed in
+`apps/browser/node-tests.json` with the reason for each, and the same script runs them with `node --test` and the test
+loader, which transpiles `.tsx` with the TypeScript 6 API (`@typescript/typescript6`, cached in
+`node_modules/.cache/ardia-test-tsx`). The loader stays for Node's other users too: the engine's Linux tests, the perf
+scripts and `scripts/command-tables.mjs`. The runner is `scripts/lib/bun-tests.mjs` (`--help`); it passes `--shard=N/M`
+to both runners, which is how CI splits the suite in four. One file, on whichever runner it belongs to:
+`bun run --cwd apps/browser test ./src/state/tabs/tabs.test.mjs`.
 
 End-to-end checks need a built app and are run by hand. Each runs hidden instances through `scripts/lib/instance.mjs`
 and prints one line per check (PASS/FAIL, ms), a failure's first lines, then a summary with the path of the log that

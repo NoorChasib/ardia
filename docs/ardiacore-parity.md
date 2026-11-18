@@ -387,7 +387,7 @@ reload and after an opaque page). `window-close`'s "cdp timeout" was the check's
 evaluate races its own reply (closeFromPage). Runs of the same bundle at once now each find their own app by its data dir.
 
 Full hidden runs on committed b1a94afe (2026-10-02, the screen locked): 119/119 twice in a row, on a `git archive` of HEAD with its own
-`pnpm install`, `pod install`, derived data and Metro (`react-native start --port <p>` in the archive, `METRO_PORT=<p>`),
+`bun install`, `pod install`, derived data and Metro (`react-native start --port <p>` in the archive, `METRO_PORT=<p>`),
 and the framework built from the same commit (`engine/ardiacore/apply.sh --check`). Run it that way: the shared Metro and
 working tree carry other agents' uncommitted edits, which turned earlier runs' failures into noise.
 

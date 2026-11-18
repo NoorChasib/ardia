@@ -467,7 +467,7 @@ timers scheduled/action: setTimeout:anonymous 2.87, setImmediate:anonymous 1.2
 
 ## Fixes landed
 
-Each is one commit with its before and after counts from this census. Typecheck (`pnpm -C apps/browser exec tsc --noEmit`)
+Each is one commit with its before and after counts from this census. Typecheck (`bun run --cwd apps/browser check`)
 and the unit tests (106) pass; nothing visible changes.
 
 | Commit | Fix | Result |

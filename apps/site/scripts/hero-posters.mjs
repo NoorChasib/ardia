@@ -3,7 +3,7 @@ const HELP = `Captures the hero meadow's first WebGL frame as WebP posters.
 
   node scripts/hero-posters.mjs [--url http://127.0.0.1:4321/] [--chrome <path>] [--keep <dir>]
 
-Run it against \`pnpm dev\` (it imports the legibility module from the dev server). It opens headless Chrome
+Run it against \`bun run dev\` (it imports the legibility module from the dev server). It opens headless Chrome
 on the real GPU (Metal), reads the canvas at its first frame (dawn, wind at rest, no brush), and works out
 the text tones the scene picks for that frame. It writes the sized WebPs and posters.json to
 src/assets/hero/. --keep saves the lossless captures there too.`;

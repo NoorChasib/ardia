@@ -441,7 +441,7 @@ fake device, "Ardia Test Sink", and records routes without sending anything anyw
   Linux, and the Linux copy can't drift silently.
 - **Engine fetch.** `packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64` dispatches to
   `scripts/linux/fetch-engine.sh`; without `--arch` the Mac path is unchanged.
-- **Proof.** `pnpm --filter @ardia/linux test:graph` asserts that the Linux production module graph loads nothing
+- **Proof.** `bun run --cwd apps/linux test:graph` asserts that the Linux production module graph loads nothing
   from `packages/demo` and only the Linux adapters it means to.
 
 ## Local Linux setup
@@ -451,14 +451,15 @@ To work on the UI you don't need a Chromium tree: run the shared UI on a prebuil
 ```bash
 sudo apt-get install clang pkg-config patch fakeroot xz-utils unzip curl util-linux openssl dbus dbus-x11 \
   libnss3-tools gnome-keyring python3-gi gir1.2-glib-2.0 libglib2.0-dev libgtk-3-0t64 libsecret-1-0
-pnpm install --frozen-lockfile
+bun install --frozen-lockfile
 scripts/linux/fetch-engine.sh --nearest
-pnpm --filter @ardia/linux build
+bun run --cwd apps/linux build
 "$(scripts/linux/fetch-engine.sh --nearest)/chrome" --ardia-ui-dir="$PWD/apps/linux/dist" \
   --user-data-dir="$(mktemp -d)" --remote-debugging-port=9222
 ```
 
-- **Toolchain.** Node 24 (`.nvmrc`) and the pnpm in `package.json`'s `packageManager`.
+- **Toolchain.** Bun at the version `package.json`'s `packageManager` pins (`curl -fsSL https://bun.com/install | bash -s bun-v1.4.4`)
+  and Node 24 (`.nvmrc`), which Vite and the engine's own tests run on.
 - **Engine.** `fetch-engine.sh` prints the engine directory, under
   `apps/browser/build-ardiacore/prebuilt-linux-x86_64/`. Without `--nearest` it needs an engine published for this
   exact engine key, which most commits don't have ([linux-ci.md](linux-ci.md) › Nearest engine). It refuses to run
@@ -482,7 +483,7 @@ pnpm --filter @ardia/linux build
 Use a dedicated build root, apart from any Mac Chromium tree. `01-sync.sh` is for a fresh tree and refuses to run
 when an output directory exists; after that, builds are incremental.
 
-Provision Chromium's Linux build dependencies first, along with Node 24, pnpm 11, Python 3, Git, util-linux `flock`,
+Provision Chromium's Linux build dependencies first, along with Node 24, Bun 1.4.4, Python 3, Git, util-linux `flock`,
 and ImageMagick or Pillow. Helium's Docker build environment is a useful reference.
 
 ```bash
@@ -531,8 +532,8 @@ python3 engine/patches/series.py files --platform linux
 ## Packaging and installing
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm --filter @ardia/linux build
+bun install --frozen-lockfile
+bun run --cwd apps/linux build
 source engine/patches/build/env.sh
 python3 scripts/linux/package.py \
   --out "$CB/chromium_git/chromium/src/out/$GN_OUT_CONFIGS" \
@@ -623,12 +624,12 @@ CI builds packages from a prebuilt engine instead of compiling Chromium; see [li
 These checks need no Chromium tree. `scripts/linux/ci-checks.sh` runs all of them:
 
 ```bash
-pnpm --filter @ardia/linux typecheck
-pnpm --filter @ardia/linux test:host
-pnpm --filter @ardia/linux test:symbols
-pnpm --filter @ardia/linux test:graph
-pnpm --filter @ardia/linux acceptance:self-test
-pnpm --filter @ardia/linux build
+bun run --cwd apps/linux check
+bun run --cwd apps/linux test:host
+bun run --cwd apps/linux test:symbols
+bun run --cwd apps/linux test:graph
+bun run --cwd apps/linux acceptance:self-test
+bun run --cwd apps/linux build
 python3 -m unittest discover -s engine/patches/build/tests
 python3 -m unittest discover -s engine/chromium/src/chrome/browser/ardia/tests
 python3 -m unittest discover -s engine/ardiacore-linux/tests
@@ -653,7 +654,7 @@ Against a built package:
 
 ```bash
 node scripts/linux/smoke.mjs --package <ardia-linux-x64.tar.xz> --results <dir>
-pnpm --filter @ardia/linux acceptance -- <extracted>/ardia/bin/ardia
+bun run --cwd apps/linux acceptance "$PWD/<extracted>/ardia/bin/ardia"
 ```
 
 - **Smoke gate.** Twelve checks: libraries resolve; the shell renders the packaged UI; the bootstrap reports

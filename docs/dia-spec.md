@@ -1011,7 +1011,7 @@ on its window.
   `LastVideoPIPPosition`. A thrown window is remembered by its corner and a dropped one by its frame.
 - **Tilt**: Dia also tilts the window while it's dragged (`dragAngleAnimation`, 0.005 × speed).
 
-**Ardia** (`ArdiaPiPController.mm`, the maths in `ArdiaPiPThrowMath.h`, tested by `pnpm -C packages/ardiacore test`)
+**Ardia** (`ArdiaPiPController.mm`, the maths in `ArdiaPiPThrowMath.h`, tested by `bun run --cwd packages/ardiacore test`)
 does the same on Chrome's video PiP window, using the same thresholds, corner rule, 10 pt inset and spring. It
 differs in a few places:
 - Chrome's window can't tilt.

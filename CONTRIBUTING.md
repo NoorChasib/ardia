@@ -48,13 +48,15 @@ do, pick from there, and update its row in the same PR.
 
 ## Getting it running
 
-You need an Apple Silicon Mac on macOS 14 or later, Xcode, CocoaPods, Node and pnpm 11.
+You need an Apple Silicon Mac on macOS 14 or later, Xcode, CocoaPods, Node 24 (`.nvmrc`) and Bun 1.4.4, the version
+`package.json`'s `packageManager` pins (`curl -fsSL https://bun.com/install | bash -s bun-v1.4.4`). Linux and Windows
+have their own commands in the README's "Run it".
 
 ```sh
-pnpm install
-pnpm pods
-pnpm dev      # Metro, leave it running
-pnpm macos    # builds the Debug app and opens it
+bun install --frozen-lockfile
+bun run pods
+bun run dev      # Metro, leave it running
+bun run macos    # builds the Debug app and opens it
 ```
 
 You don't need to build Chromium. When there's no Chromium tree at `~/chromium-build`, the app's build downloads the
@@ -63,7 +65,7 @@ prebuilt engine that matches your checkout's `engine/` folder
 If you change the engine you need your own Chromium build: `docs/engine-build.md` has the whole thing, and a first
 build takes about five hours.
 
-`pnpm macos` runs the app on its own data folder, `~/Library/Application Support/Ardia Dev`, so it never touches the
+`bun run macos` runs the app on its own data folder, `~/Library/Application Support/Ardia Dev`, so it never touches the
 Ardia you browse with. Keep it that way. A Debug build refuses to start without `ARDIA_DATA_DIR`, and every test
 instance should get a throwaway one. To run a build without it popping up over your work:
 
@@ -144,8 +146,8 @@ to follow real wall-clock time doesn't count as proof.
   sense.
 - Read `docs/store-api.md` before you touch app state.
 - Skills live only in the root `.claude/skills`. Deploy setups live only in `infra/<service>`.
-- Patched npm dependencies live in `patches/`, listed in `pnpm-workspace.yaml`. `docs/agent-brief.md` explains how
-  to change one.
+- Patched npm dependencies live in `patches/`, listed in the root `package.json`'s `patchedDependencies`.
+  `docs/agent-brief.md` explains how to change one.
 - When JS starts needing native code older builds lack, bump `NATIVE_API_VERSION` in `apps/browser/src/platform/nativeApi.ts`
   and `apiVersion` in `packages/shell/ios/AppModule.swift` together.
 
@@ -158,8 +160,9 @@ Run what covers your change, once before and once after, then the checks next to
 for a small fix.
 
 ```sh
-pnpm typecheck
-pnpm test                               # every unit test, cached by Turbo
+bun check                               # type checks every package in the root workspace
+bun run test                            # every unit test, cached by Turbo
+bun run test:portable                   # the ones that run without a Mac (Linux, CI)
 python3 engine/patches/series.py check  # if you touched engine/patches
 ```
 

@@ -137,7 +137,7 @@ Subscribe rows by id with narrow selectors so progress events don't re-render ev
 - Profile colours that state needs (menu swatches, the launch backdrop) come from a resolver App.tsx provides
   (state/profiles/looks.ts), so state never imports components/ui.
 - Menu commands: state/commands/commands.ts (JS) + packages/shell/ios/MainMenu.swift (native menu bar).
-- Tests: `pnpm --filter @ardia/browser test` (`docs/testing.md`).
+- Tests: `bun run --cwd apps/browser test` (`docs/testing.md`).
 
 ## Native events (platform/nativeEvents.ts)
 Every native→JS call is its own task, and React Native commits after each, so a page's reports used to cost a commit

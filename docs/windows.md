@@ -136,7 +136,7 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
 
 - `apps/browser/windows` is the app project: React Native for Windows 0.81 on the new architecture, which is the
   only one Windows supports from 0.82 on. The Mac stays on the old architecture until it upgrades past 0.81.
-- The UI is the same TypeScript. Metro bundles it for the `windows` platform (`pnpm -C apps/browser bundle:windows`),
+- The UI is the same TypeScript. Metro bundles it for the `windows` platform (`bun run --cwd apps/browser bundle:windows`),
   where `react-native` is `react-native-windows` and `expo-modules-core` is `packages/expo-windows`.
 - `packages/expo-windows` is the API our native packages call (`requireNativeModule`, `requireNativeViewManager`,
   `uuid`), on Windows:
@@ -1333,8 +1333,8 @@ does run in a test instance. A scratch folder with the marker must get both powe
 
 - To build the app on a PC you need Visual Studio 2022 with the C++ desktop workload and the Windows SDK
   **10.0.26100.0**, the version `Ardia.vcxproj` names; with another SDK the build stops before compiling. The
-  GitHub runners have it. Then `pnpm install` and, in `apps/browser`,
-  `npx react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager`.
+  GitHub runners have it. Then `bun install` and, in `apps/browser`,
+  `bun x react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager`.
 - `.github/workflows/windows.yml` builds the x64 app on a Windows runner and runs `scripts/windows/launch-smoke.ps1`,
   which launches it three times and uploads each launch's log: a first launch (onboarding) and a launch with
   onboarding done (the browser window), each with a screenshot when the runner allows a capture, then a hidden
