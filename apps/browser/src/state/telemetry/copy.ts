@@ -243,7 +243,7 @@ export const LOCAL_COPY = {
   exported: (lines: number) => `Saved ${lines.toLocaleString()} ${lines === 1 ? "line" : "lines"} to Downloads`,
   exportFailed: "Couldn't save your data",
   items: [
-    "Each event and warning or error line listed in What's Sent, with whether it was sent",
+    "Each event and warning or error line listed in What's Sent, with whether it was queued for a server",
     "With sharing off, they carry no install ID and stay here",
     "Kept 7 days and 8 MB at most, oldest first out; checked when Ardia opens and every hour",
     "Never leaves this Mac unless sharing is on or you attach it to a problem report",

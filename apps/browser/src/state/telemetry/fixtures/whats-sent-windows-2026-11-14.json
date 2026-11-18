@@ -84,8 +84,8 @@
   "Couldn't save your data"
  ],
  [
-  "Each event and warning or error line listed in What's Sent, with whether it was sent",
-  "Each event and warning or error line listed in What's Sent, with whether it was sent"
+  "Each event and warning or error line listed in What's Sent, with whether it was queued for a server",
+  "Each event and warning or error line listed in What's Sent, with whether it was queued for a server"
  ],
  [
   "With sharing off, they carry no install ID and stay here",

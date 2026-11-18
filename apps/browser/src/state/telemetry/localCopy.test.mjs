@@ -100,7 +100,10 @@ test("with no endpoint an opted-in event stays in the local copy and the queue, 
   await client.flush();
   local.flushLocal();
   assert.equal(requests.length, posts);
-  assert.equal(stub.telemetryLocal.records().find((r) => r.event === "no_endpoint").sent, true);
+  assert.equal(stub.telemetryLocal.records().find((r) => r.event === "no_endpoint").sent, false);
+  client.queueLog("warn", "a warning with no endpoint", {});
+  local.flushLocal();
+  assert.equal(stub.telemetryLocal.records().find((r) => r.message === "a warning with no endpoint").sent, false);
   client.saveQueueNow();
   assert.ok(queued().events.some((e) => e.event === "no_endpoint"));
   const last = requestLog().at(-1);

@@ -20,6 +20,8 @@ globalThis.acTestNativeModules = {
   },
 };
 
+const { overrideServicesForTests } = await import("@ardia/core/src/services.testing.ts");
+overrideServicesForTests({ telemetryUrl: "https://logs.example.test/v1/logs", ingestKeys: { app: "app-key", cli: "cli-key", site: "site-key" } });
 const stub = await import("../../test-native/index.ts");
 Object.assign(stub.appInfo, { appVersion: "0.3.0", appBuild: "300", osVersion: "27.0.1", arch: "arm64", isolatedInstance: false });
 stub.docs.set("telemetry.json", JSON.stringify({ version: 1, sharing: true, decidedAt: 1, askDoneAt: 1, installId: "install-1", crashCursor: 0, lastVersion: "0.3.0", sessionOpen: false }));

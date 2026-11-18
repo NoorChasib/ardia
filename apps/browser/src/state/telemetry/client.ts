@@ -142,7 +142,7 @@ export function capture(event: string, props: Record<string, unknown> = {}, opti
       timestamp: new Date(at).toISOString(),
       properties: { ...context(), ...cleanProperties(props), ...options.raw },
     };
-    recordLocal("event", sharing, { event, uuid: record.uuid, distinct_id: sharing ? installId : null, properties: record.properties }, at);
+    recordLocal("event", sharing && mayPost(), { event, uuid: record.uuid, distinct_id: sharing ? installId : null, properties: record.properties }, at);
     if (!sharing) {
       droppedWhileOff++;
       return;
@@ -162,7 +162,7 @@ export function queueLog(level: "warn" | "error", message: string, attributes: R
     const sharing = !relay && saved().sharing;
     const at = Date.now();
     const withSession = { ...attributes, $session_id: sessionId() };
-    recordLocal("log", sharing, { level, message, attributes: withSession }, at);
+    recordLocal("log", sharing && mayPost(), { level, message, attributes: withSession }, at);
     if (!sharing) return;
     loadQueue();
     queue.logs.push(logRecord(level, message, withSession, at));
