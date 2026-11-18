@@ -5,7 +5,8 @@ import { newIncognitoTab, openArchive, openSpaces, reopenLastClosed } from "../.
 import { menuOpenedHaptic } from "../../state/browse/tabMenus";
 import { openSettings } from "../../state/settings/hooks";
 import { selectProfile } from "../../state/sync/actions";
-import { useSelectedProfile, useSyncStatus, useSyncView } from "../../state/sync/hooks";
+import { useSelectedProfile, useSyncEnabled, useSyncProfiles } from "../../state/sync/hooks";
+import { countRender } from "../../state/app/interactionPerf";
 import { useCanReopen, useIncognito } from "../../state/tabs/hooks";
 import { prepareArchive } from "../../state/tabs/store";
 import { countUsage } from "../../state/telemetry/telemetry";
@@ -45,13 +46,14 @@ export function deckMoreMenuItems({ syncEnabled, canReopen, hasTabs, onCloseAll 
 }
 
 export function DeckHeader({ safeTop, safeSide, privateCount, hasTabs, onCloseIncognito, onCloseAll, menusShown = true, showsMore = true, onMenu, glassShown, glassShownMs, glyphFade }: Props) {
+  countRender("DeckHeader");
   const theme = useTheme();
-  const status = useSyncStatus();
-  const view = useSyncView();
+  const syncEnabled = useSyncEnabled();
+  const profiles = useSyncProfiles();
   const shown = useSelectedProfile();
   const canReopen = useCanReopen();
   const incognito = useIncognito();
-  const spaces = status.isEnabled ? view.profiles : [];
+  const spaces = syncEnabled ? profiles : [];
   const current = shown ?? spaces[0] ?? null;
   const side = safeSide + deckChromeLayout.headerSide;
   const below = safeTop + deckHeaderBottom() + deckChromeLayout.menuGap;
@@ -69,7 +71,7 @@ export function DeckHeader({ safeTop, safeSide, privateCount, hasTabs, onCloseIn
     selectProfile(id);
   };
   const spaceItems: MenuItem[] = spaces.map((space) => ({ label: space.name, icon: spaceMenuSymbol(space) ?? undefined, systemImage: spaceSystemImage(space.name, space.icon), checked: space.syncId === current?.syncId, onPress: () => choose(space.syncId) }));
-  const moreItems = deckMoreMenuItems({ syncEnabled: status.isEnabled, canReopen, hasTabs, onCloseAll });
+  const moreItems = deckMoreMenuItems({ syncEnabled, canReopen, hasTabs, onCloseAll });
   const pillItems: MenuItem[] = [{ label: "Close Incognito Tabs", destructive: true, onPress: onCloseIncognito }];
   return (
     <View testID="deckHeader" pointerEvents="box-none" style={[styles.row, { top: safeTop + deckChromeLayout.headerCenter - browseLayout.hitTarget / 2, paddingHorizontal: side }]}>

@@ -8,7 +8,7 @@ import Animated, { cancelAnimation, FadeIn, FadeOut, runOnJS, runOnUI, useAnimat
 import type { GestureType } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { activateRow, cancelSearch, submitSearch, toggleTrayIncognito } from "../../state/browse/store";
-import { menuOpenedHaptic, trayRowActions } from "../../state/browse/tabMenus";
+import { menuOpenedHaptic, trayRowActions, type RowAction } from "../../state/browse/tabMenus";
 import { useSearchFieldVersion, useSearchInitialText, useSearchOpen, useSearchOrigin, useSearchRows, useSearchSession, useSearchText } from "../../state/search/hooks";
 import { SEARCH_ANCHOR_ID, SEARCH_FACE_ID, SEARCH_FIELD_ID, SEARCH_REVEAL_ID, SEARCH_ROWS_REVEAL_ID, setStageMorphs, stageExit, stageOpened, stagePresented, stageSettled, useStageBar } from "../../state/search/stageBar";
 import { SearchStage, SearchStagePanel, searchStageIsNative, type SearchStageHandle, type SearchStageLift } from "../../platform/searchStage";
@@ -897,12 +897,26 @@ function IncognitoToggle() {
   );
 }
 
+function useRowMenus(incognito: boolean) {
+  return useMemo(() => {
+    const made = new WeakMap<TrayRow, RowAction[]>();
+    return (row: TrayRow) => {
+      const known = made.get(row);
+      if (known) return known;
+      const menu = trayRowActions(row);
+      made.set(row, menu);
+      return menu;
+    };
+  }, [incognito]);
+}
+
 function TrayRows({ dismissDrag }: { dismissDrag: GestureType }) {
   const leaving = useLeavingActions();
   const theme = useTrayTheme();
   const rows = useSearchRows();
   const typed = useSearchText();
   const incognito = useIncognito();
+  const menuOf = useRowMenus(incognito);
   const [room, setRoom] = useState(0);
   const [bottoms, setBottoms] = useState<number[]>([]);
   const refine = useCallback((row: TrayRow) => setSearchText(refinedText(row)), []);
@@ -968,7 +982,7 @@ function TrayRows({ dismissDrag }: { dismissDrag: GestureType }) {
       >
         {rows.map((row, index) => (
           <View key={index} onLayout={(event) => measure(index, event.nativeEvent.layout)}>
-            <SuggestionRow row={row} typed={typed} roles={theme} menu={trayRowActions(row)} onActivate={leaving.activate} onRefine={refine} onMenu={showMenu} />
+            <SuggestionRow row={row} typed={typed} roles={theme} menu={menuOf(row)} onActivate={leaving.activate} onRefine={refine} onMenu={showMenu} />
           </View>
         ))}
       </ScrollView>
@@ -1020,7 +1034,7 @@ function ScrubbedRows({ rows, typed, budget, onRefine, onMenu }: ScrubbedProps) 
     [onMenu],
   );
   const incognito = useIncognito();
-  const menus = useMemo(() => rows.map(trayRowActions), [rows, incognito]);
+  const menuOf = useRowMenus(incognito);
 
   const gesture = useMemo(
     () =>
@@ -1095,7 +1109,7 @@ function ScrubbedRows({ rows, typed, budget, onRefine, onMenu }: ScrubbedProps) 
               if (!was || was.top !== y || was.bottom !== y + height) remeasured((count) => count + 1);
             }}
           >
-            <SuggestionRow row={row} typed={typed} roles={theme} highlightsPress={false} menu={menus[index]} onActivate={leaving.activate} onRefine={onRefine} onMenu={openMenu} />
+            <SuggestionRow row={row} typed={typed} roles={theme} highlightsPress={false} menu={menuOf(row)} onActivate={leaving.activate} onRefine={onRefine} onMenu={openMenu} />
           </View>
         ))}
       </FadeView>

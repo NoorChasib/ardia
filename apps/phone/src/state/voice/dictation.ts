@@ -4,6 +4,8 @@ export type DictationPhase = "idle" | "requesting" | "listening" | "finished" | 
 
 export type Dictation = { phase: DictationPhase; problem: DictationProblem | null; transcript: string; level: number; attempt: number };
 
+export type DictationFace = Pick<Dictation, "phase" | "problem" | "transcript">;
+
 export type DictationAccess = "granted" | "denied" | "unavailable";
 
 export const SILENCE_TIMEOUT_MS = 1600;
@@ -58,7 +60,7 @@ export const silenceWait = (state: Dictation) => SILENCE_TIMEOUT_MS + (state.tra
 
 export type VoiceControl = { kind: "done" } | { kind: "search"; text: string } | { kind: "tryAgain" } | null;
 
-export function voiceControl(state: Dictation): VoiceControl {
+export function voiceControl(state: Pick<Dictation, "phase" | "transcript">): VoiceControl {
   const text = state.transcript.trim();
   if (state.phase === "listening") return { kind: "done" };
   if (text) return { kind: "search", text };

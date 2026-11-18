@@ -27,6 +27,7 @@ import {
   closeAllPrivateTabs,
   closeAllTabs,
   closeTab,
+  deckOrder,
   deleteArchived,
   emptyTabs,
   findTab,
@@ -66,7 +67,14 @@ export const setTabProfile = (profileSyncId: string | null) => {
   tabProfile = profileSyncId;
 };
 
+const pagesGoneListeners: ((ids: readonly string[]) => void)[] = [];
+
+export const whenPagesGo = (listener: (ids: readonly string[]) => void) => void pagesGoneListeners.push(listener);
+
+const changesNothing = (change: TabsChange) => change.data === data() && !change.put.length && !change.remove.length && !change.endedPages.length && !change.clearArchived;
+
 function apply(change: TabsChange) {
+  if (changesNothing(change)) return;
   const db = tabDatabase();
   const hadPrivate = useTabs.getState().privates.length > 0;
   writeTabs(db, change.put.map(forTheDatabase), change.remove);
@@ -74,6 +82,8 @@ function apply(change: TabsChange) {
   const cleared = change.clearArchived ? deleteArchivedTabs(db) : [];
   const listed = change.put.some((t) => !t.isPrivate) || change.remove.length > 0;
   useTabs.setState((s) => ({ ...change.data, listing: listed ? s.listing + 1 : s.listing }));
+  const gone = [...change.endedPages, ...change.remove];
+  if (gone.length) for (const listener of pagesGoneListeners) listener(gone);
   const archived = new Set(change.put.filter((t) => t.archivedAt !== null && !t.isPrivate).map((t) => t.id));
   endPages(change.endedPages.filter((id) => !archived.has(id)));
   for (const id of change.endedPages) if (archived.has(id)) void saveAndEnd(id);
@@ -96,13 +106,15 @@ export function tabSavedState(id: string): string | null {
   return privateStates.get(id) ?? (data().privates.some((t) => t.id === id) ? null : readTabState(tabDatabase(), id));
 }
 
-export function saveTabState(id: string, saved: string | null) {
+export function saveTabState(id: string, saved: string | null): boolean {
   if (data().privates.some((t) => t.id === id)) {
     if (saved) privateStates.set(id, saved);
     else privateStates.delete(id);
-    return;
+    return false;
   }
-  if (data().open.some((t) => t.id === id)) writeTabState(tabDatabase(), id, saved);
+  if (!data().open.some((t) => t.id === id)) return false;
+  writeTabState(tabDatabase(), id, saved);
+  return true;
 }
 
 export function pruneExpiredArchive() {
@@ -225,3 +237,16 @@ export function receiveSentTabs(incoming: readonly IncomingTab[]): BrowserTab[] 
 }
 
 export const currentTabs = data;
+
+let orderedFrom: TabsData | null = null;
+let ordered: BrowserTab[] = [];
+
+export function deckOrderOf(tabs: TabsData): BrowserTab[] {
+  const from = orderedFrom;
+  if (from && from.open === tabs.open && from.privates === tabs.privates && from.selectedId === tabs.selectedId && from.spaces === tabs.spaces) return ordered;
+  ordered = deckOrder(tabs);
+  orderedFrom = tabs;
+  return ordered;
+}
+
+export const currentDeckOrder = () => deckOrderOf(data());

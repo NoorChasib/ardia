@@ -38,8 +38,10 @@ import { useTab } from "../../state/tabs/hooks";
 import { capsule, ConfirmDialog, FloatingMenu, font, menuLayout, PressScale, Sheet, space, Symbol, tabsMotion, Toggle, useDesign, useTheme, type SymbolName } from "../ui";
 import { PageMenuWords, usePageMenuInk } from "./PageMenuWords";
 import { syncOffered } from "../../state/sync/offer";
+import { countRender } from "../../state/app/interactionPerf";
 
 export function PageMenu({ tabId, open, onHidden }: { tabId: string; open: boolean; onHidden: () => void }) {
+  countRender("PageMenu");
   const model = useMenuModel(tabId);
   const [confirmsTranslation, setConfirmsTranslation] = useState(false);
   const isPrivate = useTab(tabId)?.isPrivate ?? false;
@@ -148,6 +150,7 @@ function MenuSiteSettings() {
 }
 
 function NavigationCapsule({ tabId }: { tabId: string }) {
+  countRender("NavigationCapsule");
   const theme = useTheme();
   const model = useMenuModel(tabId);
   const title = useMenuTitle(tabId);

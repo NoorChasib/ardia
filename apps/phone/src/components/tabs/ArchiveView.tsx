@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { ARCHIVE_SEARCH_DELAY_MS, archiveDayTitle } from "../../lib/archiveDay";
 import { parseColor } from "../../lib/color";
 import { haptics } from "../../state/app/haptics";
+import { countRender } from "../../state/app/interactionPerf";
 import { ArchiveTile } from "./ArchiveTile";
 import { BackHandler, Platform, Pressable, SectionList, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -47,15 +48,28 @@ export function ArchiveView() {
     return () => back.remove();
   }, [Boolean(query)]);
   const results = useMemo(() => (searched ? searchArchive(searched) : null), [searched, days]);
-  const now = Date.now();
-  const sections = results
-    ? [{ title: "", data: results }]
-    : days.map((day) => ({ title: archiveDayTitle(day.tabs[0]!.archivedAt ?? day.tabs[0]!.lastActive, now), data: day.tabs }));
+  const today = startOfToday();
+  const sections = useMemo(
+    () => (results ? [{ title: "", data: results }] : days.map((day) => ({ title: archiveDayTitle(day.tabs[0]!.archivedAt ?? day.tabs[0]!.lastActive, today), data: day.tabs }))),
+    [results, days, today],
+  );
   const hasArchive = days.some((day) => day.tabs.length > 0);
   const headerFill = useMemo(() => {
     const [r, g, b] = parseColor(theme.surface);
     return `rgba(${r}, ${g}, ${b}, ${HEADER_ALPHA})`;
   }, [theme.surface]);
+
+  const openRowMenu = useCallback((tab: BrowserTab, y: number) => {
+    menuOpenedHaptic();
+    setRowMenu({ tab, y });
+  }, []);
+  const faviconSize = ROW_FAVICON * Math.min(fontScale, ROW_FAVICON_SCALE_CAP);
+  const renderRow = useCallback(({ item }: { item: BrowserTab }) => <ArchiveRow tab={item} faviconSize={faviconSize} onMenu={openRowMenu} />, [faviconSize, openRowMenu]);
+  const sectionInk = theme.secondaryLabel;
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: { title: string } }) => (section.title ? <Text style={[font.footnote, styles.section, { color: sectionInk, backgroundColor: headerFill }]}>{section.title}</Text> : null),
+    [sectionInk, headerFill],
+  );
 
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
   const ask = (asked: Confirmation) => confirmInSheet(asked, () => setConfirmation(asked));
@@ -140,19 +154,8 @@ export function ArchiveView() {
             stickySectionHeadersEnabled
             {...frame?.list(false)}
             contentContainerStyle={{ paddingBottom: insets.bottom + space.l }}
-            renderSectionHeader={({ section }) =>
-              section.title ? <Text style={[font.footnote, styles.section, { color: theme.secondaryLabel, backgroundColor: headerFill }]}>{section.title}</Text> : null
-            }
-            renderItem={({ item }) => (
-              <ArchiveRow
-                tab={item}
-                faviconSize={ROW_FAVICON * Math.min(fontScale, ROW_FAVICON_SCALE_CAP)}
-                onMenu={(y) => {
-                  menuOpenedHaptic();
-                  setRowMenu({ tab: item, y });
-                }}
-              />
-            )}
+            renderSectionHeader={renderSectionHeader}
+            renderItem={renderRow}
           />
         )}
       </View>
@@ -188,7 +191,8 @@ function restoreRow(tab: BrowserTab) {
   openArchivedTab(tab);
 }
 
-function ArchiveRow({ tab, faviconSize, onMenu }: { tab: BrowserTab; faviconSize: number; onMenu: (y: number) => void }) {
+const ArchiveRow = memo(function ArchiveRow({ tab, faviconSize, onMenu }: { tab: BrowserTab; faviconSize: number; onMenu: (tab: BrowserTab, y: number) => void }) {
+  countRender("ArchiveRow");
   const theme = useTheme();
   const shown = display(tab.url);
   return (
@@ -197,7 +201,7 @@ function ArchiveRow({ tab, faviconSize, onMenu }: { tab: BrowserTab; faviconSize
         accessibilityRole="button"
         accessibilityHint="Reopens the tab."
         onPress={() => restoreRow(tab)}
-        onLongPress={(event) => onMenu(event.nativeEvent.pageY)}
+        onLongPress={(event) => onMenu(tab, event.nativeEvent.pageY)}
         delayLongPress={tabsMotion.longPress}
         style={({ pressed }) => [styles.row, pressed ? { backgroundColor: theme.rowHighlight } : null]}
       >
@@ -215,7 +219,12 @@ function ArchiveRow({ tab, faviconSize, onMenu }: { tab: BrowserTab; faviconSize
       </Pressable>
     </SwipeToDelete>
   );
-}
+});
+
+const startOfToday = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+};
 
 const HEADER_ALPHA = 0.92;
 const EMPTY_TILE = 64;

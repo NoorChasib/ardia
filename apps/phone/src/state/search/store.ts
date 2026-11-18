@@ -4,14 +4,16 @@ import { history } from "../history/store";
 import { currentPreferences } from "../settings/store";
 import { currentTabs, useTabs } from "../tabs/store";
 import { idleMacTabs, macTabIndex, mergeSyncedHistory, syncedBookmarks } from "../sync/spaces";
-import { selectedProfile, syncData } from "../sync/store";
+import { selectedProfile, syncData, type SyncedProfile } from "../sync/store";
+import type { SyncedDevice } from "../../platform/sync";
 import { idleRows, remoteSuggestions, setSearchEngine, setSources, setSyncedSearch, suggest, type SuggestContext, type TrayRow } from "./omnibox";
 import { withPasteRow, type PasteOffer } from "./pasteRow";
 import { copy } from "../../lib/platformCopy";
 import { clipboardOffer } from "../../platform/system";
 import { settled } from "../pages/store";
-import { buildSources, recentSearches, sourcesKey } from "./sources";
+import { NO_SOURCE_BOOKMARKS, recentSearches, sourceTabs, type Sources } from "./sources";
 import { spaceTabs } from "../tabs/tabsState";
+import type { TabSpaces } from "../tabs/spaces";
 
 export type SearchOrigin = "home" | "start" | "page";
 
@@ -51,19 +53,31 @@ export const useSearch = create<SearchState>()(() => ({
 
 let remote: { text: string; values: string[] } = { text: "", values: [] };
 let inFlight: AbortController | null = null;
-let fedSources = "";
+let fed: (Sources & { listing: number; spaces: TabSpaces; profile: SyncedProfile | null; devices: readonly SyncedDevice[]; engine: string }) | null = null;
+let engine = "";
 let context: SuggestContext = { currentUrl: null, currentTabId: null };
 let paste: PasteOffer | null = null;
 
 export function feedSources() {
-  const key = `${sourcesKey(useTabs.getState().listing, history().revision(), syncData().revision)}:${useTabs.getState().spaces.current}`;
-  if (key === fedSources) return;
-  fedSources = key;
+  const { listing, spaces } = useTabs.getState();
   const profile = selectedProfile();
+  const devices = syncData().view.devices;
   const local = history().summary();
-  setSources(buildSources(spaceTabs(currentTabs()), profile ? mergeSyncedHistory(local, profile.history) : local, profile ? syncedBookmarks(profile) : []));
+  const historyRows = profile ? mergeSyncedHistory(local, profile.history) : local;
+  const bookmarks = profile ? syncedBookmarks(profile) : NO_SOURCE_BOOKMARKS;
+  const prior = fed;
+  const sameTabs = prior !== null && prior.listing === listing && prior.spaces === spaces;
+  const sameSources = sameTabs && prior.history === historyRows && prior.bookmarks === bookmarks;
+  if (sameSources && prior.profile === profile && prior.devices === devices && prior.engine === engine) return;
+  const tabs = sameTabs ? prior.tabs : sourceTabs(spaceTabs(currentTabs()));
+  fed = { tabs, history: historyRows, bookmarks, listing, spaces, profile, devices, engine };
+  if (!sameSources) setSources({ tabs, history: historyRows, bookmarks });
   const shown = useSearch.getState();
   if (shown.open && !shown.text.trim()) useSearch.setState({ rows: rowsFor(shown.text, []) });
+}
+
+export function sourcesMoved() {
+  if (useSearch.getState().open) feedSources();
 }
 
 function suggestionsFor(text: string, remoteValues: readonly string[]): { rows: TrayRow[]; completion: string } {
@@ -93,8 +107,13 @@ export const refreshSearchRows = () => useSearch.setState((state) => ({ rows: ro
 
 export function applySearchEngine() {
   const { status, view } = syncData();
-  if (status.isEnabled && view.search) setSyncedSearch(view.search);
-  else setSearchEngine(currentPreferences().searchEngineId);
+  if (status.isEnabled && view.search) {
+    engine = JSON.stringify(view.search);
+    setSyncedSearch(view.search);
+  } else {
+    engine = currentPreferences().searchEngineId;
+    setSearchEngine(engine);
+  }
 }
 
 export function presentSearch(origin: SearchOrigin, text = "", incognitoOnCancel: boolean | null = null, page: SuggestContext | null = null, arrival: TrayArrival = "rises") {
@@ -131,10 +150,29 @@ let typed: string | null = null;
 let frame: ReturnType<typeof requestAnimationFrame> | null = null;
 let remoteTimer: ReturnType<typeof setTimeout> | null = null;
 
+const sameRow = (shown: TrayRow, next: TrayRow) => {
+  const a = shown as Record<string, unknown>;
+  const b = next as Record<string, unknown>;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
+};
+
+function keptRows(shown: readonly TrayRow[], next: readonly TrayRow[]): TrayRow[] {
+  const byKey = new Map(shown.map((row) => [row.key, row]));
+  let unchanged = shown.length === next.length;
+  const kept = next.map((row, index) => {
+    const known = byKey.get(row.key);
+    const reused = known && sameRow(known, row) ? known : row;
+    if (reused !== shown[index]) unchanged = false;
+    return reused;
+  });
+  return unchanged ? (shown as TrayRow[]) : kept;
+}
+
 function showRows(text: string) {
   const carried = remote.text && text.startsWith(remote.text) ? remote.values : [];
   const suggested = suggestionsFor(text, carried);
-  useSearch.setState({ text, rows: suggested.rows, completion: suggested.completion, completedFor: text });
+  useSearch.setState((state) => ({ text, rows: keptRows(state.rows, suggested.rows), completion: suggested.completion, completedFor: text }));
   inFlight?.abort();
   if (remoteTimer) clearTimeout(remoteTimer);
   if (!text.trim() || !currentPreferences().searchSuggestions) return;
@@ -146,7 +184,10 @@ function showRows(text: string) {
       if (controller.signal.aborted || useSearch.getState().text !== text) return;
       remote = { text, values: outcome.values };
       const merged = suggestionsFor(text, outcome.values);
-      useSearch.setState({ rows: merged.rows, completion: merged.completion, completedFor: text });
+      const shown = useSearch.getState();
+      const rows = keptRows(shown.rows, merged.rows);
+      if (rows === shown.rows && merged.completion === shown.completion && shown.completedFor === text) return;
+      useSearch.setState({ rows, completion: merged.completion, completedFor: text });
     });
   }, REMOTE_DELAY_MS);
 }

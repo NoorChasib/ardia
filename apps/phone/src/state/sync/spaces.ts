@@ -106,9 +106,10 @@ export function pinsOnTheirWay(view: Pick<SyncedView, "pendingPins">, sentHere: 
 
 export type HistoryRowLike = { url: string; title: string; favicon: string | null; visits: number; lastVisit: number };
 
-export function mergeSyncedHistory(local: readonly HistoryRowLike[], synced: readonly SyncedHistoryItem[]): HistoryRowLike[] {
+function mergeRows(local: readonly HistoryRowLike[], synced: readonly SyncedHistoryItem[]): readonly HistoryRowLike[] {
+  if (!synced.length) return local;
   const merged = new Map<string, HistoryRowLike>();
-  for (const row of local) merged.set(row.url, { ...row });
+  for (const row of local) merged.set(row.url, row);
   for (const item of synced) {
     const known = merged.get(item.url);
     if (known) merged.set(item.url, { ...known, title: known.title || item.title, visits: known.visits + item.visits, lastVisit: Math.max(known.lastVisit, item.lastVisit) });
@@ -117,8 +118,23 @@ export function mergeSyncedHistory(local: readonly HistoryRowLike[], synced: rea
   return [...merged.values()];
 }
 
-export function syncedBookmarks(profile: SyncedProfile): { url: string; title: string; favicon: string | null }[] {
-  const out: { url: string; title: string; favicon: string | null }[] = [];
+const sameHistoryItem = (a: SyncedHistoryItem, b: SyncedHistoryItem) => a.url === b.url && a.title === b.title && a.visits === b.visits && a.lastVisit === b.lastVisit;
+
+const sameSyncedHistory = (a: readonly SyncedHistoryItem[], b: readonly SyncedHistoryItem[]) => a === b || (a.length === b.length && a.every((item, index) => sameHistoryItem(item, b[index]!)));
+
+let lastMerge: { local: readonly HistoryRowLike[]; synced: readonly SyncedHistoryItem[]; merged: readonly HistoryRowLike[] } | null = null;
+
+export function mergeSyncedHistory(local: readonly HistoryRowLike[], synced: readonly SyncedHistoryItem[]): readonly HistoryRowLike[] {
+  if (lastMerge && lastMerge.local === local && sameSyncedHistory(lastMerge.synced, synced)) return lastMerge.merged;
+  const merged = mergeRows(local, synced);
+  lastMerge = { local, synced, merged };
+  return merged;
+}
+
+export type SyncedBookmark = { url: string; title: string; favicon: string | null };
+
+function bookmarksOf(profile: SyncedProfile): SyncedBookmark[] {
+  const out: SyncedBookmark[] = [];
   const walk = (items: readonly BookmarkItem[]) => {
     for (const item of items) {
       if (item.url) out.push({ url: item.url, title: item.title, favicon: null });
@@ -133,14 +149,38 @@ export function syncedBookmarks(profile: SyncedProfile): { url: string; title: s
   return out;
 }
 
-export function macTabIndex(profile: SyncedProfile | null, devices: readonly SyncedDevice[]): Map<string, string> {
+const sameBookmarks = (a: readonly SyncedBookmark[], b: readonly SyncedBookmark[]) =>
+  a.length === b.length && a.every((item, index) => item.url === b[index]!.url && item.title === b[index]!.title && item.favicon === b[index]!.favicon);
+
+let lastBookmarks: readonly SyncedBookmark[] = [];
+
+export function syncedBookmarks(profile: SyncedProfile): readonly SyncedBookmark[] {
+  const next = bookmarksOf(profile);
+  if (sameBookmarks(lastBookmarks, next)) return lastBookmarks;
+  lastBookmarks = next;
+  return next;
+}
+
+function buildMacTabIndex(profile: SyncedProfile | null, devices: readonly SyncedDevice[]): Map<string, string> {
   const index = new Map<string, string>();
   if (!profile) return index;
   const current = new Set(devices.filter((d) => d.isCurrent).map((d) => d.id));
   for (const device of profile.deviceTabs) {
     if (device.kind !== "mac" || current.has(device.deviceId)) continue;
-    for (const tab of device.tabs) if (!index.has(landingKey(tab.url))) index.set(landingKey(tab.url), device.deviceName);
+    for (const tab of device.tabs) {
+      const key = landingKey(tab.url);
+      if (!index.has(key)) index.set(key, device.deviceName);
+    }
   }
+  return index;
+}
+
+let lastMacIndex: { profile: SyncedProfile | null; devices: readonly SyncedDevice[]; index: ReadonlyMap<string, string> } | null = null;
+
+export function macTabIndex(profile: SyncedProfile | null, devices: readonly SyncedDevice[]): ReadonlyMap<string, string> {
+  if (lastMacIndex && lastMacIndex.profile === profile && lastMacIndex.devices === devices) return lastMacIndex.index;
+  const index = buildMacTabIndex(profile, devices);
+  lastMacIndex = { profile, devices, index };
   return index;
 }
 

@@ -216,6 +216,8 @@ export function readPreferences(db: SqlDatabase): Record<string, string> {
   return out;
 }
 
+export const readPreference = (db: SqlDatabase, key: string): string | null => db.first<{ value: string }>("SELECT value FROM preferences WHERE key = ?", [key])?.value ?? null;
+
 export function writePreference(db: SqlDatabase, key: string, value: string | null) {
   if (value === null) db.run("DELETE FROM preferences WHERE key = ?", [key]);
   else db.run("INSERT OR REPLACE INTO preferences (key, value) VALUES (?, ?)", [key, value]);

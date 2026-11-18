@@ -43,8 +43,11 @@ export const pageTone = (id: string) => usePages.getState().tones[id] ?? null;
 export const storeNavigation = (id: string, navigation: PageState) =>
   usePages.setState((s) => ({ navigation: { ...s.navigation, [id]: navigation } }));
 
+const sameTone = (a: PageTone | undefined, b: PageTone) => a !== undefined && a.top === b.top && a.bottom === b.bottom;
+
 export function storeTone(id: string, tone: PageTone) {
-  usePages.setState((s) => ({ tones: { ...s.tones, [id]: tone }, lastTones: { ...s.lastTones, [id]: tone } }));
+  const { tones, lastTones } = usePages.getState();
+  if (!sameTone(tones[id], tone) || !sameTone(lastTones[id], tone)) usePages.setState((s) => ({ tones: { ...s.tones, [id]: tone }, lastTones: { ...s.lastTones, [id]: tone } }));
   reportedSinceHold.add(id);
   if (releasing.has(id)) dropHeldTone(id);
 }

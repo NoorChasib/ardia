@@ -3,8 +3,9 @@ import { Platform, Pressable, StyleSheet, Text, View, type ViewInstance } from "
 import Animated, { Easing, FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { copy } from "../../lib/platformCopy";
-import { PROBLEM_TEXT, voiceControl, type Dictation } from "../../state/voice/dictation";
-import { closeVoiceSearch, openSpeechSettings, searchSpoken, startListening, stopListening, useDictation, useVoiceLevels, useVoicePresented } from "../../state/voice/store";
+import { countRender } from "../../state/app/interactionPerf";
+import { PROBLEM_TEXT, voiceControl, type DictationFace } from "../../state/voice/dictation";
+import { closeVoiceSearch, openSpeechSettings, searchSpoken, startListening, stopListening, useDictationFace, useDictationLevel, useVoiceLevels, useVoiceListening, useVoicePresented } from "../../state/voice/store";
 import { ArdiaLogo, capsule, font, FrostSource, LookBackdrop, LookFrost, space, Symbol, useCoverFocus, voiceInk, voiceLayout, type SymbolName, useReduceMotion } from "../ui";
 
 export function VoiceSearchView() {
@@ -13,8 +14,9 @@ export function VoiceSearchView() {
 }
 
 function VoiceCover() {
+  countRender("VoiceCover");
   const insets = useSafeAreaInsets();
-  const dictation = useDictation();
+  const dictation = useDictationFace();
   const cancel = useRef<ViewInstance>(null);
   useCoverFocus(cancel);
   return (
@@ -24,10 +26,10 @@ function VoiceCover() {
       </FrostSource>
       <View style={[styles.column, { paddingTop: insets.top, paddingBottom: insets.bottom + space.xl, paddingLeft: insets.left + space.xl, paddingRight: insets.right + space.xl }]}>
         <View style={styles.fill} />
-        <LevelLogo level={dictation.level} />
+        <LevelLogo />
         <Transcript dictation={dictation} />
         <View style={styles.fill} />
-        <Waveform listening={dictation.phase === "listening"} />
+        <Waveform />
         <Controls dictation={dictation} />
       </View>
       <Pressable
@@ -45,7 +47,8 @@ function VoiceCover() {
   );
 }
 
-function LevelLogo({ level }: { level: number }) {
+function LevelLogo() {
+  const level = useDictationLevel();
   const reduceMotion = useReduceMotion();
   const shown = useSharedValue(level);
   useEffect(() => {
@@ -59,7 +62,7 @@ function LevelLogo({ level }: { level: number }) {
   );
 }
 
-function Transcript({ dictation }: { dictation: Dictation }) {
+function Transcript({ dictation }: { dictation: DictationFace }) {
   if (dictation.phase === "denied") {
     return (
       <View style={styles.message}>
@@ -85,7 +88,8 @@ function Transcript({ dictation }: { dictation: Dictation }) {
   );
 }
 
-function Waveform({ listening }: { listening: boolean }) {
+function Waveform() {
+  const listening = useVoiceListening();
   const levels = useVoiceLevels();
   return (
     <View style={[styles.wave, { opacity: listening ? 1 : 0 }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
@@ -101,6 +105,7 @@ const TRANSCRIPT_OUT = FadeOut.duration(150);
 const WAVE_EASE_MS = 100;
 
 function WaveBar({ height }: { height: number }) {
+  countRender("WaveBar");
   const shown = useSharedValue(height);
   useEffect(() => {
     shown.value = Platform.OS === "ios" ? withTiming(height, { duration: WAVE_EASE_MS, easing: Easing.out(Easing.quad) }) : height;
@@ -109,7 +114,8 @@ function WaveBar({ height }: { height: number }) {
   return <Animated.View style={[styles.bar, style]} />;
 }
 
-function Controls({ dictation }: { dictation: Dictation }) {
+function Controls({ dictation }: { dictation: DictationFace }) {
+  countRender("VoiceControls");
   const control = voiceControl(dictation);
   return (
     <View style={styles.controls}>

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { canUseSpeech, openAppSettings, speech, type SpeechEvent } from "../../platform/voice";
 import { searchFor } from "../browse/store";
 import { settled } from "../pages/store";
@@ -110,6 +111,10 @@ export const openSpeechSettings = () => void settled(() => openAppSettings(), un
 
 export const useVoicePresented = () => useVoice((state) => state.presented);
 
-export const useDictation = () => useVoice((state) => state.dictation);
+export const useDictationFace = () => useVoice(useShallow((state) => ({ phase: state.dictation.phase, problem: state.dictation.problem, transcript: state.dictation.transcript })));
+
+export const useDictationLevel = () => useVoice((state) => state.dictation.level);
+
+export const useVoiceListening = () => useVoice((state) => state.dictation.phase === "listening");
 
 export const useVoiceLevels = () => useVoice((state) => state.levels);

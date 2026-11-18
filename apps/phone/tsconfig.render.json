@@ -6,5 +6,5 @@
     "customConditions": ["react-native"],
     "moduleSuffixes": [".native", ""]
   },
-  "include": ["src/**/*.render.test.tsx", "test/render"]
+  "include": ["src/**/*.render.test.tsx", "test/render", "scripts/perf"]
 }

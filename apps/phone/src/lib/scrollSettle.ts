@@ -8,3 +8,7 @@ export function scrollSaveDecision(watch: ScrollWatch, y: number): { save: boole
   const save = !moving && changed;
   return { save, next: { lastSeen: y, lastSaved: save ? y : watch.lastSaved } };
 }
+
+export const scrollMovedSinceSave = (savedY: number | undefined, y: number) => savedY === undefined || Math.abs(y - savedY) > SCROLL_MOVE_THRESHOLD;
+
+export const scrollAtRest = (watch: ScrollWatch, y: number) => watch.lastSeen !== null && watch.lastSaved !== null && Math.abs(y - watch.lastSeen) <= SCROLL_MOVE_THRESHOLD && Math.abs(y - watch.lastSaved) <= SCROLL_MOVE_THRESHOLD;

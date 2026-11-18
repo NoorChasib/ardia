@@ -8,7 +8,7 @@ import { appearanceTelemetry, offeredInterfaceStyle, offeredScheme } from "../..
 import { useBoot } from "../app/bootState";
 import { isDemoSession } from "../app/launchFlags";
 import { currentPreferences } from "../settings/store";
-import { readPreferences, writePreference } from "../store/browserDatabase";
+import { readPreference, writePreference } from "../store/browserDatabase";
 import { browserDatabase } from "../store/database";
 import { syncOffered } from "../../platform/system";
 
@@ -18,7 +18,7 @@ export const useUsageSharing = create<{ sharing: boolean }>()(() => ({ sharing: 
 
 const gate = createGate({
   store: {
-    read: (key) => readPreferences(browserDatabase())[key] ?? null,
+    read: (key) => readPreference(browserDatabase(), key),
     write: (key, value) => writePreference(browserDatabase(), key, value),
   },
   post: postTelemetry,
@@ -91,7 +91,7 @@ export async function reportLaunchTray(trayUpAt: number) {
 }
 
 export function usageToday(): { day: string | null; counts: Partial<Record<Counted, number>>; sharing: boolean } {
-  const daily = parseDaily(readPreferences(browserDatabase())[DAILY_KEY] ?? null);
+  const daily = parseDaily(readPreference(browserDatabase(), DAILY_KEY));
   const counts: Partial<Record<Counted, number>> = {};
   if (daily) for (const field of COUNTED) if (daily[field] > 0) counts[field] = daily[field];
   return { day: daily?.day ?? null, counts, sharing: gate.isSharing() };

@@ -8,7 +8,7 @@ import { openTab, showDeck, useBrowse } from "../browse/store";
 import { history } from "../history/store";
 import { useOnboarding } from "../onboarding/store";
 import { settled } from "../pages/store";
-import { applySearchEngine, feedSources } from "../search/store";
+import { applySearchEngine, sourcesMoved } from "../search/store";
 import type { ColorChoice } from "../settings/preferences";
 import { setPreference } from "../settings/store";
 import { historyCuts, withoutOwnTabs } from "../tabs/received";
@@ -78,7 +78,7 @@ export async function applyInbox(): Promise<number> {
         for (const cut of historyCuts(removal)) history().removeVisits(cut.urls, cut.profileSyncId);
       }
       await settled(() => sync.inboxApplied(entries.map((entry) => entry.id)), undefined);
-      feedSources();
+      sourcesMoved();
       total += opened.length;
       if (opened.length) announce(opened);
     } while (again);
@@ -106,7 +106,7 @@ export function startSync() {
     profile = nowProfile;
     view = state.view;
     applySearchEngine();
-    feedSources();
+    sourcesMoved();
   });
   useOnboarding.subscribe((state) => {
     if (state.showing || !held.length) return;

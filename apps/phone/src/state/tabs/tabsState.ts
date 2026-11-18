@@ -207,7 +207,7 @@ export function archiveTabs(data: TabsData, ids: readonly string[], undoable: bo
   const open = data.open.filter((t) => !set.has(t.id));
   const remaining = shown.filter((t) => !set.has(t.id));
   const archived = closing.map((tab) => ({ ...tab, archivedAt: now }));
-  const archive = data.archive ? [...archived, ...data.archive].sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0)) : null;
+  const archive = data.archive ? withNewlyArchived(data.archive, archived, now) : null;
   let next: TabsData = { ...data, open, undo, archive, archivedCount: data.archivedCount + archived.length };
   const put: BrowserTab[] = [...archived];
   if (data.selectedId !== null && set.has(data.selectedId)) {
@@ -220,6 +220,15 @@ export function archiveTabs(data: TabsData, ids: readonly string[], undoable: bo
     }
   }
   return { data: next, put, remove: [], endedPages: closing.map((t) => t.id) };
+}
+
+const newestFirst = (a: BrowserTab, b: BrowserTab) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0);
+
+const isNewestFirst = (list: readonly BrowserTab[]) => list.every((tab, i) => i === 0 || (tab.archivedAt ?? 0) <= (list[i - 1]!.archivedAt ?? 0));
+
+function withNewlyArchived(archive: readonly BrowserTab[], archived: readonly BrowserTab[], now: number): BrowserTab[] {
+  const joined = [...archived, ...archive];
+  return (archive[0]?.archivedAt ?? 0) <= now && isNewestFirst(archive) ? joined : joined.sort(newestFirst);
 }
 
 export function closePrivateTabs(data: TabsData, ids: readonly string[]): TabsChange {
@@ -292,9 +301,22 @@ export function restoreArchived(data: TabsData, archived: BrowserTab, now: numbe
   return { ...selected, put: dedupe([tab, ...selected.put]) };
 }
 
+type TabList = "open" | "privates" | "archive";
+
+const TAB_LISTS: readonly TabList[] = ["open", "privates", "archive"];
+
+function locateTab(data: TabsData, id: string): { list: TabList; index: number } | null {
+  for (const list of TAB_LISTS) {
+    const index = data[list]?.findIndex((t) => t.id === id) ?? -1;
+    if (index >= 0) return { list, index };
+  }
+  return null;
+}
+
 export function updateTab(data: TabsData, id: string, patch: TabPatch): TabsChange {
-  const tab = findTab(data, id);
-  if (!tab) return unchanged(data);
+  const found = locateTab(data, id);
+  if (!found) return unchanged(data);
+  const tab = data[found.list]![found.index]!;
   const next: BrowserTab = { ...tab };
   let changed = false;
   for (const key of Object.keys(patch) as (keyof TabPatch)[]) {
@@ -304,14 +326,9 @@ export function updateTab(data: TabsData, id: string, patch: TabPatch): TabsChan
     changed = true;
   }
   if (!changed) return unchanged(data);
-  const swap = (list: BrowserTab[]) => list.map((t) => (t.id === id ? next : t));
-  const updated: TabsData = {
-    ...data,
-    open: swap(data.open),
-    privates: swap(data.privates),
-    archive: data.archive ? swap(data.archive) : null,
-  };
-  return { data: updated, put: next.isPrivate ? [] : [next], remove: [], endedPages: [] };
+  const list = [...data[found.list]!];
+  list[found.index] = next;
+  return { data: { ...data, [found.list]: list }, put: next.isPrivate ? [] : [next], remove: [], endedPages: [] };
 }
 
 export function runAutoArchive(data: TabsData, interval: AutoArchiveInterval, now: number): TabsChange {

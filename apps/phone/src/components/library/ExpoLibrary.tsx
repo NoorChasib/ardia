@@ -44,6 +44,7 @@ import {
   deleteDownload,
   deleteHistoryEntry,
   followLibraryPath,
+  historyShowsRemovals,
   LIBRARY_NAMES,
   LIBRARY_SEARCH_PROMPTS,
   LIBRARY_SECTIONS,
@@ -60,8 +61,10 @@ import {
   type DownloadedFile,
   type LibrarySection,
 } from "../../state/library/store";
+import { useHistoryRemovals } from "../../state/history/store";
 import { useSync } from "../../state/sync/store";
 import { useSelectedProfile, useSyncEnabled } from "../../state/sync/hooks";
+import { shownProfile } from "../../state/sync/syncRules";
 import { useTabs } from "../../state/tabs/store";
 import { ExpoClearDataPage } from "../settings/ExpoClearDataPage";
 import { contentMargins, Favicon, modifierList, settingsChrome } from "../ui";
@@ -189,11 +192,17 @@ function HistoryContent({ query, page }: { query: string; page: PageModifiers })
   const open = useLibrary((s) => s.open);
   const entries = useLibrary((s) => s.history);
   const loaded = useLibrary((s) => s.historyLoaded);
-  const syncRevision = useSync((s) => s.revision);
-  const space = useTabs((s) => s.spaces.current);
+  const syncEnabled = useSyncEnabled();
+  const syncing = useSync((s) => s.status.isSyncing);
+  const syncedHistory = useSync((s) => shownProfile(s.view, s.status)?.history ?? null);
+  const spaces = useTabs((s) => s.spaces);
   useEffect(() => {
     if (open) loadHistory();
-  }, [open, syncRevision, space]);
+  }, [open, syncEnabled, syncing, syncedHistory, spaces]);
+  const removals = useHistoryRemovals((s) => s.removals);
+  useEffect(() => {
+    if (open && !historyShowsRemovals(removals)) loadHistory();
+  }, [open, removals]);
   const shown = useMemo(() => filterHistory(entries, query), [entries, query]);
   const days = useMemo(() => historyDays(shown), [shown]);
   const sizes = useMemo(() => days.map((day) => day.entries.length), [days]);

@@ -8,7 +8,7 @@ import { menuOpenedHaptic, tabTitle } from "../../state/browse/tabMenus";
 import { editPageQuery } from "../../state/page/actions";
 import { openSettings } from "../../state/settings/hooks";
 import { openRemote, selectProfile } from "../../state/sync/actions";
-import { useSelectedProfile, useSyncStatus, useSyncView } from "../../state/sync/hooks";
+import { useSelectedProfile, useSyncEnabled, useSyncProfiles } from "../../state/sync/hooks";
 import { remoteTitle } from "../../state/sync/spaces";
 import type { PinnedTile, SyncedProfile } from "../../state/sync/store";
 import { useCanReopen, useDeckOrder, useIncognito, usePrivateCount, useSelectedTab } from "../../state/tabs/hooks";
@@ -32,10 +32,10 @@ export function DuoSidebar({ variant, onClose }: Props) {
   const theme = useTheme();
   const incognito = useIncognito();
   const dark = theme.dark || incognito;
-  const status = useSyncStatus();
-  const view = useSyncView();
+  const syncEnabled = useSyncEnabled();
+  const profiles = useSyncProfiles();
   const shown = useSelectedProfile();
-  const spaces = status.isEnabled ? view.profiles : [];
+  const spaces = syncEnabled ? profiles : [];
   const current = shown ?? spaces[0] ?? null;
   const order = useDeckOrder();
   const privateCount = usePrivateCount();
@@ -90,7 +90,7 @@ export function DuoSidebar({ variant, onClose }: Props) {
             </Text>
           )}
         </View>
-        <MoreMenu dark={dark} hasTabs={order.length > 0} syncEnabled={status.isEnabled} onCloseAll={confirmCloseAll} />
+        <MoreMenu dark={dark} hasTabs={order.length > 0} syncEnabled={syncEnabled} onCloseAll={confirmCloseAll} />
         {variant === "overlay" ? (
           <Pressable accessibilityRole="button" accessibilityLabel="Hide Sidebar" onPress={onClose} style={styles.headerButton}>
             <SidebarGlyph size={DUO.sidebarGlyph} color={rolesFor(dark).foregroundPrimary} />
