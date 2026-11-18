@@ -1,0 +1,20 @@
+# Nilla: assets and inventories
+
+> **The contents of this folder are now Nilla (double L)**, the owner's confirmed name, with ids under `com.nilladigital.nilla`. The folder keeps its old `nila/` spelling only so existing paths keep working. Anything that still says "Nila" (only `plan.md`, which is superseded) means Nilla. The source of truth for decisions is `~/ardia-work/nila-cleanup/owner-requirements.md`.
+
+This folder is the branding hand-off for the conversion that makes Nilla an independent project. It only delivers files: nothing in `/home/noor/Code/ardia` has been changed, and the conversion workflow applies every repo change.
+
+| Path | What it is |
+| --- | --- |
+| **`manifest.json`** | **Start here.** 234 entries. Each has its `file` here, the `current` path in the repo today, the proposed `target` after the full rename (Ardia→Nilla, ardia→nilla in path segments), an `action` (replace, add, remove, edit, optional, mac-step, preview), and a `layer`: 1 works with today's engines, 2 is `engine/`. The same data is `icons/INDEX.md` as a table. |
+| `preview.html` | Every generated icon, the wordmarks and the optional New Tab marks, on light and dark. Phone-sized, with no external requests. |
+| `icons/` | **macOS**: `AppIcon.icon` (macOS 26 layers), `AppIcon.appiconset` (10 sizes), `AppIcon-Dev.icon` (dev builds), 23 `AppIconVariant-<id>` imagesets for AppIcons.swift, and the app's 512 px icon. **Engine, Layer 2**: Chromium's 20 product-logo PNGs, two vector SVGs and `mac/app.icns`; `Assets.car` is a Mac `actool` step. **Linux**: hicolor 16–512 plus scalable, named `nilla`. **Windows**: `Nilla.ico` (10 sizes). **Phone**: iOS layers, `OpenInNilla.png`, previews, and Android's vector adaptive icon. **Web**: favicons, apple-touch and `og.png`, kept under `docs/brand/nilla/web/` because the site is deleted (D4). **README**: header icon at `docs/brand/nilla/app-icon-256.png`. **Raycast** icon. **New Tab marks**: optional (see the manifest notes). |
+| `wordmark/` | The Nilla wordmark (the icon plus stroked-path lettering). Lowercase "nilla" and title-case "Nilla", each adaptive, on-light and on-dark, plus lettering only in both cases, and PNGs of the fixed-ink versions. |
+| `strings/` | The user-visible string inventory, rerun for Nilla. `inventory.md` has counts, the 139 lines that read oddly as Nilla (they get hand-written copy), and every user-visible line with how it reads. `inventory.tsv` has all 6,777 lines that mention Ardia, classified (column `as_nilla`). It's the per-line source of truth. |
+| `web-check.md` | The name check for "Nilla" and "Nilla Browser": other software (the nilla-nix CLI clash), stores, meanings, and the NILLA wafers mark and how far it might reach. Plus what the owner must check and the identity notes. |
+| `tools/` | The brand pipeline, ready for `docs/brand/nilla/`. `build.mjs [--out <dir>] [--repo <path>]` regenerates every asset and the manifest. `preview.mjs` builds the preview. `inventory.mjs <rev>` regenerates the inventory. `verify-manifest.mjs <rev>` checks: current paths exist at `<rev>`, replacement PNG sizes match, every manifest file exists here, SVG and XML parse, the `.ico` and `.icns` files are valid, the preview has no external references, no target still spells "nila", and no icon-like repo file is missed. |
+| `plan.md` | Superseded: the earlier app-layer-only plan, written for "Nila". Kept for reference. |
+
+Run the tools from `~/ardia-work/branding/nila`: `node tools/build.mjs && node tools/preview.mjs`, then `node tools/verify-manifest.mjs <rev>` and `node tools/inventory.mjs <rev>`. The current outputs were checked against `phase3/final-candidate` (e15125104), because the PR stack hadn't settled; rerun both on the conversion's base.
+
+The default icon is Highland: sky #D6E6EC → #E4ECE6 → #EEF0E2, sun #F2C14E, back hill #8A9F6A, front hill #43506E. The other 23 palettes in `tools/palettes.json` are the alternates, in picker order. The icon art is unchanged from the Nila hand-off; only the lettering and the names changed.

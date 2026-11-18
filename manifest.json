@@ -1,0 +1,1927 @@
+{
+  "product": "Nilla",
+  "ids": {
+    "prefix": "com.nilladigital",
+    "app": "com.nilladigital.nilla",
+    "source": "owner-requirements.md (Owner answers)"
+  },
+  "generated": "nila/tools/build.mjs",
+  "palette": {
+    "default": "highland",
+    "colors": {
+      "skyTop": "#D6E6EC",
+      "skyMiddle": "#E4ECE6",
+      "skyBottom": "#EEF0E2",
+      "sun": "#F2C14E",
+      "backHill": "#8A9F6A",
+      "frontHill": "#43506E"
+    },
+    "alternates": [
+      "original",
+      "brand",
+      "forest-dusk",
+      "noon",
+      "spring",
+      "summer-haze",
+      "mint-coral",
+      "golden",
+      "harvest",
+      "apricot-teal",
+      "rose",
+      "blue-hour",
+      "lavender",
+      "moonrise",
+      "aurora",
+      "clay",
+      "fog",
+      "heather",
+      "graphite",
+      "electric",
+      "sumi",
+      "citrus",
+      "ultramarine"
+    ]
+  },
+  "notes": [
+    "file: relative to this folder (~/ardia-work/branding/nila; the folder keeps its old spelling, the contents are Nilla). current: the path at the repo base today (null for new files). target: the proposed path after the full rename (Ardia→Nilla, ardia→nilla in path segments); the conversion workflow owns the final paths.",
+    "action: replace (overwrite current, then move to target), add (new file), remove (delete the current path), edit (change a value in place), optional (owner decision pending; today's file can stay), mac-step (must be produced on a Mac), preview (not shipped).",
+    "layer: 1 = works with today's prebuilt engines; 2 = engine/ (and its interface), lands with the first Nilla engine builds. Every engine/chromium asset is Layer 2.",
+    "Site assets (favicons, apple-touch, og) target docs/brand/nilla/web/ because apps/site is deleted under D4. README.md's header image moves to docs/brand/nilla/app-icon-256.png.",
+    "New Tab hills (ntp-mark*, new-tab-mark*) are optional: the owner keeps today's as scenery, but they are cut from Ardia's logo painting, which the attribution rules say Nilla must not use as its brand. The redrawn set is ready if the owner wants it.",
+    "Default icon: Highland. AppIcons.swift's variants become the 23 alternates in palettes.json order, each drawn whole from its AppIconVariant-<id> imageset (no plate, no monochrome filter)."
+  ],
+  "assets": [
+    {
+      "file": "icons/source/default.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/default.svg",
+      "note": "Highland on Apple's 1024 grid (824 px squircle, 100 px inset). Brand source."
+    },
+    {
+      "file": "icons/source/alternates/original.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/original.svg",
+      "note": "alternate: Dusk (Closest to today)"
+    },
+    {
+      "file": "icons/source/alternates/brand.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/brand.svg",
+      "note": "alternate: Parchment (Closest to today)"
+    },
+    {
+      "file": "icons/source/alternates/forest-dusk.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/forest-dusk.svg",
+      "note": "alternate: Forest dusk (Closest to today)"
+    },
+    {
+      "file": "icons/source/alternates/noon.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/noon.svg",
+      "note": "alternate: Meadow noon (Daylight)"
+    },
+    {
+      "file": "icons/source/alternates/spring.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/spring.svg",
+      "note": "alternate: Spring (Daylight)"
+    },
+    {
+      "file": "icons/source/alternates/summer-haze.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/summer-haze.svg",
+      "note": "alternate: Summer haze (Daylight)"
+    },
+    {
+      "file": "icons/source/alternates/mint-coral.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/mint-coral.svg",
+      "note": "alternate: Mint and coral (Daylight)"
+    },
+    {
+      "file": "icons/source/alternates/golden.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/golden.svg",
+      "note": "alternate: Golden hour (Golden hour)"
+    },
+    {
+      "file": "icons/source/alternates/harvest.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/harvest.svg",
+      "note": "alternate: Harvest (Golden hour)"
+    },
+    {
+      "file": "icons/source/alternates/apricot-teal.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/apricot-teal.svg",
+      "note": "alternate: Apricot and teal (Golden hour)"
+    },
+    {
+      "file": "icons/source/alternates/rose.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/rose.svg",
+      "note": "alternate: Rose (Golden hour)"
+    },
+    {
+      "file": "icons/source/alternates/blue-hour.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/blue-hour.svg",
+      "note": "alternate: Blue hour (Dusk and night)"
+    },
+    {
+      "file": "icons/source/alternates/lavender.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/lavender.svg",
+      "note": "alternate: Lavender (Dusk and night)"
+    },
+    {
+      "file": "icons/source/alternates/moonrise.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/moonrise.svg",
+      "note": "alternate: Moonrise (Dusk and night)"
+    },
+    {
+      "file": "icons/source/alternates/aurora.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/aurora.svg",
+      "note": "alternate: Aurora (Dusk and night)"
+    },
+    {
+      "file": "icons/source/alternates/clay.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/clay.svg",
+      "note": "alternate: Clay and sage (Muted)"
+    },
+    {
+      "file": "icons/source/alternates/fog.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/fog.svg",
+      "note": "alternate: Fog (Muted)"
+    },
+    {
+      "file": "icons/source/alternates/heather.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/heather.svg",
+      "note": "alternate: Heather moor (Muted)"
+    },
+    {
+      "file": "icons/source/alternates/graphite.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/graphite.svg",
+      "note": "alternate: Graphite and snow (Muted)"
+    },
+    {
+      "file": "icons/source/alternates/electric.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/electric.svg",
+      "note": "alternate: Electric sunset (Bold)"
+    },
+    {
+      "file": "icons/source/alternates/sumi.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/sumi.svg",
+      "note": "alternate: Red sun (Bold)"
+    },
+    {
+      "file": "icons/source/alternates/citrus.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/citrus.svg",
+      "note": "alternate: Citrus (Bold)"
+    },
+    {
+      "file": "icons/source/alternates/ultramarine.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/alternates/ultramarine.svg",
+      "note": "alternate: Ultramarine (Bold)"
+    },
+    {
+      "file": "icons/source/palettes.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/palettes.json",
+      "note": "default and the 23 alternates, in picker order, with their six colours (AppIcons.swift's variant list)"
+    },
+    {
+      "file": "icons/source/layers/sun.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/layers/sun.svg",
+      "note": "Icon Composer layer sun (full 1024 canvas)"
+    },
+    {
+      "file": "icons/macos/AppIcon.icon/Assets/sun.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon.icon/Assets/sun.png",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon.icon/Assets/sun.png",
+      "note": "macOS 26 icon layer"
+    },
+    {
+      "file": "icons/phone/ios/AppIcon.icon/Assets/sun.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/ios/App/AppIcon.icon/Assets/sun.png",
+      "target": "apps/phone/ios/App/AppIcon.icon/Assets/sun.png",
+      "note": "iOS icon layer"
+    },
+    {
+      "file": "icons/source/layers/back.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/layers/back.svg",
+      "note": "Icon Composer layer back (full 1024 canvas)"
+    },
+    {
+      "file": "icons/macos/AppIcon.icon/Assets/back.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon.icon/Assets/back.png",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon.icon/Assets/back.png",
+      "note": "macOS 26 icon layer"
+    },
+    {
+      "file": "icons/phone/ios/AppIcon.icon/Assets/back.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/ios/App/AppIcon.icon/Assets/back.png",
+      "target": "apps/phone/ios/App/AppIcon.icon/Assets/back.png",
+      "note": "iOS icon layer"
+    },
+    {
+      "file": "icons/source/layers/front.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/layers/front.svg",
+      "note": "Icon Composer layer front (full 1024 canvas)"
+    },
+    {
+      "file": "icons/macos/AppIcon.icon/Assets/front.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon.icon/Assets/front.png",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon.icon/Assets/front.png",
+      "note": "macOS 26 icon layer"
+    },
+    {
+      "file": "icons/phone/ios/AppIcon.icon/Assets/front.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/ios/App/AppIcon.icon/Assets/front.png",
+      "target": "apps/phone/ios/App/AppIcon.icon/Assets/front.png",
+      "note": "iOS icon layer"
+    },
+    {
+      "file": "icons/macos/AppIcon.icon/icon.json",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon.icon/icon.json",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon.icon/icon.json",
+      "note": "solid fill = the sky's middle colour (the schema in use today); a gradient fill needs Icon Composer on a Mac"
+    },
+    {
+      "file": "icons/phone/ios/AppIcon.icon/icon.json",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/ios/App/AppIcon.icon/icon.json",
+      "target": "apps/phone/ios/App/AppIcon.icon/icon.json",
+      "note": "iOS"
+    },
+    {
+      "file": "icons/source/layers-dev/board.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/layers-dev/board.svg",
+      "note": "dev-build icon layer board"
+    },
+    {
+      "file": "icons/macos/AppIcon-Dev.icon/Assets/board.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon-Dev.icon/Assets/board.png",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon-Dev.icon/Assets/board.png",
+      "note": "dev builds' icon (ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Dev): copper slope on a circuit board"
+    },
+    {
+      "file": "icons/source/layers-dev/sun.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/layers-dev/sun.svg",
+      "note": "dev-build icon layer sun"
+    },
+    {
+      "file": "icons/macos/AppIcon-Dev.icon/Assets/sun.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon-Dev.icon/Assets/sun.png",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon-Dev.icon/Assets/sun.png",
+      "note": "dev builds' icon (ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Dev): copper slope on a circuit board"
+    },
+    {
+      "file": "icons/source/layers-dev/back.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/layers-dev/back.svg",
+      "note": "dev-build icon layer back"
+    },
+    {
+      "file": "icons/macos/AppIcon-Dev.icon/Assets/back.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon-Dev.icon/Assets/back.png",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon-Dev.icon/Assets/back.png",
+      "note": "dev builds' icon (ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Dev): copper slope on a circuit board"
+    },
+    {
+      "file": "icons/source/layers-dev/front.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/source/layers-dev/front.svg",
+      "note": "dev-build icon layer front"
+    },
+    {
+      "file": "icons/macos/AppIcon-Dev.icon/Assets/front.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon-Dev.icon/Assets/front.png",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon-Dev.icon/Assets/front.png",
+      "note": "dev builds' icon (ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Dev): copper slope on a circuit board"
+    },
+    {
+      "file": "icons/macos/AppIcon-Dev.icon/icon.json",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/AppIcon-Dev.icon/icon.json",
+      "target": "apps/browser/macos/Nilla-macOS/AppIcon-Dev.icon/icon.json",
+      "note": "dev icon: dark-green fill, four layers, as today"
+    },
+    {
+      "file": "icons/macos/AppIcon-Dev-preview.svg",
+      "action": "preview",
+      "layer": 1,
+      "current": null,
+      "target": null,
+      "note": "the dev icon composited, for the preview page"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_16x16_1x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_16x16_1x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_16x16_1x.png",
+      "note": "16 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_16x16_2x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_16x16_2x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_16x16_2x.png",
+      "note": "32 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_32x32_1x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_32x32_1x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_32x32_1x.png",
+      "note": "32 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_32x32_2x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_32x32_2x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_32x32_2x.png",
+      "note": "64 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_128x128_1x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_128x128_1x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_128x128_1x.png",
+      "note": "128 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_128x128_2x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_128x128_2x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_128x128_2x.png",
+      "note": "256 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_256x256_1x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_256x256_1x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_256x256_1x.png",
+      "note": "256 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_256x256_2x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_256x256_2x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_256x256_2x.png",
+      "note": "512 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_512x512_1x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_512x512_1x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_512x512_1x.png",
+      "note": "512 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/icon_512x512_2x.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/icon_512x512_2x.png",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/icon_512x512_2x.png",
+      "note": "1024 px, Apple template with shadow"
+    },
+    {
+      "file": "icons/macos/AppIcon.appiconset/Contents.json",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "note": "same slots as today"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-original.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-original.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"original\" (Dusk), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-original.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-original.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-brand.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-brand.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"brand\" (Parchment), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-brand.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-brand.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-forest-dusk.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-forest-dusk.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"forest-dusk\" (Forest dusk), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-forest-dusk.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-forest-dusk.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-noon.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-noon.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"noon\" (Meadow noon), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-noon.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-noon.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-spring.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-spring.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"spring\" (Spring), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-spring.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-spring.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-summer-haze.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-summer-haze.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"summer-haze\" (Summer haze), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-summer-haze.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-summer-haze.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-mint-coral.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-mint-coral.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"mint-coral\" (Mint and coral), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-mint-coral.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-mint-coral.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-golden.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-golden.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"golden\" (Golden hour), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-golden.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-golden.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-harvest.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-harvest.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"harvest\" (Harvest), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-harvest.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-harvest.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-apricot-teal.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-apricot-teal.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"apricot-teal\" (Apricot and teal), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-apricot-teal.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-apricot-teal.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-rose.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-rose.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"rose\" (Rose), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-rose.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-rose.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-blue-hour.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-blue-hour.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"blue-hour\" (Blue hour), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-blue-hour.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-blue-hour.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-lavender.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-lavender.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"lavender\" (Lavender), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-lavender.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-lavender.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-moonrise.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-moonrise.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"moonrise\" (Moonrise), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-moonrise.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-moonrise.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-aurora.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-aurora.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"aurora\" (Aurora), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-aurora.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-aurora.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-clay.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-clay.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"clay\" (Clay and sage), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-clay.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-clay.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-fog.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-fog.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"fog\" (Fog), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-fog.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-fog.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-heather.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-heather.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"heather\" (Heather moor), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-heather.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-heather.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-graphite.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-graphite.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"graphite\" (Graphite and snow), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-graphite.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-graphite.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-electric.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-electric.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"electric\" (Electric sunset), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-electric.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-electric.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-sumi.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-sumi.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"sumi\" (Red sun), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-sumi.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-sumi.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-citrus.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-citrus.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"citrus\" (Citrus), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-citrus.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-citrus.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-ultramarine.imageset/icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-ultramarine.imageset/icon.png",
+      "note": "AppIcons.swift alternate \"ultramarine\" (Ultramarine), drawn whole"
+    },
+    {
+      "file": "icons/macos/variants/AppIconVariant-ultramarine.imageset/Contents.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIconVariant-ultramarine.imageset/Contents.json",
+      "note": ""
+    },
+    {
+      "file": null,
+      "action": "remove",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIconMark.imageset",
+      "target": null,
+      "note": "old plate-variant marks: the new variants are whole icons"
+    },
+    {
+      "file": null,
+      "action": "remove",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIconMark-blue.imageset",
+      "target": null,
+      "note": "old plate-variant marks: the new variants are whole icons"
+    },
+    {
+      "file": null,
+      "action": "remove",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIconMark-neutral.imageset",
+      "target": null,
+      "note": "old plate-variant marks: the new variants are whole icons"
+    },
+    {
+      "file": null,
+      "action": "remove",
+      "layer": 1,
+      "current": "apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIconMark-plum.imageset",
+      "target": null,
+      "note": "old plate-variant marks: the new variants are whole icons"
+    },
+    {
+      "file": "icons/macos/app-icon-512.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/assets/app-icon.png",
+      "target": "apps/browser/assets/app-icon.png",
+      "note": "the app's own UI icon (drawn at 132 pt at most)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-back.png",
+      "target": "apps/browser/assets/ntp-mark-back.png",
+      "note": "New Tab page mark, green profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-back@2x.png",
+      "note": "New Tab page mark, green profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-front.png",
+      "target": "apps/browser/assets/ntp-mark-front.png",
+      "note": "New Tab page mark, green profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-front@2x.png",
+      "note": "New Tab page mark, green profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-sun.png",
+      "target": "apps/browser/assets/ntp-mark-sun.png",
+      "note": "New Tab page mark, green profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-sun@2x.png",
+      "note": "New Tab page mark, green profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-blue-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-blue-back.png",
+      "target": "apps/browser/assets/ntp-mark-blue-back.png",
+      "note": "New Tab page mark, blue profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-blue-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-blue-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-blue-back@2x.png",
+      "note": "New Tab page mark, blue profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-blue-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-blue-front.png",
+      "target": "apps/browser/assets/ntp-mark-blue-front.png",
+      "note": "New Tab page mark, blue profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-blue-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-blue-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-blue-front@2x.png",
+      "note": "New Tab page mark, blue profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-blue-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-blue-sun.png",
+      "target": "apps/browser/assets/ntp-mark-blue-sun.png",
+      "note": "New Tab page mark, blue profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-blue-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-blue-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-blue-sun@2x.png",
+      "note": "New Tab page mark, blue profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-neutral-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-neutral-back.png",
+      "target": "apps/browser/assets/ntp-mark-neutral-back.png",
+      "note": "New Tab page mark, neutral profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-neutral-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-neutral-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-neutral-back@2x.png",
+      "note": "New Tab page mark, neutral profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-neutral-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-neutral-front.png",
+      "target": "apps/browser/assets/ntp-mark-neutral-front.png",
+      "note": "New Tab page mark, neutral profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-neutral-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-neutral-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-neutral-front@2x.png",
+      "note": "New Tab page mark, neutral profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-neutral-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-neutral-sun.png",
+      "target": "apps/browser/assets/ntp-mark-neutral-sun.png",
+      "note": "New Tab page mark, neutral profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-neutral-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-neutral-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-neutral-sun@2x.png",
+      "note": "New Tab page mark, neutral profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-orange-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-orange-back.png",
+      "target": "apps/browser/assets/ntp-mark-orange-back.png",
+      "note": "New Tab page mark, orange profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-orange-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-orange-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-orange-back@2x.png",
+      "note": "New Tab page mark, orange profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-orange-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-orange-front.png",
+      "target": "apps/browser/assets/ntp-mark-orange-front.png",
+      "note": "New Tab page mark, orange profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-orange-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-orange-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-orange-front@2x.png",
+      "note": "New Tab page mark, orange profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-orange-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-orange-sun.png",
+      "target": "apps/browser/assets/ntp-mark-orange-sun.png",
+      "note": "New Tab page mark, orange profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-orange-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-orange-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-orange-sun@2x.png",
+      "note": "New Tab page mark, orange profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-pink-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-pink-back.png",
+      "target": "apps/browser/assets/ntp-mark-pink-back.png",
+      "note": "New Tab page mark, pink profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-pink-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-pink-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-pink-back@2x.png",
+      "note": "New Tab page mark, pink profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-pink-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-pink-front.png",
+      "target": "apps/browser/assets/ntp-mark-pink-front.png",
+      "note": "New Tab page mark, pink profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-pink-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-pink-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-pink-front@2x.png",
+      "note": "New Tab page mark, pink profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-pink-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-pink-sun.png",
+      "target": "apps/browser/assets/ntp-mark-pink-sun.png",
+      "note": "New Tab page mark, pink profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-pink-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-pink-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-pink-sun@2x.png",
+      "note": "New Tab page mark, pink profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-plum-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-plum-back.png",
+      "target": "apps/browser/assets/ntp-mark-plum-back.png",
+      "note": "New Tab page mark, plum profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-plum-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-plum-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-plum-back@2x.png",
+      "note": "New Tab page mark, plum profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-plum-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-plum-front.png",
+      "target": "apps/browser/assets/ntp-mark-plum-front.png",
+      "note": "New Tab page mark, plum profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-plum-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-plum-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-plum-front@2x.png",
+      "note": "New Tab page mark, plum profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-plum-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-plum-sun.png",
+      "target": "apps/browser/assets/ntp-mark-plum-sun.png",
+      "note": "New Tab page mark, plum profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-plum-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-plum-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-plum-sun@2x.png",
+      "note": "New Tab page mark, plum profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-purple-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-purple-back.png",
+      "target": "apps/browser/assets/ntp-mark-purple-back.png",
+      "note": "New Tab page mark, purple profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-purple-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-purple-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-purple-back@2x.png",
+      "note": "New Tab page mark, purple profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-purple-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-purple-front.png",
+      "target": "apps/browser/assets/ntp-mark-purple-front.png",
+      "note": "New Tab page mark, purple profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-purple-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-purple-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-purple-front@2x.png",
+      "note": "New Tab page mark, purple profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-purple-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-purple-sun.png",
+      "target": "apps/browser/assets/ntp-mark-purple-sun.png",
+      "note": "New Tab page mark, purple profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-purple-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-purple-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-purple-sun@2x.png",
+      "note": "New Tab page mark, purple profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-red-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-red-back.png",
+      "target": "apps/browser/assets/ntp-mark-red-back.png",
+      "note": "New Tab page mark, red profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-red-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-red-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-red-back@2x.png",
+      "note": "New Tab page mark, red profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-red-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-red-front.png",
+      "target": "apps/browser/assets/ntp-mark-red-front.png",
+      "note": "New Tab page mark, red profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-red-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-red-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-red-front@2x.png",
+      "note": "New Tab page mark, red profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-red-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-red-sun.png",
+      "target": "apps/browser/assets/ntp-mark-red-sun.png",
+      "note": "New Tab page mark, red profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-red-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-red-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-red-sun@2x.png",
+      "note": "New Tab page mark, red profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-yellow-back.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-yellow-back.png",
+      "target": "apps/browser/assets/ntp-mark-yellow-back.png",
+      "note": "New Tab page mark, yellow profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-yellow-back@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-yellow-back@2x.png",
+      "target": "apps/browser/assets/ntp-mark-yellow-back@2x.png",
+      "note": "New Tab page mark, yellow profile colour, back layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-yellow-front.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-yellow-front.png",
+      "target": "apps/browser/assets/ntp-mark-yellow-front.png",
+      "note": "New Tab page mark, yellow profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-yellow-front@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-yellow-front@2x.png",
+      "target": "apps/browser/assets/ntp-mark-yellow-front@2x.png",
+      "note": "New Tab page mark, yellow profile colour, front layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-yellow-sun.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-yellow-sun.png",
+      "target": "apps/browser/assets/ntp-mark-yellow-sun.png",
+      "note": "New Tab page mark, yellow profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/ntp-mark-yellow-sun@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/ntp-mark-yellow-sun@2x.png",
+      "target": "apps/browser/assets/ntp-mark-yellow-sun@2x.png",
+      "note": "New Tab page mark, yellow profile colour, sun layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)"
+    },
+    {
+      "file": "icons/ntp/new-tab-mark.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/new-tab-mark.png",
+      "target": "apps/browser/assets/new-tab-mark.png",
+      "note": "New Tab favicon: one colour (drawn tinted), hills split, sun cut free. Optional, like the New Tab hills, but today's is a small copy of Ardia's logo"
+    },
+    {
+      "file": "icons/ntp/new-tab-mark@2x.png",
+      "action": "optional",
+      "layer": 1,
+      "current": "apps/browser/assets/new-tab-mark@2x.png",
+      "target": "apps/browser/assets/new-tab-mark@2x.png",
+      "note": "New Tab favicon @2x (optional, as above)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo_16.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo_16.png",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo_16.png",
+      "note": "Chromium product logo (flat tile, 92 %, no shadow)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo_24.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo_24.png",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo_24.png",
+      "note": "Chromium product logo (flat tile, 92 %, no shadow)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo_48.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo_48.png",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo_48.png",
+      "note": "Chromium product logo (flat tile, 92 %, no shadow)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo_64.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo_64.png",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo_64.png",
+      "note": "Chromium product logo (flat tile, 92 %, no shadow)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo_128.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo_128.png",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo_128.png",
+      "note": "Chromium product logo (flat tile, 92 %, no shadow)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo_256.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo_256.png",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo_256.png",
+      "note": "Chromium product logo (flat tile, 92 %, no shadow)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_100_percent/chromium/product_logo_16.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_16.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_16.png",
+      "note": "16 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_100_percent/chromium/product_logo_32.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_32.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_32.png",
+      "note": "32 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_100_percent/chromium/product_logo_name_22.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_name_22.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_name_22.png",
+      "note": "22 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_100_percent/chromium/product_logo_name_22_white.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_name_22_white.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_100_percent/chromium/product_logo_name_22_white.png",
+      "note": "22 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/components/resources/default_100_percent/chromium/favicon_product.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/components/resources/default_100_percent/chromium/favicon_product.png",
+      "target": "engine/chromium/src/components/resources/default_100_percent/chromium/favicon_product.png",
+      "note": "16 px"
+    },
+    {
+      "file": "icons/engine/components/resources/default_100_percent/chromium/product_logo.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/components/resources/default_100_percent/chromium/product_logo.png",
+      "target": "engine/chromium/src/components/resources/default_100_percent/chromium/product_logo.png",
+      "note": "32 px"
+    },
+    {
+      "file": "icons/engine/components/resources/default_100_percent/chromium/product_logo_white.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/components/resources/default_100_percent/chromium/product_logo_white.png",
+      "target": "engine/chromium/src/components/resources/default_100_percent/chromium/product_logo_white.png",
+      "note": "32 px"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_200_percent/chromium/product_logo_16.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_16.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_16.png",
+      "note": "32 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_200_percent/chromium/product_logo_32.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_32.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_32.png",
+      "note": "64 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_200_percent/chromium/product_logo_name_22.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_name_22.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_name_22.png",
+      "note": "44 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/default_200_percent/chromium/product_logo_name_22_white.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_name_22_white.png",
+      "target": "engine/chromium/src/chrome/app/theme/default_200_percent/chromium/product_logo_name_22_white.png",
+      "note": "44 px (the \"name\" and \"white\" variants are the tile, as today)"
+    },
+    {
+      "file": "icons/engine/components/resources/default_200_percent/chromium/favicon_product.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/components/resources/default_200_percent/chromium/favicon_product.png",
+      "target": "engine/chromium/src/components/resources/default_200_percent/chromium/favicon_product.png",
+      "note": "32 px"
+    },
+    {
+      "file": "icons/engine/components/resources/default_200_percent/chromium/product_logo.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/components/resources/default_200_percent/chromium/product_logo.png",
+      "target": "engine/chromium/src/components/resources/default_200_percent/chromium/product_logo.png",
+      "note": "64 px"
+    },
+    {
+      "file": "icons/engine/components/resources/default_200_percent/chromium/product_logo_white.png",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/components/resources/default_200_percent/chromium/product_logo_white.png",
+      "target": "engine/chromium/src/components/resources/default_200_percent/chromium/product_logo_white.png",
+      "note": "64 px"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo.svg",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo.svg",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo.svg",
+      "note": "real vector (today's is a PNG inside an SVG)"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/product_logo_animation.svg",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/product_logo_animation.svg",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/product_logo_animation.svg",
+      "note": "same as product_logo.svg, as today"
+    },
+    {
+      "file": "icons/engine/chrome/app/theme/chromium/mac/app.icns",
+      "action": "replace",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/mac/app.icns",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/mac/app.icns",
+      "note": "the framework helpers' icon (notifications), 128 pt at most, PNG entries"
+    },
+    {
+      "file": null,
+      "action": "mac-step",
+      "layer": 2,
+      "current": "engine/chromium/src/chrome/app/theme/chromium/mac/Assets.car",
+      "target": "engine/chromium/src/chrome/app/theme/chromium/mac/Assets.car",
+      "note": "needs Apple's actool on a Mac: `actool --compile <dir> --platform macosx --minimum-deployment-target 14.0 --app-icon AppIcon --output-partial-info-plist /tmp/p.plist icons/macos/AppIcon.appiconset/..` (or the brand pipeline's existing actool step)"
+    },
+    {
+      "file": "icons/windows/Nilla.ico",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/browser/windows/Ardia/Ardia.ico",
+      "target": "apps/browser/windows/Nilla/Nilla.ico",
+      "note": "10 sizes as today. The Windows engine copies the same file over its chrome/app/theme/chromium/win/chromium.ico through scripts/windows/engine/ardia_resources_win.txt; that mapping is Layer 2"
+    },
+    {
+      "file": "icons/linux/hicolor/16x16/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/16x16/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/22x22/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/22x22/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/24x24/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/24x24/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/32x32/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/32x32/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/48x48/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/48x48/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/64x64/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/64x64/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/128x128/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/128x128/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/256x256/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/256x256/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/512x512/apps/nilla.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/512x512/apps/nilla.png",
+      "note": "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop"
+    },
+    {
+      "file": "icons/linux/hicolor/scalable/apps/nilla.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "scripts/linux/icons/hicolor/scalable/apps/nilla.svg",
+      "note": "new: scalable app icon; also the AppImage's top-level icon"
+    },
+    {
+      "file": "icons/site/favicon.ico",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/web/favicon.ico",
+      "note": "16, 32, 48 px; the site (apps/site) is deleted under D4; kept as a brand asset for a future site"
+    },
+    {
+      "file": "icons/site/favicon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/web/favicon.png",
+      "note": "64 px; the site (apps/site) is deleted under D4; kept as a brand asset for a future site"
+    },
+    {
+      "file": "icons/site/apple-touch-icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/web/apple-touch-icon.png",
+      "note": "180 px full square (iOS rounds it); the site (apps/site) is deleted under D4; kept as a brand asset for a future site"
+    },
+    {
+      "file": "icons/site/app-icon.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/app-icon-256.png",
+      "note": "README header image: README.md shows apps/site/src/assets/app-icon.png today, and apps/site is deleted under D4, so point README.md here"
+    },
+    {
+      "file": "icons/site/og.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/web/og.svg",
+      "note": "share-image source, placeholder lettering; the site (apps/site) is deleted under D4; kept as a brand asset for a future site"
+    },
+    {
+      "file": "icons/site/og.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/web/og.png",
+      "note": "1200×630; the site (apps/site) is deleted under D4; kept as a brand asset for a future site"
+    },
+    {
+      "file": "icons/phone/ios/OpenInNilla.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset/OpenInArdia.png",
+      "target": "apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset/OpenInNilla.png",
+      "note": "share extension, 1024 full square (iOS rounds it)"
+    },
+    {
+      "file": "icons/phone/ios/Action-AppIcon-Contents.json",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "target": "apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset/Contents.json",
+      "note": "points at the renamed file"
+    },
+    {
+      "file": "icons/phone/AppIconPreview.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/ios/App/Assets.xcassets/AppIconPreview.imageset/AppIconPreview.png",
+      "target": "apps/phone/ios/App/Assets.xcassets/AppIconPreview.imageset/AppIconPreview.png",
+      "note": "360 px"
+    },
+    {
+      "file": "icons/phone/appIconPreview.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/assets/appIconPreview.png",
+      "target": "apps/phone/assets/appIconPreview.png",
+      "note": "360 px"
+    },
+    {
+      "file": "icons/phone/android/drawable/ic_launcher_foreground.xml",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/android/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "target": "apps/phone/android/app/src/main/res/drawable/ic_launcher_foreground.xml",
+      "note": "vector; hills bleed to the 108 dp edge"
+    },
+    {
+      "file": "icons/phone/android/drawable/ic_launcher_monochrome.xml",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/android/app/src/main/res/drawable/ic_launcher_monochrome.xml",
+      "target": "apps/phone/android/app/src/main/res/drawable/ic_launcher_monochrome.xml",
+      "note": "themed icon"
+    },
+    {
+      "file": "icons/phone/android/drawable/ic_launcher_background.xml",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "apps/phone/android/app/src/main/res/drawable/ic_launcher_background.xml",
+      "note": "new: the sky as a gradient (replaces the solid colour background)"
+    },
+    {
+      "file": "icons/phone/android/mipmap-anydpi-v26/ic_launcher.xml",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "target": "apps/phone/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+      "note": ""
+    },
+    {
+      "file": "icons/phone/android/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "action": "replace",
+      "layer": 1,
+      "current": "apps/phone/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "target": "apps/phone/android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+      "note": ""
+    },
+    {
+      "file": null,
+      "action": "edit",
+      "layer": 1,
+      "current": "apps/phone/android/app/src/main/res/values/colors.xml",
+      "target": "apps/phone/android/app/src/main/res/values/colors.xml",
+      "note": "set the icon background colour (today `ardia_icon_background`, #FFF9F5E3) to #FFE4ECE6; under the full rename the resource becomes `nilla_icon_background`"
+    },
+    {
+      "file": "icons/phone/android-preview.svg",
+      "action": "preview",
+      "layer": 1,
+      "current": null,
+      "target": null,
+      "note": "the adaptive icon under a circle mask; not shipped"
+    },
+    {
+      "file": "icons/extras/raycast-icon.png",
+      "action": "replace",
+      "layer": 1,
+      "current": "extras/raycast-ardia/assets/icon.png",
+      "target": "extras/raycast-nilla/assets/icon.png",
+      "note": "Raycast extension icon, 512 px"
+    },
+    {
+      "file": "wordmark/nilla-wordmark.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark.svg",
+      "note": "icon + lowercase nilla; ink follows prefers-color-scheme"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-on-light.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-on-light.svg",
+      "note": "lowercase, fixed heather ink #2B3550"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-on-dark.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-on-dark.svg",
+      "note": "lowercase, fixed light ink #EEF0E2"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-title.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-title.svg",
+      "note": "title case, ink follows prefers-color-scheme"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-title-on-light.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-title-on-light.svg",
+      "note": "title case, fixed heather ink"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-title-on-dark.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-title-on-dark.svg",
+      "note": "title case, fixed light ink"
+    },
+    {
+      "file": "wordmark/nilla-lettering.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-lettering.svg",
+      "note": "lowercase lettering only"
+    },
+    {
+      "file": "wordmark/nilla-lettering-title.svg",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-lettering-title.svg",
+      "note": "title-case lettering only"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-on-light.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-on-light.png",
+      "note": "raster, 1200 px wide"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-on-dark.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-on-dark.png",
+      "note": "raster, 1200 px wide"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-title-on-light.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-title-on-light.png",
+      "note": "raster, 1200 px wide"
+    },
+    {
+      "file": "wordmark/nilla-wordmark-title-on-dark.png",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/wordmark/nilla-wordmark-title-on-dark.png",
+      "note": "raster, 1200 px wide"
+    },
+    {
+      "file": "tools/build.mjs",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/build.mjs",
+      "note": "the brand pipeline: `node docs/brand/nilla/build.mjs --out <dir>` regenerates every asset (renders with the repo's @resvg/resvg-js). Apply the repo's no-comments rule; the tools have none"
+    },
+    {
+      "file": "tools/glyphs.mjs",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/glyphs.mjs",
+      "note": "the brand pipeline: `node docs/brand/nilla/build.mjs --out <dir>` regenerates every asset (renders with the repo's @resvg/resvg-js). Apply the repo's no-comments rule; the tools have none"
+    },
+    {
+      "file": "tools/shape.mjs",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/shape.mjs",
+      "note": "the brand pipeline: `node docs/brand/nilla/build.mjs --out <dir>` regenerates every asset (renders with the repo's @resvg/resvg-js). Apply the repo's no-comments rule; the tools have none"
+    },
+    {
+      "file": "tools/palettes.json",
+      "action": "add",
+      "layer": 1,
+      "current": null,
+      "target": "docs/brand/nilla/palettes.json",
+      "note": "the brand pipeline: `node docs/brand/nilla/build.mjs --out <dir>` regenerates every asset (renders with the repo's @resvg/resvg-js). Apply the repo's no-comments rule; the tools have none"
+    },
+    {
+      "file": null,
+      "action": "remove",
+      "layer": 1,
+      "current": "docs/brand/ardia",
+      "target": null,
+      "note": "the old painted-logo pipeline (build.py, hsv_np.py, source paintings): replaced by docs/brand/nilla"
+    }
+  ]
+}
