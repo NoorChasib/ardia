@@ -96,13 +96,15 @@ export function tabSavedState(id: string): string | null {
   return privateStates.get(id) ?? (data().privates.some((t) => t.id === id) ? null : readTabState(tabDatabase(), id));
 }
 
-export function saveTabState(id: string, saved: string | null) {
+export function saveTabState(id: string, saved: string | null): boolean {
   if (data().privates.some((t) => t.id === id)) {
     if (saved) privateStates.set(id, saved);
     else privateStates.delete(id);
-    return;
+    return false;
   }
-  if (data().open.some((t) => t.id === id)) writeTabState(tabDatabase(), id, saved);
+  if (!data().open.some((t) => t.id === id)) return false;
+  writeTabState(tabDatabase(), id, saved);
+  return true;
 }
 
 export function pruneExpiredArchive() {

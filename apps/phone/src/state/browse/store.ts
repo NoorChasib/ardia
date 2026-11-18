@@ -3,7 +3,6 @@ import { history } from "../history/store";
 import { HISTORY_RETENTION_MS } from "../history/historySummary";
 import {
   clearTone,
-  livePageIds,
   listenToPages,
   pageNavigation,
   settled,
@@ -16,10 +15,10 @@ import {
 } from "../pages/store";
 import type { VisitKind } from "../../platform/pages";
 import { showOnboarding, useOnboarding } from "../onboarding/store";
-import { pageUi } from "../page/store";
-import { settingsNav } from "../settings/nav";
+import { pageUi, usePageUi } from "../page/store";
+import { settingsNav, useSettingsNav } from "../settings/nav";
 import { refreshDefaultBrowser } from "../settings/defaultBrowser";
-import { forgetPosition, saveTabPosition, watchFrontScroll } from "./positions";
+import { followFrontPage, forgetPosition, notePageNavigated, saveChangedPages, saveTabPosition, watchFrontScroll } from "./positions";
 import { noteLocalChange, showSpace } from "../sync/store";
 import { spaceToShow, tabsInSpace } from "../tabs/spaces";
 import { currentPreferences, loadPreferences } from "../settings/store";
@@ -87,6 +86,7 @@ export function startBrowser(beforeOpening: () => void = () => undefined) {
   archiveDueTabs();
   archiveTimer = setInterval(archiveDueTabs, AUTO_ARCHIVE_CHECK_MS);
   listenToPages(pageEvent);
+  for (const subscribe of [useBrowse.subscribe, useTabs.subscribe, useSearch.subscribe, usePageUi.subscribe, useSettingsNav.subscribe, useOnboarding.subscribe]) subscribe(followFrontPage);
   watchFrontScroll(frontPageId);
   if (!currentPreferences().hasFinishedOnboarding) showOnboarding();
   else if (currentPreferences().autoOpensKeyboard) presentSearch("home", "", useTabs.getState().incognito, null, "atRest");
@@ -118,6 +118,7 @@ const AUTO_ARCHIVE_CHECK_MS = 15 * 60_000;
 
 export function appBecameActive() {
   appActive = true;
+  followFrontPage();
   if (pruneExpiredArchive() > 0) loadArchive();
   if (archiveTimer) clearInterval(archiveTimer);
   archiveTimer = setInterval(archiveDueTabs, AUTO_ARCHIVE_CHECK_MS);
@@ -129,11 +130,12 @@ export function appBecameActive() {
 
 export function appWillResignActive() {
   appActive = false;
+  followFrontPage();
   if (archiveTimer) clearInterval(archiveTimer);
   archiveTimer = null;
   const selected = currentTabs().selectedId;
   if (selected) selectTabById(selected);
-  void savePageStates();
+  void saveChangedPages();
 }
 
 const show = (surface: Surface) => useBrowse.setState({ surface });
@@ -455,7 +457,10 @@ function pageVisited(id: string, url: string, reported: string, kind: VisitKind)
   const tab = findTab(currentTabs(), id);
   if (!tab) return;
   const title = pageNavigation(id)?.failure ? "" : reported;
-  if (kind !== "restored") saveFrontTabSoon(id);
+  if (kind !== "restored") {
+    notePageNavigated(id);
+    saveFrontTabSoon(id);
+  }
   if (isSyncableUrl(url)) updateTabById(id, { url, title: title.trim() ? title : undefined });
   const transition = transitions[kind];
   if (!transition || tab.isPrivate) return;
@@ -581,15 +586,6 @@ export function pageStateChanged(id: string, state: PageState) {
 
 export function pageToneChanged(id: string, tone: PageTone) {
   if (!pageNavigation(id)?.failure) storeTone(id, tone);
-}
-
-export async function savePageStates() {
-  const live = new Set(await livePageIds());
-  const data = currentTabs();
-  for (const tab of [...data.open, ...data.privates]) {
-    if (!live.has(tab.id)) continue;
-    await saveTabPosition(tab.id);
-  }
 }
 
 let hidesFromRecents = false;

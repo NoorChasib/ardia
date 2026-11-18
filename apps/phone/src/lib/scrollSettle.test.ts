@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { scrollSaveDecision, type ScrollWatch } from "./scrollSettle.ts";
+import { scrollMovedSinceSave, scrollSaveDecision, type ScrollWatch } from "./scrollSettle.ts";
 
 const run = (start: ScrollWatch, ys: number[]) => {
   let watch = start;
@@ -18,4 +18,11 @@ test("a scroll is saved once it has settled, and only when it moved since the la
   assert.deepEqual(run({ lastSeen: 0, lastSaved: 0 }, [300, 900, 900, 900]), [900]);
   assert.deepEqual(run({ lastSeen: 0, lastSaved: 0 }, [300, 300, 1200, 1200]), [300, 1200]);
   assert.deepEqual(run({ lastSeen: 500, lastSaved: 500 }, [501, 500]), []);
+});
+
+test("a page counts as scrolled since its save when it has no save yet or moved past the threshold", () => {
+  assert.equal(scrollMovedSinceSave(undefined, 0), true);
+  assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: null }, 40), true);
+  assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: 40 }, 41), false);
+  assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: 40 }, 400), true);
 });
