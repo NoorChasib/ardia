@@ -682,7 +682,7 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
   `linux-host`; a native tab paints and can't see the bridge; renderers run under seccomp; the blocker loads; a restart restores the tab; `install.sh --destdir`
   stages correctly; and, for a release package, the app version, the bundled CLI install, `ardia` control, and a
   userscript installed with `ardia scripts install` running on the fixture page ([linux-ci.md](linux-ci.md) › Smoke gate).
-- **Acceptance suite.** Nine headless scenarios for core features; see [linux-acceptance.md](linux-acceptance.md).
+- **Acceptance suite.** Eleven headless scenarios for core features; see [linux-acceptance.md](linux-acceptance.md).
 - **Shared changes.** A change to shared code also needs the Mac checks.
 
 ### Updates and kill switches
