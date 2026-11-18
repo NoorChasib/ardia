@@ -37,17 +37,20 @@ Ardia has to be running. The first time, macOS asks whether Raycast may control 
 
 ## Install (development)
 
-Needs [Raycast](https://raycast.com) and Node 22 or newer.
+Needs [Raycast](https://raycast.com), [Bun](https://bun.com) 1.4.4 (the version `package.json` pins)
+and Node 22 or newer, which Raycast's `ray` CLI runs on.
 
 ```bash
 cd extras/raycast-ardia
-npm install
-npm run dev     # ray develop: adds the extension to Raycast and rebuilds on save
+bun install --frozen-lockfile
+bun run dev     # ray develop: adds the extension to Raycast and rebuilds on save
 ```
 
-Stop `npm run dev` when you're done: the extension stays in Raycast. `npm run build` checks that it
-compiles, `npm run lint` runs Raycast's linter, and `npm test` checks the AppleScript it sends
-and how it reads the answer.
+Stop `bun run dev` when you're done: the extension stays in Raycast. `bun run build` checks that it
+compiles, `bun run check` type checks it, `bun run lint` runs Raycast's linter, and `bun run test` checks
+the AppleScript it sends and how it reads the answer. The extension is its own Bun project with its own
+`bun.lock`, outside the repository's workspace: `ray` and the TypeScript 5 it builds with are Raycast's
+tooling, so they stay at the versions Raycast supports rather than the repository's TypeScript 7.
 
 ## How it works
 
