@@ -12,6 +12,9 @@ $ardia = [System.IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA "Ardia")).Tr
 if ($data -ieq $ardia -or $data.StartsWith("$ardia\", [System.StringComparison]::OrdinalIgnoreCase)) {
   throw "nilla-dev-run: $data is Ardia's data folder; Nilla never uses it"
 }
+foreach ($argument in $Arguments) {
+  if ($argument -match '^(--?|/)user-data-dir(=|$)') { throw "nilla-dev-run: $argument isn't allowed; the profile always comes from -DataDir" }
+}
 New-Item -ItemType Directory -Force -Path $data | Out-Null
 $env:ARDIA_DATA_DIR = $data
 Write-Host "nilla-dev-run: starting $App with ARDIA_DATA_DIR=$data"

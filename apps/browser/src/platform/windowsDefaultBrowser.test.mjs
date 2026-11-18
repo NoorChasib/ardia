@@ -32,6 +32,16 @@ test("setting the default browser and launch at login report unsupported, so the
   assert.match(method("launchAtLoginStatus"), /promise\.Resolve\("notFound"\);/);
 });
 
+test("the default-browser status never reads Ardia's ProgID or any registry key", () => {
+  assert.doesNotMatch(native, /ArdiaHTM|RegGetValueW|RegSetKeyValueW|RegDeleteKeyValueW|AssocQueryStringW|UrlAssociations|CurrentVersion\\\\Run/);
+  const method = native.slice(native.indexOf("REACT_METHOD(isDefaultBrowser)"), native.indexOf("REACT_METHOD(setAsDefaultBrowser)"));
+  assert.match(method, /promise\.Resolve\(false\);/);
+  const state = native.slice(native.indexOf("REACT_SYNC_METHOD(defaultBrowserState)"), native.indexOf("REACT_METHOD(launchAtLoginStatus)"));
+  assert.match(state, /state\["progId"\] = JSValue\{std::string\{\}\};/);
+  assert.match(state, /state\["registeredHere"\] = JSValue\{false\};/);
+  assert.match(state, /state\["isDefault"\] = JSValue\{false\};/);
+});
+
 test("the app refuses to start without ARDIA_DATA_DIR, before it writes anything", () => {
   for (const entry of ["ArdiaAppRun(void) {", "ArdiaAppStart(const ArdiaEngineApi *engine) {"]) {
     assert.ok(app.includes(`${entry}\n  if (!Ardia::Paths::HasCustomDataDirectory()) return RefuseWithoutDataDirectory();\n`), entry);
@@ -48,6 +58,7 @@ test("the app's windows carry Nilla's AppUserModelID and its data folder is %LOC
   const run = read("scripts/windows/nilla-dev-run.ps1");
   assert.match(run, /\$env:ARDIA_DATA_DIR = \$data/);
   assert.match(run, /Join-Path \$env:LOCALAPPDATA "Nilla"/);
+  assert.match(run, /'\^\(--\?\|\/\)user-data-dir\(=\|\$\)'/);
 });
 
 test("a link Windows hands over through the ProgID's command reaches the app as one address", () => {
