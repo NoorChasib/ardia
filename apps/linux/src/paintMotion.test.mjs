@@ -25,6 +25,13 @@ function fakeElement(name, log) {
         currentTime: 0,
         playState: "running",
         finished,
+        timing: { ...options },
+        effect: {
+          updateTiming(change) {
+            animation.timing = { ...animation.timing, ...change };
+            log.push(`${name}.updateTiming`);
+          },
+        },
         cancel() {
           if (this.playState === "idle") return;
           this.playState = "idle";
@@ -166,6 +173,46 @@ test("reduced motion grows once and keeps the full bar", () => {
   last(fill).currentTime = 2000;
   motion.leave(() => {});
   assert.deepEqual([...timers.values()].map((timer) => timer.ms), [0]);
+});
+
+test("Reduce Motion turned on mid-load ends the sweep after the cycle it is in and holds, with no timer or frame work", () => {
+  const { log, timers, fill, motion } = stage();
+  motion.show(false);
+  const sweep = last(fill);
+  sweep.currentTime = 4 * 990 + 600;
+  motion.endAfterThisCycle();
+  assert.deepEqual(sweep.timing, { duration: 990, iterations: 5, fill: "forwards" });
+  assert.equal(fill.animations.length, 1);
+  assert.equal(sweep.playState, "running");
+  assert.deepEqual(log, ["plate.animate", "fill.animate", "fill.updateTiming"]);
+  assert.equal(timers.size, 0);
+});
+
+test("a load that ends after the held sweep shrinks at once from the full bar", () => {
+  const { timers, fill, motion, fire } = stage();
+  motion.show(false);
+  const sweep = last(fill);
+  sweep.currentTime = 990 + 100;
+  motion.endAfterThisCycle();
+  sweep.finish();
+  sweep.currentTime = 9000;
+  motion.leave(() => {});
+  assert.deepEqual([...timers.values()].map((timer) => timer.ms), [0]);
+  fire();
+  assert.equal(sweep.currentTime, 330);
+});
+
+test("Reduce Motion leaves a reduced grow and a leaving pill alone", () => {
+  const reducedFromStart = stage();
+  reducedFromStart.motion.show(true);
+  reducedFromStart.motion.endAfterThisCycle();
+  assert.ok(!reducedFromStart.log.includes("fill.updateTiming"));
+  const leaving = stage();
+  leaving.motion.show(false);
+  leaving.motion.leave(() => {});
+  leaving.fire();
+  leaving.motion.endAfterThisCycle();
+  assert.ok(!leaving.log.includes("fill.updateTiming"));
 });
 
 test("stop cancels every animation and the pending leave", () => {

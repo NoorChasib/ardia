@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View } from "react-native";
+import { AccessibilityInfo, View } from "react-native";
 import { useLastingLoad } from "../../browser/src/state/tabs/lastingLoad";
 import { notePageOverlay } from "../../browser/src/state/telemetry/usage";
 import { capsule, curve, hairline, reduceMotion, useTheme } from "../../browser/src/components/ui";
@@ -50,7 +50,11 @@ export function LoadingPill({ tabId }: { tabId: string }) {
       notePageOverlay("loadingPill");
       const long = setTimeout(() => notePageOverlay("loadingPillLong"), LOADING_PILL.longShowMs);
       motionOf.show(!!reduceMotion());
-      return () => clearTimeout(long);
+      const reduced = AccessibilityInfo.addEventListener("reduceMotionChanged", (on) => on && motionOf.endAfterThisCycle());
+      return () => {
+        clearTimeout(long);
+        reduced.remove();
+      };
     }
     motionOf.leave(() => {
       pill.current = null;

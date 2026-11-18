@@ -50,7 +50,7 @@ export type PillDeps = {
 export function createPillMotion(deps: PillDeps, spec: PillMotionSpec) {
   const cycle = sweepCycle(spec);
   let sweep: Animation | null = null;
-  let looping = false;
+  let cyclic = false;
   let fade: Animation | null = null;
   let leaving: unknown = null;
 
@@ -66,9 +66,9 @@ export function createPillMotion(deps: PillDeps, spec: PillMotionSpec) {
     leaving = null;
   };
   const growing = () => {
-    if (!sweep) return 0;
+    if (!sweep || sweep.playState === "finished") return 0;
     const elapsed = Number(sweep.currentTime ?? 0);
-    return spec.sweep.duration - (looping ? elapsed % cycle : elapsed);
+    return spec.sweep.duration - (cyclic ? elapsed % cycle : elapsed);
   };
 
   return {
@@ -76,7 +76,7 @@ export function createPillMotion(deps: PillDeps, spec: PillMotionSpec) {
       cancelLeave();
       fadeTo(1, 1, spec.show);
       sweep?.cancel();
-      looping = !reduced;
+      cyclic = !reduced;
       sweep = reduced
         ? deps.fill.animate(growKeyframes(spec), { ...spec.sweep, fill: "forwards" })
         : deps.fill.animate(sweepKeyframes(spec), { duration: cycle, iterations: Infinity });
@@ -92,6 +92,11 @@ export function createPillMotion(deps: PillDeps, spec: PillMotionSpec) {
         const shrink = fadeTo(0, spec.leaveScale, spec.hide);
         shrink.finished.then(() => fade === shrink && gone(), () => {});
       }, Math.max(0, growing()));
+    },
+    endAfterThisCycle() {
+      if (!sweep || !cyclic || sweep.playState !== "running") return;
+      const cyclesBegun = Math.floor(Number(sweep.currentTime ?? 0) / cycle) + 1;
+      sweep.effect?.updateTiming({ iterations: cyclesBegun, fill: "forwards" });
     },
     cancelLeave,
     stop() {
