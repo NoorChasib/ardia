@@ -24,8 +24,9 @@ export function useSelectedProfile() {
 export function useLook(presets: readonly PresetSpec[], fallback: string): ProfileLook {
   const choice = usePreferences((p) => p.colorChoice);
   const enabled = useSyncEnabled();
-  const profile = useSelectedProfile();
-  return useMemo(() => lookForApp(choice, enabled, profile, presets, fallback), [choice, enabled, profile, presets, fallback]);
+  const color = useSync((s) => shownProfile(s.view, s.status)?.color ?? null);
+  const theme = useSync((s) => shownProfile(s.view, s.status)?.theme ?? null);
+  return useMemo(() => lookForApp(choice, enabled, { color, theme }, presets, fallback), [choice, enabled, color, theme, presets, fallback]);
 }
 
 export function useSendTargets(tabId: string) {

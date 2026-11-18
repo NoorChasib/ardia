@@ -171,3 +171,30 @@ test("a pin sent from here leaves the list once the Mac's bookmarks show it, als
   emitView(view());
   expect(useSync.getState().pinsOnTheirWay).toBe(kept);
 });
+
+test("a view that changes only the Mac's tabs renders no deck card: the theme keeps its look", () => {
+  const root = renderSurface(<TabDeck />);
+  renders = [];
+  emitView(view({ macTabs: 5 }));
+  expect(useSync.getState().view.profiles[0]!.deviceTabs[0]!.tabs).toHaveLength(5);
+  expect(count("DeckCard")).toBe(0);
+  unmount(root);
+});
+
+test("a view that changes the shown space's color or theme still repaints the deck in the new look", () => {
+  const root = renderSurface(<TabDeck />);
+  const edges = () => JSON.stringify(root.root.findAll((node) => node.props.testID === "deckCard" && typeof node.type === "string").map((card) => card.props.style));
+  const themed = edges();
+  renders = [];
+  const plain = view();
+  plain.profiles[0]!.theme = null;
+  emitView(plain);
+  expect(count("DeckCard")).toBeGreaterThan(0);
+  const blue = edges();
+  expect(blue).not.toBe(themed);
+  renders = [];
+  emitView({ ...plain, profiles: [{ ...plain.profiles[0]!, color: "orange" }, plain.profiles[1]!] });
+  expect(count("DeckCard")).toBeGreaterThan(0);
+  expect(edges()).not.toBe(blue);
+  unmount(root);
+});
