@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { AUTO_ARCHIVE_INTERVALS, coverIsCapturable, offersArchiveCard, isAutoArchiveDue, pageStatePatch, POSITION_STEP, tabMatchesQuery, titleAfterFailedLoad } from "./tabModels.ts";
+import { AUTO_ARCHIVE_INTERVALS, coverIsCapturable, offersArchiveCard, isAutoArchiveDue, pageStatePatch, POSITION_STEP, tabMatchesQuery, titleAfterFailedLoad, type BrowserTab } from "./tabModels.ts";
 import {
   isPrivateOnScreen,
   archiveTabs,
@@ -274,4 +274,56 @@ test("Search Tabs matches a tab's title or address as main's TabText.matches doe
   assert.equal(tabMatchesQuery(tab, "incognito"), false);
   assert.equal(tabMatchesQuery({ ...tab, isPrivate: true }, "incognito"), true);
   assert.equal(tabMatchesQuery(tab, "   "), true);
+});
+
+function bigTabs(open: number, privates: number, archived: number): TabsData {
+  const tab = (id: string, i: number, extra: Partial<BrowserTab> = {}): BrowserTab => ({ id, url: `https://s${i}.example/`, title: `S ${i}`, created: i, lastActive: i, archivedAt: null, position: (i + 1) * POSITION_STEP, profileSyncId: null, faviconUrl: null, themeColorHex: null, snapshotFileName: null, isPrivate: false, ...extra }) as BrowserTab;
+  const data = launchTabs(Array.from({ length: open }, (_, i) => tab(`o${i}`, i)), archived);
+  const loaded = withArchive(data, Array.from({ length: archived }, (_, i) => tab(`a${i}`, i, { archivedAt: 10_000 - i })));
+  return { ...loaded, privates: Array.from({ length: privates }, (_, i) => tab(`p${i}`, i, { isPrivate: true })) };
+}
+
+const swappedEverywhere = (data: TabsData, id: string, next: BrowserTab): TabsData => {
+  const swap = (list: BrowserTab[]) => list.map((t) => (t.id === id ? next : t));
+  return { ...data, open: swap(data.open), privates: swap(data.privates), archive: data.archive ? swap(data.archive) : null };
+};
+
+test("updating a tab replaces only the list that holds it: an open tab's title keeps the private list and the 2000 archived tabs as they were", () => {
+  const data = bigTabs(1000, 3, 2000);
+  for (const [id, list] of [["o500", "open"], ["p1", "privates"], ["a1999", "archive"]] as const) {
+    const change = updateTab(data, id, { title: "x" });
+    const updated = { ...[...data.open, ...data.privates, ...data.archive!].find((t) => t.id === id)!, title: "x" };
+    assert.deepEqual(change.data, swappedEverywhere(data, id, updated));
+    for (const other of ["open", "privates", "archive"] as const) {
+      if (other === list) assert.notEqual(change.data[other], data[other]);
+      else assert.equal(change.data[other], data[other], `${id} re-created ${other}`);
+    }
+  }
+});
+
+function countSorts<T>(work: () => T): { result: T; sorts: number } {
+  const original = Array.prototype.sort;
+  let sorts = 0;
+  Array.prototype.sort = function (this: unknown[], compare?: (a: unknown, b: unknown) => number) {
+    sorts += 1;
+    return original.call(this, compare);
+  } as typeof original;
+  try {
+    return { result: work(), sorts };
+  } finally {
+    Array.prototype.sort = original;
+  }
+}
+
+const byNewest = (list: readonly BrowserTab[]) => [...list].sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0));
+
+test("closing a tab with the archive loaded puts it first in the archive without sorting the 2000 already there, and still sorts when the clock went back", () => {
+  const data = bigTabs(10, 0, 2000);
+  const forward = countSorts(() => archiveTabs(data, ["o3", "o7"], true, 20_000));
+  assert.equal(forward.sorts, 0);
+  assert.deepEqual(forward.result.data.archive, byNewest([...forward.result.put.filter((t) => t.archivedAt !== null), ...data.archive!]));
+  assert.deepEqual(forward.result.data.archive!.slice(0, 2).map((t) => t.id), ["o3", "o7"]);
+  const past = archiveTabs(data, ["o3"], true, 9_000);
+  assert.deepEqual(past.data.archive, byNewest([...past.put.filter((t) => t.archivedAt !== null), ...data.archive!]));
+  assert.equal(past.data.archive![0]!.id, "a0");
 });
