@@ -381,7 +381,7 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: scripts/windows/fetch-engine.ps1 -Cpu $env:SLUG -Out "${{ runner.temp }}/engine"
+        run: scripts/windows/fetch-engine.ps1 -Cpu $env:SLUG -Out "${{ runner.temp }}/engine" -Repository "${{ vars.WINDOWS_ENGINE_REPO || 'ardia-browser/ardia' }}"
       - name: Assemble with the engine
         id: assemble
         if: ${{ !cancelled() && steps.engine.outcome == 'success' }}

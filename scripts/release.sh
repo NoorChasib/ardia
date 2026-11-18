@@ -122,7 +122,7 @@ if [ "$phase" != build ]; then
     || die "packages/ardiacore/prebuilt-engines.tsv lists no published engine for this engine key (${engine_tree:0:12}): publish it with scripts/publish-engine.sh, commit the table line, then release"
   case "$engine_release" in engine-*) engine_tag="$engine_release" ;; *) engine_tag="v$engine_release" ;; esac
   [ -n "$engine_release" ] \
-    && engine_source="$REPO_URL/releases/download/$engine_tag/ArdiaCore-${engine_tree:0:12}-source.tar.xz"
+    && engine_source="https://github.com/$ENGINE_REPO/releases/download/$engine_tag/ArdiaCore-${engine_tree:0:12}-source.tar.xz"
 
   identity_name="Developer ID Application"
   identity="$(security find-identity -v -p codesigning | awk -v n="$identity_name" 'index($0, n) { print $2; exit }')"

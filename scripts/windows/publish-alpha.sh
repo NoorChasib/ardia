@@ -25,7 +25,8 @@ set -euo pipefail
 [ -n "${NILLA_RELEASES_ENABLED:-}" ] || { echo "Releases aren't set up for Nilla yet" >&2; exit 1; }
 
 root="$(cd "$(dirname "$0")/../.." && pwd -P)"
-repo="ardia-browser/ardia"
+. "$root/scripts/lib/releases.sh"
+repo="$REPO"
 tag="windows-alpha"
 published="https://github.com/$repo/releases/download/$tag"
 die() { echo "error: $*" >&2; exit 1; }
