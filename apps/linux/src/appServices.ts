@@ -2,6 +2,7 @@ import type { CommandEvent } from "../../browser/src/platform/commands";
 import { onLinuxCommand } from "./shims/expo-modules-core";
 import { copyText } from "../../browser/src/platform/clipboard";
 import { isDefaultBrowser, setAsDefaultBrowser, systemInfo } from "../../browser/src/platform/app";
+import { appServices } from "../../browser/src/platform/launchConfig";
 import { openTaskManager } from "../../browser/src/platform/performance";
 import { confirm } from "../../browser/src/platform/dialogs";
 import { readDocument, removeDocument, saveDocument } from "../../browser/src/platform/documents";
@@ -197,7 +198,7 @@ export function runAppCommand(windowId: string, command: CommandEvent["command"]
       else unavailable(windowId, "The video tour");
       return true;
     case "releaseNotes":
-      if (systemInfo().releaseNotesURL) openReleaseNotesPage(windowId);
+      if (appServices().releaseNotesUrl) openReleaseNotesPage(windowId);
       else unavailable(windowId, "Release notes");
       return true;
     case "taskManager":

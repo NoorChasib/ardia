@@ -13,6 +13,7 @@ import { linuxCapabilities, unavailableCommands } from "./hostCapabilities";
 import { videoTourUrl } from "../../browser/src/state/onboarding/tour";
 import { showToast } from "../../browser/src/state/app/toasts";
 import { engineInfo, systemInfo } from "../../browser/src/platform/app";
+import { appServices } from "../../browser/src/platform/launchConfig";
 import { openUrls } from "../../browser/src/state/browser/actions";
 import { BASED_ON_ARDIA, LEGAL_NOTICE, sourceRepositoryUrl } from "../../browser/src/state/app/legalNotice";
 import "./linkShareSurface";
@@ -21,7 +22,7 @@ const hiddenCommands = () => {
   const hidden = unavailableCommands(linuxCapabilities());
   hidden.delete("emailPageLocation");
   if (!videoTourUrl()) hidden.add("videoTour");
-  if (!systemInfo().releaseNotesURL) hidden.add("releaseNotes");
+  if (!appServices().releaseNotesUrl) hidden.add("releaseNotes");
   return hidden;
 };
 
