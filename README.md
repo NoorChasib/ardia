@@ -1,125 +1,88 @@
 <p align="center">
-  <img src="apps/site/src/assets/app-icon.png" width="128" height="128" alt="Ardia's app icon">
-</p>
-
-<h1 align="center">Touch grass.</h1>
-
-<p align="center">
-  Arc’s sidebar and Dia’s polish on real Chromium.<br>
-  Free and open source. Ads and trackers stay out.
-</p>
-
-<h3 align="center">
-  <a href="https://github.com/mantrakp04/ardia/releases/download/v0.2.46/Ardia-0.2.46.dmg">Download Ardia 0.2.46 for Mac</a>
-</h3>
-
-<p align="center">
-  128 MB DMG · macOS 14 Sonoma or later · Apple Silicon · Notarized by Apple<br>
-  Like your paint wet? <a href="https://ardia.dev/nightly">The nightly</a> has every fix the day it’s made, smudges and all.<br>
-  Homebrew: <code>brew install ardia-browser/tap/ardia</code><br>
-  <a href="https://ardia.dev">ardia.dev</a> · <a href="https://ardia.dev/release-notes">What’s new</a> · <a href="https://github.com/mantrakp04/ardia/releases">All releases</a> · <a href="https://discord.gg/TdhuXrbcA6">Discord</a>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/nilla/wordmark/nilla-wordmark-on-dark.svg">
+    <img src="docs/brand/nilla/wordmark/nilla-wordmark-on-light.svg" width="320" alt="Nilla">
+  </picture>
 </p>
 
 <p align="center">
-  <img src="apps/site/src/assets/shots/window.webp" alt="The Ardia window in light mode: pinned tiles and tabs in the sidebar, and Wikipedia’s article on The Hay Wain open on the right.">
+  A Chromium browser with a sidebar for your tabs, for macOS, Linux and Windows.<br>
+  Free and open source, with no account.
 </p>
 
-## Lose the toolbar.
+> **Status: pre-release.** Nilla is a new, independent fork of [Ardia](https://github.com/ardia-browser/ardia). There
+> are no Nilla downloads yet. You can build it from source; the first release waits for Nilla's own engine builds
+> ("The engine" below).
 
-Move the address bar into the sidebar and the page runs all the way to the top of the window.
+## What it is
 
-<img src="apps/site/src/assets/shots/address-sidebar.webp" alt="Ardia with the address bar in the sidebar under the traffic lights and Wikipedia running to the top of the window.">
+Nilla is one browser UI, written in React Native and TypeScript, on Chromium 157 (Chrome's own framework) through a
+thin native layer, the engine. It has a vertical sidebar, split view, profiles, built-in uBlock Origin, import from
+other browsers and end-to-end encrypted sync through a folder you choose. Nothing in it needs an account or a server
+of ours.
 
-## Two pages, one window.
+Nilla sends nothing anywhere on its own. Telemetry, crash and feedback reports, update checks and remote kill switches
+are **off**: every service endpoint ships empty, and each has one setting to point it at a server later
+([docs/services.md](docs/services.md)).
 
-Drag a tab onto the page. Up to three panes, side by side or stacked.
-
-<img src="apps/site/src/assets/shots/split.webp" alt="Ardia in split view: MDN on the left, Wikipedia on the right, both in one window.">
-
-## Refuses to leave the picture.
-
-Switch tabs mid-video and it floats along in the corner. Go back to its tab and it slips back into the page.
-
-<img src="apps/site/src/assets/shots/pip.webp" alt="Ardia on Wikipedia’s article about Big Buck Bunny, while the film keeps playing in a small floating window at the bottom right.">
-
-## Your extensions come along.
-
-The Chrome Web Store just works, its button says Add to Ardia, and Sync takes them to your other Macs.
-
-<img src="apps/site/src/assets/shots/extensions.webp" alt="Dark Reader’s page on the Chrome Web Store, open in Ardia, with an Add to Ardia button.">
-
-## Ads and trackers stay out.
-
-The full uBlock Origin is built in, cookie banners included. Google’s pings are compiled out. Crash reports are
-opt-in and never carry your sites or searches.
-
-## Also in there
-
-- **Work stays at work.** Each profile keeps its own logins, history, extensions and colour. Swipe the sidebar to switch.
-- **Little Ardia.** ⌥⌘N opens a small window with one page and no sidebar.
-- **Groups on contact.** Drop a tab on a tab and they’re a group, named for you.
-- **Moves in for you.** Bookmarks, history, passwords and logins from Chrome, Safari, Firefox, Arc, Dia and five more. Arc’s spaces, pinned tabs and themes too.
-- **Paints like Arc.** Gradient themes per profile: up to three colours, some grain, some blur.
-- **Syncs through your iCloud.** End-to-end encrypted, in a folder in your own iCloud Drive. No server of ours in the middle.
-- **Command bar.** ⌘L finds tabs, history and bookmarks, does your sums, and knows doc.new and 16 friends.
-- **Tidies up.** ⌥⌘K sweeps the tabs you haven’t touched into Recently Cleaned.
-- **Clean links.** Copy a link and the tracking junk stays behind.
-- **Naps when you do.** Background tabs past your latest five freeze, and sleep after half an hour.
-- **Sits still.** Idles under half a percent of CPU with a tab open.
-- **Updates itself.** Quietly, then shows you what changed.
-
-## It’s actually Chromium.
-
-Not WebKit. Not Electron. Every window is Chrome’s own, so sites, extensions and DevTools behave like they do in Chrome.
-
-| Part | Details | Status |
+| Platform | App | Engine |
 | --- | --- | --- |
-| Engine | Chromium 157, on Chrome’s own framework. | ✓ Yes |
-| De-Googled | Google’s background services stripped out. | ✓ Yes |
-| H.264 and AAC | The codecs Chromium leaves out. | ✓ Yes |
-| DevTools | Docked, with device mode. Like Chrome. | ✓ Yes |
-| Sync | End-to-end encrypted, through your own iCloud Drive. | ✓ Yes |
-| Translate | On your Mac. Nothing leaves it. | ✓ macOS 26 |
-| Passkeys | Touch ID yes. iCloud Keychain waits on Apple. | ~ Partly |
-| Netflix and DRM | Streaming sites open in WebKit, where they play. Widevine in Chromium waits on Google. | ~ Partly |
-| Intel Macs | Apple Silicon only. | ✗ No |
-
-<h3 align="center">
-  <a href="https://github.com/mantrakp04/ardia/releases/download/v0.2.46/Ardia-0.2.46.dmg">Download Ardia 0.2.46</a>
-</h3>
-
-<p align="center">
-  It’s 128 MB and one drag into Applications.<br>
-  Not on a Mac? Watch › Custom › Releases up top and GitHub tells you when it is.
-</p>
-
----
-
-# Build it yourself
-
-A macOS browser that looks and feels like [Dia](https://diabrowser.com): Chrome's own framework from our
-patched Chromium with our layer on top (ArdiaCore), an Expo + React Native macOS shell, and Metal shaders
-reconstructed from Dia's own New Tab effects.
+| macOS 14+ (Apple Silicon) | `apps/browser` (React Native macOS) | Chromium's framework with our layer (`engine/ardiacore`) |
+| Linux x86-64 (Wayland or X11) | `apps/linux` (the shared UI, served by Chromium) | Chromium with `engine/ardiacore-linux` and the `engine/patches/chromium-linux-*` patches |
+| Windows 10/11 (x64, ARM64) | `apps/browser/windows` (React Native for Windows) | Chromium's `chrome.dll` (`scripts/windows/engine`) |
+| iPhone and Android | `apps/phone` (Expo) | The system WebView; sends tabs to the desktop app |
 
 ```
 apps/
-  browser/            Expo + react-native-macos app (UI in src/, Xcode project in macos/)
-  linux/              Linux desktop entry, window controls and native host integration; shares the browser UI
+  browser/            the shared UI (src/), the macOS app (macos/) and the Windows app (windows/)
+  linux/              the Linux desktop target: the shared UI with Linux adapters
+  phone/              the Expo app for iPhone and Android
+  cli/                the nilla-browser command
 packages/
-  ardiacore/             The engine: Chromium 157's framework with our layer (Chrome tabs hosted in our views), JS API in src/
-  shell/              Native menu bar + shortcuts → JS, windows, SF Symbols, native primitives
-  shaders/            Metal: New Tab effects + grained OKLab window backdrop
-  import/             Import from other browsers (bookmarks, history, passwords, Arc spaces)
-  core/               Pure TS: omnibox input → URL, suggestions, Dia-style breadcrumbs (tested)
+  ardiacore/          the engine's app side: Chrome tabs hosted in our views, JS API in src/
+  shell/              native menus, shortcuts, windows and views
+  shaders/            Metal: New Tab effects and the grained OKLab window backdrop
+  import/             import from other browsers (bookmarks, history, passwords, Arc spaces)
+  sync/               end-to-end encrypted sync through a shared folder
+  core/               pure TypeScript: omnibox input to URL, suggestions, breadcrumbs (tested)
+engine/               our patches to Chromium and our Chrome-side code
 ```
 
+## The engine
 
-## Run it
+Building Chromium takes hours, so the app builds download a prebuilt engine that matches your checkout's `engine/`
+folder and check its SHA-256 against a pinned table. Today those engines are **Ardia's**, fetched from the upstream
+project's releases (`ardia-browser/ardia`):
 
-Bun is the package manager and the entry point for every JavaScript task: installs, scripts, type checks and most
-tests. Install the version `package.json` pins (`"packageManager": "bun@1.4.4"`) and Node 24 (`.nvmrc`), which Metro,
-Vite, jest and the engine's own tests still run on (a tool's `#!/usr/bin/env node` bin keeps running on Node under
-`bun run`):
+| Platform | Pin | Fetch script |
+| --- | --- | --- |
+| macOS | `packages/ardiacore/prebuilt-engines.tsv` | `packages/ardiacore/scripts/fetch-engine.sh` |
+| Linux | `packages/ardiacore/prebuilt-engines-linux.tsv` | `scripts/linux/fetch-engine.sh` |
+| Windows | `scripts/windows/engine/prebuilt.json` | `scripts/windows/fetch-engine.ps1` |
+
+Changing anything under `engine/` (or the offline game it packs) changes the engine key, and no prebuilt matches. You
+then build the engine yourself: [docs/engine-build.md](docs/engine-build.md) (macOS), [docs/linux-port.md](docs/linux-port.md)
+› Building the engine, and [docs/engine-build-windows.md](docs/engine-build-windows.md). A first build takes about five
+hours. When your `engine/` is newer than every published engine, `fetch-engine.sh --nearest` builds against the newest
+one anyway.
+
+Nilla's own engines, with Nilla's name throughout, are the next milestone. Once they are published, the pins and
+fetch scripts point at this repository's releases.
+
+### Known limits
+
+- The newest published engine (`--nearest`) can be older than this checkout's `engine/`, so an app call to a newer
+  `ac_*` function can fail on it. That's a gap in the engine you fetched, not in the app.
+- Pages and text the engine draws itself (chrome://credits, chrome://settings, notifications, the Web Store's "Add to
+  Ardia" button, some error messages) still say Ardia, and the address bar shows `ardia://` for the app's own pages.
+- Names today's engines read keep their Ardia spelling until Nilla's engines exist: the `ARDIA_*` environment
+  variables (`ARDIA_DATA_DIR` included), the `--ardia-*` switches (`--ardia-ui-dir`), `ArdiaCore` and the `ac_*` calls.
+- So builds made this way are for development only. None is published or handed out.
+
+## Build and run
+
+Every platform needs Bun 1.4.4 (`package.json` pins it) and Node 24 (`.nvmrc`; Metro, Vite and jest still run on
+it):
 
 ```bash
 curl -fsSL https://bun.com/install | bash -s bun-v1.4.4                     # macOS and Linux
@@ -129,198 +92,176 @@ curl -fsSL https://bun.com/install | bash -s bun-v1.4.4                     # ma
 iex "& {$(irm https://bun.com/install.ps1)} -Version 1.4.4"                  # Windows
 ```
 
-Then, at the repository root, on every platform:
+Then install, at the repository root and in the two workspaces with their own lockfile:
 
 ```bash
 bun install --frozen-lockfile
+bun install --frozen-lockfile --cwd apps/phone
+bun install --frozen-lockfile --cwd extras/raycast-nilla
 ```
 
-`bunfig.toml` keeps `node_modules` hoisted at the root; `apps/phone`, `apps/site`, `apps/dashboard` and `apps/videos`
-each have their own `bun.lock` and install with `bun install --frozen-lockfile --cwd <dir>`.
+`bun check` type checks the root workspace; type check another package with `bun run --cwd <dir> check`. Builds go
+through Bun and keep their own bundlers (Vite, Metro, esbuild); [docs/bundling.md](docs/bundling.md) says which target
+uses which.
 
-`bun check` runs the folder's `check` script, which type checks with the pinned TypeScript 7 (`tsc`; the site's runs
-`astro check`). In a folder without one it runs Bun's own built-in type checker instead, so type check a package with
-`bun run --cwd <dir> check`. Builds go through
-Bun and keep their own bundlers (Vite, Metro, esbuild, Astro, Remotion); [docs/bundling.md](docs/bundling.md) says
-which target uses which, why it isn't Bun's bundler, and what still runs outside Bun.
+Every build runs on a data folder of its own. Nilla never reads or writes an installed Ardia's data, keychain items or
+sync folder, and a test instance never touches a real profile.
 
 ### macOS
 
-The macOS app also needs Xcode 26+ and CocoaPods.
-
-The engine (Chrome's framework, built from our patched Chromium) comes prebuilt: with no local engine build, the app's
-build downloads the one matching your checkout's `engine/` (about 110 MB, once; Apple Silicon only) and checks it
-against `packages/ardiacore/prebuilt-engines.tsv`. Every release whose engine changed publishes one. If `main`'s engine
-is newer than the last release's, work from a release tag (`v0.2.30`, say), or run
-`packages/ardiacore/scripts/fetch-engine.sh --nearest` to build against the newest prebuilt anyway. Passkeys and saved
-cards need our team ID and won't work in a build signed by anyone else.
-
-To change the engine itself (anything under `engine/`), build it from source: Chrome's framework from our patched
-Chromium tree in `~/chromium-build` (Chromium 157.0.8103.50 with the patch series in `engine/patches`;
-`docs/engine-build.md` › "Rebuilding", then `engine/chromium/apply.sh`,
-`engine/ardiacore/apply.sh` and `autoninja -C out/Release_GN_arm64 chrome_framework`; the first build takes about 2
-hours). The app's build stages it from there when it exists.
+Needs Xcode 26+ and CocoaPods.
 
 ```bash
 bun run pods
+bun run dev        # Metro; leave it running
+xcodebuild -workspace apps/browser/macos/Nilla.xcworkspace -scheme Nilla-macOS -derivedDataPath apps/browser/build \
+  -destination 'platform=macOS,arch=arm64' -configuration Debug -quiet
+open -g -n --env ARDIA_BACKGROUND=1 --env ARDIA_DATA_DIR="$(mktemp -d)" --env ARDIA_REMOTE_DEBUGGING_PORT=9333 \
+  apps/browser/build/Build/Products/Debug/Nilla.app
 ```
 
-In one terminal, start Metro:
-
-```bash
-bun run dev
-```
-
-In another, build and launch the Debug app (on its own data, `~/Library/Application Support/Ardia Dev`, or
-`ARDIA_DATA_DIR`):
-
-```bash
-bun run macos
-```
-
-| Task | Command |
-|---|---|
-| Type check the 10 packages of the root workspace | `bun check` |
-| The same, then `apps/phone` (with `packages/phone`), `apps/dashboard` (it generates the router's route tree first), `apps/videos` and `apps/site`; each needs its own `bun install --frozen-lockfile --cwd <dir>` | `bun run check:all` |
-| Every test, cached by Turbo | `bun run test` |
-| The shaders, compiled offline | `bun run shaders:check` |
-| A Release `.app` with a Hermes bytecode bundle | `scripts/agent/build-app --config Release` (in `apps/browser/build-<name>`, under the shared build locks; `--help`) |
-| Signed releases (DMG, Sparkle zip and appcast) | the Release workflow, with `scripts/release.sh` (`docs/releasing.md`) |
+That runs the Debug app hidden, on a scratch data folder, without taking focus; drop `-g` and `ARDIA_BACKGROUND` to
+see it in front. A Debug build refuses to start without `ARDIA_DATA_DIR`. With no Chromium tree of your own, the build
+fetches the prebuilt engine first (about 110 MB, once). Passkeys and saved cards need entitlements tied to an Apple
+team and don't work in an ad hoc build.
 
 ### Linux
 
-The Linux desktop target is `apps/linux`, for x86-64 Linux on Wayland or X11. It runs the shared UI on the dedicated
-Linux Chromium host; releases ship it as a tarball, a `.deb` and an AppImage. Its system packages, the AppArmor note
-and building the engine from source are in [docs/linux-port.md](docs/linux-port.md).
+Run Linux builds only inside a disposable VM or a user and mount namespace with a scratch `$HOME`, never on an account
+that has, or could later get, an Ardia profile: today's Linux engine picks Ardia's default folder before any app code
+runs. `scripts/linux/nilla-dev-run` refuses to start without a scratch `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME`:
 
 ```bash
 scripts/linux/fetch-engine.sh --nearest
 bun run --cwd apps/linux build
-"$(scripts/linux/fetch-engine.sh --nearest)/chrome" --ardia-ui-dir="$PWD/apps/linux/dist" \
-  --user-data-dir="$(mktemp -d)" --remote-debugging-port=9222
+scratch="$(mktemp -d)"
+ARDIA_DATA_DIR="$scratch/data" ARDIA_CONFIG_HOME="$scratch/config" scripts/linux/nilla-dev-run
 ```
 
+Don't install the tarball, `.deb` or AppImage on a host; system packages, AppArmor and packaging are in
+[docs/linux-port.md](docs/linux-port.md).
+
 | Task | Command |
-|---|---|
-| UI dev server (Vite serves the UI modules; to see the desktop UI, build the bundle and launch the fetched engine as above) | `bun run --cwd apps/linux dev` |
+| --- | --- |
+| UI dev server | `bun run --cwd apps/linux dev` |
 | Type check | `bun run --cwd apps/linux check` |
 | Host, symbol and module-graph tests | `bun run --cwd apps/linux test:host`, `test:symbols`, `test:graph` |
-| Portable workspace and root tests (no Mac needed) | `bun run test:portable` |
 | Every Linux check CI runs | `scripts/linux/ci-checks.sh` |
-| A test release (tarball and CLI, smoke-tested; needs `bun` and `uv`) | `scripts/linux/release.sh <version> --engine nearest` |
-| Packages (tarball, `.deb`, AppImage) | `scripts/linux/package.py` ([docs/linux-port.md](docs/linux-port.md) › Packaging and installing) |
 
 ### Windows
 
-The Windows app is `apps/browser/windows` (React Native for Windows) hosting Chromium's `chrome.dll`
-([docs/windows.md](docs/windows.md)). It needs Visual Studio 2022 with the C++ desktop workload and the Windows SDK
-10.0.26100.0. Build the x64 app (it bundles the JavaScript itself) from `apps/browser`, in PowerShell:
+Windows builds run in CI or in a disposable Windows VM only: today's Windows engine opens Ardia's default profile
+before any app code runs, unless `ARDIA_DATA_DIR` is set. The app needs Visual Studio 2022 with the C++ desktop
+workload and the Windows SDK 10.0.26100.0. In PowerShell, from `apps/browser`:
 
 ```powershell
 bun x --no-install react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager
 ```
 
-`bun run --cwd apps/browser bundle:windows` bundles the JavaScript alone, into `apps/browser/build-windows`.
-
-Package the build with a prebuilt engine (`gh` signed in), from the repository root. An ARM64 build follows
-`.github/workflows/windows.yml` (`run-windows --no-build`, then the ARM64 MSBuild) and packages with `-Cpu arm64`:
+Then, from the repository root, assemble it with a prebuilt engine:
 
 ```powershell
-scripts/windows/fetch-engine.ps1 -Cpu x64 -Out $env:TEMP\ardia-engine
-scripts/windows/assemble.ps1 -App apps/browser/windows/x64/Release -Engine $env:TEMP\ardia-engine -Out $env:TEMP\Ardia
+scripts/windows/fetch-engine.ps1 -Cpu x64 -Out $env:TEMP\nilla-engine
+scripts/windows/assemble.ps1 -App apps/browser/windows/x64/Release -Engine $env:TEMP\nilla-engine -Out $env:TEMP\Nilla
 ```
 
-Launch the assembled app on a fresh data folder:
+Start the assembled app through `scripts/windows/nilla-dev-run.ps1`, which sets `ARDIA_DATA_DIR` to a Nilla-only or
+scratch folder first; a development build started without it shows a message and quits.
+[docs/windows.md](docs/windows.md) › Test instances has the details. The Windows workflow builds, launches, tours and
+installs both CPUs on every pull request that touches shared code.
 
-```powershell
-$env:ARDIA_DATA_DIR = Join-Path $env:TEMP "ardia-data-$(Get-Random)"
-New-Item -ItemType Directory -Force $env:ARDIA_DATA_DIR | Out-Null
-& "$env:TEMP\Ardia\Ardia.exe"
-```
+### Checks
 
-`ARDIA_DATA_DIR` keeps everything in that folder in any build: settings in `<folder>\config`, Chromium's profile in
-`<folder>\Chromium`, nothing in `%APPDATA%\Ardia` or `%LOCALAPPDATA%\Ardia`. Only the test keys (`ARDIA_TEST`,
-`ARDIA_TRACE`, `ARDIA_CONFIG_DIR`, `ARDIA_REMOTE_DEBUGGING_PORT`) need a test build, which the assembled folder is not
-(docs/windows.md › Test instances).
-Build the installer from the same folder:
-
-```powershell
-scripts/windows/make-installer.ps1 -Source $env:TEMP\Ardia -Out $env:TEMP\ardia-installer -Cpu x64
-```
-
-The shared UI's checks are the macOS and Linux ones above (`bun check`, `bun run test:portable`); the Windows workflow
-builds, launches, tours and installs both CPUs on every pull request that touches shared code.
-
-Shortcuts: ⌘T new tab, ⌘L command bar, ⌘W close, ⇧⌘T reopen, ⌘S sidebar, ⌘[ / ⌘] back/forward,
-⌘R reload, ⌘1–⌘9 select tab, ⌃Tab cycle.
+| Task | Command |
+| --- | --- |
+| Type check the root workspace | `bun check` |
+| Every type check, the phone included | `bun run check:all` |
+| Every unit test, cached by Turbo | `bun run test` |
+| Tests that don't need a Mac | `bun run test:portable` |
+| The shaders, compiled offline | `bun run shaders:check` |
+| Engine patch series | `python3 engine/patches/series.py check` |
 
 ## How Dia's New Tab light works
 
-Dia 1.50 turns this light off along with its rebrand (a painted mark, a single-colour power-up band
-and a halo around the bar; `docs/dia-spec.md` › "1.50 Sunglow"), and so does Ardia. The
-reconstruction left the tree with it: `git show f2c0e251:packages/shaders/ios/AreaLightView.swift`.
+Dia 1.50 turns this light off along with its rebrand (a painted mark, a single-colour power-up band and a halo around
+the bar; `docs/dia-spec.md` › "1.50 Sunglow"), and Nilla leaves it off too. The reconstruction left the tree with it:
+`git show f2c0e251:packages/shaders/ios/AreaLightView.swift`.
 
-These findings come from disassembling the Metal libraries in `Dia.app` (v1.49.1) with
-`xcrun metal-objdump`. `BoostBrowser_PowerUp.bundle/default.metallib` contains
-`breathingAreaLightFragment`, which the Swift class `NewTabPage.NewTabAreaLightView` hosts. The
-reconstruction was `AreaLightView.swift` (above).
+These findings come from disassembling the Metal libraries in `Dia.app` (v1.49.1) with `xcrun metal-objdump`.
+`BoostBrowser_PowerUp.bundle/default.metallib` contains `breathingAreaLightFragment`, which the Swift class
+`NewTabPage.NewTabAreaLightView` hosts. The reconstruction was `AreaLightView.swift` (above).
 
-- **The command bar is a light source.** Dia models the bar as a rounded-rectangle area light floating
-  `lift` points above the page. Each pixel receives the closed-form irradiance of that rectangle: the
-  solid-angle formula, one `atan` term per corner, times 1/2π. Rounded corners subtract (1 − π/4) of
-  each corner square. The result is a physically correct penumbra: a higher lift gives a softer, wider
-  glow.
-- **Falloff** is reshaped from inverse-square to `(h/d)^falloff`, where `d` is the distance to the
-  emitter's rounded-rect surface rather than to its centre.
-- **Colour** is Dia's brand spectrum (`ProgressBarColor2…7` in its asset catalog):
-  blue `#0358F7`, steel `#5092C7`, lavender `#E1E1FE`, yellow `#FFD400`, orange `#FA3D1D` and magenta
-  `#FD02F5`. It is laid out as a wrapping, slightly diagonal gradient that scrolls every 20 s. IQ's 2D
-  simplex noise warps the gradient under the bar, and the warp fades out into the penumbra.
-- **Dark mode** treats the light as HDR emission and applies the Hable/Uncharted-2 filmic tonemap
-  (white point 11.2), with alpha set to Rec.709 luminance. **Light mode** keeps the flat palette
-  colour and uses the irradiance as opacity.
-- **Finishing:** alpha fades over the top 50 pt and bottom 200 pt of the view, and ±3/255 triangular
-  dither (Dave Hoskins' `hash12`) prevents banding in the long soft falloff.
-- **Animation:** the shader itself only scrolls the colours. The lift-off intro and the slow
-  "breathing" come from the CPU, which animates `lift` and `intensity`. Those curves live in Dia's
-  Swift code, so the ones here (quartic ease-out over 1.1 s, ±7% intensity on a 5.5 s sine) are my
-  approximation.
+- **The command bar is a light source.** Dia models the bar as a rounded-rectangle area light floating `lift` points
+  above the page. Each pixel receives the closed-form irradiance of that rectangle: the solid-angle formula, one
+  `atan` term per corner, times 1/2π. Rounded corners subtract (1 − π/4) of each corner square. The result is a
+  physically correct penumbra: a higher lift gives a softer, wider glow.
+- **Falloff** is reshaped from inverse-square to `(h/d)^falloff`, where `d` is the distance to the emitter's
+  rounded-rect surface rather than to its centre.
+- **Colour** is Dia's brand spectrum (`ProgressBarColor2…7` in its asset catalog): blue `#0358F7`, steel `#5092C7`,
+  lavender `#E1E1FE`, yellow `#FFD400`, orange `#FA3D1D` and magenta `#FD02F5`. It is laid out as a wrapping, slightly
+  diagonal gradient that scrolls every 20 s. IQ's 2D simplex noise warps the gradient under the bar, and the warp
+  fades out into the penumbra.
+- **Dark mode** treats the light as HDR emission and applies the Hable/Uncharted-2 filmic tonemap (white point 11.2),
+  with alpha set to Rec.709 luminance. **Light mode** keeps the flat palette colour and uses the irradiance as opacity.
+- **Finishing:** alpha fades over the top 50 pt and bottom 200 pt of the view, and ±3/255 triangular dither (Dave
+  Hoskins' `hash12`) prevents banding in the long soft falloff.
+- **Animation:** the shader itself only scrolls the colours. The lift-off intro and the slow "breathing" come from the
+  CPU, which animates `lift` and `intensity`. Those curves live in Dia's Swift code, so the ones here (quartic
+  ease-out over 1.1 s, ±7% intensity on a 5.5 s sine) are an approximation.
 
-The **window backdrop** comes from `ARC_WindowThemeUI.bundle`
-(`gradientFragment` + `renderFragment`). Gradient stops are stored and mixed in **OKLab**, then
-converted to linear sRGB and gamma-encoded in the shader. A tiled grain texture is then
-multiply-blended on top. `WindowBackdropView` does the same with procedural grain.
+The **window backdrop** comes from `ARC_WindowThemeUI.bundle` (`gradientFragment` + `renderFragment`). Gradient stops
+are stored and mixed in **OKLab**, then converted to linear sRGB and gamma-encoded in the shader. A tiled grain
+texture is then multiply-blended on top. `WindowBackdropView` does the same with procedural grain.
 
 Only math and colour values are reused. No Dia images, fonts or binaries are copied into this repo.
 
 ## Architecture notes
 
-- **Why Expo SDK 54:** `react-native-macos` tops out at 0.81, which pairs with Expo SDK 54 (whose
-  `ExpoAppDelegate` / `ExpoReactNativeFactory` have macOS code paths).
-- **Legacy architecture.** react-native-macos 0.81's Fabric support is experimental, so the app runs on
-  the legacy architecture. One consequence: Expo's legacy view-manager adapter instantiates a module's
-  *first* view class for every view it declares, so each native view has its own module.
-- **Metro, not `expo start`.** Metro runs through the react-native-macos CLI. `metro.config.js`
-  redirects `react-native` → `react-native-macos` for `platform=macos`, because defining our own
-  `resolveRequest` replaces the redirect the CLI would install.
+- **Why Expo SDK 54:** `react-native-macos` tops out at 0.81, which pairs with Expo SDK 54 (whose `ExpoAppDelegate` /
+  `ExpoReactNativeFactory` have macOS code paths).
+- **Legacy architecture.** react-native-macos 0.81's Fabric support is experimental, so the app runs on the legacy
+  architecture. One consequence: Expo's legacy view-manager adapter instantiates a module's *first* view class for
+  every view it declares, so each native view has its own module.
+- **Metro, not `expo start`.** Metro runs through the react-native-macos CLI. `metro.config.js` redirects
+  `react-native` → `react-native-macos` for `platform=macos`, because defining our own `resolveRequest` replaces the
+  redirect the CLI would install.
 - **No Reanimated.** It has no macOS build for 0.81; animations use RN's `Animated`.
 - **Monorepo paths.** `bunfig.toml` sets `[install] linker = "hoisted"` because CocoaPods and Metro resolve
-  `react-native-macos` by path. The Podfile rewrites `REACT_NATIVE_PATH` to the hoisted location and
-  raises every pod's deployment target to 14.0, since Xcode 26+ rejects the 11.0 some Expo pods declare.
-- **Native subviews** are sized in `setFrameSize`, not `layout()`. RN macOS assigns frames directly and
-  never autoresizes subviews.
-- **Shaders** are Metal source embedded in Swift and compiled at runtime (once per class, cached). This
-  keeps the pods free of a metallib build phase.
-
-## Status
+  `react-native-macos` by path. The Podfile rewrites `REACT_NATIVE_PATH` to the hoisted location and raises every
+  pod's deployment target to 14.0, since Xcode 26+ rejects the 11.0 some Expo pods declare.
+- **Native subviews** are sized in `setFrameSize`, not `layout()`. RN macOS assigns frames directly and never
+  autoresizes subviews.
+- **Shaders** are Metal source embedded in Swift and compiled at runtime (once per class, cached). This keeps the pods
+  free of a metallib build phase.
 
 Feature parity with Dia (everything but its AI) is tracked row by row in
-[docs/dia-feature-parity.md](docs/dia-feature-parity.md); releases and their notes are at
-[ardia.dev/release-notes](https://ardia.dev/release-notes).
+[docs/dia-feature-parity.md](docs/dia-feature-parity.md). [docs/agent-brief.md](docs/agent-brief.md) explains the
+architecture in depth.
+
+## Contributing
+
+Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Contributions come in under the licences
+below (Apache-2.0 section 5). There is no CLA.
 
 ## License
 
-Ardia as distributed is licensed under the [GNU General Public License v3](LICENSE), because its engine is built
-with GPL-3.0 patches. Ardia's own source files are under the [Apache License 2.0](LICENSE.Apache-2.0). It builds on
-Chromium, carries a few of the Chromium Embedded Framework's patches to Chromium (BSD-3-Clause), and bundles uBlock
-Origin, each under its own license; see [NOTICE](NOTICE). Every release links its source.
+Nilla as distributed is licensed under the [GNU General Public License v3](LICENSE), because its engine is built with
+Helium's GPL-3.0 patches. Nilla's own source files, including those it carries from Ardia, are under the
+[Apache License 2.0](LICENSE.Apache-2.0). Third-party components keep their own licences; see [NOTICE](NOTICE). Every
+Nilla release will carry its exact source.
+
+## Acknowledgements
+
+Nilla is a fork of **[Ardia](https://github.com/ardia-browser/ardia)** (originally
+[mantrakp04/ardia](https://github.com/mantrakp04/ardia)), by Mantra Patel and its contributors. Nearly everything here
+started as their work, and the git history keeps every commit of it. Thank you, sincerely, for building it in the open
+and for making a fork like this one possible.
+
+Nilla's engine is built on **[Chromium](https://www.chromium.org)** (The Chromium Authors) with
+**[Helium](https://github.com/imputnet/helium-chromium)**'s patch series (The Helium Authors, GPL-3.0), which carries
+**[ungoogled-chromium](https://github.com/ungoogled-software/ungoogled-chromium)**'s. It bundles
+**[uBlock Origin](https://github.com/gorhill/uBlock)**. [NOTICE](NOTICE) has the full list, with every licence.
+
+Nilla is an independent project. It is not affiliated with or endorsed by Ardia or its authors, The Helium Authors, or
+The Chromium Authors and Google. Other product names and logos belong to their owners and appear only to identify
+those products.
