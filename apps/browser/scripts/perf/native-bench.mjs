@@ -891,11 +891,13 @@ async function journeyRun(side, i, parts) {
     await app.launch();
     await app.pageState("id=seed", 30_000, (s) => s.fcp);
     await sleep(6000);
-    r.guard = await app.run(`return fetch("https://ardia.dev/otel/v1/logs", { method: "POST", body: "{}" }).then((res) => {
+    r.guard = await app.run(`return fetch(${JSON.stringify(UPSTREAM_PROBE)}, { method: "POST", body: "{}" }).then((res) => {
       const j = ac.journeys();
       return { blocked: res.headers.get("x-bench-blocked"), on: j.on, native: j.native, sharing: ac.telemetry().saved.sharing };
     });`);
     if (r.guard.blocked !== "1") throw new Error("bench-offline.js isn't guarding fetch: refusing to run with sharing on");
+    const probed = (await app.run(`return ac.blockedFetches();`)).filter((url) => url !== UPSTREAM_PROBE.replace(/[?#].*$/, ""));
+    if (probed.some(isUpstream)) throw new Error(`the app tried to reach upstream: ${probed.filter(isUpstream).join(", ")}`);
     if (!r.guard.on || !r.guard.native) throw new Error(`field timing isn't on in the app: ${JSON.stringify(r.guard)}`);
     const closeTab = (tab) => tab && app.run(`ac.store.getState().closeTab(${JSON.stringify(tab)}); return true;`);
     if (parts.has("newtabkey")) {
@@ -923,11 +925,28 @@ async function journeyRun(side, i, parts) {
       }
       log(`${side.tag}journeys ${i} j4:`, JSON.stringify([r.j4new.map((x) => Math.round(x.fcp)), r.j4page.map((x) => Math.round(x.fcp))]));
     }
-    r.blocked = (await app.run(`return ac.blockedFetches();`)).length;
+    const blocked = await app.run(`return ac.blockedFetches();`);
+    const upstream = blocked.filter((url) => url !== UPSTREAM_PROBE.replace(/[?#].*$/, "") && isUpstream(url));
+    if (upstream.length) throw new Error(`the app tried to reach upstream: ${upstream.join(", ")}`);
+    r.blocked = blocked.length;
     r.load.push(Math.round(loadavg()[0]));
     side.results.journeys.push(r);
   } finally {
     await app.done();
+  }
+}
+
+const UPSTREAM_PROBE = "https://ardia.dev/otel/v1/logs";
+const UPSTREAM_HOSTS = /^(?:[\w-]+\.)*(?:ardia\.dev|netnyahoo\.com)$/i;
+const UPSTREAM_GITHUB_HOSTS = new Set(["github.com", "api.github.com", "objects.githubusercontent.com"]);
+const UPSTREAM_OWNERS = /^\/(?:repos\/)?(?:ardia-browser|mantrakp04)(?:\/|$)/i;
+
+function isUpstream(url) {
+  try {
+    const { hostname, pathname } = new URL(url);
+    return UPSTREAM_HOSTS.test(hostname) || (UPSTREAM_GITHUB_HOSTS.has(hostname.toLowerCase()) && UPSTREAM_OWNERS.test(pathname));
+  } catch {
+    return false;
   }
 }
 
