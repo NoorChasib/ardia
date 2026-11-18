@@ -8,7 +8,7 @@ Everything here is drawn from code, so nothing is painted by hand and every size
 
 | File | What it is |
 | --- | --- |
-| `build.mjs` | The pipeline. `node docs/brand/nilla/build.mjs --out <dir>` renders every asset into `<dir>` (with the repo's `@resvg/resvg-js`, no system fonts) and writes `<dir>/manifest.json` and `<dir>/icons/INDEX.md`, which map each output to its slot below |
+| `build.mjs` | The pipeline. `node docs/brand/nilla/build.mjs --out <dir>` renders every asset into `<dir>`, which must be new or empty (it refuses anything else and never deletes) (with the repo's `@resvg/resvg-js`, no system fonts) and writes `<dir>/manifest.json` and `<dir>/icons/INDEX.md`, which map each output to its slot below |
 | `shape.mjs` | The squircle outline |
 | `glyphs.mjs` | The wordmark's lettering, drawn as stroked paths (no font file) |
 | `palettes.json` | Highland and the 23 alternates with their six colours, names and picker groups |

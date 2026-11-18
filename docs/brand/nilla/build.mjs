@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
-import { mkdirSync, writeFileSync, readFileSync, rmSync, existsSync, copyFileSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { SQ } from "./shape.mjs";
@@ -12,10 +12,14 @@ const arg = (name, fallback) => {
   return i > 0 ? process.argv[i + 1] : fallback;
 };
 if (!arg("--out")) {
-  console.error("usage: node docs/brand/nilla/build.mjs --out <dir> [--repo <path>]");
+  console.error("usage: node docs/brand/nilla/build.mjs --out <new or empty dir> [--repo <path>]");
   process.exit(2);
 }
 const OUT = resolve(arg("--out"));
+if (existsSync(OUT) && readdirSync(OUT).length > 0) {
+  console.error(`--out must be a new or empty directory; ${OUT} is not empty`);
+  process.exit(2);
+}
 const REPO = resolve(arg("--repo", join(HERE, "..", "..", "..")));
 const resvg = (() => {
   for (const from of [join(HERE, "package.json"), join(REPO, "package.json")]) {
@@ -51,7 +55,6 @@ const SUN = { cx: 334, cy: 372, r: 112 };
 const BACK = "M100 700C320 640 560 610 924 560V924H100Z";
 const FRONT = "M100 812C380 760 650 600 924 338V924H100Z";
 
-for (const d of ["icons", "wordmark"]) if (existsSync(join(OUT, d))) rmSync(join(OUT, d), { recursive: true });
 const entries = [];
 const rename = (p) => p && p.replace(/Ardia/g, "Nilla").replace(/ardia/g, "nilla").replace(/ARDIA/g, "NILLA");
 const layerOf = (p) => (p && /^engine\//.test(p) ? 2 : 1);
