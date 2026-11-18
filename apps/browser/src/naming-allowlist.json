@@ -31,7 +31,7 @@
    "LICENSE.Apache-2.0",
    "NOTICE",
    "third_party/*",
-   "docs/perf/0.2.*",
+   "docs/perf/*",
    "docs/audit/*",
    "docs/history/*",
    "*THIRD_PARTY_NOTICES.txt"
@@ -83,6 +83,11 @@
   "ruleLimited": {
    "apps/cli/scripts/build.sh": [
     "cli-module"
+   ],
+   "scripts/linux/smoke.mjs": [
+    "smoke-drift-path",
+    "smoke-drift-lower",
+    "smoke-drift-title"
    ]
   }
  },
@@ -177,7 +182,7 @@
     "why": "kept byte for byte (X-keep)"
    },
    {
-    "glob": "docs/perf/0.2.*",
+    "glob": "docs/perf/*",
     "why": "kept byte for byte (X-keep)"
    },
    {
@@ -351,7 +356,7 @@
    "id": "S-env",
    "class": "S",
    "mechanism": "class",
-   "regex": "(?<![A-Za-z0-9_])ARDIA_[A-Z0-9_]*",
+   "regex": "(?:(?<![A-Za-z0-9_])|(?<=-D))ARDIA_[A-Z0-9_]*",
    "why": "Every ARDIA_* variable stays until Layer 2; 27 are engine-read and two paths forward by prefix."
   },
   {
@@ -551,6 +556,23 @@
    "why": "APP_SCHEME and scheme comparisons with the bare name."
   },
   {
+   "id": "F-scheme-list",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "(?<=[\\\"'])ardia(?=[\\\"'],)",
+   "scope": [
+    "packages/core/src/omnibox.ts"
+   ],
+   "why": "The bare ardia scheme in the omnibox's KNOWN_SCHEMES set (plan 0.4 F): ardia:settings resolves only while it is listed."
+  },
+  {
+   "id": "F-chrome-hostname",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "(?<=hostname: [\\\"'])ardia(?=[\\\"'])|(?<=hostname [!=]== [\\\"'])ardia(?=[\\\"'])",
+   "why": "The chrome://ardia host name as a bare hostname (bootstrap.js only initialises on hostname ardia)."
+  },
+  {
    "id": "F-chrome-host",
    "class": "F",
    "mechanism": "class",
@@ -638,7 +660,7 @@
    "id": "N-linux-layout",
    "class": "N",
    "mechanism": "class",
-   "regex": "(?<![A-Za-z0-9_-])(?:usr/)?(?:bin|lib|share|libexec|apparmor\\.d|opt)/ardia(?:-dev)?(?![A-Za-z0-9_-])|(?<=`)ardia-dev(?=`)|(?<![A-Za-z0-9_-])ardia(?=/lib/ardia)|Package: ardia\\b|(?<![A-Za-z0-9_-])ardia\\.(?:desktop|apparmor|tar\\.xz)\\b|(?<![A-Za-z0-9_-])ardia-launch\\b|(?:Exec|Icon|StartupWMClass)=ardia\\b|(?<=profile )ardia(?= )|(?<=Name=)Ardia\\b",
+   "regex": "(?<![A-Za-z0-9_-])(?:usr/)?(?:bin|lib|share|libexec|apparmor\\.d|opt)/ardia(?:-dev)?(?![A-Za-z0-9_-]|\\.(?:mjs|cjs|js|ts|tsx|py|json)\\b)|(?<=`)ardia-dev(?=`)|(?<![A-Za-z0-9_-])ardia(?=/lib/ardia)|Package: ardia\\b|(?<![A-Za-z0-9_-])ardia\\.(?:desktop|apparmor|tar\\.xz)\\b|(?<![A-Za-z0-9_-])ardia-launch\\b|(?:Exec|Icon|StartupWMClass)=ardia\\b|(?<=profile )ardia(?= )|(?<=Name=)Ardia\\b",
    "scope": [
     "apps/linux/*",
     "scripts/linux/*",
@@ -702,6 +724,16 @@
    "why": "Picture-in-picture plist the Mac engine reads (ac_pip_mac.mm:27)."
   },
   {
+   "id": "P-windows-dll-target",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?<=<TargetName>)ArdiaApp(?=</TargetName>)",
+   "scope": [
+    "apps/browser/windows/Ardia/Ardia.vcxproj"
+   ],
+   "why": "The app project's TargetName: MSBuild writes ArdiaApp.dll, which the prebuilt Windows engine loads (main.cc:95) and assemble.ps1 and rebundle.ps1 package."
+  },
+  {
    "id": "P-windows-test-build",
    "class": "P",
    "mechanism": "literal",
@@ -752,7 +784,7 @@
    "id": "Q-cli-refusals",
    "class": "Q",
    "mechanism": "class",
-   "regex": "isn't allowed for the ardia command|on a tab the ardia command didn't open|(?<=[\\\"'(`])ardia: (?=[A-Z][a-z]+\\.[a-z])|\\[ardia\\] ",
+   "regex": "isn't allowed for the ardia command|on a tab the ardia command didn't open|(?<![A-Za-z0-9_-])ardia: (?=[A-Z][a-z]+\\.[a-zA-Z]|\\{[A-Za-z_*.]+\\}|a command|no attached session|params must|too many commands)|\\[ardia\\] ",
    "why": "Refusal texts the engines produce and the CLI parses."
   },
   {
@@ -825,8 +857,26 @@
    "id": "V-credit-text",
    "class": "never",
    "mechanism": "never",
-   "regex": "(?i)(?:based on|a fork of|forked from|a modified version of|built on) Ardia\\b|Ardia, Copyright 2026 Mantra Patel|Mantra Patel",
+   "regex": "(?i)(?:based on|a fork of|forked from|a modified version of|built on) Ardia\\b|Ardia, Copyright 2026 Mantra Patel|Mantra Patel|Ardia's contributors|Ardia contributors",
    "why": "Credit wording that names Ardia as Nilla's origin."
+  },
+  {
+   "id": "V-history-versions",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<![A-Za-z0-9_-])Ardia(?= v?0\\.\\d+\\.\\d+)",
+   "scope": [
+    "docs/*",
+    "*.md"
+   ],
+   "why": "A versioned Ardia build in the docs (Ardia 0.2.46): history and measurements of Ardia builds, never Nilla's claims (owner requirements, branding inputs)."
+  },
+  {
+   "id": "U-tap",
+   "class": "U",
+   "mechanism": "report",
+   "regex": "ardia-browser/homebrew-tap|tap/ardia|Casks/ardia",
+   "why": "Homebrew tap leftovers: report-only (G removes them in wave 1); kept as they are so the report sees them."
   },
   {
    "id": "V-credit-raycast",
@@ -844,6 +894,36 @@
    "mechanism": "never",
    "regex": "\\$\\{\\{ vars\\.(?:ARDIACORE_PREBUILT_REPO|WINDOWS_ENGINE_REPO|ENGINE_REPO) \\|\\| '(?:ardia-browser|mantrakp04)/ardia' \\}\\}|\\$\\{(?:ARDIACORE_PREBUILT_REPO|ENGINE_REPO):-(?:ardia-browser|mantrakp04)/ardia\\}",
    "why": "The upstream engine-fetch defaults (naming.md 4.8): prebuilt engines still come from upstream in Layer 1."
+  },
+  {
+   "id": "R-engine-basenames",
+   "class": "R",
+   "mechanism": "basename",
+   "regex": "(?<![A-Za-z0-9_.-])(?:chromium\\-win\\-ardia\\-layer\\-calls\\-mac\\-only\\.patch|chromium\\-ardia\\-linux\\-layer\\.patch|chromium\\-ardia\\-layer\\.patch|ardia\\-linux\\-bridge\\.html|ardia_resources_win\\.txt|ardia\\-layer\\-win\\.patch|ardia\\-linux\\-bridge\\.js|ardia_resources\\.txt|ardia_namesub\\.py)(?![A-Za-z0-9_-])",
+   "why": "Basenames of engine files (patches, resource lists, scripts) wherever they are named: the frozen files keep their names until Layer 2."
+  },
+  {
+   "id": "R-engine-doc-symbols",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_-])(?:test_chromium_asks_ardia_before_it_opens_a_launch_url_at_startup_and_for_a_running_process|test_notifications_go_through_chromiums_system_bridge_and_come_back_through_ardias_handler|test_off_screen_tabs_close_with_the_last_browser_window_so_they_never_keep_ardia_running|test_background_instances_and_a_running_ardia_without_a_window_leave_links_to_chromium|test_the_app_resigns_once_no_ardia_window_is_active_and_not_on_a_switch_between_them|CHROME_BROWSER_ARDIA_AC_CLI_TOKEN_POLICY_INTERNAL_H_|CHROME_BROWSER_ARDIA_AC_EXTENSIONS_SYNC_INTERNAL_H_|ARDIA_CORE_RENDERER_AC_CONTENT_RENDERER_CLIENT_H_|g_ardia_linux_refuses_document_picture_in_picture|CHROME_BROWSER_ARDIA_AC_TAB_RESTORE_INTERNAL_H_|CONTENT_PUBLIC_BROWSER_ARDIA_LIVE_CONNECTION_H_|ArdiaAutoPictureInPictureHostVisibilityChanged|CHROME_BROWSER_ARDIA_AC_REAUTH_LINUX_POLICY_H_|ARDIA_LINUX_AC_LINUX_EXTENSION_KEYBINDINGS_H_|ARDIA_LINUX_AC_LINUX_PAGE_PROMPTS_INTERNAL_H_|ARDIA_LINUX_AC_LINUX_SITE_CONTROLS_SERVICE_H_|CHROME_BROWSER_ARDIA_AC_PASSWORDS_INTERNAL_H_|ARDIA_LINUX_AC_LINUX_SAVED_HISTORY_ENGINE_H_|ARDIA_LINUX_AC_LINUX_SEARCH_ENGINE_POLICY_H_|CHROME_BROWSER_ARDIA_AC_AUTOFILL_INTERNAL_H_|ARDIA_LINUX_AC_LINUX_EXTENSION_SHORTCUTS_H_|ARDIA_LINUX_AC_LINUX_IDLE_PROFILE_ENGINE_H_|ARDIA_LINUX_RENDERER_AC_LINUX_PAGE_AGENT_H_|CHROME_BROWSER_ARDIA_AC_CLI_TOKEN_POLICY_H_|CHROME_BROWSER_ARDIA_AC_CLI_VISIBLE_TABS_H_|CHROME_BROWSER_ARDIA_PIP_AC_PIP_CONTROLS_H_|CHROME_BROWSER_ARDIA_PIP_AC_PIP_HYPRLAND_H_|ARDIA_CORE_AC_TEST_MEDIA_ROUTE_PROVIDER_H_|ARDIA_LINUX_AC_LINUX_BACKGROUND_DIALOGS_H_|ARDIA_LINUX_AC_LINUX_CREDENTIAL_SERVICE_H_|ARDIA_LINUX_AC_LINUX_DEVTOOLS_AUTHORITY_H_|ARDIA_LINUX_AC_LINUX_FULLSCREEN_RESTORE_H_|ARDIA_LINUX_AC_LINUX_NOTIFICATIONS_CORE_H_|ARDIA_LINUX_AC_LINUX_PAGE_PROMPT_POLICY_H_|ARDIA_LINUX_AC_LINUX_USER_SCRIPTS_STORE_H_|ArdiaMainFrameHandlesEnterPictureInPicture|ARDIA_LINUX_AC_LINUX_AUTOMATION_WINDOW_H_|ARDIA_LINUX_AC_LINUX_EXTENSION_SERVICE_H_|CHROME_BROWSER_ARDIA_AC_CLI_OWNED_TABS_H_|CHROME_BROWSER_ARDIA_AC_SCRIPTS_POLICY_H_|CHROME_BROWSER_ARDIA_AC_SENSITIVE_ARGS_H_|CHROME_BROWSER_ARDIA_PIP_AC_PIP_WINDOW_H_|ARDIA_CORE_AC_TEST_SYSTEM_PERMISSIONS_H_|ARDIA_CORE_AC_VIDEO_UPSCALER_INTERNAL_H_|ARDIA_LINUX_AC_LINUX_AUTO_PIP_SERVICE_H_|ARDIA_LINUX_AC_LINUX_BANG_LIST_POLICY_H_|ARDIA_LINUX_AC_LINUX_CALENDAR_SERVICE_H_|ARDIA_LINUX_AC_LINUX_CRASH_DUMPS_CORE_H_|ARDIA_LINUX_AC_LINUX_DOCUMENT_REDUCER_H_|ARDIA_LINUX_AC_LINUX_DOCUMENT_SERVICE_H_|ARDIA_LINUX_AC_LINUX_DOWNLOAD_SERVICE_H_|ARDIA_LINUX_AC_LINUX_NATIVE_MESSAGING_H_|ARDIA_LINUX_AC_LINUX_PRIVATE_SERVICES_H_|ARDIA_LINUX_AC_LINUX_TELEMETRY_POLICY_H_|ARDIA_LINUX_AC_LINUX_WINDOW_LIFECYCLE_H_|CHROME_BROWSER_ARDIA_AC_EXTERNAL_APPS_H_|CHROME_BROWSER_ARDIA_PUBLIC_AC_ENGINE_H_|g_ardia_hidden_widget_takes_screen_rects|ARDIA_LINUX_AC_LINUX_EXTENSION_VIEWS_H_|ARDIA_LINUX_AC_LINUX_IMPORT_SESSIONS_H_|ARDIA_LINUX_AC_LINUX_MEMORY_PRESSURE_H_|ARDIA_LINUX_AC_LINUX_NAVIGATION_HOLD_H_|ARDIA_LINUX_AC_LINUX_PAGE_EVALUATION_H_|ARDIA_LINUX_AC_LINUX_PAGE_OPERATIONS_H_|ARDIA_LINUX_AC_LINUX_PASSWORD_PROMPT_H_|ARDIA_LINUX_AC_LINUX_POINTER_REGIONS_H_|ARDIA_LINUX_AC_LINUX_PROFILE_SERVICE_H_|ARDIA_LINUX_AC_LINUX_STATUS_GEOMETRY_H_|ARDIA_LINUX_AC_LINUX_TYPEAHEAD_INPUT_H_|ARDIA_LINUX_AC_LINUX_WEB_STORE_QUEUE_H_|ARDIA_LINUX_AC_LINUX_WINDOW_COMMANDS_H_|CHROME_BROWSER_ARDIA_AC_REAUTH_LINUX_H_|chromium\\-win\\-ardia\\-layer\\-calls\\-mac\\-only|g_ardia_linux_off_the_record_navigation|g_ardia_safe_storage_key_may_be_created|ARDIA_LINUX_AC_LINUX_APP_ACTIVATION_H_|ARDIA_LINUX_AC_LINUX_FAVICON_POLICY_H_|ARDIA_LINUX_AC_LINUX_GEOCLUE_POLICY_H_|ARDIA_LINUX_AC_LINUX_GLASS_GEOMETRY_H_|ARDIA_LINUX_AC_LINUX_IMPORT_FORMATS_H_|ARDIA_LINUX_AC_LINUX_IMPORT_KEYRING_H_|ARDIA_LINUX_AC_LINUX_IMPORT_READERS_H_|ARDIA_LINUX_AC_LINUX_IMPORT_SECRETS_H_|ARDIA_LINUX_AC_LINUX_IMPORT_SERVICE_H_|ARDIA_LINUX_AC_LINUX_IMPORT_STORAGE_H_|ARDIA_LINUX_AC_LINUX_PASSWORD_CHECK_H_|ARDIA_LINUX_AC_LINUX_PASSWORD_FIELD_H_|ARDIA_LINUX_AC_LINUX_POPUP_GEOMETRY_H_|ARDIA_LINUX_AC_LINUX_SEARCH_ENGINES_H_|ARDIA_LINUX_AC_LINUX_SUGGEST_POLICY_H_|ARDIA_LINUX_AC_LINUX_SYSTEM_SIGNALS_H_|ARDIA_LINUX_AC_LINUX_UPDATES_POLICY_H_|ARDIA_LINUX_AC_LINUX_WINDOW_CAPTION_H_|ARDIA_TESTS_TYPEAHEAD_INPUT_SUPPORT_H_|ASwitchBetweenArdiaWindowsNeverResigns|ArdiaPictureInPictureControlsPresenter|CHROME_BROWSER_ARDIA_AC_TAB_RESTORE_H_|CHROME_BROWSER_ARDIA_PIP_AC_PIP_MAC_H_|g_ardia_initial_main_document_accessed|g_ardia_linux_keeps_picture_in_picture|g_ardia_restricted_component_extension|ARDIA_LINUX_AC_LINUX_CONTENT_HOOKS_H_|ARDIA_LINUX_AC_LINUX_IDLE_PROFILES_H_|ARDIA_LINUX_AC_LINUX_IMPORT_CRYPTO_H_|ARDIA_LINUX_AC_LINUX_LAUNCH_CONFIG_H_|ARDIA_LINUX_AC_LINUX_NOTIFICATIONS_H_|ARDIA_LINUX_AC_LINUX_PAGE_COMMANDS_H_|ARDIA_LINUX_AC_LINUX_PAGE_MESSAGES_H_|ARDIA_LINUX_AC_LINUX_SAVED_HISTORY_H_|ARDIA_LINUX_AC_LINUX_SITE_CONTROLS_H_|ARDIA_LINUX_AC_LINUX_SWITCHER_KEYS_H_|ARDIA_LINUX_AC_LINUX_SYNC_KEYSTORE_H_|g_ardia_host_takes_global_accelerator|g_ardia_linux_autofill_bubble_handler|ARDIA_CORE_AC_CONTENTS_BACKGROUND_H_|ARDIA_CORE_AC_EXTENSION_SHORTCUTS_H_|ARDIA_LINUX_AC_LINUX_CALENDAR_EDS_H_|ARDIA_LINUX_AC_LINUX_CONTROL_CORE_H_|ARDIA_LINUX_AC_LINUX_DESKTOP_CORE_H_|ARDIA_LINUX_AC_LINUX_DIALOG_VIEWS_H_|ARDIA_LINUX_AC_LINUX_HISTORY_ZOOM_H_|ARDIA_LINUX_AC_LINUX_LAUNCH_STEPS_H_|ARDIA_LINUX_AC_LINUX_LINK_GESTURE_H_|ARDIA_LINUX_AC_LINUX_LIVE_SERVICE_H_|ARDIA_LINUX_AC_LINUX_MEMORY_SAVER_H_|ARDIA_LINUX_AC_LINUX_PAGE_CHANNEL_H_|ARDIA_LINUX_AC_LINUX_PAGE_COMMITS_H_|ARDIA_LINUX_AC_LINUX_PAGE_PROMPTS_H_|ARDIA_LINUX_AC_LINUX_PICKER_SLOTS_H_|ARDIA_LINUX_AC_LINUX_SIDEBAR_EDGE_H_|ARDIA_LINUX_AC_LINUX_SYNC_SERVICE_H_|ARDIA_LINUX_AC_LINUX_USER_SCRIPTS_H_|ArdiaLinuxPictureInPictureCandidates|PresentArdiaPictureInPictureControls|g_ardia_create_web_contents_delegate|g_ardia_linux_password_bubble_hidden|g_ardia_win_external_protocol_dialog|g_ardia_windowless_page_screen_rects|presentArdiaPictureInPictureControls|ARDIA_CORE_AC_CONTEXT_MENU_SHARE_H_|ARDIA_CORE_AC_PICTURE_IN_PICTURE_H_|ARDIA_LINUX_AC_LINUX_CLOSE_HOOKS_H_|ARDIA_LINUX_AC_LINUX_CONFIG_CORE_H_|ARDIA_LINUX_AC_LINUX_CRASH_DUMPS_H_|ARDIA_LINUX_AC_LINUX_CREDENTIALS_H_|ARDIA_LINUX_AC_LINUX_IDLE_POLICY_H_|ARDIA_LINUX_AC_LINUX_LAUNCH_URLS_H_|ARDIA_LINUX_AC_LINUX_PAGE_STATUS_H_|ARDIA_LINUX_AC_LINUX_REPORT_CORE_H_|ARDIA_LINUX_AC_LINUX_SECRET_TEXT_H_|ARDIA_LINUX_AC_LINUX_STARTUP_TAB_H_|ARDIA_LINUX_AC_LINUX_SYNC_CRYPTO_H_|ArdiaHasAccessedInitialMainDocument|ArdiaLinuxPictureInPictureAvailable|ArdiaLinuxPictureInPictureCandidate|g_ardia_auto_picture_in_picture_off|g_ardia_linux_renderer_unresponsive|g_ardia_reserved_global_accelerator|g_ardia_script_loader_ready_at_once|ARDIA_CORE_AC_MODAL_DIALOG_HOST_H_|ARDIA_LINUX_AC_LINUX_APPEARANCE_H_|ARDIA_LINUX_AC_LINUX_AUTOMATION_H_|ARDIA_LINUX_AC_LINUX_EXTENSIONS_H_|ARDIA_LINUX_AC_LINUX_PAGE_LEASE_H_|ARDIA_LINUX_AC_LINUX_PAGE_MEDIA_H_|ARDIA_LINUX_AC_LINUX_PAGE_STATE_H_|ARDIA_LINUX_AC_LINUX_PAGE_SWIPE_H_|ARDIA_LINUX_AC_LINUX_PIP_PLAYER_H_|ARDIA_LINUX_AC_LINUX_SYNC_VAULT_H_|ARDIA_LINUX_AC_LINUX_TAB_POLICY_H_|ArdiaLinuxPictureInPictureEligible|gArdiaDragSessionInitiationRefused|g_ardia_autofill_suggestions_shown|g_ardia_file_system_restore_prompt|g_ardia_linux_navigation_throttles|g_ardia_linux_permission_tab_shown|g_ardia_omits_from_session_service|g_ardia_opacity_from_default_color|ARDIA_CORE_AC_AUTOFILL_TRIGGER_H_|ARDIA_CORE_AC_BROWSER_INTERNAL_H_|ARDIA_CORE_AC_INSTALLED_BUBBLE_H_|ARDIA_LINUX_AC_LINUX_BANG_LIST_H_|ARDIA_LINUX_AC_LINUX_CAST_CORE_H_|ARDIA_LINUX_AC_LINUX_DOCUMENTS_H_|ARDIA_LINUX_AC_LINUX_DOWNLOADS_H_|ARDIA_LINUX_AC_LINUX_FILE_DROP_H_|ARDIA_LINUX_AC_LINUX_LINK_TABS_H_|ARDIA_LINUX_AC_LINUX_OPEN_URLS_H_|ARDIA_LINUX_AC_LINUX_PAGE_KEYS_H_|ARDIA_LINUX_AC_LINUX_SYNC_JSON_H_|ARDIA_LINUX_AC_LINUX_TAB_SLEEP_H_|ARDIA_LINUX_AC_LINUX_TELEMETRY_H_|ARDIA_LINUX_AC_LINUX_TYPEAHEAD_H_|ARDIA_LINUX_AC_LINUX_WEB_STORE_H_|ArdiaLinuxRequestPictureInPicture|CHROME_BROWSER_ARDIA_AC_ENGINE_H_|CHROME_BROWSER_ARDIA_AC_REAUTH_H_|g_ardia_devtools_session_attached|g_ardia_devtools_session_detached|g_ardia_keeps_window_without_tabs|g_ardia_linux_devtools_opened_tab|g_ardia_linux_renderer_responsive|g_ardia_native_messaging_manifest|ARDIA_CORE_AC_AUTOFILL_PROMPT_H_|ARDIA_CORE_AC_DESKTOP_CAPTURE_H_|ARDIA_CORE_AC_HOST_VISIBILITY_H_|ARDIA_CORE_AC_LAUNCH_SWITCHES_H_|ARDIA_CORE_AC_NAVIGATION_HOLD_H_|ARDIA_CORE_AC_PASSWORD_PROMPT_H_|ARDIA_CORE_AC_PRERENDER_POSTS_H_|ARDIA_CORE_AC_VIDEO_UPSCALING_H_|ARDIA_CORE_AC_WINDOWLESS_PAGE_H_|ARDIA_LINUX_AC_LINUX_AUTOPLAY_H_|ARDIA_LINUX_AC_LINUX_AUTO_PIP_H_|ARDIA_LINUX_AC_LINUX_CONTRACT_H_|ARDIA_LINUX_AC_LINUX_FAVICONS_H_|ARDIA_LINUX_AC_LINUX_HARDWARE_H_|ARDIA_LINUX_AC_LINUX_PROFILES_H_|ARDIA_LINUX_AC_LINUX_SECURITY_H_|ARDIA_WIN_PAGE_LINKS_INTERNAL_H_|ArdiaLinuxGpuCompositingDisabled|ArdiaRefuseDragSessionInitiation|ardia\\-middle\\-click\\-paste\\-enabled|g_ardia_bluetooth_poll_on_demand|g_ardia_create_permission_prompt|g_ardia_disk_space_check_seconds|g_ardia_extension_install_prompt|g_ardia_external_protocol_dialog|g_ardia_global_shortcuts_resumed|g_ardia_linux_auto_pip_requested|g_ardia_linux_shell_passes_point|g_ardia_resource_bundle_delegate|g_ardia_scripts_wait_at_response|g_ardia_skip_cpu_health_sampling|g_ardia_win_hosts_normal_windows|ARDIA_CORE_AC_BROWSER_WINDOW_H_|ARDIA_CORE_AC_DEVICE_CHOOSER_H_|ARDIA_CORE_AC_EXTENSION_DROP_H_|ARDIA_CORE_AC_EXTENSION_VIEW_H_|ARDIA_CORE_AC_VIDEO_UPSCALER_H_|ARDIA_LINUX_AC_LINUX_CAPTURE_H_|ARDIA_LINUX_AC_LINUX_DIALOGS_H_|ARDIA_LINUX_AC_LINUX_GEOCLUE_H_|ARDIA_LINUX_AC_LINUX_SESSION_H_|ARDIA_LINUX_AC_LINUX_SUGGEST_H_|ARDIA_LINUX_AC_LINUX_UPDATES_H_|LoadArdiaPictureInPictureBounds|SaveArdiaPictureInPictureBounds|g_ardia_linux_automation_window|g_ardia_linux_devtools_open_url|g_ardia_linux_location_provider|g_ardia_linux_present_companion|g_ardia_safe_storage_unreadable|ARDIA_CORE_AC_CONTENT_HOOKS_H_|ARDIA_CORE_AC_DEVTOOLS_CALL_H_|ARDIA_CORE_AC_EXTERNAL_APPS_H_|ARDIA_CORE_AC_MAIN_DELEGATE_H_|ARDIA_LINUX_AC_LINUX_CONFIG_H_|ARDIA_LINUX_AC_LINUX_POLICY_H_|ARDIA_LINUX_AC_LINUX_REPORT_H_|ARDIA_LINUX_AC_LINUX_SYSTEM_H_|ARDIA_WIN_PAGE_LINKS_SCRIPT_H_|ArdiaBackgroundInstanceRefuses|ResetArdiaPictureInPictureFade|SetArdiaPipButtonDrawnNatively|ardia_linux_search_suggestions|g_ardia_browser_window_factory|g_ardia_devtools_active_target|g_ardia_devtools_token_accepts|g_ardia_devtools_token_factory|g_ardia_hidden_from_extensions|g_ardia_linux_auto_pip_allowed|g_ardia_linux_autoplay_blocked|g_ardia_linux_page_host_binder|g_ardia_linux_thin_scroll_bars|g_ardia_linux_window_tab_count|g_ardia_live_tab_skips_restore|g_ardia_sync_installer_created|setLittleArdiaOpensNewTabLinks|ARDIA_CORE_AC_CONTEXT_MENU_H_|ARDIA_CORE_AC_PAGE_CHANNEL_H_|ARDIA_CORE_AC_SAFE_STORAGE_H_|ARDIA_LINUX_AC_LINUX_CLOSE_H_|ARDIA_LINUX_AC_LINUX_FILES_H_|ARDIA_LINUX_AC_LINUX_GLASS_H_|ARDIA_LINUX_AC_LINUX_MEDIA_H_|ARDIA_LINUX_AC_LINUX_POWER_H_|ARDIA_LINUX_AC_LINUX_THEME_H_|ARDIA_LINUX_HOST_BOOTSTRAP_H_|ARDIA_PROBE_SLOW_DOWNLOAD_URL|ARDIA_WIN_PRIVATE_SESSIONS_H_|ArdiaReregisterGlobalCommands|g_ardia_create_video_upscaler|g_ardia_devtools_dock_changed|g_ardia_devtools_token_client|g_ardia_devtools_token_server|g_ardia_dnr_rulesets_in_force|g_ardia_hybrid_scan_on_demand|g_ardia_linux_companion_owner|g_ardia_linux_store_uninstall|g_ardia_pre_translate_message|g_ardia_unpacked_path_allowed|ARDIA_CORE_AC_CAST_DIALOG_H_|ARDIA_CORE_AC_PAGE_LIMITS_H_|ARDIA_CORE_AC_PAGE_SCRIPT_H_|ARDIA_CORE_AC_PERMISSIONS_H_|ARDIA_LINUX_AC_LINUX_CAST_H_|ARDIA_LINUX_AC_LINUX_FIND_H_|ARDIA_LINUX_AC_LINUX_HOST_H_|ARDIA_LINUX_AC_LINUX_LIVE_H_|ARDIA_LINUX_AC_LINUX_SYNC_H_|ArdiaAppPreTranslateFunction|ArdiaAppStartFailureFunction|ArdiaLinuxBackgroundInstance|ArdiaLinuxContentBlockerHold|FadeOutArdiaPictureInPicture|ISOLATED_WORLD_ID_ARDIA_PAGE|PrepareArdiaPictureInPicture|ardia\\-native\\-frame\\-materials|ardia\\-waited\\-for\\-previous\\-ms|g_ardia_extension_side_panel|g_ardia_linux_wheel_zoom_off|g_ardia_media_access_request|g_ardia_permission_tab_shown|g_ardia_reserved_accelerator|g_ardia_widevine_without_cdm|g_ardia_win_autoplay_blocked|g_ardia_win_autoplay_refused|kArdiaDragEndDebuggerUnowned|ARDIA_CORE_AC_FAKE_MEDIA_H_|ARDIA_LINUX_AC_LINUX_CLI_H_|ARDIA_REMOTE_DEBUGGING_PORT|ArdiaAppPreTranslateMessage|ArdiaCancelDragOfGeneration|ArdiaDevToolsAgentHostForId|ArdiaFrameHasLiveConnection|ArdiaHasOtherDevToolsClient|ArdiaWriteAfterValueRestore|SetArdiaLinuxThinScrollBars|ardia\\-default\\-search\\-engine|ardia\\-telemetry\\-policy\\-test|ardia_linux_autofill_prompt|ardia_linux_usage_telemetry|g_ardia_background_instance|g_ardia_devtools_may_attach|g_ardia_extension_installed|g_ardia_linux_frameless_app|g_ardia_linux_unhandled_key|g_ardia_linux_video_overlay|g_ardia_prompts_without_tab|ARDIA_CORE_AC_PAGE_VIEW_H_|ARDIA_LINUX_PAGE_SCRIPT_H_|ARDIA_WIN_EXTERNAL_APPS_H_|ArdiaAutofillBubbleHandler|ArdiaControlsFadeAnimation|ArdiaHostVisibilityChanged|ArdiaPageHasLiveConnection|ArdiaWindowlessScreenRects|IsArdiaLinuxContentBlocker|NewArdiaVideoOverlayWindow|ardia\\-hyprland\\-runtime\\-dir|ardia\\-keyboard\\-diagnostics|ardia\\-noise\\-hw\\-concurrency|ardia_linux_problem_report|chromium\\-ardia\\-linux\\-layer|g_ardia_devtools_may_input|g_ardia_lazy_storage_usage|g_ardia_linux_is_companion|g_ardia_linux_minimum_size|g_ardia_win_add_main_parts|g_ardia_win_offer_inserted|kArdiaConfirmationDeadline|kArdiaDragEndNativeRefused|kArdiaMostReportedRefusals|ARDIA_CORE_AC_APP_URLS_H_|ARDIA_CORE_AC_LIFETIME_H_|ARDIA_CORE_AC_TAB_INFO_H_|ARDIA_PROFILE_HOST_SOURCE|ARDIA_WIN_CONTEXT_MENU_H_|ARDIA_WIN_LAUNCH_GUARD_H_|ArdiaGlobalRegistryAccess|ArdiaScriptsPagesThrottle|ArdiaShellTakesLaunchUrls|ardia\\-content\\-blocker\\-dir|ardia\\-document\\-limit\\-test|ardia\\-document\\-validation|ardia\\-extension\\-followups|ardia\\-suggest\\-policy\\-test|ardia\\-updates\\-policy\\-test|ardia_linux_favicon_fetch|g_ardia_linux_close_hooks|g_ardia_open_action_popup|g_ardia_tab_shown_by_host|g_ardia_viewless_browsers|g_ardia_wants_cast_dialog|g_ardia_win_open_as_offer|g_ardia_win_prompt_window|ARDIA_CORE_AC_BROWSER_H_|ARDIA_CORE_AC_STRINGS_H_|ARDIA_ENGINE_API_VERSION|ARDIA_PROBE_DOWNLOAD_URL|ARDIA_TEST_PAGE_STATE_H_|ArdiaDevToolsTokenClient|ArdiaInheritFrameBlocked|ardia\\-extension\\-contract|ardia\\-picture\\-in\\-picture|ardia\\-user\\-scripts\\-store|ardia_linux_live_folders|ardia_linux_update_check|g_ardia_dnr_rule_matched|g_ardia_history_eligible|g_ardia_linux_drag_ended|g_ardia_linux_target_url|g_ardia_win_context_menu|ARDIA_REPEATINGtemplate|ARDIA_WIN_FRAME_VIEW_H_|ARDIA_WIN_KEPT_PAGES_H_|ARDIA_WIN_PAGE_LINKS_H_|ARDIA_WIN_TAB_EVENTS_H_|ArdiaLinuxInPrimaryPage|ArdiaLinuxWindowOutputs|ArdiaVideoOverlayWindow|ConfigureArdiaPageWorld|SetArdiaAutoplayBlocked|ardia\\-automation\\-window|ardia\\-download\\-contract|ardia\\-hide\\-page\\-actions|ardia\\-hyprland\\-instance|ardia\\-launch\\-steps\\-test|ardia\\-passwords\\-replace|ardia\\-renderer\\-contract|ardia\\-split\\-clienthello|ardia\\-throwaway\\-profile|ardia_autoplay_blocked_|ardia_drag_entered_pos_|g_ardia_linux_tab_shown|g_ardia_password_bubble|kArdiaDragEndSourceGone|ARDIA_CORE_AC_HOOKS_H_|ARDIA_CORE_AC_SEAMS_H_|ARDIA_PROBE_COOKIE_URL|ARDIA_WIN_TAB_CALLS_H_|ARDIA_WIN_TAB_STATE_H_|ARDIA_WIN_TEST_GATE_H_|AnyArdiaToplevelActive|ArdiaDropAfterDragOver|ArdiaExplicitlyEntered|ArdiaLinuxFramelessApp|ArdiaMediaCommandScope|ArdiaRestrictedSession|ReportArdiaTokenServer|ShowArdiaDeviceChooser|ardia\\-calendar\\-session|ardia\\-delayed\\-pip\\-test|ardia\\-download\\-service|ardia\\-engine\\-win\\-arm64|ardia\\-extension\\-routes|ardia\\-host\\-policy\\-test|ardia\\-sandbox\\-decision|ardia\\-services\\-fixture|ardia\\-stored\\-read\\-test|ardia\\-thin\\-scroll\\-bars|ardia\\-typeahead\\-replay|ardia_autoplay_blocked|ardia_drag_generation_|ardia_entered_for_drop|g_ardia_crx_installing|g_ardia_device_chooser|g_ardia_media_commands|g_ardia_win_frame_view|g_ardia_win_relaunched|kArdiaDragEndOwnerGone|kArdiaRelaxedDiskSpace|ARDIA_HANDLER_METHODS|ARDIA_WIN_AC_CALLS_H_|ARDIA_WIN_AUTOPLAY_H_|ARDIA_WIN_PROFILES_H_|ArdiaAppStartFunction|ArdiaDocumentAutoplay|ArdiaNoteMediaCommand|ArdiaPictureInPicture|ArdiaPipNativeControl|ArdiaSetHybridUiShown|ArdiaVideoUpscalerKit|ArdiaWindowController|ardia\\-auto\\-pip\\-hidden|ardia\\-control\\-folders|ardia\\-memory\\-pressure|ardia\\-pointer\\-regions|ardia\\-typeahead\\-input|ardia\\-window\\-commands|ardia_linux_bang_list|ardia_live_connection|g_ardia_test_keychain|kArdiaLinuxPageScript|kArdiaPageWorldPolicy|kArdiaPipButtonMargin|ARDIA_FIXTURE_SECRET|ARDIA_FRONTEND_WATCH|ArdiaAppStartFailure|ArdiaAppStopFunction|ArdiaAutoplayRefused|ArdiaBackToTabButton|ArdiaEngineEventSink|ArdiaNativeMessaging|ArdiaSetFrameBlocked|RunArdiaMediaCommand|ardia\\-app\\-activation|ardia\\-bootstrap\\-test|ardia\\-close\\-dispatch|ardia\\-document\\-close|ardia\\-engine\\-win\\-x64|ardia\\-favicon\\-policy|ardia\\-glass\\-geometry|ardia\\-linux\\-contract|ardia\\-page\\-host\\-join|ardia\\-password\\-check|ardia\\-popup\\-geometry|ardia\\-session\\-worker|ardia\\-test\\-cast\\-sink|ardia\\-window\\-minimum|ardiaEmbeddedSubview|ardia_search_suggest|chromium\\-ardia\\-layer|ARDIA_MODIFIER_FLAG|ARDIA_PROBE_EXPORTS|ARDIA_PROBE_STEP_MS|ARDIA_TEST_MEDIA_H_|Ardia\\-Einstellungen|ArdiaContentBlocker|ArdiaEndRefusedDrag|ArdiaPlaybackButton|IDR_ARDIA_GAME_HTML|__ardiaStoreRelabel|ardia\\-downloads\\-dir|ardia\\-idle\\-profiles|ardia\\-import\\-XXXXXX|ardia\\-import\\-new222|ardia\\-import\\-old111|ardia\\-live\\-contract|ardia\\-live\\-services|ardia\\-notifications|ardia\\-page\\-messages|ardia\\-private\\-close|ardia\\-series\\-target|ardia\\-session\\-merge|ardia\\-site\\-controls|ardia\\-switcher\\-keys|ardia\\-test\\-instance|ardia\\-unhandled\\-key|ardia\\-window\\-ledger|ardia_close_closure|ardia_drag_entered_|ardia_last_drag_id_|ardia_resources_win|ardia_sync_approval|ardia_token_client_|ardia_token_factory|g_ardia_cast_dialog|g_ardia_drags_ended|kArdiaHostBootstrap|kArdiaPipButtonSize|ARDIA_HOST_METHODS|ARDIA_NATIVE_GUARD|ARDIA_WIN_HOOKS_H_|ArdiaDocumentAsked|ArdiaEndDragSource|ArdiaExtensionView|ArdiaFrameAutoplay|ArdiaNotifications|ArdiaReportRefusal|ArdiaSystemSignals|_ardiaEmbeddedView|ardia\\-blocking\\-off|ardia\\-calendar\\-bus|ardia\\-chromium\\-win|ardia\\-control\\-bind|ardia\\-control\\-core|ardia\\-desktop\\-core|ardia\\-engine\\-event|ardia\\-import\\-build|ardia\\-launch\\-claim|ardia\\-linux\\-bridge|ardia\\-media\\-policy|ardia\\-memory\\-saver|ardia\\-noise\\-canvas|ardia\\-picker\\-slots|ardia\\-pip\\-lifetime|ardia\\-private\\-link|ardia\\-profile\\-host|ardia\\-secret\\-reply|ardia\\-sidebar\\-edge|ardia\\-sync\\-devices|ardia\\-user\\-scripts|ardiaReloadPending|ardia_drag_source_|ardia_saved_bounds|ardia_symbol_probe|ardia_sync_delayed|ardia_sync_desired|data\\-ardia\\-request|g_ardia_keeps_page|kArdiaDragEndKinds|kLittleArdiaWindow|ARDIA_CLI_BIN_DIR|ARDIA_CONFIG_HOME|ARDIA_INPUT_TRACE|ARDIA_PACKAGE_DIR|ARDIA_PROBE_URL_2|ARDIA_TEST_REAUTH|ARDIA_WIN_HOST_H_|ARDIA_WIN_MAIN_H_|ArdiaEndOwnedDrag|ArdiaFrameBlocked|ArdiaLeaveTargets|ArdiaNoteUsedHere|ArdiaPromptWindow|ArdiaWithDeadline|CloseArdiaPrompts|ardia\\-cli\\-install|ardia\\-config\\-core|ardia\\-credentials|ardia\\-import\\-file|ardia\\-launch\\-test|ardia\\-noise\\-audio|ardia\\-pane\\-layout|ardia\\-secret\\-text|ardia\\-startup\\-tab|ardiaEmbeddedView|ardia_drag_owned_|ardia_saved_state|ardia_screenshot_|ardia_token_mode_|data\\-ardia\\-bridge|reserved_by_ardia|ARDIA_BACKGROUND|ARDIA_PROBE_STAY|ARDIA_WIN_API_H_|ArdiaAbandonDrag|ArdiaCloseButton|ArdiaEngineReply|ArdiaGlassRegion|ArdiaPermissions|ArdiaProbeWindow|ArdiaProgressBar|ArdiaRefusesPlay|ArdiaUserScripts|__ardiaBootstrap|ardia\\-appearance|ardia\\-background|ardia\\-extensions|ardia\\-f01\\-native|ardia\\-fullscreen|ardia\\-page\\-state|ardia\\-page\\-swipe|ardia\\-pane\\-focus|ardia\\-wheel\\-zoom|ardia_build_file|ardia_icon_fetch|ardia_screenshot|ardia_yuv_to_rgb|data\\-ardia\\-reply|g_ardia_embedder|ARDIA_PROBE_DIR|ARDIA_PROBE_LOG|ARDIA_PROBE_URL|ARDIA_REPEATING|ARDIA_TRANSFORM|ArdiaAutomation|ArdiaExtensions|ArdiaForgetDrag|ArdiaHostedPage|ArdiaPasswordsX|ardia\\-bang\\-list|ardia\\-documents|ardia\\-downloads|ardia\\-frameless|ardia\\-layer\\-win|ardia\\-open\\-urls|ardia\\-page\\-keys|ardia\\-sync\\-tool|ardia\\-tab\\-sleep|ardia\\-typeahead|ardia\\-web\\-store|ardia_bootstrap|ardia_own_press|ardia_resources|ARDIA_CLI_HOME|ARDIA_DATA_DIR|ARDIA_INSTANCE|ARDIA_SWITCHES|ArdiaDocuments|ArdiaDownloads|ArdiaEngineApi|ArdiaMayInject|ArdiaObserving|ArdiaPasswords|ArdiaScripting|ArdiaTabActive|ArdiaTelemetry|OnArdiaRequest|SplitArdiaPath|ardia\\-calendar|ardia\\-data\\-dir|ardia\\-hardware|ardia\\-pip\\-test|ardia\\-switches|ardia\\-tab\\-glue|ardiaOffscreen|ardiaPageColor|ardia_features|ardiapagecolor|ARDIA_BACKEND|ARDIA_CLI_URL|ARDIA_DESKTOP|ARDIA_DIALOGS|ARDIA_HANDLER|ARDIA_METHODS|ARDIA_PROFILE|ARDIA_TRUSTED|Ardia\\-Autoren|ArdiaAppStart|ArdiaAutofill|ArdiaCalendar|ArdiaEmbedded|ArdiaFileDrag|ArdiaFileDrop|ArdiaLocation|ArdiaProfiles|ArdiaSettings|ardia\\-capture|ardia\\-desktop|ardia\\-dialogs|ardia\\-geoclue|ardia\\-pip\\-ipc|ardia\\-staging|ardia\\-symbols|ardia\\-windows|ardiaPeekSend|ardia_bin_dir|ardia_command|ardia_namesub|ardia_sources|ARDIA_NATIVE|ArdiaAppStop|ArdiaBrowser|ArdiaControl|ArdiaDragEnd|ArdiaOwnDrag|ArdiaUpdater|ArdiaUpdates|ArdiaWebView|__ardiaEvent|__ardiaReply|ardia\\-config|ardia\\-import|ardia\\-launch|ardia\\-live\\-1|ardia\\-reauth|ardia\\-report|ardia\\-ui\\-dir|ardiaFadeOut|ardiaRequest|ardia_opaque|ardia_press_|ardia_routed|ardia_source|ARDIA_GUARD|ARDIA_INPUT|ARDIA_LAYER|ARDIA_RULES|ARDIA_TRACE|ArdiaAnswer|ArdiaConfig|ArdiaEngine|ArdiaImport|ArdiaReport|ArdiaSearch|ArdiaSystem|X\\-Ardia\\-Key|__ardiaHost|ardia\\-cli\\-0|ardia\\-crash|ardia\\-icons|ardia\\-links|ardia\\-noise|ardia\\-oauth|ardia\\-trace|ardiaResult|ardia_alive|ardia_error|littleArdia|x\\-ardia\\-key|ARDIA_TEST|ArdiaCrash|ArdiaGlass|ArdiaMedia|ArdiaProbe|ArdiaShell|ardia\\-cast|ardia\\-idle|ardia\\-live|ardia\\-quit|ardia\\-sync|ardia\\-test|ardiaError|ardia_page|kArdiaType|u201CArdia|ArdiaHost|ArdiaLive|ArdiaSync|ArdiaTabs|app\\-ardia|ardia\\-cli|ardia\\-pip|ardia\\-psi|ardia\\-ver|ardiaPeek|ardia_pad|ardia_win|ArdiaApp|ArdiaCEF|ArdiaCli|ArdiaDev|ArdiaHTM|ArdiaPDF|ArdiaPip|ArdiaVSR|ardia\\-ui|ku\\-Ardia|ArdiaId|Ardiain|yeArdia)(?![A-Za-z0-9_-])|(?<![A-Za-z0-9_])ardia(?=::)|(?<=source_set\\(\\\")ardia(?=\\\")",
+   "scope": [
+    "docs/engine-build.md",
+    "docs/engine-build-windows.md",
+    "docs/ardiacore-parity.md",
+    "docs/ardiacore-spike.md"
+   ],
+   "why": "Engine symbols, namespaces, files and build names the engine docs cite (every ardia token in engine/ and scripts/windows/engine at the base): the docs describe the retained engine until Layer 2."
+  },
+  {
+   "id": "R-engine-branding-row",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "^\\| `chromium-helium-branding\\.patch` \\|.*$",
+   "scope": [
+    "docs/engine-build.md"
+   ],
+   "why": "The engine-build.md row for chromium-helium-branding.patch: it says what the prebuilt engine shows (Ardia), which stays true until Layer 2."
   },
   {
    "id": "O-frozen-tokens",
@@ -1160,6 +1240,51 @@
    "replace": "@nilla"
   },
   {
+   "id": "smoke-drift-path",
+   "plan": "D.6 hand edit (review: the skip file imports a moved helper)",
+   "find": "(?<=acceptance/lib/)ardia(?=\\.mjs)",
+   "replace": "nilla",
+   "scope": [
+    "scripts/linux/smoke.mjs"
+   ]
+  },
+  {
+   "id": "smoke-drift-lower",
+   "plan": "D.6 hand edit (review: names R renames in the helper, the UI and ubo-seed)",
+   "find": "(?<![A-Za-z0-9_])ardia(?=Linux\\b|SeedFromPackage\\b|-linux-window\\b)",
+   "replace": "nilla",
+   "scope": [
+    "scripts/linux/smoke.mjs"
+   ]
+  },
+  {
+   "id": "smoke-drift-title",
+   "plan": "D.6 hand edit (review: launchArdia and the CLI's own scripts list text)",
+   "find": "(?<=\\blaunch)Ardia(?![A-Za-z0-9_])|(?<=reported by )Ardia\\b",
+   "replace": "Nilla",
+   "scope": [
+    "scripts/linux/smoke.mjs"
+   ]
+  },
+  {
+   "id": "cli-script",
+   "plan": "D.3 (E11)",
+   "find": "^ardia = \\\"ardia_cli\\.cli:main\\\"$",
+   "replace": "nilla-browser = \"nilla_browser_cli.cli:main\"",
+   "scope": [
+    "apps/cli/pyproject.toml"
+   ]
+  },
+  {
+   "id": "cli-skill-permission",
+   "plan": "D.3 (E11)",
+   "find": "(?<=Bash\\()ardia(?=:\\*\\))",
+   "replace": "nilla-browser",
+   "scope": [
+    "apps/cli/*"
+   ]
+  },
+  {
    "id": "cli-module",
    "plan": "D.3 (OWNER-CLI, E11)",
    "find": "(?<![A-Za-z0-9_])ardia_cli(?![A-Za-z0-9])",
@@ -1170,15 +1295,6 @@
    "plan": "D.3 (E11)",
    "find": "(?<=^name = \\\")ardia-cli(?=\\\"$)",
    "replace": "nilla-browser",
-   "scope": [
-    "apps/cli/pyproject.toml"
-   ]
-  },
-  {
-   "id": "cli-script",
-   "plan": "D.3 (E11)",
-   "find": "^ardia = \\\"ardia_cli\\.cli:main\\\"$",
-   "replace": "nilla-browser = \"nilla_browser_cli.cli:main\"",
    "scope": [
     "apps/cli/pyproject.toml"
    ]
@@ -1202,8 +1318,8 @@
   {
    "id": "13a-the-command",
    "plan": "D.5 rule 13a",
-   "find": "\\bthe (`?)ardia(`?) command\\b",
-   "replace": "the \\1nilla-browser\\2 command"
+   "find": "\\b([Tt])he (`?)ardia(`?) command\\b",
+   "replace": "\\1he \\2nilla-browser\\3 command"
   },
   {
    "id": "14-upper",
@@ -1227,8 +1343,9 @@
  "reports": [
   {
    "id": "2-tap",
-   "what": "Homebrew tap leftovers (G removed them)",
-   "regex": "ardia-browser/homebrew-tap|tap/ardia|Casks/ardia"
+   "what": "Homebrew tap leftovers (G removed them), scanned in the pre-image",
+   "regex": "ardia-browser/homebrew-tap|tap/ardia|Casks/ardia",
+   "scan": "pre"
   },
   {
    "id": "13-netnyahoo",
@@ -1258,8 +1375,8 @@
    "files": 508,
    "occurrences": 1889,
    "decision": "class",
-   "protectedOccurrences": 307,
-   "renamedOccurrences": 1582,
+   "protectedOccurrences": 325,
+   "renamedOccurrences": 1564,
    "notRsFiles": 680,
    "coveredBy": [
     "N-cli-artifacts",
@@ -1268,6 +1385,8 @@
     "S-switch-names",
     "N-linux-layout",
     "F-page-operations",
+    "R-engine-basenames",
+    "U-tap",
     "P-windows-engine-files",
     "R-engine-paths",
     "V-engine-fetch-lines",
@@ -1275,6 +1394,8 @@
     "K-staging",
     "H-linux-same-words",
     "K-basenames",
+    "R-engine-doc-symbols",
+    "R-engine-branding-row",
     "T-header",
     "K-asserted:scripts/release.sh"
    ],
@@ -1286,8 +1407,8 @@
    "files": 216,
    "occurrences": 1244,
    "decision": "class",
-   "protectedOccurrences": 1198,
-   "renamedOccurrences": 46,
+   "protectedOccurrences": 1201,
+   "renamedOccurrences": 43,
    "notRsFiles": 123,
    "coveredBy": [
     "S-env",
@@ -1321,12 +1442,13 @@
    "files": 121,
    "occurrences": 382,
    "decision": "protect-linux",
-   "protectedOccurrences": 273,
-   "renamedOccurrences": 109,
+   "protectedOccurrences": 274,
+   "renamedOccurrences": 108,
    "notRsFiles": 13,
    "coveredBy": [
     "H-linux-modules",
-    "K-basenames"
+    "K-basenames",
+    "R-engine-doc-symbols"
    ],
    "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
   },
@@ -1336,12 +1458,13 @@
    "files": 104,
    "occurrences": 326,
    "decision": "protect-linux",
-   "protectedOccurrences": 174,
-   "renamedOccurrences": 152,
+   "protectedOccurrences": 175,
+   "renamedOccurrences": 151,
    "notRsFiles": 9,
    "coveredBy": [
     "H-linux-modules",
-    "P-windows-exports"
+    "P-windows-exports",
+    "P-windows-dll-target"
    ],
    "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
   },
@@ -1630,7 +1753,8 @@
    "notRsFiles": 0,
    "coveredBy": [
     "K-basenames",
-    "H-linux-modules"
+    "H-linux-modules",
+    "R-engine-doc-symbols"
    ],
    "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
   },
@@ -1683,11 +1807,12 @@
    "files": 15,
    "occurrences": 28,
    "decision": "protect-linux",
-   "protectedOccurrences": 16,
-   "renamedOccurrences": 12,
+   "protectedOccurrences": 20,
+   "renamedOccurrences": 8,
    "notRsFiles": 14,
    "coveredBy": [
-    "H-linux-modules"
+    "H-linux-modules",
+    "R-engine-doc-symbols"
    ],
    "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
   },
@@ -2445,11 +2570,12 @@
    "files": 5,
    "occurrences": 6,
    "decision": "protect-linux",
-   "protectedOccurrences": 5,
-   "renamedOccurrences": 1,
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
    "notRsFiles": 0,
    "coveredBy": [
-    "H-linux-modules"
+    "H-linux-modules",
+    "R-engine-doc-symbols"
    ],
    "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
   },
@@ -3394,11 +3520,12 @@
    "files": 3,
    "occurrences": 6,
    "decision": "protect-linux",
-   "protectedOccurrences": 5,
-   "renamedOccurrences": 1,
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
    "notRsFiles": 1,
    "coveredBy": [
-    "H-linux-modules"
+    "H-linux-modules",
+    "R-engine-doc-symbols"
    ],
    "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
   },
@@ -3408,11 +3535,12 @@
    "files": 3,
    "occurrences": 5,
    "decision": "protect-linux",
-   "protectedOccurrences": 4,
-   "renamedOccurrences": 1,
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
    "notRsFiles": 1,
    "coveredBy": [
-    "H-linux-modules"
+    "H-linux-modules",
+    "R-engine-doc-symbols"
    ],
    "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
   },
