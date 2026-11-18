@@ -174,6 +174,20 @@ describe.each(SIZES)("%i items", (size) => {
     unmount(root);
   });
 
+  run("syncMacTabsSpaces")("three views that change one Mac tab's title, with the Spaces sheet open", () => {
+    seed(size, "browsing");
+    const root = renderSurface(<Surfaces />);
+    act(() => jest.advanceTimersByTime(2000));
+    act(() => useBrowse.setState({ sheet: "spaces" }));
+    act(() => jest.advanceTimersByTime(800));
+    measure("syncMacTabsSpaces", size, () => {
+      for (let change = 1; change <= 3; change++) emit(viewEvent(size, `Mac ${change}`));
+      act(() => jest.advanceTimersByTime(1000));
+    });
+    act(() => useBrowse.setState({ sheet: null }));
+    unmount(root);
+  });
+
   run("syncTicksLibrary")("four lastSynced ticks with History open", () => {
     seed(size, "browsing");
     const root = renderSurface(<Surfaces />);

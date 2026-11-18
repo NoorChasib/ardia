@@ -290,3 +290,21 @@ onIos("open History reloads on what it shows (sync on, syncing, the space's sync
   act(() => library.closeLibrary());
   unmount(root);
 });
+
+onIos("opening Spaces renders each page and row once, and a Mac tab change re-renders only that page and row, which shows the new title", () => {
+  useBrowse.setState({ surface: "browsing", sheet: null, deckEntrance: null, frozenOrder: null, opening: null });
+  const root = renderSurface(<Surfaces />);
+  act(() => useBrowse.setState({ sheet: "spaces" }));
+  act(() => jest.advanceTimersByTime(800));
+  expect(count("ExpoSpacePage")).toBe(2);
+  expect(count("ExpoRemoteRow")).toBe(6);
+  renders = [];
+  const changed = view();
+  changed.profiles[0]!.deviceTabs[0]!.tabs[0]!.title = "Renamed on the Mac";
+  emitView(changed);
+  expect(count("ExpoSpacePage")).toBe(1);
+  expect(count("ExpoRemoteRow")).toBe(1);
+  expect(JSON.stringify(root.toJSON())).toContain("Renamed on the Mac");
+  act(() => useBrowse.setState({ sheet: null }));
+  unmount(root);
+});
