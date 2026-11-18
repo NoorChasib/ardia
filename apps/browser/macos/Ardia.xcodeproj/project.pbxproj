@@ -30,6 +30,7 @@
 		514201562437B4B40078DB4F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		514201592437B4B40078DB4F /* Ardia.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Ardia.entitlements; sourceTree = "<group>"; };
 		6BFBFB605DF6F35370DCDEB9 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Ardia-macOS/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		A7D3C0DE00000000000000E1 /* Nilla.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Nilla.xcconfig; sourceTree = "<group>"; };
 		B061BE5464342E57C82A2F6C /* Pods-Ardia-macOS.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Ardia-macOS.debug.xcconfig"; path = "Target Support Files/Pods-Ardia-macOS/Pods-Ardia-macOS.debug.xcconfig"; sourceTree = "<group>"; };
 		B5B616A5F60952076D0F8358 /* AppDelegate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C1D4F94ED9B4A4D62FC468D0 /* libPods-Ardia-macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Ardia-macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -106,6 +107,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				A7D3C0DE00000000000000E1 /* Nilla.xcconfig */,
 				5142014A2437B4B30078DB4F /* Ardia-macOS */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
@@ -162,7 +164,6 @@
 				TargetAttributes = {
 					514201482437B4B30078DB4F = {
 						CreatedOnToolsVersion = 11.4;
-						DevelopmentTeam = U5L5T3NGVV;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -391,13 +392,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 122;
 				DEAD_CODE_STRIPPING = NO;
-				DEVELOPMENT_TEAM = U5L5T3NGVV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = "Ardia-macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.47-nightly.5;
+				MARKETING_VERSION = 0.1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -405,8 +405,7 @@
 					"\"$(ARDIACORE_STAGE_DIR)/Chromium Framework.framework/Chromium Framework\"",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser;
-				PRODUCT_NAME = Ardia;
+				PRODUCT_NAME = Nilla;
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -426,13 +425,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 122;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = U5L5T3NGVV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = "Ardia-macOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.2.47-nightly.5;
+				MARKETING_VERSION = 0.1.0;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -440,8 +438,7 @@
 					"\"$(ARDIACORE_STAGE_DIR)/Chromium Framework.framework/Chromium Framework\"",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.ardia.browser;
-				PRODUCT_NAME = Ardia;
+				PRODUCT_NAME = Nilla;
 				SDKROOT = macosx;
 				SWIFT_VERSION = 5.0;
 			};
@@ -449,6 +446,7 @@
 		};
 		83CBBA201A601CBA00E9B192 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7D3C0DE00000000000000E1 /* Nilla.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
@@ -512,6 +510,7 @@
 		};
 		83CBBA211A601CBA00E9B192 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A7D3C0DE00000000000000E1 /* Nilla.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
