@@ -37,6 +37,6 @@
     "@types/react": "~19.1.10",
     "babel-preset-expo": "~54.0.0",
     "react-dom": "19.1.4",
-    "typescript": "~5.9.2"
+    "typescript": "~7.0.2"
   }
 }

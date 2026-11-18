@@ -29,8 +29,9 @@
     "test:portable:packages": "turbo run test --filter=!@ardia/ardiacore --filter=!@ardia/import --filter=!@ardia/shell --filter=!@ardia/sync"
   },
   "devDependencies": {
+    "@typescript/typescript6": "~6.0.2",
     "turbo": "^2.11.3",
-    "typescript": "~5.9.2"
+    "typescript": "~7.0.2"
   },
   "patchedDependencies": {
     "expo-constants@18.0.14": "patches/expo-constants@18.0.14.patch",
