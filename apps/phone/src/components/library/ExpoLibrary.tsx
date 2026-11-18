@@ -44,6 +44,7 @@ import {
   deleteDownload,
   deleteHistoryEntry,
   followLibraryPath,
+  historyShowsRemovals,
   LIBRARY_NAMES,
   LIBRARY_SEARCH_PROMPTS,
   LIBRARY_SECTIONS,
@@ -60,6 +61,7 @@ import {
   type DownloadedFile,
   type LibrarySection,
 } from "../../state/library/store";
+import { useHistoryRemovals } from "../../state/history/store";
 import { useSync } from "../../state/sync/store";
 import { useSelectedProfile, useSyncEnabled } from "../../state/sync/hooks";
 import { shownProfile } from "../../state/sync/syncRules";
@@ -197,6 +199,10 @@ function HistoryContent({ query, page }: { query: string; page: PageModifiers })
   useEffect(() => {
     if (open) loadHistory();
   }, [open, syncEnabled, syncing, syncedHistory, spaces]);
+  const removals = useHistoryRemovals((s) => s.removals);
+  useEffect(() => {
+    if (open && !historyShowsRemovals(removals)) loadHistory();
+  }, [open, removals]);
   const shown = useMemo(() => filterHistory(entries, query), [entries, query]);
   const days = useMemo(() => historyDays(shown), [shown]);
   const sizes = useMemo(() => days.map((day) => day.entries.length), [days]);

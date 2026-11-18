@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { downloads } from "../../platform/downloads";
-import { history } from "../history/store";
+import { history, useHistoryRemovals } from "../history/store";
 import { settled } from "../pages/store";
 import { dismissSearch } from "../search/store";
 import { openRemote } from "../sync/actions";
@@ -126,7 +126,12 @@ function localVisits(): HistoryVisitInput[] {
   return visits.map((visit) => ({ url: visit.url, title: visit.title, visitedAt: visit.visitedAt }));
 }
 
+let removalsShown = -1;
+
+export const historyShowsRemovals = (removals: number) => removalsShown === removals;
+
 export function loadHistory() {
+  removalsShown = useHistoryRemovals.getState().removals;
   const space = syncedSpace()?.syncId ?? null;
   const synced = syncedVisits();
   const stored = loadHidden(space);
@@ -137,11 +142,13 @@ export function loadHistory() {
 
 export function deleteHistoryEntry(entry: HistoryEntry) {
   const space = syncedSpace()?.syncId ?? null;
+  const upToDate = historyShowsRemovals(useHistoryRemovals.getState().removals);
   const hidden = settledHidden(hidingEntry(entry, loadHidden(space)), syncedVisits());
   saveHidden(hidden, space);
   useLibrary.setState((state) => ({ history: state.history.filter((shown) => shown.url !== entry.url) }));
   for (const profileSyncId of localSpaces.get(entry.url) ?? []) history().removeVisits([entry.url], profileSyncId);
   localSpaces.delete(entry.url);
+  if (upToDate) removalsShown = useHistoryRemovals.getState().removals;
 }
 
 export async function loadDownloads() {

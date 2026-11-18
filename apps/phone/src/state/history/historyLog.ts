@@ -28,7 +28,7 @@ export type HistoryLog = {
 
 type Summary = { limit: number; scan: number; rows: HistoryRow[]; scanned: number; edge: WindowEdge | null };
 
-export function createHistoryLog(db: SqlDatabase, onFullScan: () => void = () => undefined): HistoryLog {
+export function createHistoryLog(db: SqlDatabase, onFullScan: () => void = () => undefined, onRemoval: () => void = () => undefined): HistoryLog {
   let nextId = maxVisitId(db);
   let revision = 0;
   let summary: Summary | null = null;
@@ -140,17 +140,20 @@ export function createHistoryLog(db: SqlDatabase, onFullScan: () => void = () =>
       deleteVisitsBefore(db, cutoff);
       bump();
       forget();
+      onRemoval();
     },
     clear(since) {
       deleteVisitsSince(db, since);
       bump();
       forget();
+      onRemoval();
     },
     removeVisits(urls, profileSyncId) {
       if (!urls.length) return;
       deleteVisitsFor(db, urls, profileSyncId);
       bump();
       forget();
+      onRemoval();
     },
   };
 }
