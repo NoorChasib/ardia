@@ -11,9 +11,10 @@ import { usePages } from "../tabs/pageState";
 import { addressBarInSidebar } from "../windows/layout";
 import { peekShown } from "../windows/dockMotion";
 import { useToolbarAutoHide } from "../windows/toolbarAutoHide";
+import { useTabDrag, type TabDrag } from "../drag/tabDragStore";
 import { focusedWindowOf } from "../windows/ui";
 
-export type Surface = "menu" | "rename" | "iconPicker" | "hoverCard" | "resize" | "downloads" | "popover" | "panel" | "find" | "historyMenu" | "extensionPopup";
+export type Surface = "menu" | "rename" | "iconPicker" | "hoverCard" | "resize" | "downloads" | "popover" | "panel" | "find" | "historyMenu" | "extensionPopup" | "tabDrag";
 export type Held = "peek" | "topStrip" | "toolbar" | "hover";
 type Chrome = "sidebar" | "toolbar";
 type Where = { windowId: string; chrome: Chrome | null; tab: (tabId: string) => boolean };
@@ -27,6 +28,8 @@ const onPages: Watch = (changed) => usePages.subscribe(changed);
 const onHistoryMenu: Watch = (changed) => useHistoryMenu.subscribe(changed);
 const onExtensions: Watch = (changed) => useExtensions.subscribe(changed);
 const browser = () => useBrowser.getState();
+const tabDragWindow = (d: TabDrag) => (d.phase === "tab" ? d.windowId : null);
+const onTabDrag: Watch = (changed) => useTabDrag.subscribe((d, prev) => tabDragWindow(d) !== tabDragWindow(prev) && changed());
 
 let menuOrigin: MenuOrigin | null = null;
 
@@ -61,10 +64,11 @@ const SURFACES: Record<Surface, { open: (at: Where) => boolean; watch: Watch[] }
   find: { open: (at) => Object.entries(browser().find).some(([id, find]) => !!find?.open && at.tab(id)), watch: [onBrowser] },
   historyMenu: { open: (at) => !!useHistoryMenu.getState().menu && at.tab(useHistoryMenu.getState().menu!.tabId), watch: [onHistoryMenu] },
   extensionPopup: { open: (at) => useExtensions.getState().popup?.windowId === at.windowId, watch: [onExtensions] },
+  tabDrag: { open: (at) => tabDragWindow(useTabDrag.getState()) === at.windowId, watch: [onTabDrag] },
 };
 
 export const HOLDS: Record<Held, { chrome: Chrome | null; surfaces: Surface[] }> = {
-  peek: { chrome: "sidebar", surfaces: ["menu", "rename", "iconPicker", "hoverCard", "resize", "downloads", "popover", "historyMenu"] },
+  peek: { chrome: "sidebar", surfaces: ["menu", "rename", "iconPicker", "hoverCard", "resize", "downloads", "popover", "historyMenu", "tabDrag"] },
   topStrip: { chrome: null, surfaces: ["menu", "downloads"] },
   toolbar: { chrome: "toolbar", surfaces: ["menu", "panel", "find", "popover", "historyMenu", "extensionPopup"] },
   hover: { chrome: null, surfaces: ["menu", "rename", "iconPicker", "downloads", "popover", "panel", "find", "historyMenu", "extensionPopup"] },
@@ -72,9 +76,16 @@ export const HOLDS: Record<Held, { chrome: Chrome | null; surfaces: Surface[] }>
 
 const noTab = () => false;
 
+const where = (held: Held, windowId: string, tab: (tabId: string) => boolean): Where => ({ windowId, chrome: HOLDS[held].chrome, tab });
+
 function holds(held: Held, windowId: string, tab: (tabId: string) => boolean): boolean {
-  const at: Where = { windowId, chrome: HOLDS[held].chrome, tab };
+  const at = where(held, windowId, tab);
   return HOLDS[held].surfaces.some((surface) => SURFACES[surface].open(at));
+}
+
+function holdingSurfaces(held: Held, windowId: string, tab: (tabId: string) => boolean): Surface[] {
+  const at = where(held, windowId, tab);
+  return HOLDS[held].surfaces.filter((surface) => SURFACES[surface].open(at));
 }
 
 const watches = (held: Held) => [...new Set(HOLDS[held].surfaces.flatMap((s) => SURFACES[s].watch))];
@@ -89,10 +100,14 @@ const sidebarFieldTab = (windowId: string) => {
   return addressBarInSidebar(s, windowId) ? activeTabId(s, windowId) : undefined;
 };
 
-export const peekHeld = (windowId: string) => {
+const peekFieldTab = (windowId: string) => {
   const field = sidebarFieldTab(windowId);
-  return holds("peek", windowId, field ? (id) => id === field : noTab);
+  return field ? (id: string) => id === field : noTab;
 };
+
+export const peekHeld = (windowId: string) => holds("peek", windowId, peekFieldTab(windowId));
+
+export const peekHeldBy = (windowId: string) => holdingSurfaces("peek", windowId, peekFieldTab(windowId));
 
 export const topStripPeekHeld = (windowId: string) => holds("topStrip", windowId, noTab);
 
