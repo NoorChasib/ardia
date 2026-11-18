@@ -86,13 +86,7 @@ async function killSpawned(pids) {
 export const isAlive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
 export const binaryOf = (app) => join(app, "Contents/MacOS",
   execFileSync("plutil", ["-extract", "CFBundleExecutable", "raw", join(app, "Contents/Info.plist")]).toString().trim());
-export const appEnv = (app, env) => {
-  const binary = binaryOf(app);
-  const forThisBuild = forBuild(binary, env);
-  if (basename(binary) !== "Netnyahoo") return forThisBuild;
-  const legacy = Object.fromEntries(Object.entries(forThisBuild).filter(([k]) => k.startsWith("ARDIA_")).map(([k, v]) => [`NETNYAHOO_${k.slice("ARDIA_".length)}`, v]));
-  return { ...forThisBuild, ...legacy };
-};
+export const appEnv = (app, env) => forBuild(binaryOf(app), env);
 export const onScreenWindows = (pid) => JSON.parse(execFileSync("osascript", ["-l", "JavaScript", "-e",
   `ObjC.import("CoreGraphics"); JSON.stringify(ObjC.deepUnwrap(ObjC.castRefToObject($.CGWindowListCopyWindowInfo($.kCGWindowListOptionOnScreenOnly, 0)))
      .filter((w) => w.kCGWindowOwnerPID === ${pid} && w.kCGWindowLayer <= 0 && w.kCGWindowLayer > -2000000).map((w) => w.kCGWindowNumber))`], { timeout: 20000 }).toString());
