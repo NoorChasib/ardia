@@ -63,6 +63,9 @@ on:
         type: string
         default: ""
 
+env:
+  PRIVACY_URL: ${{ vars.IOS_PRIVACY_URL || format('https://github.com/{0}/blob/main/PRIVACY.md', github.repository) }}
+
 permissions:
   contents: read
 
@@ -126,7 +129,7 @@ jobs:
           (umask 077 && printf '%s' "$ASC_KEY_P8" | base64 -d > "$key")
           trap 'rm -f "$key"' EXIT
           ASC_KEY="$key" node apps/phone/scripts/asc.mjs public-link --build "$BUILD" \
-            --what-to-test apps/phone/ios/Config/TestFlight-WhatToTest.txt --privacy-policy https://ardia.dev/privacy | tee -a "$GITHUB_STEP_SUMMARY"
+            --what-to-test apps/phone/ios/Config/TestFlight-WhatToTest.txt --privacy-policy "$PRIVACY_URL" | tee -a "$GITHUB_STEP_SUMMARY"
 
   add-tester:
     needs: releases-enabled
@@ -218,13 +221,13 @@ jobs:
   release:
     needs: releases-enabled
     if: inputs.mode == 'dry-run' || inputs.mode == 'upload' || inputs.mode == 'device'
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 120
     concurrency:
       group: ios-release
       cancel-in-progress: false
     env:
-      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      DEVELOPER_DIR: ${{ vars.XCODE_APP || '/Applications/Xcode.app' }}/Contents/Developer
       ASC_KEY: ${{ github.workspace }}/.ci/asc/AuthKey.p8
       ASC_KEY_ID: ${{ secrets.NOTARY_KEY_ID }}
       ASC_ISSUER: ${{ secrets.NOTARY_ISSUER }}
@@ -328,7 +331,7 @@ jobs:
         run: |
           set -euo pipefail
           node apps/phone/scripts/asc.mjs public-link --build "$BUILD" \
-            --what-to-test apps/phone/ios/Config/TestFlight-WhatToTest.txt --privacy-policy https://ardia.dev/privacy | tee -a "$GITHUB_STEP_SUMMARY"
+            --what-to-test apps/phone/ios/Config/TestFlight-WhatToTest.txt --privacy-policy "$PRIVACY_URL" | tee -a "$GITHUB_STEP_SUMMARY"
       - if: always()
         name: No certificate was made
         run: |

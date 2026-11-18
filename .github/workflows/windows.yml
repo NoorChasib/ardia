@@ -382,6 +382,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: scripts/windows/fetch-engine.ps1 -Cpu $env:SLUG -Out "${{ runner.temp }}/engine" -Repository "${{ vars.WINDOWS_ENGINE_REPO || 'ardia-browser/ardia' }}"
+      - name: The engine-dependent checks are unverified without the engine
+        if: ${{ !cancelled() && steps.engine.outcome != 'success' }}
+        shell: pwsh
+        env:
+          OUTCOME: ${{ steps.engine.outcome }}
+        run: |
+          $reason = if ($env:OUTCOME -eq 'skipped') { "the fetch was skipped (a pull request from a fork has no token for it)" } else { "the fetch ended $env:OUTCOME (its log above has the reason)" }
+          Write-Host "::warning::No engine for $env:SLUG`: $reason. The install, relaunch and AUMID checks are unverified, not passed."
+          "- $env:SLUG engine: $reason; install, relaunch and AUMID checks **unverified**" >> $env:GITHUB_STEP_SUMMARY
       - name: Assemble with the engine
         id: assemble
         if: ${{ !cancelled() && steps.engine.outcome == 'success' }}

@@ -28,6 +28,8 @@ env:
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   TURBO_TELEMETRY_DISABLED: 1
   NILLA_RELEASES_ENABLED: ${{ vars.NILLA_RELEASES_ENABLED }}
+  APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+  NILLA_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
   VERSION: ${{ inputs.version }}
   DRY_RUN: ${{ inputs.dry_run }}
 
@@ -77,7 +79,7 @@ jobs:
 
   checks:
     needs: preflight
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -99,7 +101,7 @@ jobs:
 
   build:
     needs: preflight
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 120
     env:
       CAS_PATH: ${{ github.workspace }}/.xcode-cas
@@ -212,7 +214,7 @@ jobs:
 
   sign:
     needs: [preflight, build]
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -270,7 +272,7 @@ jobs:
           rm -rf "$secrets"
           printf '%s=\n' RELEASE_PROVISIONING_PROFILE SPARKLE_KEY_FILE NOTARY_KEY >> "$GITHUB_ENV"
           [ ! -e "$secrets" ] || { echo "::error::couldn't remove $secrets"; exit 1; }
-          if security find-identity -v -p codesigning | grep -q 'Developer ID Application: .*(U5L5T3NGVV)'; then
+          if security find-identity -v -p codesigning | grep -q 'Developer ID Application: '; then
             echo "::error::a Developer ID identity is still in the keychain search list"
             exit 1
           fi
@@ -435,17 +437,8 @@ jobs:
           git tag "v$VERSION" "$GITHUB_SHA"
           git push origin "refs/tags/v$VERSION"
       - name: Publish
-        env:
-          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           export RELEASE_DIST="$GITHUB_WORKSPACE/dist/$VERSION"
-          if [ -n "$TAP_TOKEN" ]; then
-            git config --global url."https://x-access-token:$TAP_TOKEN@github.com/ardia-browser/homebrew-tap".insteadOf https://github.com/ardia-browser/homebrew-tap
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          else
-            export PUBLISH_TAP=0
-          fi
           if [ "$DRY_RUN" = true ]; then
             scripts/release/publish.sh "$VERSION" --dry-run
           else

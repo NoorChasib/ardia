@@ -45,11 +45,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+  DEVELOPER_DIR: ${{ vars.XCODE_APP || '/Applications/Xcode.app' }}/Contents/Developer
 
 jobs:
   app:
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 75
     env:
       SCRATCH: ${{ github.workspace }}/.ci
@@ -79,7 +79,7 @@ jobs:
           CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet build
 
   packages:
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 45
     env:
       SCRATCH: ${{ github.workspace }}/.ci

@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RELEASE_SIGNER: "8A:B5:0E:90:D9:09:5D:F3:6A:0C:C7:EA:61:AD:AD:2B:DD:58:26:27:52:D2:9F:1B:83:D9:EA:69:62:41:98:BC"
+  RELEASE_SIGNER: ${{ vars.ANDROID_RELEASE_SIGNER }}
 
 jobs:
   releases-enabled:
