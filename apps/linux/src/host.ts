@@ -2,7 +2,7 @@ import type { LaunchConfig } from "../../../packages/shell/src/app";
 import type { HydrateData } from "../../browser/src/state/browser/store";
 import type { BrowserWindow, Tab } from "../../browser/src/state/browser/types";
 import type { UnclaimedTab } from "./unclaimedTabs.ts";
-import { gatedError, gateHost, isGated } from "./layer1Gate.ts";
+import { gatedError, gateHost, isGatedForAnyHost } from "./layer1Gate.ts";
 
 export type HostListener = (module: string, event: string, payload: unknown) => void;
 export type ArdiaHost = {
@@ -46,12 +46,12 @@ export function hostProfile(profile: string | undefined, host: ArdiaHost = ardia
 
 export function invokeHost<T = unknown>(method: string, args: Record<string, unknown>, host: ArdiaHost = ardiaHost!): Promise<T> {
   if (!host) return Promise.reject(new Error(`Ardia host unavailable: ${method}`));
-  if (isGated(method)) return Promise.reject(gatedError(method));
+  if (isGatedForAnyHost(method)) return Promise.reject(gatedError(method));
   return Promise.resolve().then(() => host.invoke(method, args)) as Promise<T>;
 }
 
 export function hostSupports(method: string, host: ArdiaHost = ardiaHost!) {
-  return !isGated(method) && !!host?.bootstrap.capabilities?.includes(method);
+  return !isGatedForAnyHost(method) && !!host?.bootstrap.capabilities?.includes(method);
 }
 
 export type HostRect = { x: number; y: number; width: number; height: number };
@@ -60,12 +60,12 @@ export const INPUT_REGIONS_METHOD = "shell.inputRegions";
 
 export function hostModuleMethod(module: string, method: string, host: ArdiaHost = ardiaHost!) {
   const name = `${module}.${method}`;
-  return (...args: unknown[]) => (isGated(name) ? Promise.reject(gatedError(name)) : invokeHost(name, { args }, host));
+  return (...args: unknown[]) => (isGatedForAnyHost(name) ? Promise.reject(gatedError(name)) : invokeHost(name, { args }, host));
 }
 
 export function callHost(name: string, profile: string, args: string | null, host: ArdiaHost = ardiaHost!) {
   if (!host) return Promise.reject(new Error(`Ardia host unavailable: ${name}`));
-  if (isGated(name)) return Promise.reject(gatedError(name));
+  if (isGatedForAnyHost(name)) return Promise.reject(gatedError(name));
   if (typeof profile !== "string") return Promise.reject(Object.assign(new Error("Profile must be a string"), { code: "ERR_ENGINE" }));
   return Promise.resolve().then(() => host.call(name, hostProfile(profile, host), args)).then((reply) => {
     if (typeof reply !== "string") throw Object.assign(new Error("The engine reply is not JSON text"), { code: "ERR_BAD_REPLY" });

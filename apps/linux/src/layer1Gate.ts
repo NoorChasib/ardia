@@ -16,6 +16,10 @@ export const GATED_MODULES: readonly string[] = ["ArdiaSync", "ArdiaLive"];
 
 export const isGated = (name: string) => GATED_METHODS.has(name) || GATED_MODULES.some((module) => name.startsWith(`${module}.`));
 
+export const ENGINE_DRIVEN_MODULES: readonly string[] = ["ArdiaLive"];
+
+export const isGatedForAnyHost = (name: string) => isGated(name) && !ENGINE_DRIVEN_MODULES.some((module) => name.startsWith(`${module}.`));
+
 export const gatedError = (name: string) => Object.assign(new Error(`${name} is off in this build of Nilla`), { code: "ERR_UNSUPPORTED" });
 
 const ungated = (capabilities: string[] | undefined) => capabilities?.filter((name) => !isGated(name));

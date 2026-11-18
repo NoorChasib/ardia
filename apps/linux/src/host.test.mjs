@@ -985,7 +985,7 @@ test("a presentation batch retains its final visibility and reports transport er
 
 test("the Layer 1 gate hides and refuses every service and independence call before the native host, whatever the engine advertises", async () => {
   const { readdirSync, readFileSync } = await import("node:fs");
-  const { gateHost, GATED_METHODS, isGated } = await import("./layer1Gate.ts");
+  const { gateHost, GATED_METHODS, isGated, isGatedForAnyHost } = await import("./layer1Gate.ts");
   const { hostSupports, hostModuleMethod } = await import("./host.ts");
   const { mock } = await import("bun:test");
   mock.module(new URL("./shims/shellBase.tsx", import.meta.url).pathname, () => ({ refreshDocument: async () => false }));
@@ -1027,9 +1027,10 @@ test("the Layer 1 gate hides and refuses every service and independence call bef
       return error;
     }
   };
+  assert.equal(isGatedForAnyHost("ArdiaLive.connect"), false, "the engine's live contract suite drives the live client through its own host");
   for (const host of [raw, gated]) {
     nativeCalls.length = 0;
-    for (const name of gatedNames) assert.equal(hostSupports(name, host), false, name);
+    for (const name of gatedNames) assert.equal(hostSupports(name, host), host === raw && !isGatedForAnyHost(name), name);
     assert.equal(hostSupports("report.files", host), true);
     await settle(() => hostTelemetrySend(host)("{}"));
     await settle(() => hostReportPost(host)?.("https://feedback.example.test/api/feedback", "{}", {}));
@@ -1041,18 +1042,20 @@ test("the Layer 1 gate hides and refuses every service and independence call bef
       if (typeof resolved === "function") await settle(() => resolved("default", null, null));
       await settle(() => resolveHostModule(host, "ArdiaSync", method)?.("default"));
     }
-    const live = hostLiveClient(host);
-    assert.equal(live.available(), false);
-    await settle(() => live.request("github", "user"));
-    await settle(() => live.connect("github", {}));
-    await settle(() => live.disconnect("github"));
-    for (const name of gatedNames.filter((n) => /^Ardia[A-Z]\w*\.\w+$/.test(n))) {
+    if (host === gated) {
+      const live = hostLiveClient(host);
+      assert.equal(live.available(), false);
+      await settle(() => live.request("github", "user"));
+      await settle(() => live.connect("github", {}));
+      await settle(() => live.disconnect("github"));
+    }
+    for (const name of gatedNames.filter((n) => /^Ardia[A-Z]\w*\.\w+$/.test(n) && (host === gated || isGatedForAnyHost(n)))) {
       const [module, method] = name.split(".");
       await settle(() => hostModuleMethod(module, method, host)());
       const resolved = await settle(() => resolveHostModule(host, module, method));
       if (typeof resolved === "function") await settle(() => resolved());
     }
-    for (const name of gatedNames) {
+    for (const name of gatedNames.filter((n) => host === gated || isGatedForAnyHost(n))) {
       await settle(() => invokeHost(name, { args: [] }, host));
       await settle(() => callHost(name, "default", "[]", host));
     }
