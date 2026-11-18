@@ -93,7 +93,7 @@ The light run records S3's key-to-shown latency (from the page's own frame times
 | put-back presses per 40 | 3.5 (2-5) | 1.5 (1-3) | 4 (2-5) | 2 (0-4) |
 
 The median is inside the A/A spread (final 3 ms above bun, spread 6 ms). The p90 leans the wrong way: final is higher
-than bun in 4 of 4 blocks, 40 against 33 ms (Mann-Whitney p = 0.14). That matches E4's earlier ctrl+Next p90 lead and
+than bun in 4 of 4 blocks, 40 against 33 ms (Mann-Whitney p = .029 against bun, .143 against stock). That matches E4's earlier ctrl+Next p90 lead and
 stayed open until the full run and the E4 ablation below. Edge reveal and hover-card latency need the
 full-instrumentation probe and aren't in this run.
 
