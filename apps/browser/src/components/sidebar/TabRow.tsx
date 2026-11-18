@@ -20,14 +20,14 @@ import { pressPaneClose, pressTabClose, useTabCloseControlWhile } from "../../st
 import { modifiersOf } from "../../lib/keys";
 import { ACTIVE, ICON_MARKS, LOADING, mutedBy, PLAYING, SELECTED, useRowState, useStruckTitle } from "../../state/sidebar/rowState";
 import { registerRow, useSidebarUi } from "../../state/sidebar/sidebarUi";
-import { TabIcon } from "./TabIcon";
+import { sidebarTabIconSize, TabIcon } from "./TabIcon";
 import { TabBadges } from "../media/TabBadges";
 import { UnreadCount } from "../unread/UnreadBadge";
 import { useTabUnread } from "../../state/tabs/unread";
 import { titleWithoutUnread } from "../../lib/unread";
 import { ROW_GLYPH, SIDEBAR_TYPE, SLEEPING_TITLE_OPACITY, TAB_ROW, useSidebarTokens } from "./tokens";
 import { useSidebarRowLook } from "./rowLook";
-import { LeadingClose, rowIconBox, TrailingBackToPin } from "./LeadingClose";
+import { LeadingClose, TrailingBackToPin } from "./LeadingClose";
 import { rowEnds } from "../../state/sidebar/closeSide";
 import { noteTabCloseButtonPress } from "../../state/telemetry/hoverCardCounts";
 import { rowTitleFrame, SidebarRowLabel, SidebarRowSurface } from "./SidebarRow";
@@ -129,7 +129,7 @@ export const TabRow = memo(function TabRow({
               textOnly ? (
                 <HoverSlot hovered={ends.lead === "close"} reserve="hover" align="start" hover={closeButton} />
               ) : (
-                <LeadingClose iconBox={rowIconBox(quiet)} close={ends.lead === "close" ? closeButton : null}>
+                <LeadingClose iconBox={sidebarTabIconSize(quiet)} close={ends.lead === "close" ? closeButton : null}>
                   <TabIcon tabId={tab.id} url={tab.url} favicon={tab.favicon} icon={tab.customIcon} profileId={tab.profileId} marks={flags & ICON_MARKS} compact={quiet} />
                   <TabBadges tabId={tab.id} />
                 </LeadingClose>
@@ -185,7 +185,7 @@ export const TabRow = memo(function TabRow({
             <HoverSlot
               hovered={hovered && !renaming}
               reserve="hover"
-              hover={ends.trail === "backToPin" ? <TrailingBackToPin tooltip={backToPinTooltip} onPress={() => returnToPinnedUrl(tab.id)} onHover={setTrailingBackHovered} /> : closeLeft ? null : closeButton}
+              hover={ends.trail === "close" ? closeButton : null}
             >
               {loading || showsUnread ? (
                 <>
@@ -194,6 +194,9 @@ export const TabRow = memo(function TabRow({
                 </>
               ) : null}
             </HoverSlot>
+            {ends.trailingBackToPin === "none" ? null : (
+              <HoverSlot hovered={ends.trailingBackToPin === "shown"} hover={<TrailingBackToPin tooltip={backToPinTooltip} onPress={() => returnToPinnedUrl(tab.id)} onHover={setTrailingBackHovered} />} />
+            )}
           </SidebarRowSurface>
       )}
       </TabPressArea>
@@ -366,7 +369,7 @@ function SplitPane({ tabId, windowId }: { tabId: string; windowId: string }) {
               backgroundColor: active ? undefined : pressed ? theme.tabPressed : hovered ? theme.rowHover : undefined,
             }}
           >
-            {closeLeft ? <LeadingClose iconBox={rowIconBox(true)} close={hovered ? closeButton : null}>{icon}</LeadingClose> : icon}
+            {closeLeft ? <LeadingClose iconBox={sidebarTabIconSize(true)} close={hovered ? closeButton : null}>{icon}</LeadingClose> : icon}
             <FadeLabel text={tabTitle(tab)} fontSize={sidebarFont.small.fontSize} color={active ? theme.rowSelectedText : theme.textTab} strikethrough={struck} style={{ flex: 1, height: Math.max(ROW_GLYPH.box, sidebarLineHeight.small + 1), marginLeft: space.xs, opacity: struck ? SLEEPING_TITLE_OPACITY : 1 }} />
             <HoverSlot
               hovered={hovered}

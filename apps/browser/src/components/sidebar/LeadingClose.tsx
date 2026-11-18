@@ -1,12 +1,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { View } from "react-native";
-import { Button, iconButton, sidebarIconSize, useHover } from "../ui";
+import { Button, iconButton, useHover } from "../ui";
 
-const ROW_ICON = 16;
-const COMPACT_ROW_ICON = 14;
 const CLOSE_BOX = iconButton.s.box;
-
-export const rowIconBox = (compact: boolean) => sidebarIconSize(compact ? COMPACT_ROW_ICON : ROW_ICON);
 
 const COVERED = { opacity: 0 } as const;
 const OVER_ICON = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" } as const;

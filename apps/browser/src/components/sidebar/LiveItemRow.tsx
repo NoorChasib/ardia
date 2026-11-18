@@ -21,10 +21,10 @@ import { useRowHover } from "./hoverController";
 import { openLiveItemMenu } from "../../state/sidebar/liveMenus";
 import { registerRow } from "../../state/sidebar/sidebarUi";
 import { withShortcut } from "../../state/commands/commandShortcuts";
-import { TabIcon } from "./TabIcon";
+import { sidebarTabIconSize, TabIcon } from "./TabIcon";
 import { SIDEBAR_MOTION, sidebarTokens, TAB_ROW, useSidebarTokens } from "./tokens";
 import { useSidebarRowLook } from "./rowLook";
-import { LeadingClose, rowIconBox, TrailingBackToPin } from "./LeadingClose";
+import { LeadingClose, TrailingBackToPin } from "./LeadingClose";
 import { rowEnds } from "../../state/sidebar/closeSide";
 import { noteTabCloseButtonPress } from "../../state/telemetry/hoverCardCounts";
 import { SidebarRowLabel, SidebarRowSurface } from "./SidebarRow";
@@ -100,7 +100,7 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
               <SidebarRowSurface fill={!active && pressed ? pressedFill : fill} selected={active && !quiet} border={border} padLeft={TAB_ROW.contentLeft + indent - border} padRight={TAB_ROW.trailing - border}>
                 {unread ? <Dot size={5} color={theme.accent} style={{ position: "absolute", left: UNREAD_DOT_LEFT + indent - border }} /> : null}
                 {closeLeft ? (
-                  <LeadingClose iconBox={item.pr ? LIVE_GLYPH : rowIconBox(false)} close={ends.lead === "close" ? closeButton : null}>
+                  <LeadingClose iconBox={item.pr ? LIVE_GLYPH : sidebarTabIconSize(false)} close={ends.lead === "close" ? closeButton : null}>
                     {itemIcon}
                   </LeadingClose>
                 ) : (
@@ -132,10 +132,13 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
                 <HoverSlot
                   hovered={hovered && !!control && !completion}
                   reserve={inStack && item.pr?.stack ? "always" : "hover"}
-                  hover={ends.trail === "backToPin" ? <TrailingBackToPin tooltip={backToPinTooltip} onPress={() => tabId && returnLiveTab(tabId)} onHover={setTrailingBackHovered} /> : closeLeft ? null : closeButton}
+                  hover={ends.trail === "close" ? closeButton : null}
                 >
                   <Trailing item={item} completion={completion} colors={colors} />
                 </HoverSlot>
+                {ends.trailingBackToPin === "none" ? null : (
+                  <HoverSlot hovered={ends.trailingBackToPin === "shown"} hover={<TrailingBackToPin tooltip={backToPinTooltip} onPress={() => tabId && returnLiveTab(tabId)} onHover={setTrailingBackHovered} />} />
+                )}
               </SidebarRowSurface>
             )}
           </Pressable>
@@ -147,6 +150,7 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
 
 const UNREAD_DOT_LEFT = 2;
 const LIVE_GLYPH = 16;
+const LIVE_GLYPH_BOX = { width: LIVE_GLYPH, height: LIVE_GLYPH } as const;
 const STACK_INDENT = 10;
 const POSITION_CHIP = { marginLeft: space.xs } as const;
 
@@ -197,7 +201,7 @@ function ItemIcon({ item, completion, colors }: { item: LiveItem; completion: Co
     );
   }
   if (item.pr) {
-    return <Symbol name="arrow.triangle.pull" size={12} weight="semibold" color={item.pr.draft ? colors.draft : colors.success} style={{ width: 16, height: 16 }} />;
+    return <Symbol name="arrow.triangle.pull" size={12} weight="semibold" color={item.pr.draft ? colors.draft : colors.success} style={LIVE_GLYPH_BOX} />;
   }
   if (item.icon && /^https?:/.test(item.icon)) return <TabIcon url={item.url} favicon={item.icon} direct />;
   return <TabIcon url={item.source === "confluence" && !item.icon ? SOURCES.confluence.site : item.url} icon={item.icon} />;
