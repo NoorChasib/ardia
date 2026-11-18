@@ -326,22 +326,35 @@ export function deckBarBand(g: DeckGeometry, barHeight: number, scaleProgress: n
 
 export function mergeDeckOrder(shown: readonly string[], live: readonly string[]): string[] {
   const alive = new Set(live);
-  const next = shown.filter((id) => alive.has(id));
-  const known = new Set(next);
-  for (let i = 0; i < live.length; i++) {
-    const id = live[i]!;
-    if (known.has(id)) continue;
-    let at = next.length;
-    for (let j = i + 1; j < live.length; j++) {
-      const after = next.indexOf(live[j]!);
-      if (after >= 0) {
-        at = after;
-        break;
+  const kept = shown.filter((id) => alive.has(id));
+  const keptIds = new Set(kept);
+  const placed = new Set(kept);
+  const arrivalsBefore = new Map<string, string[]>();
+  let arriving: string[] = [];
+  for (const id of live) {
+    if (keptIds.has(id)) {
+      if (arriving.length) {
+        const earlier = arrivalsBefore.get(id);
+        if (earlier) for (const arrival of arriving) earlier.push(arrival);
+        else arrivalsBefore.set(id, arriving);
+        arriving = [];
       }
+      continue;
     }
-    next.splice(at, 0, id);
-    known.add(id);
+    if (placed.has(id)) continue;
+    placed.add(id);
+    arriving.push(id);
   }
+  const next: string[] = [];
+  for (const id of kept) {
+    const arrivals = arrivalsBefore.get(id);
+    if (arrivals) {
+      for (const arrival of arrivals) next.push(arrival);
+      arrivalsBefore.delete(id);
+    }
+    next.push(id);
+  }
+  for (const arrival of arriving) next.push(arrival);
   return next;
 }
 
