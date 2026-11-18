@@ -78,7 +78,7 @@ the same. Console warnings and errors go out as plain logs. Replays mask every i
 minimum session length, flags) are in `src/data/telemetry.ts`, with the event names (`SITE_EVENTS`), the
 sources and libs, the noise rules and the replay upload contract that `scripts/stats.mjs` and `scripts/replay.mjs` import
 too. Tag a link with `data-track="event"` and `data-track-<prop>="value"`, or call `capture()` from
-`src/scripts/telemetry`; `src/data/telemetry.test.ts` (in `bun run test`) fails when an event isn't listed or a listed one
+`src/scripts/telemetry`; `src/data/telemetry.test.ts` (run by `bun run test:root` from the repository root) fails when an event isn't listed or a listed one
 is no longer sent. Every event carries `ardia_device` (`mac`, `phone`, `other`) and `ardia_os` from `Device.astro`, the
 same answer the page acted on.
 

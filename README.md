@@ -222,6 +222,20 @@ Package the build with a prebuilt engine (`gh` signed in), from the repository r
 ```powershell
 scripts/windows/fetch-engine.ps1 -Cpu x64 -Out $env:TEMP\ardia-engine
 scripts/windows/assemble.ps1 -App apps/browser/windows/x64/Release -Engine $env:TEMP\ardia-engine -Out $env:TEMP\Ardia
+```
+
+Launch the assembled app on a fresh data folder:
+
+```powershell
+$env:ARDIA_DATA_DIR = Join-Path $env:TEMP "ardia-data-$(Get-Random)"
+New-Item -ItemType Directory -Force $env:ARDIA_DATA_DIR | Out-Null
+& "$env:TEMP\Ardia\Ardia.exe"
+```
+
+Settings still live in `%APPDATA%\Ardia`: only a test build keeps them apart (docs/windows.md › Test instances).
+Build the installer from the same folder:
+
+```powershell
 scripts/windows/make-installer.ps1 -Source $env:TEMP\Ardia -Out $env:TEMP\ardia-installer -Cpu x64
 ```
 
