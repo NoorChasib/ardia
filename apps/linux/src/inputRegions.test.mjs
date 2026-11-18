@@ -65,7 +65,7 @@ function harness({ send = true, animating = false } = {}) {
     timers.clear();
     for (const run of due) run();
   };
-  return { registry, sent, replies, concealed, pagesSeen, areasSeen, settle, nextFrame, fireTimers, errors };
+  return { registry, sent, replies, concealed, pagesSeen, areasSeen, settle, nextFrame, fireTimers, errors, frames, microtasks };
 }
 
 const page = node({ x: 200, y: 50, width: 700, height: 700 });
@@ -394,4 +394,29 @@ test("a page inside another page's hole adds no hole of its own, so the even-odd
   const split = separateHoles([pane, peek]);
   assert.deepEqual(split.holes, [pane]);
   assert.deepEqual(split.pieces, [{ rect: { x: 790, y: 96, width: 564, height: 737 }, radii: [0, 12, 12, 0] }]);
+});
+
+test("a hidden page slot inside an overlay cuts no hole in it; a shown one does", () => {
+  const h = harness({ send: false });
+  const peekSlot = node({ x: 400, y: 200, width: 200, height: 200 });
+  const peek = node({ x: 300, y: 100, width: 400, height: 400 }, { children: [peekSlot] });
+  const hidden = Array.from({ length: 50 }, () => node({ x: 300, y: 100, width: 400, height: 400 }));
+  for (const slot of hidden) peek.children.push(slot), (slot.parent = peek), h.registry.setPage(slot, false);
+  h.registry.setPage(peekSlot, false);
+  h.registry.addOverlay(peek);
+  assert.deepEqual(h.registry.overlayRects(), [peek.rect]);
+  h.registry.setPage(peekSlot, true);
+  assert.deepEqual(h.registry.overlayRects(), subtract(peek.rect, peekSlot.rect));
+});
+
+test("a frame whose measuring pass already queued a flush flushes once", async () => {
+  const h = harness({ send: false });
+  h.registry.setPage(page, true);
+  h.registry.addOverlay(pageMenu());
+  await h.settle();
+  assert.equal(h.frames.length, 1);
+  const before = h.registry.status().flushes;
+  h.frames.unshift(() => h.registry.refresh());
+  await h.nextFrame();
+  assert.equal(h.registry.status().flushes - before, 1);
 });

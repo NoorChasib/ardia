@@ -73,6 +73,7 @@ export function createInputRegions(deps: RegionDeps) {
   let acked: Rect[] = [];
   let sequence = 0;
   let ackedSequence = 0;
+  let flushes = 0;
 
   const schedule = () => {
     if (flushQueued) return;
@@ -87,7 +88,7 @@ export function createInputRegions(deps: RegionDeps) {
     frameQueued = true;
     deps.frame(() => {
       frameQueued = false;
-      flush();
+      if (!flushQueued) flush();
     });
   };
 
@@ -117,7 +118,8 @@ export function createInputRegions(deps: RegionDeps) {
       const rect = deps.rectOf(element);
       if (area(rect)) raw.push(rect);
     } else hitRects(element, raw);
-    const hosted = [...pages.keys()].filter((slot) => element.contains(slot)).map(deps.rectOf);
+    const hosted: Rect[] = [];
+    for (const [slot, page] of pages) if (page.visible && element.contains(slot)) hosted.push(deps.rectOf(slot));
     return raw.flatMap((rect) => hosted.reduce<Rect[]>((pieces, hole) => pieces.flatMap((piece) => subtract(piece, hole)), [rect])).map(rounded);
   };
 
@@ -165,6 +167,7 @@ export function createInputRegions(deps: RegionDeps) {
   };
 
   const flush = () => {
+    flushes++;
     const areas = measurePages();
     const pageRects = areas.map((page) => page.rect);
     const key = JSON.stringify(areas.map((page) => [page.rect, page.radii ?? null]));
@@ -233,12 +236,13 @@ export function createInputRegions(deps: RegionDeps) {
       };
     },
     overlayElements: () => [...overlays.keys()],
+    overlayRects: () => [...overlays].flatMap(([element, overlay]) => measureOverlay(element, overlay.shape)),
     overlayAt(x: number, y: number) {
       for (const [element, overlay] of overlays) if (measureOverlay(element, overlay.shape).some((rect) => x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height)) return true;
       return false;
     },
     refresh: schedule,
-    status: () => ({ supported: !!deps.send, sent: sentKey ? (JSON.parse(sentKey) as HostInputRegions) : null, sequence, acked: ackedSequence, overlays: overlays.size, pages: pages.size }),
+    status: () => ({ supported: !!deps.send, sent: sentKey ? (JSON.parse(sentKey) as HostInputRegions) : null, sequence, acked: ackedSequence, flushes, overlays: overlays.size, pages: pages.size }),
     flushNow: flush,
   };
 }

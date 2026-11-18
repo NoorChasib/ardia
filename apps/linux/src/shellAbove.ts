@@ -1,5 +1,7 @@
 import { createContext, useContext, useLayoutEffect, type RefObject } from "react";
 import { hostSupports, INPUT_REGIONS_METHOD, invokeHost, reportHostError, type ArdiaHost } from "./host.ts";
+import { setShellFrameCountSource } from "../../browser/src/state/telemetry/shellFrameCounts";
+import { paintsOnly, requestViewportFrame, viewportCounts } from "./hostViewport.ts";
 import { createInputRegions, type InputRegionsRegistry, type RegionDeps, type RegionShape } from "./inputRegions.ts";
 import { createPageHoles, type PageHoles } from "./pageHoles.ts";
 import { startShellGlass } from "./shellGlass.ts";
@@ -36,10 +38,10 @@ export function domRegionDeps(host: ArdiaHost): Omit<RegionDeps, "conceal"> {
     },
     animating: (elements) => !!document.getAnimations?.().some((animation) => {
       const target = (animation.effect as KeyframeEffect | null)?.target;
-      return animation.playState === "running" && !!target && elements.some((element) => element.contains(target) || target.contains(element));
+      return animation.playState === "running" && !!target && !paintsOnly(target) && elements.some((element) => element.contains(target) || target.contains(element));
     }),
     microtask: (run) => queueMicrotask(run),
-    frame: (run) => void requestAnimationFrame(run),
+    frame: requestViewportFrame,
     frameTime: () => Number(document.timeline.currentTime ?? performance.now()),
     timeout: (run, ms) => setTimeout(run, ms),
     clearTimeout: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
@@ -59,6 +61,37 @@ function conceal(element: Element, hidden: boolean) {
   }
 }
 
+export function shellFrameCounts(registry: { status(): { flushes: number; sequence: number } }, viewport: () => { frames: number; measures: number }) {
+  const longFrames = { count: 0, ms: 0 };
+  const observer = typeof PerformanceObserver !== "undefined" && PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame")
+    ? new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        longFrames.count++;
+        longFrames.ms += entry.duration;
+      }
+    })
+    : null;
+  observer?.observe({ type: "long-animation-frame", buffered: false });
+  let last = { flushes: 0, sends: 0, frames: 0, measures: 0 };
+  const take = () => {
+    const { flushes, sequence: sends } = registry.status();
+    const { frames, measures } = viewport();
+    const counts = {
+      linux_viewport_frames: frames - last.frames,
+      linux_viewport_measures: measures - last.measures,
+      linux_region_flushes: flushes - last.flushes,
+      linux_region_sends: sends - last.sends,
+      linux_long_frames: longFrames.count,
+      linux_long_frame_ms: Math.round(longFrames.ms),
+    };
+    last = { flushes, sends, frames, measures };
+    longFrames.count = 0;
+    longFrames.ms = 0;
+    return counts;
+  };
+  return { take, stop: () => observer?.disconnect() };
+}
+
 export function startShellAbove(host: ArdiaHost, root: HTMLElement = document.body) {
   document.documentElement.classList.add(SHELL_ABOVE_CLASS);
   const painter = createPageHoles(root);
@@ -73,6 +106,8 @@ export function startShellAbove(host: ArdiaHost, root: HTMLElement = document.bo
   });
   holes = painter;
   regions = registry;
+  const frames = shellFrameCounts(registry, viewportCounts);
+  setShellFrameCountSource(frames.take);
   const refresh = () => registry.refresh();
   window.addEventListener("resize", refresh);
   window.addEventListener("scroll", refresh, true);
@@ -81,6 +116,8 @@ export function startShellAbove(host: ArdiaHost, root: HTMLElement = document.bo
     window.removeEventListener("scroll", refresh, true);
     document.documentElement.classList.remove(SHELL_ABOVE_CLASS);
     glass.stop();
+    frames.stop();
+    setShellFrameCountSource(null);
     if (regions === registry) regions = null;
     if (holes === painter) holes = null;
   };

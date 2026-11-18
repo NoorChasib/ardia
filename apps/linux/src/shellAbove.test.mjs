@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { domRegionDeps } from "./shellAbove.ts";
+import { domRegionDeps, shellFrameCounts } from "./shellAbove.ts";
 
 const host = { bootstrap: { windowId: "w", profileId: "default", capabilities: [] }, invoke: async () => null, onEvent: () => () => {} };
 
@@ -63,4 +63,29 @@ test("an animation on an overlay's ancestor or inside it counts as the overlay m
     if (previous === undefined) delete globalThis.document;
     else globalThis.document = previous;
   }
+});
+
+test("an animation inside [data-ardia-paint-motion] isn't the overlay moving", () => {
+  const previous = globalThis.document;
+  const { overlay, row } = tree();
+  const pill = { ...row, closest: (selector) => (selector === "[data-ardia-paint-motion]" ? pill : null) };
+  pill.parentElement = overlay;
+  globalThis.document = { getAnimations: () => [{ playState: "running", effect: { target: pill } }] };
+  try {
+    assert.equal(domRegionDeps(host).animating([overlay]), false);
+  } finally {
+    if (previous === undefined) delete globalThis.document;
+    else globalThis.document = previous;
+  }
+});
+
+test("the hourly frame counts are what happened since the last take", () => {
+  let status = { flushes: 10, sequence: 2 };
+  let viewport = { frames: 7, measures: 9 };
+  const counts = shellFrameCounts({ status: () => status }, () => viewport);
+  assert.deepEqual(counts.take(), { linux_viewport_frames: 7, linux_viewport_measures: 9, linux_region_flushes: 10, linux_region_sends: 2, linux_long_frames: 0, linux_long_frame_ms: 0 });
+  status = { flushes: 13, sequence: 2 };
+  viewport = { frames: 10, measures: 12 };
+  assert.deepEqual(counts.take(), { linux_viewport_frames: 3, linux_viewport_measures: 3, linux_region_flushes: 3, linux_region_sends: 0, linux_long_frames: 0, linux_long_frame_ms: 0 });
+  counts.stop();
 });
