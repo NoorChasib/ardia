@@ -16,7 +16,10 @@ them.
 | `windows/` | Screenshots of Ardia's Windows app |
 
 Every archived Markdown file starts (after its frontmatter, for the release notes) with one line naming the upstream
-repository. Nothing else in them was changed.
+repository. Nothing else in them was changed, so their relative links still point where they did in Ardia's layout,
+and some no longer resolve from here. To follow one, read the tree as it was before the move:
+`git show 1fad6ed2a^:docs/<path>` (for example `git show 1fad6ed2a^:docs/linux-ci.md`), or browse that commit. Link
+checks on Nilla's own docs leave this folder out.
 
 Kept in place, also as records of Ardia's tree:
 
