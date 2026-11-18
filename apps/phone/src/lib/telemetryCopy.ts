@@ -3,7 +3,7 @@ export const PHONE_SHARING_COPY = {
   summary: "How fast Ardia opens, rough counts of what you use, and how often a page stops. Never the sites you visit, anything you type or search, or what’s in your tabs.",
   whatsSent: "What’s Sent",
   footnote:
-    "Off unless you turn it on. Sent to ardia.dev with a random ID made on this phone, and kept on our own servers. No third parties. Turning it off stops it at once and deletes anything waiting to be sent. This setting doesn’t sync.",
+    "Off unless you turn it on. Sent only to a server this build is set up to use, with a random ID made on this phone. This build has none, so nothing leaves this phone. Turning it off stops it at once and deletes anything waiting to be sent. This setting doesn’t sync.",
   onboardingNote: "Off unless you turn it on. Change it any time in Settings.",
 } as const;
 

@@ -29,7 +29,7 @@ src="$base/src"
 tools="$base/tools"
 out="$HOME/Developer/ardia-phone-apks"
 branch="${ARDIA_BUILD_BRANCH:-t3/unify-expo-architecture}"
-remote="https://github.com/ardia-browser/ardia.git"
+remote="https://github.com/NoorChasib/nilla.git"
 keep=8
 gib=$((1024 * 1024 * 1024))
 

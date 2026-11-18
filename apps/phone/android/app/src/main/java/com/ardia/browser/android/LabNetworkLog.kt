@@ -7,7 +7,7 @@ import com.facebook.react.modules.network.OkHttpClientProvider
 import okhttp3.Interceptor
 
 object LabNetworkLog {
-    private const val TELEMETRY_HOST = "ardia.dev"
+    private val TELEMETRY_HOST: String? = null
     private const val TELEMETRY_PATH = "/otel/"
 
     fun install(context: Context) {
@@ -16,7 +16,7 @@ object LabNetworkLog {
         OkHttpClientProvider.setOkHttpClientFactory {
             OkHttpClientProvider.createClientBuilder(app).addNetworkInterceptor(Interceptor { chain ->
                 val request = chain.request()
-                val telemetry = request.url.host == TELEMETRY_HOST && request.url.encodedPath.startsWith(TELEMETRY_PATH)
+                val telemetry = TELEMETRY_HOST != null && request.url.host == TELEMETRY_HOST && request.url.encodedPath.startsWith(TELEMETRY_PATH)
                 val response = chain.proceed(request)
                 if (telemetry) Log.i("PAGELAB", "PAGELAB telemetry posted: ${request.method} ${request.url.host}${request.url.encodedPath} -> ${response.code}")
                 response

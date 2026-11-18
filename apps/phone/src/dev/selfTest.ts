@@ -11,7 +11,7 @@ const DIALOG_PAGE = dataPage(
   "dialogs",
   "<p>dialogs</p><script>setTimeout(()=>{alert('lab alert');const c=confirm('lab confirm?');const p=prompt('lab prompt','default');document.title='c '+c+' p '+p},400)</script>",
 );
-export const LAB_BLOCKING_URL = "https://lab.ardia.dev/blocking";
+export const LAB_BLOCKING_URL = "https://lab.example.test/blocking";
 export const LAB_BLOCKED_REQUESTS = [
   "https://securepubads.g.doubleclick.net/tag/js/gpt.js",
   "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",

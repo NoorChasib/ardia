@@ -13,7 +13,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LabBlockingTest {
-    private val labPage = "https://lab.ardia.dev/blocking"
+    private val labPage = "https://lab.example.test/blocking"
 
     private val labRequests = listOf(
         "https://securepubads.g.doubleclick.net/tag/js/gpt.js",
