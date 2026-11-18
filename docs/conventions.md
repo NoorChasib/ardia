@@ -220,7 +220,7 @@ writeDocument(DOC, versionedJson(data, VERSION));
 
 ## Workspaces
 
-- Two pnpm workspaces. The root one is the Mac app and its packages (`apps/browser`, `packages/*` but
+- Two Bun workspaces. The root one is the Mac app and its packages (`apps/browser`, `packages/*` but
   `packages/phone`), on the Mac's Expo and react-native-macos. `apps/phone` is its own workspace with `packages/phone`,
   on the phone's Expo and React Native, with its own lockfile (docs/phone.md › Layout). They share only `@ardia/core`,
   plain TypeScript linked into the phone.
@@ -317,7 +317,7 @@ still counts:
 
 ## The check
 
-`apps/browser/src/conventions.test.mjs` runs in `pnpm -C apps/browser test` and checks, per file:
+`apps/browser/src/conventions.test.mjs` runs in `bun run --cwd apps/browser test` and checks, per file:
 
 | Rule | What it counts |
 | --- | --- |

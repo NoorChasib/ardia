@@ -71,22 +71,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      - uses: ./.github/actions/bun-install
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          lockfile-drift: true
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: .turbo/cache
           key: turbo-${{ github.sha }}
           restore-keys: turbo-
-      - run: pnpm typecheck
+      - run: bun check
       - if: ${{ !cancelled() }}
-        run: pnpm test
+        run: bun run test
       - if: ${{ !cancelled() }}
-        run: pnpm shaders:check
+        run: bun run shaders:check
 
   build:
     needs: preflight
@@ -115,12 +112,7 @@ jobs:
             exit 1
           fi
           { echo "ARDIACORE_FRAMEWORK=$framework"; echo "ARDIACORE_FRAMEWORK_ENGINE=$TREE"; } >> "$GITHUB_ENV"
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/bun-install
       - name: uv
         run: curl -LsSf https://astral.sh/uv/0.12.15/install.sh | sh
       - id: cas-key
@@ -136,7 +128,7 @@ jobs:
           path: |
             apps/browser/macos/Pods
             ~/Library/Caches/CocoaPods
-          key: pods-${{ hashFiles('apps/browser/macos/Podfile', 'apps/browser/macos/Podfile.lock', 'pnpm-lock.yaml', 'patches/**') }}
+          key: pods-${{ hashFiles('apps/browser/macos/Podfile', 'apps/browser/macos/Podfile.lock', 'bun.lock', 'bunfig.toml', 'patches/**') }}
           restore-keys: pods-
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:

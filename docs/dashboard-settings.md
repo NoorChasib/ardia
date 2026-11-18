@@ -24,7 +24,7 @@ Server code: `apps/dashboard/src/server/sections/settings.ts` (`settingsSql` bui
 Nothing reads production for this. Run a throwaway `clickhouse server` with a `telemetry.events` MergeTree table that has the view's columns (`event`, `distinct_id`, `timestamp`, `properties`, `source`, `lib`, `app_version`, …), insert a few fake installs, then start the dashboard against it:
 
 ```
-PORT=4417 DASHBOARD_DEV_BYPASS_AUTH=1 CLICKHOUSE_URL=http://127.0.0.1:18123/ CLICKHOUSE_USER=reader CLICKHOUSE_PASSWORD=<fixture> pnpm -C apps/dashboard dev
+PORT=4417 DASHBOARD_DEV_BYPASS_AUTH=1 CLICKHOUSE_URL=http://127.0.0.1:18123/ CLICKHOUSE_USER=reader CLICKHOUSE_PASSWORD=<fixture> bun run --cwd apps/dashboard dev
 ```
 
 Explicit env vars win over `~/.config/ardia/*.env`, so the dev server never touches the real ClickHouse this way.

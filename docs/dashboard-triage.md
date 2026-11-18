@@ -104,7 +104,7 @@ python3 ch_sync.py attention
 
 `refresh --github` refreshes explicit current reply holds and a single contributor/bot review-backlog card from live GitHub data. A historical “hold” does not count when the latest check says UNHOLD. This is a starting summary, not proof a fix is still missing or a PR is ready: the routine must verify sources and rewrite the report. It must add other real pending decisions/asks with `upsert`, and mark verified completed outcomes with `done --evidence`. Never infer completion just because a source vanished or a telemetry query failed. Do not add unrelated personal work. Do not reopen dismissed work on refresh.
 
-Tests: `pnpm -C apps/dashboard test` and `python3 -m unittest discover -s apps/dashboard/pipeline -p 'test_*.py'`.
+Tests: `bun run --cwd apps/dashboard test` and `python3 -m unittest discover -s apps/dashboard/pipeline -p 'test_*.py'`.
 
 ### Lead sorting
 

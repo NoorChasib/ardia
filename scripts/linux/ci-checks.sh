@@ -2,7 +2,7 @@
 set -uo pipefail
 usage='usage: scripts/linux/ci-checks.sh [--jobs N] [--logs DIR]
 
-Runs the Linux checks that need no engine: the apps/linux typecheck, host,
+Runs the Linux checks that need no engine: the apps/linux type check, host,
 symbol, module-graph and acceptance self-tests, the UI build, the smoke gate
 unit tests, and the Python and Node fixture suites under engine/. The
 engine/ardiacore-linux modules run in parallel, N at a time (default: the CPU
@@ -40,17 +40,17 @@ check() {
   fi
 }
 
-check linux-typecheck pnpm --filter @ardia/linux typecheck
-check linux-test-host pnpm --filter @ardia/linux test:host
-check linux-test-symbols pnpm --filter @ardia/linux test:symbols
-check linux-test-graph pnpm --filter @ardia/linux test:graph
-check linux-acceptance-self-test pnpm --filter @ardia/linux acceptance:self-test
-check linux-build pnpm --filter @ardia/linux build
+check linux-check bun run --cwd apps/linux check
+check linux-test-host bun run --cwd apps/linux test:host
+check linux-test-symbols bun run --cwd apps/linux test:symbols
+check linux-test-graph bun run --cwd apps/linux test:graph
+check linux-acceptance-self-test bun run --cwd apps/linux acceptance:self-test
+check linux-build bun run --cwd apps/linux build
 check patches-build-tests python3 -m unittest discover -s engine/patches/build/tests
 check chromium-ardia-tests python3 -m unittest discover -s engine/chromium/src/chrome/browser/ardia/tests
 check ardiacore-linux-bootstrap node --test engine/ardiacore-linux/tests/bootstrap.test.mjs
-check linux-smoke-gate node --test scripts/linux/smoke.test.mjs
-check linux-ubo-seed node --test scripts/linux/ubo-seed.test.mjs
+check linux-smoke-gate bun test --timeout=0 ./scripts/linux/smoke.test.mjs
+check linux-ubo-seed bun test --timeout=0 ./scripts/linux/ubo-seed.test.mjs
 
 modules=$(cd engine/ardiacore-linux/tests && ls test_*.py | sed 's/\.py$//')
 started=$(date +%s)

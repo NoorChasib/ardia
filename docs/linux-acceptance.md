@@ -13,12 +13,14 @@ No scenario runs in CI. The package job runs `scripts/linux/smoke.mjs` only (see
 ## Running it
 
 ```sh
-pnpm --filter @ardia/linux build
-pnpm --filter @ardia/linux acceptance -- <path to the packaged ardia executable> [apps/linux/dist]
+bun run --cwd apps/linux build
+bun run --cwd apps/linux acceptance "$PWD/<path to the packaged ardia executable>" "$PWD/apps/linux/dist"
 ```
 
 - **UI directory.** The second argument is optional. When given, the UI is loaded from it (`--ardia-ui-dir`);
-  otherwise the bundled UI is used. Relative paths resolve against the directory pnpm runs from.
+  otherwise the bundled UI is used. Relative paths resolve against `INIT_CWD` when the runner sets it and otherwise
+  against the script's directory, which `bun run --cwd apps/linux` makes `apps/linux` (Bun sets no `INIT_CWD`), so
+  pass absolute paths as above.
 - **`--only F01,#33`** runs a subset by scenario id or issue number.
 - **`--list`** prints every scenario.
 - **`--results <dir>`** chooses where evidence goes. The default is a new temporary directory.
@@ -32,7 +34,7 @@ Results go to stdout and to `<results>/results.json`. Each scenario writes its c
 `<results>/<id>/`. A failing scenario keeps its scratch profiles, including the browser log and `*-command.json` with
 the exact command line.
 
-`pnpm --filter @ardia/linux acceptance:self-test` tests the harness without an Ardia build: the CDP client against a
+`bun run --cwd apps/linux acceptance:self-test` tests the harness without an Ardia build: the CDP client against a
 mock peer, the launch plumbing and shell driver against a mock host, the runner and its report, the classifiers, the
 fixture servers and certificates, and `scripts/linux/smoke.mjs`. When `/usr/bin/chromium` (or
 `ARDIA_ACCEPTANCE_CHROMIUM`) is installed, it also checks SPKI trust, resolver mapping, gated downloads, synthesized

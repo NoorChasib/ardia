@@ -116,14 +116,31 @@ packages/
 
 ## Run it
 
-The Linux desktop target is `apps/linux`, for x86-64 Linux on Wayland or X11. Releases ship it as a tarball, a `.deb`
-and an AppImage; its source-build and packaging instructions are in [docs/linux-port.md](docs/linux-port.md). It builds against the dedicated Linux Chromium host.
-
-The macOS app requires Xcode 26+, CocoaPods, Node 24 (pinned in `.nvmrc`), pnpm 11.
+Bun is the package manager and the entry point for every JavaScript task: installs, scripts, type checks and most
+tests. Install the version `package.json` pins (`"packageManager": "bun@1.4.4"`) and Node 24 (`.nvmrc`), which Metro,
+Vite, jest and the engine's own tests still run on (a tool's `#!/usr/bin/env node` bin keeps running on Node under
+`bun run`):
 
 ```bash
-pnpm install
+curl -fsSL https://bun.com/install | bash -s bun-v1.4.4                     # macOS and Linux
 ```
+
+```powershell
+iex "& {$(irm https://bun.com/install.ps1)} -Version 1.4.4"                  # Windows
+```
+
+Then, at the repository root, on every platform:
+
+```bash
+bun install --frozen-lockfile
+```
+
+`bunfig.toml` keeps `node_modules` hoisted at the root; `apps/phone`, `apps/site`, `apps/dashboard` and `apps/videos`
+each have their own `bun.lock` and install with `bun install --frozen-lockfile --cwd <dir>`.
+
+### macOS
+
+The macOS app also needs Xcode 26+ and CocoaPods.
 
 The engine (Chrome's framework, built from our patched Chromium) comes prebuilt: with no local engine build, the app's
 build downloads the one matching your checkout's `engine/` (about 110 MB, once; Apple Silicon only) and checks it
@@ -139,27 +156,91 @@ Chromium tree in `~/chromium-build` (Chromium 157.0.8103.50 with the patch serie
 hours). The app's build stages it from there when it exists.
 
 ```bash
-pnpm pods
+bun run pods
 ```
 
 In one terminal, start Metro:
 
 ```bash
-pnpm dev
+bun run dev
 ```
 
 In another, build and launch the Debug app (on its own data, `~/Library/Application Support/Ardia Dev`, or
 `ARDIA_DATA_DIR`):
 
 ```bash
-pnpm macos
+bun run macos
 ```
 
-Other tasks: `pnpm typecheck`, `pnpm test`, `pnpm shaders:check` (compiles the embedded Metal offline),
-`scripts/agent/build-app --config Release` (a Release `.app` with a Hermes bytecode bundle in
-`apps/browser/build-<name>`, under the shared build locks; `--help`).
-Signed releases (DMG, Sparkle zip and appcast) are built by the Release workflow with `scripts/release.sh`, see
-`docs/releasing.md`.
+| Task | Command |
+|---|---|
+| Type check (every package in the root workspace) | `bun check` |
+| Type check the separately installed projects too | `bun run check:all` |
+| Every test, cached by Turbo | `bun run test` |
+| The shaders, compiled offline | `bun run shaders:check` |
+| A Release `.app` with a Hermes bytecode bundle | `scripts/agent/build-app --config Release` (in `apps/browser/build-<name>`, under the shared build locks; `--help`) |
+| Signed releases (DMG, Sparkle zip and appcast) | the Release workflow, with `scripts/release.sh` (`docs/releasing.md`) |
+
+### Linux
+
+The Linux desktop target is `apps/linux`, for x86-64 Linux on Wayland or X11. It runs the shared UI on the dedicated
+Linux Chromium host; releases ship it as a tarball, a `.deb` and an AppImage. Its system packages, the AppArmor note
+and building the engine from source are in [docs/linux-port.md](docs/linux-port.md).
+
+```bash
+scripts/linux/fetch-engine.sh --nearest
+bun run --cwd apps/linux build
+"$(scripts/linux/fetch-engine.sh --nearest)/chrome" --ardia-ui-dir="$PWD/apps/linux/dist" \
+  --user-data-dir="$(mktemp -d)" --remote-debugging-port=9222
+```
+
+| Task | Command |
+|---|---|
+| UI dev server (Vite) | `bun run --cwd apps/linux dev` |
+| Type check | `bun run --cwd apps/linux check` |
+| Host, symbol and module-graph tests | `bun run --cwd apps/linux test:host`, `test:symbols`, `test:graph` |
+| Every test that runs without a Mac | `bun run test:portable` |
+| Every Linux check CI runs | `scripts/linux/ci-checks.sh` |
+| A test release (tarball and CLI, smoke-tested) | `scripts/linux/release.sh <version> --engine nearest` |
+| Packages (tarball, `.deb`, AppImage) | `scripts/linux/package.py` ([docs/linux-port.md](docs/linux-port.md) › Packaging and installing) |
+
+### Windows
+
+The Windows app is `apps/browser/windows` (React Native for Windows) hosting Chromium's `chrome.dll`
+([docs/windows.md](docs/windows.md)). It needs Visual Studio 2022 with the C++ desktop workload and the Windows SDK
+10.0.26100.0. Build the x64 app (it bundles the JavaScript itself) from `apps/browser`, in PowerShell:
+
+```powershell
+bun x react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager
+```
+
+`bun run --cwd apps/browser bundle:windows` bundles the JavaScript alone, into `apps/browser/build-windows`.
+
+Package the build with a prebuilt engine (`gh` signed in), from the repository root. An ARM64 build follows
+`.github/workflows/windows.yml` (`run-windows --no-build`, then the ARM64 MSBuild) and packages with `-Cpu arm64`:
+
+```powershell
+scripts/windows/fetch-engine.ps1 -Cpu x64 -Out $env:TEMP\ardia-engine
+scripts/windows/assemble.ps1 -App apps/browser/windows/x64/Release -Engine $env:TEMP\ardia-engine -Out $env:TEMP\Ardia
+```
+
+Launch the assembled app on a fresh data folder:
+
+```powershell
+$env:ARDIA_DATA_DIR = Join-Path $env:TEMP "ardia-data-$(Get-Random)"
+New-Item -ItemType Directory -Force $env:ARDIA_DATA_DIR | Out-Null
+& "$env:TEMP\Ardia\Ardia.exe"
+```
+
+Settings still live in `%APPDATA%\Ardia`: only a test build keeps them apart (docs/windows.md › Test instances).
+Build the installer from the same folder:
+
+```powershell
+scripts/windows/make-installer.ps1 -Source $env:TEMP\Ardia -Out $env:TEMP\ardia-installer -Cpu x64
+```
+
+The shared UI's checks are the macOS and Linux ones above (`bun check`, `bun run test:portable`); the Windows workflow
+builds, launches, tours and installs both CPUs on every pull request that touches shared code.
 
 Shortcuts: ⌘T new tab, ⌘L command bar, ⌘W close, ⇧⌘T reopen, ⌘S sidebar, ⌘[ / ⌘] back/forward,
 ⌘R reload, ⌘1–⌘9 select tab, ⌃Tab cycle.
@@ -214,7 +295,7 @@ Only math and colour values are reused. No Dia images, fonts or binaries are cop
   redirects `react-native` → `react-native-macos` for `platform=macos`, because defining our own
   `resolveRequest` replaces the redirect the CLI would install.
 - **No Reanimated.** It has no macOS build for 0.81; animations use RN's `Animated`.
-- **Monorepo paths.** pnpm is set to `nodeLinker: hoisted` because CocoaPods and Metro resolve
+- **Monorepo paths.** `bunfig.toml` sets `[install] linker = "hoisted"` because CocoaPods and Metro resolve
   `react-native-macos` by path. The Podfile rewrites `REACT_NATIVE_PATH` to the hoisted location and
   raises every pod's deployment target to 14.0, since Xcode 26+ rejects the 11.0 some Expo pods declare.
 - **Native subviews** are sized in `setFrameSize`, not `layout()`. RN macOS assigns frames directly and
