@@ -89,3 +89,33 @@ test("the hourly frame counts are what happened since the last take", () => {
   assert.deepEqual(counts.take(), { linux_viewport_frames: 3, linux_viewport_measures: 3, linux_region_flushes: 3, linux_region_sends: 0, linux_long_frames: 0, linux_long_frame_ms: 0 });
   counts.stop();
 });
+
+test("a long frame from before a take, delivered late, isn't counted in the next window", () => {
+  const previous = globalThis.PerformanceObserver;
+  let deliver = () => {};
+  let pending = [];
+  globalThis.PerformanceObserver = class {
+    static supportedEntryTypes = ["long-animation-frame"];
+    constructor(callback) { deliver = (entries) => callback({ getEntries: () => entries }); }
+    observe() {}
+    takeRecords() { const taken = pending; pending = []; return taken; }
+    disconnect() {}
+  };
+  try {
+    const counts = shellFrameCounts({ status: () => ({ flushes: 0, sequence: 0 }) }, () => ({ frames: 0, measures: 0 }));
+    const started = performance.now();
+    pending.push({ startTime: started, duration: 78 });
+    const inFlight = { startTime: started, duration: 64 };
+    while (performance.now() <= started);
+    assert.equal(counts.take().linux_long_frames, 1, "the queued record belongs to the window being taken");
+    deliver([inFlight]);
+    const later = { startTime: performance.now(), duration: 55 };
+    deliver([later]);
+    const next = counts.take();
+    assert.deepEqual([next.linux_long_frames, next.linux_long_frame_ms], [1, 55], "only the frame that started after the take reaches the next window");
+    counts.stop();
+  } finally {
+    if (previous === undefined) delete globalThis.PerformanceObserver;
+    else globalThis.PerformanceObserver = previous;
+  }
+});

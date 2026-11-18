@@ -120,8 +120,9 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   DOM mutation, a resize, scroll or visibility change, a CSS transition or animation, or a page's own presentation
   change (`refreshTabViewports`). One coordinator serves every tab: one document observer, one set of listeners and
   at most one animation frame, in which only tabs shown now or in their last report are measured and the input
-  regions flush once. A hidden tab is measured again on a full refresh, its own refresh or resize, and a document
-  visibility change. A scroll in something that holds no shown page (the sidebar list) waits for that frame. It keeps
+  regions flush once for the pass; an overlay's own mutation still flushes at once so it is held back before it paints.
+  A hidden tab is measured again on a full refresh, its own refresh or resize, and a document visibility change; a
+  resize whose rect the frame's pass already measured is not reported again. A scroll in something that holds no shown page (the sidebar list) waits for that frame. It keeps
   measuring each frame only while a running animation targets a shown page's ancestors or an overlay; animations
   inside `[data-ardia-paint-motion]` (transform or opacity inside a box that doesn't move) don't count. Idle windows run no measuring code;
   the earlier version polled every frame and used about 5% of a core. Mutation-triggered measures run in the next

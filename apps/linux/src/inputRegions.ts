@@ -198,7 +198,7 @@ export function createInputRegions(deps: RegionDeps) {
       overlay.waiting = deps.timeout(() => reveal(element, overlay), REVEAL_DEADLINE_MS);
     }
     stillFrames = moving ? 0 : stillFrames + 1;
-    if (overlays.size && (stillFrames < SETTLE_FRAMES || deps.animating([...overlays.keys()]))) nextFrame();
+    if (overlays.size && !frameQueued && (stillFrames < SETTLE_FRAMES || deps.animating([...overlays.keys()]))) nextFrame();
     if (!deps.send) return;
     const regions = { pages: pageRects, overlays: [...overlays.values()].flatMap((overlay) => overlay.rects) };
     const regionsKey = JSON.stringify(regions);

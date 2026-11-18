@@ -12,7 +12,7 @@ const MOTION_EVENTS = ["transitionrun", "transitionend", "transitioncancel", "an
 
 export type OverlayCover = { overlayAt: (x: number, y: number) => boolean; overlayElements: () => readonly Element[]; overlayRects?: () => readonly Bounds[] };
 
-type Watcher = { element: HTMLElement; visible: () => boolean; report: (viewport: TabViewport) => void; cover: OverlayCover; shown: boolean };
+type Watcher = { element: HTMLElement; visible: () => boolean; report: (viewport: TabViewport) => void; cover: OverlayCover; shown: boolean; measured?: Bounds };
 type Listening = { mutations: MutationObserver; resizes: ResizeObserver; stop: () => void };
 
 const watchers = new Set<Watcher>();
@@ -110,23 +110,26 @@ const rethrow = (error: unknown) => void setTimeout(() => {
 
 const active = (watcher: Watcher) => watcher.shown || dirty.has(watcher) || watcher.visible();
 
-function measure(watcher: Watcher, pass: Pass) {
+const sameBounds = (rect: DOMRect, measured: Bounds | undefined) =>
+  !!measured && rect.x === measured.x && rect.y === measured.y && rect.width === measured.width && rect.height === measured.height;
+
+function measure(watcher: Watcher, pass: Pass, rect: DOMRect = watcher.element.getBoundingClientRect()) {
   const { element } = watcher;
-  const rect = element.getBoundingClientRect();
+  watcher.measured = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
   const viewport = plainViewport(element, rect, tabViewport(rect, { width: window.innerWidth, height: window.innerHeight }, watcher.visible() && !document.hidden && element.isConnected), pass, watcher.cover);
   watcher.shown = viewport.visible;
   counts.measures++;
   watcher.report(viewport);
 }
 
-function measureWhere(chosen: (watcher: Watcher) => boolean) {
+function measureWhere(chosen: (watcher: Watcher) => boolean, rects?: ReadonlyMap<Watcher, DOMRect>) {
   const pass = createPass();
   let follow = false;
   for (const watcher of watchers) {
     if (!chosen(watcher)) continue;
     dirty.delete(watcher);
     try {
-      measure(watcher, pass);
+      measure(watcher, pass, rects?.get(watcher));
       if (!follow && pass.moves(watcher)) follow = true;
     } catch (error) {
       rethrow(error);
@@ -197,7 +200,13 @@ function listen(): Listening {
   mutations.observe(document.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
   const resizes = new ResizeObserver((entries) => {
     const targets = new Set(entries.map((entry) => entry.target));
-    measureWhere((watcher) => targets.has(watcher.element));
+    const changed = new Map<Watcher, DOMRect>();
+    for (const watcher of watchers) {
+      if (!targets.has(watcher.element)) continue;
+      const rect = watcher.element.getBoundingClientRect();
+      if (dirty.has(watcher) || !sameBounds(rect, watcher.measured)) changed.set(watcher, rect);
+    }
+    if (changed.size) measureWhere((watcher) => changed.has(watcher), changed);
   });
   window.addEventListener("resize", resized);
   window.addEventListener("scroll", scrolled, true);

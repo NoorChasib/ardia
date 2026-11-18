@@ -201,7 +201,7 @@ function slot(x, counts) {
   const element = { isConnected: true, parentElement: null, closest: () => null };
   element.getBoundingClientRect = () => {
     counts.set(element, (counts.get(element) ?? 0) + 1);
-    return box(x, 47, 1000, 800);
+    return box(x, 47, element.width ?? 1000, 800);
   };
   element.contains = (node) => node === element;
   return element;
@@ -262,6 +262,52 @@ test("a hundred watched tabs cost one frame, one measure of the shown tab and on
   }
 });
 
+test("a resize the frame's pass already measured neither reports nor flushes again; one it didn't see does both", () => {
+  const counts = new Map();
+  const pages = Array.from({ length: 20 }, (_, index) => slot(200 + index, counts));
+  const s = stage({ width: 1440, height: 900, elementFromPoint: () => pages[0] });
+  const microtasks = [];
+  const drain = () => { while (microtasks.length) microtasks.shift()(); };
+  let stops = [];
+  try {
+    const regions = createInputRegions({
+      send: null, viewport: () => ({ width: 1440, height: 900 }), rectOf: (element) => element.getBoundingClientRect(), receivesPointer: () => true,
+      watch: () => () => {}, animating: () => false, conceal: () => {}, microtask: (run) => microtasks.push(run), frame: requestViewportFrame,
+      frameTime: () => 0, timeout: () => 0, clearTimeout: () => {},
+    });
+    const reports = [];
+    stops = pages.map((page, index) => watchTabViewport(page, () => index === 0, (update) => {
+      if (index === 0) reports.push(update);
+      regions.refresh();
+    }, regions));
+    s.resize(pages);
+    drain();
+    const startReports = reports.length;
+    const before = regions.status().flushes;
+    assert.equal(startReports, 1, "the first resize report of every new watcher repeats its first measure, so it is skipped");
+    pages[0].width = 960;
+    s.notify();
+    s.frames.shift()();
+    drain();
+    s.resize([pages[0]]);
+    drain();
+    assert.equal(reports.length - startReports, 1, "the frame's pass already saw the new width");
+    assert.equal(regions.status().flushes - before, 1, "one flush at the frame time");
+    pages[0].width = 920;
+    s.resize([pages[0]]);
+    drain();
+    assert.equal(reports.at(-1).rect.width, 920, "a size the pass didn't see is reported before paint");
+    assert.equal(regions.status().flushes - before, 2);
+  } finally {
+    for (const stop of stops) stop();
+    while (s.frames.length) {
+      s.frames.shift()();
+      drain();
+    }
+    s.restore();
+  }
+});
+
 test("a hidden tab isn't measured on a mutation, but is on a full refresh, its own refresh, its own resize and when it is shown", () => {
   const counts = new Map();
   const shown = slot(200, counts);
@@ -289,8 +335,10 @@ test("a hidden tab isn't measured on a mutation, but is on a full refresh, its o
     s.frames.shift()();
     assert.equal(counts.get(hidden), 2);
     assert.equal(counts.get(other), 1, "a refresh for one tab leaves the other hidden tabs alone");
+    hidden.width = 900;
     s.resize([hidden]);
     assert.equal(counts.get(hidden), 3);
+    assert.equal(reports.at(-1).rect.width, 900);
     assert.equal(counts.get(other), 1);
     hiddenVisible = true;
     s.mutate();

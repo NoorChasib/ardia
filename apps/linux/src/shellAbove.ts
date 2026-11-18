@@ -63,17 +63,21 @@ function conceal(element: Element, hidden: boolean) {
 
 export function shellFrameCounts(registry: { status(): { flushes: number; sequence: number } }, viewport: () => { frames: number; measures: number }) {
   const longFrames = { count: 0, ms: 0 };
+  let windowStart = performance.now();
+  const countLongFrames = (entries: readonly PerformanceEntry[]) => {
+    for (const entry of entries) {
+      if (entry.startTime < windowStart) continue;
+      longFrames.count++;
+      longFrames.ms += entry.duration;
+    }
+  };
   const observer = typeof PerformanceObserver !== "undefined" && PerformanceObserver.supportedEntryTypes?.includes("long-animation-frame")
-    ? new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        longFrames.count++;
-        longFrames.ms += entry.duration;
-      }
-    })
+    ? new PerformanceObserver((list) => countLongFrames(list.getEntries()))
     : null;
   observer?.observe({ type: "long-animation-frame", buffered: false });
   let last = { flushes: 0, sends: 0, frames: 0, measures: 0 };
   const take = () => {
+    countLongFrames(observer?.takeRecords() ?? []);
     const { flushes, sequence: sends } = registry.status();
     const { frames, measures } = viewport();
     const counts = {
@@ -87,6 +91,7 @@ export function shellFrameCounts(registry: { status(): { flushes: number; sequen
     last = { flushes, sends, frames, measures };
     longFrames.count = 0;
     longFrames.ms = 0;
+    windowStart = performance.now();
     return counts;
   };
   return { take, stop: () => observer?.disconnect() };
