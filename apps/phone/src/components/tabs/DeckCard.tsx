@@ -1,4 +1,4 @@
-import { memo, useEffect, useState, type ReactNode } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { countRender } from "../../state/app/interactionPerf";
 import { PixelRatio, Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle, useDerivedValue, useSharedValue, type SharedValue } from "react-native-reanimated";
@@ -15,7 +15,7 @@ import { hideArchiveCard } from "../../state/browse/archiveCard";
 import { OPENING_COVER_ID } from "../../state/browse/store";
 import { canShareTab, copyTabLink, shareTab } from "../../state/browse/tabMenus";
 import { openSettings } from "../../state/settings/nav";
-import { useIsPinned, useSendTargets, useSyncEnabled, useSyncView } from "../../state/sync/hooks";
+import { useIsPinned, useSameItems, useSendTargets, useSyncEnabled, useSyncProfiles } from "../../state/sync/hooks";
 import { pinToMac, sendTab, type sendTargetsFor } from "../../state/sync/actions";
 import { useTabSpaces } from "../../state/tabs/hooks";
 import { moveTargets } from "../../state/tabs/spaces";
@@ -336,22 +336,25 @@ export function cardMenuItems(tab: BrowserTab, { devices, pinned, syncEnabled, s
 type CardMenuProps = { tab: BrowserTab; close: () => void; testID: string; haptic?: () => void; style?: StyleProp<ViewStyle>; children: (handlers: MenuHandlers) => ReactNode };
 
 export function CardMenu({ tab, close, testID, haptic, style, children }: CardMenuProps) {
-  const devices = useSendTargets(tab.id);
-  const pinned = useIsPinned(tab.id);
+  countRender("CardMenu");
+  const devices = useSendTargets(tab);
+  const pinned = useIsPinned(tab);
   const syncEnabled = useSyncEnabled();
   const tabSpaces = useTabSpaces();
-  const profiles = useSyncView().profiles;
-  const spaces = moveTargets(tabSpaces, profiles, tab);
+  const profiles = useSyncProfiles();
+  const spaces = useSameItems(useMemo(() => moveTargets(tabSpaces, profiles, { isPrivate: tab.isPrivate }), [tabSpaces, profiles, tab.isPrivate]));
+  const items = useMemo(() => cardMenuItems(tab, { devices, pinned, syncEnabled, spaces }, close), [tab, devices, pinned, syncEnabled, spaces, close]);
   return (
-    <MenuTrigger testID={testID} items={cardMenuItems(tab, { devices, pinned, syncEnabled, spaces }, close)} trigger="longPress" haptic={haptic} onOpen={hideArchiveCard} style={style}>
+    <MenuTrigger testID={testID} items={items} trigger="longPress" haptic={haptic} onOpen={hideArchiveCard} style={style}>
       {children}
     </MenuTrigger>
   );
 }
 
 export function DeckCardMenu({ tab, index, onClose, fill, children }: { tab: BrowserTab; index: number; onClose: (index: number) => void; fill: string; children: ReactNode }) {
+  const close = useCallback(() => onClose(index), [onClose, index]);
   return (
-    <CardMenu testID="deckCardMenu" tab={tab} close={() => onClose(index)} style={[styles.cardMenu, { backgroundColor: fill }]}>
+    <CardMenu testID="deckCardMenu" tab={tab} close={close} style={[styles.cardMenu, { backgroundColor: fill }]}>
       {() => children}
     </CardMenu>
   );

@@ -36,10 +36,10 @@ import { closeArchive, openArchive, useBrowse } from "../../state/browse/store";
 import { copyLink } from "../../state/browse/tabMenus";
 import { openSettings } from "../../state/settings/nav";
 import { openRemote, selectProfile, syncNow } from "../../state/sync/actions";
-import { useSelectedProfile, useSyncStatus, useSyncView } from "../../state/sync/hooks";
+import { useSelectedProfile, useSyncBanner, useSyncPhase, useSyncProfiles } from "../../state/sync/hooks";
 import { COLLAPSED_LIMIT, pinnedKeyAt, remoteTitle } from "../../state/sync/spaces";
 import { showAllDeviceTabs, toggleSpaceRow, useSpaceOpenFor } from "../../state/sync/spaceOpen";
-import { syncBanner, type BannerIcon } from "../../state/sync/syncRules";
+import type { BannerIcon } from "../../state/sync/syncRules";
 import { countUsage } from "../../state/telemetry/telemetry";
 import { DEFAULT_PROFILE_COLOR, expoSpacesLayout as L, Favicon, chromeSurface, contentMargins, GlassCircleButton, minListRowHeight, modifierList, PinnedTiles, PROFILE_PRESETS, settingsUIAvailable, spaceBackdrop, spaceColor, spaceMenuSymbol, SpacePageDots, spaceSymbol, SpaceTitle, useIncreasedContrast, useReduceMotion, useTheme } from "../ui";
 
@@ -68,13 +68,13 @@ export function ExpoSpacesSheet() {
 function SpacesSheetContent() {
   const theme = useTheme();
   const contrast = useIncreasedContrast();
-  const status = useSyncStatus();
-  const view = useSyncView();
+  const phase = useSyncPhase();
+  const profiles = useSyncProfiles();
   const shown = useSelectedProfile();
-  const [selection, setSelection] = useState(() => shown?.syncId ?? view.profiles[0]?.syncId ?? "");
-  const profile = view.profiles.find((p) => p.syncId === selection) ?? view.profiles[0] ?? null;
+  const [selection, setSelection] = useState(() => shown?.syncId ?? profiles[0]?.syncId ?? "");
+  const profile = profiles.find((p) => p.syncId === selection) ?? profiles[0] ?? null;
   const tones = useMemo(() => spaceTone(profile, theme.dark, contrast, PROFILE_PRESETS, DEFAULT_PROFILE_COLOR), [profile, theme.dark, contrast]);
-  const banner = syncBanner(status);
+  const banner = useSyncBanner();
   const reduceMotion = useReduceMotion();
   const switchTo = (id: string, swiped: boolean) => {
     if (!id || id === profile?.syncId) return;
@@ -90,7 +90,7 @@ function SpacesSheetContent() {
   );
   return (
     <VStack spacing={0} modifiers={sheet}>
-      <SpacesHeader profiles={view.profiles} current={profile} onSelect={(id) => switchTo(id, false)} />
+      <SpacesHeader profiles={profiles} current={profile} onSelect={(id) => switchTo(id, false)} />
       {banner ? (
         <HStack alignment="firstTextBaseline" spacing={L.bannerGap} modifiers={[padding({ all: L.bannerPadding }), backgroundOverlay({ color: theme.tertiaryFill }), cornerRadius(L.bannerRadius), padding({ horizontal: L.page, bottom: L.tight })]}>
           <Image systemName={BANNER_SYMBOLS[banner.icon] as never} color={PlatformColor("systemOrange")} />
@@ -102,21 +102,21 @@ function SpacesSheetContent() {
       {profile ? (
         <ZStack alignment="bottom">
           <TabView selection={profile.syncId} onSelectionChange={(id) => switchTo(id, true)} modifiers={[tabViewStyle({ type: "page", indexDisplayMode: "never" })]}>
-            {view.profiles.map((page) => (
+            {profiles.map((page) => (
               <TabView.Tab key={page.syncId} value={page.syncId}>
-                <SpacePage profile={page} dotsBelow={view.profiles.length > 1} />
+                <SpacePage profile={page} dotsBelow={profiles.length > 1} />
               </TabView.Tab>
             ))}
           </TabView>
-          {view.profiles.length > 1 ? <SpacePageDots count={view.profiles.length} index={view.profiles.indexOf(profile)} modifiers={modifierList(padding({ horizontal: L.dotsPadding }), frame({ height: L.dotsHeight }), chromeSurface({ shape: "capsule", interactive: false }), padding({ top: L.tight }))} /> : null}
+          {profiles.length > 1 ? <SpacePageDots count={profiles.length} index={profiles.indexOf(profile)} modifiers={modifierList(padding({ horizontal: L.dotsPadding }), frame({ height: L.dotsHeight }), chromeSurface({ shape: "capsule", interactive: false }), padding({ top: L.tight }))} /> : null}
         </ZStack>
       ) : (
         <ContentUnavailableView
           title="Your Mac’s Spaces"
           systemImage="macbook.and.iphone"
-          description={status.phase === "off" ? "Every tab, anywhere." : "Waiting for your Mac."}
+          description={phase === "off" ? "Every tab, anywhere." : "Waiting for your Mac."}
           modifiers={[frame({ maxHeight: FILL })]}
-          actions={<Button label={status.phase === "off" ? "Sync With Mac" : "Sync Settings"} onPress={() => openSettings({ page: status.phase === "off" ? "syncConnect" : "sync" })} modifiers={[buttonStyle("borderedProminent"), buttonBorderShape("capsule")]} />}
+          actions={<Button label={phase === "off" ? "Sync With Mac" : "Sync Settings"} onPress={() => openSettings({ page: phase === "off" ? "syncConnect" : "sync" })} modifiers={[buttonStyle("borderedProminent"), buttonBorderShape("capsule")]} />}
         />
       )}
     </VStack>

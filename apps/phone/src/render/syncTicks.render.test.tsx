@@ -1,3 +1,4 @@
+import { Platform } from "react-native";
 import { act } from "react-test-renderer";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 import { resetNativeMenus } from "./nativeMenusMock";
@@ -196,5 +197,65 @@ test("a view that changes the shown space's color or theme still repaints the de
   emitView({ ...plain, profiles: [{ ...plain.profiles[0]!, color: "orange" }, plain.profiles[1]!] });
   expect(count("DeckCard")).toBeGreaterThan(0);
   expect(edges()).not.toBe(blue);
+  unmount(root);
+});
+
+const spaces = require("../state/sync/spaces") as typeof import("../state/sync/spaces");
+
+type Root = ReturnType<typeof renderSurface>;
+type NativeItem = import("./nativeMenusMock").NativeItem;
+
+const cardMenus = (root: Root) => root.root.findAll((node) => node.props.testID === "deckCardMenu" && node.type === "ContextMenuView");
+const cardMenuItems = (root: Root) => cardMenus(root).map((menu) => menu.props.items as NativeItem[]);
+const flatTitles = (items: NativeItem[]): string[] => items.flatMap((item) => [item.title, ...flatTitles(item.children ?? [])]);
+
+test("a lastSynced tick renders no card menu and no deck header, checks no pin and hands no card's native menu new items", () => {
+  const root = renderSurface(<TabDeck />);
+  expect(count("CardMenu")).toBeGreaterThan(0);
+  if (Platform.OS === "ios") expect(count("DeckHeader")).toBeGreaterThan(0);
+  const itemsBefore = cardMenuItems(root);
+  expect(itemsBefore.length).toBeGreaterThan(0);
+  const pinChecks = jest.spyOn(spaces, "isPinnedOnMac");
+  renders = [];
+  emitStatus(status("updated", T + 15_000));
+  expect(count("CardMenu")).toBe(0);
+  expect(count("DeckHeader")).toBe(0);
+  expect(pinChecks).not.toHaveBeenCalled();
+  expect(cardMenuItems(root).filter((items, i) => items !== itemsBefore[i])).toHaveLength(0);
+  unmount(root);
+});
+
+test("a look change repaints the cards but hands no card's native menu new items", () => {
+  const root = renderSurface(<TabDeck />);
+  const itemsBefore = cardMenuItems(root);
+  renders = [];
+  emitView(view({ color: "red" }));
+  const plain = view({ color: "red" });
+  plain.profiles[0]!.theme = null;
+  emitView(plain);
+  expect(count("DeckCard")).toBeGreaterThan(0);
+  expect(cardMenuItems(root).filter((items, i) => items !== itemsBefore[i])).toHaveLength(0);
+  unmount(root);
+});
+
+test("card menus still follow sync: send targets, pinned state, and sync turning off", () => {
+  const pinned = view();
+  pinned.profiles[0]!.bookmarks.push({ key: "site0", title: "Site 0", url: "https://site0.example/", added: T, root: null, children: null });
+  emitView(pinned);
+  const root = renderSurface(<TabDeck />);
+  const all = () => cardMenuItems(root).map(flatTitles);
+  expect(all().every((titles) => titles.includes("Send to Studio"))).toBe(true);
+  expect(all().filter((titles) => titles.includes("Pinned to Mac"))).toHaveLength(1);
+  expect(all().filter((titles) => titles.includes("Pin to Mac")).length).toBe(all().length - 1);
+  emitView(view());
+  expect(all().filter((titles) => titles.includes("Pinned to Mac"))).toHaveLength(0);
+  const noTargets = view();
+  noTargets.profiles[0]!.sendTargets = [];
+  emitView(noTargets);
+  expect(all().some((titles) => titles.some((title) => title.startsWith("Send to")))).toBe(false);
+  emitView(view());
+  emitStatus({ ...status("off", T), isEnabled: false });
+  expect(all().some((titles) => titles.includes("Pin to Mac") || titles.includes("Send to Studio"))).toBe(false);
+  expect(all().every((titles) => titles.includes("Copy Link"))).toBe(true);
   unmount(root);
 });

@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { menuOpenedHaptic } from "../../state/browse/tabMenus";
 import { columnContentWidth, SCREEN_COLUMN, type ScreenColumn } from "../../state/app/screenLayout";
-import { useSyncStatus } from "../../state/sync/hooks";
+import { useSyncEnabled } from "../../state/sync/hooks";
 import { useCanReopen } from "../../state/tabs/hooks";
 import { deckChromeLayout, tabsCurve, tabsLayout, useTheme } from "../ui";
 import { MenuTrigger } from "../ui/MenuTrigger";
@@ -28,7 +28,7 @@ type Props = {
 export function DeckColumn({ column, width, shown, incognito, hasTabs, onQuery, onCloseAll, menusShown = true, onMenu, glassShown, glassShownMs, glyphFade }: Props) {
   const fade = { glassShown, glassShownMs, glyphFade };
   const dark = useTheme().dark;
-  const syncEnabled = useSyncStatus().isEnabled;
+  const syncEnabled = useSyncEnabled();
   const canReopen = useCanReopen();
   const search = useSearchTabs(shown, incognito, onQuery);
   const showsField = search.focused || search.text !== "";

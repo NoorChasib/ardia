@@ -78,7 +78,7 @@ export function MenuTrigger(props: Props) {
 
 function NativeTrigger({ items, trigger = "longPress", fixedOrder, onOpen, onClose, disabled, dark, style, testID, children }: Props) {
   const theme = useTheme();
-  const menu = nativeMenu(items);
+  const menu = useMemo(() => nativeMenu(items), [items]);
   const actions = useRef(menu.actions);
   actions.current = menu.actions;
   const select = useCallback((id: string) => actions.current.get(id)?.(), []);

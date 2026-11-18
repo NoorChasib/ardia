@@ -11,12 +11,12 @@ import { closeArchive, openArchive } from "../../state/browse/store";
 import { copyLink, menuOpenedHaptic, shareUrl } from "../../state/browse/tabMenus";
 import { openSettings } from "../../state/settings/nav";
 import { openRemote, selectProfile, syncNow } from "../../state/sync/actions";
-import { useSelectedProfile, useSyncStatus, useSyncView } from "../../state/sync/hooks";
+import { useSelectedProfile, useSyncBanner, useSyncPhase, useSyncProfiles } from "../../state/sync/hooks";
 import { remoteTitle, spaceGroupColor, spaceRows, type SpaceRow } from "../../state/sync/spaces";
 import { showAllDeviceTabs, toggleSpaceRow, useSpaceOpenFor } from "../../state/sync/spaceOpen";
 import { spaceTone } from "../../lib/profileLook";
 import { sfSymbol } from "../../lib/sfSymbols";
-import { syncBanner, type BannerIcon } from "../../state/sync/syncRules";
+import type { BannerIcon } from "../../state/sync/syncRules";
 import {
   capsule,
   FadingBackdrop,
@@ -57,25 +57,25 @@ export function SpacesView() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const frame = useSheetFrame();
-  const status = useSyncStatus();
-  const view = useSyncView();
+  const phase = useSyncPhase();
+  const profiles = useSyncProfiles();
   const shown = useSelectedProfile();
   const [chosen, setChosen] = useState<string | null>(null);
   const [menu, setMenu] = useState<RowMenu | null>(null);
-  const profile = (chosen ? view.profiles.find((p) => p.syncId === chosen) : undefined) ?? shown ?? view.profiles[0] ?? null;
+  const profile = (chosen ? profiles.find((p) => p.syncId === chosen) : undefined) ?? shown ?? profiles[0] ?? null;
   useEffect(() => {
     if (chosen && shown?.syncId === chosen) setChosen(null);
   }, [chosen, shown?.syncId]);
   const contrast = useIncreasedContrast();
   const tone = useMemo(() => spaceTone(profile, theme.dark, contrast, PROFILE_PRESETS, DEFAULT_PROFILE_COLOR), [profile, theme.dark, contrast]);
-  const banner = syncBanner(status);
+  const banner = useSyncBanner();
   const reduceMotion = useReduceMotion();
   const window = useWindowDimensions();
   const [width, setWidth] = useState(window.width);
   const pager = useRef<FlatList<SyncedProfile>>(null);
   const index = Math.max(
     0,
-    view.profiles.findIndex((p) => p.syncId === profile?.syncId),
+    profiles.findIndex((p) => p.syncId === profile?.syncId),
   );
   const pagerIndex = useRef(index);
   useEffect(() => {
@@ -84,21 +84,21 @@ export function SpacesView() {
     pager.current?.scrollToOffset({ offset: index * width, animated: false });
   }, [index, width]);
   const select = (id: string) => {
-    pagerIndex.current = view.profiles.findIndex((p) => p.syncId === id);
+    pagerIndex.current = profiles.findIndex((p) => p.syncId === id);
     haptics.selection();
     setChosen(id);
     selectProfile(id);
   };
   const choose = (id: string) => {
     if (id === profile?.syncId) return;
-    const to = view.profiles.findIndex((p) => p.syncId === id);
+    const to = profiles.findIndex((p) => p.syncId === id);
     if (to < 0) return;
     pager.current?.scrollToIndex({ index: to, animated: !reduceMotion });
     select(id);
   };
   const settle = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (width <= 0) return;
-    const page = view.profiles[Math.round(event.nativeEvent.contentOffset.x / width)];
+    const page = profiles[Math.round(event.nativeEvent.contentOffset.x / width)];
     if (!page || page.syncId === profile?.syncId) return;
     countUsage("spaces_swiped");
     select(page.syncId);
@@ -130,7 +130,7 @@ export function SpacesView() {
             ref={pager}
             testID="spacesPager"
             style={styles.fill}
-            data={view.profiles}
+            data={profiles}
             keyExtractor={(page) => page.syncId}
             horizontal
             pagingEnabled
@@ -150,15 +150,15 @@ export function SpacesView() {
               const isShown = item.syncId === profile.syncId;
               return (
                 <View style={{ width }} accessibilityElementsHidden={!isShown} importantForAccessibility={isShown ? "auto" : "no-hide-descendants"}>
-                  <SpacePage profile={item} isShown={isShown} onMenu={setMenu} bottom={view.profiles.length > 1 ? 0 : insets.bottom} />
+                  <SpacePage profile={item} isShown={isShown} onMenu={setMenu} bottom={profiles.length > 1 ? 0 : insets.bottom} />
                 </View>
               );
             }}
           />
         ) : (
-          <Unavailable isOff={status.phase === "off"} />
+          <Unavailable isOff={phase === "off"} />
         )}
-        {view.profiles.length > 1 && profile ? <Switcher profiles={view.profiles} selected={profile.syncId} onChoose={choose} bottom={insets.bottom} /> : null}
+        {profiles.length > 1 && profile ? <Switcher profiles={profiles} selected={profile.syncId} onChoose={choose} bottom={insets.bottom} /> : null}
       </View>
       {menu ? <FloatingMenu items={menu.items} anchor={menu.anchor} place={{ top: menu.y, left: space.xl, width: tabsLayout.menuWidth }} onDismiss={() => setMenu(null)} /> : null}
     </View>
