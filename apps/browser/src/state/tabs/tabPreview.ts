@@ -10,7 +10,7 @@ import { lastPicture, onPicturesChanged, tabNeverCaptured, type Picture } from "
 export type PreviewState = "shown" | "none" | "stale" | "hidden";
 
 export type PreviewInput = {
-  picture: Pick<Picture, "url"> | null;
+  picture: Pick<Picture, "url" | "settled"> | null;
   tabUrl: string;
   onScreen: boolean;
   crashed: boolean;
@@ -20,7 +20,7 @@ export type PreviewInput = {
 export function previewState({ picture, tabUrl, onScreen, crashed, neverCaptured }: PreviewInput): PreviewState {
   if (onScreen || crashed || neverCaptured || isBlankAddress(tabUrl)) return "hidden";
   if (!picture) return "none";
-  return picture.url === tabUrl ? "shown" : "stale";
+  return picture.url === tabUrl && picture.settled ? "shown" : "stale";
 }
 
 export function tabOnScreen(s: BrowserState, windowId: string, tabId: string): boolean {

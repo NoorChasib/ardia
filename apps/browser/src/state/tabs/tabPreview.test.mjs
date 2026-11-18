@@ -6,12 +6,13 @@ const { tabNeverCaptured } = await import("./tabPictures.ts");
 
 const S = () => useBrowser.getState();
 const URL_A = "https://red.example/";
-const base = { picture: { url: URL_A }, tabUrl: URL_A, onScreen: false, crashed: false, neverCaptured: false };
+const base = { picture: { url: URL_A, settled: true }, tabUrl: URL_A, onScreen: false, crashed: false, neverCaptured: false };
 
 test("a background tab shows its picture only while the picture is of the address the tab is on", () => {
   assert.equal(previewState(base), "shown");
   assert.equal(previewState({ ...base, tabUrl: "https://red.example/inbox" }), "stale", "navigated since, SPA changes included");
   assert.equal(previewState({ ...base, picture: null }), "none");
+  assert.equal(previewState({ ...base, picture: { url: URL_A, settled: false } }), "stale", "taken mid-load or before a load it couldn't capture");
 });
 
 test("the tab on screen, a blank, crashed, private or incognito tab never shows a preview", () => {
@@ -19,7 +20,7 @@ test("the tab on screen, a blank, crashed, private or incognito tab never shows 
   assert.equal(previewState({ ...base, crashed: true }), "hidden");
   assert.equal(previewState({ ...base, neverCaptured: true, picture: null }), "hidden");
   assert.equal(previewState({ ...base, tabUrl: "", picture: null }), "hidden");
-  assert.equal(previewState({ ...base, tabUrl: "about:blank", picture: { url: "about:blank" } }), "hidden");
+  assert.equal(previewState({ ...base, tabUrl: "about:blank", picture: { url: "about:blank", settled: true } }), "hidden");
   assert.equal(previewState({ ...base, onScreen: true, picture: null }), "hidden", "hidden wins over none, so it isn't counted");
 });
 

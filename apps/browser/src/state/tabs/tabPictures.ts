@@ -4,7 +4,7 @@ import type { BrowserState } from "../browser/store";
 import { webviews } from "../../platform/webviews";
 import { noteTabHoverPreviewCapture } from "../telemetry/hoverCardCounts";
 
-export type Picture = { data: string; frame: [number, number, number, number]; url: string; at: number };
+export type Picture = { data: string; frame: [number, number, number, number]; url: string; at: number; settled: boolean };
 
 const SETTLE_MS = 1500;
 export const LOADED_SETTLE_MS = 500;
@@ -32,6 +32,8 @@ export function rememberPicture(tabId: string): Promise<void> {
   return remember(tabId, false);
 }
 
+export const previewCaptures = (s: Pick<BrowserState, "settings">) => s.settings.showTabHoverMenu && s.settings.showPagePreviewInTabHoverMenu;
+
 export const tabNeverCaptured = (s: Pick<BrowserState, "windows" | "tabs">, tabId: string) => {
   const tab = s.tabs[tabId];
   return !tab || s.windows[tab.windowId]?.kind === "private" || isIncognitoProfile(tab.profileId);
@@ -43,25 +45,37 @@ function remember(tabId: string, afterLoad: boolean): Promise<void> {
   const view = webviews.get(tabId);
   if (!view) return Promise.resolve();
   const url = state.tabs[tabId]!.url;
+  const loadingAtRequest = !!state.live[tabId]?.isLoading;
+  const requested = Date.now();
+  const missed = () => {
+    if (!afterLoad) return;
+    noteTabHoverPreviewCapture(true);
+    unsettle(tabId, url, requested);
+  };
   return view
     .capturePicture(0.25)
-    .then(
-      (picture) => {
-        if (afterLoad) noteTabHoverPreviewCapture(!picture);
-        if (!picture || useBrowser.getState().tabs[tabId]?.url !== url) return;
-        pictures.delete(tabId);
-        pictures.set(tabId, { data: picture.data, frame: picture.frame, url, at: Date.now() });
-        for (const old of pictures.keys()) {
-          if (pictures.size <= KEEP) break;
-          pictures.delete(old);
-        }
-        changed();
-      },
-      () => {
-        if (afterLoad) noteTabHoverPreviewCapture(true);
-      },
-    )
+    .then((picture) => {
+      if (!picture) return missed();
+      if (afterLoad) noteTabHoverPreviewCapture(false);
+      const now = useBrowser.getState();
+      if (now.tabs[tabId]?.url !== url) return;
+      const settled = !loadingAtRequest && !now.live[tabId]?.isLoading;
+      pictures.delete(tabId);
+      pictures.set(tabId, { data: picture.data, frame: picture.frame, url, at: Date.now(), settled });
+      for (const old of pictures.keys()) {
+        if (pictures.size <= KEEP) break;
+        pictures.delete(old);
+      }
+      changed();
+    }, missed)
     .catch(() => {});
+}
+
+function unsettle(tabId: string, url: string, requested: number) {
+  const picture = pictures.get(tabId);
+  if (!picture?.settled || picture.url !== url || picture.at > requested) return;
+  pictures.set(tabId, { ...picture, settled: false });
+  changed();
 }
 
 function clearGone(s: BrowserState, from: Map<string, ReturnType<typeof setTimeout>>) {
@@ -112,7 +126,7 @@ function followFinishedLoads(s: BrowserState, prev: BrowserState) {
         loadTimers.delete(w.id);
         const now = useBrowser.getState();
         const win = now.windows[w.id];
-        if (now.settings.showPagePreviewInTabHoverMenu && win?.activeTabIds[win.profileId] === id && now.tabs[id]?.url === url && !now.live[id]?.isLoading) void remember(id, true);
+        if (previewCaptures(now) && win?.activeTabIds[win.profileId] === id && now.tabs[id]?.url === url && !now.live[id]?.isLoading) void remember(id, true);
       }, LOADED_SETTLE_MS),
     );
   }
@@ -122,7 +136,7 @@ export function startTabPictures() {
   if (started) return;
   started = true;
   useBrowser.subscribe((s, prev) => {
-    const loads = s.live !== prev.live && s.settings.showPagePreviewInTabHoverMenu;
+    const loads = s.live !== prev.live && previewCaptures(s);
     if (s.windows === prev.windows && s.tabs === prev.tabs && !loads) return;
     if (s.windows !== prev.windows || s.tabs !== prev.tabs) followActiveTabs(s, prev);
     if (loads) followFinishedLoads(s, prev);

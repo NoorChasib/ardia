@@ -4,6 +4,7 @@ const { useBrowser } = await import("../browser/store.ts");
 const { webviews, webviewRef } = await import("../../platform/webviews.ts");
 const { LOADED_SETTLE_MS, lastPicture, onPicturesChanged, rememberPicture, startTabPictures } = await import("./tabPictures.ts");
 const { takeHoverCardCounts } = await import("../telemetry/hoverCardCounts.ts");
+const { previewState } = await import("./tabPreview.ts");
 
 const S = () => useBrowser.getState();
 mock.timers.enable({ apis: ["setTimeout"] });
@@ -181,4 +182,115 @@ test("a closed tab's picture is dropped and its readers are told", async () => {
   stop();
   assert.equal(lastPicture(a), null);
   assert.equal(told, 1);
+});
+
+const hoverState = (id) => previewState({ picture: lastPicture(id), tabUrl: S().tabs[id].url, onScreen: false, crashed: false, neverCaptured: false });
+
+test("a picture taken while a navigation is still loading is kept for the switcher but never shown as the new page", async () => {
+  const { w, a } = await setup({ preview: true });
+  S().newTab(w, { url: "https://blue.example/", background: true });
+  assert.equal(hoverState(a), "shown");
+  S().updateLive(a, { isLoading: true });
+  S().updateTab(a, { url: "https://slow.example/" });
+  fake(a, () => Promise.resolve({ data: "RED", frame: FRAME }));
+  mock.timers.tick(SETTLE_MS);
+  await flush();
+  assert.deepEqual([lastPicture(a).url, lastPicture(a).data], ["https://slow.example/", "RED"]);
+  assert.equal(hoverState(a), "stale", "the old page may still be painted under the new address");
+  S().newTab(w, { url: "https://green.example/" });
+  S().updateLive(a, { isLoading: false });
+  mock.timers.tick(10 * SETTLE_MS);
+  await flush();
+  assert.equal(hoverState(a), "stale", "the load ended in the background, so nothing replaced it");
+  S().activate(a);
+  fake(a);
+  mock.timers.tick(SETTLE_MS);
+  await flush();
+  assert.equal(hoverState(a), "shown", "seen again once settled");
+});
+
+test("a load that starts while its picture is being taken leaves the picture unshown", async () => {
+  const { a } = await setup();
+  let answer;
+  fake(a, () => new Promise((resolve) => (answer = resolve)));
+  void rememberPicture(a);
+  S().updateLive(a, { isLoading: true });
+  answer({ data: "CC", frame: FRAME });
+  await flush();
+  assert.equal(lastPicture(a).data, "CC");
+  assert.equal(hoverState(a), "stale");
+});
+
+test("a finished load that can't be captured hides the earlier picture of the same address until a settled capture lands", async () => {
+  for (const answer of [() => Promise.resolve(null), () => Promise.reject(new Error("timed out"))]) {
+    const { a } = await setup({ preview: true });
+    assert.equal(hoverState(a), "shown");
+    let told = 0;
+    const stop = onPicturesChanged(() => told++);
+    fake(a, answer);
+    finishLoad(a);
+    mock.timers.tick(LOADED_SETTLE_MS);
+    await flush();
+    stop();
+    assert.equal(lastPicture(a).data, "AA", "the switcher and drag still have a picture");
+    assert.equal(hoverState(a), "stale", "but it is of the document before this load");
+    assert.equal(told, 1);
+    assert.equal(takeHoverCardCounts().tab_hover_preview_capture_misses, 1);
+    fake(a);
+    finishLoad(a);
+    mock.timers.tick(LOADED_SETTLE_MS);
+    await flush();
+    assert.equal(hoverState(a), "shown");
+  }
+});
+
+test("a failed load capture leaves alone a picture that landed after it was asked for", async () => {
+  const { a } = await setup({ preview: true });
+  let fail;
+  fake(a, () => new Promise((resolve) => (fail = resolve)));
+  finishLoad(a);
+  mock.timers.tick(LOADED_SETTLE_MS);
+  await flush();
+  const asked = Date.now();
+  while (Date.now() === asked) await new Promise((r) => setImmediate(r));
+  fake(a, () => Promise.resolve({ data: "FRESH", frame: FRAME }));
+  await rememberPicture(a);
+  await flush();
+  fail(null);
+  await flush();
+  assert.equal(lastPicture(a).data, "FRESH");
+  assert.equal(hoverState(a), "shown");
+});
+
+test("a sleeping tab with no new load keeps showing its picture", async () => {
+  const { w, a } = await setup({ preview: true });
+  S().newTab(w, { url: "https://blue.example/" });
+  mock.timers.tick(10 * SETTLE_MS);
+  await flush();
+  assert.equal(hoverState(a), "shown");
+});
+
+test("with the hover menu off, the preview setting alone schedules nothing and captures nothing extra", async () => {
+  const { a } = await setup({ preview: true });
+  S().updateSettings({ showTabHoverMenu: false });
+  const schedule = globalThis.setTimeout;
+  let scheduled = 0;
+  globalThis.setTimeout = (...args) => (scheduled++, schedule(...args));
+  try {
+    for (let i = 0; i < 10; i++) finishLoad(a);
+  } finally {
+    globalThis.setTimeout = schedule;
+  }
+  assert.equal(scheduled, 0);
+  mock.timers.tick(10 * SETTLE_MS);
+  await flush();
+  assert.equal(calls.length, 0);
+  assert.equal(takeHoverCardCounts().tab_hover_preview_captures, 0);
+  S().updateSettings({ showTabHoverMenu: true });
+  finishLoad(a);
+  S().updateSettings({ showTabHoverMenu: false });
+  mock.timers.tick(LOADED_SETTLE_MS);
+  await flush();
+  assert.equal(calls.length, 0, "a menu turned off before the settle cancels the capture");
+  S().updateSettings({ showTabHoverMenu: true });
 });
