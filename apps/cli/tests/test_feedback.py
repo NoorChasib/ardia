@@ -30,7 +30,7 @@ class FeedbackService:
         self.statuses = {"create": 201, "upload": 200, "complete": 200}
         self.requests: list[dict] = []
         self.files: dict[str, bytes] = {}
-        self.issue_url = "https://github.com/mantrakp04/ardia/issues/1234"
+        self.issue_url = "https://github.com/NoorChasib/nilla/issues/1234"
         service = self
 
         class Handler(BaseHTTPRequestHandler):
@@ -315,7 +315,7 @@ class IdentityTest(FeedbackCase):
         status, out, _ = self.send("--title", "t", "d")
         self.assertEqual(status, 0)
         self.assertEqual(self.service.created()["body"]["install_id"], INSTALL_ID)
-        self.assertEqual(out.splitlines(), ["Sent. Reference FB-7K2Q.", "Issue: https://github.com/mantrakp04/ardia/issues/1234", "You appear to us as Brave Otter."])
+        self.assertEqual(out.splitlines(), ["Sent. Reference FB-7K2Q.", "Issue: https://github.com/NoorChasib/nilla/issues/1234", "You appear to us as Brave Otter."])
 
     def test_sharing_off_sends_with_a_one_time_id(self):
         write_consent(self.data, sharing=False)

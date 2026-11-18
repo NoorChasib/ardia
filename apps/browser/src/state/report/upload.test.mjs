@@ -16,7 +16,7 @@ function fakeServer({ create = 201, put = () => 200, complete = 200, upload_urls
   const deps = {
     async postJson(url, body, headers) {
       calls.push({ kind: "post", url, body, headers });
-      if (url.endsWith("/complete")) return { status: complete, json: complete < 300 ? { id: "FB-7KQ2", name: "Brave Otter", issue_url: "https://github.com/ardia-browser/ardia/issues/1234" } : { error: "boom" } };
+      if (url.endsWith("/complete")) return { status: complete, json: complete < 300 ? { id: "FB-7KQ2", name: "Brave Otter", issue_url: "https://github.com/NoorChasib/nilla/issues/1234" } : { error: "boom" } };
       return { status: create, json: create < 300 ? { id: "FB-7KQ2", name: "Brave Otter", upload_token: "tok", upload_urls: upload_urls ?? { "recording.mp4": "/api/feedback/FB-7KQ2/files/recording.mp4" } } : { error: "title: required" } };
     },
     async putFile(id, url, headers, file) {
@@ -183,10 +183,10 @@ test("upload urls come from the answer, a list, or the report path", () => {
 });
 
 test("helpers", () => {
-  assert.equal(issueNumberOf("https://github.com/ardia-browser/ardia/issues/77"), 77);
+  assert.equal(issueNumberOf("https://github.com/NoorChasib/nilla/issues/77"), 77);
   assert.equal(issueNumberOf(null), null);
-  assert.equal(resolveUrl("https://ardia.dev/api/feedback", "/api/x"), "https://ardia.dev/api/x");
-  assert.equal(resolveUrl("https://ardia.dev/api/feedback", "https://cdn.dev/x"), "https://cdn.dev/x");
+  assert.equal(resolveUrl("https://feedback.example.test/api/feedback", "/api/x"), "https://feedback.example.test/api/x");
+  assert.equal(resolveUrl("https://feedback.example.test/api/feedback", "https://cdn.dev/x"), "https://cdn.dev/x");
   assert.equal(isBusy({ phase: "creating" }), true);
   assert.equal(isBusy({ phase: "failed", stage: "create", message: "", created: null }), false);
 });

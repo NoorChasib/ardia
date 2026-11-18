@@ -5,7 +5,7 @@ import { Button, TextField } from "../../ui";
 import { Row } from "../Form";
 import { setupCodesOffered } from "../../../state/app/siteServices";
 
-const SETUP_CODE_HINT = "Paste the code from the demo on ardia.dev to bring over the layout, look and pinned apps you picked there.";
+const SETUP_CODE_HINT = "Paste the code from the demo to bring over the layout, look and pinned apps you picked there.";
 
 export function SetupCodeRow() {
   return setupCodesOffered() ? <SetupCodeField /> : null;

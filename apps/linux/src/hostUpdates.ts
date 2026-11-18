@@ -4,12 +4,13 @@ import { hostSupports, invokeHost } from "./host.ts";
 import { hostLaunchConfig } from "./hostLaunchConfig.ts";
 import { channelOf, compareVersions, isAppVersion, linuxReleases, newestRelease, type Release } from "./updateReleases.ts";
 import { noteUpdateCheck, noteUpdatePageOpened } from "../../browser/src/state/telemetry/updateCounts.ts";
+import { SOURCE_REPO } from "@ardia/core/src/services.ts";
 
 export const UPDATE_METHODS = ["updaterState", "checkForUpdates", "setAutomaticUpdateChecks", "setAutomaticUpdateDownloads", "setUpdateChannel"] as const;
 export const RELEASES_METHOD = "ArdiaUpdates.releases";
 export const KILL_SWITCHES_METHOD = "ArdiaShell.fetchKillSwitches";
 export const UPDATE_PREFERENCES = "linux-updates.json";
-export const RELEASES_PAGE = "https://github.com/ardia-browser/ardia/releases";
+export const RELEASES_PAGE = `https://github.com/${SOURCE_REPO}/releases`;
 export const FIRST_CHECK_AFTER_MS = 30_000;
 export const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 export const UPDATE_CHECK_LOCK = "ardia.linux.update-checks";

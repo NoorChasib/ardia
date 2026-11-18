@@ -5,7 +5,7 @@ const { restoredDraft, savedDraftJson, savedDraftOf } = await import("./savedDra
 const { initialReportState } = await import("./store.ts");
 
 const identity = { id: "11111111-2222-4333-8444-555555555555", kind: "one-time", name: "Brave Otter", avatar: { colors: ["#000", "#111", "#222"], angle: 30 } };
-const created = { id: "FB-7KQ2", name: "Brave Otter", token: "tok", uploadUrls: { "recording.mp4": "https://ardia.dev/api/feedback/FB-7KQ2/files/recording.mp4" }, uploaded: [] };
+const created = { id: "FB-7KQ2", name: "Brave Otter", token: "tok", uploadUrls: { "recording.mp4": "https://feedback.example.test/api/feedback/FB-7KQ2/files/recording.mp4" }, uploaded: [] };
 const recording = { phase: "ready", path: "/drafts/a/recording.mp4", thumbnail: "/drafts/a/recording-1.png", seconds: 16, bytes: 146_000, includePages: false };
 
 const filled = (over = {}) => ({
