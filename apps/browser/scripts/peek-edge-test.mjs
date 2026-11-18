@@ -8,7 +8,7 @@ import { launch, reporter, session } from "../../../scripts/lib/instance.mjs";
 const args = process.argv.slice(2);
 const appArg = args.find((a) => !a.startsWith("--"));
 if (!appArg) {
-  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a second push goes on through. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
+  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a push 350 ms after the stop goes on through, whatever the reveal speed. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
   process.exit(2);
 }
 const appPath = resolve(appArg);
@@ -298,19 +298,27 @@ try {
     }
   });
 
-  await rep.check("Slower at a screen-edge stop: it opens after the wait, and a second push still goes through", async () => {
-    const frame = (x) => `return globalThis.expo.modules.ArdiaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
-    await run(frame(0));
-    try {
-      const ms = await run(`return speed("slower").then(() => revealAfter(-30, 400));`);
-      assert.ok(ms !== null && ms >= 230 && ms < 450, `opened ${ms} ms after the stop`);
-      assert.equal(await run(`return at(-30, 400).then(() => settle(700)).then(live);`), false, "the second push went on to the next display");
-      assert.equal(await run(`return away();`), false);
-    } finally {
-      await run(`return speed("default");`);
-      await run(frame(200));
-    }
-  });
+  for (const s of ["default", "slower"]) {
+    await rep.check(`${s} at a screen-edge stop: a push 200 ms after the stop stays at the edge, one 460 ms after it goes through`, async () => {
+      const frame = (x) => `return globalThis.expo.modules.ArdiaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
+      await run(frame(0));
+      try {
+        const out = await run(`const notes = []; const sub = globalThis.expo.modules.ArdiaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
+          return speed("${s}").then(() => at(300, 400)).then(() => settle(700)).then(() => { const t0 = Date.now(); const opened = firstLive(1200);
+            const pushAt = (ms) => settle(Math.max(0, t0 + ms - Date.now())).then(() => at(-30, 400));
+            return at(-30, 400).then(() => pushAt(200)).then(() => settle(40)).then(() => ({ early: [...notes] }))
+              .then((r) => pushAt(460).then(() => opened).then((ms) => settle(700).then(() => (sub.remove(), { ...r, ms, late: [...notes], after: live() })))); });`);
+        if (s === "slower") assert.ok(out.ms !== null && out.ms >= 230 && out.ms < 450, `opened ${out.ms} ms after the stop`);
+        else assert.ok(out.ms !== null && out.ms < 120, `opened ${out.ms} ms after the stop`);
+        assert.deepEqual(out.early, ["stopped"], "200 ms after the stop the push is held at the edge");
+        assert.deepEqual(out.late, ["stopped", "passed"], "460 ms after the stop the push goes on to the next display");
+        assert.equal(out.after, false, "and the peek closes behind it");
+      } finally {
+        await run(`return away().then(() => speed("default"));`);
+        await run(frame(200));
+      }
+    });
+  }
 
   await rep.check("the reveal speed survives a relaunch", async () => {
     await run(`return speed("slower").then(() => settle(1500));`);
