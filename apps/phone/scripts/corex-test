@@ -38,6 +38,7 @@ while [ $# -gt 0 ]; do
 done
 base="$HOME/Developer/ardia-android-build"
 src="$base/src"
+tools="$base/tools"
 testApp="$base/device-tests.apk"
 
 if [ "${device#run:}" != "$device" ]; then
@@ -136,6 +137,7 @@ reset() {
 }
 trap reset EXIT
 git -C "$src" fetch --quiet origin "$branch"
+head="$(git -C "$src" rev-parse FETCH_HEAD)"
 commit="$(git -C "$src" rev-parse --verify --quiet "$wanted^{commit}" || true)"
 [ -n "$commit" ] || { echo "$wanted isn't on origin/$branch: push it first" >&2; exit 64; }
 git -C "$src" checkout --quiet --detach --force "$commit"
@@ -147,12 +149,15 @@ else
   echo "testing $commit"
 fi
 
-pinned="$(sed -n 's/.*"packageManager": "bun@\([^"]*\)".*/\1/p' "$src/apps/phone/package.json")"
-export PATH="$base/bun-$pinned/node_modules/.bin:$PATH"
+rm -rf "$tools"
+mkdir -p "$tools"
+git -C "$src" archive "$head" apps/phone/scripts apps/phone/test/r8 apps/phone/package.json apps/phone/bunfig.toml | tar -x -C "$tools"
+bunBin="$(bash "$tools/apps/phone/scripts/corex-bun" path "$base" "$src" "$tools")"
+export PATH="$bunBin:$PATH"
 export BUN_INSTALL_CACHE_DIR="$base/bun-cache"
 export TMPDIR="$base/tmp"
 export GRADLE_OPTS="${GRADLE_OPTS:-} -Djava.net.preferIPv4Stack=true"
-(cd "$src/apps/phone" && bun install --frozen-lockfile --silent)
+bash "$tools/apps/phone/scripts/corex-bun" install "$base" "$src" "$tools" --silent
 results=("$src/packages/phone/android/build/test-results/testDebugUnitTest" "$src/apps/phone/android/app/build/test-results/testDebugUnitTest" "$src/apps/phone/android/ardia-design/build/test-results/testDebugUnitTest")
 tasks=(:ardia-phone-native:testDebugUnitTest :app:testDebugUnitTest :ardia-design:testDebugUnitTest)
 deviceArgs=()

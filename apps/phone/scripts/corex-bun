@@ -1,0 +1,45 @@
+#!/bin/bash
+# corex-bun path|install <base> <revision root> <tools root> [bun install options]
+# The Bun corex-build and corex-test install a revision with: the version the revision's apps/phone/package.json pins,
+# or, for a revision from before Bun, the version the tools' (the branch head's) apps/phone/package.json pins. It lives
+# in <base>/bun-<version>, installed with npm when it is missing or reports another version, and must report that one.
+# path prints its bin folder. install runs its bun install --frozen-lockfile in the revision's apps/phone with the
+# options given; a revision without apps/phone/bunfig.toml takes the tools' one, so Bun reads its pnpm lockfile into
+# the same hoisted layout.
+set -euo pipefail
+if [ $# -lt 4 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'
+  [ $# -ge 1 ] && [ "$1" != "--help" ] && [ "$1" != "-h" ] && exit 64
+  exit 0
+fi
+command="$1"
+base="$2"
+revision="$3/apps/phone"
+tools="$4/apps/phone"
+shift 4
+case "$command" in
+  path | install) ;;
+  *) echo "corex-bun takes path or install, not $command" >&2; exit 64 ;;
+esac
+
+pin() { [ -f "$1/package.json" ] && sed -n 's/.*"packageManager": "bun@\([^"]*\)".*/\1/p' "$1/package.json"; return 0; }
+pinned="$(pin "$revision")"
+[ -n "$pinned" ] || pinned="$(pin "$tools")"
+[ -n "$pinned" ] || { echo "neither $revision nor $tools pins Bun in package.json" >&2; exit 1; }
+home="$base/bun-$pinned"
+bin="$home/node_modules/.bin"
+reported() { [ -x "$bin/bun" ] && "$bin/bun" --version 2>/dev/null; return 0; }
+if [ "$(reported)" != "$pinned" ]; then
+  rm -rf "$home"
+  npm install --silent --prefix "$home" "bun@$pinned" >&2
+fi
+[ "$(reported)" = "$pinned" ] || { echo "$bin/bun reports $(reported), not $pinned" >&2; exit 1; }
+
+if [ "$command" = "path" ]; then
+  echo "$bin"
+  exit 0
+fi
+config=()
+[ -f "$revision/bunfig.toml" ] || config=("--config=$tools/bunfig.toml")
+cd "$revision"
+exec "$bin/bun" install --frozen-lockfile ${config[@]+"${config[@]}"} "$@"

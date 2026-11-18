@@ -6,7 +6,8 @@
 //
 // create resolves REV (default HEAD), extracts the phone app with its own workspace file and lockfile, its
 // packages and the patches from that commit with git archive into a new folder under the system temp folder,
-// runs bun install --offline --frozen-lockfile in the phone's workspace there,
+// runs bun install --offline --frozen-lockfile in the phone's workspace there (with this checkout's
+// apps/phone/bunfig.toml for a commit from before Bun, which has none),
 // and prints {"dir": …, "commit": …}. Pass the dir to Gradle as -PardiaBundleExport=DIR. remove deletes a folder
 // that create made, and refuses anything else.
 import { execFileSync } from "node:child_process";
@@ -31,6 +32,13 @@ export const EXPORT_RECORD = ".ardia-bundle.json";
 
 export type BundleExport = { dir: string; commit: string };
 
+export const toolBunfig = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "bunfig.toml");
+
+export function installArgs(phone: string): string[] {
+  const config = fs.existsSync(path.join(phone, "bunfig.toml")) ? [] : [`--config=${toolBunfig}`];
+  return ["install", "--offline", "--frozen-lockfile", ...config, "--silent"];
+}
+
 export function resolveCommit(root: string, rev = "HEAD"): string {
   return execFileSync("git", ["rev-parse", "--verify", `${rev}^{commit}`], { cwd: root, encoding: "utf8" }).trim();
 }
@@ -44,7 +52,8 @@ export function createExport(root: string, rev = "HEAD", options: { install?: bo
     execFileSync("tar", ["-x", "-f", "-", "-C", dir], { input: archive });
     fs.writeFileSync(path.join(dir, EXPORT_RECORD), JSON.stringify({ commit }));
     if (options.install !== false) {
-      execFileSync("bun", ["install", "--offline", "--frozen-lockfile", "--silent"], { cwd: path.join(dir, "apps/phone"), stdio: ["ignore", 2, 2] });
+      const phone = path.join(dir, "apps/phone");
+      execFileSync("bun", installArgs(phone), { cwd: phone, stdio: ["ignore", 2, 2] });
     }
     return { dir, commit };
   } catch (error) {
