@@ -4,7 +4,7 @@
     "//"
   ],
   "tasks": {
-    "typecheck": {
+    "check": {
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/apps/browser/src/**"

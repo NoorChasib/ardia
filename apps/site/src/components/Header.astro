@@ -403,7 +403,7 @@ const pages: { page?: Page; href: string; section?: string; label: string; menuL
     btn.setAttribute("aria-expanded", String(open));
     btn.textContent = open ? "Close" : "Menu";
   };
-  btn.addEventListener("click", () => setOpen(menu.hidden));
+  btn.addEventListener("click", () => setOpen(Boolean(menu.hidden)));
   menu.addEventListener("click", (e) => {
     if ((e.target as Element).closest("a")) setOpen(false);
   });

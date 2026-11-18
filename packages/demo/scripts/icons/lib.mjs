@@ -6,7 +6,7 @@ import { PNG } from "pngjs";
 const require = createRequire(import.meta.url);
 export function packageDir(name) {
   const dir = (require.resolve.paths(name) ?? []).map((root) => `${root}/${name}`).find((candidate) => existsSync(`${candidate}/package.json`));
-  if (!dir) throw new Error(`${name} is not installed; run pnpm install`);
+  if (!dir) throw new Error(`${name} is not installed; run bun install`);
   return dir;
 }
 export const packageMeta = (name) => JSON.parse(readFileSync(`${packageDir(name)}/package.json`, "utf8"));

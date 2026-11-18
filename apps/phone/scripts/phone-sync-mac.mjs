@@ -100,7 +100,7 @@ async function ensureMetro(opts) {
   if (listenerPids(opts.metroPort).length > 0) return null;
   const log = path.join(opts.work, "metro.log");
   const out = fs.openSync(log, "a");
-  const child = spawn("pnpm", ["exec", "react-native", "start", "--port", String(opts.metroPort)], { cwd: path.join(repo, "apps/browser"), detached: true, stdio: ["ignore", out, out] });
+  const child = spawn("bun", ["x", "react-native", "start", "--port", String(opts.metroPort)], { cwd: path.join(repo, "apps/browser"), detached: true, stdio: ["ignore", out, out] });
   child.unref();
   for (const end = Date.now() + 120_000; Date.now() < end; await sleep(500)) {
     if (listenerPids(opts.metroPort).length > 0) {

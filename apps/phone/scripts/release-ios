@@ -72,7 +72,7 @@ fi
 channel="$(channel_of "$release_version")" || exit 1
 version="$(apple_version_of "$release_version")"
 
-nativePaths=(apps/phone/ios packages/phone/ios apps/phone/app.json apps/phone/package.json apps/phone/pnpm-lock.yaml packages/phone/expo-module.config.json patches)
+nativePaths=(apps/phone/ios packages/phone/ios apps/phone/app.json apps/phone/package.json apps/phone/bun.lock apps/phone/bunfig.toml packages/phone/expo-module.config.json patches)
 dirtyNative="$(cd "$root" && git status --porcelain=v1 --untracked-files=no -- "${nativePaths[@]}" | cut -c4- | tr '\n' ' ')"
 [ -z "$dirtyNative" ] || { (cd "$root" && git --no-pager diff --stat -- "${nativePaths[@]}" >&2); die "the native tree has uncommitted changes, commit them first: $dirtyNative"; }
 nativeCommit="$(git -C "$root" rev-parse HEAD)"

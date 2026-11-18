@@ -1,5 +1,6 @@
 const path = require("node:path");
 const { getDefaultConfig } = require("expo/metro-config");
+const { withNestedPhoneModules } = require("./metro-nested-modules.js");
 
 const projectRoot = __dirname;
 const repoRoot = path.resolve(projectRoot, "../..");
@@ -18,4 +19,4 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return upstreamResolve ? upstreamResolve(context, moduleName, platform) : context.resolveRequest(context, moduleName, platform);
 };
 
-module.exports = config;
+module.exports = withNestedPhoneModules(config, projectRoot);

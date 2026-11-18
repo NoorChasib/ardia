@@ -21,7 +21,7 @@ for (const task of tasks) {
   const manifest = join(dir, "src/bundles.json");
   if (!existsSync(manifest)) throw new Error(`${manifest} is missing`);
   for (const [out, src] of Object.entries(JSON.parse(readFileSync(manifest, "utf8")))) {
-    execFileSync("npx", ["--yes", ESBUILD, join(dir, src), "--bundle", "--minify", "--format=iife", "--target=es2022",
+    execFileSync("bun", ["x", ESBUILD, join(dir, src), "--bundle", "--minify", "--format=iife", "--target=es2022",
       "--legal-comments=none", `--outfile=${join(dir, out)}`, "--log-level=warning"], { stdio: "inherit" });
     console.log(`${task}: ${out}`);
   }

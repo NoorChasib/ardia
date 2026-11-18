@@ -16,11 +16,12 @@
     "!packages/phone"
   ],
   "scripts": {
-    "dev": "turbo run dev --filter=@ardia/browser",
-    "macos": "pnpm --filter @ardia/browser macos",
-    "pods": "pnpm --filter @ardia/browser pods",
+    "dev": "bun run --cwd apps/browser dev",
+    "macos": "bun run --cwd apps/browser macos",
+    "pods": "bun run --cwd apps/browser pods",
     "build": "turbo run build",
-    "typecheck": "turbo run typecheck",
+    "check": "turbo run check",
+    "check:all": "scripts/check-all.sh",
     "shaders:check": "turbo run shaders:check",
     "test": "turbo run test && pnpm run test:root",
     "test:root": "node --no-warnings --test extras/raycast-ardia/src/scripts.test.ts \"scripts/**/*.test.mjs\" \"apps/ios/scripts/*.test.mjs\" \"apps/site/src/**/*.test.ts\"",
