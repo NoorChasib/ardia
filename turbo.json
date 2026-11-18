@@ -34,11 +34,21 @@
     "test": {
       "dependsOn": [
         "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/lib/bun-tests.mjs",
+        "$TURBO_ROOT$/scripts/lib/test-tsconfig.json"
       ]
     },
     "test:portable": {
       "dependsOn": [
         "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/lib/bun-tests.mjs",
+        "$TURBO_ROOT$/scripts/lib/test-tsconfig.json"
       ]
     }
   }

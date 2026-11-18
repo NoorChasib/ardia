@@ -1,0 +1,8 @@
+{
+  "node": ["--test-concurrency=1"],
+  "files": {
+    "scripts/acceptance/tests/fixtures.test.mjs": "serves two certificates by SNI from one node:https server, which Bun answers with the first certificate",
+    "scripts/acceptance/tests/chromium.test.mjs": "a skipped describe() leaves no result under bun test, so where Chromium is missing nothing would show it was skipped",
+    "scripts/acceptance/tests/content-blocker-bridge.test.mjs": "a skipped describe() leaves no result under bun test, so where Chromium is missing nothing would show it was skipped"
+  }
+}

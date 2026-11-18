@@ -7,7 +7,7 @@
     "render": "scripts/deliver.sh",
     "studio": "remotion studio",
     "check": "tsc -p .",
-    "test": "node --no-warnings --test scripts/beats.test.mts"
+    "test": "bun test --timeout=0 ./scripts/beats.test.mts"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.529",
