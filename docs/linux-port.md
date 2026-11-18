@@ -802,7 +802,13 @@ pnpm --filter @ardia/linux acceptance -- <extracted>/ardia/bin/ardia
   - The zone is 8 px from the client's edge, plus anything of the window beyond it (the resize border), up to
     24 px. The right edge mirrors the left pixel for pixel.
   - While the peek is out, the pointer counts as over anywhere in its column, 5 + sidebar width + 24 px wide, over the
-    page too. Dismissal keeps the shared 120 ms delay.
+    page too. Dismissal keeps the shared 200 ms delay.
+  - Settings › Tabs › Sidebar reveal speed acts on the shared side, after the native report: Faster and Default open
+    at once, Slower waits 250 ms for the pointer to rest on the 3 px edge. The native zone is 8 px wide and reports
+    only transitions, so while Slower's wait runs the shared UI calls `watchSidebarEdge` again every 40 ms for a fresh
+    report with the pointer, and opens only if the pointer is still on the 3 px band (`useSidebarEdgeWatch.ts`);
+    stepping back to x 5 ends the wait. Default and Faster never ask. On the leave-the-window path the 250 ms runs
+    after the 90 ms settle, about 340 ms in all.
   - Wayland has no global pointer, so the 24 pt reach macOS gives outside the window becomes this: when the pointer
     leaves through the sidebar's edge of the active window, the peek opens after 90 ms. If focus moves first
     (Hyprland's `follow_mouse` focusing the neighbouring window), it doesn't open. A peek that is already out stays out
@@ -1830,7 +1836,9 @@ These were open at the time of the PR.
   (`webView.setCommandScrollZoom`), Keep new-tab links inside a Little Ardia window
   (`webView.setLittleArdiaOpensNewTabLinks`), Open a Peek window when clicking on links to other sites
   (`webView.setPeekOtherSiteTabs`), Scroll bars (`ArdiaSystem.setThinScrollBars`), all four advertised by the
-  current host, Haptic feedback when reordering tabs (`ArdiaSystem.hapticTick`), and the two rows
+  current host, Haptic feedback when reordering tabs (`ArdiaSystem.hapticTick`), Show page preview in tab hover menu
+  (`tab.capturePicture`, which no engine serves yet), Show memory use in tab hover menu (`engine.tasks`, which every
+  pinned engine serves), and the two rows
   about links from other apps, Open links from other apps in Little Ardia and Put links from other apps first
   (`ArdiaShell.onOpenURLs`, which the host advertises now that it sends that event; an older engine leaves such
   links to Chromium, which opens them as tabs). The command bar's Dictate button follows `ArdiaShell.startDictation`
@@ -1839,6 +1847,14 @@ These were open at the time of the PR.
   `settingsForm.tsx`). Calendar › Show alerts is hidden until a host posts Ardia's own notifications
   (`ArdiaApp.postNotification`), and the commands that need WebKit or AppleScript (Open Page in WebKit, Allow
   JavaScript from Apple Events) have no menu entry or shortcut row.
+- **Tab pictures.** The web view handle answers `capturePicture` with null and makes no host call unless the host
+  advertises `tab.capturePicture` (`hostTabHandle` in `shims/web/HostWebView.tsx`), so the tab switcher's pictures,
+  the pin handoff and the tab drag preview cost no IPC on Linux (before, every tab switch sent one rejected
+  `tab.command`). The web view module also tells the shared UI that pictures can't be taken, so a synced-on Show
+  page preview in tab hover menu schedules no load capture, counts no misses and doesn't move the hover card up for
+  a preview that can't render. Both light up by themselves once an engine serves the command. The hover card's
+  memory line needs `engine.tasks` at run time too (`setTabMemoryAttributed` from `main.tsx`); the engine names
+  only tabs of the same window in it, so a sharer in another window reads as "shared with other pages".
 - **Session migrations.** The saved Linux session carries the shared `version`. `linuxSessionShape` runs the shared
   `SESSION_MIGRATIONS` from that version on the shape the Mac saves (windows, tabs, groups and splits as lists), and a
   session without the stamp counts as version 9, the last one Linux's own shape checks cover. A migration that changes
