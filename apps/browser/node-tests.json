@@ -1,0 +1,24 @@
+{
+  "node": ["--no-warnings", "--import", "./src/test-loader.mjs"],
+  "files": {
+    "src/state/app/cliControl.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/app/cliControlWindows.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/engines/actions.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/favicons/favicons.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/sidebar/closeControl.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/tabs/staleness.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/tabs/tabLifecycle.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/windows/windowCloseSeam.test.mjs": "stubs a module for one importer only with node:module registerHooks",
+    "src/state/commands/commandCatalog.test.mjs": "imports scripts/command-tables.mjs, which loads src/test-loader.mjs",
+    "src/state/browser/changes.test.mjs": "frees memory with V8's --expose-gc gc() and watches a WeakRef",
+    "src/state/favicons/pagesWritten.test.mjs": "frees memory with V8's --expose-gc gc() and watches a WeakRef",
+    "src/state/sidebar/groupEntriesMemo.test.mjs": "frees memory with V8's --expose-gc gc() and watches a WeakRef",
+    "src/state/telemetry/localBench.test.mjs": "frees memory with V8's --expose-gc gc() and measures V8 heap growth",
+    "src/components/settings/panes/passwordRows.test.mjs": "replaces the global require that the transpiled .tsx calls for .png assets",
+    "src/platform/pageScriptAppBadge.test.mjs": "checks the page script's shims print as V8 native functions, as in Chrome",
+    "src/platform/pageScriptDisplayMedia.test.mjs": "checks the page script's shims print as V8 native functions, as in Chrome",
+    "src/platform/pageScriptDrm.test.mjs": "checks the page script's shims print as V8 native functions, as in Chrome",
+    "src/platform/pageScriptNativeShape.test.mjs": "checks the page script's shims print as V8 native functions, as in Chrome",
+    "src/platform/windowsGradientFailure.test.mjs": "imports the module under test with a ?case= query to get a fresh instance each time"
+  }
+}

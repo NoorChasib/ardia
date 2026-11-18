@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
 const { useBrowser } = await import("../browser/store.ts");
 const { QUIT_WARNING, askBeforeQuitting, asksBeforeQuit, quitWarningMayAsk, windowsStayingOpen } = await import("./quitWarning.ts");
 const { shellNativeModules } = await import("../../test-native/shell.ts");
@@ -124,7 +125,7 @@ console.log(JSON.stringify({ cancelled, quit: { asked, closed: windows.closed.in
 `;
 
 test("on Windows, the user closing the last pop-up asks with the setting on: Cancel keeps it, Quit closes it", () => {
-  const run = spawnSync(process.execPath, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", LAST_POPUP_CLOSED_BY_THE_USER], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", LAST_POPUP_CLOSED_BY_THE_USER], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
   assert.equal(run.status, 0, run.stderr);
   const seen = JSON.parse(run.stdout.trim().split("\n").at(-1));
   assert.deepEqual(seen.cancelled, { asked: 1, closed: false }, "Cancel keeps the pop-up open");
@@ -176,7 +177,7 @@ console.log(JSON.stringify({ settings, importWindow, cancelled, job, besideBrows
 `;
 
 test("on Windows, Settings or Import as the last window asks before closing: Cancel keeps it and its import running, Quit closes it, and an open browser window means no question", () => {
-  const run = spawnSync(process.execPath, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", LAST_SETTINGS_OR_IMPORT], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", LAST_SETTINGS_OR_IMPORT], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
   assert.equal(run.status, 0, run.stderr);
   const seen = JSON.parse(run.stdout.trim().split("\n").at(-1));
   const askedThenClosed = { cancel: { asked: 1, open: true }, quit: { asked: 2, open: false } };
@@ -288,7 +289,7 @@ console.log(JSON.stringify(seen));
 `;
 
 test("on Windows, when the other window closes while a window's tabs confirm is open, confirming it asks the quit question: Cancel keeps the window, Quit closes it", () => {
-  const run = spawnSync(process.execPath, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", OTHER_WINDOW_CLOSES_DURING_THE_TABS_CONFIRM], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", OTHER_WINDOW_CLOSES_DURING_THE_TABS_CONFIRM], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
   assert.equal(run.status, 0, run.stderr);
   const seen = JSON.parse(run.stdout.trim().split("\n").at(-1));
   const quit = QUIT_WARNING.title;
@@ -303,7 +304,7 @@ test("on Windows, when the other window closes while a window's tabs confirm is 
 });
 
 test("on Windows, a browser window's close asks the quit question first: Cancel keeps it, a confirmed quit skips the tabs question and Don't ask again turns the quit warning off; a last tab asks the tabs question, or the quit question when that one is off", () => {
-  const run = spawnSync(process.execPath, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", BROWSER_WINDOW_CLOSES], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(ON_WINDOWS)}`, "--input-type=module", "-e", BROWSER_WINDOW_CLOSES], { cwd: fileURLToPath(new URL("../../../", import.meta.url)), encoding: "utf8" });
   assert.equal(run.status, 0, run.stderr);
   const seen = JSON.parse(run.stdout.trim().split("\n").at(-1));
   const quit = QUIT_WARNING.title;

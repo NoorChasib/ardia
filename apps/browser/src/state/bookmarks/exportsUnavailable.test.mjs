@@ -3,6 +3,8 @@ import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 const APP = fileURLToPath(new URL("../../../", import.meta.url));
 
 const ON_WINDOWS = `import { registerHooks } from "node:module";
@@ -44,7 +46,7 @@ console.log(JSON.stringify({
 
 function entryPoints(hook) {
   const hooks = hook ? ["--import", `data:text/javascript,${encodeURIComponent(hook)}`] : [];
-  const run = spawnSync(process.execPath, ["--no-warnings", "--import", "./src/test-loader.mjs", ...hooks, "--input-type=module", "-e", ENTRY_POINTS], { cwd: APP, encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", "--import", "./src/test-loader.mjs", ...hooks, "--input-type=module", "-e", ENTRY_POINTS], { cwd: APP, encoding: "utf8" });
   assert.equal(run.status, 0, run.stderr);
   return JSON.parse(run.stdout.trim().split("\n").at(-1));
 }

@@ -7,7 +7,7 @@
   "types": "src/index.tsx",
   "scripts": {
     "typecheck": "tsc -p .",
-    "test": "node --test scripts/focusHandoff.test.mjs && swift test --scratch-path \"${TMPDIR:-/tmp}/ardia-shell-swiftpm\""
+    "test": "bun test --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./scripts/focusHandoff.test.mjs && swift test --scratch-path \"${TMPDIR:-/tmp}/ardia-shell-swiftpm\""
   },
   "peerDependencies": {
     "expo": "*",

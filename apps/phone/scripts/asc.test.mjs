@@ -7,6 +7,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 const script = fileURLToPath(new URL("./asc.mjs", import.meta.url));
 
 function fakeAppStoreConnect() {
@@ -40,7 +42,7 @@ function publicLink(groups) {
   const log = join(dir, "requests.jsonl");
   writeFileSync(log, "");
   const preload = `import { appendFileSync } from "node:fs";\n(${fakeAppStoreConnect})();`;
-  execFileSync(process.execPath, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "public-link", "--build", "7"], {
+  execFileSync(nodeBinary, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "public-link", "--build", "7"], {
     env: { ...process.env, ASC_KEY: key, ASC_KEY_ID: "key", ASC_ISSUER: "issuer", ASC_FAKE_GROUPS: JSON.stringify(groups), ASC_FAKE_LOG: log },
   });
   const requests = readFileSync(log, "utf8").trim().split("\n").map((line) => JSON.parse(line));
@@ -78,7 +80,7 @@ function registerDevice(known) {
     };
   };
   const preload = `import { appendFileSync } from "node:fs";\n(${fake})();`;
-  const said = execFileSync(process.execPath, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "register-device", "--udid", "00008140-000A1B2C3D4E5F60"], {
+  const said = execFileSync(nodeBinary, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "register-device", "--udid", "00008140-000A1B2C3D4E5F60"], {
     env: { ...process.env, ASC_KEY: key, ASC_KEY_ID: "key", ASC_ISSUER: "issuer", ASC_FAKE_DEVICES: JSON.stringify(known), ASC_FAKE_LOG: log },
     encoding: "utf8",
   });
@@ -117,7 +119,7 @@ function nextBuild(failures, status = 500, failing = "/v1/apps") {
     };
   };
   const preload = `import { appendFileSync } from "node:fs";\n(${fake})();`;
-  const run = spawnSync(process.execPath, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "next-build"], {
+  const run = spawnSync(nodeBinary, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "next-build"], {
     env: { ...process.env, ASC_KEY: key, ASC_KEY_ID: "key", ASC_ISSUER: "issuer", ASC_FAKE_FAILURES: String(failures), ASC_FAKE_STATUS: String(status), ASC_FAKE_FAILING: failing, ASC_FAKE_LOG: log },
     encoding: "utf8",
   });
@@ -157,7 +159,7 @@ test("a write Apple answers with a server error is never sent twice", () => {
     };
   };
   const preload = `import { appendFileSync } from "node:fs";\n(${fake})();`;
-  const run = spawnSync(process.execPath, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "register-device", "--udid", "00008140-000A1B2C3D4E5F60"], {
+  const run = spawnSync(nodeBinary, ["--import", `data:text/javascript,${encodeURIComponent(preload)}`, script, "register-device", "--udid", "00008140-000A1B2C3D4E5F60"], {
     env: { ...process.env, ASC_KEY: key, ASC_KEY_ID: "key", ASC_ISSUER: "issuer", ASC_FAKE_LOG: log },
     encoding: "utf8",
   });

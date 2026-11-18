@@ -1,0 +1,11 @@
+{
+  "node": ["--experimental-strip-types", "--import", "./scripts/host-test-loader.mjs"],
+  "files": {
+    "src/hostPagePrompts.test.mjs": "stubs expo-modules-core for packages/ardiacore importers only with node:module registerHooks",
+    "src/hostSiteControls.test.mjs": "stubs expo-modules-core for packages/ardiacore importers only with node:module registerHooks",
+    "src/liveCompletionPersistence.test.mjs": "swaps the browser's livePersistence.ts for the Linux one with node:module registerHooks",
+    "src/livePersistenceBinding.test.mjs": "swaps the browser's livePersistence.ts for the Linux one with node:module registerHooks",
+    "src/pageOperations.test.mjs": "imports scripts/page-operations.mjs, which registers node:module hooks",
+    "src/hostCapabilities.test.mjs": "relies on Node refusing the .wav?url import, which Bun's file loader accepts and then needs a DOM Audio"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "node": [],
+  "files": {
+    "test/storage.test.mjs": "adds .ts to extensionless imports of the deploy configs with node:module registerHooks"
+  }
+}
