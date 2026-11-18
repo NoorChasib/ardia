@@ -88,3 +88,17 @@ test("a setup code can carry every value its settings can take", () => {
     if (values) assert.deepEqual(values.filter((v) => !SETTING_FIELDS[key].values.includes(v)), [], key);
   }
 });
+
+test("the tab hover page preview is off by default, synced, allowed in config files and only true when true", async () => {
+  const { isConfigSettingKey } = await import("./configAllowlist.ts");
+  const key = "showPagePreviewInTabHoverMenu";
+  assert.equal(DEFAULT_SETTINGS[key], false);
+  assert.ok(SETTING_SPECS[key].synced);
+  assert.ok(SYNCED_SETTINGS.includes(key));
+  assert.ok(isConfigSettingKey(key));
+  assert.equal(parseSettings({ [key]: true })[key], true);
+  assert.equal(parseSettings({ [key]: "yes" })[key], false);
+  assert.equal(parseSettings({ [key]: 1 })[key], false);
+  S().hydrate({ settings: { [key]: true } });
+  assert.equal(S().settings[key], true, "a saved value survives a relaunch");
+});
