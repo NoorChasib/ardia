@@ -423,13 +423,6 @@ jobs:
         run: |
           scripts/windows/relaunch-check.ps1 -Setup "${{ runner.temp }}/installer/Ardia-Setup-$env:SLUG.exe" -Out "${{ runner.temp }}/relaunch"
           if (Test-Path "${{ runner.temp }}/relaunch/relaunch.md") { "### Close and reopen ($env:SLUG)" >> $env:GITHUB_STEP_SUMMARY; Get-Content "${{ runner.temp }}/relaunch/relaunch.md" | ForEach-Object { "- $_" } >> $env:GITHUB_STEP_SUMMARY }
-      - if: ${{ !cancelled() && steps.relaunch.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: nilla-dev-${{ github.sha }}-windows-relaunch-${{ env.SLUG }}-logs
-          path: ${{ runner.temp }}/relaunch
-          if-no-files-found: ignore
-          retention-days: 3
       - name: Name it for a release
         id: release-files
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
@@ -470,6 +463,37 @@ jobs:
         run: |
           scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/tour-typing" -Only typing
           if (Test-Path "${{ runner.temp }}/tour-typing/tour.md") { Get-Content "${{ runner.temp }}/tour-typing/tour.md" >> $env:GITHUB_STEP_SUMMARY }
+      - name: Only logs and smoke results go up
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          UPLOADS: relaunch launch-engine tour-engine tour-first-run tour-typing tour launch
+        run: |
+          set -euo pipefail
+          temp="$(cygpath -u "$RUNNER_TEMP" 2>/dev/null || printf '%s' "$RUNNER_TEMP")"
+          removed=0
+          for name in $UPLOADS; do
+            [ -d "$temp/$name" ] || continue
+            rm -rf "$temp/$name/cold-app"
+            while IFS= read -r -d '' file; do
+              magic="$(head -c 4 "$file" | od -An -tx1 | tr -d ' \n')"
+              case "$magic" in
+                4d5a* | 7f454c46 | cffaedfe | cefaedfe | cafebabe | 504b0304 | 1f8b* | fd377a58 | 28b52ffd | 377abcaf | 213c6172 | 4d534346) ;;
+                *) printf '%s\n' "$file" | grep -qiE '\.(exe|dll|sys|msi|msix|appx|node|so|dylib|deb|rpm|appimage|apk|ipa|dmg)$' || continue ;;
+              esac
+              echo "::error::${file#"$temp/"} is a program or an archive, not a log or a smoke result; it was removed before the upload"
+              rm -f "$file"
+              removed=1
+            done < <(find "$temp/$name" -type f -print0)
+          done
+          exit "$removed"
+      - if: ${{ !cancelled() && steps.relaunch.outcome != 'skipped' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: nilla-dev-${{ github.sha }}-windows-relaunch-${{ env.SLUG }}-logs
+          path: ${{ runner.temp }}/relaunch
+          if-no-files-found: ignore
+          retention-days: 3
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -488,6 +512,7 @@ jobs:
             !${{ runner.temp }}/tour-engine/data
             ${{ runner.temp }}/tour-first-run
             !${{ runner.temp }}/tour-first-run/data
+            !${{ runner.temp }}/tour-first-run/cold-app
             ${{ runner.temp }}/tour-typing
             !${{ runner.temp }}/tour-typing/data
           if-no-files-found: ignore

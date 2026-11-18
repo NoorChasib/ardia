@@ -75,6 +75,29 @@ jobs:
       - name: Stock Chromium
         run: echo "$(readlink -f /usr/bin/chromium) $(/usr/bin/chromium --version)"
       - run: scripts/linux/ci-checks.sh --logs "$RUNNER_TEMP/checks"
+      - name: Only logs and smoke results go up
+        if: failure()
+        env:
+          UPLOADS: checks
+        run: |
+          set -euo pipefail
+          temp="$(cygpath -u "$RUNNER_TEMP" 2>/dev/null || printf '%s' "$RUNNER_TEMP")"
+          removed=0
+          for name in $UPLOADS; do
+            [ -d "$temp/$name" ] || continue
+            rm -rf "$temp/$name/cold-app"
+            while IFS= read -r -d '' file; do
+              magic="$(head -c 4 "$file" | od -An -tx1 | tr -d ' \n')"
+              case "$magic" in
+                4d5a* | 7f454c46 | cffaedfe | cefaedfe | cafebabe | 504b0304 | 1f8b* | fd377a58 | 28b52ffd | 377abcaf | 213c6172 | 4d534346) ;;
+                *) printf '%s\n' "$file" | grep -qiE '\.(exe|dll|sys|msi|msix|appx|node|so|dylib|deb|rpm|appimage|apk|ipa|dmg)$' || continue ;;
+              esac
+              echo "::error::${file#"$temp/"} is a program or an archive, not a log or a smoke result; it was removed before the upload"
+              rm -f "$file"
+              removed=1
+            done < <(find "$temp/$name" -type f -print0)
+          done
+          exit "$removed"
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -169,6 +192,29 @@ jobs:
           node scripts/linux/smoke.mjs --package "$RUNNER_TEMP/dist/$PACKAGE_NAME.tar.xz" --results "$RUNNER_TEMP/smoke" --timeout-ms 600000 "${extra[@]}"
           node scripts/linux/smoke.mjs --package "$RUNNER_TEMP/dist/$PACKAGE_NAME.deb" --results "$RUNNER_TEMP/smoke/deb" --timeout-ms 600000 "${extra[@]}"
           node scripts/linux/smoke.mjs --package "$RUNNER_TEMP/dist/$PACKAGE_NAME.AppImage" --results "$RUNNER_TEMP/smoke/appimage" --timeout-ms 600000 "${extra[@]}"
+      - name: Only logs and smoke results go up
+        if: ${{ !cancelled() }}
+        env:
+          UPLOADS: smoke
+        run: |
+          set -euo pipefail
+          temp="$(cygpath -u "$RUNNER_TEMP" 2>/dev/null || printf '%s' "$RUNNER_TEMP")"
+          removed=0
+          for name in $UPLOADS; do
+            [ -d "$temp/$name" ] || continue
+            rm -rf "$temp/$name/cold-app"
+            while IFS= read -r -d '' file; do
+              magic="$(head -c 4 "$file" | od -An -tx1 | tr -d ' \n')"
+              case "$magic" in
+                4d5a* | 7f454c46 | cffaedfe | cefaedfe | cafebabe | 504b0304 | 1f8b* | fd377a58 | 28b52ffd | 377abcaf | 213c6172 | 4d534346) ;;
+                *) printf '%s\n' "$file" | grep -qiE '\.(exe|dll|sys|msi|msix|appx|node|so|dylib|deb|rpm|appimage|apk|ipa|dmg)$' || continue ;;
+              esac
+              echo "::error::${file#"$temp/"} is a program or an archive, not a log or a smoke result; it was removed before the upload"
+              rm -f "$file"
+              removed=1
+            done < <(find "$temp/$name" -type f -print0)
+          done
+          exit "$removed"
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:

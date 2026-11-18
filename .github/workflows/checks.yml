@@ -69,11 +69,16 @@ jobs:
         if: ${{ !cancelled() && matrix.part == 'rest' }}
         run: |
           cat > "$RUNNER_TEMP/artifacts.mjs" <<'JS'
-          import { readdirSync, readFileSync } from "node:fs";
+          import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+          import { tmpdir } from "node:os";
+          import { dirname, join } from "node:path";
           const dir = ".github/workflows";
           const installable = /\.(dmg|zip|app|xcarchive|ipa|apk|aab|exe|msi|msix|appx|dll|deb|rpm|appimage|tar|tar\.xz|tar\.gz|tgz|tar\.zst)(\/|$)|env\.APP\b|\/(installer|dist|release|export)(\/|$)/i;
           const gate = /vars\.NILLA_RELEASES_ENABLED/;
           const prefix = `nilla-dev-$${"{{"} github.sha }}-`;
+          const temp = `$${"{{"} runner.temp }}/`;
+          const guardName = "Only logs and smoke results go up";
+          const guards = new Set();
           const problems = [];
           for (const file of readdirSync(dir).filter((name) => name.endsWith(".yml"))) {
             const jobs = Bun.YAML.parse(readFileSync(`${dir}/${file}`, "utf8")).jobs ?? {};
@@ -86,18 +91,50 @@ jobs:
             };
             for (const [job, spec] of Object.entries(jobs)) {
               if (isGated(job)) continue;
+              const guarded = new Set();
               for (const step of spec.steps ?? []) {
+                if (step.name === guardName) {
+                  guards.add(String(step.run));
+                  for (const dir of String(step.env?.UPLOADS ?? "").split(/\s+/).filter(Boolean)) guarded.add(dir);
+                  continue;
+                }
                 if (!String(step.uses ?? "").startsWith("actions/upload-artifact@") || gate.test(String(step.if ?? ""))) continue;
                 const name = String(step.with?.name ?? "");
                 const where = `${file} › ${job} › ${name || "(no name)"}`;
                 if (!name.startsWith(prefix) || !name.endsWith("-logs")) problems.push(`${where}: name it ${prefix}<what>-logs`);
                 if (Number(step.with?.["retention-days"]) !== 3) problems.push(`${where}: retention-days must be 3`);
-                for (const line of String(step.with?.path ?? "").split("\n").map((l) => l.trim().replace(/^!/, "")).filter(Boolean)) {
-                  if (installable.test(line)) problems.push(`${where}: ${line} looks installable; CI uploads logs and smoke results only`);
+                for (const line of String(step.with?.path ?? "").split("\n").map((l) => l.trim()).filter(Boolean)) {
+                  const path = line.replace(/^!/, "");
+                  const dir = line.slice(temp.length).split("/")[0];
+                  if (installable.test(path)) problems.push(`${where}: ${path} looks installable; CI uploads logs and smoke results only`);
+                  if (line.startsWith(temp) && !guarded.has(dir)) problems.push(`${where}: ${line} needs an earlier "${guardName}" step with ${dir} in UPLOADS`);
                 }
               }
             }
           }
+          for (const run of guards) {
+            const root = mkdtempSync(join(tmpdir(), "uploads-"));
+            const put = (path, bytes) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), bytes); };
+            const guard = () => Bun.spawnSync(["bash", "-c", run], { env: { ...process.env, RUNNER_TEMP: root, UPLOADS: "results other" }, stdout: "pipe", stderr: "pipe" });
+            put("results/tour.md", "# tour\n");
+            put("results/shot.png", Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a]));
+            put("results/cold-app/Nilla.exe", Buffer.from([0x4d, 0x5a, 0x90, 0x00]));
+            put("results/cold-app/resources.pak", "pak");
+            put("results/deep/chrome.dll", Buffer.from([0x4d, 0x5a, 0x90, 0x00]));
+            put("results/renamed.log", Buffer.from([0x7f, 0x45, 0x4c, 0x46, 0x02]));
+            put("other/Nilla-Setup.EXE", "");
+            put("other/bundle.zip", Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+            const dirty = guard();
+            const left = ["results/cold-app", "results/deep/chrome.dll", "results/renamed.log", "other/Nilla-Setup.EXE", "other/bundle.zip"].filter((path) => existsSync(join(root, path)));
+            const lost = ["results/tour.md", "results/shot.png"].filter((path) => !existsSync(join(root, path)));
+            if (dirty.exitCode === 0) problems.push(`"${guardName}" passed with programs in the uploads`);
+            if (left.length) problems.push(`"${guardName}" left ${left.join(", ")} to upload`);
+            if (lost.length) problems.push(`"${guardName}" removed ${lost.join(", ")}`);
+            const clean = guard();
+            if (clean.exitCode !== 0) problems.push(`"${guardName}" failed on logs alone: ${clean.stdout}${clean.stderr}`);
+            rmSync(root, { recursive: true, force: true });
+          }
+          if (!guards.size) problems.push(`no "${guardName}" step to test`);
           if (problems.length) {
             for (const problem of problems) console.log(`::error::${problem}`);
             process.exit(1);
