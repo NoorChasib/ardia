@@ -4,10 +4,15 @@ import { mount } from "../../test-hooks.mjs";
 
 globalThis.__DEV__ = false;
 
-const { attributeTabMemory, measureTabMemory, tabMemoryReading, useTabMemoryLine, useTabMemorySnapshot, SNAPSHOT_KEPT_MS } = await import("./tabMemory.ts");
+globalThis.fetch = async () => ({ status: 200 });
+
+const { attributeTabMemory, attributesTabMemory, measureTabMemory, setTabMemoryAttributed, tabMemoryReading, useTabMemoryLine, useTabMemorySnapshot, SNAPSHOT_KEPT_MS } = await import("./tabMemory.ts");
 const { useLifecycle } = await import("./sleepingTabs.ts");
 const { takeHoverCardCounts } = await import("../telemetry/hoverCardCounts.ts");
-const { engineCalls } = await import("../../test-native/index.ts");
+const stub = await import("../../test-native/index.ts");
+const { engineCalls } = stub;
+const client = await import("../telemetry/client.ts");
+const presses = await import("../telemetry/tabPresses.ts");
 
 const MB = 1024 * 1024;
 let nextId = 1;
@@ -58,18 +63,21 @@ test("a tab with no task, pid 0 or no pid is unavailable, and null tab ids are i
   assert.deepEqual(attributeTabMemory([task("renderer", 10, 50 * MB, ["a"]), task("renderer", 10, 50 * MB, [null])], "a"), { kind: "shared", bytes: 50 * MB, tabs: 1, unnamed: true });
 });
 
-test("while a read runs the reading keeps a value under 20 s old, says measuring for an older one or a tab it doesn't hold, and says unavailable once a read settles on zero", () => {
+test("while a read runs the reading keeps a value under 20 s old, says measuring for an older one or a tab it doesn't hold, says unavailable once a read settles on zero, and says measuring, unsettled, when a re-read is due", () => {
   const tasks = [task("renderer", 10, 100 * MB, ["a"]), task("renderer", 11, 0, ["z"])];
   const at = (patch) => ({ at: 1000, tasks, reading: false, failed: false, ...patch });
   const now = 1000 + SNAPSHOT_KEPT_MS - 1;
   assert.deepEqual(tabMemoryReading(at({ reading: true }), false, "a", now), { memory: { kind: "exact", bytes: 100 * MB }, settled: false });
   assert.deepEqual(tabMemoryReading(at({ reading: true }), false, "a", now + 1), { memory: { kind: "measuring" }, settled: false });
   assert.deepEqual(tabMemoryReading(at({ reading: true }), false, "b", now), { memory: { kind: "measuring" }, settled: false });
-  assert.deepEqual(tabMemoryReading(at({}), false, "a", now + 60_000), { memory: { kind: "exact", bytes: 100 * MB }, settled: true });
-  assert.deepEqual(tabMemoryReading(at({}), false, "b", now), { memory: { kind: "unavailable" }, settled: true });
-  assert.deepEqual(tabMemoryReading(at({}), false, "z", now), { memory: { kind: "unavailable" }, settled: true });
+  assert.deepEqual(tabMemoryReading(at({}), false, "a", now), { memory: { kind: "exact", bytes: 100 * MB }, settled: true });
+  assert.deepEqual(tabMemoryReading(at({}), false, "a", now + 1), { memory: { kind: "measuring" }, settled: false });
+  assert.deepEqual(tabMemoryReading(at({}), false, "b", 2999), { memory: { kind: "unavailable" }, settled: true });
+  assert.deepEqual(tabMemoryReading(at({}), false, "b", 3000), { memory: { kind: "measuring" }, settled: false });
+  assert.deepEqual(tabMemoryReading(at({}), false, "z", 2999), { memory: { kind: "unavailable" }, settled: true });
   assert.deepEqual(tabMemoryReading(at({ tasks: null }), false, "a", now), { memory: { kind: "measuring" }, settled: false });
-  assert.deepEqual(tabMemoryReading(at({ tasks: [], failed: true }), false, "a", now), { memory: { kind: "unavailable" }, settled: true });
+  assert.deepEqual(tabMemoryReading(at({ tasks: [], failed: true }), false, "a", 2999), { memory: { kind: "unavailable" }, settled: true });
+  assert.deepEqual(tabMemoryReading(at({ tasks: [], failed: true }), false, "a", 3000), { memory: { kind: "measuring" }, settled: false });
   assert.deepEqual(tabMemoryReading(at({ reading: true }), true, "a", now), { memory: { kind: "asleep" }, settled: true });
 });
 
@@ -221,4 +229,77 @@ test("a hover card line measures on mount, shows measuring, then counts the kind
   assert.equal(counts.tab_hover_card_memory_exact, 2);
   assert.equal(counts.tab_hover_card_memory_asleep, 1);
   assert.equal(reads(), 4);
+});
+
+test("a sample that started before sharing turned on is never sent, and the next one is", async (t) => {
+  fresh(t);
+  client.loadChoice();
+  client.setSharing(false, "settings");
+  t.after(() => client.setSharing(false, "settings"));
+  measureTabMemory("a");
+  await settle();
+  client.setSharing(true, "settings");
+  mock.timers.tick(2200);
+  await settle();
+  assert.equal(reads(), 2);
+  presses.emitTabPresses();
+  await client.saveQueueNow();
+  const sent = () => JSON.parse(stub.docs.get("telemetry-queue.json") ?? '{"events":[]}').events.filter((e) => e.event === "tab_presses").map((e) => e.properties);
+  assert.ok(sent().every((p) => !p.tab_hover_card_memory_samples && !p.tab_hover_card_memory_cold_waits), JSON.stringify(sent()));
+  mock.timers.tick(SNAPSHOT_KEPT_MS);
+  await coldRead("a");
+  presses.emitTabPresses();
+  await client.saveQueueNow();
+  assert.equal(sent().at(-1).tab_hover_card_memory_samples, 1);
+});
+
+test("a card open on a sleeping tab reads once when the tab wakes, without remounting or polling", async (t) => {
+  fresh(t);
+  useLifecycle.setState({ discarded: { a: true } });
+  const line = mount((props) => useTabMemoryLine(props.tabId), { props: { tabId: "a" } });
+  await settle();
+  assert.deepEqual(line.value, { kind: "asleep" });
+  assert.equal(reads(), 0);
+  useLifecycle.setState({ discarded: {} });
+  assert.deepEqual(line.value, { kind: "measuring" });
+  await settle();
+  mock.timers.tick(2200);
+  await settle();
+  assert.deepEqual(line.value, { kind: "exact", bytes: 100 * MB });
+  assert.equal(reads(), 2);
+  mock.timers.tick(60_000);
+  await settle();
+  assert.equal(reads(), 2);
+});
+
+test("a card that opens on a cached miss counts only the kind the refresh settles on", async (t) => {
+  let tasks = [task("renderer", 10, 100 * MB, ["a"])];
+  fresh(t, () => tasks);
+  await coldRead("a");
+  takeHoverCardCounts();
+  tasks = [task("renderer", 10, 100 * MB, ["a"]), task("renderer", 12, 100 * MB, ["new"])];
+  mock.timers.tick(5000);
+  const line = mount((props) => useTabMemoryLine(props.tabId), { props: { tabId: "new" } });
+  assert.deepEqual(line.value, { kind: "measuring" });
+  await settle();
+  assert.deepEqual(line.value, { kind: "exact", bytes: 100 * MB });
+  const counts = takeHoverCardCounts();
+  assert.equal(counts.tab_hover_card_memory_unavailable, 0);
+  assert.equal(counts.tab_hover_card_memory_exact, 1);
+  assert.equal(reads(), 3);
+});
+
+test("with no engine.tasks at run time the line's gate is off and even a mounted reader reads nothing", async (t) => {
+  fresh(t);
+  setTabMemoryAttributed(false);
+  t.after(() => setTabMemoryAttributed(true));
+  assert.equal(attributesTabMemory(), false);
+  measureTabMemory("a");
+  mount((props) => useTabMemoryLine(props.tabId), { props: { tabId: "a" } });
+  await settle();
+  mock.timers.tick(30_000);
+  await settle();
+  assert.equal(reads(), 0);
+  setTabMemoryAttributed(true);
+  assert.equal(attributesTabMemory(), true);
 });

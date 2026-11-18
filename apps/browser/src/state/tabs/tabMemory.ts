@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { create } from "zustand";
+import { PLATFORM_FEATURES } from "../../lib/platformFeatures";
 import type { EngineTask } from "../../platform/performance";
+import { useTelemetry } from "../telemetry/choice";
 import { noteTabMemorySample, noteTabMemoryShown } from "../telemetry/hoverCardCounts";
 import { isSleeping, useIsSleeping } from "./sleepingTabs";
 import { sampleTasks } from "./taskSampler";
@@ -23,6 +25,19 @@ const UNAVAILABLE: TabMemory = { kind: "unavailable" };
 const ASLEEP: TabMemory = { kind: "asleep" };
 const PAGE_TASKS = new Set<EngineTask["type"]>(["renderer", "guest"]);
 const NAMELESS_TASKS = new Set<EngineTask["type"]>(["renderer", "guest", "extension"]);
+
+let attributed = PLATFORM_FEATURES.attributesTabMemory;
+let sharingPeriod = 0;
+
+useTelemetry.subscribe((s, prev) => {
+  if (prev.sharing !== s.sharing) sharingPeriod++;
+});
+
+export const attributesTabMemory = () => attributed;
+
+export function setTabMemoryAttributed(on: boolean) {
+  attributed = on && PLATFORM_FEATURES.attributesTabMemory;
+}
 
 export const useTabMemorySnapshot = create<TabMemorySnapshot>()(() => ({ at: 0, tasks: null, reading: false, failed: false }));
 
@@ -69,22 +84,25 @@ const measured = (tasks: EngineTask[], tabId: string) => {
   return kind !== "measuring" && kind !== "unavailable";
 };
 
+function refreshDue(snapshot: TabMemorySnapshot, tabId: string, now: number) {
+  if (!snapshot.tasks) return true;
+  const age = now - snapshot.at;
+  return age >= SNAPSHOT_REREAD_MS && !(age < SNAPSHOT_KEPT_MS && measured(snapshot.tasks, tabId));
+}
+
 export function measureTabMemory(tabId: string) {
-  if (isSleeping(tabId)) return;
-  const { at, tasks, reading } = useTabMemorySnapshot.getState();
-  if (reading) return;
-  const age = Date.now() - at;
-  if (tasks && (age < SNAPSHOT_REREAD_MS || (age < SNAPSHOT_KEPT_MS && measured(tasks, tabId)))) return;
+  if (!attributed || isSleeping(tabId)) return;
+  const snapshot = useTabMemorySnapshot.getState();
+  if (snapshot.reading || !refreshDue(snapshot, tabId, Date.now())) return;
   useTabMemorySnapshot.setState({ reading: true });
+  const period = sharingPeriod;
+  const settle = (tasks: EngineTask[], waited: boolean, failed: boolean) => {
+    useTabMemorySnapshot.setState({ at: Date.now(), tasks, reading: false, failed });
+    if (period === sharingPeriod) noteTabMemorySample(waited, failed);
+  };
   sampleTasks().then(
-    (sample) => {
-      useTabMemorySnapshot.setState({ at: Date.now(), tasks: sample.tasks, reading: false, failed: false });
-      noteTabMemorySample(sample.waited, false);
-    },
-    () => {
-      useTabMemorySnapshot.setState({ at: Date.now(), tasks: [], reading: false, failed: true });
-      noteTabMemorySample(false, true);
-    },
+    (sample) => settle(sample.tasks, sample.waited, false),
+    () => settle([], false, true),
   );
 }
 
@@ -96,6 +114,7 @@ export function tabMemoryReading(snapshot: TabMemorySnapshot, asleep: boolean, t
   const memory = attributeTabMemory(snapshot.tasks, tabId);
   const unmeasured = memory.kind === "measuring" || memory.kind === "unavailable";
   if (snapshot.reading) return { memory: unmeasured || now - snapshot.at >= SNAPSHOT_KEPT_MS ? MEASURING : memory, settled: false };
+  if (refreshDue(snapshot, tabId, now)) return { memory: MEASURING, settled: false };
   return { memory: memory.kind === "measuring" ? UNAVAILABLE : memory, settled: true };
 }
 
@@ -106,7 +125,8 @@ export function useTabMemory(tabId: string): TabMemoryReading {
 }
 
 export function useTabMemoryLine(tabId: string): TabMemory {
-  useEffect(() => measureTabMemory(tabId), [tabId]);
+  const asleep = useIsSleeping(tabId);
+  useEffect(() => measureTabMemory(tabId), [tabId, asleep]);
   const { memory, settled } = useTabMemory(tabId);
   const noted = useRef<string | null>(null);
   useEffect(() => {
