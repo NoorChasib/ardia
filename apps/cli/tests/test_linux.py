@@ -351,7 +351,7 @@ class LinuxKernel(unittest.TestCase):
             self.assertEqual(sorted(os.listdir(root / "b")), ["x"])
 
 
-def fake_tarball(folder: Path, version: str) -> Path:
+def fake_tarball(folder: Path, version: str, ardia: str | None = None) -> Path:
     path = folder / f"ardia-cli-{version}-linux-x64.tar.gz"
     with tarfile.open(path, "w:gz") as archive:
         def add(name, data=None, mode=0o755):
@@ -369,7 +369,7 @@ def fake_tarball(folder: Path, version: str) -> Path:
         add("")
         add("/bin")
         add("/.leases")
-        add("/bin/ardia", f"#!/bin/sh\necho 'ardia {version}'\n".encode())
+        add("/bin/ardia", (ardia or f"#!/bin/sh\necho 'ardia {version}'\n").encode())
         link = tarfile.TarInfo(f"ardia-cli-{version}/bin/python3")
         link.type = tarfile.SYMTYPE
         link.linkname = "ardia"
@@ -584,6 +584,17 @@ class InstallScript(unittest.TestCase):
         self.assertEqual((status, lines[-1]), (0, "uninstalled"))
         self.assertFalse(os.path.lexists(bin_dir / "nilla-browser"))
         self.assertEqual(os.readlink(ardia), "/opt/ardia/current/bin/ardia")
+
+    def test_install_runs_the_new_cli_only_to_check_its_version(self):
+        self.login_shell("zsh")
+        calls = self.temp / "calls"
+        fake_tarball(self.dist, "0.0.1", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{calls}'\necho 'ardia 0.0.1'\n")
+        status, lines, err = self.install("0.0.1")
+        self.assertEqual(status, 0, err)
+        self.assertEqual(lines[-1], f"installed {self.bin}")
+        time.sleep(0.5)
+        self.assertEqual(calls.read_text().splitlines(), ["--version"], "no skills install, skills refresh or computer refresh")
+        self.assertNotIn("skills", INSTALL_SH.read_text().split("link_bin\n")[-1])
 
     def test_the_mac_cli_home_is_nillas(self):
         self.assertIn('cli_home=${ARDIA_CLI_HOME:-$HOME/Library/Application Support/Nilla/CLI}', INSTALL_SH.read_text())
