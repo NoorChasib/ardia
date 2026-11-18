@@ -455,7 +455,7 @@ export const TabDeck = memo(function TabDeck() {
     const next = mergeDeckOrder(order, ids);
     const before = scroll.value;
     const after = deckScrollAfterChange(order, next, before, query !== needle);
-    if (Date.now() - began > DECK_SEARCH_FRAME_MS && !incognito) countUsage("deck_searches_late");
+    if (Date.now() - began > DECK_SEARCH_FRAME_MS && !incognito && !allTabs.some((t) => t.isPrivate)) countUsage("deck_searches_late");
     searchedFor.current = query;
     orderedLive.current = matching;
     const expanded = phase.id ? next.indexOf(phase.id) : -1;
