@@ -268,7 +268,7 @@ class Confinement(unittest.TestCase):
         (data / "Chromium" / "secret.js").write_text("export default 1;\n")
         path = support / "s.user.ts"
         path.write_text("// ==UserScript==\n// @match https://example.com/*\n// ==/UserScript==\nimport s from \"./COM.NILLADIGITAL.NILLA/Chromium/secret.js\";\nconsole.log(s);\n")
-        if not (support / "COM.ARDIA.BROWSER").exists():
+        if not (support / "COM.NILLADIGITAL.NILLA").exists():
             self.skipTest("case-sensitive file system")
         with self.assertRaisesRegex(ScriptError, "data folder"):
             build(path, data_dirs=[data])
