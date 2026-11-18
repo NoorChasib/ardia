@@ -45,6 +45,16 @@ export default {
       if (shown.length) throw new Error(`shown: ${shown.join(", ")}`);
       return { panes: Object.keys(texts) };
     });
+    await t.check("the Tabs pane hides the page preview row the engine can't serve and keeps the memory row it can", async () => {
+      const capabilities = await shell.eval("__ardiaHost.bootstrap.capabilities ?? []");
+      texts.Tabs = await paneText(settings, "Tabs");
+      await t.evidence("tabs-pane", { text: texts.Tabs, pagePictures: capabilities.includes("tab.capturePicture"), tabMemory: capabilities.includes("engine.tasks") });
+      const lines = texts.Tabs.split("\n").map((line) => line.trim());
+      const rows = { preview: lines.includes("Show page preview in tab hover menu"), memory: lines.includes("Show memory use in tab hover menu") };
+      if (rows.preview !== capabilities.includes("tab.capturePicture")) throw new Error(`page preview row shown: ${rows.preview}`);
+      if (rows.memory !== capabilities.includes("engine.tasks")) throw new Error(`memory row shown: ${rows.memory}`);
+      return rows;
+    });
     await t.check("startup logged no backend rejections", async () => {
       const problems = [...shell.problems, ...settings.problems].filter((p) => STARTUP_PROBLEM.test(p.text ?? ""));
       const log = (await app.logText()).split("\n").filter((line) => line.includes("CONSOLE") && STARTUP_PROBLEM.test(line));
