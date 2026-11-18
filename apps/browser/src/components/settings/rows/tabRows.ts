@@ -105,7 +105,7 @@ export const tabRows = {
         },
         showPagePreviewInTabHoverMenu: {
           title: "Show page preview in tab hover menu",
-          description: "A small picture of the page as you last saw it.",
+          description: "A small picture of the page from your last visit.",
           keywords: ["preview", "page preview", "tab preview", "thumbnail", "screenshot", "picture", "hover", "hover card", "popup", "chrome", "edge"],
         },
         showMemoryInTabHoverMenu: {
