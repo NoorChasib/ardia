@@ -1,11 +1,12 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "ardia",
-  "title": "Ardia",
+  "name": "nilla-browser",
+  "title": "Nilla",
   "description": "Search and switch Ardia's tabs and profiles, and open new tabs and windows",
   "icon": "icon.png",
-  "author": "mantrakp04",
+  "author": "NoorChasib",
   "contributors": [
+    "mantrakp04",
     "ridemountainpig"
   ],
   "platforms": [

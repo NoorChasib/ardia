@@ -1,4 +1,6 @@
-export const BUNDLE_ID = "com.ardia.browser";
+import { BUNDLE_ID } from "../../../packages/core/src/identity";
+
+export { BUNDLE_ID };
 
 export const APP_TARGET = `application id "${BUNDLE_ID}"`;
 
