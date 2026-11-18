@@ -245,6 +245,20 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
 
 - **Session writes.** Each write carries a baseline and a proposed snapshot. The native file worker writes in order
   and merges local changes into the latest stored snapshot, so concurrent edits in other windows survive.
+- **Two save delays** (`hostSession.ts`). A structural change (a URL, a new or closed tab, a pin, a move, a group,
+  settings, a window frame) is saved within `STRUCTURAL_SAVE_MS` (300 ms). A volatile one is saved at most every
+  `VOLATILE_SAVE_MS` (2 s): a tab switch (a window's `activeTabIds` and `chromeWindow`) and a tab's cosmetic fields
+  (title, favicon, `lastActiveAt`, `unseen`). A structural change inside the volatile wait takes the volatile ones
+  with it, and a save queued behind an in-flight write keeps its class. A hidden window, quit, window close and the
+  `flush()` API (Settings, Import, the close drain) write what's pending at once. On 100 tabs this cut session bytes
+  per ctrl+Tab press from about 74 KB to 26 KB. The cost: a crash or SIGKILL can lose up to the last 2 s of active
+  tab, MRU order, titles, favicons and `unseen`, though never a tab, pin, group or window, and a second window of the
+  same profile sees a switch or a new title up to 2 s later (2.6-2.9 s against 1.0 s before). Watch
+  `session_writes`, `session_cosmetic_writes` and `session_kb_written` in Linux `usage_counts`: writes and KB per hour
+  should fall, while KB per write stays about the same.
+- **Echo settle.** When the canonical event for a window's own save comes back and the store hasn't changed since
+  that save, the window settles its writer on the saved snapshot without a merge (`echoed()`). A reply that carries
+  another window's change is still merged.
 - **Canonical events.** These sync every renderer while keeping its pending edits. The renderer that sent a save gets
   its own snapshot as the next base; its peers get the previous canonical base.
 - **Native window ids** are fixed after bootstrap. A new window doesn't reapply the launch restore policy.

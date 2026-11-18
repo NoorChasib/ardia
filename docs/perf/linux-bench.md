@@ -3,8 +3,8 @@
 `apps/linux/scripts/perf/bench.mjs` compares Linux UI builds (`apps/linux/dist` folders, passed to the engine as
 `--ardia-ui-dir`) on one prebuilt engine, with many loaded tabs, under Xvfb. It measures CPU and context switches per
 process kind, memory per process kind, shell main-thread work, interaction latency and long frames, and deterministic
-shell counters, over seven scenarios. PR 3's (the CPU and RAM hill climb) stock, feature, Bun and final comparison was
-measured with it.
+shell counters, over seven scenarios. PR 3's (the CPU and RAM hill climb) stock, feature, Bun and final comparison runs
+on it; the recipe is below.
 
 It needs Node 22 or later (the global `WebSocket`) and no npm dependencies, plus `Xvfb`, `xdotool`, `xdpyinfo`,
 `taskset` and `flock`. For exact CPU totals and teardown it also needs a user systemd (`systemd-run --user --scope`).
@@ -26,21 +26,32 @@ All of them are in `apps/linux/scripts/perf/`.
 | `lib/report.mjs` | Markdown tables, the sign test and Mann-Whitney U test, the paired control section, the A/A noise table. |
 | `lib/fixtures.mjs` | The fixture server (also runnable on its own: `node lib/fixtures.mjs --help`). |
 | `lib/cdp.mjs`, `lib/util.mjs` | A minimal CDP client, and the repo-relative defaults and helpers. |
-| `partition.sh`, `cpu-audit.py` | The optional CPU partition (below) and the per-task audit it can run. |
-| `tests/` | In-memory tests: options, fixtures, report arithmetic, and S1-S5 run against a fake shell, sampler and xdotool. They run in `bun run --cwd apps/linux acceptance:self-test`. |
+| `cpu-audit.py` | A per-task audit of CPU time on the bench CPUs, split into benchmark, orchestrator, kernel and foreign (see "CPU isolation"). |
+| `tests/` | In-memory tests: options, defaults, the DevTools endpoint, fixtures, report arithmetic, and S1-S7 run against a fake shell, sampler and xdotool. They run in `bun run --cwd apps/linux acceptance:self-test`. |
 
 ## Run it
 
-```bash
-scripts/linux/fetch-engine.sh --nearest
-scripts/linux/fetch-ubo.sh
-bun run --cwd apps/linux build
-cp -a apps/linux/dist /tmp/ui-a && git rev-parse HEAD > /tmp/ui-a/BUILD_INFO
+Build two commits' UIs (here `main` against your branch), each from its own clean tree, then compare them:
 
-taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --builds a=/tmp/ui-a,b=/tmp/ui-b --runs 6 --tabs 100 \
-  --instrument light --control a --out output/linux-bench/a-vs-b
-node apps/linux/scripts/perf/bench.mjs report --out output/linux-bench/a-vs-b --control a --md /tmp/a-vs-b.md
+```bash
+engine=$(scripts/linux/fetch-engine.sh --nearest)
+work=$(mktemp -d)
+for pair in a=main b=HEAD; do
+  label=${pair%%=*} commit=$(git rev-parse "${pair#*=}")
+  mkdir "$work/src-$label" && git archive "$commit" | tar -x -C "$work/src-$label"
+  if [ -f "$work/src-$label/bun.lock" ]; then (cd "$work/src-$label" && bun install --frozen-lockfile); else (cd "$work/src-$label" && pnpm install --frozen-lockfile); fi
+  (cd "$work/src-$label" && bun run --cwd apps/linux build)
+  cp -a "$work/src-$label/apps/linux/dist" "$work/ui-$label" && echo "$commit" > "$work/ui-$label/BUILD_INFO"
+done
+
+taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --engine "$engine" --content-blocker "$blocker" \
+  --builds a=$work/ui-a,b=$work/ui-b --runs 6 --tabs 100 --instrument light --control a --out "$work/out"
+node apps/linux/scripts/perf/bench.mjs report --out "$work/out" --control a --md "$work/a-vs-b.md"
 ```
+
+`$blocker` is the packaged content blocker ("Engine and content blocker" below). The CPU lists assume a 16-vCPU host:
+the app gets 10-15 (`--cpus`) and the orchestrator 0-9. On a smaller host pass both; the harness checks `--cpus`
+against the online CPUs and stops before launching when it names one that isn't there.
 
 `bun run --cwd apps/linux bench -- <args>` runs the same script, with relative paths resolved against `apps/linux`.
 
@@ -48,12 +59,12 @@ Defaults that come from the checkout:
 
 | Flag | Default |
 | --- | --- |
-| `--engine DIR` | The newest engine under `apps/browser/build-ardiacore/prebuilt-linux-x86_64`, where `scripts/linux/fetch-engine.sh` caches them. |
-| `--content-blocker DIR` | `$ARDIA_BENCH_CONTENT_BLOCKER`, else `packages/ardiacore/vendor/ubo/ext` (from `scripts/linux/fetch-ubo.sh`). `none` launches without one. |
+| `--engine DIR` | The cache entry under `apps/browser/build-ardiacore/prebuilt-linux-x86_64` whose directory changed last. That isn't necessarily the engine for HEAD's key (`fetch-engine.sh` touches only `.complete` on a cache hit), so the harness logs which one it took; pass the directory `fetch-engine.sh` prints. |
+| `--content-blocker DIR` | `$ARDIA_BENCH_CONTENT_BLOCKER`; there is no other default. It must be the tree a packaged build ships (`lib/ardia/extensions/ublock`, with `ardia-linux-bridge.js`). The raw uBlock Origin from `scripts/linux/fetch-ubo.sh` is refused: without the Linux bridge it never starts on the Linux engine (the template launch fails with "no extension target"). `none` launches without one. |
 | `--out DIR` | `output/linux-bench` (gitignored). |
-| `--cpus LIST` | `10-15`: the app, its Xvfb and the fixture server are pinned there. Run the orchestrator under `taskset -c` on the other CPUs. |
+| `--cpus LIST` | `10-15`, for a 16-vCPU host: the app, its Xvfb and the fixture server are pinned there. Run the orchestrator under `taskset -c` on the other CPUs. A CPU that isn't online fails the run at once. |
 | `--display-base N` | `160`: the first X display tried (and up to 40 above it). |
-| `--debug-port P`, `--fixture-port P` | `0`: chrome and the fixture server pick free ports. A fixed `--debug-port` is checked to be free first. |
+| `--debug-port P`, `--fixture-port P` | `0`: chrome and the fixture server pick free ports. A fixed `--debug-port` is checked to be free first, and after connecting the harness asks the browser for its pid (`SystemInfo.getProcessInfo`). If another browser took the port in between, it closes that socket without sending anything else and fails the launch. |
 | `--lock FILE` | `/tmp/ardia-perflab.lock`, the perflab lock the other benches use. Give a run its own file when it's a smoke or an attribution run, not a timing. |
 
 Prepare a build by copying its `apps/linux/dist` somewhere stable (the harness reads it while it runs) and writing a
@@ -66,9 +77,9 @@ there).
 A smoke check of an install (about 3 minutes):
 
 ```bash
-taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --builds final=<dist> --tabs 5 --runs 1 --scenarios S1 \
-  --cpus 0-9 --lock /tmp/bench-smoke.lock --template-wait 45 --settle 10 --idle-seconds 20 --quiet-gate 0 \
-  --max-foreign 0 --out /tmp/bench-smoke
+taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --builds final=<dist> --engine "$engine" \
+  --content-blocker "$blocker" --tabs 5 --runs 1 --scenarios S1 --cpus 0-9 --lock /tmp/bench-smoke.lock \
+  --template-wait 45 --settle 10 --idle-seconds 20 --quiet-gate 0 --max-foreign 0 --out "$(mktemp -d)"
 ```
 
 ## Reproducing PR 3's comparison
@@ -83,39 +94,49 @@ taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --builds final=<dist> 
 | OS | Ubuntu 26.04.1, Linux 7.0.0-43-generic, no `isolcpus`, `perf_event_paranoid` = 4 |
 | Display | Xvfb 1920x1080x24, no window manager; Chromium composites through ANGLE on Mesa llvmpipe (`gl=egl-angle,angle=opengl`) |
 | Engine | `engine-3a64a10704ff` (Chromium 157.0.8103.50), chrome sha256 `4a7cb6b15f40…`, one engine for every build |
-| Pinning | App, Xvfb and fixture server on CPUs 10-15; orchestrator on 0-9; everything else confined to 0-9 by `partition.sh` |
+| Pinning | App, Xvfb and fixture server on CPUs 10-15; orchestrator on 0-9; everything else confined to 0-9 by a CPU partition outside the repo (see "CPU isolation") |
 
 ### Builds
 
-Build the UI at each of the four commits from a clean tree of its own (`git archive`, so nothing uncommitted gets in).
-Install dependencies with the package manager that commit pins: pnpm before the Bun migration, Bun after.
+Build the UI at each of the four commits the run measured, from a clean tree of its own (`git archive`, so nothing
+uncommitted gets in), into a fresh directory. Install dependencies with the package manager that commit pins: pnpm
+before the Bun migration, Bun after.
 
 | Label | Commit | What it is | Install |
 | --- | --- | --- | --- |
 | `stock` | 3043ac26b | upstream before this work | `pnpm install --frozen-lockfile` |
-| `feature` | 6d9c3956c | PR 1, sidebar settings | `pnpm install --frozen-lockfile` |
-| `bun` | db3139706 | PR 2, Bun migration (PR 1 merged) | `bun install --frozen-lockfile` |
-| `final` | PR 3's head (UI at 2e9c24a46) | PR 3, the optimized build | `bun install --frozen-lockfile` |
+| `feature` | 50a1ef106 | PR 1, sidebar settings, before its last two commits | `pnpm install --frozen-lockfile` |
+| `bun` | 48c7e3e67 | PR 2, Bun migration, on that PR 1 | `bun install --frozen-lockfile` |
+| `final` | 2e9c24a46 | PR 3, the optimized build | `bun install --frozen-lockfile` |
 
 ```bash
-builds=$PWD/output/linux-bench/builds
-for pair in stock=3043ac26b feature=6d9c3956c bun=db3139706 final=<PR 3 head>; do
-  label=${pair%%=*} commit=$(git rev-parse "${pair#*=}") src=/tmp/ardia-$label
-  mkdir -p "$src" && git archive "$commit" | tar -x -C "$src"
+builds=$(mktemp -d)
+for pair in stock=3043ac26b feature=50a1ef106 bun=48c7e3e67 final=2e9c24a46; do
+  label=${pair%%=*} commit=$(git rev-parse "${pair#*=}") src=$(mktemp -d)
+  git archive "$commit" | tar -x -C "$src"
   if [ -f "$src/bun.lock" ]; then (cd "$src" && bun install --frozen-lockfile); else (cd "$src" && pnpm install --frozen-lockfile); fi
   (cd "$src" && bun run --cwd apps/linux build)
-  mkdir -p "$builds/$label" && cp -a "$src/apps/linux/dist" "$builds/$label/linux-ui"
+  mkdir "$builds/$label" && cp -a "$src/apps/linux/dist" "$builds/$label/linux-ui"
   printf 'commit=%s\n' "$commit" > "$builds/$label/linux-ui/BUILD_INFO"
 done
 ```
 
-The commits after 2e9c24a46 on PR 3 only add this harness and its docs, so they build the same dist.
+Before measuring, check that each build's UI sha256 in the first lines of the run's log (and in the report header)
+matches the published run's; a different hash means a different dist. A pnpm build and a Bun build of 50a1ef106 gave
+the same 72 files, byte for byte, and so do the measured `feature` and `bun` dists: in this run `bun` against
+`feature` is an A/A pair, and their spread is part of the noise a real difference must leave.
 
-The measured run's `feature` and `bun` dists came from earlier heads of PRs 1 and 2: 50a1ef106 and 48c7e3e67. A pnpm
-build and a Bun build of 50a1ef106 gave the same 72 files, byte for byte. 6d9c3956c and db3139706 add PR 1's last two
-commits (#1679: a tab dragged off the sidebar peek holds it out), so a rebuild at those commits has a different UI
-sha256 than the measured `feature` and `bun` labels. They add one more store subscription to the peek's holds and a
-check in its hold test. The hold itself only engages during a tab drag, which no scenario does.
+PR 3's commits after 2e9c24a46 that touch `apps/browser/src` or `apps/linux/src` (the review's telemetry consent gate
+and the tab lifecycle's kept claims) build a different UI dist; the PR says which scenarios were measured again on
+it. The rest only change the harness and its docs.
+
+**What `final` against `bun` measures.** `final` contains PR 1's last two commits (#1679: a tab dragged off the
+sidebar peek holds it out), and the measured `bun` and `feature` don't: they came from earlier heads of PRs 1 and 2.
+So final against bun is PR 3 plus #1679, not PR 3 alone. #1679 adds one store subscription to the peek's holds and a
+check in its hold test, and S4 reveals the peek 20 times, so it runs through that code. To bound #1679's share, run
+`bun` rebuilt at db3139706 (PR 2's head, with #1679) against `bun` at 48c7e3e67 on S4 and S5, or use db3139706 as the
+control. Branch-tip rebuilds (`feature` at 6d9c3956c, `bun` at db3139706) have a different UI sha256 from the measured
+labels and can't be pooled with the published run.
 
 ### Engine and content blocker
 
@@ -131,8 +152,9 @@ plus the Linux bridge and the seeded compiled engine. To get the same tree, pack
 
 ```bash
 ubo=$(scripts/linux/fetch-ubo.sh)
-python3 scripts/linux/package.py --out "$engine" --ui "$builds/stock/linux-ui" --destination /tmp/ardia.tar.xz --content-blocker "$ubo"
-tar -xJf /tmp/ardia.tar.xz -C /tmp && blocker=/tmp/ardia/lib/ardia/extensions/ublock
+pkg=$(mktemp -d)
+python3 scripts/linux/package.py --out "$engine" --ui "$builds/stock/linux-ui" --destination "$pkg/ardia.tar.xz" --content-blocker "$ubo"
+tar -xJf "$pkg/ardia.tar.xz" -C "$pkg" && blocker=$pkg/ardia/lib/ardia/extensions/ublock
 ```
 
 Every result records the blocker tree's sha256, so a different blocker shows up in the report header and stops
@@ -141,22 +163,43 @@ Every result records the blocker tree's sha256, so a different blocker shows up 
 ### The command
 
 Four builds, 4 launches each, interleaved (stock feature bun final, then final bun feature stock, and so on), all
-seven scenarios, 100 tabs, light instrumentation, paired against `bun`, inside the CPU partition, with the run holding
-the lock from the first template to the last launch:
+seven scenarios, 100 tabs, light instrumentation, paired against `bun`, with the run holding the lock from the first
+template to the last launch:
 
 ```bash
-apps/linux/scripts/perf/partition.sh run --audit output/linux-bench/final-light/audit.json -- \
-  taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --engine "$engine" --content-blocker "$blocker" \
+out=$(mktemp -d)
+taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --engine "$engine" --content-blocker "$blocker" \
   --lock-scope run --builds stock=$builds/stock/linux-ui,feature=$builds/feature/linux-ui,bun=$builds/bun/linux-ui,final=$builds/final/linux-ui \
-  --runs 4 --tabs 100 --instrument light --control bun --display-base 240 --out output/linux-bench/final-light
-node apps/linux/scripts/perf/bench.mjs report --out output/linux-bench/final-light --control bun --md output/linux-bench/final-light/report.md
+  --runs 4 --tabs 100 --instrument light --control bun --display-base 240 --out "$out"
+node apps/linux/scripts/perf/bench.mjs report --out "$out" --control bun --md "$out/report.md"
 ```
 
 Each launch takes about 6.5 minutes, and each template about 2 minutes, so the run takes about 2 hours. `--instrument
 light` is the mode to rank CPU and RAM by (see "Two kinds of run"). For counters, frames and latencies, run the same
-command with `--instrument full` (the default) into another `--out`. Without the partition, drop the `partition.sh run
-… --` prefix. The run still works, but other processes can use CPUs 10-15, and the quiet gate and the
-contended-window repeat are what keep the windows usable then.
+command with `--instrument full` (the default) into another `--out`. PR 3's run had CPUs 10-15 to itself (see "CPU
+isolation"). Without that, other processes can use them, and the quiet gate and the contended-window repeat are what
+keep the windows usable.
+
+**With PR 1's options on.** Stock doesn't know PR 1's settings, so a run that includes it measures S4 and S5 with the
+defaults. The options-on comparison is a second run on the three builds that have them:
+
+```bash
+taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --engine "$engine" --content-blocker "$blocker" \
+  --lock-scope run --builds feature=$builds/feature/linux-ui,bun=$builds/bun/linux-ui,final=$builds/final/linux-ui \
+  --runs 6 --tabs 100 --scenarios S4,S5 --settings sidebarRevealSpeed=faster --settings showMemoryInTabHoverMenu=true \
+  --settings tabCloseButtonSide=left --control bun --display-base 240 --out "$(mktemp -d)"
+```
+
+Run it once per reveal speed (`faster`, `slower`; the four-build run covers `default`). It uses full instrumentation,
+since the reveal and hover-card latencies need the probe. `showPagePreviewInTabHoverMenu` isn't measured: on Linux
+the row is hidden in Settings because the engine can't capture pages (`hostCapabilities.ts`), so the setting has no
+effect there.
+
+**Reading the statistics.** At `--runs 4` the sign test over blocks can't go below p = 0.125 (two-sided, 4 blocks),
+so its column can never show significance; only the Mann-Whitney column (smallest p about 0.029 at 4 against 4) and
+effects well beyond the A/A floor below can be called. The bold primary rows are the only ones read for significance;
+every other row is exploratory, and with about 100 rows per build pair some p-values under 0.05 are expected by chance.
+For a headline row that has to stand on the sign test, use `--runs 6` or more.
 
 ## What one launch does
 
@@ -218,17 +261,15 @@ and `/pending` lists its open requests.
 | --- | --- | --- |
 | S1 idle | Nothing; tab 1 (static) is active. An untimed idle window of `--idle-discard` runs first and is kept under `discarded`. | `--idle-seconds` (60 s) |
 | S2 active | The first rAF tab, split with the first ticker tab (`createSplit`), so both are in the foreground. Not comparable when the split fails or either page isn't visible. | `--active-seconds` (45 s) |
-| S3 tab switching | Tabs 1 and 2 (both static), then 40 real `xdotool key ctrl+Tab` presses 500 ms apart. On Linux ctrl+Tab goes to the most recent tab, so every press must land on the other one. A press that leaves the switcher open or lands elsewhere is put back and counted as a miss. | about 21 s |
-| S4 sidebar edge reveal | `autoHideTabs: true`, then 20 times: pointer to x=40, then x=0 at mid-height, hold 600 ms, back to the middle, hold 600 ms. Not comparable unless tab 1's row was off screen first. | about 25 s |
+| S3 tab switching | Tabs 1 and 2 (both static), then 40 real `xdotool key ctrl+Tab` presses 500 ms apart. On Linux ctrl+Tab goes to the most recent tab, so every press must land on the other one. A press that leaves the switcher open or lands elsewhere is put back (Escape, then two store activations) and counted as a miss. That is extra work inside the window, so a window with any put-back press keeps only its latency and workload rows in the report. | about 21 s |
+| S4 sidebar edge reveal | `--settings` applied and read back (without `autoHideTabs`), then `autoHideTabs: true`, then 20 times: pointer to x=40, then x=0 at mid-height, hold 600 ms, read tab 1's row once, back to the middle, hold 600 ms, read it again. Not comparable unless tab 1's row was off screen first; a window where any reveal or hide didn't happen keeps only its latency and workload rows, so a broken reveal can't look cheaper. The settings go back afterwards, and the launch fails if they don't. | about 25 s |
 | S5 hover sweep | `--settings` applied and read back. Over the first 24 sidebar rows whose centre hit-tests to the row, 3 passes: row 1 for 1,200 ms (the card's cold delay), rows 2-24 for 300 ms each, then the pointer away for 1 s. The settings go back afterwards, and the launch fails if they don't. | about 3 x 9 s at N >= 24 |
 | S6 loading | Tab 1 loads `/slow/<--slow-ms>` and stays loading in the default layout (address field in the toolbar, the reload button breathing, the row spinner). The window counts only if tab 1 is active and loading and its request is open, at its first and its last moment. | `--loading-seconds` (45 s) |
 | S7 pill | As S6, with the address field in the sidebar and the sidebar hidden, so the LoadingPill shows over the page. | `--loading-seconds` (45 s) |
 
-`--settings` is applied only around S5, and a key the build doesn't know fails the launch. So a run that includes
-stock measures S5 with the defaults, and so did PR 3's four-build run. To measure hover with PR 1's options on, run
-S5 on the builds that have them, for example `--builds feature=…,bun=…,final=… --scenarios S5 --settings
-showMemoryInTabHoverMenu=true --settings tabCloseButtonSide=left`. S4 always runs at the default
-`sidebarRevealSpeed`.
+`--settings` is applied around S4 and S5, and a key the build doesn't know fails the launch. So a run that includes
+stock measures both with the defaults, as PR 3's four-build run did; "With PR 1's options on" above has the
+options-on run. Each launch records what it applied under `settingsApplied`, per scenario.
 
 Before every window a quiet gate waits (up to `--quiet-wait`, 240 s) until other processes' CPU on the app's cores is
 under `--quiet-gate` (100 % of one core). It measures over 3 s from `/proc/stat`, minus the launch's own cgroup, Xvfb
@@ -289,54 +330,49 @@ Each `<out>/results/<launch>.json` records the build, its fingerprints, the exac
 display, CPUs, scope and partition, load averages, every scenario window (with `valid` and `invalidReason`), memory,
 the process list, the GL renderer and the teardown check.
 
-## The CPU partition (optional)
+## CPU isolation
 
-Taskset alone keeps the app on 10-15, but nothing keeps other processes off them. `partition.sh run … -- <command>`
-moves everything else onto the rest CPUs for one run and always gives them back:
+Taskset alone keeps the app on 10-15, but nothing keeps other processes off them. PR 3's run moved every other
+systemd unit onto CPUs 0-9 for its duration with a partition script that lives outside the repo. Doing that takes
+root: it rewrites the CPU sets of system units and arms a root service that puts them back if the run dies. That
+belongs to the machine's administrator, not to a script run from a checkout, so the repo doesn't carry one. Use one
+of these instead:
 
-1. **Checks.** It refuses overlapping or offline CPU lists, and sudo rules that don't cover the commands it needs. It
-   refuses a `bench.mjs` whose `--cpus` isn't `--bench` or that doesn't start with `taskset -c <subset of --rest>`,
-   and a process outside the benchmark slice pinned only to the bench CPUs (`--force` overrides that last one).
-2. **Locks.** It takes the host-wide partition lock (`/run/lock/ardiabench-partition.lock`) and a shared lease on the
-   perflab lock (`ARDIA_PERFLAB_LOCK`, default `/tmp/ardia-perflab.lock`), so no benchmark that takes the perflab lock
-   can start until the CPUs are back.
-3. **State.** It records `AllowedCPUs`, `EffectiveCPUs` and the runtime drop-in of every active top-level unit
-   (`system.slice`, `user.slice`, `init.scope`, `machine.slice` and any other) in a state file
-   (`ARDIA_PARTITION_STATE`, default `~/.local/state/ardia/linux-bench-partition.state`). It also records what no unit
-   setting reaches: root-cgroup tasks, and cgroups outside systemd.
-4. **Guard.** It arms a root service, `ardiabench-guard-*` (`Restart=on-failure`). The guard runs `restore` as soon as
-   the script is gone (SIGKILL included) or the deadline passes (`--max-hours` + 10 min), and retries every 15 s until a
-   restore verifies.
-5. **Confine.** It confines the recorded units to the rest CPUs with `systemctl set-property --runtime` and checks
-   each one's `EffectiveCPUs`.
-6. **Run.** It runs the command as `ardiabench-run-*` in `ardiabench.slice` (`Delegate=yes`, your uid and gid, the
-   current directory). With `ARDIA_BENCH_SCOPE=delegated`, the harness moves itself into a child cgroup with the rest
-   CPUs, and puts Xvfb, the fixture server and each chrome in child cgroups with the bench CPUs, checked through
-   `cpuset.cpus.effective`. `--audit FILE` runs `cpu-audit.py` on the rest CPUs: every task's CPU on the bench CPUs,
-   split into benchmark, orchestrator, kernel and foreign.
+- **A dedicated host or a Boat VM** used only for the benchmark. Nothing else competes, and the quiet gate and the
+  contended-window repeat catch what's left.
+- **A cpuset the administrator sets up**: a root-owned helper and root-owned state (under `/run`), installed by an
+  administrator, with fixed unit names and restore paths and a sudoers rule for exactly that helper. Never give a
+  user passwordless `tee`, `rm` or `systemctl` for this: those are root-equivalent. Run only one partition per host.
 
-`restore` runs on exit, INT, TERM and HUP, from the guard, or by hand (`partition.sh restore`). It takes the partition
-lock, stops the benchmark service and waits until its cgroup is empty (it never reopens the CPUs while the benchmark
-runs). It puts every recorded unit back to its recorded `AllowedCPUs` and drop-in, and runs `daemon-reload` when a
-drop-in changed. Then it checks `AllowedCPUs`, `EffectiveCPUs` and `NeedDaemonReload`. Only when all of that verifies
-does it delete the state file and stop the guard; on any failure both stay and the guard tries again.
-`partition.sh status` shows each unit's CPUs, the state file, the guard and anything the partition doesn't confine.
+The harness works inside such a partition. Put the run in a `Delegate=yes` unit, start the orchestrator under
+`taskset -c <rest CPUs>`, and pass `--scope delegated` (or `ARDIA_BENCH_SCOPE=delegated`). The harness then moves
+itself into a child cgroup of its own unit, and gives Xvfb, the fixture server and each chrome child cgroups pinned to
+`--cpus`, checked through `cpuset.cpus.effective`. `ARDIA_PARTITION=<rest>|<bench>` makes it check that `--cpus` is
+the bench set and the orchestrator is on the rest; when `ARDIA_PERFLAB_LEASE` names the `--lock` file and
+`ARDIA_PARTITION_STATE` exists, the partition already holds the lock and the run takes none of its own.
+`cpu-audit.py --out FILE --bench 10-15 --until-pid <pid>` samples every task in `/proc` and splits CPU time on the
+bench CPUs into benchmark, orchestrator, kernel and foreign.
 
-It needs passwordless sudo for `systemctl`, `systemd-run`, `tee`, `rm`, `rmdir`, `truncate`, `test`, `base64` and
-`install`. Changing system units' CPUs and starting root transient services are root operations. The script checks
-`sudo -n -l` for each one before it changes anything.
-
-Root-cgroup tasks and unbound kernel threads still keep every CPU (about 3 % of one core in the dry runs). Only a
+Root-cgroup tasks and unbound kernel threads still keep every CPU (about 3 % of one core in PR 3's dry runs). Only a
 dedicated host isolates fully.
 
 ## Limits of comparability
 
-- **Xvfb and software GL.** There is no GPU, real display or vsync. Chromium composites through ANGLE on llvmpipe on
-  the CPU, so the `gpu` process's CPU is large and noisy. Frame gaps and latencies are only meaningful relative between
-  builds measured the same way, never as absolute numbers or against macOS. Moving work to the compositor moves its
-  cost into this software GPU process instead of removing it. On PR 3's loading animation, the shell's CPU went from
-  27-31 % to 1.4-1.9 % of a core, while the GPU process stayed at 160-212 % on both builds, and the whole-browser
-  ranges overlap in an attribution run. On a machine with a GPU, that work is cheap.
+- **Xvfb and software GL.** There is no GPU, real display or vsync, so frame gaps and latencies are only meaningful
+  relative between builds measured the same way, never as absolute numbers or against macOS. Where compositor work
+  lands depends on the GL backend a GPU-less machine gets, and the two setups PR 3 used disagree:
+  - **The harness** (ANGLE on Mesa llvmpipe at 1920x1080, as every result's `gpu.renderer` records). The GPU process
+    stays small on every build, about 7-11 % of a core in S6 and S7, so the shell's drop reaches the whole browser.
+    In the integration's contended full-instrumentation run of the loading scenarios, the shell went from 106-112 % to
+    13-14 % of a core in S6 and total CPU from 127-136 % to 35-38 %, with the GPU process at 9-10 % on both builds.
+    The partitioned light run's figures are in PR 3's results.
+  - **SwiftShader** (`--use-gl=angle --use-angle=swiftshader`, at 1600x1000: the instances PR 3's screen recordings
+    came from). The GPU process dominates: moving the loading animation to the compositor took the shell from 27-31 %
+    to 1.4-1.9 % of a core, while the GPU process stayed at 160-212 % on both builds, and the whole-browser ranges
+    overlap in that attribution run.
+
+  On a machine with a GPU that compositor work is cheap; on a GPU-less one it depends on which of these paths Chromium
+  picks.
 - **No window manager.** The window sits at 0,0 and has focus because nothing else does. There is no occlusion
   tracking, so the window always counts as visible.
 - **A shared VPS.** Other agents' builds, tests, ClickHouse and Postgres used 100 to 500 % of a core on the bench CPUs
@@ -370,5 +406,24 @@ dedicated host isolates fully.
   S1-S3. Every side pays the same.
 - **Hidden-tab sleeping.** Balanced sleeps tabs hidden for 60 minutes, so every tab stays loaded for a launch;
   `tabsLoaded` and `pageTargets` in each result confirm it.
-- **Rebuilt labels.** A rebuild of `feature` and `bun` at 6d9c3956c and db3139706 isn't byte-identical to the
-  measured dists (see "Builds"). Compare UI sha256 in the report header before pooling with the published run.
+- **Labels and commits.** The measured `final` includes #1679 and the measured `bun` and `feature` don't, so final
+  against bun is PR 3 plus #1679; the measured `bun` and `feature` dists are byte-identical, an A/A pair (see
+  "Builds"). A rebuild of `feature` and `bun` at 6d9c3956c and db3139706 isn't byte-identical to the measured dists.
+  Compare UI sha256 in the report header before pooling with the published run.
+- **Options.** The four-build run measures S4 and S5 with PR 1's options at their defaults, because stock doesn't
+  have them; the options-on numbers come from the separate run in "With PR 1's options on".
+
+## Open leads
+
+Attribution-grade signals from PR 3's experiments that lean toward the optimized build being slower. None was measured
+on quiet cores, and each needs the rerun named here before PR 3 can claim responsiveness parity on it:
+
+| Lead | What was seen | Rerun that settles it |
+| --- | --- | --- |
+| Default-speed reveals over 80 ms (E1) | 20 of 64 against 8 of 64, equal medians, under load 12-28 | S4, full instrumentation, partitioned: median, p90 and reveals over 80 ms |
+| Reveal and hover timing at Faster and Slower (screen-recording A/B) | Faster 850 against 750 ms, Slower 1017 against 983 ms, hover after a card opens 200-333 against 167-267 ms, 8 visits each, SwiftShader at about 95 % load | The options-on S4/S5 run, partitioned |
+| Discard refused during a switch (F23, integration) | 12 of 40 loops against 5 of 40 (Fisher p about 0.09) at about twice the load; every refused tab discarded on the retry 1.5 s later | `discard-race2.mjs`, 20 loops x about 4 launches per side, on quiet cores |
+| ctrl+Next p90 with switches every 500 ms (E4) | 41 to 52 ms at 20 tabs, in step with the 2 s volatile save | S3 key->shown p90 from the partitioned full run |
+| Pointer resting at x=0 hovers the row level with it (screen recordings) | The final build showed that row's ✕ (3 of 3), the PR 2 build didn't (0 of 3), inside the long demo session | Not reproduced in fresh instances: with the pointer moved to x=40 and then x=0 and left there 1.8-2.5 s, neither build hovers the row (0 of 7 each, at Faster and Slower, on llvmpipe and on SwiftShader), and both hover it with the pointer on the row. Rows start at x=18, so a hover at x=0 needs the shell to have kept an older pointer position; repeat inside a recorded session before attributing it |
+| Loading scenarios on quiet cores | Every integration CPU window for S6 and S7 was contended | The partitioned light run |
+
