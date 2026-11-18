@@ -4,13 +4,14 @@ import { history } from "../history/store";
 import { currentPreferences } from "../settings/store";
 import { currentTabs, useTabs } from "../tabs/store";
 import { idleMacTabs, macTabIndex, mergeSyncedHistory, syncedBookmarks } from "../sync/spaces";
-import { selectedProfile, syncData } from "../sync/store";
+import { selectedProfile, syncData, type SyncedProfile } from "../sync/store";
+import type { SyncedDevice } from "../../platform/sync";
 import { idleRows, remoteSuggestions, setSearchEngine, setSources, setSyncedSearch, suggest, type SuggestContext, type TrayRow } from "./omnibox";
 import { withPasteRow, type PasteOffer } from "./pasteRow";
 import { copy } from "../../lib/platformCopy";
 import { clipboardOffer } from "../../platform/system";
 import { settled } from "../pages/store";
-import { buildSources, recentSearches, sourcesKey } from "./sources";
+import { NO_SOURCE_BOOKMARKS, recentSearches, sourceTabs, type Sources } from "./sources";
 import { spaceTabs } from "../tabs/tabsState";
 
 export type SearchOrigin = "home" | "start" | "page";
@@ -51,19 +52,30 @@ export const useSearch = create<SearchState>()(() => ({
 
 let remote: { text: string; values: string[] } = { text: "", values: [] };
 let inFlight: AbortController | null = null;
-let fedSources = "";
+let fed: (Sources & { listing: number; space: string | null; profile: SyncedProfile | null; devices: readonly SyncedDevice[] }) | null = null;
 let context: SuggestContext = { currentUrl: null, currentTabId: null };
 let paste: PasteOffer | null = null;
 
 export function feedSources() {
-  const key = `${sourcesKey(useTabs.getState().listing, history().revision(), syncData().revision)}:${useTabs.getState().spaces.current}`;
-  if (key === fedSources) return;
-  fedSources = key;
+  const { listing, spaces } = useTabs.getState();
   const profile = selectedProfile();
+  const devices = syncData().view.devices;
   const local = history().summary();
-  setSources(buildSources(spaceTabs(currentTabs()), profile ? mergeSyncedHistory(local, profile.history) : local, profile ? syncedBookmarks(profile) : []));
+  const historyRows = profile ? mergeSyncedHistory(local, profile.history) : local;
+  const bookmarks = profile ? syncedBookmarks(profile) : NO_SOURCE_BOOKMARKS;
+  const prior = fed;
+  const sameTabs = prior !== null && prior.listing === listing && prior.space === spaces.current;
+  const sameSources = sameTabs && prior.history === historyRows && prior.bookmarks === bookmarks;
+  if (sameSources && prior.profile === profile && prior.devices === devices) return;
+  const tabs = sameTabs ? prior.tabs : sourceTabs(spaceTabs(currentTabs()));
+  fed = { tabs, history: historyRows, bookmarks, listing, space: spaces.current, profile, devices };
+  if (!sameSources) setSources({ tabs, history: historyRows, bookmarks });
   const shown = useSearch.getState();
   if (shown.open && !shown.text.trim()) useSearch.setState({ rows: rowsFor(shown.text, []) });
+}
+
+export function sourcesMoved() {
+  if (useSearch.getState().open) feedSources();
 }
 
 function suggestionsFor(text: string, remoteValues: readonly string[]): { rows: TrayRow[]; completion: string } {
