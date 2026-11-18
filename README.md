@@ -196,10 +196,10 @@ bun run --cwd apps/linux build
 
 | Task | Command |
 |---|---|
-| UI dev server (Vite) | `bun run --cwd apps/linux dev` |
+| UI dev server (Vite serves the UI modules; to see the desktop UI, build the bundle and launch the fetched engine as above) | `bun run --cwd apps/linux dev` |
 | Type check | `bun run --cwd apps/linux check` |
 | Host, symbol and module-graph tests | `bun run --cwd apps/linux test:host`, `test:symbols`, `test:graph` |
-| Every test that runs without a Mac | `bun run test:portable` |
+| Portable workspace and root tests (no Mac needed) | `bun run test:portable` |
 | Every Linux check CI runs | `scripts/linux/ci-checks.sh` |
 | A test release (tarball and CLI, smoke-tested; needs `bun` and `uv`) | `scripts/linux/release.sh <version> --engine nearest` |
 | Packages (tarball, `.deb`, AppImage) | `scripts/linux/package.py` ([docs/linux-port.md](docs/linux-port.md) › Packaging and installing) |

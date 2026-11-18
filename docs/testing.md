@@ -2,8 +2,8 @@
 
 `bun run test` at the root runs every package's tests through Turbo, then `bun run test:root` over
 `extras/raycast-ardia/src/scripts.test.ts`, `scripts/**/*.test.mjs` and `apps/site/src/**/*.test.ts`. Turbo caches the
-results; a cold run spends most of its time in `swift test`'s first build. `bun run test:portable` runs only what needs
-no Mac (CI's Linux jobs and `scripts/linux/ci-checks.sh`). Each package also runs its own:
+results; a cold run spends most of its time in `swift test`'s first build. `bun run test:portable` runs the portable workspace and root tests, the ones that need
+no Mac; the Linux host tests and native fixtures run through `scripts/linux/ci-checks.sh`. Each package also runs its own:
 
 | Package | Command | What runs |
 | --- | --- | --- |

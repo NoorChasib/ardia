@@ -531,6 +531,8 @@ python3 engine/patches/series.py files --platform linux
 
 ## Packaging and installing
 
+With a local Chromium build:
+
 ```bash
 bun install --frozen-lockfile
 bun run --cwd apps/linux build
@@ -541,6 +543,23 @@ python3 scripts/linux/package.py \
   --content-blocker "$(scripts/linux/fetch-ubo.sh)" \
   --destination "$CB/artifacts/ardia-linux-$AC_TARGET_CPU.tar.xz"
 ```
+
+With a prebuilt engine (a clean clone, no Chromium tree):
+
+```bash
+bun install --frozen-lockfile
+bun run --cwd apps/linux build
+umask 022
+engine="$(scripts/linux/fetch-engine.sh --nearest)" || exit 1
+blocker="$(scripts/linux/fetch-ubo.sh)" || exit 1
+python3 scripts/linux/package.py \
+  --out "$engine" \
+  --ui apps/linux/dist \
+  --content-blocker "$blocker" \
+  --destination /tmp/ardia-linux-x64.tar.xz
+```
+
+The engine refuses a group-writable data folder, so package and smoke-test with `umask 022`.
 
 - **Formats.** `--deb <path>` and `--appimage <path>` build a `.deb` and an AppImage from the same tree. `release.sh`
   builds all three and smoke-tests each.
