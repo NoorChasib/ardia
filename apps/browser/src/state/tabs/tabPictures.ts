@@ -4,6 +4,7 @@ import type { BrowserState } from "../browser/store";
 import type { Settings } from "../settings/settings";
 import { pagePicturesSupported, webviews } from "../../platform/webviews";
 import { noteTabHoverPreviewCapture } from "../telemetry/hoverCardCounts";
+import { sameSharingPeriod } from "../telemetry/sharingPeriod";
 
 export type Picture = { data: string; frame: [number, number, number, number]; url: string; at: number; settled: boolean };
 
@@ -53,6 +54,7 @@ function remember(tabId: string, afterLoad: boolean): Promise<void> {
   const loadingAtRequest = !!state.live[tabId]?.isLoading;
   const requested = Date.now();
   const load = loadStarts.get(tabId) ?? 0;
+  const consented = sameSharingPeriod();
   asking.set(tabId, (asking.get(tabId) ?? 0) + 1);
   const answered = () => {
     const left = (asking.get(tabId) ?? 1) - 1;
@@ -61,14 +63,14 @@ function remember(tabId: string, afterLoad: boolean): Promise<void> {
   };
   const missed = () => {
     if (!afterLoad) return;
-    noteTabHoverPreviewCapture(true);
+    if (consented()) noteTabHoverPreviewCapture(true);
     unsettle(tabId, url, requested);
   };
   return view
     .capturePicture(0.25)
     .then((picture) => {
       if (!picture) return missed();
-      if (afterLoad) noteTabHoverPreviewCapture(false);
+      if (afterLoad && consented()) noteTabHoverPreviewCapture(false);
       const now = useBrowser.getState();
       if (now.tabs[tabId]?.url !== url) return;
       const settled = !loadingAtRequest && !now.live[tabId]?.isLoading && (loadStarts.get(tabId) ?? 0) === load;

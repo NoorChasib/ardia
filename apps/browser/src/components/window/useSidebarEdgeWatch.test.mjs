@@ -11,6 +11,8 @@ const { EDGE_ARMED, PEEK_EDGE_STRIP, edgeSeen, peekHoldWidth } = await import(".
 const { takeDockCounts } = await import("../../state/telemetry/dockCounts.ts");
 const { EDGE_PROBE_IDLE_LIMIT, EDGE_PROBE_MS } = await import("./revealWait.ts");
 const { AppState } = await import("react-native");
+globalThis.fetch ??= async () => ({ status: 200 });
+const client = await import("../../state/telemetry/client.ts");
 
 const WIDTH = 1200;
 const PROBE_IDLE_MS = EDGE_PROBE_IDLE_LIMIT * EDGE_PROBE_MS;
@@ -229,4 +231,37 @@ test("Slower with the shell's strip on macOS framed: stepping back off the strip
   s.native.x = 5;
   s.h.value.strip(false);
   assert.equal(s.firstLive(1000), null);
+});
+
+for (const late of [false, true]) {
+  test(`a Slower wait that started before sharing turned on is never counted as abandoned ${late ? "at its deadline" : "on a step back"}`, (t) => {
+    client.loadChoice();
+    client.setSharing(false, "settings");
+    t.after(() => client.setSharing(false, "settings"));
+    const s = harness(t);
+    s.run(100);
+    s.at(1);
+    s.run(late ? 245 : 120);
+    client.setSharing(true, "settings");
+    takeDockCounts();
+    s.at(12);
+    s.run(1000);
+    assert.equal(s.h.value.live, false);
+    assert.equal(takeDockCounts().sidebar_peek_reveal_waits_abandoned, 0);
+  });
+}
+
+test("a Slower wait started while sharing still counts its abandon", (t) => {
+  client.loadChoice();
+  client.setSharing(true, "settings");
+  t.after(() => client.setSharing(false, "settings"));
+  const s = harness(t);
+  s.run(100);
+  takeDockCounts();
+  s.at(1);
+  s.run(120);
+  s.at(12);
+  s.run(1000);
+  const counted = takeDockCounts();
+  assert.deepEqual([counted.sidebar_peek_reveal_waits, counted.sidebar_peek_reveal_waits_abandoned], [1, 1]);
 });

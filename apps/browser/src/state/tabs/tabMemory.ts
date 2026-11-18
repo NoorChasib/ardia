@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { create } from "zustand";
 import { PLATFORM_FEATURES } from "../../lib/platformFeatures";
 import type { EngineTask } from "../../platform/performance";
-import { useTelemetry } from "../telemetry/choice";
+import { sameSharingPeriod } from "../telemetry/sharingPeriod";
 import { noteTabMemorySample, noteTabMemoryShown } from "../telemetry/hoverCardCounts";
 import { isSleeping, useIsSleeping } from "./sleepingTabs";
 import { sampleTasks } from "./taskSampler";
@@ -27,11 +27,6 @@ const PAGE_TASKS = new Set<EngineTask["type"]>(["renderer", "guest"]);
 const NAMELESS_TASKS = new Set<EngineTask["type"]>(["renderer", "guest", "extension"]);
 
 let attributed = PLATFORM_FEATURES.attributesTabMemory;
-let sharingPeriod = 0;
-
-useTelemetry.subscribe((s, prev) => {
-  if (prev.sharing !== s.sharing) sharingPeriod++;
-});
 
 export const attributesTabMemory = () => attributed;
 
@@ -95,10 +90,10 @@ export function measureTabMemory(tabId: string) {
   const snapshot = useTabMemorySnapshot.getState();
   if (snapshot.reading || !refreshDue(snapshot, tabId, Date.now())) return;
   useTabMemorySnapshot.setState({ reading: true });
-  const period = sharingPeriod;
+  const consented = sameSharingPeriod();
   const settle = (tasks: EngineTask[], waited: boolean, failed: boolean) => {
     useTabMemorySnapshot.setState({ at: Date.now(), tasks, reading: false, failed });
-    if (period === sharingPeriod) noteTabMemorySample(waited, failed);
+    if (consented()) noteTabMemorySample(waited, failed);
   };
   sampleTasks().then(
     (sample) => settle(sample.tasks, sample.waited, false),

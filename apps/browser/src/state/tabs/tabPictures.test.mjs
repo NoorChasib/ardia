@@ -362,3 +362,31 @@ test("an engine that can't take pictures makes the preview setting inert: no tim
   }
   assert.equal(pagePreviewOn(S().settings), true, "it lights up once the engine can");
 });
+
+test("a load capture that started before sharing turned on counts neither its attempt nor its miss", async (t) => {
+  globalThis.__DEV__ ??= false;
+  globalThis.fetch ??= async () => ({ status: 200 });
+  const client = await import("../telemetry/client.ts");
+  client.loadChoice();
+  client.setSharing(false, "settings");
+  t.after(() => client.setSharing(false, "settings"));
+  const { a } = await setup({ preview: true });
+  let answer;
+  fake(a, () => new Promise((resolve) => (answer = resolve)));
+  finishLoad(a);
+  mock.timers.tick(LOADED_SETTLE_MS);
+  await flush();
+  assert.equal(capturesOf(a), 1);
+  client.setSharing(true, "settings");
+  takeHoverCardCounts();
+  answer(null);
+  await flush();
+  const before = takeHoverCardCounts();
+  assert.deepEqual([before.tab_hover_preview_captures, before.tab_hover_preview_capture_misses], [0, 0]);
+  fake(a, () => Promise.resolve(null));
+  finishLoad(a);
+  mock.timers.tick(LOADED_SETTLE_MS);
+  await flush();
+  const after = takeHoverCardCounts();
+  assert.deepEqual([after.tab_hover_preview_captures, after.tab_hover_preview_capture_misses], [1, 1], "the next capture, started while sharing, counts");
+});

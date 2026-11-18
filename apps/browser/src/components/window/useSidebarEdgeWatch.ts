@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { onWindowEvent, watchSidebarEdge } from "../../state/windows/nativeWindow";
-import { noteSidebarPeekRevealHeldBack, noteSidebarPeekRevealWaitAbandoned, noteSidebarScreenEdge } from "../../state/telemetry/dockCounts";
+import { noteSidebarPeekRevealHeldBack, noteSidebarScreenEdge } from "../../state/telemetry/dockCounts";
 import { atRevealEdge, edgeEventReveals, edgeSeen, type DockState, type EdgeArm } from "./dockMotion";
 import { edgeProbe } from "./revealWait";
 
 type Ref<T> = { current: T };
-type EdgePeek = { showAfterWait(confirm?: (go: () => void) => void): void; waiting(): boolean; abandonWait(): void; hide(atEdge: boolean): void };
+type EdgePeek = { showAfterWait(confirm?: (go: () => void) => void): void; waiting(): boolean; abandonWait(): void; noteWaitAbandoned(): void; hide(atEdge: boolean): void };
 type EdgeAt = { state: DockState; right: boolean; windowWidth: number; band: number };
 export type EdgeWatch = { windowId: string; watching: boolean; hold: number; right: boolean; whilePressed: boolean; peekLive: boolean };
 
@@ -21,7 +21,7 @@ export function useSidebarEdgeWatch(watch: EdgeWatch, at: Ref<EdgeAt>, peek: Ref
     }),
   );
   const confirmAtEdge = (go: () => void) => {
-    if (!probe.confirm(go)) noteSidebarPeekRevealWaitAbandoned();
+    if (!probe.confirm(go)) peek.current.noteWaitAbandoned();
   };
   const reveal = () => {
     if (!arm.current.armed) return noteSidebarPeekRevealHeldBack();
@@ -30,7 +30,7 @@ export function useSidebarEdgeWatch(watch: EdgeWatch, at: Ref<EdgeAt>, peek: Ref
   };
   const reply = {
     reveal: () => arm.current.armed && peek.current.showAfterWait(confirmAtEdge),
-    retreat: (waitEnded: boolean) => (waitEnded ? noteSidebarPeekRevealWaitAbandoned() : peek.current.abandonWait()),
+    retreat: (waitEnded: boolean) => (waitEnded ? peek.current.noteWaitAbandoned() : peek.current.abandonWait()),
     waiting: () => peek.current.waiting(),
   };
   const latestReveal = useRef(reveal);

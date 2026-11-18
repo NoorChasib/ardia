@@ -4,6 +4,7 @@ import { PEEK_CLOSE_DELAY_MS, peekAnimation, revealWaitMs } from "./dockMotion";
 import { revealWait } from "./revealWait";
 import { backgroundInstance } from "../../state/app/appSettings";
 import { noteSidebarPeekRevealWait, noteSidebarPeekRevealWaitAbandoned } from "../../state/telemetry/dockCounts";
+import { sameSharingPeriod } from "../../state/telemetry/sharingPeriod";
 import type { SidebarRevealSpeed } from "../../state/settings/settings";
 
 const appInFront = () => backgroundInstance || AppState.currentState === "active";
@@ -24,6 +25,7 @@ export function usePeek(
   const out = useRef(false);
   const waitingForFocus = useRef(false);
   const [wait] = useState(revealWait);
+  const waitCounted = useRef<() => boolean>(() => false);
   const animate = (to: number, done?: () => void) => {
     const motion = peekAnimation(to, arc, speed);
     (motion.kind === "spring"
@@ -61,10 +63,14 @@ export function usePeek(
     if (!ms) return show();
     if (wait.pending() || waitingForFocus.current) return;
     noteSidebarPeekRevealWait();
+    waitCounted.current = sameSharingPeriod();
     wait.start(ms, () => confirm(() => latestShow.current()));
   };
+  const noteWaitAbandoned = () => {
+    if (waitCounted.current()) noteSidebarPeekRevealWaitAbandoned();
+  };
   const dropWait = (pointerStillAtEdge: boolean) => {
-    if (!pointerStillAtEdge && wait.cancel()) noteSidebarPeekRevealWaitAbandoned();
+    if (!pointerStillAtEdge && wait.cancel()) noteWaitAbandoned();
   };
   const abandonWait = () => dropWait(false);
   const cancelPending = (pointerStillAtEdge = false) => {
@@ -119,5 +125,5 @@ export function usePeek(
     },
     [],
   );
-  return { slide, live, leaving, show, showAfterWait, waiting: wait.pending, hide, recheck, abandonWait, cancelPending, reset };
+  return { slide, live, leaving, show, showAfterWait, waiting: wait.pending, hide, recheck, abandonWait, noteWaitAbandoned, cancelPending, reset };
 }
