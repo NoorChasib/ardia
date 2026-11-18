@@ -9,7 +9,7 @@
   "scripts": {
     "check": "tsc -p .",
     "test:portable": "node ../../apps/phone/scripts/bundle-shared.mjs --check && bun test --parallel --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./src",
-    "test": "swift test --scratch-path \"${TMPDIR:-/tmp}/ardia-sync-swiftpm\" && bun run test:portable && node scripts/legacy-migration-e2e.mjs"
+    "test": "swift test --scratch-path \"${TMPDIR:-/tmp}/ardia-sync-swiftpm\" && bun run test:portable"
   },
   "peerDependencies": {
     "expo": "*",
