@@ -252,37 +252,29 @@ const tabsIn = (windowId) => Object.values(useBrowser.getState().tabs).filter((t
 const tabURL = (tab) => tab.url ?? tab.navigation?.url ?? "";
 const waitFor = async (check) => { for (let i = 0; i < 100 && !check(); i++) await new Promise((resolve) => setTimeout(resolve, 5)); };
 
-test("Report a Problem opens one prefilled GitHub issue in the window that asked, since the sheet can't send from Linux", async () => {
+test("Report a Problem opens one GitHub issue page with a static body in the window that asked, since the sheet can't send from Linux", async () => {
   const { first, second } = twoWindows();
   useReportSheet.setState(useReportSheet.getInitialState(), true);
   const before = tabsIn(first).length;
   assert.equal(runAppCommand(first, "reportProblem", capabilities), true);
   await waitFor(() => tabsIn(first).length > before);
-  const opened = tabsIn(first).filter((tab) => tabURL(tab).startsWith("https://github.com/mantrakp04/ardia/issues/new?body="));
+  const opened = tabsIn(first).filter((tab) => tabURL(tab).startsWith("https://github.com/NoorChasib/nilla/issues/new?body="));
   assert.equal(opened.length, 1);
   const body = decodeURIComponent(tabURL(opened[0]).split("?body=")[1]);
-  assert.ok(body.startsWith(LINUX_REPORT_TEMPLATE), body);
-  assert.match(body, /Windows: 2 \(\+0 incognito\)/);
+  assert.equal(body, LINUX_REPORT_TEMPLATE);
+  assert.doesNotMatch(tabURL(opened[0]), /Windows|incognito|tabs/);
   assert.equal(tabsIn(second).length, 1);
   assert.equal(useReportSheet.getState().windowId, null);
 });
 
-test("Report a Problem from the check-in or the command bar reaches the same issue page, and a build's own https feedback page wins", async () => {
+test("Report a Problem from the check-in reaches the same issue page, and a window that can't take it opens nothing", async () => {
   const { first } = twoWindows();
-  appInfo.feedbackURL = "https://feedback.example/new?text=%s";
-  try {
-    await openReport(first, "check_in");
-    assert.ok(tabsIn(first).some((tab) => tabURL(tab).startsWith("https://feedback.example/new?text=What%20happened%3F")));
-    appInfo.feedbackURL = "http://insecure.example/?q=%s";
-    await openReport(first);
-    assert.ok(tabsIn(first).some((tab) => tabURL(tab).startsWith("https://github.com/mantrakp04/ardia/issues/new?body=")));
-    const count = tabsIn(first).length;
-    await openReport("settings");
-    await openReport(null);
-    assert.equal(tabsIn(first).length, count);
-  } finally {
-    delete appInfo.feedbackURL;
-  }
+  await openReport(first, "check_in");
+  assert.ok(tabsIn(first).some((tab) => tabURL(tab).startsWith("https://github.com/NoorChasib/nilla/issues/new?body=What%20happened%3F")));
+  const count = tabsIn(first).length;
+  await openReport("settings");
+  await openReport(null);
+  assert.equal(tabsIn(first).length, count);
 });
 
 test("the shared command handler never also runs an app command Linux runs itself, so nothing opens twice", () => {

@@ -187,41 +187,19 @@ test("the shared report code works with a module that answers promises where the
   }
 });
 
-test("with both capabilities Report a Problem opens the sheet without recording, and Send posts through the engine", async () => {
+test("with both capabilities but no feedback server Report a Problem opens the issue page, never the sheet, and posts nothing", async () => {
   mainWindow();
-  const posts = [];
-  const host = fakeHost(BOTH, {
-    "ArdiaReport.post": (url, body, headers) => {
-      posts.push({ url, body: JSON.parse(body), headers });
-      return url === FEEDBACK_URL
-        ? { status: 201, body: JSON.stringify({ id: "r1", name: "Quiet Fox", upload_token: "tok" }), error: null }
-        : { status: 200, body: JSON.stringify({ id: "r1", issue_url: "https://github.com/mantrakp04/ardia/issues/77" }), error: null };
-    },
-  });
+  const host = fakeHost(BOTH, { "ArdiaReport.post": () => ({ status: 201, body: "{}", error: null }) });
   adoptHostReports(host);
   try {
-    assert.equal(recordsReports(), false);
-    assert.equal(canRecord(), false);
-    const tabs = Object.keys(S().tabs).length;
+    assert.equal(sendsFromSheet(host), false);
     await openReport("main", "menu", host);
-    assert.equal(useReportSheet.getState().windowId, "main");
-    assert.equal(Object.keys(S().tabs).length, tabs, "no issue tab opens");
-    await startRecording();
-    assert.equal(useReportSheet.getState().recording.phase, "none");
-    setTitle("Tabs flicker");
-    setDescription("They flicker after the laptop wakes up from sleep.");
+    assert.equal(useReportSheet.getState().windowId, null);
+    const opened = Object.values(S().tabs).map((tab) => tab.url ?? tab.navigation?.url ?? "").filter((url) => url.startsWith("https://github.com/NoorChasib/nilla/issues/new?body="));
+    assert.equal(opened.length, 1);
+    assert.deepEqual([...new URL(opened[0]).searchParams.keys()], ["body"]);
     await sendCurrentReport();
-    await waitFor(() => useReportSheet.getState().sent);
-    const state = useReportSheet.getState();
-    assert.equal(state.upload.phase, "sent", JSON.stringify(state.upload));
-    assert.equal(state.sent.issueNumber, 77);
-    assert.deepEqual(posts.map((post) => post.url), [FEEDBACK_URL, `${FEEDBACK_URL}/r1/complete`]);
-    assert.equal(posts[0].body.title, "Tabs flicker");
-    assert.deepEqual(Object.keys(posts[0].headers).sort(), ["Content-Type", "X-Ardia-Key"]);
-    assert.equal(posts[0].headers["Content-Type"], "application/json");
-    assert.deepEqual(Object.keys(posts[1].headers).sort(), ["Authorization", "Content-Type", "X-Ardia-Key"]);
-    assert.equal(posts[1].headers.Authorization, "Bearer tok");
-    assert.ok(host.invoked.every(([, args]) => args.length === 3 && typeof args[1] === "string"));
+    assert.deepEqual(host.invoked.filter(([method]) => method === "ArdiaReport.post"), []);
   } finally {
     resetReport();
     adoptHostReports(undefined);
@@ -234,20 +212,4 @@ test("a refused or failed engine post is a failure the sheet can retry, never a 
   const post = hostReportPost(host);
   assert.deepEqual(await post(FEEDBACK_URL, "{}", {}), { status: 0, text: "" });
   assert.deepEqual(await hostReportPost(fakeHost(BOTH, { "ArdiaReport.post": null }))(FEEDBACK_URL, "{}", {}), { status: 0, text: "" });
-});
-
-test("a build's own feedback page keeps the issue tab even when the engine could send the sheet", async () => {
-  const { appInfo } = await import("../../browser/src/test-native/index.ts");
-  mainWindow();
-  const host = fakeHost(BOTH);
-  appInfo.feedbackURL = "https://feedback.example/new?text=%s";
-  try {
-    assert.equal(sendsFromSheet(host), false);
-    await openReport("main", "menu", host);
-    assert.equal(useReportSheet.getState().windowId, null);
-    assert.ok(Object.values(S().tabs).some((tab) => (tab.url ?? tab.navigation?.url ?? "").startsWith("https://feedback.example/new?text=")));
-  } finally {
-    delete appInfo.feedbackURL;
-  }
-  assert.equal(sendsFromSheet(host), true);
 });

@@ -26,6 +26,10 @@ final class ReportUploader: NSObject, URLSessionTaskDelegate, URLSessionDataDele
   }
 
   func upload(id: String, url: URL, method: String, headers: [String: String], file: URL, done: @escaping Done) {
+    guard url.scheme == "https", url.host?.isEmpty == false, ServicesConfig.feedbackURL != nil else {
+      done(["status": 0, "body": "", "error": "No report server is set up for this build"])
+      return
+    }
     var request = URLRequest(url: url)
     request.httpMethod = method
     for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
