@@ -94,6 +94,11 @@ export const DOCK_SLIDE = { duration: 160, easing: Easing.bezier(...DOCK_SLIDE_C
 
 export const ARC_PEEK_SPRING = { response: 0.18, damping: 0.8 } as const;
 export const ARC_PEEK_OUT_MS = 150;
+export const SIDEBAR_REVEAL = {
+  faster: { waitMs: 0, slideMs: duration.fast, arcSpring: { response: 0.12, damping: 0.8 } },
+  default: { waitMs: 0, slideMs: duration.base, arcSpring: ARC_PEEK_SPRING },
+  slower: { waitMs: duration.slow, slideMs: duration.base, arcSpring: ARC_PEEK_SPRING },
+} as const;
 export const ARC_HIDE_MS = duration.fast;
 
 export const peekRadius = () => radius.panel;

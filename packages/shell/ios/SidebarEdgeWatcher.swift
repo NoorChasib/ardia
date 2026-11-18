@@ -44,7 +44,7 @@ final class SidebarEdgeWatcher {
   func watch(id: String, on: Bool, hold: CGFloat, right: Bool, whilePressed: Bool) {
     watched[id] = on ? Watch(rootHold: max(0, hold), right: right, whilePressed: whilePressed) : nil
     if on { unreported.insert(id) } else { over.remove(id) }
-    if !on { overSince[id] = nil }
+    if !on, stoppedAtScreenEdge != id { overSince[id] = nil }
     if watched.isEmpty { return stop() }
     start()
     checkPointer()
@@ -98,8 +98,11 @@ final class SidebarEdgeWatcher {
       let fresh = unreported.remove(id) != nil
       let edgeNote = screenEdge?.id == id ? screenEdge?.note : nil
       guard fresh || now != over.contains(id) || edgeNote != nil else { continue }
-      if now, !over.contains(id) { overSince[id] = ProcessInfo.processInfo.systemUptime }
-      if now { over.insert(id) } else { over.remove(id) }
+      if now, !over.contains(id), overSince[id] == nil || stoppedAtScreenEdge != id { overSince[id] = ProcessInfo.processInfo.systemUptime }
+      if now { over.insert(id) } else {
+        over.remove(id)
+        overSince[id] = nil
+      }
       let inRoot = InterfaceScale.rootPoint(fromScreen: point, in: window)
       var event: [String: Any] = ["type": "sidebarEdge", "id": id, "over": now, "point": [inRoot.x, inRoot.y]]
       if let edgeNote { event["screenEdge"] = edgeNote }
