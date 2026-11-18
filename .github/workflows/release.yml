@@ -435,9 +435,9 @@ jobs:
             export PUBLISH_TAP=0
           fi
           if [ "$DRY_RUN" = true ]; then
-            .claude/skills/release/scripts/publish.sh "$VERSION" --dry-run
+            scripts/release/publish.sh "$VERSION" --dry-run
           else
-            .claude/skills/release/scripts/publish.sh "$VERSION"
+            scripts/release/publish.sh "$VERSION"
           fi
 
   windows-update:

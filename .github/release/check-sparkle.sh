@@ -9,8 +9,8 @@ root="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 work="$(mktemp -d "${TMPDIR:-/tmp}/ac-sparkle.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
-swiftc -O "$root/.claude/skills/release/scripts/ed25519.swift" -o "$work/ed25519"
-enclosure="$(python3 -I "$root/.claude/skills/release/scripts/appcast.py" enclosure "$feed" "$version")" \
+swiftc -O "$root/scripts/release/ed25519.swift" -o "$work/ed25519"
+enclosure="$(python3 -I "$root/scripts/release/appcast.py" enclosure "$feed" "$version")" \
   || { echo "::error::$feed has no single item for $version"; exit 1; }
 read -r signature length <<<"$enclosure"
 key="$(plutil -extract SUPublicEDKey raw "$dist/export/Ardia.app/Contents/Info.plist")"

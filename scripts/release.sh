@@ -52,15 +52,7 @@ if [ "$phase" = build ]; then
 elif [ -n "$sparkle_key_file" ]; then
   [ -s "$sparkle_key_file" ] || die "SPARKLE_KEY_FILE ($sparkle_key_file) is missing or empty"
 else
-  if [ -n "${SPARKLE_ACCOUNT:-}" ]; then
-    sparkle_account="$SPARKLE_ACCOUNT"
-  else
-    legacy_account="$("$root/scripts/lib/legacy-name.sh" appName | tr '[:upper:]' '[:lower:]')"
-    sparkle_account=ardia
-    for account in ardia $legacy_account; do
-      if "$sparkle/generate_keys" --account "$account" -p >/dev/null 2>&1; then sparkle_account="$account"; break; fi
-    done
-  fi
+  sparkle_account="${SPARKLE_ACCOUNT:?set SPARKLE_ACCOUNT to the keychain account of the Sparkle key, or SPARKLE_KEY_FILE}"
   "$sparkle/generate_keys" --account "$sparkle_account" -p >/dev/null 2>&1 \
     || die "no Sparkle EdDSA key in the login keychain under account $sparkle_account (SPARKLE_ACCOUNT; docs/releasing.md)"
 fi
@@ -143,7 +135,7 @@ if [ "$phase" != build ]; then
   elif [ "${ALLOW_UNNOTARIZED:-0}" = 1 ]; then
     echo "warning: no notarytool credentials; the build won't be notarized" >&2
   else
-    echo "error: notarytool credentials are missing or invalid (scripts/.notary.env or the '${NOTARY_PROFILE:-ardia}' profile):" >&2
+    echo "error: notarytool credentials are missing or invalid (scripts/.notary.env or the '${NOTARY_PROFILE:-}' profile):" >&2
     xcrun notarytool history "${notary_auth[@]}" 2>&1 | head -2 >&2
     exit 1
   fi
@@ -222,7 +214,7 @@ SPARKLE_BIN="$sparkle" SPARKLE_KEY_FILE="$sparkle_key_file" "$stages/appcast.sh"
 echo
 [ "$notarize" = 1 ] && echo "Notarized and stapled." || echo "NOT notarized."
 [ "$rc" = 1 ] && echo "Release candidate: never publish dist/$version-rc."
-[ "$channel" = nightly ] && [ "$rc" = 0 ] && echo "Nightly: publish it with .claude/skills/release/scripts/publish.sh $version (a prerelease; the feed and ardia.dev/nightly follow)."
+[ "$channel" = nightly ] && [ "$rc" = 0 ] && echo "Nightly: publish it with scripts/release/publish.sh $version (a prerelease; the feed follows)."
 [ "$phase" = sign ] && echo "Not launched yet: remove the signing keys, then run the launch check (--phase check)."
 [ -n "$phased" ] && echo "Phased rollout: $phased s between steps (the appcast item has phasedRolloutInterval; the whole release takes $((phased * 7)) s)."
 du -sh "$app" "$dist/Ardia-$version.dmg" "$dist/Ardia-$version.zip" "$cli_tarball" "$dist/appcast.xml" "$dist/release-notes.md"

@@ -120,36 +120,17 @@ fi
 run gh release create "v$version" -R "$REPO" "${release_flags[@]}" --verify-tag --title "Ardia $version" \
   --notes-file "$dist/release-notes.md" "${assets[@]}"
 if [ "$channel" = nightly ]; then
-  nightly_notes="The newest nightly, always as Ardia-Nightly.dmg (https://ardia.dev/nightly). Now $version: its notes and source are at $REPO_URL/releases/tag/v$version. Every nightly's notes: $RELEASE_NOTES_URL"
-  if ! gh release view nightly -R "$REPO" >/dev/null 2>&1; then
-    run gh release create nightly -R "$REPO" --prerelease --latest=false --title "Ardia Nightly" --notes "$nightly_notes"
-  fi
-  cp -c "$dmg" "$work/Ardia-Nightly.dmg"
-  run gh release upload nightly -R "$REPO" --clobber "$work/Ardia-Nightly.dmg"
-  run gh release edit nightly -R "$REPO" --notes "$nightly_notes"
   run gh release upload "$stable_tag" -R "$REPO" --clobber "$merged"
 fi
 
-tap() { [ "${PUBLISH_TAP:-1}" = 0 ] && { echo "note: the Homebrew tap is left alone (PUBLISH_TAP=0): run update-tap.sh $version"; return 0; }; "$here/update-tap.sh" "$@"; }
-[ "$dry" = 1 ] && { tap "$version" --dry-run || true; echo "dry run: nothing published"; exit 0; }
+[ "$dry" = 1 ] && { echo "dry run: nothing published"; exit 0; }
 status=0
-for url in "$LATEST_DOWNLOAD_URL/appcast.xml" "https://ardia.dev/appcast.xml"; do
-  for _ in $(seq 1 18); do
-    xml="$(curl -fsSL --max-time 20 "$url" 2>/dev/null || true)"
-    grep -q "<sparkle:shortVersionString>$version<" <<<"$xml" && break
-    sleep 10
-  done
-  grep -q "<sparkle:shortVersionString>$version<" <<<"$xml" && echo "PASS  $url lists $version" \
-    || { echo "FAIL  $url lists $version"; status=1; }
+url="$LATEST_DOWNLOAD_URL/appcast.xml"
+for _ in $(seq 1 18); do
+  xml="$(curl -fsSL --max-time 20 "$url" 2>/dev/null || true)"
+  grep -q "<sparkle:shortVersionString>$version<" <<<"$xml" && break
+  sleep 10
 done
-if [ "$channel" = nightly ]; then
-  url="$NIGHTLY_DMG_URL"
-  size="$(curl -fsSLI --max-time 30 "$url" | awk 'tolower($1) == "content-length:" { n = $2 } END { print n + 0 }')"
-  [ "$size" = "$(stat -f %z "$dmg")" ] && echo "PASS  $url is $version's DMG" \
-    || { echo "FAIL  $url is $version's DMG (size $size, expected $(stat -f %z "$dmg"))"; status=1; }
-  to="$(curl -s -o /dev/null --max-time 15 -w '%{redirect_url}' https://ardia.dev/nightly || true)"
-  [ "$to" = "$NIGHTLY_DMG_URL" ] && echo "PASS  https://ardia.dev/nightly leads there" \
-    || { echo "FAIL  https://ardia.dev/nightly leads there (goes to ${to:-nothing}: deploy the site, infra/site/nginx.conf)"; status=1; }
-fi
-tap "$version" || { echo "FAIL  the Homebrew tap's cask is $version"; status=1; }
+grep -q "<sparkle:shortVersionString>$version<" <<<"$xml" && echo "PASS  $url lists $version" \
+  || { echo "FAIL  $url lists $version"; status=1; }
 exit $status

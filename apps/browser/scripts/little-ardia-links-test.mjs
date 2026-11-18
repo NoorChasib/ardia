@@ -15,7 +15,7 @@ const app = resolve(appArg);
 const only = args.find((a) => a.startsWith("--only="))?.slice(7).split(",");
 const root = mkdtempSync(join(tmpdir(), "little-links-"));
 const gurl = join(root, "gurl");
-execFileSync("swiftc", ["-O", resolve(import.meta.dirname, "../../../.claude/skills/release/scripts/gurl.swift"), "-o", gurl]);
+execFileSync("swiftc", ["-O", resolve(import.meta.dirname, "../../../scripts/release/gurl.swift"), "-o", gurl]);
 const failures = [];
 
 const state = (inst) =>

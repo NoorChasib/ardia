@@ -13,7 +13,7 @@ if (!appArg) {
 const app = resolve(appArg);
 const root = mkdtempSync(join(tmpdir(), "air-traffic-"));
 const gurl = join(root, "gurl");
-execFileSync("swiftc", ["-O", resolve(import.meta.dirname, "../../../.claude/skills/release/scripts/gurl.swift"), "-o", gurl]);
+execFileSync("swiftc", ["-O", resolve(import.meta.dirname, "../../../scripts/release/gurl.swift"), "-o", gurl]);
 const failures = [];
 
 function record(name, ok, detail) {

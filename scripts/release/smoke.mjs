@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { attach, sleep } from "../../../../scripts/lib/instance.mjs";
+import { attach, sleep } from "../lib/instance.mjs";
 
 const [version, windowsTool, pages] = process.argv.slice(2);
 const instance = attach(process.env.SMOKE_DATA);
@@ -29,7 +29,7 @@ if (!canPostKeys || !canReadTitles) console.log(`note: ${access}: key-routing ch
 const windows = () =>
   execFileSync(windowsTool, [pid], { encoding: "utf8" }).trim().split("\n").filter(Boolean).map((l) => JSON.parse(l));
 
-const chromiumVersion = readFileSync(new URL("../../../../engine/patches/build/env.sh", import.meta.url), "utf8")
+const chromiumVersion = readFileSync(new URL("../../engine/patches/build/env.sh", import.meta.url), "utf8")
   .match(/^export CHROMIUM_VERSION=(\S+)$/m)[1];
 const browserInfo = await (await fetch(`http://localhost:${port}/json/version`)).json();
 check(`engine is Chromium ${chromiumVersion}`, browserInfo.Browser === `Chrome/${chromiumVersion}`, browserInfo.Browser);

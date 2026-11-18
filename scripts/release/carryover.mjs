@@ -2,7 +2,7 @@ import { execFileSync, execSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { UBO_ID, launch, listenerPids, sleep } from "../../../../scripts/lib/instance.mjs";
+import { UBO_ID, launch, listenerPids, sleep } from "../lib/instance.mjs";
 
 const [phase, app, home, port, origin, extra, out] = process.argv.slice(2);
 const here = path.dirname(new URL(import.meta.url).pathname);
@@ -121,7 +121,7 @@ const safe = (p, f) => Promise.resolve().then(() => p).then(f, (e) => "error: " 
 const orError = (p) => p.catch((e) => ({ error: e.message }));
 const flat = (n, acc) => { acc = acc || []; if (!n) return acc; if (n.u) acc.push(n.t + " " + n.u); (n.c || []).forEach((c) => flat(c, acc)); return acc; };
 const r = { profiles: s.profileOrder.map((id) => s.profiles[id].name), tabs: [] };
-for (const t of Object.values(s.tabs)) if (t.url && !t.url.startsWith("https://ardia.dev/release-notes")) r.tabs.push(s.profiles[t.profileId].name + " " + t.url);
+for (const t of Object.values(s.tabs)) if (t.url && !new URL(t.url).pathname.startsWith("/release-notes")) r.tabs.push(s.profiles[t.profileId].name + " " + t.url);
 r.tabs.sort();
 return safe(E.call("engine.info"), (i) => { r.dataDirectory = i && i.dataDirectory; }).then(() => seq(s.profileOrder, (id) => {
   const p = id === "default" ? "" : id, name = s.profiles[id].name, put = (k, v) => { r[name + " " + k] = v; };
