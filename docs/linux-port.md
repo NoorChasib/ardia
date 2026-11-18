@@ -118,8 +118,13 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   browser overlays and clip themselves.
 - **Tracking.** `watchTabViewport` measures a page's rectangle, overlays and coverage only when something changes: a
   DOM mutation, a resize, scroll or visibility change, a CSS transition or animation, or a page's own presentation
-  change (`refreshTabViewports`). It measures at most once per animation frame. It keeps measuring each
-  frame only while a running animation targets the page's ancestors or an overlay. Idle windows run no measuring code;
+  change (`refreshTabViewports`). One coordinator serves every tab: one document observer, one set of listeners and
+  at most one animation frame, in which only tabs shown now or in their last report are measured and the input
+  regions flush once for the pass; an overlay's own mutation still flushes at once so it is held back before it paints.
+  A hidden tab is measured again on a full refresh, its own refresh or resize, and a document visibility change; a
+  resize whose rect the frame's pass already measured is not reported again. A scroll in something that holds no shown page (the sidebar list) waits for that frame. It keeps
+  measuring each frame only while a running animation targets a shown page's ancestors or an overlay; animations
+  inside `[data-ardia-paint-motion]` (transform or opacity inside a box that doesn't move) don't count. Idle windows run no measuring code;
   the earlier version polled every frame and used about 5% of a core. Mutation-triggered measures run in the next
   frame rather than in a later task, so a React commit and the animated transform that offsets it are never seen
   apart. Each tab keeps at most one `tab.viewport` request in flight; later rectangles replace the queued one, so a
