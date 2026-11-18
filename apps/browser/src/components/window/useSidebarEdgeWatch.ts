@@ -31,6 +31,7 @@ export function useSidebarEdgeWatch(watch: EdgeWatch, at: Ref<EdgeAt>, peek: Ref
   const reply = {
     reveal: () => arm.current.armed && peek.current.showAfterWait(confirmAtEdge),
     retreat: (waitEnded: boolean) => (waitEnded ? noteSidebarPeekRevealWaitAbandoned() : peek.current.abandonWait()),
+    waiting: () => peek.current.waiting(),
   };
   const latestReveal = useRef(reveal);
   latestReveal.current = reveal;

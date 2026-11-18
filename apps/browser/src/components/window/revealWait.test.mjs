@@ -66,14 +66,15 @@ test("a wait can start again after it ran or was cancelled", (t) => {
   assert.equal(runs, 2);
 });
 
-const { EDGE_PROBE_MS, edgeProbe } = await import("./revealWait.ts");
+const { EDGE_PROBE_IDLE_LIMIT, EDGE_PROBE_MS, edgeProbe } = await import("./revealWait.ts");
 
 const probeWith = (watching = true) => {
   const asks = [];
   const replies = [];
   const probe = edgeProbe(() => (asks.push(Date.now()), watching));
-  const reply = { reveal: () => replies.push("reveal"), retreat: (waitEnded) => replies.push(waitEnded ? "ended" : "retreat") };
-  return { probe, asks, replies, reply };
+  const wait = { pending: false };
+  const reply = { reveal: () => replies.push("reveal"), retreat: (waitEnded) => replies.push(waitEnded ? "ended" : "retreat"), waiting: () => wait.pending };
+  return { probe, asks, replies, reply, wait };
 };
 
 test("tracking asks the edge watcher for a fresh report every probe interval until it stops", (t) => {
@@ -111,4 +112,47 @@ test("a confirm with no edge watch running fails at once instead of waiting for 
   assert.equal(probe.answer(true, true, reply), false);
   assert.equal(shown, 0);
   assert.deepEqual(replies, []);
+});
+
+test("with no wait pending, a lingering pointer gets a limited number of asks and then none", (t) => {
+  t.mock.timers.enable({ apis: ["setInterval", "Date"] });
+  const { probe, asks, reply, wait } = probeWith();
+  wait.pending = true;
+  probe.track();
+  for (let i = 0; i < 3 * EDGE_PROBE_IDLE_LIMIT; i++) {
+    t.mock.timers.tick(EDGE_PROBE_MS);
+    probe.answer(true, true, reply);
+  }
+  assert.equal(probe.tracking(), true, "a running wait keeps the probe going");
+  wait.pending = false;
+  const before = asks.length;
+  for (let i = 0; i < 3 * EDGE_PROBE_IDLE_LIMIT; i++) {
+    t.mock.timers.tick(EDGE_PROBE_MS);
+    probe.answer(false, true, reply);
+  }
+  assert.equal(probe.tracking(), false);
+  assert.ok(asks.length - before <= EDGE_PROBE_IDLE_LIMIT + 1, `${asks.length - before} asks after the wait ended`);
+});
+
+test("a probe whose reports never come stops asking on its own", (t) => {
+  t.mock.timers.enable({ apis: ["setInterval", "Date"] });
+  const { probe, asks } = probeWith();
+  probe.track();
+  t.mock.timers.tick(EDGE_PROBE_MS * EDGE_PROBE_IDLE_LIMIT * 4);
+  assert.equal(probe.tracking(), false);
+  assert.equal(asks.length, EDGE_PROBE_IDLE_LIMIT);
+});
+
+test("a confirm answered on the band ends the tracking even while the pointer lingers, so a parked reveal isn't asked about again", (t) => {
+  t.mock.timers.enable({ apis: ["setInterval", "Date"] });
+  const { probe, asks, reply } = probeWith();
+  probe.track();
+  let shown = 0;
+  probe.confirm(() => shown++);
+  probe.answer(true, true, reply);
+  assert.equal(shown, 1);
+  assert.equal(probe.tracking(), false);
+  const before = asks.length;
+  t.mock.timers.tick(EDGE_PROBE_MS * 10);
+  assert.equal(asks.length, before);
 });

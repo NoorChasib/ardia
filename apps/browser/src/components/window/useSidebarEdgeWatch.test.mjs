@@ -9,8 +9,11 @@ const { usePeek } = await import("./usePeek.ts");
 const { useSidebarEdgeWatch } = await import("./useSidebarEdgeWatch.ts");
 const { EDGE_ARMED, PEEK_EDGE_STRIP, edgeSeen, peekHoldWidth } = await import("./dockMotion.ts");
 const { takeDockCounts } = await import("../../state/telemetry/dockCounts.ts");
+const { EDGE_PROBE_IDLE_LIMIT, EDGE_PROBE_MS } = await import("./revealWait.ts");
+const { AppState } = await import("react-native");
 
 const WIDTH = 1200;
+const PROBE_IDLE_MS = EDGE_PROBE_IDLE_LIMIT * EDGE_PROBE_MS;
 const LINUX_STRIP = 8;
 const REACH = 24;
 
@@ -121,6 +124,43 @@ for (const right of [false, true]) {
       assert.ok(ms !== null && ms >= 250 && ms < 330, `opened ${ms} ms after the return, not on the first deadline`);
     });
   }
+
+  for (const borderless of [true, false]) {
+    test(`Slower, ${side} side, ${borderless ? "borderless" : "framed"}: resting at 5 px stops asking the native watcher within a second, and a return through the strip starts a fresh wait`, (t) => {
+      const s = harness(t, { right, borderless });
+      s.run(100);
+      s.at(1);
+      s.run(120);
+      s.at(5);
+      s.run(PROBE_IDLE_MS + 4 * EDGE_PROBE_MS);
+      const calls = s.native.calls;
+      s.run(30_000);
+      assert.equal(s.native.calls, calls, "no native call while the pointer rests inside the 8 px band with no wait running");
+      assert.equal(s.h.value.live, false);
+      s.at(1);
+      s.h.value.strip(true);
+      const ms = s.firstLive(800);
+      assert.ok(ms !== null && ms >= 250 && ms < 330, `opened ${ms} ms after the return`);
+    });
+  }
+
+  test(`Slower, ${side} side: resting on the edge while the app is in the background makes one wait, then stops asking until the app comes forward`, (t) => {
+    const s = harness(t, { right });
+    AppState.currentState = "background";
+    t.after(() => (AppState.currentState = "active"));
+    s.run(100);
+    takeDockCounts();
+    s.at(1);
+    s.run(250 + 4 * EDGE_PROBE_MS);
+    const calls = s.native.calls;
+    s.run(10_000);
+    s.h.value.strip(true);
+    s.run(1_000);
+    assert.equal(s.h.value.live, false);
+    assert.equal(s.native.calls, calls, "no native call while the wait is over and the peek waits for focus");
+    const counted = takeDockCounts();
+    assert.deepEqual([counted.sidebar_peek_reveal_waits, counted.sidebar_peek_reveal_waits_abandoned], [1, 0], "one wait, and no new one per probe or strip entry");
+  });
 
   test(`Slower, ${side} side: a step back just before the deadline, between two probes, still never opens it`, (t) => {
     const s = harness(t, { right });

@@ -59,7 +59,7 @@ export function usePeek(
   const showAfterWait = (confirm: (go: () => void) => void = (go) => go()) => {
     const ms = revealWaitMs(speed, out.current || live);
     if (!ms) return show();
-    if (wait.pending()) return;
+    if (wait.pending() || waitingForFocus.current) return;
     noteSidebarPeekRevealWait();
     wait.start(ms, () => confirm(() => latestShow.current()));
   };

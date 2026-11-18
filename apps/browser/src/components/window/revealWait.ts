@@ -33,8 +33,9 @@ export function revealWait<H = ReturnType<typeof setTimeout>>(
 }
 
 export const EDGE_PROBE_MS = 40;
+export const EDGE_PROBE_IDLE_LIMIT = 25;
 
-export type ProbeReply = { reveal(): void; retreat(waitEnded: boolean): void };
+export type ProbeReply = { reveal(): void; retreat(waitEnded: boolean): void; waiting(): boolean };
 
 export type EdgeProbe = {
   track(): void;
@@ -52,6 +53,7 @@ export function edgeProbe<H = ReturnType<typeof setInterval>>(
   let timer: H | undefined;
   let polling = false;
   let asked = false;
+  let idleAsksLeft = 0;
   let confirming: (() => void) | null = null;
   const ask = () => {
     asked = request() || asked;
@@ -63,11 +65,16 @@ export function edgeProbe<H = ReturnType<typeof setInterval>>(
     asked = false;
     confirming = null;
   };
+  const tick = () => {
+    if (idleAsksLeft-- <= 0) return stop();
+    ask();
+  };
   return {
     track() {
+      idleAsksLeft = EDGE_PROBE_IDLE_LIMIT;
       if (polling) return;
       polling = true;
-      timer = every(ask, EDGE_PROBE_MS);
+      timer = every(tick, EDGE_PROBE_MS);
     },
     confirm(go) {
       confirming = go;
@@ -82,7 +89,8 @@ export function edgeProbe<H = ReturnType<typeof setInterval>>(
       confirming = null;
       if (inBand) (go ?? reply.reveal)();
       else reply.retreat(!!go);
-      if (!lingering) stop();
+      if (!lingering || (go && inBand)) stop();
+      else if (reply.waiting()) idleAsksLeft = EDGE_PROBE_IDLE_LIMIT;
       return true;
     },
     stop,
