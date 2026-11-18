@@ -25,4 +25,6 @@ export const windowVisitsOf = (db: SqlDatabase, url: string, edge: WindowEdge | 
   title: windowTitleOf(db, url, edge),
 });
 
+export const storedVisit = (db: SqlDatabase, id: number) => db.first<EdgeVisit>("SELECT id, url, title, visitedAt FROM visits WHERE id = ?", [id]);
+
 export const isInWindow = (visit: WindowEdge, edge: WindowEdge | null) => !edge || visit.visitedAt > edge.visitedAt || (visit.visitedAt === edge.visitedAt && visit.id >= edge.id);

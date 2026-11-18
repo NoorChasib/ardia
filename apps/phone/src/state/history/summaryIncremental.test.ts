@@ -113,3 +113,43 @@ test("after any mix of visits, amends, prunes and removals the summary equals a 
     }
   }
 });
+
+test("an amend through an older handle patches the stored row, so the summary and SQLite agree", () => {
+  const { db, log } = seeded(0);
+  const original = log.record("https://before.example/", "Before", "link", null, 1)!;
+  log.amend(original, { url: "https://redirected.example/" });
+  log.summary();
+  const late = log.amend(original, { title: "Late title" });
+  assert.deepEqual({ url: late.url, title: late.title }, { url: "https://redirected.example/", title: "Late title" });
+  assert.deepEqual(log.search("").map(({ url, title }) => ({ url, title })), [{ url: "https://redirected.example/", title: "Late title" }]);
+  assert.deepEqual(log.summary(), summarizeVisits(newestVisits(db, 1000), 1000));
+});
+
+test("after amends through any handle, old or removed, the summary equals a fresh scan", () => {
+  for (let seed = 1; seed <= 60; seed++) {
+    const random = mulberry(seed + 1000);
+    const { db, log } = seeded(0);
+    const pick = <T,>(list: readonly T[]) => list[Math.floor(random() * list.length)]!;
+    const urls = Array.from({ length: 3 + Math.floor(random() * 6) }, (_, i) => `https://h${i}.example/`);
+    const titles = ["", "One", "Two", "Three"];
+    const limit = 1 + Math.floor(random() * 6);
+    const scan = 1 + Math.floor(random() * 14);
+    const handles: Visit[] = [];
+    let at = 1_000;
+    for (let step = 0; step < 160; step++) {
+      const roll = random();
+      if (roll < 0.45) {
+        at += 1 + Math.floor(random() * 3);
+        const visit = log.record(pick(urls), pick(titles), "link", null, at);
+        if (visit) handles.push(visit);
+      } else if (roll < 0.95 && handles.length) {
+        const patch = random() < 0.3 ? { url: pick(urls) } : { title: pick(titles) };
+        handles.push(log.amend(pick(handles), patch));
+      } else {
+        log.removeVisits([pick(urls)], null);
+      }
+      const expected = summarizeVisits(newestVisits(db, scan), limit);
+      assert.deepEqual(log.summary(limit, scan), expected, `seed ${seed} step ${step}`);
+    }
+  }
+});

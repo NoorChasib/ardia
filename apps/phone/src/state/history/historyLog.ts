@@ -13,7 +13,7 @@ import {
   type VisitTransition,
 } from "../store/browserDatabase.ts";
 import { summarizeVisits, SUMMARY_LIMIT, SUMMARY_SCAN, type HistoryRow } from "./historySummary.ts";
-import { isInWindow, oldestTwo, windowTitleOf, windowVisitsOf, type EdgeVisit, type WindowEdge } from "./historyWindow.ts";
+import { isInWindow, oldestTwo, storedVisit, windowTitleOf, windowVisitsOf, type EdgeVisit, type WindowEdge } from "./historyWindow.ts";
 
 export type HistoryLog = {
   revision(): number;
@@ -113,14 +113,17 @@ export function createHistoryLog(db: SqlDatabase, onFullScan: () => void = () =>
       return visit;
     },
     amend(visit, patch) {
+      const stored = storedVisit(db, visit.id);
+      const before: Visit = stored ? { ...visit, url: stored.url, title: stored.title } : visit;
       const amended: Visit = {
-        ...visit,
-        url: patch.url && isSyncableUrl(patch.url) ? patch.url : visit.url,
-        title: patch.title ? patch.title : visit.title,
+        ...before,
+        url: patch.url && isSyncableUrl(patch.url) ? patch.url : before.url,
+        title: patch.title ? patch.title : before.title,
       };
+      if (!stored) return amended;
       updateVisit(db, amended);
       bump();
-      noteTitle(visit, amended);
+      noteTitle(before, amended);
       return amended;
     },
     summary(limit = SUMMARY_LIMIT, scan = SUMMARY_SCAN) {
