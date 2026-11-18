@@ -74,7 +74,7 @@ import { confirmInSheet, nativeMenus } from "../ui/MenuTrigger";
 import { useSyncEnabled } from "../../state/sync/hooks";
 import { isTabPinned, sendTargetsFor, spaceMoveTargets } from "../../state/sync/actions";
 import { currentTabs } from "../../state/tabs/store";
-import { tabMatchesQuery, type BrowserTab } from "../../state/tabs/tabModels";
+import { tabsMatchingQuery, type BrowserTab } from "../../state/tabs/tabModels";
 import { DeckBar } from "./DeckBar";
 import { cardMenuItems as deckCardMenu, cardOpen, DECK_PHASE, DeckCard, leavingZ, OPENING_CARD_MOTION, OPENING_CARD_RESPONSE, OpeningCard, type CardOpen, type DeckMotion } from "./DeckCard";
 import { ContainedDeckCard, containedCards, containedDeckScroll } from "./ContainedDeck";
@@ -149,7 +149,7 @@ export const TabDeck = memo(function TabDeck() {
   const { tabs: allTabs, selectedId: heldSelected } = useHeldDeckOrder();
   const shownSpace = useShownSpace();
   const [needle, setNeedle] = useState("");
-  const live = useMemo(() => (needle ? allTabs.filter((tab) => tabMatchesQuery(tab, needle)) : allTabs), [allTabs, needle]);
+  const live = useMemo(() => (needle ? tabsMatchingQuery(allTabs, needle) : allTabs), [allTabs, needle]);
   const incognito = useIncognito();
   const privateCount = usePrivateCount();
   const canReopen = useCanReopen();
@@ -442,8 +442,36 @@ export const TabDeck = memo(function TabDeck() {
   const moveCards = (next: readonly string[], to: number, by: number, expandedAt: number, keepsExpanded: boolean, reduced: boolean, leave: { id: string; spec: DeckLeave } | null) =>
     runOnUI(shiftDeck)(next, to, by, expandedAt, keepsExpanded, reduced, leave);
 
+  const orderedLive = useRef<readonly BrowserTab[] | null>(null);
+  const searchTabs = (query: string) => {
+    if (!shown) {
+      setNeedle(query);
+      return;
+    }
+    const began = Date.now();
+    const matching = query ? tabsMatchingQuery(allTabs, query) : allTabs;
+    const ids = matching.flatMap((t) => (leavingIds.current.has(t.id) ? [] : [t.id]));
+    const next = mergeDeckOrder(order, ids);
+    const before = scroll.value;
+    const after = deckScrollAfterChange(order, next, before, query !== needle);
+    if (Date.now() - began > DECK_SEARCH_FRAME_MS && !incognito) countUsage("deck_searches_late");
+    searchedFor.current = query;
+    orderedLive.current = matching;
+    const expanded = phase.id ? next.indexOf(phase.id) : -1;
+    moveCards(next, after, after - before, expanded, phase.id !== null && coverPending.current !== phase.id, reduceMotion, null);
+    setNeedle(query);
+    setAnchor(Math.round(after));
+    setOrder(next);
+  };
+  const latestSearch = useRef(searchTabs);
+  latestSearch.current = searchTabs;
+  const onQuery = useCallback((query: string) => latestSearch.current(query), []);
+
   useEffect(() => {
     if (!shown) return;
+    const ordered = orderedLive.current === live;
+    orderedLive.current = null;
+    if (ordered && spaceShown.current === shownSpace) return;
     const ids = live.flatMap((t) => (leavingIds.current.has(t.id) ? [] : [t.id]));
     const alive = new Set(allTabs.map((t) => t.id));
     if (spaceShown.current !== shownSpace) {
@@ -1006,7 +1034,7 @@ export const TabDeck = memo(function TabDeck() {
                       shown={shown}
                       incognito={incognito}
                       hasTabs={allTabs.length > 0}
-                      onQuery={setNeedle}
+                      onQuery={onQuery}
                       onCloseAll={confirmCloseAll}
                       menusShown={shown && phase.kind === "settled"}
                       onMenu={setChromeMenu}
@@ -1021,7 +1049,7 @@ export const TabDeck = memo(function TabDeck() {
                     deckHeight={deckHeight}
                     safeSide={g.safeSide}
                     incognito={incognito}
-                    onQuery={setNeedle}
+                    onQuery={onQuery}
                     menusShown={shown && phase.kind === "settled"}
                     onMenu={setChromeMenu}
                     glassShown={glassShown}
@@ -1159,6 +1187,7 @@ const DECK_RENDER_REACH = 6;
 const DECK_GESTURE_REACH = 3;
 
 const DECK_MOUNT_REACH = DECK_RENDER_REACH + DECK_GESTURE_REACH;
+const DECK_SEARCH_FRAME_MS = 16;
 
 const deckCardMounted = (index: number, anchor: number) => Math.abs(index - anchor) <= DECK_MOUNT_REACH;
 

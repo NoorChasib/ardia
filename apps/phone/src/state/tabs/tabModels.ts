@@ -98,11 +98,41 @@ export const coverIsCapturable = (finishedLoading: boolean | undefined, covered:
 
 const folded = (text: string) => text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase();
 
-export function tabMatchesQuery(tab: Pick<BrowserTab, "title" | "url" | "isPrivate">, query: string): boolean {
-  const needle = folded(query.trim());
+type SearchableTab = Pick<BrowserTab, "title" | "url" | "isPrivate">;
+
+type FoldedTab = { title: string; url: string };
+
+const foldedTabs = new WeakMap<SearchableTab, FoldedTab>();
+
+function foldedTab(tab: SearchableTab): FoldedTab {
+  const known = foldedTabs.get(tab);
+  if (known) return known;
+  const fresh = { title: folded(tab.isPrivate ? `Incognito ${tab.title}` : tab.title), url: folded(tab.url) };
+  foldedTabs.set(tab, fresh);
+  return fresh;
+}
+
+const searchNeedle = (query: string) => {
+  const trimmed = query.trim();
+  return trimmed ? folded(trimmed) : "";
+};
+
+const matchesNeedle = (tab: SearchableTab, needle: string) => {
   if (!needle) return true;
-  const title = tab.isPrivate ? `Incognito ${tab.title}` : tab.title;
-  return folded(title).includes(needle) || folded(tab.url).includes(needle);
+  const haystack = foldedTab(tab);
+  return haystack.title.includes(needle) || haystack.url.includes(needle);
+};
+
+export const tabMatchesQuery = (tab: SearchableTab, query: string): boolean => matchesNeedle(tab, searchNeedle(query));
+
+let lastSearch: { tabs: readonly SearchableTab[]; query: string; matching: readonly SearchableTab[] } | null = null;
+
+export function tabsMatchingQuery<T extends SearchableTab>(tabs: readonly T[], query: string): T[] {
+  if (lastSearch?.tabs === tabs && lastSearch.query === query) return lastSearch.matching as T[];
+  const needle = searchNeedle(query);
+  const matching = tabs.filter((tab) => matchesNeedle(tab, needle));
+  lastSearch = { tabs, query, matching };
+  return matching;
 }
 
 export const ARCHIVE_CARD_THRESHOLD = 8;
