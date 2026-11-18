@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+[ -n "${NILLA_RELEASES_ENABLED:-}" ] || { echo "Releases aren't set up for Nilla yet" >&2; exit 1; }
 
 usage="usage: scripts/release.sh <version> [--rc] [--phased <seconds>] [--phase build|sign|check]  (a -nightly.<n> version is a nightly)"
 version="${1:?$usage}"

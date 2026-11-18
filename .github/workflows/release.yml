@@ -27,11 +27,23 @@ env:
   HOMEBREW_NO_AUTO_UPDATE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   TURBO_TELEMETRY_DISABLED: 1
+  NILLA_RELEASES_ENABLED: ${{ vars.NILLA_RELEASES_ENABLED }}
   VERSION: ${{ inputs.version }}
   DRY_RUN: ${{ inputs.dry_run }}
 
 jobs:
+  releases-enabled:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Releases are set up for Nilla
+        env:
+          ENABLED: ${{ vars.NILLA_RELEASES_ENABLED }}
+        run: |
+          [ -n "$ENABLED" ] || { echo "::error::Releases aren't set up for Nilla yet"; exit 1; }
+
   preflight:
+    needs: releases-enabled
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:

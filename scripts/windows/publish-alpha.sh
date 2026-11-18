@@ -22,6 +22,7 @@
 # --dry-run downloads and packs into <dir> (default dist/windows-alpha-<build>, which must not hold files yet),
 # prints the gh commands and publishes nothing.
 set -euo pipefail
+[ -n "${NILLA_RELEASES_ENABLED:-}" ] || { echo "Releases aren't set up for Nilla yet" >&2; exit 1; }
 
 root="$(cd "$(dirname "$0")/../.." && pwd -P)"
 repo="ardia-browser/ardia"

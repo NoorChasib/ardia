@@ -28,7 +28,18 @@ env:
   RELEASE_SIGNER: "8A:B5:0E:90:D9:09:5D:F3:6A:0C:C7:EA:61:AD:AD:2B:DD:58:26:27:52:D2:9F:1B:83:D9:EA:69:62:41:98:BC"
 
 jobs:
+  releases-enabled:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Releases are set up for Nilla
+        env:
+          ENABLED: ${{ vars.NILLA_RELEASES_ENABLED }}
+        run: |
+          [ -n "$ENABLED" ] || { echo "::error::Releases aren't set up for Nilla yet"; exit 1; }
+
   release:
+    needs: releases-enabled
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
