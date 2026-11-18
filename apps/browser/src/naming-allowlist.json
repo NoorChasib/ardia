@@ -724,11 +724,25 @@
    "why": "Profile files the engines read and write by name."
   },
   {
-   "id": "J-ac-keys",
+   "id": "J-ac-plist-keys",
    "class": "J",
    "mechanism": "class",
-   "regex": "(?<![A-Za-z0-9_])AC(?!FeedbackURL(?![A-Za-z0-9_])|ReleaseNotesURL(?![A-Za-z0-9_]))[A-Z][a-z][A-Za-z0-9]*(?![A-Za-z0-9_])",
-   "why": "Every AC<Word> Info.plist key the Mac engine and shell read, and the AC<Word> engine class names (plan 0.4 class J and R), except ACFeedbackURL and ACReleaseNotesURL, which their owner renames to NL* (R41)."
+   "regex": "(?:(?<=<key>)|(?<=forInfoDictionaryKey:\\ \")|(?<=objectForInfoDictionaryKey:@\")|(?<=infoDictionary\\?\\[\")|(?<=infoDictionary\\[\")|(?<=infoString\\(\")|(?<=Add\\ :)|(?<=Set\\ :)|(?<=Delete\\ :)|(?<=Print\\ :))AC(?!(?:FeedbackURL|ReleaseNotesURL)(?![A-Za-z0-9_]))[A-Za-z0-9_]+",
+   "why": "Every AC* Info.plist key in a key position (a plist <key>, an Info.plist read in Swift or Objective-C, a PlistBuddy path), whatever follows AC, except exactly ACFeedbackURL and ACReleaseNotesURL, which their owner renames to NL* (R41). Plan 0.4 class J."
+  },
+  {
+   "id": "J-ac-key-names",
+   "class": "J",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])(?:ACFeedbackEmail|ACPictureInPictureKeepOnTop|ACPictureInPictureThrow|ACPictureInPictureZoom|ACUpdateChannel|ACUpdateFeedURL|ACVideoTourURL)(?![A-Za-z0-9_])",
+   "why": "The AC* Info.plist and defaults key names the shell, engines and release scripts read, wherever they are named: ACFeedbackEmail, ACPictureInPictureKeepOnTop, ACPictureInPictureThrow, ACPictureInPictureZoom, ACUpdateChannel, ACUpdateFeedURL, ACVideoTourURL (from the plists and defaults reads at the base commit; ACFeedbackURL and ACReleaseNotesURL rename under R41)."
+  },
+  {
+   "id": "R-ac-engine-names",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])(?:ACAppControllerStandIn|ACAppSchemeThrottle|ACAutofillBubbleHandler|ACBrowserMainExtraParts|ACBrowserMainParts|ACBrowserWindow|ACCancelTerminate|ACContentBrowserClient|ACContentRendererClient|ACContextMenu|ACExtensionShortcutDispatcher|ACFileRestorePrompt|ACFindBar|ACInvisibleWindowPin|ACLocationBar|ACMainDelegate|ACNavigationHoldThrottle|ACPage|ACPageHost|ACPageObserver|ACPageViewDelegate|ACPermissionPrompt|ACQuitAppleEventHandler|ACRenderThreadObserver|ACRendererConfig|ACReplyToApplicationShouldTerminate|ACTabDialogHost|ACTerminate|ACViewDelegate|ACWebContentsDelegate)(?![A-Za-z0-9_])",
+   "why": "The AC* class and function names the Mac engine defines (engine/ at the base commit), named by the shell and docs: ACAppControllerStandIn, ACAppSchemeThrottle, ACAutofillBubbleHandler, ACBrowserMainExtraParts, ACBrowserMainParts, ACBrowserWindow, ACCancelTerminate, ACContentBrowserClient, ACContentRendererClient, ACContextMenu, ACExtensionShortcutDispatcher, ACFileRestorePrompt, ACFindBar, ACInvisibleWindowPin, ACLocationBar, ACMainDelegate, ACNavigationHoldThrottle, ACPage, ACPageHost, ACPageObserver, ACPageViewDelegate, ACPermissionPrompt, ACQuitAppleEventHandler, ACRenderThreadObserver, ACRendererConfig, ACReplyToApplicationShouldTerminate, ACTabDialogHost, ACTerminate, ACViewDelegate, ACWebContentsDelegate. Plan 0.4 class R."
   },
   {
    "id": "J-plist",
@@ -895,7 +909,7 @@
    "id": "V-credit-phone-row",
    "class": "never",
    "mechanism": "never",
-   "regex": "(?<=\\{ name: \\\")Ardia(?=\\\", use: )|(?<=\\{ name: \\\"Ardia\\\", use: copy\\(\\)\\.ardiaCredit, license: \\\"Apache License 2\\.0\\\", url: \\\")https://github\\.com/mantrakp04/ardia(?=\\\" \\})",
+   "regex": "(?<=\\{ name: \\\")Ardia(?=\\\", use: )|(?<=\\{ name: \\\"Ardia\\\", use: copy\\(\\)\\.(?:ardia|nilla)Credit, license: \\\"Apache License 2\\.0\\\", url: \\\")https://github\\.com/mantrakp04/ardia(?=\\\" \\})",
    "scope": [
     "apps/phone/src/components/settings/DataPages.tsx"
    ],
