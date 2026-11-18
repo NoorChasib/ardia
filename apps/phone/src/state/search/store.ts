@@ -143,10 +143,29 @@ let typed: string | null = null;
 let frame: ReturnType<typeof requestAnimationFrame> | null = null;
 let remoteTimer: ReturnType<typeof setTimeout> | null = null;
 
+const sameRow = (shown: TrayRow, next: TrayRow) => {
+  const a = shown as Record<string, unknown>;
+  const b = next as Record<string, unknown>;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every((key) => a[key] === b[key]);
+};
+
+function keptRows(shown: readonly TrayRow[], next: readonly TrayRow[]): TrayRow[] {
+  const byKey = new Map(shown.map((row) => [row.key, row]));
+  let unchanged = shown.length === next.length;
+  const kept = next.map((row, index) => {
+    const known = byKey.get(row.key);
+    const reused = known && sameRow(known, row) ? known : row;
+    if (reused !== shown[index]) unchanged = false;
+    return reused;
+  });
+  return unchanged ? (shown as TrayRow[]) : kept;
+}
+
 function showRows(text: string) {
   const carried = remote.text && text.startsWith(remote.text) ? remote.values : [];
   const suggested = suggestionsFor(text, carried);
-  useSearch.setState({ text, rows: suggested.rows, completion: suggested.completion, completedFor: text });
+  useSearch.setState((state) => ({ text, rows: keptRows(state.rows, suggested.rows), completion: suggested.completion, completedFor: text }));
   inFlight?.abort();
   if (remoteTimer) clearTimeout(remoteTimer);
   if (!text.trim() || !currentPreferences().searchSuggestions) return;
@@ -158,7 +177,10 @@ function showRows(text: string) {
       if (controller.signal.aborted || useSearch.getState().text !== text) return;
       remote = { text, values: outcome.values };
       const merged = suggestionsFor(text, outcome.values);
-      useSearch.setState({ rows: merged.rows, completion: merged.completion, completedFor: text });
+      const shown = useSearch.getState();
+      const rows = keptRows(shown.rows, merged.rows);
+      if (rows === shown.rows && merged.completion === shown.completion && shown.completedFor === text) return;
+      useSearch.setState({ rows, completion: merged.completion, completedFor: text });
     });
   }, REMOTE_DELAY_MS);
 }
