@@ -39,7 +39,7 @@ useLifecycle.subscribe((l, prev) => {
 
 const predatesRenderer = (snapshot: TabMemorySnapshot, tabId: string) => {
   const changed = lastReadBeforeRendererChange.get(tabId);
-  return changed !== undefined && !((snapshot.read ?? 0) > changed);
+  return changed !== undefined && snapshot.read !== undefined && snapshot.read <= changed;
 };
 
 export const attributesTabMemory = () => attributed;
