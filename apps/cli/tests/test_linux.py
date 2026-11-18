@@ -44,17 +44,24 @@ class DataDir(unittest.TestCase):
         patch.start()
         self.addCleanup(patch.stop)
 
-    def test_default_data_dir_follows_chromium(self):
-        self.assertEqual(endpoint.installed_data_dir(linux=True), self.home / ".config" / "ardia")
-        with mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": str(self.temp / "xdg")}):
-            self.assertEqual(endpoint.installed_data_dir(linux=True), self.temp / "xdg" / "ardia")
-            with mock.patch.dict(os.environ, {"ARDIA_CONFIG_HOME": str(self.temp / "override")}):
-                self.assertEqual(endpoint.installed_data_dir(linux=True), self.temp / "override" / "ardia")
+    def test_linux_has_no_default_data_dir(self):
+        for env in ({}, {"XDG_CONFIG_HOME": str(self.temp / "xdg")}):
+            with mock.patch.dict(os.environ, env):
+                self.assertEqual(endpoint.installed_data_dir(linux=True), endpoint.UNSET_DATA_DIR, env)
+                with mock.patch.object(endpoint, "LINUX", True), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.installed_data_dir(linux=True)):
+                    with self.assertRaisesRegex(endpoint.DataDirUnset, "set ARDIA_DATA_DIR .* or ARDIA_CONFIG_HOME"):
+                        endpoint.data_root()
+                    with self.assertRaises(endpoint.DataDirUnset):
+                        endpoint.resolve()
+                    self.assertEqual(endpoint.data_root(str(self.temp / "scratch")), self.temp / "scratch")
+        self.assertFalse((self.home / ".config").exists())
+        with mock.patch.dict(os.environ, {"ARDIA_CONFIG_HOME": str(self.temp / "override")}):
+            self.assertEqual(endpoint.installed_data_dir(linux=True), self.temp / "override" / "ardia")
 
     def test_the_path_help_shows_is_the_path_the_cli_reads(self):
         from ardia_cli import automation_cli, config_cli, scripts_cli
 
-        for env in ({}, {"XDG_CONFIG_HOME": str(self.temp / "xdg")}, {"XDG_CONFIG_HOME": str(self.temp / "xdg"), "ARDIA_CONFIG_HOME": str(self.temp / "override")}):
+        for env in ({"ARDIA_CONFIG_HOME": str(self.temp / "override")}, {"XDG_CONFIG_HOME": str(self.temp / "xdg"), "ARDIA_CONFIG_HOME": str(self.temp / "override")}):
             with mock.patch.dict(os.environ, env):
                 shown = subprocess.run(["/bin/sh", "-c", f"printf %s {endpoint.LINUX_DATA_DIR_SHOWN}"], capture_output=True, text=True, check=True).stdout
                 self.assertEqual(Path(shown), endpoint.installed_data_dir(linux=True), env)
@@ -63,7 +70,7 @@ class DataDir(unittest.TestCase):
         if ON_LINUX:
             self.assertIn(f"else {endpoint.LINUX_DATA_DIR_SHOWN}/config)", config_cli.DATA_DIR_HELP)
             self.assertIn(f"{endpoint.LINUX_DATA_DIR_SHOWN}/config", config_cli.CONFIG_DESCRIPTION)
-            self.assertIn(f"({endpoint.LINUX_DATA_DIR_SHOWN}).", scripts_cli.ENDPOINT_EPILOG)
+            self.assertIn(f"else {endpoint.LINUX_DATA_DIR_SHOWN}\nwith $ARDIA_CONFIG_HOME set; with neither variable set it refuses.", scripts_cli.ENDPOINT_EPILOG)
         self.assertEqual(automation_cli.agent_words(linux=True)["config_folder"], f"{endpoint.LINUX_DATA_DIR_SHOWN}/config")
 
     def test_macos_data_dir_is_unchanged(self):
@@ -115,10 +122,16 @@ class LinuxConfig(Sandbox):
             self.assertEqual(out.strip(), str(self.installed / "config"))
             self.assertEqual(config_files.places().schema_candidates("config.schema.json"),
                              [self.installed / "config" / "config.schema.json", self.installed / "config-schema" / "config.schema.json"])
-            with mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": str(self.temp / "xdg")}):
+            with mock.patch.dict(os.environ, {"ARDIA_CONFIG_HOME": str(self.temp / "nilla-home")}):
                 with mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.installed_data_dir()):
                     out, _ = self.ok("config", "path")
-            self.assertEqual(out.strip(), str(self.temp / "xdg" / "ardia" / "config"))
+            self.assertEqual(out.strip(), str(self.temp / "nilla-home" / "ardia" / "config"))
+            with mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": str(self.temp / "xdg"), "ARDIA_CONFIG_HOME": ""}):
+                with mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.installed_data_dir()):
+                    status, _, err = self.run_cli("config", "path")
+            self.assertEqual(status, 2)
+            self.assertIn("set ARDIA_DATA_DIR", err)
+            self.assertFalse((self.temp / "xdg").exists())
 
     def test_edit_falls_back_to_xdg_open_without_waiting(self):
         with mock.patch.dict(os.environ, {"DISPLAY": "", "WAYLAND_DISPLAY": "wayland-1"}), mock.patch("shutil.which", return_value="/usr/bin/xdg-open"), mock.patch("subprocess.call", return_value=0) as call:
@@ -165,7 +178,7 @@ class SystemdService(Base):
         self.unit = self.home / ".config" / "systemd" / "user" / hooks.SERVICE
 
     def installed_env(self, **extra):
-        return mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "PATH": "/usr/local/bin:/usr/bin:/bin", **extra})
+        return mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "ARDIA_CONFIG_HOME": str(self.temp / "nilla-config"), "PATH": "/usr/local/bin:/usr/bin:/bin", **extra})
 
     def test_install_list_uninstall(self):
         with self.installed_env():
@@ -178,7 +191,7 @@ class SystemdService(Base):
         self.assertIn("RestartSec=10\n", text)
         self.assertIn("StartLimitIntervalSec=0\n", text)
         self.assertIn(f"WorkingDirectory={self.home}\n", text)
-        self.assertIn(f'Environment="PATH=/usr/local/bin:/usr/bin:/bin" "ARDIA_DATA_DIR=" "ARDIA_CONFIG_HOME={endpoint.installed_data_dir(True).parent}"\n', text)
+        self.assertIn(f'Environment="PATH=/usr/local/bin:/usr/bin:/bin" "ARDIA_DATA_DIR=" "ARDIA_CONFIG_HOME={self.temp / "nilla-config"}"\n', text)
         self.assertIn("WantedBy=default.target\n", text)
         self.assertTrue(log.parent.is_dir())
         self.assertEqual(self.calls, [["daemon-reload"], ["enable", hooks.SERVICE], ["restart", hooks.SERVICE]])
@@ -255,13 +268,19 @@ class SystemdService(Base):
             hooks.service_unit(hooks.AgentPaths(Path("/home/a\nb"), Path("/cli"), True, Path("/c"), Path("/s")), None)
 
     def test_unit_pins_the_config_folder_the_cli_saw(self):
+        with mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": str(self.temp / "xdg")}):
+            os.environ.pop("ARDIA_CONFIG_HOME", None)
+            with self.assertRaises(endpoint.DataDirUnset):
+                hooks.agent_paths(linux=True)
+            with self.installed_env(ARDIA_CONFIG_HOME=""):
+                status, _, err = self.run_cli("hooks", "install")
+            self.assertEqual(status, 2)
+            self.assertIn("set ARDIA_DATA_DIR", err)
+            self.assertFalse(self.unit.exists())
         for env, expected in (
-            ({"XDG_CONFIG_HOME": str(self.temp / "xdg")}, self.temp / "xdg"),
             ({"XDG_CONFIG_HOME": str(self.temp / "xdg"), "ARDIA_CONFIG_HOME": str(self.temp / "ardia-home")}, self.temp / "ardia-home"),
         ):
             with mock.patch.dict(os.environ, env):
-                if "ARDIA_CONFIG_HOME" not in env:
-                    os.environ.pop("ARDIA_CONFIG_HOME", None)
                 paths = hooks.agent_paths(linux=True)
                 self.assertEqual(paths.ardia_config_home, expected)
                 self.assertEqual(endpoint.installed_data_dir(True), expected / "ardia")
@@ -375,7 +394,7 @@ class InstallScript(unittest.TestCase):
         self.home = self.temp / name
         self.home.mkdir()
         self.cli_home = self.home / ".local" / "share" / "ardia" / "cli"
-        self.bin = self.home / ".local" / "bin" / "ardia"
+        self.bin = self.home / ".local" / "bin" / "nilla-browser"
 
     def login_shell(self, name: str) -> Path:
         shell = self.tools / "shells" / name
@@ -472,7 +491,7 @@ class InstallScript(unittest.TestCase):
     def test_login_file_per_shell(self):
         posix = 'export PATH="$HOME/.local/bin:$PATH"'
         fish = "contains -- $HOME/.local/bin $PATH; or set -gx PATH $HOME/.local/bin $PATH"
-        fish_file = ".config/fish/conf.d/ardia.fish"
+        fish_file = ".config/fish/conf.d/nilla-browser.fish"
         cases = [("zsh", None, ".zprofile", posix), ("bash", None, ".profile", posix), ("bash", ".bash_profile", ".bash_profile", posix), ("fish", None, fish_file, fish), ("fish", fish_file, fish_file, fish), ("sh", None, ".profile", posix)]
         for index, (shell, existing, expected, line) in enumerate(cases):
             with self.subTest(shell=shell, existing=existing):
@@ -495,10 +514,10 @@ class InstallScript(unittest.TestCase):
         self.login_shell("fish")
         status, lines, err = self.install("0.0.1", env={"XDG_CONFIG_HOME": str(self.temp / "xdg")})
         self.assertEqual(status, 0, err)
-        self.assertIn(f"path {self.temp / 'xdg' / 'fish' / 'conf.d' / 'ardia.fish'}", lines)
+        self.assertIn(f"path {self.temp / 'xdg' / 'fish' / 'conf.d' / 'nilla-browser.fish'}", lines)
         status, lines, err = self.install("0.0.2", env={"XDG_CONFIG_HOME": "relative"})
         self.assertEqual(status, 0, err)
-        self.assertTrue((self.home / ".config" / "fish" / "conf.d" / "ardia.fish").is_file())
+        self.assertTrue((self.home / ".config" / "fish" / "conf.d" / "nilla-browser.fish").is_file())
 
     def test_no_path_line_when_login_path_has_the_bin_dir(self):
         shell = self.login_shell("bash")
@@ -513,10 +532,10 @@ class InstallScript(unittest.TestCase):
         bin_dir = self.temp / "bin"
         status, lines, err = self.install("0.0.1", env={"ARDIA_CLI_BIN_DIR": str(bin_dir)})
         self.assertEqual(status, 0, err)
-        self.assertEqual(lines[-1], f"installed {bin_dir / 'ardia'}")
+        self.assertEqual(lines[-1], f"installed {bin_dir / 'nilla-browser'}")
         self.assertFalse(any(line.startswith("path ") for line in lines))
 
-    def test_refuses_a_foreign_ardia(self):
+    def test_refuses_a_foreign_nilla_browser(self):
         self.login_shell("zsh")
         self.bin.parent.mkdir(parents=True)
         self.bin.write_text("#!/bin/sh\n")
@@ -532,10 +551,42 @@ class InstallScript(unittest.TestCase):
         self.assertTrue(lines[-1].startswith("error checksum mismatch: expected " + "0" * 64))
         self.assertFalse((self.cli_home / "current").exists())
 
-    def test_download_needs_a_pinned_digest(self):
-        status, lines, _ = self.install("0.0.1", env={"ARDIA_CLI_URL": ""})
-        self.assertEqual(status, 1)
-        self.assertTrue(lines[-1].startswith("error no --sha256"))
+    def test_refuses_anything_but_a_local_tarball(self):
+        for url in ("", "https://github.com/NoorChasib/nilla/releases/download/v0.0.1/ardia-cli-0.0.1-linux-x64.tar.gz"):
+            with self.subTest(url=url):
+                status, lines, _ = self.install("0.0.1", "--sha256", "0" * 64, env={"ARDIA_CLI_URL": url})
+                self.assertEqual(status, 1)
+                self.assertEqual(lines[-1], "error this development build of Nilla installs the CLI only from a local tarball: set ARDIA_CLI_URL to a file:// URL")
+                self.assertFalse(self.cli_home.exists())
+
+    def test_a_scratch_install_touches_only_its_cli_home_and_the_nilla_browser_link(self):
+        self.login_shell("zsh")
+        tried = self.temp / "curl-ran"
+        curl = self.tools / "curl"
+        curl.write_text(f"#!/bin/sh\ntouch '{tried}'\nexit 7\n")
+        curl.chmod(0o755)
+        bin_dir = self.home / ".local" / "bin"
+        bin_dir.mkdir(parents=True)
+        ardia = bin_dir / "ardia"
+        ardia.symlink_to("/opt/ardia/current/bin/ardia")
+        cli_home = self.temp / "scratch-cli"
+        before = set(self.home.rglob("*"))
+        status, lines, err = self.install("0.0.1", env={"ARDIA_CLI_HOME": str(cli_home)})
+        self.assertEqual(status, 0, err)
+        self.assertEqual(lines[-1], f"installed {bin_dir / 'nilla-browser'}")
+        self.assertFalse(tried.exists(), "nothing was downloaded")
+        self.assertEqual(os.readlink(bin_dir / "nilla-browser"), str(cli_home / "current" / "bin" / "ardia"))
+        self.assertEqual(os.readlink(ardia), "/opt/ardia/current/bin/ardia")
+        self.assertEqual(sorted(str(p.relative_to(self.home)) for p in set(self.home.rglob("*")) - before), [".local/bin/nilla-browser", ".zprofile"])
+        self.assertFalse((self.home / ".local" / "share" / "ardia").exists())
+        self.assertFalse((self.home / "Library").exists())
+        status, lines, _ = self.install(None, "--uninstall", env={"ARDIA_CLI_HOME": str(cli_home)})
+        self.assertEqual((status, lines[-1]), (0, "uninstalled"))
+        self.assertFalse(os.path.lexists(bin_dir / "nilla-browser"))
+        self.assertEqual(os.readlink(ardia), "/opt/ardia/current/bin/ardia")
+
+    def test_the_mac_cli_home_is_nillas(self):
+        self.assertIn('cli_home=${ARDIA_CLI_HOME:-$HOME/Library/Application Support/Nilla/CLI}', INSTALL_SH.read_text())
 
     def test_refuses_links_out_of_the_tree(self):
         self.login_shell("zsh")

@@ -173,6 +173,9 @@ def dispatch(args, parser) -> int:
         handler = handlers[args.command]
     try:
         return handler(args)
+    except endpoint.DataDirUnset as error:
+        complain(f"ardia {args.command}: {error}")
+        return 2
     except KeyboardInterrupt:
         complain(f"ardia {args.command}: interrupted")
         return 130
@@ -411,6 +414,8 @@ def run_with(holder, main) -> int:
 def hooks_file(args) -> Path:
     from ardia_cli import config_files
 
+    if endpoint.LINUX:
+        endpoint.data_root(args.data_dir)
     return config_files.places(args.data_dir).folder / hooks.HOOKS_FILE
 
 

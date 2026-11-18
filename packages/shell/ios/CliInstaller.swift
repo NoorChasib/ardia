@@ -29,7 +29,7 @@ final class CliInstaller {
     if let path = LaunchConfig.shared.instance("cliHome") { return URL(fileURLWithPath: path, isDirectory: true) }
     if LaunchConfig.shared.isolated { return nil }
     return FileManager.default.homeDirectoryForCurrentUser
-      .appendingPathComponent("Library/Application Support/Ardia/CLI", isDirectory: true)
+      .appendingPathComponent("Library/Application Support/Nilla/CLI", isDirectory: true)
   }
 
   static func installedVersion() -> String? {
@@ -55,7 +55,15 @@ final class CliInstaller {
     return digest.range(of: digestPattern, options: .regularExpression) != nil ? digest : nil
   }
 
+  static var installsFromLocalFixture: Bool {
+    LaunchConfig.shared.isolated && LaunchConfig.shared.testValue("cliInstallScript") != nil
+      && LaunchConfig.shared.instance("cliUrl")?.hasPrefix("file://") == true
+  }
+
+  static let unsupported = "Installing the nilla-browser command isn't supported in this development build of Nilla."
+
   static func canInstallUnattended() -> Bool {
+    guard installsFromLocalFixture else { return false }
     if LaunchConfig.shared.isolated && (LaunchConfig.shared.instance("cliHome") == nil || LaunchConfig.shared.instance("cliBinDir") == nil) {
       return false
     }
@@ -92,6 +100,9 @@ final class CliInstaller {
   }
 
   private func run() {
+    guard Self.installsFromLocalFixture else {
+      return finish(["ok": false, "unsupported": true, "error": Self.unsupported, "lines": [], "appVersion": Self.appVersion])
+    }
     if LaunchConfig.shared.isolated && (LaunchConfig.shared.instance("cliHome") == nil || LaunchConfig.shared.instance("cliBinDir") == nil) {
       return finish(failure("A test instance installs only with ARDIA_INSTANCE cliHome and cliBinDir set."))
     }

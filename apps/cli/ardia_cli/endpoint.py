@@ -20,6 +20,10 @@ ID_PREFIX = "com.nilladigital"
 BUNDLE_ID = f"{ID_PREFIX}.nilla"
 
 
+class EndpointError(Exception):
+    pass
+
+
 def xdg_dir(variable: str, *fallback: str, absolute: bool = False) -> Path:
     value = os.environ.get(variable)
     if value and (os.path.isabs(value) or not absolute):
@@ -31,14 +35,31 @@ def config_home(absolute: bool = False) -> Path:
     return xdg_dir("XDG_CONFIG_HOME", ".config", absolute=absolute)
 
 
+DATA_DIR_UNSET = (
+    "set ARDIA_DATA_DIR to Nilla's data folder, or ARDIA_CONFIG_HOME to the folder that holds it: on Linux this "
+    "development build never guesses, so it never reaches an installed Ardia's ~/.config/ardia"
+)
+UNSET_DATA_DIR = Path(os.devnull) / "nilla-browser-data-dir-unset"
+
+
+class DataDirUnset(EndpointError):
+    pass
+
+
 def installed_data_dir(linux: bool | None = None) -> Path:
     if not (LINUX if linux is None else linux):
         return Path.home() / "Library" / "Application Support" / BUNDLE_ID
     override = os.environ.get("ARDIA_CONFIG_HOME")
-    return (Path(override) if override else config_home()) / "ardia"
+    return Path(override) / "ardia" if override else UNSET_DATA_DIR
 
 
-LINUX_DATA_DIR_SHOWN = "${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia"
+def known_data_dir(path: Path) -> Path:
+    if path == UNSET_DATA_DIR:
+        raise DataDirUnset(DATA_DIR_UNSET)
+    return path
+
+
+LINUX_DATA_DIR_SHOWN = "$ARDIA_CONFIG_HOME/ardia"
 
 
 def chromium_dir(root: Path, linux: bool | None = None) -> Path:
@@ -53,10 +74,6 @@ INSTALLED_DATA_DIR = installed_data_dir()
 _BROWSER_PATH = re.compile(r"^/devtools/browser/[0-9A-Za-z-]{1,128}$")
 _TOKEN = re.compile(r"^[\x21-\x7e]{16,1024}$")
 _MAX_CONTROL_FILE = 64 * 1024
-
-
-class EndpointError(Exception):
-    pass
 
 
 @dataclass(frozen=True)
@@ -94,7 +111,7 @@ def env_port_number(text: str) -> int:
 
 def data_root(data_dir: str | None = None) -> Path:
     root = data_dir or os.environ.get("ARDIA_DATA_DIR")
-    return Path(root).expanduser() if root else INSTALLED_DATA_DIR
+    return Path(root).expanduser() if root else known_data_dir(INSTALLED_DATA_DIR)
 
 
 def explicit_data_root(data_dir: str | None = None) -> Path | None:

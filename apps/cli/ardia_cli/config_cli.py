@@ -259,7 +259,12 @@ def note_error(code: str) -> None:
 
 def guarded(prefix: str, handler, args) -> int:
     try:
+        if endpoint.LINUX:
+            endpoint.data_root(args.data_dir)
         return handler(args, files.places(args.data_dir))
+    except endpoint.DataDirUnset as error:
+        complain(f"{prefix}: {error}")
+        return 2
     except ConfigError as error:
         note_error("unknown_setting" if str(error).startswith("unknown setting") else "config_error")
         complain(f"{prefix}: {error}")

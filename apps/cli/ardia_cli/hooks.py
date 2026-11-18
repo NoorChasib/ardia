@@ -1064,7 +1064,7 @@ def agent_paths(linux: bool | None = None) -> AgentPaths:
             True,
             endpoint.config_home(absolute=True),
             endpoint.xdg_dir("XDG_STATE_HOME", ".local", "state", absolute=True),
-            Path(os.path.abspath(endpoint.installed_data_dir(True).parent)),
+            Path(os.path.abspath(endpoint.known_data_dir(endpoint.installed_data_dir(True)).parent)),
         )
     from ardia_cli import usage
 

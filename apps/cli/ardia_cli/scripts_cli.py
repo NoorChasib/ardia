@@ -74,7 +74,7 @@ Endpoint: --ws, else --port (plain DevTools servers only), else $ARDIA_CDP_URL, 
 """
 if endpoint.LINUX:
     ENDPOINT_EPILOG = ENDPOINT_EPILOG.replace("<data dir>/Chromium/ArdiaControl.json", "<data dir>/ArdiaControl.json").replace(
-        "the installed Ardia's.", f"the installed Ardia's\n({endpoint.LINUX_DATA_DIR_SHOWN})."
+        "else the installed Ardia's.", f"else {endpoint.LINUX_DATA_DIR_SHOWN}\nwith $ARDIA_CONFIG_HOME set; with neither variable set it refuses."
     )
 UNKNOWN_EXIT = 3
 
@@ -123,6 +123,16 @@ def add_endpoint_arguments(parser):
 
 
 def run(args, parser) -> int:
+    from ardia_cli.endpoint import DataDirUnset
+
+    try:
+        return run_command(args, parser)
+    except DataDirUnset as error:
+        complain(f"ardia scripts: {error}")
+        return 2
+
+
+def run_command(args, parser) -> int:
     command = args.scripts_command
     if command == "new":
         return new(args)
