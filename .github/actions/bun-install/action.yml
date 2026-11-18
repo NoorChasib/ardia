@@ -1,0 +1,75 @@
+name: Bun install
+description: Installs Bun at the version package.json pins, Node 24 for the tools that still run on it (Metro, Vite, jest, the engine's tests), and each named project's dependencies from its frozen bun.lock
+inputs:
+  projects:
+    description: The directories to install, each with its own bun.lock, separated by spaces
+    required: false
+    default: "."
+  cache:
+    description: The name of this set of projects in the Bun cache key, as caches.yml prunes it (bun-install-<cache>-<os>-<arch>-)
+    required: false
+    default: root
+  ignore-scripts:
+    description: Run no lifecycle scripts, not even the projects' own
+    required: false
+    default: "false"
+  lockfile-drift:
+    description: Also fail when a committed bun.lock no longer matches its package.json, including a range edit the locked version still satisfies
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+      with:
+        bun-version-file: package.json
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      with:
+        node-version: 24
+    - name: Bun's package cache
+      id: bun-cache
+      shell: bash
+      run: |
+        dir="$HOME/.bun/install/cache"
+        if [ "$RUNNER_OS" = Windows ]; then dir=$(cygpath -w "$dir"); fi
+        echo "BUN_INSTALL_CACHE_DIR=$dir" >> "$GITHUB_ENV"
+        echo "dir=$dir" >> "$GITHUB_OUTPUT"
+        bun --version
+        node --version
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ${{ steps.bun-cache.outputs.dir }}
+        key: bun-install-${{ inputs.cache }}-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('bun.lock', 'apps/*/bun.lock', 'infra/*/bun.lock') }}
+        restore-keys: bun-install-${{ inputs.cache }}-${{ runner.os }}-${{ runner.arch }}-
+    - name: Dependencies
+      shell: bash
+      env:
+        PROJECT_DIRS: ${{ inputs.projects }}
+        IGNORE_SCRIPTS: ${{ inputs.ignore-scripts }}
+      run: |
+        set -euo pipefail
+        read -ra projects <<<"$PROJECT_DIRS"
+        flags=(--frozen-lockfile)
+        if [ "$IGNORE_SCRIPTS" = true ]; then flags+=(--ignore-scripts); fi
+        for project in "${projects[@]}"; do
+          echo "::group::bun install ${flags[*]} in $project"
+          (cd "$project" && bun install "${flags[@]}")
+          echo "::endgroup::"
+        done
+    - name: Lockfiles match their manifests
+      if: inputs.lockfile-drift == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+        mapfile -t locks < <(git ls-files -- ':(glob)**/bun.lock')
+        [ "${#locks[@]}" -gt 0 ] || { echo "::error::no bun.lock is committed"; exit 1; }
+        for lock in "${locks[@]}"; do
+          dir=$(dirname "$lock")
+          echo "bun install --lockfile-only in $dir"
+          (cd "$dir" && bun install --lockfile-only --silent)
+        done
+        if ! git diff --exit-code --stat -- ':(glob)**/bun.lock'; then
+          echo "::error::a bun.lock is out of date with its package.json (diff above): run bun install in that directory and commit the lockfile"
+          exit 1
+        fi
+        echo "all ${#locks[@]} lockfiles match their manifests"

@@ -39,10 +39,18 @@ jobs:
           DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
         shell: bash
         run: >-
-          node scripts/ci/prune-caches.mjs $DRY_RUN
+          node scripts/ci/prune-caches.mjs ${DRY_RUN:+"$DRY_RUN"}
           --newest-only xcode-cas-release-
           --newest-only xcode-cas-ios-
           --newest-only windows-app-x64-
           --newest-only windows-app-arm64-
           --newest-only swiftpm-xcode-
-          --newest-only turbo- | tee -a "$GITHUB_STEP_SUMMARY"
+          --newest-only turbo-
+          --newest-only bun-install-root-Linux-X64-
+          --newest-only bun-install-root-macOS-ARM64-
+          --newest-only bun-install-root-Windows-X64-
+          --newest-only bun-install-root-Windows-ARM64-
+          --newest-only bun-install-site-Linux-X64-
+          --newest-only bun-install-hexclave-Linux-X64-
+          --newest-only bun-install-phone-Linux-X64-
+          --newest-only bun-install-phone-macOS-ARM64- | tee -a "$GITHUB_STEP_SUMMARY"

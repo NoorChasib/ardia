@@ -1,5 +1,5 @@
 name: Linux setup
-description: Installs the Ubuntu packages, Node and pnpm the Linux checks and package jobs need, then the workspace
+description: Installs the Ubuntu packages, Bun and Node the Linux checks and package jobs need, then the workspace
 inputs:
   packages:
     description: Extra apt packages
@@ -28,11 +28,4 @@ runs:
           echo "::notice::Ubuntu restricts unprivileged user namespaces; allowing them on this throwaway runner so Chromium's sandbox and the private polkitd fixtures can start"
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         fi
-    - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-      with:
-        node-version: 24
-        cache: pnpm
-    - name: Workspace
-      shell: bash
-      run: pnpm install --frozen-lockfile
+    - uses: ./.github/actions/bun-install

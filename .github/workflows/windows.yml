@@ -13,8 +13,10 @@ on:
       - "apps/browser/package.json"
       - "packages/expo-windows/**"
       - "scripts/windows/**"
-      - "pnpm-lock.yaml"
+      - "bun.lock"
+      - "bunfig.toml"
       - ".github/workflows/windows.yml"
+      - ".github/actions/bun-install/**"
   push:
     branches: [main, t3/windows-linux-release-priority]
     paths:
@@ -28,8 +30,10 @@ on:
       - "apps/browser/package.json"
       - "packages/expo-windows/**"
       - "scripts/windows/**"
-      - "pnpm-lock.yaml"
+      - "bun.lock"
+      - "bunfig.toml"
       - ".github/workflows/windows.yml"
+      - ".github/actions/bun-install/**"
   workflow_dispatch:
     inputs:
       version:
@@ -161,12 +165,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/bun-install
       - name: Bundle the app's JavaScript for Windows
         working-directory: apps/browser
         run: |
@@ -174,7 +173,7 @@ jobs:
           if [ -f index.windows.js ]; then entry=index.windows.js; fi
           out="$RUNNER_TEMP/windows-javascript"
           mkdir -p "$out/Bundle"
-          npx @react-native-community/cli bundle --platform windows --entry-file "$entry" --bundle-output "$out/Bundle/index.windows.bundle" --assets-dest "$out/Bundle" --dev false --reset-cache --sourcemap-output "$RUNNER_TEMP/index.windows.bundle.packager.map" --minify false
+          bun x @react-native-community/cli bundle --platform windows --entry-file "$entry" --bundle-output "$out/Bundle/index.windows.bundle" --assets-dest "$out/Bundle" --dev false --reset-cache --sourcemap-output "$RUNNER_TEMP/index.windows.bundle.packager.map" --minify false
           echo "bundled $entry: $(find "$out/Bundle" -type f | wc -l) files, index.windows.bundle is $(sha256sum "$out/Bundle/index.windows.bundle" | cut -d' ' -f1) before Hermes"
           echo "it holds $(grep -c $'\r' "$out/Bundle/index.windows.bundle" || true) lines with a carriage return"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
@@ -207,7 +206,7 @@ jobs:
         id: native
         shell: bash
         env:
-          TREE: ${{ hashFiles('apps/browser/windows/**', 'apps/browser/NuGet.config', 'apps/browser/package.json', 'apps/browser/app.json', 'apps/browser/react-native.config.*', 'packages/*/package.json', 'packages/*/react-native.config.*', 'packages/*/windows/**', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', 'patches/**', 'scripts/windows/rebundle.ps1', '.github/workflows/windows.yml') }}
+          TREE: ${{ hashFiles('apps/browser/windows/**', 'apps/browser/NuGet.config', 'apps/browser/package.json', 'apps/browser/app.json', 'apps/browser/react-native.config.*', 'packages/*/package.json', 'packages/*/react-native.config.*', 'packages/*/windows/**', 'bun.lock', 'bunfig.toml', 'patches/**', 'scripts/windows/rebundle.ps1', '.github/workflows/windows.yml') }}
         run: |
           echo "key=windows-app-${{ env.SLUG }}-$TREE" >> "$GITHUB_OUTPUT"
           if grep -l '"codegenConfig"' apps/browser/package.json packages/*/package.json; then
@@ -227,14 +226,7 @@ jobs:
           key: ${{ steps.native.outputs.key }}
           lookup-only: true
       - if: steps.built.outputs.cache-hit != 'true'
-        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-      - if: steps.built.outputs.cache-hit != 'true'
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: 24
-          cache: pnpm
-      - if: steps.built.outputs.cache-hit != 'true'
-        run: pnpm install --frozen-lockfile
+        uses: ./.github/actions/bun-install
       - name: Toolchain
         if: steps.built.outputs.cache-hit != 'true'
         shell: pwsh
@@ -253,10 +245,10 @@ jobs:
         shell: pwsh
         run: |
           if ($env:CPU -ne 'ARM64') {
-            npx react-native run-windows --release --arch $env:CPU --no-launch --no-deploy --no-packager --no-telemetry --logging
+            bun x react-native run-windows --release --arch $env:CPU --no-launch --no-deploy --no-packager --no-telemetry --logging
             exit $LASTEXITCODE
           }
-          npx react-native run-windows --release --arch ARM64 --no-build --no-launch --no-deploy --no-packager --no-telemetry --logging
+          bun x react-native run-windows --release --arch ARM64 --no-build --no-launch --no-deploy --no-packager --no-telemetry --logging
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
           $msbuild = "$vs\MSBuild\Current\Bin\arm64\MSBuild.exe"

@@ -8,12 +8,14 @@ on:
       - "apps/phone/ios/**"
       - "apps/phone/src/**"
       - "apps/phone/package.json"
-      - "apps/phone/pnpm-lock.yaml"
+      - "apps/phone/bun.lock"
+      - "apps/phone/bunfig.toml"
       - "apps/phone/app.json"
       - "apps/phone/scripts/bundle-shared.mjs"
       - "packages/sync/**"
       - "packages/core/**"
       - ".github/workflows/ios.yml"
+      - ".github/actions/bun-install/**"
   push:
     branches: [main]
     paths:
@@ -22,12 +24,14 @@ on:
       - "apps/phone/ios/**"
       - "apps/phone/src/**"
       - "apps/phone/package.json"
-      - "apps/phone/pnpm-lock.yaml"
+      - "apps/phone/bun.lock"
+      - "apps/phone/bunfig.toml"
       - "apps/phone/app.json"
       - "apps/phone/scripts/bundle-shared.mjs"
       - "packages/sync/**"
       - "packages/core/**"
       - ".github/workflows/ios.yml"
+      - ".github/actions/bun-install/**"
 
 permissions:
   contents: read
@@ -71,18 +75,20 @@ jobs:
       SCRATCH: ${{ github.workspace }}/.ci
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
-        with:
-          node-version: 24
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
       - name: Toolchain
         run: |
           xcodebuild -version
           xcrun --sdk iphonesimulator --show-sdk-version
-      - name: The Expo app's dependencies and Pods
+      - name: The Expo app's dependencies
+        uses: ./.github/actions/bun-install
+        with:
+          projects: apps/phone
+          cache: phone
+      - name: Type check the Expo app
+        run: bun run --cwd apps/phone check
+      - name: The Expo app's Pods
         run: |
           set -euo pipefail
-          (cd apps/phone && pnpm install --frozen-lockfile)
           (cd apps/phone/ios && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install)
           git diff --exit-code -- apps/phone/ios/Podfile.lock || { echo "::error::pod install changed apps/phone/ios/Podfile.lock: commit the lockfile pod install writes"; exit 1; }
           git diff --exit-code -- apps/phone/ios ':!apps/phone/ios/Pods' || { echo "::error::pod install rewrote the iPhone project (diff above): run pod install locally and commit what it writes"; exit 1; }

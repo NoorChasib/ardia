@@ -14,13 +14,14 @@ on:
       - "infra/feedback/lib/**"
       - "patches/**"
       - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
+      - "bun.lock"
+      - "bunfig.toml"
       - "turbo.json"
       - "tsconfig.base.json"
       - ".nvmrc"
       - ".github/workflows/linux.yml"
       - ".github/actions/linux-setup/**"
+      - ".github/actions/bun-install/**"
   push:
     branches: [main]
     paths:
@@ -35,13 +36,14 @@ on:
       - "infra/feedback/lib/**"
       - "patches/**"
       - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
+      - "bun.lock"
+      - "bunfig.toml"
       - "turbo.json"
       - "tsconfig.base.json"
       - ".nvmrc"
       - ".github/workflows/linux.yml"
       - ".github/actions/linux-setup/**"
+      - ".github/actions/bun-install/**"
   workflow_dispatch:
     inputs:
       engine:
@@ -170,7 +172,7 @@ jobs:
             echo "### Linux engine ${selected:0:12} (older than this commit's ${ENGINE_KEY:0:12})" >> "$GITHUB_STEP_SUMMARY"
           fi
           { echo "ENGINE=$engine"; echo "PACKAGE_NAME=Ardia-linux-x64-$label"; } >> "$GITHUB_ENV"
-      - run: pnpm --filter @ardia/linux build
+      - run: bun run --cwd apps/linux build
       - name: uv
         run: curl -LsSf https://astral.sh/uv/0.12.15/install.sh | sh
       - name: ardia CLI
