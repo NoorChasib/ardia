@@ -1,0 +1,44 @@
+name: Phone
+
+on:
+  pull_request:
+    paths: &phone
+      - "apps/phone/**"
+      - "!apps/phone/ios/**"
+      - "!apps/phone/android/**"
+      - "packages/phone/src/**"
+      - "packages/phone/package.json"
+      - "packages/core/**"
+      - "tsconfig.base.json"
+      - "scripts/lib/test-tsconfig.json"
+      - "package.json"
+      - ".github/workflows/phone.yml"
+      - ".github/actions/bun-install/**"
+  push:
+    branches: [main]
+    paths: *phone
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phone-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: phone type check and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/bun-install
+        with:
+          projects: apps/phone
+          cache: phone
+      - name: Type check the phone app
+        run: bun run --cwd apps/phone check
+      - name: The phone's unit tests
+        run: bun run --cwd apps/phone test:unit

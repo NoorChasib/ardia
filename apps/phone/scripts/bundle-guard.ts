@@ -26,6 +26,7 @@ export const watchedPaths = [
   "apps/phone/package.json",
   "apps/phone/babel.config.js",
   "apps/phone/metro.config.js",
+  "apps/phone/metro-nested-modules.js",
   "packages/phone/src",
   "packages/phone/package.json",
   "packages/core/src",

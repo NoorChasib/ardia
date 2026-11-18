@@ -22,8 +22,9 @@ side. Under `bun test`, `src/test-preload.mjs` does it with `mock.module`; under
 same with loader hooks. `expo-modules-core` becomes `src/test-native/expo.ts`, which hands each package the fake of
 every native module it asks for (`src/test-native/shell.ts`, `src/test-native/ardiacore.ts`), and `react-native` inert
 views: `View` renders its children and every `Pressable` a render passes is kept in `pressables` so a test can press it
-(rendered with `react-dom/server`, `src/components/site/siteExtensionsManage.test.mjs`). `bun test --parallel` gives
-each file a fresh global and module registry, as `node --test`'s process per file did. The native surface is listed
+(rendered with `react-dom/server`, `src/components/site/siteExtensionsManage.test.mjs`). Every `bun test` run of more
+than one file passes `--parallel` or `--isolate`, which gives each file a fresh global and module registry, as
+`node --test`'s process per file did; a new multi-file suite does the same. The native surface is listed
 once per package, in `src/nativeModules.ts` (`ShellNativeModules`, `ArdiaCoreNativeModules`), and the packages can only
 ask for modules listed there. Each fake is typed against that list, so `bun run --cwd apps/browser check` fails when a
 native method is added, removed or changed and the fake isn't. Tests drive the fakes through `src/test-native/index.ts`
@@ -43,7 +44,8 @@ named in `apps/linux` `test:host`.
 
 The Linux suites run with `bun run --cwd apps/linux test:host`, `test:symbols`, `test:graph` and
 `acceptance:self-test`; `scripts/linux/ci-checks.sh` runs them all. The acceptance suite against a packaged build is
-`bun run acceptance:linux <executable> [uiDir]` from the repository root ([linux-acceptance.md](linux-acceptance.md)).
+`bun run acceptance:linux <executable> [uiDir]` from the repository root or `apps/linux`, where relative paths resolve
+against that folder ([linux-acceptance.md](linux-acceptance.md)).
 
 End-to-end checks need a built app and are run by hand. Each runs hidden instances through `scripts/lib/instance.mjs`
 and prints one line per check (PASS/FAIL, ms), a failure's first lines, then a summary with the path of the log that

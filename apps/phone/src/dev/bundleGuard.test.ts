@@ -30,6 +30,8 @@ function repo(): { root: string; state: string; write: (file: string, text: stri
   write("packages/phone/src/index.ts", "export {};\n");
   write("packages/core/src/index.ts", "export {};\n");
   write("apps/phone/package.json", "{}\n");
+  write("apps/phone/metro.config.js", "module.exports = require(\"./metro-nested-modules.js\");\n");
+  write("apps/phone/metro-nested-modules.js", "module.exports = {};\n");
   write("apps/phone/bun.lock", "{\n  \"lockfileVersion\": 2,\n}\n");
   write("packages/phone/ios/SyncModule.swift", "let a = 1\n");
   write(".gitignore", "build/\n");
@@ -74,6 +76,19 @@ test("a changed lockfile refuses", () => {
   const { root, write } = repo();
   write("apps/phone/bun.lock", "{\n  \"lockfileVersion\": 3,\n}\n");
   assert.match(refusal(() => check(root)), /apps\/phone\/bun\.lock/);
+});
+
+test("the Metro resolver that metro.config.js loads is guarded like the config: dirty refuses, and a change mid-bundle fails", () => {
+  const { root, state, write } = repo();
+  write("apps/phone/metro-nested-modules.js", "module.exports = { changed: true };\n");
+  assert.match(refusal(() => before(root, state)), / M apps\/phone\/metro-nested-modules\.js/);
+
+  const clean = repo();
+  before(clean.root, clean.state);
+  clean.write("apps/phone/metro-nested-modules.js", "module.exports = { changed: true };\n");
+  const message = refusal(() => after(clean.root, clean.state));
+  assert.match(message, /the files Metro reads changed/);
+  assert.match(message, /apps\/phone\/metro-nested-modules\.js/);
 });
 
 test("another agent's native files and ignored output do not block the bundle", () => {

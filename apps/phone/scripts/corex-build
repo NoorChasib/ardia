@@ -88,6 +88,7 @@ head="$(git -C "$src" rev-parse FETCH_HEAD)"
 commit="$(git -C "$src" rev-parse --verify --quiet "$wanted^{commit}" || true)"
 [ -n "$commit" ] || { echo "$wanted isn't on origin/$branch: push it first" >&2; exit 64; }
 git -C "$src" merge-base --is-ancestor "$commit" "$head" || { echo "$commit isn't on origin/$branch" >&2; exit 64; }
+git -C "$src" cat-file -e "$head:apps/phone/bunfig.toml" 2> /dev/null || { echo "origin/$branch predates Bun (its head ${head:0:9} has no apps/phone/bunfig.toml): set ARDIA_BUILD_BRANCH to a branch with Bun" >&2; exit 64; }
 git -C "$src" checkout --quiet --detach --force "$commit"
 git -C "$src" reset --quiet --hard "$commit"
 git -C "$src" clean -ffdq

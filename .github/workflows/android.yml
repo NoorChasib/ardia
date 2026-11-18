@@ -10,6 +10,8 @@ on:
       - "apps/phone/package.json"
       - "apps/phone/bun.lock"
       - "apps/phone/bunfig.toml"
+      - "apps/phone/metro.config.js"
+      - "apps/phone/metro-nested-modules.js"
       - ".github/workflows/android.yml"
       - ".github/actions/bun-install/**"
   push:
@@ -22,6 +24,8 @@ on:
       - "apps/phone/package.json"
       - "apps/phone/bun.lock"
       - "apps/phone/bunfig.toml"
+      - "apps/phone/metro.config.js"
+      - "apps/phone/metro-nested-modules.js"
       - ".github/workflows/android.yml"
       - ".github/actions/bun-install/**"
 

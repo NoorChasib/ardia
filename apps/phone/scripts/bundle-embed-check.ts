@@ -49,6 +49,12 @@ export function mapSources(map: SourceMap, phone: string): string[] {
   return [...own, ...(map.sections ?? []).flatMap((section) => mapSources(section.map, phone))];
 }
 
+export function bundleStrays(map: SourceMap, root: string): { sources: string[]; stray: string[] } {
+  const canonical = fs.realpathSync(root);
+  const sources = mapSources(map, path.join(canonical, "apps/phone"));
+  return { sources, stray: strayModules(sources, canonical) };
+}
+
 function bundle(root: string, platform: Platform, work: string): { ok: boolean; detail: string } {
   const phone = path.join(root, "apps/phone");
   const out = fs.mkdtempSync(path.join(work, `${platform}-`));
@@ -68,8 +74,7 @@ function bundle(root: string, platform: Platform, work: string): { ok: boolean; 
     const reason = `${run.stdout}${run.stderr}`.split("\n").find((line) => /Unable to resolve|Error:/.test(line)) ?? `exit ${run.status ?? run.signal}`;
     return { ok: false, detail: `${reason.trim()} (log: ${log})` };
   }
-  const sources = mapSources(JSON.parse(fs.readFileSync(map, "utf8")) as SourceMap, phone);
-  const stray = strayModules(sources, fs.realpathSync(root));
+  const { sources, stray } = bundleStrays(JSON.parse(fs.readFileSync(map, "utf8")) as SourceMap, root);
   if (stray.length) return { ok: false, detail: `${stray.length} modules from outside the phone's install, first ${stray[0]}` };
   return { ok: true, detail: `${sources.length} modules, ${fs.statSync(path.join(out, "main.bundle")).size} bytes` };
 }

@@ -11,6 +11,9 @@ variables) is in `docs/conventions.md`, enforced by `apps/browser/src/convention
 ## Stack
 - Turborepo + Bun 1.4.4, the package manager and the script runner (hoisted `node_modules` at the repo root,
   `bunfig.toml` `[install] linker = "hoisted"`). Node 24 still runs Metro, Vite, jest and the engine's own tests.
+  Which bundler builds each target, why none is Bun's, and what still runs outside Bun: `docs/bundling.md`.
+  `bun check` runs a folder's `check` script, or Bun's built-in checker where there is none, so use
+  `bun run --cwd <pkg> check` for one package.
 - `apps/browser`: Expo SDK 54 + react-native-macos 0.81 (Legacy architecture), zustand store,
   inline styles.
 - Native code lives in Expo modules under `packages/*/ios` (Swift / Objective-C++):

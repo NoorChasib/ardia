@@ -6,6 +6,6 @@
   "scripts": {
     "start": "node server.mjs",
     "local": "node server.mjs --local ./.local",
-    "test": "bun ../../scripts/lib/bun-tests.mjs --node-only=node-tests.json --default=./test --timeout=0"
+    "test": "bun ../../scripts/lib/bun-tests.mjs --node-only=node-tests.json --default=./test --isolate --timeout=0"
   }
 }
