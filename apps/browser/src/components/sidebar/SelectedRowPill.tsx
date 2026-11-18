@@ -34,9 +34,13 @@ export function useSelectedRowAway(windowId: string, geometry: RefObject<Sidebar
     let selected: string | null | undefined;
     let quietUntil = 0;
     let quiet: ReturnType<typeof setTimeout> | undefined;
+    let judged: RowAway = null;
     const judge = () => {
       const page = live.current.geometry?.current;
-      setAway(page && Date.now() >= quietUntil ? rowAway(row, live.current.scrollY(), page.viewport, page.edgeLift) : null);
+      const next = page && Date.now() >= quietUntil ? rowAway(row, live.current.scrollY(), page.viewport, page.edgeLift) : null;
+      if (next === judged) return;
+      judged = next;
+      setAway(next);
     };
     const settleAfterSwitch = (tabId: string | null) => {
       if (selected !== undefined && tabId !== selected) {

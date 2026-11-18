@@ -1,5 +1,5 @@
 import { devRegister } from "../dev/devRegister";
-import { createContext, memo, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createContext, memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Animated, View } from "react-native";
 import { layout, useTheme } from "../ui/theme";
 import type { BrowserState } from "../../state/browser/store";
@@ -189,7 +189,7 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
           let set = watchers.get(key);
           if (!set) watchers.set(key, (set = new Set()));
           set.add(changed);
-          return () => void set.delete(changed);
+          return () => void (set.delete(changed) && !set.size && watchers.delete(key));
         },
       };
       sources.set(key, known);
@@ -209,7 +209,7 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
   const queued = useRef<Plan | null>(null);
   const clipping = useRef<object | null>(null);
   const [, rerender] = useState(0);
-  if (enabled) devRegister("sidebarMotion", devKey, { slides, ghosts, clipped });
+  useEffect(() => (enabled ? devRegister("sidebarMotion", devKey, { slides, ghosts, clipped, sources, watchers }) : undefined), [enabled, devKey, slides, clipped, sources, watchers]);
 
   const now = Date.now();
   if (settleSlides(slides.values(), now)) noteSidebarMotion("overrun");
@@ -225,7 +225,6 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
     for (const key of next.clipped) clipped.add(key);
     queued.current = next;
   };
-
   const before = from.pending;
   if (before) {
     from.pending = null;
@@ -235,9 +234,9 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
   if (entries !== seen.current) {
     seen.current = entries;
     const live = new Set(entries);
-    for (const key of slides.keys()) if (key !== TAIL && !live.has(key)) slides.delete(key);
-    for (const key of contexts.keys()) if (!live.has(key)) contexts.delete(key);
-    for (const key of clipped) if (key !== TAIL && !live.has(key)) clipped.delete(key);
+    const gone = (key: string) => key !== TAIL && !live.has(key);
+    for (const map of [slides, contexts, sources] as Map<string, unknown>[]) for (const key of map.keys()) if (gone(key)) map.delete(key);
+    for (const key of clipped) if (gone(key)) clipped.delete(key);
   }
 
   const slideBelow = useRef((entry: string, delta: number) => {
