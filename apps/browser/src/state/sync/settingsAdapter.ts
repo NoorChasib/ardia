@@ -1,7 +1,6 @@
 import { canonical, type Adapter, type SyncRecord } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
 import { DEFAULT_SETTINGS, SETTING_KEYS, SETTING_SPECS, validSettingValue, type SettingKey, type Settings } from "../settings/settings";
-import { fromLegacy } from "../../lib/legacy";
 import { CLEAN_UP_KEY, hoursFromMinutes, LEGACY_CLEAN_UP_KEY, minutesFromHours } from "../settings/cleanUpAfter";
 
 const store = () => useBrowser.getState();
@@ -56,7 +55,7 @@ export function settingsToReapply(records: Record<string, SyncRecord>): string[]
   const chosen = new Set(store().settingsMeta.chosen);
   return SYNCED_SETTINGS.flatMap((name) => {
     const key = recordKey(name);
-    const value = fromRecord(name, (fromLegacy(records[key]?.v) as { v?: unknown } | null | undefined)?.v);
+    const value = fromRecord(name, (records[key]?.v as { v?: unknown } | null | undefined)?.v);
     if (chosen.has(name) || !validSettingValue(name, value)) return [];
     return canonical(value) === canonical(settings[name]) ? [] : [key];
   });

@@ -16,7 +16,6 @@ import {
   type ProviderEntry,
 } from "@ardia/core";
 import type { StateCreator } from "zustand";
-import { fromLegacyUrl } from "../../lib/legacy";
 import type { BrowserState } from "../browser/store";
 import { DEFAULT_SIDEBAR_WIDTH, PAGE_FRAME, validPageFrame } from "../../lib/windowLayout";
 import { SIDEBAR_TEXT_SIZES } from "../../lib/themeLook";
@@ -252,11 +251,11 @@ export function searchUrlPrefix(settings: Settings): string {
   return defaultSearchEngine(settings).url;
 }
 
-export const resolveTyped = (settings: Settings, input: string): string => resolveInput(fromLegacyUrl(input.trim()), searchUrlPrefix(settings));
+export const resolveTyped = (settings: Settings, input: string): string => resolveInput(input.trim(), searchUrlPrefix(settings));
 
 export function customNewTabUrl(settings: Pick<Settings, "newTabOpens" | "minimalismMode" | "newTabUrl">): string | undefined {
   if (newTabOpensOf(settings) !== "page") return undefined;
-  const url = fixupUrl(fromLegacyUrl(settings.newTabUrl.trim()));
+  const url = fixupUrl(settings.newTabUrl.trim());
   return url && opensAsNewTab(url) ? url : undefined;
 }
 
