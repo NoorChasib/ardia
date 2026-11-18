@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Stage 1 acceptance for the app on ArdiaCore (docs/ardiacore-parity.md): boots the ArdiaCore build of the app hidden
+// Stage 1 acceptance for the app on ArdiaCore: boots the ArdiaCore build of the app hidden
 // (ARDIA_BACKGROUND=1, its own data dir and DevTools port; scripts/lib/instance.mjs), serves fixture pages, and
 // drives the real app through its dev harness (lib/devHarness.ts) and Chrome's DevTools protocol.
 //
