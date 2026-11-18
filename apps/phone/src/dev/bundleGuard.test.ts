@@ -7,6 +7,8 @@ import { after as afterAll, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { after, before, BundleRefused, check } from "../../scripts/bundle-guard.ts";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 const guardScript = fileURLToPath(new URL("../../scripts/bundle-guard.ts", import.meta.url));
 
 
@@ -28,7 +30,7 @@ function repo(): { root: string; state: string; write: (file: string, text: stri
   write("packages/phone/src/index.ts", "export {};\n");
   write("packages/core/src/index.ts", "export {};\n");
   write("apps/phone/package.json", "{}\n");
-  write("apps/phone/pnpm-lock.yaml", "lockfileVersion: 9\n");
+  write("apps/phone/bun.lock", "{\n  \"lockfileVersion\": 2,\n}\n");
   write("packages/phone/ios/SyncModule.swift", "let a = 1\n");
   write(".gitignore", "build/\n");
   git("add", "-A");
@@ -70,8 +72,8 @@ test("a modified, a staged and an untracked file under the bundled trees each re
 
 test("a changed lockfile refuses", () => {
   const { root, write } = repo();
-  write("apps/phone/pnpm-lock.yaml", "lockfileVersion: 10\n");
-  assert.match(refusal(() => check(root)), /apps\/phone\/pnpm-lock\.yaml/);
+  write("apps/phone/bun.lock", "{\n  \"lockfileVersion\": 3,\n}\n");
+  assert.match(refusal(() => check(root)), /apps\/phone\/bun\.lock/);
 });
 
 test("another agent's native files and ignored output do not block the bundle", () => {
@@ -112,10 +114,10 @@ test("the after step without a before step fails", () => {
 test("the command refuses with exit 1 and prints the offending paths", () => {
   const { root, write } = repo();
   write("apps/phone/src/App.tsx", "export default 2;\n");
-  const run = spawnSync(process.execPath, ["--no-warnings", guardScript, "check", "--root", root], { encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", guardScript, "check", "--root", root], { encoding: "utf8" });
   assert.equal(run.status, 1);
   assert.match(run.stderr, /refusing to bundle: 1 uncommitted change/);
   assert.match(run.stderr, /apps\/phone\/src\/App\.tsx/);
-  const dirty = spawnSync(process.execPath, ["--no-warnings", guardScript, "dirty", "--root", root], { encoding: "utf8" });
+  const dirty = spawnSync(nodeBinary, ["--no-warnings", guardScript, "dirty", "--root", root], { encoding: "utf8" });
   assert.equal(dirty.stdout.trim(), "yes");
 });

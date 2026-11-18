@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 export const APP_DIR = join(import.meta.dirname, "..");
 const REPO_DIR = join(APP_DIR, "..", "..");
-const LOCKFILE = join(APP_DIR, "pnpm-lock.yaml");
+const LOCKFILE = join(APP_DIR, "bun.lock");
 const MODULE_GRADLE = join(REPO_DIR, "packages", "phone", "android", "build.gradle");
 export const CREDITS_FILE = join(APP_DIR, "src", "state", "settings", "credits.json");
 
@@ -22,12 +22,15 @@ const NATIVE_LIBRARIES: { group: string; name: string; license: string; url: str
 
 const BUNDLED_WITH_NPM = ["com.facebook.react"];
 
-export function importerBlock(lockfile: string, importer: string): string {
-  const start = lockfile.indexOf(`\n  ${importer}:\n`);
-  if (start < 0) throw new Error(`${importer} is not in the lockfile`);
-  const rest = lockfile.slice(start + 1);
-  const end = rest.slice(1).search(/\n {2}\S|\n\S/);
-  return end < 0 ? rest : rest.slice(0, end + 1);
+const DEPENDENCY_FIELDS = ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"] as const;
+
+export function workspaceLock(lockfile: string, workspace: string): string {
+  const lock = JSON.parse(lockfile.replace(/,(\s*[}\]])/g, "$1"));
+  const entry = lock.workspaces?.[workspace];
+  if (!entry) throw new Error(`workspace "${workspace}" is not in the lockfile`);
+  const names = [...new Set(DEPENDENCY_FIELDS.flatMap((field) => Object.keys(entry[field] ?? {})))].sort();
+  const resolved = Object.fromEntries(names.map((name) => [name, lock.packages?.[name]?.[0] ?? null]));
+  return JSON.stringify({ ...entry, resolved }, null, 2);
 }
 
 export function gradleArtifacts(gradle: string): string[] {
@@ -36,7 +39,7 @@ export function gradleArtifacts(gradle: string): string[] {
 
 export function creditInputs(): string {
   const lockfile = readFileSync(LOCKFILE, "utf8");
-  const inputs = [importerBlock(lockfile, "."), gradleArtifacts(readFileSync(MODULE_GRADLE, "utf8")).join("\n")];
+  const inputs = [workspaceLock(lockfile, ""), gradleArtifacts(readFileSync(MODULE_GRADLE, "utf8")).join("\n")];
   return createHash("sha256").update(inputs.join("\n---\n")).digest("hex");
 }
 
