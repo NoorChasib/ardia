@@ -64,31 +64,7 @@ env:
   ARDIACORE_PREBUILT_REPO: ${{ vars.ARDIACORE_PREBUILT_REPO || 'ardia-browser/ardia' }}
 
 jobs:
-  gate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      run: ${{ steps.vouch.outputs.run }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          persist-credentials: false
-          sparse-checkout: .github
-      - id: vouch
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          retries: 3
-          script: |
-            const vouch = require(`${process.env.GITHUB_WORKSPACE}/.github/vouch/vouch.cjs`);
-            await vouch.gate({ github, context, core });
-
   checks:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -108,8 +84,6 @@ jobs:
           retention-days: 14
 
   package:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:

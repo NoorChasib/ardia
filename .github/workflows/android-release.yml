@@ -51,7 +51,7 @@ jobs:
             [ -f "$needed" ] || missing="$missing $needed"
           done
           if [ -n "$missing" ]; then
-            echo "::error::This commit doesn't have the Android release scripts (missing:$missing). They arrive with the Expo phone app; until it is merged, dispatch with --ref t3/unify-expo-architecture."
+            echo "::error::This commit doesn't have the Android release scripts (missing:$missing). Dispatch it for a commit that has them."
             exit 1
           fi
           if [ ! -f apps/phone/bun.lock ]; then

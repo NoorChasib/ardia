@@ -18,7 +18,7 @@ on:
       - ".github/workflows/windows.yml"
       - ".github/actions/bun-install/**"
   push:
-    branches: [main, t3/windows-linux-release-priority]
+    branches: [main]
     paths:
       - "apps/browser/windows/**"
       - "apps/browser/NuGet.config"
@@ -62,28 +62,15 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  gate:
+  depth:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: read
     outputs:
-      run: ${{ steps.vouch.outputs.run }}
       full: ${{ steps.depth.outputs.full }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          persist-credentials: false
-          sparse-checkout: .github
-      - id: vouch
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          retries: 3
-          script: |
-            const vouch = require(`${process.env.GITHUB_WORKSPACE}/.github/vouch/vouch.cjs`);
-            await vouch.gate({ github, context, core });
       - id: depth
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
@@ -98,8 +85,6 @@ jobs:
             core.info(full ? "Full run: compile, tours and installers." : "Fast run: reuse a built app when the native code is unchanged, then launch it.");
 
   identity:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -155,8 +140,6 @@ jobs:
           retention-days: 14
 
   javascript:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -185,8 +168,7 @@ jobs:
           retention-days: 1
 
   app:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
+    needs: depth
     runs-on: windows-latest
     timeout-minutes: 75
     env:
@@ -194,7 +176,7 @@ jobs:
       SLUG: x64
       APP: apps/browser/windows/x64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
     outputs:
       compiled: ${{ steps.built.outputs.cache-hit != 'true' }}
       key: ${{ steps.native.outputs.key }}
@@ -298,8 +280,7 @@ jobs:
           retention-days: 14
 
   arm64-app:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
+    needs: depth
     runs-on: windows-11-arm
     timeout-minutes: 90
     env:
@@ -307,15 +288,14 @@ jobs:
       SLUG: arm64
       APP: apps/browser/windows/ARM64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
     outputs:
       compiled: ${{ steps.built.outputs.cache-hit != 'true' }}
       key: ${{ steps.native.outputs.key }}
     steps: *build_steps
 
   x64:
-    needs: [gate, identity, javascript, app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, app]
     runs-on: windows-latest
     timeout-minutes: 60
     permissions:
@@ -327,7 +307,7 @@ jobs:
       NO_INPUT: "false"
       APP: apps/browser/windows/x64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.app.outputs.compiled }}
       KEY: ${{ needs.app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}
@@ -545,8 +525,7 @@ jobs:
           retention-days: 14
 
   x64-gate:
-    needs: [gate, identity, javascript, app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, app]
     runs-on: windows-latest
     timeout-minutes: 45
     permissions:
@@ -558,7 +537,7 @@ jobs:
       NO_INPUT: "false"
       APP: apps/browser/windows/x64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.app.outputs.compiled }}
       KEY: ${{ needs.app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}
@@ -566,8 +545,7 @@ jobs:
     steps: *launch_steps
 
   arm64:
-    needs: [gate, identity, javascript, arm64-app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, arm64-app]
     runs-on: windows-11-arm
     timeout-minutes: 60
     permissions:
@@ -579,7 +557,7 @@ jobs:
       NO_INPUT: "true"
       APP: apps/browser/windows/ARM64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.arm64-app.outputs.compiled }}
       KEY: ${{ needs.arm64-app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}
@@ -587,8 +565,7 @@ jobs:
     steps: *launch_steps
 
   arm64-gate:
-    needs: [gate, identity, javascript, arm64-app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, arm64-app]
     runs-on: windows-11-arm
     timeout-minutes: 45
     permissions:
@@ -600,7 +577,7 @@ jobs:
       NO_INPUT: "true"
       APP: apps/browser/windows/ARM64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.arm64-app.outputs.compiled }}
       KEY: ${{ needs.arm64-app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}
