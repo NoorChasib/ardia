@@ -62,12 +62,12 @@ const median = (values) => {
 };
 const summary = [...groups.entries()].map(([key, list]) => {
   const stat = (field) => ({ median: median(list.map((row) => row[field])), min: Math.min(...list.map((row) => row[field])), max: Math.max(...list.map((row) => row[field])) });
-  return { key, n: list.length, commits: stat("commits"), renders: stat("renders"), mounts: stat("mounts"), timers: stat("timers"), cpuMs: stat("cpuMs") };
+  return { key, n: list.length, commits: stat("commits"), renders: stat("renders"), mounts: stat("mounts"), timers: stat("timers"), frames: stat("frames"), cpuMs: stat("cpuMs") };
 });
 writeFileSync(join(resultsDir, `${label}.summary.json`), JSON.stringify(summary, null, 2));
 const pad = (value, width) => String(value).padStart(width);
-console.log(`${"scenario".padEnd(36)}${pad("n", 3)}${pad("commits", 9)}${pad("renders", 9)}${pad("mounts", 8)}${pad("timers", 8)}  cpuMs median [min-max]`);
+console.log(`${"scenario".padEnd(36)}${pad("n", 3)}${pad("commits", 9)}${pad("renders", 9)}${pad("mounts", 8)}${pad("timers", 8)}${pad("frames", 9)}  cpuMs median [min-max]`);
 for (const row of summary) {
   const exact = (stat) => (stat.min === stat.max ? stat.median : `${stat.median}~`);
-  console.log(`${row.key.padEnd(36)}${pad(row.n, 3)}${pad(exact(row.commits), 9)}${pad(exact(row.renders), 9)}${pad(exact(row.mounts), 8)}${pad(exact(row.timers), 8)}  ${row.cpuMs.median} [${row.cpuMs.min}-${row.cpuMs.max}]`);
+  console.log(`${row.key.padEnd(36)}${pad(row.n, 3)}${pad(exact(row.commits), 9)}${pad(exact(row.renders), 9)}${pad(exact(row.mounts), 8)}${pad(exact(row.timers), 8)}${pad(exact(row.frames), 9)}  ${row.cpuMs.median} [${row.cpuMs.min}-${row.cpuMs.max}]`);
 }

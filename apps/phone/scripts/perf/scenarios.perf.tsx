@@ -17,6 +17,7 @@ type SyncListener = (event: Record<string, unknown>) => void;
 
 const mockSync = { listeners: [] as SyncListener[], nativeCalls: 0 };
 
+
 jest.mock("@ardia/phone-native", () => {
   const actual = jest.requireActual("@ardia/phone-native");
   return {
@@ -53,32 +54,35 @@ const OUT = process.env.PERF_OUT ?? null;
 const ONLY = process.env.PERF_ONLY ? new Set(process.env.PERF_ONLY.split(",")) : null;
 const PLATFORM = require("react-native").Platform.OS as string;
 
-type Result = { scenario: string; size: number; platform: string; commits: number; renders: number; mounts: number; cpuMs: number; wallMs: number; timers: number; top: [string, number][]; timerSites: [string, number][]; extra?: Record<string, number> };
+type Result = { scenario: string; size: number; platform: string; commits: number; renders: number; mounts: number; cpuMs: number; wallMs: number; timers: number; frames: number; top: [string, number][]; timerSites: [string, number][]; extra?: Record<string, number> };
 
-const timerCalls = { count: 0, sites: new Map<string, number>() };
+const timerCalls = { count: 0, frames: 0, sites: new Map<string, number>() };
 const TRACE_TIMERS = process.env.PERF_TIMER_SITES === "1";
 
 function callSite() {
   const frames = (new Error().stack ?? "").split("\n").slice(3);
-  if (frames.some((frame) => frame.includes("react-native-worklets/src/runLoop"))) return "ui-runtime frame (Reanimated on the UI thread on a phone)";
   const own = frames.find((frame) => /\/(src|packages\/phone\/src)\//.test(frame) && !frame.includes("scripts/perf")) ?? frames.find((frame) => !frame.includes("scripts/perf") && !frame.includes("jest-")) ?? "unknown";
   return own.trim().replace(/^at /, "").replace(/\(.*\/(apps|packages)\//, "(");
 }
 
+const UI_RUNTIME_FRAME = /^\(\) => callback\(performance\.now\(\)\)$/;
+
 function wrapTimers() {
-  const wrap = <F extends (...args: never[]) => unknown>(original: F) =>
+  const wrap = <F extends (...args: never[]) => unknown>(original: F, frames: boolean) =>
     ((callback: (...inner: unknown[]) => unknown, ...rest: unknown[]) => {
-      const site = TRACE_TIMERS ? callSite() : "";
+      const counted = frames || (rest[0] === 0 && UI_RUNTIME_FRAME.test(String(callback)));
+      const site = TRACE_TIMERS ? (counted ? "frame (Reanimated runs these on the UI thread on a phone, or a JS frame wait)" : callSite()) : "";
       const fired = (...inner: unknown[]) => {
-        timerCalls.count += 1;
+        if (counted) timerCalls.frames += 1;
+        else timerCalls.count += 1;
         if (TRACE_TIMERS) timerCalls.sites.set(site, (timerCalls.sites.get(site) ?? 0) + 1);
         return callback(...inner);
       };
       return (original as unknown as (...args: unknown[]) => unknown)(fired, ...rest);
     }) as unknown as F;
-  globalThis.setTimeout = wrap(globalThis.setTimeout);
-  globalThis.setInterval = wrap(globalThis.setInterval);
-  globalThis.requestAnimationFrame = wrap(globalThis.requestAnimationFrame);
+  globalThis.setTimeout = wrap(globalThis.setTimeout, false);
+  globalThis.setInterval = wrap(globalThis.setInterval, false);
+  globalThis.requestAnimationFrame = wrap(globalThis.requestAnimationFrame, true);
 }
 
 const round = (value: number) => Math.round(value * 10) / 10;
@@ -86,13 +90,14 @@ const round = (value: number) => Math.round(value * 10) / 10;
 function record(scenario: string, size: number, tally: RenderTally, cpuMs: number, wallMs: number, extra?: Record<string, number>): Result {
   const top = [...tally.renders.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
   const timerSites = [...timerCalls.sites.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8);
-  const result: Result = { scenario, size, platform: PLATFORM, commits: tally.commits, renders: totalRenders(tally), mounts: tally.mounts, cpuMs: round(cpuMs), wallMs: round(wallMs), timers: timerCalls.count, top, timerSites, extra };
+  const result: Result = { scenario, size, platform: PLATFORM, commits: tally.commits, renders: totalRenders(tally), mounts: tally.mounts, cpuMs: round(cpuMs), wallMs: round(wallMs), timers: timerCalls.count, frames: timerCalls.frames, top, timerSites, extra };
   if (OUT) appendFileSync(OUT, `${JSON.stringify(result)}\n`);
   return result;
 }
 
 function measure(scenario: string, size: number, work: () => Record<string, number> | void) {
   timerCalls.count = 0;
+  timerCalls.frames = 0;
   timerCalls.sites = new Map();
   startTally();
   const cpu = process.cpuUsage();
@@ -105,6 +110,7 @@ function measure(scenario: string, size: number, work: () => Record<string, numb
 
 async function measureAsync(scenario: string, size: number, work: () => Promise<void>) {
   timerCalls.count = 0;
+  timerCalls.frames = 0;
   timerCalls.sites = new Map();
   startTally();
   const cpu = process.cpuUsage();
