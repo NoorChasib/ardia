@@ -5,6 +5,7 @@ import { resolveHostModule } from "./hostModules.ts";
 import { createHostDocuments } from "./hostDocuments.ts";
 import { createSessionWriter, initialHostSession, snapshotHostSession, startHostPersistence } from "./hostSession.ts";
 import { HostTab } from "./hostTab.ts";
+import { takeTabReleaseCounts } from "../../browser/src/state/telemetry/tabReleaseCounts.ts";
 import { tabViewport } from "./hostViewport.ts";
 import { startHostTabLifecycle } from "./hostTabLifecycle.ts";
 import { startHostData } from "./hostData.ts";
@@ -679,6 +680,79 @@ test("logical tab presentations batch returns and departures independently of vi
   assert.deepEqual(requests.filter(([method]) => method === "tab.presentations").at(-1), ["tab.presentations", { tabs: [{ claim: outgoing.claim, id: 21, visible: false }, { claim: incoming.claim, id: 22, visible: true }] }]);
   outgoing.dispose();
   incoming.dispose();
+});
+
+function releasingHost(release) {
+  let nextId = 30;
+  return fixture(async (method, args) => {
+    if (method === "tab.create") return { browserId: ++nextId, chromeTabId: nextId };
+    if (method === "tab.release") return release(args);
+    return null;
+  });
+}
+const creates = (requests) => requests.filter(([method]) => method === "tab.create").map(([, args]) => args);
+const collectGarbage = globalThis.Bun?.gc ? () => globalThis.Bun.gc(true) : globalThis.gc;
+
+test("a release the engine answers with No owned live tab drops the claim, so the next tab with that key starts fresh", async (t) => {
+  const errors = t.mock.method(console, "error", () => {});
+  takeTabReleaseCounts();
+  const { host, requests } = releasingHost(() => { throw new Error("No owned live tab"); });
+  const closed = new HostTab(host, { key: "closed" }, () => {});
+  await closed.ready;
+  closed.dispose();
+  await new Promise(setImmediate);
+  const reopened = new HostTab(host, { key: "closed" }, () => {});
+  await reopened.ready;
+  assert.equal("previousClaim" in creates(requests).at(-1), false);
+  assert.deepEqual(takeTabReleaseCounts(), { host_tab_releases: 1, host_tab_releases_already_closed: 1, host_tab_releases_failed: 0 });
+  assert.equal(errors.mock.calls.length, 0);
+  reopened.dispose();
+  await new Promise(setImmediate);
+});
+
+test("a release that fails for another reason keeps only the claim, for the next create with that key", async (t) => {
+  const errors = t.mock.method(console, "error", () => {});
+  takeTabReleaseCounts();
+  let failing = true;
+  const { host, requests } = releasingHost(() => { if (failing) throw new Error("Native request timed out: tab.release"); return null; });
+  const first = new HostTab(host, { key: "kept" }, () => {});
+  await first.ready;
+  const claim = first.claim;
+  first.dispose();
+  await new Promise(setImmediate);
+  failing = false;
+  const second = new HostTab(host, { key: "kept" }, () => {});
+  await second.ready;
+  assert.equal(creates(requests).at(-1).previousClaim, claim);
+  second.dispose();
+  await new Promise(setImmediate);
+  const third = new HostTab(host, { key: "kept" }, () => {});
+  await third.ready;
+  assert.equal("previousClaim" in creates(requests).at(-1), false);
+  assert.deepEqual(takeTabReleaseCounts(), { host_tab_releases: 2, host_tab_releases_already_closed: 0, host_tab_releases_failed: 1 });
+  assert.equal(errors.mock.calls.length, 1);
+  third.dispose();
+  await new Promise(setImmediate);
+});
+
+test("closed tabs whose release the engine refuses are not kept alive", { skip: !collectGarbage }, async (t) => {
+  t.mock.method(console, "error", () => {});
+  const { host } = releasingHost(() => { throw new Error("No owned live tab"); });
+  const failing = releasingHost(() => { throw new Error("Native request timed out: tab.release"); });
+  const refs = [];
+  const churn = async (on, prefix) => {
+    for (let i = 0; i < 20; i++) {
+      const tab = new HostTab(on, { key: `${prefix}${i}` }, () => {});
+      await tab.ready;
+      tab.dispose();
+      refs.push(new WeakRef(tab));
+    }
+    await new Promise(setImmediate);
+  };
+  await churn(host, "gone-");
+  await churn(failing.host, "timeout-");
+  for (let i = 0; i < 3; i++) { collectGarbage(); await new Promise(setImmediate); }
+  assert.ok(refs.filter((ref) => ref.deref()).length <= 2, `${refs.filter((ref) => ref.deref()).length} of 40 closed tabs still alive`);
 });
 
 test("presentations retain queue order across pending replacements and ignore released views", async () => {

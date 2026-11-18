@@ -265,3 +265,92 @@ test("a page picture is never asked of an engine without tab.capturePicture, and
   tab.dispose();
   await settle();
 });
+
+function manyTabsHost() {
+  const listeners = new Set();
+  let nextId = 100;
+  const host = {
+    bootstrap: { windowId: "owned", profileId: "default" },
+    onEvent(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    async invoke(method, args) {
+      if (method !== "tab.create") return null;
+      const id = ++nextId;
+      return { browserId: id, chromeTabId: id, state: navigation, lease: lease(args.claim, { type: "pageLease", sequence: 1 }), snapshot: { watermark: 1, events: [] } };
+    },
+  };
+  const emit = (id, payload) => { for (const listener of [...listeners]) listener("ArdiaWebView", String(id), payload); };
+  return { host, listeners, emit };
+}
+
+function countedTabs(native, count) {
+  const received = new Map();
+  const progress = new Map();
+  const tabs = [];
+  for (let i = 0; i < count; i++) {
+    const key = `tab-${i}`;
+    received.set(key, 0);
+    const props = { onProgress: (value) => progress.set(key, [...(progress.get(key) ?? []), value]) };
+    tabs.push(new HostTab(native.host, { key }, () => {}, (claim, nativeId, rebound) => {
+      const page = new HostPageEvents(claim, nativeId, () => props, () => {}, () => {}, rebound);
+      const receive = page.receive.bind(page);
+      page.receive = (...args) => { received.set(key, received.get(key) + 1); return receive(...args); };
+      return page;
+    }));
+  }
+  return { tabs, received, progress, total: () => [...received.values()].reduce((a, b) => a + b, 0) };
+}
+
+test("one host subscription routes each page event to its claim's tab alone, whatever the tab count", async () => {
+  for (const count of [1, 50]) {
+    const native = manyTabsHost();
+    const { tabs, received, progress, total } = countedTabs(native, count);
+    assert.equal(native.listeners.size, 1);
+    await Promise.all(tabs.map((tab) => tab.ready));
+    const target = tabs.at(-1);
+    native.emit(target.identity.browserId, { ...lease(target.claim), type: "pageEvent", sequence: 2, event: { name: "progress", data: { progress: 0.5 } } });
+    assert.equal(total(), 1);
+    assert.equal(received.get(target.key), 1);
+    assert.deepEqual([...progress.entries()], [[target.key, [0.5]]]);
+    native.emit(target.identity.browserId, { ...lease("someone-else"), type: "pageEvent", sequence: 3, event: { name: "progress", data: { progress: 0.7 } } });
+    native.emit(target.identity.browserId, { type: "title", title: "legacy" });
+    assert.equal(total(), 1);
+    for (const tab of tabs) tab.dispose();
+    assert.equal(native.listeners.size, 0);
+    assert.ok(tabs.every((tab) => tab.page === undefined));
+    await settle();
+  }
+});
+
+test("an event for one tab's claim is never seen by another tab, even on the other tab's channel", async () => {
+  const native = manyTabsHost();
+  const { tabs, received, progress } = countedTabs(native, 2);
+  await Promise.all(tabs.map((tab) => tab.ready));
+  const [a, b] = tabs;
+  native.emit(b.identity.browserId, { ...lease(a.claim), type: "pageEvent", sequence: 2, event: { name: "progress", data: { progress: 0.3 } } });
+  assert.equal(received.get(b.key), 0);
+  assert.equal(received.get(a.key), 1);
+  assert.equal(progress.size, 0);
+  a.dispose();
+  assert.equal(native.listeners.size, 1);
+  native.emit(b.identity.browserId, { ...lease(b.claim), type: "pageEvent", sequence: 2, event: { name: "progress", data: { progress: 0.9 } } });
+  assert.deepEqual(progress.get(b.key), [0.9]);
+  b.dispose();
+  assert.equal(native.listeners.size, 0);
+  await settle();
+});
+
+test("a tab mounted after every other tab closed subscribes again", async () => {
+  const native = manyTabsHost();
+  const first = countedTabs(native, 1);
+  await first.tabs[0].ready;
+  first.tabs[0].dispose();
+  assert.equal(native.listeners.size, 0);
+  const again = countedTabs(native, 1);
+  await again.tabs[0].ready;
+  assert.equal(native.listeners.size, 1);
+  const tab = again.tabs[0];
+  native.emit(tab.identity.browserId, { ...lease(tab.claim), type: "pageEvent", sequence: 2, event: { name: "progress", data: { progress: 1 } } });
+  assert.deepEqual(again.progress.get(tab.key), [1]);
+  tab.dispose();
+  await settle();
+});

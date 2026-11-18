@@ -46,6 +46,9 @@ const leaseOf = (value: PageLeaseMetadata): PageLeaseMetadata =>
   ({ claim: value.claim, rendererGeneration: value.rendererGeneration, bindingGeneration: value.bindingGeneration, documentEpoch: value.documentEpoch });
 
 const SCROLL_STATES = new Set(["down", "up", "top"]);
+const noProps = (): WebViewProps => ({}) as WebViewProps;
+const ignoreReset = () => {};
+const ignoreTheme = () => {};
 
 function typedPageMessage(data: unknown): PageEvent | null {
   if (!record(data)) return null;
@@ -100,13 +103,14 @@ export class HostPageEvents {
   }
 
   receive(module: string, id: string, payload: unknown): boolean {
-    if (!this.active || module !== "ArdiaWebView" || !delivery(payload) || payload.claim !== this.claim) return false;
+    if (!this.active || module !== "ArdiaWebView" || !record(payload) || payload.claim !== this.claim) return false;
+    if (this.installed && id !== String(this.nativeId())) return false;
+    if (!delivery(payload)) return false;
     if (!this.installed) {
       if (this.early.length >= 128) { this.dispose(); return false; }
       this.early.push(structuredClone({ ...payload, channel: id }) as PageDelivery | PageLifecycle);
       return true;
     }
-    if (id !== String(this.nativeId())) return false;
     if (this.applying) {
       if (this.pending.length >= 128) { this.dispose(); return false; }
       this.pending.push(structuredClone(payload));
@@ -227,5 +231,9 @@ export class HostPageEvents {
     this.lease = undefined;
     this.early = [];
     this.pending = [];
+    this.props = noProps;
+    this.reset = ignoreReset;
+    this.applyTheme = ignoreTheme;
+    this.rebound = undefined;
   }
 }

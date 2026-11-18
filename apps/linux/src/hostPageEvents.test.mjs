@@ -281,3 +281,22 @@ test("a tab mounted asleep wakes on its first committed document", async () => {
   h.send(control(2, "2"));
   assert.equal(isSleeping(h.tab), false);
 });
+
+test("an event for another claim is turned away on its claim alone, before any other field is read", () => {
+  const page = new HostPageEvents("mine", () => 7, () => ({}), () => {}, () => {});
+  const read = [];
+  const payload = new Proxy({ claim: "theirs", rendererGeneration: "1", bindingGeneration: "1", documentEpoch: "1", type: "pageEvent", sequence: 1, event: { name: "progress", data: { progress: 1 } } }, {
+    get(target, key) { read.push(key); return target[key]; },
+  });
+  assert.equal(page.receive("ArdiaWebView", "7", payload), false);
+  assert.deepEqual(read, ["claim"]);
+});
+
+test("a disposed receiver lets go of the view's props and callbacks", () => {
+  const calls = [];
+  const page = new HostPageEvents("mine", () => 7, () => { calls.push("props"); return {}; }, () => calls.push("reset"), () => calls.push("theme"), () => calls.push("rebound"));
+  page.dispose();
+  for (const field of ["props", "reset", "applyTheme"]) page[field]();
+  assert.equal(page.rebound, undefined);
+  assert.deepEqual(calls, []);
+});
