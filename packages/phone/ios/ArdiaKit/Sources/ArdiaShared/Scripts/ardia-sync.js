@@ -995,7 +995,6 @@ const { Clock } = __require("packages/sync/src/hlc.ts");
 const { syncScope, visible } = __require("packages/sync/src/scope.ts");
 const { emptyScope } = __require("packages/sync/src/scopeState.ts");
 const { bookmarksAdapter, deviceAdapter, deviceTabsAdapter, historyAdapter, historyExpired, HISTORY_WINDOW_MS, isWebUrl, sendsAdapter, SEND_LIFETIME_MS, DAY_MS } = __require("packages/sync/src/companion/adapters.ts");
-const { fromLegacyUrl } = __require("packages/sync/src/companion/legacy.ts");
 const { buildView, dataOwner, defaultProfileId, liveProfiles } = __require("packages/sync/src/companion/view.ts");
 const { host, loaded, save, viewIsNew } = __require("packages/sync/src/companion/state.ts");
 
@@ -1273,7 +1272,7 @@ function hasBookmarkFor(c                , scope        , url        ) {
   if (!state) return false;
   for (const [key, value] of visible(state, "bm:")) {
     const bookmark = value                        ;
-    if (!removing.has(key) && bookmark?.k === "u" && typeof bookmark.u === "string" && fromLegacyUrl(bookmark.u) === url) return true;
+    if (!removing.has(key) && bookmark?.k === "u" && bookmark.u === url) return true;
   }
   return false;
 }
@@ -1587,40 +1586,6 @@ function bookmarksAdapter(ctx                 )          {
 }
 
 });
-__define("packages/sync/src/companion/legacy.ts", function (exports, __require) {
-  __export(exports, "fromLegacyUrl", () => fromLegacyUrl);
-  __export(exports, "fromLegacy", () => fromLegacy);
-const LEGACY_URLS                     = [
-  ["netnyahoo://yahu", "ardia://game"],
-  ["chrome://yahu", "chrome://game"],
-  ["netnyahoo://", "ardia://"],
-];
-
-function fromLegacyUrl(url        )         {
-  const lower = url.toLowerCase();
-  for (const prefix of ["", "view-source:"]) {
-    for (const [old, now] of LEGACY_URLS) {
-      if (!lower.startsWith(prefix + old)) continue;
-      const rest = url.slice(prefix.length + old.length);
-      if (!old.endsWith("://") && rest && !"/?#".includes(rest[0] )) continue;
-      return url.slice(0, prefix.length) + now + rest;
-    }
-  }
-  return url;
-}
-
-function fromLegacy   (value   )    {
-  if (typeof value === "string") return fromLegacyUrl(value)     ;
-  if (Array.isArray(value)) return value.map(fromLegacy)     ;
-  if (value && typeof value === "object") {
-    const out                          = {};
-    for (const [key, v] of Object.entries(value                           )) out[key] = fromLegacy(v);
-    return out     ;
-  }
-  return value;
-}
-
-});
 __define("packages/sync/src/companion/view.ts", function (exports, __require) {
   __export(exports, "MAX_HISTORY_ITEMS", () => MAX_HISTORY_ITEMS);
   __export(exports, "liveProfiles", () => liveProfiles);
@@ -1632,7 +1597,6 @@ __define("packages/sync/src/companion/view.ts", function (exports, __require) {
   __export(exports, "buildView", () => buildView);
 const { visible } = __require("packages/sync/src/scope.ts");
                                                    
-const { fromLegacy } = __require("packages/sync/src/companion/legacy.ts");
 const { lastVisitOf } = __require("packages/sync/src/companion/adapters.ts");
 
 const MAX_HISTORY_ITEMS = 2_000;
@@ -1734,7 +1698,7 @@ function deviceTabs(scope                        , me        , devices          
     const seen = new Set        ();
     const tabs                                   = [];
     for (const t of value.tabs) {
-      const url = fromLegacy(str(t?.u));
+      const url = str(t?.u);
       const title = str(t?.t);
       if (!url || seen.has(`${url}\n${title}`)) continue;
       seen.add(`${url}\n${title}`);
@@ -1761,7 +1725,7 @@ function pinnedArea(scope                        )                        {
   if (!scope) return { tiles: [], sections: [] };
   const records = (prefix        ) => visible(scope, prefix);
   const pins = new Map                  ();
-  for (const [k, v] of records("pin:t:")) if (v && typeof v === "object") pins.set(k.slice(6), fromLegacy(v            ));
+  for (const [k, v] of records("pin:t:")) if (v && typeof v === "object") pins.set(k.slice(6), v            );
   const groupValues = new Map                   ();
   for (const [k, v] of records("pin:g:")) if (v && typeof v === "object") groupValues.set(k.slice(6), v             );
   const nestValues = new Map                   ();
@@ -1890,7 +1854,7 @@ function bookmarkTree(scope                        )                 {
   const values = new Map                       ();
   for (const [k, v] of visible(scope, "bm:")) {
     const b = v                 ;
-    if (b && typeof b === "object" && (b.k === "u" || b.k === "f")) values.set(k.slice(3), fromLegacy(b));
+    if (b && typeof b === "object" && (b.k === "u" || b.k === "f")) values.set(k.slice(3), b);
   }
   const parentOf = new Map                ();
   for (const [key, v] of values) {
@@ -1932,14 +1896,14 @@ function historyList(scope                        )                {
   for (const [k, v] of visible(scope, "h:")) {
     const h = v                ;
     if (!h || typeof h !== "object" || !Array.isArray(h.vt) || !h.vt.length) continue;
-    out.push({ url: fromLegacy(k.slice(2)), title: str(h.t), visits: typeof h.n === "number" ? h.n : h.vt.length, lastVisit: lastVisitOf(h) });
+    out.push({ url: k.slice(2), title: str(h.t), visits: typeof h.n === "number" ? h.n : h.vt.length, lastVisit: lastVisitOf(h) });
   }
   return out.sort((a, z) => z.lastVisit - a.lastVisit || (a.url < z.url ? -1 : 1)).slice(0, MAX_HISTORY_ITEMS);
 }
 
 function settingOf(app            , name        )          {
   const record = app.records[`set:${name}`]?.v                                      ;
-  return record && typeof record === "object" ? fromLegacy(record.v) : undefined;
+  return record && typeof record === "object" ? record.v : undefined;
 }
 
 function oneOf                  (value         , choices              )           {

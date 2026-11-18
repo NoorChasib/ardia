@@ -1994,30 +1994,8 @@ function matchActions                           (query        , actions         
 
 });
 __define("packages/core/src/ingestKeys.ts", function (exports, __require) {
-  __export(exports, "APP_INGEST_KEY", () => APP_INGEST_KEY);
-  __export(exports, "CLI_INGEST_KEY", () => CLI_INGEST_KEY);
-  __export(exports, "SITE_INGEST_KEY", () => SITE_INGEST_KEY);
   __export(exports, "INGEST_KEY_HEADER", () => INGEST_KEY_HEADER);
-  __export(exports, "INGEST_KEYS", () => INGEST_KEYS);
-  __export(exports, "ingestSourceOf", () => ingestSourceOf);
-const APP_INGEST_KEY = "ak_app_41b5d0762fd8ade6949ac2ac";
-const CLI_INGEST_KEY = "ak_cli_67adb8ebc49841125eda860e";
-const SITE_INGEST_KEY = "ak_site_6b26588b3764ae7d0f6d63d7";
-
 const INGEST_KEY_HEADER = "X-Ardia-Key";
-
-                                                  
-
-const INGEST_KEYS                                         = {
-  app: APP_INGEST_KEY,
-  cli: CLI_INGEST_KEY,
-  site: SITE_INGEST_KEY,
-};
-
-function ingestSourceOf(key                           )                      {
-  for (const [source, value] of Object.entries(INGEST_KEYS)) if (key === value) return source                ;
-  return null;
-}
 
 });
 __define("packages/core/src/openTabs.ts", function (exports, __require) {
