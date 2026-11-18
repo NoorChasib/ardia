@@ -9,9 +9,6 @@
   "workspaces": [
     "apps/*",
     "packages/*",
-    "!apps/site",
-    "!apps/dashboard",
-    "!apps/videos",
     "!apps/phone",
     "!packages/phone"
   ],
@@ -24,7 +21,7 @@
     "check:all": "scripts/check-all.sh",
     "shaders:check": "turbo run shaders:check",
     "test": "turbo run test && bun run test:root",
-    "test:root": "bun test --parallel --timeout=0 --tsconfig-override=./scripts/lib/test-tsconfig.json ./extras/raycast-ardia/src/scripts.test.ts ./scripts ./apps/site/src",
+    "test:root": "bun test --parallel --timeout=0 --tsconfig-override=./scripts/lib/test-tsconfig.json ./extras/raycast-ardia/src/scripts.test.ts ./scripts",
     "test:linux-smoke": "bun test --timeout=0 ./scripts/linux/smoke.test.mjs",
     "test:linux-ubo-seed": "bun test --timeout=0 ./scripts/linux/ubo-seed.test.mjs",
     "test:engine-linux": "node --test engine/ardiacore-linux/tests/bootstrap.test.mjs",

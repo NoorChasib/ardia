@@ -26,7 +26,7 @@ plist() { /usr/libexec/PlistBuddy "$@"; }
 public_key="$(test_signing_key "$work")"
 identity="$(signing_identity)"
 installed_name="$(basename "$old")"
-zip_name="$("$harness_root/scripts/lib/legacy-name.sh" appFileName)"
+zip_name="$(basename "$new")"
 mkdir -p "$work/installed" "$work/new" "$work/feed" "$work/home"
 ditto "$old" "$work/installed/$installed_name"
 ditto "$new" "$work/new/$zip_name"

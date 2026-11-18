@@ -44,7 +44,7 @@ check "Sparkle's comparator orders the builds $from < $nightly1 < $next-nightly.
 "$work/version-order" "$nightly1=$nightly1" "$next-nightly.2=$next-nightly.2" >/dev/null 2>&1 && ok=0 || ok=1
 check "the short versions alone don't order nightlies ($nightly1 vs $next-nightly.2), so sparkle:version stays the build number" $ok
 
-zip_name="$("$harness_root/scripts/lib/legacy-name.sh" appFileName)"
+zip_name="$(basename "$new")"
 installed_name="$(basename "$old")"
 mkdir -p "$work/installed" "$work/home"
 ditto "$old" "$work/installed/$installed_name"

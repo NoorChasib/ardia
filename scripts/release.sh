@@ -82,11 +82,9 @@ work="$(mktemp -d "${TMPDIR:-/tmp}/ac-release-work.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 notes_body="$work/notes-body.md"
 notes="$root/docs/release-notes/$version.md"
-notes_video=""
 if [ -f "$notes" ]; then
   note() { node "$root/scripts/lib/release-note.mjs" "$notes" "$1"; }
   headline="$(note headline)" || die "$notes: its frontmatter doesn't read (above)"
-  notes_video="$(note video)"
   note body > "$notes_body"
 elif [ "$rc" = 1 ]; then
   headline="Release candidate $version"
@@ -202,7 +200,6 @@ fi
 echo "==> Release notes"
 notes_args=()
 [ "$notarize" = 1 ] && notes_args+=(--notarized)
-[ -n "$notes_video" ] && notes_args+=(--video "$notes_video")
 [ -n "$engine_source" ] && notes_args+=(--engine-source "$engine_source")
 "$stages/notes.sh" "$version" "$notes_body" "$min_macos" ${notes_args[@]+"${notes_args[@]}"} > "$dist/release-notes.md"
 
