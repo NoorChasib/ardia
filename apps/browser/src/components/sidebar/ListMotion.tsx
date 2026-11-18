@@ -209,7 +209,7 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
   const queued = useRef<Plan | null>(null);
   const clipping = useRef<object | null>(null);
   const [, rerender] = useState(0);
-  if (enabled) devRegister("sidebarMotion", devKey, { slides, ghosts, clipped });
+  if (enabled) devRegister("sidebarMotion", devKey, { slides, ghosts, clipped, sources, watchers });
 
   const now = Date.now();
   if (settleSlides(slides.values(), now)) noteSidebarMotion("overrun");
@@ -225,7 +225,6 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
     for (const key of next.clipped) clipped.add(key);
     queued.current = next;
   };
-
   const before = from.pending;
   if (before) {
     from.pending = null;
@@ -235,9 +234,10 @@ function useMotion({ devKey, entries, from, planner, height, enabled, nativeTail
   if (entries !== seen.current) {
     seen.current = entries;
     const live = new Set(entries);
-    for (const key of slides.keys()) if (key !== TAIL && !live.has(key)) slides.delete(key);
-    for (const key of contexts.keys()) if (!live.has(key)) contexts.delete(key);
-    for (const key of clipped) if (key !== TAIL && !live.has(key)) clipped.delete(key);
+    const gone = (key: string) => key !== TAIL && !live.has(key);
+    for (const map of [slides, contexts, sources] as Map<string, unknown>[]) for (const key of map.keys()) if (gone(key)) map.delete(key);
+    for (const key of clipped) if (gone(key)) clipped.delete(key);
+    for (const [key, set] of watchers) if (gone(key) && !set.size) watchers.delete(key);
   }
 
   const slideBelow = useRef((entry: string, delta: number) => {
