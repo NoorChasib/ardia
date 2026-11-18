@@ -2,6 +2,7 @@ import type { BrowserState } from "../../browser/src/state/browser/store";
 import type { Tab } from "../../browser/src/state/browser/types";
 import type { ArdiaHost } from "./host";
 import { reportHostError } from "./host.ts";
+import { forgetClosedTabClaim } from "./hostTab.ts";
 
 type TabState = Pick<BrowserState, "tabs">;
 type TabStore = { getState(): TabState; subscribe(listener: (s: TabState, prev: TabState) => void): () => void };
@@ -23,7 +24,7 @@ export function startHostTabLifecycle(host: ArdiaHost, store: TabStore) {
       const tab = tabs[key];
       if (closed.has(key) || tab && tab.page.kind !== "asleep") continue;
       closed.add(key);
-      void closeHostTab(key).catch((error) => { if (!stopped) reportHostError(error); });
+      void closeHostTab(key).then(() => forgetClosedTabClaim(host, key), (error) => { if (!stopped) reportHostError(error); });
     }
     pending.clear();
   };

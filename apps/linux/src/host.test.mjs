@@ -755,26 +755,86 @@ test("a tab whose engine id aged out of the replacement history before its relea
   await new Promise(setImmediate);
 });
 
-test("claims kept after refused releases are capped per window, oldest first", async (t) => {
+function claimingEngine(refuseRelease = () => null) {
+  let nextId = 70;
+  const byKey = new Map();
+  const fake = fixture(async (method, args) => {
+    if (method === "tab.create") {
+      const current = byKey.get(args.key);
+      if (current?.claim && current.claim !== args.previousClaim) throw new Error("This tab already has an active owner");
+      const id = current?.id ?? ++nextId;
+      byKey.set(args.key, { id, claim: args.claim });
+      return { browserId: id, chromeTabId: id };
+    }
+    if (method === "tab.close") {
+      byKey.delete(args.key);
+      return null;
+    }
+    if (method === "tab.release") {
+      const entry = [...byKey.entries()].find(([, bound]) => bound.id === args.id && bound.claim === args.claim);
+      if (!entry) throw new Error("No owned live tab");
+      const refusal = refuseRelease(entry[0]);
+      if (refusal) throw new Error(refusal);
+      entry[1].claim = undefined;
+    }
+    return null;
+  });
+  return { ...fake, byKey };
+}
+
+test("a claim kept after a refused release survives any number of unrelated closes", async (t) => {
   t.mock.method(console, "error", () => {});
-  const { host, requests } = releasingHost(() => { throw new Error("No owned live tab"); });
-  const firstClaims = new Map();
-  for (let i = 0; i < 66; i++) {
-    const tab = new HostTab(host, { key: `capped-${i}` }, () => {});
+  const { host } = claimingEngine((key) => key === "still-live" ? "Too many pending native requests" : null);
+  const first = new HostTab(host, { key: "still-live" }, () => {});
+  await first.ready;
+  first.dispose();
+  await new Promise(setImmediate);
+  for (let i = 0; i < 100; i++) {
+    const key = `closed-${i}`;
+    const tab = new HostTab(host, { key }, () => {});
     await tab.ready;
-    firstClaims.set(tab.key, tab.claim);
+    await host.invoke("tab.close", { key });
     tab.dispose();
   }
   await new Promise(setImmediate);
-  const probes = [];
-  for (const [key, expected] of [["capped-0", undefined], ["capped-1", undefined], ["capped-2", firstClaims.get("capped-2")], ["capped-65", firstClaims.get("capped-65")]]) {
-    const tab = new HostTab(host, { key }, () => {});
-    probes.push(tab);
-    await tab.ready;
-    assert.equal(creates(requests).at(-1).previousClaim, expected, key);
-  }
-  for (const tab of probes) tab.dispose();
+  const remounted = new HostTab(host, { key: "still-live" }, () => {});
+  await remounted.ready;
+  remounted.dispose();
   await new Promise(setImmediate);
+});
+
+test("a confirmed close drops the kept claim whether it lands before or after the release", async (t) => {
+  t.mock.method(console, "error", () => {});
+  const { host, requests } = claimingEngine((key) => key === "refused" ? "Native request timed out: tab.release" : null);
+  const loaded = { page: { kind: "loaded", nav: { url: "https://example.com", seq: 1 } } };
+  const keys = ["released", "closed-first", "refused"];
+  const store = mutableStore({ tabs: Object.fromEntries(keys.map((key) => [key, loaded])) });
+  const stop = startHostTabLifecycle(host, store);
+  try {
+    const tabs = new Map();
+    for (const key of keys) {
+      const tab = new HostTab(host, { key }, () => {});
+      await tab.ready;
+      tabs.set(key, tab);
+    }
+    tabs.get("released").dispose();
+    tabs.get("refused").dispose();
+    await new Promise(setImmediate);
+    store.set({ tabs: {} });
+    await new Promise(setImmediate);
+    tabs.get("closed-first").dispose();
+    await new Promise(setImmediate);
+    assert.deepEqual(requests.filter(([method]) => method === "tab.close").map(([, args]) => args.key).sort(), [...keys].sort());
+    for (const key of keys) {
+      const reopened = new HostTab(host, { key }, () => {});
+      await reopened.ready;
+      assert.equal("previousClaim" in creates(requests).at(-1), false, key);
+      reopened.dispose();
+    }
+    await new Promise(setImmediate);
+  } finally {
+    stop();
+  }
 });
 
 test("a release that fails for another reason keeps only the claim, for the next create with that key", async (t) => {

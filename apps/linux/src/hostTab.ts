@@ -18,8 +18,7 @@ export type HostPageFactory = (claim: string, nativeId: () => number | undefined
 export type TabViewport = { rect: { x: number; y: number; width: number; height: number }; visible: boolean };
 
 const claims = new WeakMap<ArdiaHost, Map<string, HostTab>>();
-const unreleasedClaims = new WeakMap<ArdiaHost, Map<string, string>>();
-const UNRELEASED_CLAIMS_KEPT = 64;
+const recoveryClaims = new WeakMap<ArdiaHost, Map<string, string>>();
 const ENGINE_NO_LONGER_OWNS_TAB = "No owned live tab";
 
 type TabEventReceiver = (id: string, payload: unknown) => void;
@@ -68,15 +67,16 @@ function releaseOutcome(error: unknown): TabReleaseOutcome {
   return error instanceof Error && error.message === ENGINE_NO_LONGER_OWNS_TAB ? "alreadyClosed" : "failed";
 }
 
-function keepUnreleasedClaim(host: ArdiaHost, key: string, claim: string) {
-  const unreleased = unreleasedClaims.get(host) ?? new Map<string, string>();
-  unreleasedClaims.set(host, unreleased);
-  unreleased.delete(key);
-  unreleased.set(key, claim);
-  for (const oldest of unreleased.keys()) {
-    if (unreleased.size <= UNRELEASED_CLAIMS_KEPT) break;
-    unreleased.delete(oldest);
-  }
+function keepRecoveryClaim(host: ArdiaHost, key: string, claim: string) {
+  const kept = recoveryClaims.get(host) ?? new Map<string, string>();
+  recoveryClaims.set(host, kept);
+  kept.set(key, claim);
+}
+
+export function forgetClosedTabClaim(host: ArdiaHost, key: string) {
+  recoveryClaims.get(host)?.delete(key);
+  const owner = claims.get(host)?.get(key);
+  if (owner) owner.closedInEngine = true;
 }
 const CREATING_LOAD_MS = 2_000;
 const ADOPTED_LIVE = ["tab", "ardiacore"];
@@ -102,6 +102,7 @@ export class HostTab {
   nextViewport: TabViewport | undefined;
   viewportSend: Promise<void> | undefined;
   releaseScheduled = false;
+  closedInEngine = false;
   page: HostPageReceiver | undefined;
 
   creating: { url: string; at: number } | null;
@@ -137,14 +138,14 @@ export class HostTab {
       } else if (id === String(this.identity.browserId)) deliver(event);
     });
     this.ready = enqueueTab(host, this.key, async () => {
-      const previousClaim = owners.get(this.key)?.claim ?? unreleasedClaims.get(host)?.get(this.key);
+      const previousClaim = owners.get(this.key)?.claim ?? recoveryClaims.get(host)?.get(this.key);
       const identity = await invokeHost<HostTabIdentity>("tab.create", {
         ...options, adoptId: nativeAdoptId(options.adoptId, host), claim: this.claim, ...(previousClaim ? { previousClaim } : {}), profile: hostProfile(options.profile, host), url: options.url ?? "about:blank",
       }, host);
       if (!Number.isInteger(identity?.browserId) || identity.browserId <= 0 || !Number.isInteger(identity.chromeTabId) || identity.chromeTabId <= 0) throw new Error("Invalid Ardia tab identity");
       this.identity = identity;
       owners.set(this.key, this);
-      unreleasedClaims.get(host)?.delete(this.key);
+      recoveryClaims.get(host)?.delete(this.key);
       if (this.disposed) this.detach();
       else if (owners.get(this.key) === this && this.page) {
         if (!this.page.install(identity)) {
@@ -237,8 +238,8 @@ export class HostTab {
         .then((): TabReleaseOutcome => "released", (error: unknown) => { failure = error; return releaseOutcome(error); });
       if (owners.get(this.key) === this) {
         owners.delete(this.key);
-        if (outcome === "released") unreleasedClaims.get(this.host)?.delete(this.key);
-        else keepUnreleasedClaim(this.host, this.key, this.claim);
+        if (outcome === "released" || this.closedInEngine) recoveryClaims.get(this.host)?.delete(this.key);
+        else keepRecoveryClaim(this.host, this.key, this.claim);
       }
       noteTabRelease(outcome);
       if (outcome === "failed") console.error("[ardia host] release failed", failure);
