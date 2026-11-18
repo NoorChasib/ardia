@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { createRequire } from "node:module";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
-import { mapSources, strayModules } from "./bundle-embed-check.ts";
+import { bundleStrays, mapSources, strayModules } from "./bundle-embed-check.ts";
 
 const require = createRequire(import.meta.url);
 const { nestedModuleFolders, withNestedPhoneModules } = require("../metro-nested-modules.js");
@@ -65,4 +67,21 @@ test("the embed check reads Expo's sectioned maps relative to the phone and flag
   assert.deepEqual(strayModules(sources, root), []);
   const stray = [path.join(root, "node_modules/react/index.js"), path.join(root, "packages/core/node_modules/x/index.js"), path.join(root, "apps/browser/src/a.ts")];
   assert.deepEqual(strayModules([...sources, ...stray], root), stray);
+});
+
+test("a --root reached through a symlink checks the same sources as the real folder", () => {
+  const scratch = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "embed-root-")));
+  try {
+    const real = path.join(scratch, "real");
+    fs.mkdirSync(path.join(real, "apps/phone"), { recursive: true });
+    const linked = path.join(scratch, "linked");
+    fs.symlinkSync(real, linked);
+    const map = { sources: ["/src/app.tsx", "/node_modules/react/index.js", "/../../packages/core/src/a.ts", "/../../node_modules/react/index.js"] };
+    const { sources, stray } = bundleStrays(map, linked);
+    assert.deepEqual(sources, [path.join(real, "apps/phone/src/app.tsx"), path.join(real, "apps/phone/node_modules/react/index.js"), path.join(real, "packages/core/src/a.ts"), path.join(real, "node_modules/react/index.js")]);
+    assert.deepEqual(stray, [path.join(real, "node_modules/react/index.js")]);
+    assert.deepEqual(bundleStrays(map, real), { sources, stray });
+  } finally {
+    fs.rmSync(scratch, { recursive: true, force: true });
+  }
 });
