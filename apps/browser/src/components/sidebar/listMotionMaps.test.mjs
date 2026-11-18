@@ -51,8 +51,34 @@ test("closing rows drops their clip sources and empty watcher sets, so six churn
   assert.equal(leftover.length, held.length, "only a row that is still subscribed keeps its watcher set");
   assert.ok(maps.sources.size <= 3);
   for (const stop of held) stop();
-  list.rerender({ entries: ["tab:a"] });
-  assert.deepEqual([...maps.watchers.keys()].filter((key) => !kept.has(key)), [], "a closed row's set goes at the next list change once its row has unsubscribed");
+  assert.deepEqual([...maps.watchers.keys()].filter((key) => !kept.has(key)), [], "a closed row's set goes as soon as its row unsubscribes, with no further list change");
+});
+
+test("a row's watcher set goes with its last subscriber, and a stale unsubscribe never drops a newer one", (t) => {
+  const { list, maps } = churn(t, 0);
+  list.value.slideBelow("tab:a", 34);
+  list.rerender({ entries: ["tab:a", "tab:b"] });
+  const clip = list.value.motion("tab:b").clip;
+  const stopFirst = clip.subscribe(() => {});
+  const stopSecond = clip.subscribe(() => {});
+  stopFirst();
+  assert.equal(maps.watchers.get("tab:b").size, 1, "a set with a subscriber left stays");
+  stopSecond();
+  stopSecond();
+  assert.equal(maps.watchers.has("tab:b"), false);
+  const stale = clip.subscribe(() => {});
+  const fresh = maps.watchers.get("tab:b");
+  stopFirst();
+  assert.equal(maps.watchers.get("tab:b"), fresh, "an old unsubscribe never drops a newer set");
+  stale();
+  assert.equal(maps.watchers.has("tab:b"), false);
+});
+
+test("unmounting the list removes its dev registry entry", (t) => {
+  const { list, maps } = churn(t, 1);
+  assert.equal(globalThis.sidebarMotion.churn, maps);
+  list.unmount();
+  assert.equal(globalThis.sidebarMotion.churn, undefined);
 });
 
 test("a closed row that comes back slides and clips again", (t) => {
