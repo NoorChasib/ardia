@@ -259,3 +259,34 @@ test("card menus still follow sync: send targets, pinned state, and sync turning
   expect(all().every((titles) => titles.includes("Copy Link"))).toBe(true);
   unmount(root);
 });
+
+const library = require("../state/library/store") as typeof import("../state/library/store");
+const { Surfaces } = require("../App") as typeof import("../App");
+
+const onIos = Platform.OS === "ios" ? test : test.skip;
+
+onIos("open History reloads on what it shows (sync on, syncing, the space's synced history), never on a lastSynced tick", () => {
+  useBrowse.setState({ surface: "browsing", sheet: null, deckEntrance: null, frozenOrder: null, opening: null });
+  const loads = jest.spyOn(library, "loadHistory").mockImplementation(() => undefined);
+  const root = renderSurface(<Surfaces />);
+  act(() => library.openLibrary("history"));
+  act(() => jest.advanceTimersByTime(800));
+  expect(loads).toHaveBeenCalled();
+  loads.mockClear();
+  for (let tick = 1; tick <= 4; tick++) emitStatus(status("updated", T + tick * 15_000));
+  expect(loads).toHaveBeenCalledTimes(0);
+  emitStatus(status("updating", T + 75_000));
+  expect(loads).toHaveBeenCalledTimes(1);
+  emitStatus(status("updated", T + 90_000));
+  expect(loads).toHaveBeenCalledTimes(2);
+  const visited = view();
+  visited.profiles[0]!.history = [{ url: "https://new.example/", title: "New", visits: 1, lastVisit: T + 90_000 }, ...visited.profiles[0]!.history];
+  emitView(visited);
+  expect(loads).toHaveBeenCalledTimes(3);
+  emitView({ ...visited, shownProfileId: "home" });
+  expect(loads).toHaveBeenCalledTimes(4);
+  emitStatus({ ...status("off", T + 90_000), isEnabled: false });
+  expect(loads).toHaveBeenCalledTimes(5);
+  act(() => library.closeLibrary());
+  unmount(root);
+});
