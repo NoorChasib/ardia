@@ -22,9 +22,8 @@ test("a scroll is saved once it has settled, and only when it moved since the la
 
 test("a page counts as scrolled since its save when it has no save yet or moved past the threshold", () => {
   assert.equal(scrollMovedSinceSave(undefined, 0), true);
-  assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: null }, 40), true);
-  assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: 40 }, 41), false);
-  assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: 40 }, 400), true);
+  assert.equal(scrollMovedSinceSave(40, 41), false);
+  assert.equal(scrollMovedSinceSave(40, 400), true);
 });
 
 test("a page is at rest only when it is where it was last seen and last saved", () => {

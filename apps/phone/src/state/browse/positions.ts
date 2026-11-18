@@ -8,6 +8,7 @@ const SCROLL_CHECK_MS = 2000;
 const STILL_CHECK_MAX_MS = 16_000;
 
 const watches = new Map<string, ScrollWatch>();
+const savedAt = new Map<string, number>();
 const navigatedSinceSave = new Map<string, number>();
 const frontSinceCheck = new Set<string>();
 let frontPage: () => string | null = () => null;
@@ -24,7 +25,9 @@ export async function saveTabPosition(id: string, known?: PageScrollPosition | n
   if (!saved || !findTab(currentTabs(), id)) return;
   if (saveTabState(id, saved)) count("page_states_saved");
   if (navigatedSinceSave.get(id) === navigations) navigatedSinceSave.delete(id);
-  if (at) watches.set(id, { lastSeen: at.y, lastSaved: at.y });
+  if (!at) return;
+  savedAt.set(id, at.y);
+  watches.set(id, { lastSeen: at.y, lastSaved: at.y });
 }
 
 export function notePageNavigated(id: string) {
@@ -85,7 +88,7 @@ async function changedSinceSave(id: string): Promise<{ changed: boolean; at?: Pa
   if (!frontSinceCheck.has(id)) return { changed: false };
   frontSinceCheck.delete(id);
   const at = await pageScrollPosition(id);
-  return { changed: !at || scrollMovedSinceSave(watches.get(id), at.y), at };
+  return { changed: !at || scrollMovedSinceSave(savedAt.get(id), at.y), at };
 }
 
 export async function saveChangedPages() {
@@ -100,6 +103,7 @@ export async function saveChangedPages() {
 
 export function forgetPosition(id: string) {
   watches.delete(id);
+  savedAt.delete(id);
   navigatedSinceSave.delete(id);
   frontSinceCheck.delete(id);
 }
