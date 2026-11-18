@@ -17,6 +17,7 @@ store but through `storeAction` wrappers in each domain's `actions.ts` (`newTab`
   profile share a session (`privateSession(profileId)`, the regular engine name), another profile's never. Downloads
   carry `offTheRecord` and their regular profile (`downloadSession`, state/windows/ui.ts); a session's go with its last window.
 - `tabs` (persisted) vs `live` (loading/progress/back-forward/audio/theme colour; never persisted).
+- `useTabMemorySnapshot` (state/tabs/tabMemory.ts): one whole-browser `engine.tasks` snapshot `{ at, tasks, reading, failed }`, read only when a tab hover card with Show memory use opens (`measureTabMemory`), and kept 20 s for every tab; `attributeTabMemory(tasks, tabId)` turns it into exact, estimate, shared or unavailable. The cold-sampler double read is `sampleTasks` (state/tabs/taskSampler.ts), shared with the workspace usage call.
 - `downloads`: one record per download. A running download's `received`, `total` and `speed` are zero there: they live in
   `useDownloadProgress` (state/downloads/progress.ts), so progress wakes only the rows that show it and never rewrites
   downloads.json. Read a record with its progress through `useDownload(id)` (state/downloads/hooks.ts) in a component,
