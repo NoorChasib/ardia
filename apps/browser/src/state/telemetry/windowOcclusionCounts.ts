@@ -1,4 +1,5 @@
 import { chromeWindows, onWindowEvent } from "../../platform/windows";
+import { sameSharingPeriod } from "./sharingPeriod";
 
 const SETTLE_MS = 1500;
 const NONE = { focused_window_checks: 0, focused_window_pages_occluded: 0 };
@@ -6,8 +7,9 @@ let counts = { ...NONE };
 let settling: ReturnType<typeof setTimeout> | null = null;
 
 async function checkFocusedWindowOcclusion() {
+  const stillSamePeriod = sameSharingPeriod();
   const key = (await chromeWindows().catch(() => [])).find((w) => w.key && w.visible);
-  if (!key) return;
+  if (!key || !stillSamePeriod()) return;
   counts.focused_window_checks++;
   if (key.chromeOccluded === true && key.occlusionVisible) counts.focused_window_pages_occluded++;
 }

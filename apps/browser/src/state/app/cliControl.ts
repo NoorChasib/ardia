@@ -25,6 +25,7 @@ import { errorText } from "../../lib/errors";
 import { focusedWindowOf } from "../windows/ui";
 import { noteCliAutoEnabled, noteCliInstall, noteCliPillShown, type CliInstallReason } from "../telemetry/cliCounts";
 import { noteDragsEnded } from "../telemetry/stuckDrags";
+import { sameSharingPeriod } from "../telemetry/sharingPeriod";
 import type { CliCaller } from "./cliCaller";
 import { noteCliConnections } from "../automation/offscreen";
 
@@ -191,7 +192,8 @@ function pushActiveTab() {
   const active = shownReadyTab(useBrowser.getState());
   if (active === sentActive) return;
   sentActive = active;
-  void setCliActiveTab(active).then((status) => noteDragsEnded(status.dragsEnded), () => {});
+  const statusInSamePeriod = sameSharingPeriod();
+  void setCliActiveTab(active).then((status) => noteDragsEnded(status.dragsEnded, statusInSamePeriod()), () => {});
 }
 
 export function noteTabReady(tabId: string) {

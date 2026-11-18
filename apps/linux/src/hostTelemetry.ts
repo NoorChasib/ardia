@@ -117,9 +117,9 @@ let localCopySettled: () => Promise<void> = settledLocalCopy;
 let offeredInstallId: string | null = null;
 
 function deliverRelayed(message: Relayed) {
-  if (message.consentEpoch !== savedChoice().consentEpoch) return;
-  if (message.kind === "capture") capture(message.event, message.props, message.options);
-  else queueLog(message.level, message.message, message.attributes);
+  const current = message.consentEpoch === savedChoice().consentEpoch;
+  if (message.kind === "capture") capture(message.event, message.props, current ? message.options : { ...message.options, consent: { epoch: message.consentEpoch, installId: null, agreed: false } });
+  else if (current) queueLog(message.level, message.message, message.attributes);
 }
 
 const shownChoice = () => JSON.stringify(useTelemetry.getState());
@@ -133,7 +133,7 @@ async function refreshState() {
 export function startHostTelemetry(options: { host: ArdiaHost; candidate: boolean; locks?: LeaderLocks; channel?: LeaderChannel | null; localSettled?: () => Promise<void> }) {
   const { host, candidate } = options;
   localCopySettled = options.localSettled ?? settledLocalCopy;
-  setTelemetrySettle({ settle: settleHostTelemetry, reopen: reopenHostTelemetry });
+  setTelemetrySettle({ settle: settleHostTelemetry, reopen: reopenHostTelemetry, saveLocal: saveHostLocalCopy });
   setTelemetryHost({ os: "Linux", osType: "linux", send: hostSupports(TELEMETRY_POST, host) ? hostTelemetrySend(host) : null });
   loadChoice();
   installErrorReporting();
@@ -203,13 +203,24 @@ async function saveLocalCopy() {
 }
 
 export async function settleHostTelemetry(endsSession: boolean): Promise<string | null> {
-  if (!leadership) return null;
-  if (!endsSession || !leadership.leading()) emitWindowUsage();
+  const current = leadership;
+  if (!current) return null;
+  const leading = current.leading();
+  if (!endsSession || !leading) emitWindowUsage();
   let token: unknown = null;
-  if (endsSession) token = await leadership.request("end", END_TIMEOUT_MS).catch(report);
-  else if (leadership.leading()) await withDeadline(saveState(), END_TIMEOUT_MS, undefined);
-  await withDeadline(saveLocalCopy(), END_TIMEOUT_MS, undefined);
+  const settling = async () => {
+    const localSaved = saveLocalCopy();
+    if (endsSession) token = await current.request("end", END_TIMEOUT_MS).catch(report);
+    else if (leading) await saveState();
+    await localSaved;
+    if (leading) await saveLocalCopy();
+  };
+  await withDeadline(settling(), END_TIMEOUT_MS, undefined);
   return typeof token === "string" ? token : null;
+}
+
+export async function saveHostLocalCopy(): Promise<void> {
+  if (leadership) await withDeadline(saveLocalCopy(), END_TIMEOUT_MS, undefined);
 }
 
 export async function reopenHostTelemetry(token: string) {

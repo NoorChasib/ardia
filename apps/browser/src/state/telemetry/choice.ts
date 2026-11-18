@@ -136,7 +136,8 @@ const shown = (s: Saved): Shown => ({
 });
 
 export function save(patch: Partial<Session> | (Partial<Session> & Sharing)) {
-  const crossesConsent = "sharing" in patch && patch.sharing !== saved.sharing;
+  const replacesInstallId = "installId" in patch && saved.installId !== null && patch.installId !== saved.installId;
+  const crossesConsent = ("sharing" in patch && patch.sharing !== saved.sharing) || replacesInstallId;
   saved = { ...saved, ...patch, ...(crossesConsent ? { consentEpoch: saved.consentEpoch + 1 } : {}) } as Saved;
   try {
     writeDocument(STATE_DOC, versionedJson(saved, STATE_VERSION));
@@ -169,6 +170,8 @@ function readStateDoc(): SavedObject | null {
 }
 
 let loaded = false;
+
+export const choiceLoaded = () => loaded;
 
 export function loadChoice() {
   if (loaded) return;

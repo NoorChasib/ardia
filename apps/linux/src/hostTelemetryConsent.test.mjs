@@ -36,10 +36,12 @@ async function runWindow() {
   const { noteFind } = await import(`${telemetry}/findCounts.ts`);
   const { noteImportedPins } = await import(`${telemetry}/usage.ts`);
   const { trackPageProcessGone } = await import(`${telemetry}/diagnostics.ts`);
-  const { startHostTelemetry, settleHostTelemetry } = await import(`${linux}/hostTelemetry.ts`);
+  const { handleTelemetryOp, saveHostLocalCopy, startHostTelemetry, settleHostTelemetry } = await import(`${linux}/hostTelemetry.ts`);
   const channel = { postMessage: (data) => process.send({ kind: "wire", data }), onmessage: null };
   let localCopiesSaved = 0;
+  let localStalled = false;
   const localSettled = async () => {
+    if (localStalled) return new Promise(() => {});
     await Bun.sleep(30);
     localCopiesSaved++;
   };
@@ -64,10 +66,21 @@ async function runWindow() {
       releasePressure({ onBattery: false, batteryLevel: null, lowPowerMode: false, memoryPressure: "critical", physicalMemory: 1 });
       for (let i = 0; i < 10; i++) await turn();
     },
-    close: async () => {
+    close: async (endsSession) => {
       const before = localCopiesSaved;
-      await settleHostTelemetry(false);
+      const started = Date.now();
+      await settleHostTelemetry(endsSession === true);
+      return { localCopySaved: localCopiesSaved > before, ms: Date.now() - started };
+    },
+    stallLocal: () => void (localStalled = true),
+    saveLocal: async () => {
+      const before = localCopiesSaved;
+      await saveHostLocalCopy();
       return { localCopySaved: localCopiesSaved > before };
+    },
+    reset: async () => {
+      await handleTelemetryOp("reset");
+      return docs.get("telemetry.json");
     },
     queue: async () => {
       await client.saveQueueNow();
@@ -106,6 +119,7 @@ async function runWindow() {
 
 async function withWindows(run) {
   let authoritative = null;
+  let droppingRequests = false;
   const heldChoices = [];
   let documentReads = 0;
   let nextId = 0;
@@ -130,6 +144,7 @@ async function withWindows(run) {
           }
           if (message.kind === "wire") {
             if (side === "leader" && message.data.kind === "choice") return void heldChoices.push(message);
+            if (side === "follower" && droppingRequests && message.data.kind === "request") return;
             windows[side === "leader" ? "follower" : "leader"]?.send(message);
           }
         },
@@ -144,6 +159,10 @@ async function withWindows(run) {
   const setChoice = async (on) => {
     authoritative = await call("leader", "choice", on);
   };
+  const resetId = async () => {
+    authoritative = await call("leader", "reset");
+  };
+  const dropRequests = () => void (droppingRequests = true);
   const announce = async (expected = 1) => {
     const before = documentReads;
     const deadline = Date.now() + 3000;
@@ -157,7 +176,7 @@ async function withWindows(run) {
   };
   try {
     await Promise.all([start("leader"), start("follower")]);
-    await run({ call, setChoice, announce });
+    await run({ call, setChoice, announce, resetId, dropRequests });
   } finally {
     for (const window of Object.values(windows)) {
       window.send({ kind: "stop" });
@@ -176,7 +195,7 @@ else {
       await call("follower", "pins");
       await call("follower", "find");
       await call("follower", "log");
-      assert.deepEqual(await call("follower", "close"), { localCopySaved: true });
+      assert.equal((await call("follower", "close")).localCopySaved, true);
       assert.deepEqual(await call("leader", "queue"), { counts: [], logs: 0 });
       assert.deepEqual(await call("follower", "local"), [
         { kind: "log", sent: false },
@@ -251,5 +270,50 @@ else {
       assert.deepEqual(await call("follower", "flags"), [true, true]);
       await call("follower", "close");
       assert.deepEqual(await call("leader", "queue"), { counts: [], logs: 0 });
+    }), { timeout: 20000 });
+
+  test("a renderer failure a follower saw before the anonymous ID was reset isn't uploaded under the new ID, and stays an unsent local row", () =>
+    withWindows(async ({ call, setChoice, announce, resetId }) => {
+      await setChoice(true);
+      await announce();
+      await call("follower", "gone");
+      await resetId();
+      await call("follower", "pressure");
+      await call("follower", "close");
+      assert.deepEqual(await call("leader", "queued", GONE), []);
+      assert.deepEqual(await call("leader", "localEvent", GONE), [{ sent: false, memory_pressure: "critical" }]);
+    }), { timeout: 20000 });
+
+  test("a renderer failure the leader refuses as stale from a follower that hasn't read an off and on again stays an unsent local row", () =>
+    withWindows(async ({ call, setChoice, announce }) => {
+      await setChoice(true);
+      await announce();
+      await call("follower", "gone");
+      await setChoice(false);
+      await setChoice(true);
+      assert.deepEqual(await call("follower", "flags"), [true, true]);
+      await call("follower", "pressure");
+      await call("follower", "close");
+      assert.deepEqual(await call("leader", "queued", GONE), []);
+      assert.deepEqual(await call("leader", "localEvent", GONE), [{ sent: false, memory_pressure: "critical" }]);
+      assert.deepEqual(await call("follower", "localEvent", GONE), []);
+    }), { timeout: 20000 });
+
+  test("an opted-out utility window saves its buffered local rows when it closes, without relaying them", () =>
+    withWindows(async ({ call, setChoice }) => {
+      await setChoice(true);
+      await call("follower", "log");
+      assert.deepEqual(await call("follower", "saveLocal"), { localCopySaved: true });
+      assert.deepEqual(await call("follower", "local"), [{ kind: "log", sent: false }]);
+      assert.deepEqual(await call("leader", "queue"), { counts: [], logs: 0 });
+    }), { timeout: 20000 });
+
+  test("a close whose session end and local save both stall still finishes within one telemetry deadline", () =>
+    withWindows(async ({ call, dropRequests }) => {
+      dropRequests();
+      await call("follower", "stallLocal");
+      const { localCopySaved, ms } = await call("follower", "close", true);
+      assert.equal(localCopySaved, false);
+      assert.ok(ms >= 1900 && ms < 3000, `close took ${ms} ms`);
     }), { timeout: 20000 });
 }

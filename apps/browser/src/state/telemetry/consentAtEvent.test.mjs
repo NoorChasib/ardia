@@ -12,10 +12,16 @@ const { reportLocalStore } = await import("./localStoreReport.ts");
 const { viewMyData } = await import("./privacy.ts");
 const { launchEvents } = await import("./launchEvents.ts");
 const presses = await import("./tabPresses.ts");
+const { passwordImportTally } = await import("./passwordSaves.ts");
+const topApps = await import("./topAppsSharing.ts");
+const defaultBrowser = await import("./defaultBrowserCounts.ts");
+const { takeStuckDragCounts } = await import("./stuckDrags.ts");
+const { takeCliCounts } = await import("./cliCounts.ts");
 const app = stub.shellNativeModules.ArdiaApp;
 const localModule = stub.telemetryLocalModule;
 after(() => {
   delete globalThis.acTestSystemState;
+  delete globalThis.acTestCliControl;
   client.setSharing(false, "settings");
 });
 
@@ -146,4 +152,59 @@ test("a repeated row press whose answer arrives after sharing went off and on ag
   presses.notePressEnded("click");
   presses.emitTabPresses();
   assert.deepEqual((await queued("tab_presses")).map((p) => [p.presses, p.repeat_presses]), [[1, 0]]);
+});
+
+test("a password import that started while sharing was off isn't uploaded when sharing turns on before it finishes", async () => {
+  start(false);
+  const saving = held();
+  const tally = passwordImportTally("csv");
+  const attempt = tally.attempt(saving.promise);
+  client.setSharing(true, "settings");
+  saving.release(true);
+  await attempt;
+  tally.done();
+  assert.deepEqual(await queued("password_import"), []);
+  assert.deepEqual((await kept("password_import")).map((r) => [r.sent, r.properties.tried, r.properties.saved]), [[false, 1, 1]]);
+});
+
+test("a Top Apps sharing event held while sharing was off isn't uploaded when it's released after sharing turns on", async () => {
+  start(false);
+  topApps.noteTopAppsSharing("top_apps_sharing_synced", { path: "synced_record", on: true, profile_count: 1, sharing_profiles: 1 });
+  client.setSharing(true, "settings");
+  topApps.releaseTopAppsSharing();
+  assert.deepEqual(await queued("top_apps_sharing_synced"), []);
+  assert.deepEqual((await kept("top_apps_sharing_synced")).map((r) => r.sent), [false]);
+});
+
+test("a default browser answer that arrives after sharing went off and on again isn't counted under the new choice", async () => {
+  start(true);
+  const answer = held();
+  defaultBrowser.checkDefaultBrowserAtLaunch(() => answer.promise);
+  client.setSharing(false, "settings");
+  client.setSharing(true, "settings");
+  answer.release(true);
+  await turns();
+  assert.equal(defaultBrowser.takeDefaultBrowserCounts().launches_as_default_browser, 0);
+});
+
+test("stuck drag and windowless page totals read before sharing went off and on again aren't counted under the new choice, but later growth is", async () => {
+  start(true);
+  takeStuckDragCounts();
+  takeCliCounts();
+  const status = (ownerGone, given) => ({ state: "on", connections: 0, generation: 1, file: "", dragsEnded: { ownerGone, debuggerUnowned: 0, nativeRefused: 0 }, windowlessPages: { given, missed: 0 } });
+  const reply = held();
+  globalThis.acTestCliControl = () => reply.promise;
+  await diagnostics.recordContext();
+  client.setSharing(false, "settings");
+  client.setSharing(true, "settings");
+  reply.release(status(2, 3));
+  await turns();
+  assert.equal(takeStuckDragCounts().stuck_drags_ended_owner_gone, 0);
+  assert.equal(takeCliCounts().windowless_pages_given_geometry, 0);
+  globalThis.acTestCliControl = () => Promise.resolve(status(3, 5));
+  await diagnostics.recordContext();
+  await turns();
+  delete globalThis.acTestCliControl;
+  assert.equal(takeStuckDragCounts().stuck_drags_ended_owner_gone, 1);
+  assert.equal(takeCliCounts().windowless_pages_given_geometry, 2);
 });

@@ -11,6 +11,7 @@ import { consentCrossed, consentStamp } from "./choice";
 import { formatRecentPages, readRecentPages, type RecentPage, type SavedContext } from "./savedContext";
 import { noteDragsEnded } from "./stuckDrags";
 import { noteWindowlessPages } from "./cliCounts";
+import { sameSharingPeriod } from "./sharingPeriod";
 import { mainProcessWork } from "./mainProcessWork";
 import { appInfo } from "./transport";
 import { readDocument } from "../../platform/documents";
@@ -83,9 +84,11 @@ export const noteAppMemory = (totalMb: number) => (appMemoryMb = totalMb);
 
 export async function recordContext(): Promise<SavedContext | null> {
   if (!isSharing()) return null;
+  const statusInSamePeriod = sameSharingPeriod();
   void cliControlStatus().then((status) => {
-    noteDragsEnded(status.dragsEnded);
-    noteWindowlessPages(status.windowlessPages);
+    const counted = statusInSamePeriod();
+    noteDragsEnded(status.dragsEnded, counted);
+    noteWindowlessPages(status.windowlessPages, counted);
   }, () => {});
   const epoch = contextEpoch;
   const [sample, pressure] = await Promise.all([diagnosticsSample().catch(() => ({ footprintMB: undefined, freeDiskGB: undefined })), memoryPressure()]);
