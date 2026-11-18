@@ -24,6 +24,8 @@ export type LinuxCapabilities = {
   unloadIdleProfiles: boolean;
   hiddenElements: boolean;
   blockAutoplayEverywhere: boolean;
+  pagePictures: boolean;
+  tabMemory: boolean;
 };
 
 export const CLI_CONTROL_METHODS = [
@@ -47,6 +49,8 @@ export const FULL_SCREEN_ITEM = "std:toggleFullScreen:";
 export const PAGE_EDIT_COMMAND = "tab.edit";
 export const UNLOAD_IDLE_PROFILES_CALL = "profiles.unloadIdle";
 export const BLOCK_AUTOPLAY_EVERYWHERE_CALL = "webView.setBlockAutoplayEverywhere";
+export const PAGE_PICTURE_COMMAND = "tab.capturePicture";
+export const TAB_MEMORY_CALL = "engine.tasks";
 export const HIDDEN_ELEMENTS_CALLS = ["contentBlocker.hiddenElements", "contentBlocker.hideElements", "contentBlocker.restoreElements"] as const;
 
 export function linuxCapabilities(host: ArdiaHost | undefined = ardiaHost): LinuxCapabilities {
@@ -75,6 +79,8 @@ export function linuxCapabilities(host: ArdiaHost | undefined = ardiaHost): Linu
     unloadIdleProfiles: has(UNLOAD_IDLE_PROFILES_CALL),
     hiddenElements: has(...HIDDEN_ELEMENTS_CALLS),
     blockAutoplayEverywhere: has(BLOCK_AUTOPLAY_EVERYWHERE_CALL),
+    pagePictures: has(PAGE_PICTURE_COMMAND),
+    tabMemory: has(TAB_MEMORY_CALL),
   };
 }
 
@@ -89,6 +95,8 @@ export function unavailableSettingIds(capabilities: LinuxCapabilities, settingId
   if (!capabilities.peekOtherSites) ids.add("tabs.peekLinksToOtherSites");
   if (!capabilities.popupsOpenAsTabs) ids.add("tabs.popupsOpenAsTabs");
   if (!capabilities.linksFromOtherApps) for (const id of ["tabs.openLinksInLittleArdia", "tabs.appLinksFirst"]) ids.add(id);
+  if (!capabilities.pagePictures) ids.add("tabs.showPagePreviewInTabHoverMenu");
+  if (!capabilities.tabMemory) ids.add("tabs.showMemoryInTabHoverMenu");
   if (!capabilities.webkit) for (const id of WEB_ENGINE_SETTINGS) if (settingIds.includes(id)) ids.add(id);
   return ids;
 }

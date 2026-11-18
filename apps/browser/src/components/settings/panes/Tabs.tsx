@@ -24,6 +24,17 @@ const SIDEBAR_SIDES: SegmentOption<Settings["sidebarSide"]>[] = [
   { value: "right", title: "Right" },
 ];
 
+const CLOSE_BUTTON_SIDES: SegmentOption<Settings["tabCloseButtonSide"]>[] = [
+  { value: "left", title: "Left" },
+  { value: "right", title: "Right" },
+];
+
+const REVEAL_SPEEDS: SegmentOption<Settings["sidebarRevealSpeed"]>[] = [
+  { value: "faster", title: "Faster" },
+  { value: "default", title: "Default" },
+  { value: "slower", title: "Slower" },
+];
+
 type SleepingLook = "normal" | "fade" | "strike" | "both";
 
 const SLEEPING_LOOKS: Option<SleepingLook>[] = [
@@ -92,6 +103,8 @@ export function TabsPane(_place: SettingsPlace) {
 function LayoutSection() {
   const top = useTabLayout() === "top";
   const sidebarSide = useSettings((s) => s.sidebarSide);
+  const closeSide = useSettings((s) => s.tabCloseButtonSide);
+  const revealSpeed = useSettings((s) => s.sidebarRevealSpeed);
   return (
     <>
       <SectionHeader title="Layout" />
@@ -107,8 +120,14 @@ function LayoutSection() {
             anchor="tabs.autoHideTabs"
             description={`Tabs slide away until you point at the window's ${top ? "top edge" : "edge"}. ${keyText("⌘S")} toggles them in one window.`}
           />
+          <Row anchor="tabs.sidebarRevealSpeed">
+            <Segmented options={REVEAL_SPEEDS} value={revealSpeed} onChange={(sidebarRevealSpeed) => updateSettings({ sidebarRevealSpeed })} />
+          </Row>
           <Row anchor="tabs.sidebarSide">
             <Segmented options={SIDEBAR_SIDES} value={sidebarSide} onChange={chooseSidebarSide} />
+          </Row>
+          <Row anchor="tabs.tabCloseButtonSide">
+            <Segmented options={CLOSE_BUTTON_SIDES} value={closeSide} onChange={(tabCloseButtonSide) => updateSettings({ tabCloseButtonSide })} />
           </Row>
           <SettingToggle anchor="tabs.hideToolbarWhileScrolling" />
           <ButtonsRow top={top} />
@@ -138,6 +157,8 @@ function TabsAndTopAppsSection() {
   const topAppBadges = useSettings((s) => s.showTopAppBadges);
   const fade = useSettings((s) => s.fadeUnloadedTabs);
   const strike = useSettings((s) => s.strikeSleepingTabs);
+  const hoverMenu = useSettings((s) => s.showTabHoverMenu);
+  const hoverMenuOff = hoverMenu ? undefined : "Turn on Show tab hover menu to see it.";
   return (
     <>
       <SectionHeader title="Tabs and Top Apps" />
@@ -159,6 +180,8 @@ function TabsAndTopAppsSection() {
         <SettingToggle anchor="tabs.topAppFolders" />
         <SettingToggle anchor="tabs.showTabHoverMenu" />
         <SettingToggle anchor="tabs.showFullUrlInTabHoverMenu" />
+        <SettingToggle anchor="tabs.showPagePreviewInTabHoverMenu" description={hoverMenuOff} />
+        <SettingToggle anchor="tabs.showMemoryInTabHoverMenu" description={hoverMenuOff} />
         <SettingToggle anchor="tabs.autoPictureInPicture" />
         <SettingToggle anchor="tabs.playingNowAcrossProfiles" />
         <SettingToggle anchor="tabs.videoUpscaling" />

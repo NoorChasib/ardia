@@ -27,6 +27,8 @@ import { HoverCardFrameProvider, useHoverCardMotion, useHoverCardOrigin, useHove
 import { hoverCardAt, sidebarEdgeOf } from "./hoverPlacement";
 import { usePeekSpan } from "../../state/windows/dockMotion";
 import { TabCardSummary } from "./TabCardSummary";
+import { TabMemoryLine } from "./TabMemoryLine";
+import { TabCardPreview } from "./TabCardPreview";
 import { useSidebarUi, type Anchor, type Hover } from "../../state/sidebar/sidebarUi";
 import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { TabIcon } from "./TabIcon";
@@ -97,6 +99,8 @@ function TabCard({ tabId, windowId, anchor }: { tabId: string; windowId: string;
           Pinned: {displayUrl(tab.pinnedUrl)}
         </Text>
       ) : null}
+      <TabMemoryLine tabId={tabId} />
+      <TabCardPreview windowId={windowId} tabId={tabId} />
       <View style={{ flexDirection: "row", gap: space.xs, marginTop: space.m }}>
         <ActionTile caption icon={tab.pin ? "pin.slash" : "pin"} label={tab.pin ? "Unpin" : "Pin"} onPress={() => (noteTabHoverCardPress(false), togglePin(tabId))} />
         {tab.url && showBookmarks ? (

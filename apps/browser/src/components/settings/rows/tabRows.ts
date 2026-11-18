@@ -22,11 +22,24 @@ export const tabRows = {
           keywords: ["right", "left", "side", "position", "flip", "mirror", "sidebar on the right", "right sidebar", "arc"],
           shown: inSidebar,
         },
+        tabCloseButtonSide: {
+          title: "Close button position",
+          description: "Right, like Dia, or left, over the tab's icon.",
+          keywords: ["close button", "close tab button", "x", "✕", "close", "left", "right", "side", "position", "safari", "hover"],
+          shown: inSidebar,
+        },
         autoHideTabs: {
           title: "Auto-hide tabs",
           explained: true,
           description: `Tabs slide away until you point at the window's edge. ${keyText("⌘S")} toggles them in one window.`,
           keywords: ["hide tabs", "hide sidebar", "show sidebar", "toggle sidebar", "hide tab bar", "tab strip", "top tabs", "focus mode", "full screen", "zen"],
+        },
+        sidebarRevealSpeed: {
+          title: "Sidebar reveal speed",
+          explained: true,
+          description: "How soon hidden tabs slide out when you point at the window's edge. Slower waits for the pointer to rest there, so passing by doesn't open them.",
+          keywords: ["reveal", "peek", "edge", "hover delay", "delay", "dwell", "speed", "slide out", "auto-hide", "sensitivity", "faster", "slower", "accidental", "arc", "zen", "compact mode"],
+          shown: inSidebar,
         },
         hideToolbarWhileScrolling: {
           title: "Hide toolbar while scrolling",
@@ -89,6 +102,17 @@ export const tabRows = {
           title: "Show full address in tab hover menu",
           description: "Off, it shows only the domain.",
           keywords: ["hover", "hover card", "popup", "url", "address", "link", "domain", "full url", "path"],
+        },
+        showPagePreviewInTabHoverMenu: {
+          title: "Show page preview in tab hover menu",
+          description: "A small picture of the page as you last saw it.",
+          keywords: ["preview", "page preview", "tab preview", "thumbnail", "screenshot", "picture", "hover", "hover card", "popup", "chrome", "edge"],
+        },
+        showMemoryInTabHoverMenu: {
+          title: "Show memory use in tab hover menu",
+          description: "Measured when the menu opens. Tabs that share memory say so.",
+          keywords: ["memory", "ram", "memory use", "memory usage", "process", "processes", "task manager", "mb", "hover", "hover card", "popup", "performance", "chrome"],
+          shown: () => PLATFORM_FEATURES.attributesTabMemory,
         },
         autoPictureInPicture: {
           title: "Automatic Picture in Picture",
