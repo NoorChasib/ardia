@@ -9,7 +9,7 @@ or a Windows run can check. When `bun run` starts a tool whose bin begins `#!/us
 `bun x --no-install` runs the copy in `node_modules` and stops when it's missing. A plain `bun x` would download the
 latest release of the package into a global cache and run that, unpinned.
 
-| Target | Tool | Entry point | Output checked against the pnpm build |
+| Target | Tool | Entry point | Output compared with the build from before Bun |
 |---|---|---|---|
 | `apps/linux` (the Linux UI) | Vite 7 | `bun run --cwd apps/linux build`, `dev`, `preview` | `dist` byte-identical (72 files) |
 | `packages/demo` (the site's demo) | Vite 7 | `bun run --cwd packages/demo build`, `dev` | `dist` byte-identical (71 files) |
