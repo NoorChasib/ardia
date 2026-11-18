@@ -16,6 +16,7 @@ import { webviews } from "../../browser/src/platform/webviews";
 import { startMemoryTrim } from "../../browser/src/state/tabs/memoryTrim";
 import { startProfileUnloading } from "../../browser/src/state/profiles/profileUnloading";
 import { setNewTabPrewarm } from "../../browser/src/state/tabs/prewarm";
+import { setHiddenPanesDetached } from "../../browser/src/state/windows/paneHiding";
 import { setStoreBatching, useBrowser, type HydrateData } from "../../browser/src/state/browser/store";
 import { usePages } from "../../browser/src/state/tabs/pageState";
 import { useOnboarding } from "../../browser/src/state/onboarding/onboarding";
@@ -98,6 +99,7 @@ async function start() {
   setSharedCommands((command) => Object.hasOwn(COMMANDS, command) && !LINUX_APP_COMMANDS.has(command));
   if (!ardiaHost) throw new Error("The Linux desktop UI requires an Ardia native host");
   setNewTabPrewarm(false);
+  setHiddenPanesDetached(true);
   const { windowId, profileId } = ardiaHost.bootstrap;
   const utility = isLinuxUtility(windowId);
   const configReady = startHostConfig(ardiaHost, () => emitNativeEvent("ArdiaConfig", "onChange", {}));

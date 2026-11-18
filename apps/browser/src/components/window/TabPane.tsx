@@ -31,6 +31,7 @@ import { useProfileTheme } from "./ThemeScope";
 import { useCardFrame } from "./cardFrame";
 import { newTabOpensOf } from "../../state/settings/settings";
 import { markNewTabPane } from "../../state/omnibox/newTabMarks";
+import { detachedPaneStyle } from "../../state/windows/paneHiding";
 
 const LINGERING_PANE = "ardia.lingeringPane";
 
@@ -134,6 +135,7 @@ export const TabPane = memo(function TabPane({
         overflow: "hidden",
         opacity: covered ? 0 : 1,
         backgroundColor: visible && !fullscreen && !seeThrough ? theme.card : undefined,
+        ...detachedPaneStyle({ visible, warm: !!warm, lingering, prewarmed }),
       }}
     >
       {bar.kind === "toolbar" && <Toolbar tabId={tabId} geometry={geometry} windowId={windowId} inSplit={inSplit} focused={focused || !inSplit} />}
