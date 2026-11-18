@@ -4,6 +4,14 @@ export const webviews = new Map<string, WebViewHandle>();
 
 const mounts = new Map<string, object>();
 
+let picturesSupported = true;
+
+export const pagePicturesSupported = () => picturesSupported;
+
+export function setPagePicturesSupported(supported: boolean) {
+  picturesSupported = supported;
+}
+
 export const webviewMount = (tabId: string) => mounts.get(tabId);
 
 export function webviewRef(tabId: string) {
