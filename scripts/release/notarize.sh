@@ -6,6 +6,7 @@ target="${1:?$usage}"
 logs="${2:?$usage}"
 . "$(dirname "$0")/lib.sh"
 load_notary_auth
+has_notary_auth || die "no notarytool credentials: $notary_setup_hint"
 
 submit() {
   echo "Notarizing $(basename "$1")"

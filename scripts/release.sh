@@ -129,12 +129,14 @@ if [ "$phase" != build ]; then
   [ -n "$identity" ] || die "no $identity_name identity"
   load_notary_auth
   notarize=0
-  if xcrun notarytool history "${notary_auth[@]}" >/dev/null 2>&1; then
+  if has_notary_auth && xcrun notarytool history "${notary_auth[@]}" >/dev/null 2>&1; then
     notarize=1
   elif [ "${ALLOW_UNNOTARIZED:-0}" = 1 ]; then
     echo "warning: no notarytool credentials; the build won't be notarized" >&2
+  elif ! has_notary_auth; then
+    die "no notarytool credentials: $notary_setup_hint"
   else
-    echo "error: notarytool credentials are missing or invalid (scripts/.notary.env or the '${NOTARY_PROFILE:-}' profile):" >&2
+    echo "error: notarytool refuses the credentials from scripts/.notary.env or the environment:" >&2
     xcrun notarytool history "${notary_auth[@]}" 2>&1 | head -2 >&2
     exit 1
   fi
