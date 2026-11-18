@@ -8,7 +8,7 @@ import { launch, reporter, session } from "../../../scripts/lib/instance.mjs";
 const args = process.argv.slice(2);
 const appArg = args.find((a) => !a.startsWith("--"));
 if (!appArg) {
-  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a push 350 ms after the stop goes on through, whatever the reveal speed. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
+  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a push 350 ms after the stop goes on through, whatever the reveal speed. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, a tab dragged off it keeps it out until the button comes up even when a stray mouse move makes the edge watcher lose the press, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
   process.exit(2);
 }
 const appPath = resolve(appArg);
@@ -95,22 +95,28 @@ try {
     await run(`st().updateSettings({ sidebarWidth: 160 }); return away();`);
   });
 
-  await rep.check("a drag that starts on a tab row keeps the peek out while the button is down, the pointer 160 pt past its edge (#1679)", async () => {
-    assert.equal(await run(`return peek();`), true);
-    const out = await run(`let win;
-      return ac.engine.call("windows.list", {}).then((l) => { win = l.find((w) => w.hasRoot).window; })
-        .then(() => at(60, ROW_Y)).then(() => settle(200))
-        .then(() => ac.engine.call("windows.dev", { window: win, action: "mouse:down:60," + ROW_Y })).then(() => settle(80))
-        .then(() => ac.engine.call("windows.dev", { window: win, action: "mouse:dragged:100," + ROW_Y })).then(() => settle(80))
-        .then(() => ac.engine.call("windows.dev", { window: win, action: "mouse:dragged:140," + ROW_Y }))
-        .then(() => until(() => globalThis.acTabDrag.getState().phase === "tab", 1500)).then((dragging) => at(9 + 160 + 160, ROW_Y).then(() => dragging))
-        .then((dragging) => ac.engine.call("windows.dev", { window: win, action: "mouse:dragged:" + (9 + 160 + 160) + "," + ROW_Y }).then(() => dragging))
-        .then((dragging) => settle(700).then(() => { const held = live(); return ac.engine.call("windows.dev", { window: win, action: "mouse:up:" + (9 + 160 + 160) + "," + ROW_Y }).then(() => settle(600)).then(() => ({ dragging, held, after: live() })); }));`);
-    assert.equal(out.dragging, true, "the press on the first tab row became a tab drag");
-    assert.equal(out.held, true, "out while the button is down");
-    assert.equal(out.after, false, "closes once the button comes up away from it");
-    await run(`return away();`);
-  });
+  for (const [label, lostPress] of [["", false], [", even after a stray mouse move makes the edge watcher lose the press", true]]) {
+    await rep.check(`a drag that starts on a tab row keeps the peek out while the button is down, the pointer 160 pt past its edge${label} (#1679)`, async () => {
+      assert.equal(await run(`return peek();`), true);
+      const out = await run(`let win; const PAST = 9 + 160 + 160;
+        const strayMove = () => ${lostPress} ? ac.engine.call("windows.dev", { window: win, action: "mouse:moved:" + PAST + "," + ROW_Y }) : Promise.resolve();
+        return ac.engine.call("windows.list", {}).then((l) => { win = l.find((w) => w.hasRoot).window; })
+          .then(() => at(60, ROW_Y)).then(() => settle(200))
+          .then(() => ac.engine.call("windows.dev", { window: win, action: "mouse:down:60," + ROW_Y })).then(() => settle(80))
+          .then(() => ac.engine.call("windows.dev", { window: win, action: "mouse:dragged:100," + ROW_Y })).then(() => settle(80))
+          .then(() => ac.engine.call("windows.dev", { window: win, action: "mouse:dragged:140," + ROW_Y }))
+          .then(() => until(() => globalThis.acTabDrag.getState().phase === "tab", 1500)).then((dragging) => at(PAST, ROW_Y).then(() => dragging))
+          .then((dragging) => ac.engine.call("windows.dev", { window: win, action: "mouse:dragged:" + PAST + "," + ROW_Y }).then(() => dragging))
+          .then((dragging) => settle(80).then(strayMove).then(() => dragging))
+          .then((dragging) => settle(700).then(() => { const held = live(); const stillDragging = globalThis.acTabDrag.getState().phase === "tab";
+            return ac.engine.call("windows.dev", { window: win, action: "mouse:up:" + PAST + "," + ROW_Y }).then(() => settle(600)).then(() => ({ dragging, stillDragging, held, after: live() })); }));`);
+      assert.equal(out.dragging, true, "the press on the first tab row became a tab drag");
+      assert.equal(out.stillDragging, true, "the tab drag is still on just before the button comes up");
+      assert.equal(out.held, true, "out while the button is down");
+      assert.equal(out.after, false, "closes once the button comes up away from it");
+      await run(`return away();`);
+    });
+  }
 
   for (const [where, x, y] of [["the empty list", 80, 420], ["the header", 120, 20]]) {
     await rep.check(`a press on ${where} is a window drag: the peek stays out while the button is down (#1679)`, async () => {

@@ -12,7 +12,7 @@ import { Sidebar } from "../sidebar/Sidebar";
 import { ResizeHandle } from "../sidebar/ResizeHandle";
 import { dismissHoverIn } from "../../state/sidebar/hover";
 import { sidebarUi, useSidebarUi } from "../../state/sidebar/sidebarUi";
-import { peekHeld, watchHolds } from "../../state/app/transientUi";
+import { peekHeld, peekHeldBy, watchHolds } from "../../state/app/transientUi";
 import { noteSidebarPeek } from "../../state/telemetry/usage";
 import {
   noteFullScreenPeek,
@@ -20,6 +20,7 @@ import {
   notePageFullScreenPeek,
   noteSidebarPeekClosedWhileResizing,
   noteSidebarPeekResize,
+  noteSidebarPeekTabDragHold,
   noteSidebarSlide,
 } from "../../state/telemetry/dockCounts";
 import { ProfileSwipe } from "./ProfileSwipe";
@@ -185,6 +186,11 @@ export function DockedLayout({
   );
 }
 
+const onlyTabDragHolds = (windowId: string) => {
+  const by = peekHeldBy(windowId);
+  return by.length === 1 && by[0] === "tabDrag";
+};
+
 function SidebarDock({
   dock,
   open,
@@ -230,7 +236,22 @@ function SidebarDock({
     dismissHoverIn(windowId);
   };
   const revealSpeed = useSettings((s) => s.sidebarRevealSpeed);
-  const peek = usePeek((!open || fullscreen) && !moving, arc, () => edgeOver.current || peekHeld(windowId), closed, opened, revealSpeed);
+  const draggingTabNow = useRef(draggingTab);
+  draggingTabNow.current = draggingTab;
+  const tabDragHoldNoted = useRef(false);
+  useEffect(() => {
+    if (!draggingTab) tabDragHoldNoted.current = false;
+  }, [draggingTab]);
+  const peekHeldOpen = () => {
+    if (edgeOver.current) return true;
+    if (!peekHeld(windowId)) return false;
+    if (draggingTabNow.current && !tabDragHoldNoted.current && onlyTabDragHolds(windowId)) {
+      tabDragHoldNoted.current = true;
+      noteSidebarPeekTabDragHold();
+    }
+    return true;
+  };
+  const peek = usePeek((!open || fullscreen) && !moving, arc, peekHeldOpen, closed, opened, revealSpeed);
   const latestPeek = useRef(peek);
   latestPeek.current = peek;
   useEffect(() => {
