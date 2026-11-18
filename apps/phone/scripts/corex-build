@@ -7,8 +7,8 @@
 # Waits (up to ARDIA_BUILD_WAIT seconds, default 1800) while another Gradle build is busy in the container (more than
 # half a second of CPU in 5 s: an idle daemon left by another project only counts against memory) or less than
 # 8 GB of its memory is free. Gradle runs without a daemon and Kotlin in-process, so nothing of ours stays resident.
-# pnpm is the version apps/phone/package.json pins, first on the path, since bundle-export runs it too, and TMPDIR
-# sits beside the clone, so the export's offline install finds pnpm's store on the same filesystem.
+# bun is the version apps/phone/package.json pins, first on the path, since bundle-export runs it too, and TMPDIR
+# and Bun's install cache sit beside the clone, so the export's offline install finds the cache on the same filesystem.
 # apkanalyzer for check-names.py is cmdline-tools 23.0 (the Mac's), pinned by checksum, in sdk-view/ beside the clone:
 # it must sit in an SDK layout, so the view links the shared SDK's build-tools, platform-tools and platforms and
 # nothing is added to the shared SDK. Keeps the newest 8 APKs. --compose-key is refused: the upgrade pair is built on the Mac.
@@ -76,7 +76,7 @@ Every build fetches, detaches it at the requested commit and resets it there; un
 the build outputs Git ignores stay. Never edit, commit or push from here: all work happens in the main checkout on
 the Mac. `apps/phone/scripts/corex-test` runs the Kotlin unit tests here too: it may apply a diff from the main
 checkout for one run and resets the clone when it ends. Both hold `clone.lock`. `tools/` holds the branch head's `apps/phone/scripts` and `apps/phone/test/r8`, rewritten every build.
-`pnpm-<version>/` is the pinned pnpm, `sdk-view/` the pinned apkanalyzer in an SDK layout that links the shared
+`bun-<version>/` is the pinned Bun, `bun-cache/` its install cache, `sdk-view/` the pinned apkanalyzer in an SDK layout that links the shared
 SDK's parts, and `tmp/` holds the bundle exports.
 APKs go to `~/Developer/ardia-phone-apks/`.
 README
@@ -110,16 +110,17 @@ if [ ! -x "$sdkView/cmdline-tools/latest/bin/apkanalyzer" ]; then
 fi
 export ARDIA_APKANALYZER="$sdkView/cmdline-tools/latest/bin/apkanalyzer"
 
-pinned="$(sed -n 's/.*"packageManager": "pnpm@\([^"]*\)".*/\1/p' "$src/apps/phone/package.json")"
-pnpmHome="$base/pnpm-$pinned"
-[ -x "$pnpmHome/node_modules/.bin/pnpm" ] || npm install --silent --prefix "$pnpmHome" "pnpm@$pinned"
-export PATH="$pnpmHome/node_modules/.bin:$PATH"
+pinned="$(sed -n 's/.*"packageManager": "bun@\([^"]*\)".*/\1/p' "$src/apps/phone/package.json")"
+bunHome="$base/bun-$pinned"
+[ -x "$bunHome/node_modules/.bin/bun" ] || npm install --silent --prefix "$bunHome" "bun@$pinned"
+export PATH="$bunHome/node_modules/.bin:$PATH"
+export BUN_INSTALL_CACHE_DIR="$base/bun-cache"
 export TMPDIR="$base/tmp"
 export GRADLE_OPTS="${GRADLE_OPTS:-} -Djava.net.preferIPv4Stack=true"
 mkdir -p "$TMPDIR"
-[ "$(pnpm --version)" = "$pinned" ] || { echo "pnpm on the path is $(pnpm --version), not $pinned" >&2; exit 1; }
+[ "$(bun --version)" = "$pinned" ] || { echo "bun on the path is $(bun --version), not $pinned" >&2; exit 1; }
 started=$(date +%s)
-(cd "$src/apps/phone" && pnpm install --frozen-lockfile --reporter=append-only > "$base/install.log" 2>&1) || { tail -20 "$base/install.log" >&2; exit 1; }
+(cd "$src/apps/phone" && bun install --frozen-lockfile > "$base/install.log" 2>&1) || { tail -20 "$base/install.log" >&2; exit 1; }
 installed=$(date +%s)
 ARDIA_BUILD_ROOT="$src" ARDIA_APK_DIR="$out" ARDIA_GRADLE_EPHEMERAL=1 bash "$tools/apps/phone/scripts/build-apk" "$name" --commit "$commit" "$@"
 finished=$(date +%s)

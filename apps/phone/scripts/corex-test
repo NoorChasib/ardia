@@ -147,11 +147,12 @@ else
   echo "testing $commit"
 fi
 
-pinned="$(sed -n 's/.*"packageManager": "pnpm@\([^"]*\)".*/\1/p' "$src/apps/phone/package.json")"
-export PATH="$base/pnpm-$pinned/node_modules/.bin:$PATH"
+pinned="$(sed -n 's/.*"packageManager": "bun@\([^"]*\)".*/\1/p' "$src/apps/phone/package.json")"
+export PATH="$base/bun-$pinned/node_modules/.bin:$PATH"
+export BUN_INSTALL_CACHE_DIR="$base/bun-cache"
 export TMPDIR="$base/tmp"
 export GRADLE_OPTS="${GRADLE_OPTS:-} -Djava.net.preferIPv4Stack=true"
-(cd "$src/apps/phone" && pnpm install --frozen-lockfile --reporter=silent)
+(cd "$src/apps/phone" && bun install --frozen-lockfile --silent)
 results=("$src/packages/phone/android/build/test-results/testDebugUnitTest" "$src/apps/phone/android/app/build/test-results/testDebugUnitTest" "$src/apps/phone/android/ardia-design/build/test-results/testDebugUnitTest")
 tasks=(:ardia-phone-native:testDebugUnitTest :app:testDebugUnitTest :ardia-design:testDebugUnitTest)
 deviceArgs=()

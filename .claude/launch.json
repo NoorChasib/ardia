@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "site",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["-C", "apps/site", "preview", "--port", "4321"],
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/site", "preview", "--port", "4321"],
       "port": 4321
     }
   ]
