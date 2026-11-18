@@ -1,16 +1,17 @@
+import { consentedCount } from "./consentedCount";
+
 export type TabReleaseOutcome = "released" | "alreadyClosed" | "failed";
 
-const NONE = { host_tab_releases: 0, host_tab_releases_already_closed: 0, host_tab_releases_failed: 0 };
-let counts = { ...NONE };
+const releases = consentedCount();
+const alreadyClosed = consentedCount();
+const failed = consentedCount();
 
 export function noteTabRelease(outcome: TabReleaseOutcome) {
-  counts.host_tab_releases++;
-  if (outcome === "alreadyClosed") counts.host_tab_releases_already_closed++;
-  else if (outcome === "failed") counts.host_tab_releases_failed++;
+  releases.note();
+  if (outcome === "alreadyClosed") alreadyClosed.note();
+  else if (outcome === "failed") failed.note();
 }
 
 export function takeTabReleaseCounts() {
-  const taken = counts;
-  counts = { ...NONE };
-  return taken;
+  return { host_tab_releases: releases.take(), host_tab_releases_already_closed: alreadyClosed.take(), host_tab_releases_failed: failed.take() };
 }

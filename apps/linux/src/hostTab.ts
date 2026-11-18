@@ -19,6 +19,7 @@ export type TabViewport = { rect: { x: number; y: number; width: number; height:
 
 const claims = new WeakMap<ArdiaHost, Map<string, HostTab>>();
 const unreleasedClaims = new WeakMap<ArdiaHost, Map<string, string>>();
+const UNRELEASED_CLAIMS_KEPT = 64;
 const ENGINE_NO_LONGER_OWNS_TAB = "No owned live tab";
 
 type TabEventReceiver = (id: string, payload: unknown) => void;
@@ -67,10 +68,15 @@ function releaseOutcome(error: unknown): TabReleaseOutcome {
   return error instanceof Error && error.message === ENGINE_NO_LONGER_OWNS_TAB ? "alreadyClosed" : "failed";
 }
 
-function unreleasedFor(host: ArdiaHost) {
+function keepUnreleasedClaim(host: ArdiaHost, key: string, claim: string) {
   const unreleased = unreleasedClaims.get(host) ?? new Map<string, string>();
   unreleasedClaims.set(host, unreleased);
-  return unreleased;
+  unreleased.delete(key);
+  unreleased.set(key, claim);
+  for (const oldest of unreleased.keys()) {
+    if (unreleased.size <= UNRELEASED_CLAIMS_KEPT) break;
+    unreleased.delete(oldest);
+  }
 }
 const CREATING_LOAD_MS = 2_000;
 const ADOPTED_LIVE = ["tab", "ardiacore"];
@@ -231,7 +237,8 @@ export class HostTab {
         .then((): TabReleaseOutcome => "released", (error: unknown) => { failure = error; return releaseOutcome(error); });
       if (owners.get(this.key) === this) {
         owners.delete(this.key);
-        if (outcome === "failed") unreleasedFor(this.host).set(this.key, this.claim);
+        if (outcome === "released") unreleasedClaims.get(this.host)?.delete(this.key);
+        else keepUnreleasedClaim(this.host, this.key, this.claim);
       }
       noteTabRelease(outcome);
       if (outcome === "failed") console.error("[ardia host] release failed", failure);

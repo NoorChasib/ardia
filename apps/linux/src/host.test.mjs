@@ -6,6 +6,7 @@ import { createHostDocuments } from "./hostDocuments.ts";
 import { createSessionWriter, initialHostSession, snapshotHostSession, startHostPersistence } from "./hostSession.ts";
 import { HostTab } from "./hostTab.ts";
 import { takeTabReleaseCounts } from "../../browser/src/state/telemetry/tabReleaseCounts.ts";
+import { setSharing } from "../../browser/src/state/telemetry/client.ts";
 import { tabViewport } from "./hostViewport.ts";
 import { startHostTabLifecycle } from "./hostTabLifecycle.ts";
 import { startHostData } from "./hostData.ts";
@@ -693,26 +694,92 @@ function releasingHost(release) {
 const creates = (requests) => requests.filter(([method]) => method === "tab.create").map(([, args]) => args);
 const collectGarbage = globalThis.Bun?.gc ? () => globalThis.Bun.gc(true) : globalThis.gc;
 
-test("a release the engine answers with No owned live tab drops the claim, so the next tab with that key starts fresh", async (t) => {
-  const errors = t.mock.method(console, "error", () => {});
+const sharingReleaseCounts = (t) => {
+  setSharing(true, "settings");
+  t.after(() => setSharing(false, "settings"));
   takeTabReleaseCounts();
+};
+
+test("a release the engine answers with No owned live tab drops the tab but keeps its claim for the next create with that key", async (t) => {
+  const errors = t.mock.method(console, "error", () => {});
+  sharingReleaseCounts(t);
   const { host, requests } = releasingHost(() => { throw new Error("No owned live tab"); });
   const closed = new HostTab(host, { key: "closed" }, () => {});
   await closed.ready;
+  const claim = closed.claim;
   closed.dispose();
   await new Promise(setImmediate);
   const reopened = new HostTab(host, { key: "closed" }, () => {});
   await reopened.ready;
-  assert.equal("previousClaim" in creates(requests).at(-1), false);
+  assert.equal(creates(requests).at(-1).previousClaim, claim);
   assert.deepEqual(takeTabReleaseCounts(), { host_tab_releases: 1, host_tab_releases_already_closed: 1, host_tab_releases_failed: 0 });
   assert.equal(errors.mock.calls.length, 0);
   reopened.dispose();
+  await new Promise(setImmediate);
+  const fresh = new HostTab(host, { key: "closed" }, () => {});
+  await fresh.ready;
+  assert.equal(creates(requests).at(-1).previousClaim, reopened.claim);
+  fresh.dispose();
+  await new Promise(setImmediate);
+});
+
+test("a tab whose engine id aged out of the replacement history before its release still reclaims its binding on remount", async (t) => {
+  t.mock.method(console, "error", () => {});
+  let engineClaim;
+  let currentId = 10;
+  const recentlyReplaced = [];
+  const { host } = fixture(async (method, args) => {
+    if (method === "tab.create") {
+      if (engineClaim && engineClaim !== args.previousClaim) throw new Error("This tab already has an active owner");
+      engineClaim = args.claim;
+      return { browserId: currentId, chromeTabId: currentId };
+    }
+    if (method === "tab.release") {
+      if ((args.id !== currentId && !recentlyReplaced.includes(args.id)) || args.claim !== engineClaim) throw new Error("No owned live tab");
+      engineClaim = undefined;
+    }
+    return null;
+  });
+  const old = new HostTab(host, { key: "aged-out" }, () => {});
+  await old.ready;
+  old.dispose();
+  for (let i = 0; i < 5; i++) {
+    recentlyReplaced.push(currentId++);
+    if (recentlyReplaced.length > 4) recentlyReplaced.shift();
+  }
+  await new Promise(setImmediate);
+  const remounted = new HostTab(host, { key: "aged-out" }, () => {});
+  await remounted.ready;
+  assert.equal(engineClaim, remounted.claim);
+  remounted.dispose();
+  await new Promise(setImmediate);
+});
+
+test("claims kept after refused releases are capped per window, oldest first", async (t) => {
+  t.mock.method(console, "error", () => {});
+  const { host, requests } = releasingHost(() => { throw new Error("No owned live tab"); });
+  const firstClaims = new Map();
+  for (let i = 0; i < 66; i++) {
+    const tab = new HostTab(host, { key: `capped-${i}` }, () => {});
+    await tab.ready;
+    firstClaims.set(tab.key, tab.claim);
+    tab.dispose();
+  }
+  await new Promise(setImmediate);
+  const probes = [];
+  for (const [key, expected] of [["capped-0", undefined], ["capped-1", undefined], ["capped-2", firstClaims.get("capped-2")], ["capped-65", firstClaims.get("capped-65")]]) {
+    const tab = new HostTab(host, { key }, () => {});
+    probes.push(tab);
+    await tab.ready;
+    assert.equal(creates(requests).at(-1).previousClaim, expected, key);
+  }
+  for (const tab of probes) tab.dispose();
   await new Promise(setImmediate);
 });
 
 test("a release that fails for another reason keeps only the claim, for the next create with that key", async (t) => {
   const errors = t.mock.method(console, "error", () => {});
-  takeTabReleaseCounts();
+  sharingReleaseCounts(t);
   let failing = true;
   const { host, requests } = releasingHost(() => { if (failing) throw new Error("Native request timed out: tab.release"); return null; });
   const first = new HostTab(host, { key: "kept" }, () => {});
@@ -741,7 +808,7 @@ test("closed tabs whose release the engine refuses are not kept alive", { skip: 
   const failing = releasingHost(() => { throw new Error("Native request timed out: tab.release"); });
   const refs = [];
   const churn = async (on, prefix) => {
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 60; i++) {
       const tab = new HostTab(on, { key: `${prefix}${i}` }, () => {});
       await tab.ready;
       tab.dispose();
@@ -752,7 +819,8 @@ test("closed tabs whose release the engine refuses are not kept alive", { skip: 
   await churn(host, "gone-");
   await churn(failing.host, "timeout-");
   for (let i = 0; i < 3; i++) { collectGarbage(); await new Promise(setImmediate); }
-  assert.ok(refs.filter((ref) => ref.deref()).length <= 2, `${refs.filter((ref) => ref.deref()).length} of 40 closed tabs still alive`);
+  const alive = refs.filter((ref) => ref.deref()).length;
+  assert.ok(alive <= refs.length / 20, `${alive} of ${refs.length} closed tabs still alive`);
 });
 
 test("presentations retain queue order across pending replacements and ignore released views", async () => {
