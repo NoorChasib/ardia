@@ -74,6 +74,7 @@ export class HostPageEvents {
   private boundary = 0;
   private boundaries = 0;
   private provisional = false;
+  private awaitingWake = false;
   private pending: (PageDelivery | PageLifecycle)[] = [];
   private claim: string;
   private nativeId: () => number | undefined;
@@ -174,7 +175,7 @@ export class HostPageEvents {
     this.applying = true;
     try {
       if (value.type === "pageEvent") this.replay([value.event]);
-      else if (value.action === "reset") this.reset(value.reason);
+      else if (value.action === "reset") { this.reset(value.reason); if (value.reason === "document") this.wake(); }
       else if (value.reason === "restore") { this.reset("restore", new Set(value.events.map(({ name }) => name))); this.replay(value.events); }
       else { this.reset("snapshot"); this.replay(value.events); }
     } finally { this.applying = false; }
@@ -198,6 +199,12 @@ export class HostPageEvents {
     return true;
   }
 
+  private wake() {
+    if (!this.awaitingWake) return;
+    this.awaitingWake = false;
+    deliverPageEvent(this.props(), { name: "ready", data: {} });
+  }
+
   private replay(values: PageEvent[]) {
     const popupIds = new Set<string>();
     for (const value of values) {
@@ -208,6 +215,7 @@ export class HostPageEvents {
       }
       const presented = this.provisional && value.name === "navigation" && record(value.data)
         ? { ...value, data: { ...value.data, themeColor: null, themeColorSource: null } } : value;
+      if (value.name === "discarded" || value.name === "ready") this.awaitingWake = value.name === "discarded";
       const typed = appEvent(presented);
       if (typed) deliverPageEvent(this.props(), typed);
       if (this.active && presented.name === "navigation") this.applyTheme(presented.data as NavigationState);
