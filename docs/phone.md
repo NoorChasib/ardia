@@ -1822,7 +1822,12 @@ apps/phone/scripts/gradle-locked :app:assembleRelease   JS bundled in, app/build
 apps/phone/scripts/gradle-locked :app:assembleDebug     loads JS from Metro
 bun run --cwd apps/phone dev                               Metro on :8091 (the Mac's Metro keeps :8081); adb reverse tcp:8091 tcp:8091
 bun run --cwd apps/phone check
+bun run --cwd apps/phone test:unit
 ```
+
+CI's `phone.yml` runs `check` and `test:unit` on Linux for any change to the phone's JavaScript, tests or config,
+including the ones `ios.yml` and `android.yml` skip. Those two also run when `metro.config.js` or
+`metro-nested-modules.js` changes.
 
 Needs JDK 17 and the Android SDK (`local.properties` or `ANDROID_HOME`). The first build compiles React Native's and
 Expo's Gradle plugins and the C++ of every native module, about 15 minutes on a busy Mac; JS-only changes rebuild the
