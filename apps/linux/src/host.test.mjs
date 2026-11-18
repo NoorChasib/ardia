@@ -852,6 +852,60 @@ test("a confirmed close drops the kept claim whether it lands before or after th
   }
 });
 
+test("a sleeping tab whose close the engine acknowledged but deferred still reclaims its binding when it wakes", async (t) => {
+  t.mock.method(console, "error", () => {});
+  const { host, requests, byKey } = claimingEngine((key) => key === "deferred" ? "Native request timed out: tab.release" : null);
+  const closeAcknowledgedOnly = host.invoke;
+  host.invoke = async (method, args) => method === "tab.close" ? (requests.push([method, args]), null) : closeAcknowledgedOnly(method, args);
+  const loaded = { page: { kind: "loaded", nav: { url: "https://example.com", seq: 1 } } };
+  const asleep = { page: { kind: "asleep" } };
+  const store = mutableStore({ tabs: { deferred: loaded } });
+  const stop = startHostTabLifecycle(host, store);
+  try {
+    const first = new HostTab(host, { key: "deferred" }, () => {});
+    await first.ready;
+    const claim = first.claim;
+    first.dispose();
+    await new Promise(setImmediate);
+    store.set({ tabs: { deferred: asleep } });
+    await new Promise(setImmediate);
+    assert.equal(requests.filter(([method]) => method === "tab.close").length, 1);
+    assert.equal(byKey.get("deferred")?.claim, claim, "the engine still binds the old claim: beforeunload deferred the close");
+    store.set({ tabs: { deferred: loaded } });
+    const woken = new HostTab(host, { key: "deferred" }, () => {});
+    await woken.ready;
+    assert.equal(creates(requests).at(-1).previousClaim, claim);
+    woken.dispose();
+    await new Promise(setImmediate);
+  } finally {
+    stop();
+  }
+});
+
+test("a sleeping tab removed after its close was acknowledged drops its kept claim", async (t) => {
+  t.mock.method(console, "error", () => {});
+  const { host, requests } = claimingEngine((key) => key === "gone" ? "Native request timed out: tab.release" : null);
+  const loaded = { page: { kind: "loaded", nav: { url: "https://example.com", seq: 1 } } };
+  const store = mutableStore({ tabs: { gone: loaded } });
+  const stop = startHostTabLifecycle(host, store);
+  try {
+    const first = new HostTab(host, { key: "gone" }, () => {});
+    await first.ready;
+    first.dispose();
+    await new Promise(setImmediate);
+    store.set({ tabs: { gone: { page: { kind: "asleep" } } } });
+    await new Promise(setImmediate);
+    store.set({ tabs: {} });
+    const reopened = new HostTab(host, { key: "gone" }, () => {});
+    await reopened.ready;
+    assert.equal("previousClaim" in creates(requests).at(-1), false);
+    reopened.dispose();
+    await new Promise(setImmediate);
+  } finally {
+    stop();
+  }
+});
+
 test("a release that fails for another reason keeps only the claim, for the next create with that key", async (t) => {
   const errors = t.mock.method(console, "error", () => {});
   sharingReleaseCounts(t);
