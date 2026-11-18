@@ -3,6 +3,7 @@ import type { SettingsPane } from "../../../state/settings/settingsWindows";
 import { keyText } from "../../../state/commands/keyText";
 import { PLATFORM_FEATURES } from "../../../lib/platformFeatures";
 import { PLATFORM_TERMS } from "../../../lib/platformTerms";
+import { setupCodesOffered } from "../../../state/app/siteServices";
 
 const inSidebar = (_: unknown, env: SettingsEnv) => !env.top;
 const syncOn = (_: unknown, env: SettingsEnv) => !!env.syncOn;
@@ -159,7 +160,7 @@ export const generalRows = {
         importBrowser: {
           title: "Import from another browser",
           description: `From Chrome, Arc, ${PLATFORM_FEATURES.hiddenBrowserSources.includes("safari") ? "Edge" : "Safari"}, Firefox and more.`,
-          keywords: ["migrate", "switch", "transfer", "import from another browser", "setup code", "demo", "ardia.dev", "preset", "arc", "layout", "apply a setup code"],
+          keywords: ["migrate", "switch", "transfer", "import from another browser", "preset", "arc", "layout", ...(setupCodesOffered() ? ["setup code", "demo", "apply a setup code"] : [])],
         },
         redoSetup: {
           title: `Set up ${APP} again`,

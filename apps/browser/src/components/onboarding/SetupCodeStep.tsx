@@ -12,12 +12,14 @@ import { font, monoFace, proseLineHeight, radius, space } from "../ui/tokens";
 import { ChoiceCard } from "./ChoiceCard";
 import { SetupLines } from "./SetupLines";
 import { keyText } from "../../state/commands/keyText";
+import { setupCodesOffered } from "../../state/app/siteServices";
 
 const CODE_FIELD_HEIGHT = 44;
 
 const BRINGS = ["Where your tabs and address bar go", `What ${keyText("⌘T")} and ${keyText("⌘L")} open`, "Light or dark, and your color", "The apps you pinned"];
 
 export function SetupCodeLink({ onPress }: { onPress: () => void }) {
+  if (!setupCodesOffered()) return null;
   return (
     <View mouseDownCanMoveWindow={false} style={{ marginLeft: "auto", height: onboardingButton.height, justifyContent: "center" }}>
       <Button variant="text" look="link" tone="textSecondary" label="Have a setup code from ardia.dev?" title="Have a setup code?" onPress={onPress} />
