@@ -5,6 +5,12 @@ import { test } from "node:test";
 
 const root = new URL("../../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, root), "utf8");
+const basedOn = (project, path) => {
+  const escaped = path.replace(/[.\/]/g, "\\$&");
+  const id = new RegExp(`^\\s*(\\w+)(?: /\\*[^*]*\\*/)? = \\{isa = PBXFileReference;[^}]*\\bpath = ${escaped};`, "m").exec(project)?.[1];
+  assert.ok(id, `the project has a file reference to ${path}`);
+  return [...project.matchAll(new RegExp(`baseConfigurationReference = ${id}\\b`, "g"))].length;
+};
 const PREFIX = /export const ID_PREFIX = "([^"]+)";/.exec(read("packages/core/src/identity.ts"))?.[1];
 
 const mirrors = {
@@ -48,7 +54,7 @@ test("the CLI's bundle id is the prefix plus nilla", () => {
 test("the Mac project takes its bundle id and team from Nilla.xcconfig and signs only its own keychain groups", () => {
   const project = read("apps/browser/macos/Ardia.xcodeproj/project.pbxproj");
   assert.doesNotMatch(project, /PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|DevelopmentTeam|U5L5T3NGVV/);
-  assert.equal([...project.matchAll(/baseConfigurationReference = (\w+) \/\* Nilla\.xcconfig \*\/;/g)].length, 2, "both project configurations are based on Nilla.xcconfig");
+  assert.equal(basedOn(project, "Nilla.xcconfig"), 2, "both project configurations are based on Nilla.xcconfig");
   assert.equal([...project.matchAll(/PRODUCT_NAME = Nilla;/g)].length, 2);
   assert.deepEqual([...new Set([...project.matchAll(/MARKETING_VERSION = "?([^";]*)"?;/g)].map((m) => m[1]))], ["0.1.0"]);
   for (const file of ["Ardia.entitlements", "Ardia-ICloudPasskeys.entitlements"]) {
@@ -74,7 +80,7 @@ test("the release check and the Dock tile build read their ids from identity.sh"
 test("the phone apps take their ids from the prefix: the iOS targets, app group, Expo config and Android applicationId", () => {
   const project = read("apps/phone/ios/Ardia.xcodeproj/project.pbxproj");
   assert.doesNotMatch(project, /com\.ardia\.browser|DEVELOPMENT_TEAM|DevelopmentTeam|U5L5T3NGVV/);
-  assert.equal([...project.matchAll(/baseConfigurationReference = (\w+) \/\* Nilla\.xcconfig \*\/;/g)].length, 2);
+  assert.equal(basedOn(project, "Config/Nilla.xcconfig"), 2);
   const ids = [...project.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = "?([^";]*)"?;/g)].map((m) => m[1]);
   assert.deepEqual([...new Set(ids)].sort(), ["$(NILLA_PHONE_BUNDLE_ID)", "$(NILLA_PHONE_BUNDLE_ID).open", "$(NILLA_PHONE_BUNDLE_ID).share", "$(NILLA_PHONE_BUNDLE_ID).widgets"]);
   const group = `group.${PREFIX}.nilla.ios`;
