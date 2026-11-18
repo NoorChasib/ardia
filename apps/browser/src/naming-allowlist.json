@@ -1,0 +1,6372 @@
+{
+ "schema": 1,
+ "about": "Names Nilla Layer 1 keeps for today's prebuilt engines, and the rename rules for wave 2 (plan-v2 0.4, 2.1, 2.3 D). Read by nilla_rename.py and the residual-name gate. Generated in wave 0 from work/ownership-v2 and reviewed by hand.",
+ "base": {
+  "commit": "ac1d3453cbb31b3eb7f9855186d6858f151a1b58",
+  "engineKey": "2d8afa2a646dd570e1b13034b52a62e3806a2fef"
+ },
+ "paths": {
+  "frozen": [
+   "engine/*",
+   "scripts/windows/engine/*",
+   "apps/browser/assets/offline-game/*",
+   "apps/browser/assets/offline-game-pipeline/*",
+   "packages/ardiacore/prebuilt-engines*.tsv",
+   "packages/ardiacore/scripts/fetch-engine.sh",
+   "packages/ardiacore/scripts/ubo.sh",
+   "packages/ardiacore/ios/page_script.js",
+   "packages/ardiacore/src/engine/api.ts",
+   "docs/brand/ardia/*",
+   "scripts/windows/fetch-engine.ps1",
+   "scripts/windows/engine-source.sh",
+   "scripts/engine-source.sh",
+   "scripts/linux/ardia.apparmor",
+   "scripts/linux/ardia-launch",
+   "scripts/linux/dev.ardia.linux.policy",
+   "apps/browser/windows/Ardia/EngineApi.h",
+   "packages/sync/tests/fixtures/sealed-0.2.32.b64"
+  ],
+  "keep": [
+   "LICENSE",
+   "LICENSE.Apache-2.0",
+   "NOTICE",
+   "third_party/*",
+   "docs/perf/0.2.*",
+   "docs/audit/*",
+   "docs/history/*",
+   "*THIRD_PARTY_NOTICES.txt"
+  ],
+  "lead": [
+   "bun.lock",
+   "*/bun.lock",
+   "*Podfile.lock",
+   "*package-lock.json",
+   "*yarn.lock",
+   "*uv.lock",
+   "*pnpm-lock.yaml",
+   "*gradle.lockfile",
+   "apps/browser/src/conventions-baseline.json",
+   "apps/phone/src/state/settings/credits.json",
+   "scripts/dmg/DS_Store",
+   "scripts/dmg/background.tiff"
+  ],
+  "generated": [
+   "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-core.js",
+   "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-sync.js",
+   "packages/shaders/ios/Meadow/*",
+   "packages/shaders/windows/meadow/page.ts"
+  ],
+  "finalByD": [
+   "README.md",
+   "CONTRIBUTING.md",
+   "AGENTS.md",
+   "CLAUDE.md",
+   "docs/release-notes/README.md",
+   "docs/releasing.md"
+  ],
+  "skipHand": {
+   "scripts/linux/package.py": "C-linux",
+   "scripts/linux/install.sh": "C-linux",
+   "scripts/linux/runtime_files.py": "C-linux",
+   "scripts/linux/linux_formats.py": "C-linux",
+   "scripts/linux/arch/PKGBUILD": "C-linux",
+   "scripts/linux/fetch-engine.sh": "C-linux",
+   "scripts/linux/publish-engine.sh": "C-linux",
+   "scripts/linux/publish_engine.py": "C-linux",
+   "scripts/linux/smoke.mjs": "C-linux",
+   "apps/cli/install.sh": "C-cli-extras",
+   "apps/cli/scripts/build.sh": "C-cli-extras"
+  },
+  "skipTree": [
+   "packages/sync/tests/fixtures/sync-vectors/*"
+  ],
+  "ruleLimited": {
+   "apps/cli/scripts/build.sh": [
+    "cli-module"
+   ]
+  }
+ },
+ "moves": {
+  "never": [
+   {
+    "glob": "engine/*",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "scripts/windows/engine/*",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "apps/browser/assets/offline-game/*",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "apps/browser/assets/offline-game-pipeline/*",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "packages/ardiacore/prebuilt-engines*.tsv",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "packages/ardiacore/scripts/fetch-engine.sh",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "packages/ardiacore/scripts/ubo.sh",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "packages/ardiacore/ios/page_script.js",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "packages/ardiacore/src/engine/api.ts",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "docs/brand/ardia/*",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "scripts/windows/fetch-engine.ps1",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "scripts/windows/engine-source.sh",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "scripts/engine-source.sh",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "scripts/linux/ardia.apparmor",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "scripts/linux/ardia-launch",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "scripts/linux/dev.ardia.linux.policy",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "apps/browser/windows/Ardia/EngineApi.h",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "packages/sync/tests/fixtures/sealed-0.2.32.b64",
+    "why": "frozen (X-layer2)"
+   },
+   {
+    "glob": "LICENSE",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "LICENSE.Apache-2.0",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "NOTICE",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "third_party/*",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "docs/perf/0.2.*",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "docs/audit/*",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "docs/history/*",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "*THIRD_PARTY_NOTICES.txt",
+    "why": "kept byte for byte (X-keep)"
+   },
+   {
+    "glob": "packages/ardiacore/*",
+    "why": "class R: every ardiacore path stays"
+   },
+   {
+    "glob": "apps/browser/windows/Ardia",
+    "why": "class P: the Windows engine build reads the folder (series_win.py)"
+   },
+   {
+    "glob": "apps/browser/windows/Ardia/Ardia.ico",
+    "why": "class P: ardia_resources_win.txt maps it"
+   }
+  ],
+  "neverComponent": "(?i)ardiacore",
+  "contractPaths": [
+   "apps/browser/assets/",
+   "apps/browser/assets/offline-game-pipeline/",
+   "apps/browser/assets/offline-game-pipeline/inline.py",
+   "apps/browser/assets/offline-game/",
+   "apps/browser/src/components/window/TabWebView.tsx",
+   "apps/browser/src/state/commands/commandCatalog.ts",
+   "apps/browser/src/state/live/",
+   "apps/browser/src/state/live/alerts.ts",
+   "apps/browser/src/state/live/documents.ts",
+   "apps/browser/src/state/live/github.ts",
+   "apps/browser/src/state/live/googleAuth.ts",
+   "apps/browser/src/state/live/sources.ts",
+   "apps/browser/src/state/live/store.ts",
+   "apps/browser/src/state/live/types.ts",
+   "apps/browser/src/state/report/actions.ts",
+   "apps/browser/src/state/sidebar/effects.ts",
+   "apps/browser/windows/Ardia/Ardia.ico",
+   "apps/cli/install.sh",
+   "apps/linux/",
+   "apps/linux/scripts/acceptance/fixtures/extension/manifest.json",
+   "apps/linux/scripts/acceptance/lib/liveServices.mjs",
+   "apps/linux/scripts/host-contract-extension.mjs",
+   "apps/linux/scripts/host-contract-loader.mjs",
+   "apps/linux/scripts/host-test-loader.mjs",
+   "apps/linux/src/appModuleFallbacks.ts",
+   "apps/linux/src/fileCapabilities.ts",
+   "apps/linux/src/hostCapabilities.ts",
+   "apps/linux/src/hostCast.ts",
+   "apps/linux/src/hostCrashReports.ts",
+   "apps/linux/src/hostCredentials.ts",
+   "apps/linux/src/hostExtensionView.ts",
+   "apps/linux/src/hostLive.ts",
+   "apps/linux/src/hostModules.ts",
+   "apps/linux/src/hostSync.ts",
+   "apps/linux/src/liveSources.ts",
+   "apps/linux/src/shims/expo-modules-core.ts",
+   "apps/linux/src/shims/web/motion/swipe.ts",
+   "docs/brand/ardia/source/mark-small.png",
+   "docs/engine-build.md",
+   "engine/ardiacore-linux/apply.sh",
+   "engine/patches/build/03-helium.py",
+   "infra/feedback/lib/ids.mjs",
+   "infra/feedback/lib/validate.mjs",
+   "packages/ardiacore/ios/ArdiaWebView+Navigation.mm",
+   "packages/ardiacore/ios/ArdiaWindowController.mm",
+   "packages/ardiacore/prebuilt-engines-linux.tsv",
+   "packages/ardiacore/prebuilt-engines.tsv",
+   "packages/ardiacore/scripts/fetch-engine.sh",
+   "packages/ardiacore/scripts/ubo.sh",
+   "packages/ardiacore/src/engine/api.ts",
+   "packages/ardiacore/src/pageEvents.ts",
+   "packages/core/",
+   "packages/core/src/ingestKeys.ts",
+   "packages/demo/public/favicons/en.wikipedia.org.png",
+   "packages/shell/ios/BangListFetch.swift",
+   "packages/shell/ios/CrashReports.swift",
+   "packages/shell/ios/ReportFiles.swift",
+   "packages/shell/ios/ReportUploader.swift",
+   "packages/shell/ios/ShellModule.swift",
+   "packages/shell/ios/SystemModule.swift",
+   "packages/shell/ios/WindowManager.swift",
+   "packages/shell/src/app.ts",
+   "packages/shell/src/documents.ts",
+   "packages/shell/src/lifecycle.ts",
+   "packages/shell/src/notifications.ts",
+   "packages/shell/src/report.ts",
+   "packages/shell/src/windows.ts",
+   "packages/sync/ios/Core/Wordlist.swift",
+   "packages/sync/src/hlc.ts",
+   "packages/sync/src/scope.ts",
+   "packages/sync/src/scopeState.ts",
+   "packages/sync/tests/fixtures/sealed-0.2.32.b64",
+   "scripts/agent/locked",
+   "scripts/linux/",
+   "scripts/linux/arch/PKGBUILD",
+   "scripts/linux/ardia-launch",
+   "scripts/linux/ardia.apparmor",
+   "scripts/linux/dev.ardia.linux.policy",
+   "scripts/linux/fetch-engine.sh",
+   "scripts/linux/install.sh",
+   "scripts/linux/linux_formats.py",
+   "scripts/linux/package.py",
+   "scripts/linux/publish-engine.sh",
+   "scripts/linux/publish_engine.py",
+   "scripts/linux/release.sh",
+   "scripts/linux/runtime_files.py",
+   "scripts/linux/symbolize.py",
+   "scripts/release.sh"
+  ],
+  "basenameOnly": [
+   "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-core.js",
+   "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-sync.js",
+   "packages/shaders/ios/Meadow/*",
+   "packages/shaders/windows/meadow/page.ts",
+   "bun.lock",
+   "*/bun.lock",
+   "*Podfile.lock",
+   "*package-lock.json",
+   "*yarn.lock",
+   "*uv.lock",
+   "*pnpm-lock.yaml",
+   "*gradle.lockfile",
+   "apps/browser/src/conventions-baseline.json",
+   "apps/phone/src/state/settings/credits.json",
+   "scripts/dmg/DS_Store",
+   "scripts/dmg/background.tiff"
+  ],
+  "componentMaps": [
+   {
+    "match": "(^|/)com/ardia/browser$",
+    "merge": true,
+    "why": "Kotlin package com.ardia.browser becomes com.nilladigital.nilla (rule 7)"
+   },
+   {
+    "match": "(^|/)com/ardia$",
+    "replace": "nilladigital/nilla",
+    "why": "Kotlin packages com.ardia.<pkg> become com.nilladigital.nilla.<pkg> (rule 8)"
+   },
+   {
+    "match": "^apps/cli/ardia_cli$",
+    "replace": "nilla_browser_cli",
+    "why": "CLI module (OWNER-CLI, E11)"
+   }
+  ],
+  "componentCase": [
+   [
+    "ARDIA",
+    "NILLA"
+   ],
+   [
+    "Ardia",
+    "Nilla"
+   ],
+   [
+    "ardia",
+    "nilla"
+   ]
+  ]
+ },
+ "protect": [
+  {
+   "id": "S-env",
+   "class": "S",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])ARDIA_[A-Z0-9_]*",
+   "why": "Every ARDIA_* variable stays until Layer 2; 27 are engine-read and two paths forward by prefix."
+  },
+  {
+   "id": "S-switch-prefix",
+   "class": "S",
+   "mechanism": "class",
+   "regex": "--ardia-[A-Za-z0-9-]*",
+   "why": "Every --ardia-* switch and the dynamic --ardia- prefix stay until Layer 2."
+  },
+  {
+   "id": "S-switch-names",
+   "class": "S",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])(?<![A-Za-z0-9_]-)(?:ardia\\-middle\\-click\\-paste\\-enabled|ardia\\-native\\-frame\\-materials|ardia\\-waited\\-for\\-previous\\-ms|ardia\\-default\\-search\\-engine|ardia\\-hyprland\\-runtime\\-dir|ardia\\-keyboard\\-diagnostics|ardia\\-noise\\-hw\\-concurrency|ardia\\-content\\-blocker\\-dir|ardia\\-picture\\-in\\-picture|ardia\\-hide\\-page\\-actions|ardia\\-hyprland\\-instance|ardia\\-split\\-clienthello|ardia\\-sandbox\\-decision|ardia\\-test\\-cast\\-sink|ardia\\-downloads\\-dir|ardia\\-test\\-instance|ardia\\-linux\\-bridge|ardia\\-noise\\-canvas|ardia\\-noise\\-audio|ardia\\-background|ardia\\-data\\-dir|ardia\\-switches|ardia\\-live\\-1|ardia\\-ui\\-dir|ardia\\-links|ardia\\-noise|ardia\\-trace|ardia\\-test|ardia\\-ver|ardia\\-ui)(?![A-Za-z0-9_-])",
+   "except": [
+    "apps/phone/*"
+   ],
+   "why": "Engine switch names written without their dashes (lists, regexes, argument builders)."
+  },
+  {
+   "id": "S-prefix-forwarding",
+   "class": "S",
+   "mechanism": "literal",
+   "text": "ardia-",
+   "boundary": "none",
+   "quoted": true,
+   "scope": [
+    "scripts/lib/launchEnv.mjs",
+    "packages/ardiacore/ios/ArdiaLaunchConfig.mm",
+    "apps/browser/windows/Ardia/LaunchConfig.h"
+   ],
+   "why": "The quoted switch prefix the launch configs forward to the engine."
+  },
+  {
+   "id": "R-ardiacore",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?i)[A-Za-z0-9_]*ardiacore[A-Za-z0-9_]*",
+   "why": "The ArdiaCore interface: any token containing ardiacore in any case."
+  },
+  {
+   "id": "R-scope-ardiacore",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "@ardia(?:\\\\?/)(?=ardiacore)",
+   "why": "The package name @ardia/ardiacore keeps its scope (rule 12 exception)."
+  },
+  {
+   "id": "R-g-ardia",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])g_ardia_[A-Za-z0-9_]*",
+   "why": "Engine globals g_ardia_*."
+  },
+  {
+   "id": "R-engine-paths",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?:\\.\\./)*(?:engine|scripts/windows/engine)/[A-Za-z0-9_.+/-]*",
+   "why": "Paths into engine/ and scripts/windows/engine (the engine key's files keep their names)."
+  },
+  {
+   "id": "R-engine-gn",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?<![@A-Za-z0-9_.\\\\-])(?://)?(?:chrome/browser/ardia|chrome/app/theme/ardia|ardia/(?:core|linux|win))(?![A-Za-z0-9_])(?:[/:][A-Za-z0-9_.+/:-]*)?",
+   "why": "Engine source paths and GN labels inside the Chromium tree."
+  },
+  {
+   "id": "C-page-globals",
+   "class": "C",
+   "mechanism": "class",
+   "regex": "__ardia[A-Za-z0-9_]*",
+   "why": "Page and host globals the engines define or call (__ardiaHost, __ardiaReply, __ardiaEvent, __ardiaBootstrap)."
+  },
+  {
+   "id": "C-ardiaRequest",
+   "class": "C",
+   "mechanism": "literal",
+   "text": "ardiaRequest",
+   "boundary": "word",
+   "why": "The Linux host's request binding name."
+  },
+  {
+   "id": "C-ardiaOffscreen",
+   "class": "C",
+   "mechanism": "literal",
+   "text": "ardiaOffscreen",
+   "boundary": "word",
+   "why": "Target info field the engine adds (ac_cli_token_policy_events.cc)."
+  },
+  {
+   "id": "C-littleArdia-report",
+   "class": "C",
+   "mechanism": "literal",
+   "text": "littleArdia",
+   "boundary": "word",
+   "scope": [
+    "apps/browser/scripts/video-upscaling-test.mjs"
+   ],
+   "why": "The engine's video upscaling report key littleArdia (ac_video_upscaling.mm:266)."
+  },
+  {
+   "id": "C-elementPicker",
+   "class": "C",
+   "mechanism": "literal",
+   "text": "ardia.elementPicker",
+   "boundary": "none",
+   "why": "Symbol.for key the Linux engine's page evaluation reads."
+  },
+  {
+   "id": "D-dom-hooks",
+   "class": "D",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])(?:data-)?ardia-(?:reveal|hide-element[A-Za-z0-9-]*|pip-[A-Za-z0-9-]*|ver|bridge|symbols|blocking-off|reload)(?![A-Za-z0-9_])",
+   "why": "DOM ids, classes, attributes and policies the engines read or write."
+  },
+  {
+   "id": "D-uBO-reload",
+   "class": "I",
+   "mechanism": "literal",
+   "text": "ardiaReloadPending",
+   "boundary": "word",
+   "why": "uBO storage key the Mac fetch and the Linux seed share."
+  },
+  {
+   "id": "I-uBO-seed-prefix",
+   "class": "I",
+   "mechanism": "literal",
+   "text": "ardia",
+   "boundary": "word",
+   "quoted": true,
+   "scope": [
+    "scripts/linux/ubo-seed.mjs"
+   ],
+   "why": "ubo-seed strips every storage key that starts with ardia (the engine's own keys)."
+  },
+  {
+   "id": "E-ardia.window.small",
+   "class": "E",
+   "mechanism": "literal",
+   "text": "ardia.window.small",
+   "boundary": "word",
+   "why": "Little window identifier the Mac engine matches (ac_video_upscaling.mm:31)."
+  },
+  {
+   "id": "E-ArdiaHostedPage",
+   "class": "E",
+   "mechanism": "literal",
+   "text": "ArdiaHostedPage",
+   "boundary": "word",
+   "why": "Windows engine window class."
+  },
+  {
+   "id": "E-ArdiaProbeWindow",
+   "class": "E",
+   "mechanism": "literal",
+   "text": "ArdiaProbeWindow",
+   "boundary": "word",
+   "why": "Windows engine probe window class."
+  },
+  {
+   "id": "E-ArdiaProbe",
+   "class": "E",
+   "mechanism": "literal",
+   "text": "ArdiaProbe",
+   "boundary": "word",
+   "why": "Windows engine probe."
+  },
+  {
+   "id": "E-ArdiaHTM",
+   "class": "E",
+   "mechanism": "literal",
+   "text": "ArdiaHTM",
+   "boundary": "word",
+   "why": "Windows engine ProgID (chromium-win-install-names.patch)."
+  },
+  {
+   "id": "F-scheme",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_.-])ardia(?=:(?:\\\\?/|\\(|[\\\"'`\\])]))|(?<=[(|])ardia(?=[|)])|(?<=:)ardia(?=\\|)",
+   "why": "The ardia: app URL scheme in every spelling (URLs, escaped regexes, quoted scheme names, alternations)."
+  },
+  {
+   "id": "F-app-scheme-const",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "(?<=APP_SCHEME = [\\\"'])ardia(?=[\\\"'])|(?<=scheme === [\\\"'])ardia(?=[\\\"'])|(?<=scheme == [\\\"'])ardia(?=[\\\"'])|(?<=@\\\")ardia(?=\\\")",
+   "why": "APP_SCHEME and scheme comparisons with the bare name."
+  },
+  {
+   "id": "F-chrome-host",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "chrome://ardia(?![A-Za-z0-9_-])",
+   "why": "chrome://ardia/ and its host name on Linux."
+  },
+  {
+   "id": "F-oauth",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "/ardia-oauth(?![A-Za-z0-9_-])",
+   "why": "Loopback OAuth route the Linux engine serves (ac_linux_live.h:34)."
+  },
+  {
+   "id": "F-bridge",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "ardia-linux-bridge(?:\\.js|\\.html)?(?![A-Za-z0-9_-])",
+   "why": "Linux content-blocker bridge page and script names."
+  },
+  {
+   "id": "G-little-links",
+   "class": "G",
+   "mechanism": "class",
+   "regex": "[A-Za-z0-9_.]*[Ss]etLittleArdiaOpensNewTabLinks[A-Za-z0-9_]*|gLittleArdiaOpensNewTabLinks|kLittleArdiaWindow",
+   "why": "Frozen engine API setLittleArdiaOpensNewTabLinks in every form (api.ts:191, ac_linux_link_tabs.h)."
+  },
+  {
+   "id": "G-webstore",
+   "class": "G",
+   "mechanism": "class",
+   "regex": "(?:Add to|Remove from) Ardia\\b",
+   "why": "Chrome Web Store labels the engines draw."
+  },
+  {
+   "id": "H-linux-modules",
+   "class": "H",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_$])Ardia(?!Error(?![A-Za-z0-9_]))(?=[A-Z\\[$(])[A-Za-z0-9_]*",
+   "scope": [
+    "apps/linux/*",
+    "scripts/linux/*",
+    "docs/linux-*.md",
+    "docs/perf/*linux*.md"
+   ],
+   "why": "Linux wire names: module and view names the Linux engine dispatches, in any form. ArdiaError is the shared @ardia/core class, not a module."
+  },
+  {
+   "id": "H-linux-profile-folder",
+   "class": "H",
+   "mechanism": "class",
+   "regex": "(?<=Default[/\\\\])Ardia(?![A-Za-z0-9_])|(?<=\\\"Default\\\", \\\")Ardia(?=\\\")",
+   "scope": [
+    "apps/linux/*",
+    "scripts/linux/*",
+    "docs/linux-*.md",
+    "docs/perf/*linux*.md"
+   ],
+   "why": "The Linux engine's per-profile documents folder <profile>/Ardia (ac_linux_host.cc:694)."
+  },
+  {
+   "id": "H-linux-app-name",
+   "class": "H",
+   "mechanism": "class",
+   "regex": "(?<=APP_NAME = \\\")Ardia(?=\\\")",
+   "scope": [
+    "apps/linux/src/importUnlock.ts"
+   ],
+   "why": "The Linux import keyring app name (ac_linux_import_keyring.h kKWalletAppId)."
+  },
+  {
+   "id": "H-linux-same-words",
+   "class": "H",
+   "mechanism": "class",
+   "regex": "Ardia Sync Key|Ardia Sync|Ardia Recovery Kit\\.txt|Ardia Passwords\\.csv|ardia-import-handle:|ardia-import-",
+   "scope": [
+    "apps/linux/*",
+    "scripts/linux/*",
+    "docs/linux-*.md",
+    "docs/perf/*linux*.md"
+   ],
+   "why": "Names the Linux engine compiles in; their Mac, Windows and phone copies are renamed."
+  },
+  {
+   "id": "N-linux-layout",
+   "class": "N",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_-])(?:usr/)?(?:bin|lib|share|libexec|apparmor\\.d|opt)/ardia(?:-dev)?(?![A-Za-z0-9_-])|(?<=`)ardia-dev(?=`)|(?<![A-Za-z0-9_-])ardia(?=/lib/ardia)|Package: ardia\\b|(?<![A-Za-z0-9_-])ardia\\.(?:desktop|apparmor|tar\\.xz)\\b|(?<![A-Za-z0-9_-])ardia-launch\\b|(?:Exec|Icon|StartupWMClass)=ardia\\b|(?<=profile )ardia(?= )|(?<=Name=)Ardia\\b",
+   "scope": [
+    "apps/linux/*",
+    "scripts/linux/*",
+    "docs/linux-*.md",
+    "docs/perf/*linux*.md",
+    "apps/cli/*",
+    "docs/cli.md",
+    ".github/workflows/linux.yml",
+    ".github/workflows/release.yml",
+    "packages/shell/scripts/*",
+    "scripts/release/*",
+    "docs/releasing.md"
+   ],
+   "why": "Linux package and install layout names the Linux engine, packaging and engine tests read."
+  },
+  {
+   "id": "N-cli-artifacts",
+   "class": "N",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_-])ardia-cli(?=[-.])[A-Za-z0-9_.${}<>*-]*",
+   "except": [
+    "scripts/release.sh",
+    "apps/cli/pyproject.toml"
+   ],
+   "why": "The Linux CLI artifact names (tarball, top folder, digest, installer copy)."
+  },
+  {
+   "id": "N-cli-home",
+   "class": "N",
+   "mechanism": "class",
+   "regex": "/ardia/cli\\b|\\.config/ardia\\b|\\.local/share/ardia\\b|(?<=/ )[\\\"']ardia[\\\"']|[\\\"']ardia[\\\"'](?= /)",
+   "why": "The CLI's Linux home and data folders (class A and N)."
+  },
+  {
+   "id": "N-linux-ids",
+   "class": "N",
+   "mechanism": "class",
+   "regex": "dev\\.ardia\\.linux[A-Za-z0-9_.]*",
+   "why": "dev.ardia.linux ids (bundle id, polkit action, libsecret schemas)."
+  },
+  {
+   "id": "A-rendezvous",
+   "class": "A",
+   "mechanism": "class",
+   "regex": "ArdiaControl(?:\\.json|\\.sock(?:\\.lock)?)?(?![A-Za-z0-9_])|/ardia/active\\b",
+   "why": "CLI rendezvous files and route (endpoint.py, ControlSocket.swift, ac_cli_control.cc, ac_linux_control_core.h)."
+  },
+  {
+   "id": "B-profile-files",
+   "class": "B",
+   "mechanism": "class",
+   "regex": "Ardia Tab History(?: Cleared)?",
+   "why": "Profile files the engines read and write by name."
+  },
+  {
+   "id": "J-plist",
+   "class": "J",
+   "mechanism": "literal",
+   "text": "ArdiaPictureInPicture.plist",
+   "boundary": "none",
+   "why": "Picture-in-picture plist the Mac engine reads (ac_pip_mac.mm:27)."
+  },
+  {
+   "id": "P-windows-test-build",
+   "class": "P",
+   "mechanism": "literal",
+   "text": "Ardia.test-build",
+   "boundary": "none",
+   "why": "Windows test-build marker (test_gate.h:9)."
+  },
+  {
+   "id": "P-windows-exports",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "ArdiaApp\\.dll|ArdiaApp(?:Run|Start|Stop|PreTranslate|StartFailure|PreTranslateMessage)[A-Za-z0-9_]*|ArdiaEngineApi",
+   "why": "Windows engine exports and their DLL."
+  },
+  {
+   "id": "P-windows-folder",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_.-])Ardia(?=[/\\\\])|Ardia\\.ico\\b",
+   "scope": [
+    "apps/browser/windows/*",
+    "scripts/windows/*",
+    "packages/expo-windows/*",
+    ".github/workflows/windows.yml",
+    "apps/browser/src/platform/windows*",
+    "docs/windows.md",
+    "docs/windows/*",
+    "apps/browser/src/platform/*",
+    "docs/engine-build-windows.md"
+   ],
+   "why": "The Windows app folder apps/browser/windows/Ardia and its icon (series_win.py, ardia_resources_win.txt)."
+  },
+  {
+   "id": "P-windows-folder-refs",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?<=windows/)Ardia(?=/)|(?<=windows\\\\)Ardia(?=\\\\)",
+   "why": "Paths to apps/browser/windows/Ardia from anywhere in the repo (relative or from the root)."
+  },
+  {
+   "id": "P-windows-engine-files",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "ardia_resources_win\\.txt|ardia-chromium-win-[A-Za-z0-9_$]*|ardia-layer-win",
+   "why": "Windows engine build files named in docs."
+  },
+  {
+   "id": "Q-cli-refusals",
+   "class": "Q",
+   "mechanism": "class",
+   "regex": "isn't allowed for the ardia command|on a tab the ardia command didn't open|(?<=[\\\"'(`])ardia: (?=[A-Z][a-z]+\\.[a-z])|\\[ardia\\] ",
+   "why": "Refusal texts the engines produce and the CLI parses."
+  },
+  {
+   "id": "Q-engine-texts",
+   "class": "Q",
+   "mechanism": "class",
+   "regex": " ms for a previous Ardia, | ms for the previous Ardia on this profile to finish exiting|Ardia can't save downloads in that folder|Ardia HTML Document|Ardia Test Sink|Ardia Scripts|Ardia Safe Storage|Ardia's Safe Storage key is damaged\\.|Ardia can't read its Safe Storage key\\.|Ardia Live Folder Token",
+   "why": "Engine-produced texts that app code or tests match."
+  },
+  {
+   "id": "T-header",
+   "class": "T",
+   "mechanism": "class",
+   "regex": "(?i)x[-_]ardia[-_]key",
+   "why": "Network header; never mechanical (S routes it)."
+  },
+  {
+   "id": "U-hosts",
+   "class": "U",
+   "mechanism": "class",
+   "regex": "(?<![a-z0-9])(?i:(?:[a-z0-9-]+\\.)*ardia\\.(?:dev|app))(?![A-Za-z0-9_-])|(?i:netnyahoo\\.com)",
+   "why": "ardia.dev, its hosts and netnyahoo.com: never mechanical; S routes them and R reports leftovers."
+  },
+  {
+   "id": "O-offline-game",
+   "class": "O",
+   "mechanism": "class",
+   "regex": "(?i)ardiapagecolor|IDR_ARDIA_GAME_HTML",
+   "why": "Offline game names (frozen game.js and its pipeline)."
+  },
+  {
+   "id": "K-brand-folder",
+   "class": "K",
+   "mechanism": "class",
+   "regex": "brand/ardia(?![A-Za-z0-9_-])",
+   "why": "docs/brand/ardia stays until Layer 2 (gen.sh reads source/mark.png)."
+  },
+  {
+   "id": "K-staging",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "\\.ardia-staging-?",
+   "why": "The Linux engine's download staging folder prefix."
+  },
+  {
+   "id": "V-false-positives",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)[a-z]*(?:guardian|ancardia|lombardia|cardiac)[a-z]*",
+   "why": "Words that contain the letters but are not the name."
+  },
+  {
+   "id": "V-fixture",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "Ardia Ltd",
+   "why": "The Ardia Ltd fixture company (packages/import fixtures)."
+  },
+  {
+   "id": "V-credit-phone-row",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=\\{ name: \\\")Ardia(?=\\\", use: )|(?<=\\{ name: \\\"Ardia\\\", use: copy\\(\\)\\.ardiaCredit, license: \\\"Apache License 2\\.0\\\", url: \\\")https://github\\.com/mantrakp04/ardia(?=\\\" \\})",
+   "scope": [
+    "apps/phone/src/components/settings/DataPages.tsx"
+   ],
+   "why": "The phone's Ardia credit row: its name and upstream URL."
+  },
+  {
+   "id": "V-credit-text",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)(?:based on|a fork of|forked from|a modified version of|built on) Ardia\\b|Ardia, Copyright 2026 Mantra Patel|Mantra Patel",
+   "why": "Credit wording that names Ardia as Nilla's origin."
+  },
+  {
+   "id": "V-credit-raycast",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=\\\"author\\\": \\\")mantrakp04(?=\\\")|ridemountainpig",
+   "scope": [
+    "extras/raycast-ardia/package.json"
+   ],
+   "why": "Raycast contributors (D25)."
+  },
+  {
+   "id": "V-engine-fetch-lines",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "\\$\\{\\{ vars\\.(?:ARDIACORE_PREBUILT_REPO|WINDOWS_ENGINE_REPO|ENGINE_REPO) \\|\\| '(?:ardia-browser|mantrakp04)/ardia' \\}\\}|\\$\\{(?:ARDIACORE_PREBUILT_REPO|ENGINE_REPO):-(?:ardia-browser|mantrakp04)/ardia\\}",
+   "why": "The upstream engine-fetch defaults (naming.md 4.8): prebuilt engines still come from upstream in Layer 1."
+  },
+  {
+   "id": "O-frozen-tokens",
+   "class": "O",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])(?:setLittleArdiaOpensNewTabLinks|ArdiaAppPreTranslateFunction|ArdiaAppStartFailureFunction|ArdiaAppStartFunction|ArdiaAppStopFunction|ArdiaAppRunFunction|ArdiaEngineApi|ardiaPageColor|ardiapagecolor)(?![A-Za-z0-9_])",
+   "why": "Names frozen files declare and R files use (frozen-tokens.tsv)."
+  },
+  {
+   "id": "K-asserted:apps/browser/src/state/report/actions.ts",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "export\\ const\\ FEEDBACK_URL\\ =\\ \"https://ardia\\.dev/api/feedback\";",
+   "scope": [
+    "apps/browser/src/state/report/actions.ts"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/test_report.py)."
+  },
+  {
+   "id": "K-asserted:apps/linux/scripts/acceptance/lib/liveServices.mjs",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "http://127\\.0\\.0\\.1:53682/ardia\\-oauth",
+   "scope": [
+    "apps/linux/scripts/acceptance/lib/liveServices.mjs"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/live_services.test.mjs)."
+  },
+  {
+   "id": "K-asserted:apps/linux/src/hostCapabilities.ts",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "thinScrollBars:\\ has\\(\"ArdiaSystem\\.setThinScrollBars\"\\)",
+   "scope": [
+    "apps/linux/src/hostCapabilities.ts"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/test_hardware.py)."
+  },
+  {
+   "id": "K-asserted:apps/linux/src/hostCrashReports.ts",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "ArdiaCrash\\.list|ArdiaCrash\\.read|ardia\\-ver",
+   "scope": [
+    "apps/linux/src/hostCrashReports.ts"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/test_crash_dumps.py)."
+  },
+  {
+   "id": "K-asserted:apps/linux/src/hostLive.ts",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "ArdiaLive\\.connect|ArdiaLive\\.request",
+   "scope": [
+    "apps/linux/src/hostLive.ts"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/live_services.test.mjs)."
+  },
+  {
+   "id": "K-asserted:apps/linux/src/hostModules.ts",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "if\\ \\(name\\ ===\\ \"ArdiaShell\"\\ \\&\\&\\ !hostSupports\\(`\\$\\{name\\}\\.\\$\\{method\\}`,\\ host\\)\\)\\ \\{",
+   "scope": [
+    "apps/linux/src/hostModules.ts"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/test_bang_list.py)."
+  },
+  {
+   "id": "K-asserted:apps/linux/src/shims/expo-modules-core.ts",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "const\\ APP_PARTS\\ =\\ \\[\"ArdiaUpdater\",\\ \"ArdiaNotifications\",\\ \"ArdiaScripting\",\\ \"ArdiaDev\"\\];",
+   "scope": [
+    "apps/linux/src/shims/expo-modules-core.ts"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/test_notifications.py)."
+  },
+  {
+   "id": "K-asserted:packages/core/src/ingestKeys.ts",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "export\\ const\\ INGEST_KEY_HEADER\\ =\\ \"X\\-Ardia\\-Key\";",
+   "scope": [
+    "packages/core/src/ingestKeys.ts"
+   ],
+   "why": "Strings engine tests assert in this file (engine/ardiacore-linux/tests/test_report.py)."
+  },
+  {
+   "id": "K-asserted:scripts/linux/deb/postinst",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "apparmor_parser\\ \\-r\\ /etc/apparmor\\.d/ardia|lib/ardia/chrome\\-sandbox|/usr/lib/ardia/chrome|usr/lib/ardia/chrome|apparmor\\.d/ardia|lib/ardia/chrome|lib/ardia",
+   "scope": [
+    "scripts/linux/deb/postinst"
+   ],
+   "why": "Strings engine tests assert in this file (engine/patches/build/tests/test_platform_tooling.py)."
+  },
+  {
+   "id": "K-asserted:scripts/linux/deb/postrm",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "rm\\ \\-f\\ /etc/apparmor\\.d/ardia|apparmor\\.d/ardia",
+   "scope": [
+    "scripts/linux/deb/postrm"
+   ],
+   "why": "Strings engine tests assert in this file (engine/patches/build/tests/test_platform_tooling.py)."
+  },
+  {
+   "id": "K-asserted:scripts/linux/release.sh",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "ardia\\-cli\\-",
+   "scope": [
+    "scripts/linux/release.sh"
+   ],
+   "why": "Strings engine tests assert in this file (engine/patches/build/tests/test_linux_release.py)."
+  },
+  {
+   "id": "K-asserted:scripts/linux/symbolize.py",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "ArdiaCore\\-",
+   "scope": [
+    "scripts/linux/symbolize.py"
+   ],
+   "why": "Strings engine tests assert in this file (engine/patches/build/tests/test_linux_engine.py)."
+  },
+  {
+   "id": "K-asserted:scripts/release.sh",
+   "class": "K",
+   "mechanism": "literal",
+   "regex": "ardia\\-cli\\-",
+   "scope": [
+    "scripts/release.sh"
+   ],
+   "why": "Strings engine tests assert in this file (engine/patches/build/tests/test_linux_release.py)."
+  },
+  {
+   "id": "K-basenames",
+   "class": "K",
+   "mechanism": "basename",
+   "regex": "(?<![A-Za-z0-9_])(?:ArdiaChromeWindowHost\\+DevFullScreenProbe\\.mm|ArdiaChromeWindowHost\\+LittleFit\\.mm|ArdiaPiPController\\+Workspaces\\.mm|ArdiaWebView\\+PictureInPicture\\.mm|ArdiaPiPController\\+Placement\\.mm|ArdiaPictureInPictureInternal\\.h|ArdiaPiPController\\+SelfTest\\.mm|ArdiaRendererScrollObserver\\.mm|ArdiaContentBlockerInternal\\.h|ArdiaWebView\\+InputMonitors\\.mm|ArdiaChromeWindowHost\\+Dev\\.mm|ArdiaWebView\\+PageCommands\\.mm|ArdiaWebView\\+PageMessages\\.mm|ArdiaChromeWindowInternal\\.h|ArdiaContentBlockerCalls\\.mm|ArdiaDisplayPlacementMath\\.h|ArdiaNavigationDownloads\\.mm|ArdiaPiPController\\+Swipe\\.mm|ArdiaWebView\\+ContextMenu\\.mm|ArdiaContentBlockerLite\\.mm|ArdiaContentBlockerPage\\.mm|ArdiaEarlyWindowInternal\\.h|ArdiaEarlyWindowLayouts\\.mm|ArdiaHostEngineDelegate\\.mm|ArdiaNavigationDownloads\\.h|ArdiaPiPController\\+Skip\\.mm|ArdiaWebView\\+FirstPaint\\.mm|ArdiaWebView\\+Navigation\\.mm|ArdiaWebView\\+PageTab\\.swift|ArdiaEarlyWindow\\+Pages\\.mm|ArdiaEarlyWindowCovers\\.mm|ArdiaHoverProbeInternal\\.h|ArdiaWebView\\+Recording\\.mm|ArdiaChromeWindowHost\\.mm|ArdiaExtensionPackage\\.mm|ArdiaPictureInPicture\\.mm|ArdiaPopupOriginStrip\\.mm|ArdiaSwipe\\+Simulation\\.mm|ArdiaWebView\\+Painting\\.mm|ArdiaWebView\\+Transfer\\.mm|ArdiaWindowController\\.mm|ArdiaWindowFullScreen\\.mm|ArdiaChromeWindowHost\\.h|ArdiaDisplayIdentity\\.mm|ArdiaExtensionPackage\\.h|ArdiaLaunchTabHolder\\.mm|ArdiaNativeMessaging\\.mm|ArdiaPictureInPicture\\.h|ArdiaPixelGridModule\\.mm|ArdiaSwipeHitTesting\\.mm|ArdiaWebView\\+Reveals\\.mm|ArdiaWebView\\+StandIn\\.mm|ArdiaWindowController\\.h|ArdiaContentBlocker\\.mm|ArdiaDisplayIdentity\\.h|ArdiaHoverProbe\\+Dev\\.mm|ArdiaInterfaceScale\\.mm|ArdiaLaunchSequence\\.mm|ArdiaLaunchTabHolder\\.h|ArdiaNativeMessaging\\.h|ArdiaTransferLedger\\.mm|ArdiaWebViewInternal\\.h|ArdiaWindowSightMath\\.h|dev\\.ardia\\.linux\\.policy|ArdiaContentBlocker\\.h|ArdiaDownloadMover\\.mm|ArdiaInterfaceScale\\.h|ArdiaLaunchPicture\\.mm|ArdiaLaunchSequence\\.h|ArdiaPaintProbeMath\\.h|ArdiaPiPController\\.mm|ArdiaSavedDocument\\.mm|ArdiaTrafficLights\\.mm|ArdiaTransferLedger\\.h|ArdiaWebView\\+Focus\\.mm|ArdiaDownloadMover\\.h|ArdiaEngineBridge\\.mm|ArdiaLaunchConfig\\.mm|ArdiaLittleFitMath\\.h|ArdiaPageDrawWait\\.mm|ArdiaReservedKeys\\.mm|ArdiaSavedDocument\\.h|ArdiaSavedSession\\.mm|ArdiaSwipeInternal\\.h|ArdiaWebView\\+Peek\\.mm|ArdiaWebView\\+Site\\.mm|ArdiaEarlyWindow\\.mm|ArdiaEngineBridge\\.h|ArdiaFieldTiming\\.mm|ArdiaHost\\+Launch\\.mm|ArdiaHostInternal\\.h|ArdiaLaunchConfig\\.h|ArdiaPiPThrowMath\\.h|ArdiaPointerTrace\\.h|ArdiaPopupWindow\\.mm|ArdiaSavedSession\\.h|ArdiaTabLifecycle\\.h|ArdiaTabRegistry\\.mm|ArdiaWebView\\+Tab\\.mm|ArdiaActivation\\.mm|ArdiaEarlyWindow\\.h|ArdiaFieldTiming\\.h|ArdiaFocusState\\.mm|ArdiaHoverProbe\\.mm|ArdiaNowPlaying\\.mm|ArdiaPageCursor\\.mm|ArdiaPaintProbe\\.mm|ArdiaPiPControl\\.mm|ArdiaPiPOverlay\\.mm|ArdiaPiPSeekMath\\.h|ArdiaPiPZoomMath\\.h|ArdiaTabParking\\.mm|ArdiaTabRegistry\\.h|ArdiaNowPlaying\\.h|ArdiaPageCover\\.mm|ArdiaPiPHandle\\.mm|ArdiaTabParking\\.h|ArdiaFavicons\\.mm|ArdiaProfiles\\.mm|ArdiaServices\\.mm|ArdiaTabStrip\\.mm|ArdiaFavicons\\.h|ArdiaInternal\\.h|ArdiaPiPZoom\\.mm|ArdiaServices\\.h|ArdiaStartup\\.mm|ArdiaTabStrip\\.h|ArdiaWebView\\.mm|ArdiaEvents\\.mm|ArdiaRuntime\\.h|ArdiaStartup\\.h|ArdiaWebView\\.h|ardia\\.apparmor|ArdiaEvents\\.h|ArdiaSwipe\\.mm|ArdiaHost\\.mm|ArdiaSwipe\\.h|ardia\\-launch|ArdiaHost\\.h|Ardia\\.ico)(?![A-Za-z0-9_])|(?<![A-Za-z0-9_])(?:ArdiaChromeWindowHost\\+DevFullScreenProbe|ArdiaChromeWindowHost\\+LittleFit|ArdiaPiPController\\+Workspaces|ArdiaPictureInPictureInternal|ArdiaWebView\\+PictureInPicture|ArdiaPiPController\\+Placement|ArdiaContentBlockerInternal|ArdiaPiPController\\+SelfTest|ArdiaRendererScrollObserver|ArdiaWebView\\+InputMonitors|ArdiaChromeWindowHost\\+Dev|ArdiaChromeWindowInternal|ArdiaDisplayPlacementMath|ArdiaWebView\\+PageCommands|ArdiaWebView\\+PageMessages|ArdiaContentBlockerCalls|ArdiaEarlyWindowInternal|ArdiaNavigationDownloads|ArdiaPiPController\\+Swipe|ArdiaWebView\\+ContextMenu|ArdiaContentBlockerLite|ArdiaContentBlockerPage|ArdiaEarlyWindowLayouts|ArdiaHostEngineDelegate|ArdiaHoverProbeInternal|ArdiaPiPController\\+Skip|ArdiaWebView\\+FirstPaint|ArdiaWebView\\+Navigation|ArdiaEarlyWindow\\+Pages|ArdiaEarlyWindowCovers|ArdiaWebView\\+Recording|ArdiaChromeWindowHost|ArdiaExtensionPackage|ArdiaPictureInPicture|ArdiaPopupOriginStrip|ArdiaSwipe\\+Simulation|ArdiaWebView\\+Painting|ArdiaWebView\\+Transfer|ArdiaWindowController|ArdiaWindowFullScreen|ArdiaDisplayIdentity|ArdiaLaunchTabHolder|ArdiaNativeMessaging|ArdiaPixelGridModule|ArdiaSwipeHitTesting|ArdiaWebView\\+PageTab|ArdiaWebView\\+Reveals|ArdiaWebView\\+StandIn|ArdiaWebViewInternal|ArdiaWindowSightMath|ArdiaContentBlocker|ArdiaHoverProbe\\+Dev|ArdiaInterfaceScale|ArdiaLaunchSequence|ArdiaPaintProbeMath|ArdiaTransferLedger|ArdiaDownloadMover|ArdiaLaunchPicture|ArdiaLittleFitMath|ArdiaPiPController|ArdiaSavedDocument|ArdiaSwipeInternal|ArdiaTrafficLights|ArdiaWebView\\+Focus|ArdiaEngineBridge|ArdiaHostInternal|ArdiaLaunchConfig|ArdiaPageDrawWait|ArdiaPiPThrowMath|ArdiaPointerTrace|ArdiaReservedKeys|ArdiaSavedSession|ArdiaTabLifecycle|ArdiaWebView\\+Peek|ArdiaWebView\\+Site|ArdiaEarlyWindow|ArdiaFieldTiming|ArdiaHost\\+Launch|ArdiaPiPSeekMath|ArdiaPiPZoomMath|ArdiaPopupWindow|ArdiaTabRegistry|ArdiaWebView\\+Tab|ArdiaActivation|ArdiaFocusState|ArdiaHoverProbe|ArdiaNowPlaying|ArdiaPageCursor|ArdiaPaintProbe|ArdiaPiPControl|ArdiaPiPOverlay|ArdiaTabParking|ArdiaPageCover|ArdiaPiPHandle|ArdiaFavicons|ArdiaInternal|ArdiaProfiles|ArdiaServices|ArdiaTabStrip|ArdiaPiPZoom|ArdiaRuntime|ArdiaStartup|ArdiaWebView|ArdiaEvents|ArdiaSwipe|ArdiaHost|Ardia|ardia)(?=\\\\\\.|\\.\\{)",
+   "why": "Basenames of paths that never move (packages/ardiacore, frozen and kept files): references keep them, also as escaped regexes (stem\\.ext) and brace lists (stem.{h,mm})."
+  }
+ ],
+ "lines": [
+  {
+   "id": "M-feedback-url",
+   "class": "M",
+   "path": "apps/browser/src/state/report/actions.ts",
+   "text": "export const FEEDBACK_URL = \"https://ardia.dev/api/feedback\";",
+   "assertedBy": "engine/ardiacore-linux/tests/test_report.py:77",
+   "found": true
+  },
+  {
+   "id": "M-ingest-header",
+   "class": "M",
+   "path": "packages/core/src/ingestKeys.ts",
+   "text": "export const INGEST_KEY_HEADER = \"X-Ardia-Key\";",
+   "assertedBy": "engine/ardiacore-linux/tests/test_report.py:79",
+   "found": true
+  },
+  {
+   "id": "M-app-parts",
+   "class": "M",
+   "path": "apps/linux/src/shims/expo-modules-core.ts",
+   "text": "const APP_PARTS = [\"ArdiaUpdater\", \"ArdiaNotifications\", \"ArdiaScripting\", \"ArdiaDev\"];",
+   "assertedBy": "engine/ardiacore-linux/tests/test_notifications.py:98",
+   "found": true
+  },
+  {
+   "id": "M-shell-parts",
+   "class": "M",
+   "path": "apps/linux/src/shims/expo-modules-core.ts",
+   "text": "const SHELL_PARTS = [\"ArdiaAppWindows\", \"ArdiaFocus\", \"ArdiaMenus\", \"ArdiaDialogs\"];",
+   "assertedBy": "plan-v2 0.4 class H (kept with APP_PARTS)",
+   "found": true
+  },
+  {
+   "id": "M-escape-emit",
+   "class": "M",
+   "path": "packages/ardiacore/ios/ArdiaWindowController.mm",
+   "text": "    [target emit:@\"command\" payload:@{@\"command\" : @\"escape\", @\"text\" : @\"\"}];",
+   "assertedBy": "engine/ardiacore-linux/tests/test_page_keys.py:46",
+   "found": true
+  },
+  {
+   "id": "M-page-events",
+   "class": "M",
+   "path": "packages/ardiacore/src/pageEvents.ts",
+   "text": "  onCommand: \"command\",",
+   "assertedBy": "engine/ardiacore-linux/tests/test_page_keys.py:47",
+   "found": true
+  },
+  {
+   "id": "M-host-modules-shell",
+   "class": "M",
+   "path": "apps/linux/src/hostModules.ts",
+   "text": "  if (name === \"ArdiaShell\" && !hostSupports(`${name}.${method}`, host)) {",
+   "assertedBy": "engine/ardiacore-linux/tests (test-asserted scan)",
+   "found": true
+  },
+  {
+   "id": "M-pkgbuild-depends",
+   "class": "M",
+   "path": "scripts/linux/arch/PKGBUILD",
+   "text": "depends=('alsa-lib' 'dbus' 'gtk3' 'hicolor-icon-theme' 'libcups' 'libxss' 'libxtst' 'nss' 'polkit' 'ttf-liberation' 'xdg-utils')",
+   "assertedBy": "engine/patches/build/tests/test_platform_tooling.py:598-616 (R skips the file)",
+   "found": true
+  }
+ ],
+ "rules": [
+  {
+   "id": "grammar",
+   "plan": "0.1",
+   "find": "\\b([Aa])n (Ardia|ardia|ARDIA)\\b",
+   "replace": "\\1 \\2"
+  },
+  {
+   "id": "1-plugins",
+   "plan": "D.5 rule 1",
+   "find": "mantrakp04/ardia-plugins",
+   "replace": "NoorChasib/nilla-plugins"
+  },
+  {
+   "id": "3a-repo-url",
+   "plan": "D.5 rule 3a",
+   "find": "(?<=github\\.com/)(?:ardia-browser|mantrakp04)/ardia(?![A-Za-z0-9_-])",
+   "replace": "NoorChasib/nilla"
+  },
+  {
+   "id": "3b-repo-url-escaped",
+   "plan": "D.5 rule 3b",
+   "find": "(?<=github\\.com\\\\/)(?:ardia-browser|mantrakp04)\\\\/ardia(?![A-Za-z0-9_-])",
+   "replace": "NoorChasib\\\\/nilla"
+  },
+  {
+   "id": "3c-repo-slug",
+   "plan": "D.5 rule 3c",
+   "find": "(?<![A-Za-z0-9_.-])(?:ardia-browser|mantrakp04)/ardia(?![A-Za-z0-9_-])",
+   "replace": "NoorChasib/nilla"
+  },
+  {
+   "id": "3d-repo-slug-escaped",
+   "plan": "D.5 rule 3d",
+   "find": "(?<![A-Za-z0-9_.-])(?:ardia-browser|mantrakp04)\\\\/ardia(?![A-Za-z0-9_-])",
+   "replace": "NoorChasib\\\\/nilla"
+  },
+  {
+   "id": "4-group-ios",
+   "plan": "D.5 rule 4",
+   "find": "group\\.com\\.ardia\\.browser\\.ios",
+   "replace": "group.com.nilladigital.nilla.ios"
+  },
+  {
+   "id": "5-android",
+   "plan": "D.5 rule 5",
+   "find": "com\\.ardia\\.browser\\.android",
+   "replace": "com.nilladigital.nilla.android"
+  },
+  {
+   "id": "6-ios",
+   "plan": "D.5 rule 6",
+   "find": "com\\.ardia\\.browser\\.ios",
+   "replace": "com.nilladigital.nilla.ios"
+  },
+  {
+   "id": "7-bundle",
+   "plan": "D.5 rule 7",
+   "find": "com\\.ardia\\.browser(?![A-Za-z0-9_])",
+   "replace": "com.nilladigital.nilla"
+  },
+  {
+   "id": "8-kotlin-packages",
+   "plan": "D.5 rule 8",
+   "find": "(?<![A-Za-z0-9_.])com\\.ardia(?![A-Za-z0-9_])",
+   "replace": "com.nilladigital.nilla"
+  },
+  {
+   "id": "8-kotlin-folders",
+   "plan": "D.5 rule 8",
+   "find": "(?<![A-Za-z0-9_.-])com/ardia/browser(?=/|\\\")",
+   "replace": "com/nilladigital/nilla"
+  },
+  {
+   "id": "8-kotlin-folders-root",
+   "plan": "D.5 rule 8",
+   "find": "(?<![A-Za-z0-9_.-])com/ardia(?=/|\\\"|$)",
+   "replace": "com/nilladigital/nilla"
+  },
+  {
+   "id": "9-jni",
+   "plan": "D.5 rule 9",
+   "find": "(?<![A-Za-z0-9])(Java_)?com_ardia_(?:browser_)?",
+   "replace": "\\1com_nilladigital_nilla_"
+  },
+  {
+   "id": "10-dev-ids",
+   "plan": "D.5 rule 10",
+   "find": "dev\\.ardia\\.(?=hooks\\b|browse\\.auth\\b|cli-installer\\b|demo\\b|fixture\\.dia\\b|idle-watch\\b)",
+   "replace": "com.nilladigital.nilla."
+  },
+  {
+   "id": "11-test-hosts",
+   "plan": "D.5 rule 11",
+   "find": "\\.ardia\\.test\\b",
+   "replace": ".nilla.test"
+  },
+  {
+   "id": "12-scope",
+   "plan": "D.5 rule 12",
+   "find": "@ardia(?=/|\\\\/)",
+   "replace": "@nilla"
+  },
+  {
+   "id": "cli-module",
+   "plan": "D.3 (OWNER-CLI, E11)",
+   "find": "(?<![A-Za-z0-9_])ardia_cli(?![A-Za-z0-9])",
+   "replace": "nilla_browser_cli"
+  },
+  {
+   "id": "cli-dist",
+   "plan": "D.3 (E11)",
+   "find": "(?<=^name = \\\")ardia-cli(?=\\\"$)",
+   "replace": "nilla-browser",
+   "scope": [
+    "apps/cli/pyproject.toml"
+   ]
+  },
+  {
+   "id": "cli-script",
+   "plan": "D.3 (E11)",
+   "find": "^ardia = \\\"ardia_cli\\.cli:main\\\"$",
+   "replace": "nilla-browser = \"nilla_browser_cli.cli:main\"",
+   "scope": [
+    "apps/cli/pyproject.toml"
+   ]
+  },
+  {
+   "id": "cli-module-name",
+   "plan": "D.3 (E11)",
+   "find": "^module-root = \\\"\\\"$",
+   "replace": "module-root = \"\"\nmodule-name = \"nilla_browser_cli\"",
+   "scope": [
+    "apps/cli/pyproject.toml"
+   ],
+   "addsLines": true
+  },
+  {
+   "id": "13a-cli-command",
+   "plan": "D.5 rule 13a",
+   "find": "(?m)(^[ \\t]*|`|\\$ )ardia(?= (?:apply|browse|commands|computer|config|events|feedback|groups|history|hooks|notes|on|pinned|run|scripts|skills|star|tabs|theme|windows)\\b)",
+   "replace": "\\1nilla-browser"
+  },
+  {
+   "id": "13a-the-command",
+   "plan": "D.5 rule 13a",
+   "find": "\\bthe (`?)ardia(`?) command\\b",
+   "replace": "the \\1nilla-browser\\2 command"
+  },
+  {
+   "id": "14-upper",
+   "plan": "D.5 rule 14",
+   "find": "ARDIA",
+   "replace": "NILLA"
+  },
+  {
+   "id": "14-title",
+   "plan": "D.5 rule 14",
+   "find": "Ardia",
+   "replace": "Nilla"
+  },
+  {
+   "id": "14-lower",
+   "plan": "D.5 rule 14",
+   "find": "ardia",
+   "replace": "nilla"
+  }
+ ],
+ "reports": [
+  {
+   "id": "2-tap",
+   "what": "Homebrew tap leftovers (G removed them)",
+   "regex": "ardia-browser/homebrew-tap|tap/ardia|Casks/ardia"
+  },
+  {
+   "id": "13-netnyahoo",
+   "what": "Netnyahoo leftovers after M (owners named in M's check)",
+   "regex": "(?i)netnyahoo"
+  },
+  {
+   "id": "upstream-links",
+   "what": "Callable ardia-browser or mantrakp04 links outside credit spans and engine-fetch lines (OWNER-URL)",
+   "regex": "ardia-browser|mantrakp04"
+  },
+  {
+   "id": "upstream-hosts",
+   "what": "ardia.dev and netnyahoo.com leftovers (never mechanical; S routes them)",
+   "regex": "(?i)ardia\\.dev|ardia\\.app|netnyahoo\\.com"
+  },
+  {
+   "id": "nilla-word",
+   "what": "nilla <word> CLI candidates for the wave 3 owners (E11)",
+   "regex": "(?<![A-Za-z0-9_./-])nilla(?: (?:apply|browse|commands|computer|config|events|feedback|groups|history|hooks|notes|on|pinned|run|scripts|skills|star|tabs|theme|windows|--?[a-z][a-z-]*)\\b|(?=[\\\"'] ?[,)\\]]|[\\\"']$))"
+  }
+ ],
+ "engineLiterals": [
+  {
+   "text": "ardia-",
+   "engineUses": 2,
+   "files": 508,
+   "occurrences": 1889,
+   "decision": "class",
+   "protectedOccurrences": 298,
+   "renamedOccurrences": 1591,
+   "notRsFiles": 680,
+   "coveredBy": [
+    "N-cli-artifacts",
+    "S-switch-prefix",
+    "D-dom-hooks",
+    "S-switch-names",
+    "N-linux-layout",
+    "P-windows-engine-files",
+    "R-engine-paths",
+    "V-engine-fetch-lines",
+    "F-oauth",
+    "K-staging",
+    "H-linux-same-words",
+    "K-basenames",
+    "T-header",
+    "K-asserted:scripts/release.sh"
+   ],
+   "why": "Prefix fragment: its engine use is the --ardia- switch prefix (class S); other ardia- names are covered by their own entries."
+  },
+  {
+   "text": "ARDIA_",
+   "engineUses": 1,
+   "files": 216,
+   "occurrences": 1244,
+   "decision": "class",
+   "protectedOccurrences": 1198,
+   "renamedOccurrences": 46,
+   "notRsFiles": 123,
+   "coveredBy": [
+    "S-env",
+    "O-offline-game"
+   ],
+   "why": "Prefix fragment: class S (S-env)."
+  },
+  {
+   "text": "/ardia/",
+   "engineUses": 1,
+   "files": 166,
+   "occurrences": 627,
+   "decision": "class",
+   "protectedOccurrences": 316,
+   "renamedOccurrences": 311,
+   "notRsFiles": 354,
+   "coveredBy": [
+    "N-linux-layout",
+    "R-engine-paths",
+    "N-cli-home",
+    "R-engine-gn",
+    "F-chrome-host",
+    "K-brand-folder",
+    "A-rendezvous"
+   ],
+   "why": "Path fragment: covered by A-rendezvous (/ardia/active), F-chrome-host, N-cli-home, N-linux-layout and R-engine-gn."
+  },
+  {
+   "text": "ArdiaHost",
+   "engineUses": 2,
+   "files": 121,
+   "occurrences": 382,
+   "decision": "protect-linux",
+   "protectedOccurrences": 273,
+   "renamedOccurrences": 109,
+   "notRsFiles": 13,
+   "coveredBy": [
+    "H-linux-modules",
+    "K-basenames"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaApp",
+   "engineUses": 2,
+   "files": 104,
+   "occurrences": 326,
+   "decision": "protect-linux",
+   "protectedOccurrences": 174,
+   "renamedOccurrences": 152,
+   "notRsFiles": 9,
+   "coveredBy": [
+    "H-linux-modules",
+    "P-windows-exports"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell",
+   "engineUses": 16,
+   "files": 104,
+   "occurrences": 397,
+   "decision": "protect-linux",
+   "protectedOccurrences": 331,
+   "renamedOccurrences": 66,
+   "notRsFiles": 42,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaWebView",
+   "engineUses": 1,
+   "files": 97,
+   "occurrences": 518,
+   "decision": "protect-linux",
+   "protectedOccurrences": 103,
+   "renamedOccurrences": 415,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "K-basenames",
+    "H-linux-modules",
+    "G-little-links"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ARDIA_DATA_DIR",
+   "engineUses": 6,
+   "files": 89,
+   "occurrences": 228,
+   "decision": "protect",
+   "protectedOccurrences": 228,
+   "renamedOccurrences": 0,
+   "notRsFiles": 36,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "littleArdia",
+   "engineUses": 1,
+   "files": 78,
+   "occurrences": 214,
+   "decision": "rename",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 213,
+   "notRsFiles": 13,
+   "coveredBy": [
+    "C-littleArdia-report"
+   ],
+   "why": "App state and setting keys become littleNilla; only the engine's report key in video-upscaling-test.mjs is protected."
+  },
+  {
+   "text": "ardia://",
+   "engineUses": 2,
+   "files": 66,
+   "occurrences": 210,
+   "decision": "protect",
+   "protectedOccurrences": 210,
+   "renamedOccurrences": 0,
+   "notRsFiles": 42,
+   "coveredBy": [
+    "F-scheme"
+   ],
+   "why": "Same artifact on both sides (F-scheme)"
+  },
+  {
+   "text": "ArdiaEngine",
+   "engineUses": 3,
+   "files": 55,
+   "occurrences": 93,
+   "decision": "protect-linux",
+   "protectedOccurrences": 35,
+   "renamedOccurrences": 58,
+   "notRsFiles": 11,
+   "coveredBy": [
+    "P-windows-exports",
+    "K-basenames",
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ARDIA_BACKGROUND",
+   "engineUses": 3,
+   "files": 52,
+   "occurrences": 82,
+   "decision": "protect",
+   "protectedOccurrences": 82,
+   "renamedOccurrences": 0,
+   "notRsFiles": 13,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ARDIA_TEST",
+   "engineUses": 1,
+   "files": 45,
+   "occurrences": 100,
+   "decision": "protect",
+   "protectedOccurrences": 100,
+   "renamedOccurrences": 0,
+   "notRsFiles": 14,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "Ardia Sync",
+   "engineUses": 1,
+   "files": 43,
+   "occurrences": 125,
+   "decision": "rename",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 123,
+   "notRsFiles": 30,
+   "coveredBy": [
+    "H-linux-same-words"
+   ],
+   "why": "Mac, Windows and phone copies become Nilla Sync (0.1); only the disabled Linux sync compiles the Ardia name, protected in Linux paths."
+  },
+  {
+   "text": "ArdiaImport",
+   "engineUses": 3,
+   "files": 42,
+   "occurrences": 91,
+   "decision": "protect-linux",
+   "protectedOccurrences": 42,
+   "renamedOccurrences": 49,
+   "notRsFiles": 45,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "__ardiaHost",
+   "engineUses": 1,
+   "files": 31,
+   "occurrences": 53,
+   "decision": "protect",
+   "protectedOccurrences": 53,
+   "renamedOccurrences": 0,
+   "notRsFiles": 14,
+   "coveredBy": [
+    "C-page-globals"
+   ],
+   "why": "Same artifact on both sides (C-page-globals)"
+  },
+  {
+   "text": "ARDIA_INSTANCE",
+   "engineUses": 1,
+   "files": 30,
+   "occurrences": 61,
+   "decision": "protect",
+   "protectedOccurrences": 61,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ArdiaDocuments",
+   "engineUses": 1,
+   "files": 26,
+   "occurrences": 31,
+   "decision": "protect-linux",
+   "protectedOccurrences": 11,
+   "renamedOccurrences": 20,
+   "notRsFiles": 5,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": ":ardia",
+   "engineUses": 1,
+   "files": 25,
+   "occurrences": 44,
+   "decision": "class",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 37,
+   "notRsFiles": 7,
+   "coveredBy": [
+    "F-scheme",
+    "R-ardiacore",
+    "U-hosts",
+    "D-dom-hooks"
+   ],
+   "why": "GN target fragment (:ardia): covered by R-engine-gn; gradle :ardia-design and the @ardia regexes are app names."
+  },
+  {
+   "text": "ardia-cli-",
+   "engineUses": 1,
+   "files": 24,
+   "occurrences": 96,
+   "decision": "class",
+   "protectedOccurrences": 96,
+   "renamedOccurrences": 0,
+   "notRsFiles": 22,
+   "coveredBy": [
+    "N-cli-artifacts",
+    "K-asserted:scripts/release.sh"
+   ],
+   "why": "Covered by N-cli-artifacts (scripts/release.sh pruned: a Mac artifact name the Linux engine never reads)."
+  },
+  {
+   "text": "ArdiaTabs",
+   "engineUses": 5,
+   "files": 22,
+   "occurrences": 42,
+   "decision": "protect-linux",
+   "protectedOccurrences": 24,
+   "renamedOccurrences": 18,
+   "notRsFiles": 6,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaCli",
+   "engineUses": 3,
+   "files": 21,
+   "occurrences": 64,
+   "decision": "protect-linux",
+   "protectedOccurrences": 48,
+   "renamedOccurrences": 16,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ARDIA_CLI_HOME",
+   "engineUses": 2,
+   "files": 19,
+   "occurrences": 61,
+   "decision": "protect",
+   "protectedOccurrences": 61,
+   "renamedOccurrences": 0,
+   "notRsFiles": 13,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ARDIA_SWITCHES",
+   "engineUses": 2,
+   "files": 19,
+   "occurrences": 28,
+   "decision": "protect",
+   "protectedOccurrences": 28,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ArdiaContentBlocker",
+   "engineUses": 1,
+   "files": 19,
+   "occurrences": 56,
+   "decision": "protect-linux",
+   "protectedOccurrences": 17,
+   "renamedOccurrences": 39,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "K-basenames",
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ARDIA_REMOTE_DEBUGGING_PORT",
+   "engineUses": 1,
+   "files": 18,
+   "occurrences": 22,
+   "decision": "protect",
+   "protectedOccurrences": 22,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ArdiaReport",
+   "engineUses": 1,
+   "files": 17,
+   "occurrences": 70,
+   "decision": "protect-linux",
+   "protectedOccurrences": 54,
+   "renamedOccurrences": 16,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaControl.json",
+   "engineUses": 1,
+   "files": 16,
+   "occurrences": 39,
+   "decision": "protect",
+   "protectedOccurrences": 39,
+   "renamedOccurrences": 0,
+   "notRsFiles": 5,
+   "coveredBy": [
+    "A-rendezvous",
+    "H-linux-modules"
+   ],
+   "why": "Same artifact on both sides (A-rendezvous, H-linux-modules)"
+  },
+  {
+   "text": "ArdiaExtensions",
+   "engineUses": 1,
+   "files": 15,
+   "occurrences": 28,
+   "decision": "protect-linux",
+   "protectedOccurrences": 16,
+   "renamedOccurrences": 12,
+   "notRsFiles": 14,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ARDIA_TRACE",
+   "engineUses": 1,
+   "files": 14,
+   "occurrences": 29,
+   "decision": "protect",
+   "protectedOccurrences": 29,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ArdiaAutomation",
+   "engineUses": 1,
+   "files": 14,
+   "occurrences": 34,
+   "decision": "protect-linux",
+   "protectedOccurrences": 28,
+   "renamedOccurrences": 6,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaGlass",
+   "engineUses": 2,
+   "files": 14,
+   "occurrences": 27,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 24,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaUserScripts",
+   "engineUses": 1,
+   "files": 14,
+   "occurrences": 39,
+   "decision": "protect-linux",
+   "protectedOccurrences": 32,
+   "renamedOccurrences": 7,
+   "notRsFiles": 5,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "X-Ardia-Key",
+   "engineUses": 3,
+   "files": 14,
+   "occurrences": 21,
+   "decision": "protect",
+   "protectedOccurrences": 21,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "T-header"
+   ],
+   "why": "Same artifact on both sides (T-header)"
+  },
+  {
+   "text": "ardia-test",
+   "engineUses": 1,
+   "files": 14,
+   "occurrences": 19,
+   "decision": "class",
+   "protectedOccurrences": 14,
+   "renamedOccurrences": 5,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "S-switch-prefix",
+    "S-switch-names"
+   ],
+   "why": "Switch name: class S. Other ardia-test- names (temp folders, channels) are app names."
+  },
+  {
+   "text": "ardia-ui",
+   "engineUses": 1,
+   "files": 14,
+   "occurrences": 35,
+   "decision": "protect",
+   "protectedOccurrences": 32,
+   "renamedOccurrences": 3,
+   "notRsFiles": 14,
+   "coveredBy": [
+    "S-switch-prefix",
+    "S-switch-names"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix, S-switch-names)"
+  },
+  {
+   "text": "ArdiaCalendar",
+   "engineUses": 2,
+   "files": 12,
+   "occurrences": 30,
+   "decision": "protect-linux",
+   "protectedOccurrences": 20,
+   "renamedOccurrences": 10,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaConfig",
+   "engineUses": 1,
+   "files": 12,
+   "occurrences": 38,
+   "decision": "protect-linux",
+   "protectedOccurrences": 30,
+   "renamedOccurrences": 8,
+   "notRsFiles": 18,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystemSignals",
+   "engineUses": 1,
+   "files": 12,
+   "occurrences": 24,
+   "decision": "protect-linux",
+   "protectedOccurrences": 11,
+   "renamedOccurrences": 13,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ardia-ui-dir",
+   "engineUses": 2,
+   "files": 12,
+   "occurrences": 18,
+   "decision": "protect",
+   "protectedOccurrences": 18,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "S-switch-prefix",
+    "S-switch-names"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix, S-switch-names)"
+  },
+  {
+   "text": "Ardia Sync Key",
+   "engineUses": 1,
+   "files": 11,
+   "occurrences": 31,
+   "decision": "rename",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 30,
+   "notRsFiles": 21,
+   "coveredBy": [
+    "H-linux-same-words"
+   ],
+   "why": "Mac and phone keychain item becomes Nilla Sync Key (0.1); the Linux libsecret label is protected in Linux paths."
+  },
+  {
+   "text": "ArdiaProfiles",
+   "engineUses": 1,
+   "files": 11,
+   "occurrences": 13,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 10,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules",
+    "K-basenames"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ARDIA_CLI_BIN_DIR",
+   "engineUses": 2,
+   "files": 10,
+   "occurrences": 16,
+   "decision": "protect",
+   "protectedOccurrences": 16,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "Ardia.test-build",
+   "engineUses": 1,
+   "files": 10,
+   "occurrences": 13,
+   "decision": "protect",
+   "protectedOccurrences": 13,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "P-windows-test-build"
+   ],
+   "why": "Same artifact on both sides (P-windows-test-build)"
+  },
+  {
+   "text": "ArdiaApp.dll",
+   "engineUses": 1,
+   "files": 10,
+   "occurrences": 18,
+   "decision": "protect",
+   "protectedOccurrences": 18,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "P-windows-exports"
+   ],
+   "why": "Same artifact on both sides (P-windows-exports)"
+  },
+  {
+   "text": "https://ardia.dev/api/feedback",
+   "engineUses": 1,
+   "files": 10,
+   "occurrences": 13,
+   "decision": "protect",
+   "protectedOccurrences": 13,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "U-hosts"
+   ],
+   "why": "Same artifact on both sides (U-hosts)"
+  },
+  {
+   "text": "ardia.desktop",
+   "engineUses": 2,
+   "files": 9,
+   "occurrences": 25,
+   "decision": "protect",
+   "protectedOccurrences": 24,
+   "renamedOccurrences": 1,
+   "notRsFiles": 13,
+   "coveredBy": [
+    "N-linux-layout"
+   ],
+   "why": "Same artifact on both sides (N-linux-layout)"
+  },
+  {
+   "text": "ardia.window.small",
+   "engineUses": 1,
+   "files": 9,
+   "occurrences": 11,
+   "decision": "protect",
+   "protectedOccurrences": 11,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "E-ardia.window.small"
+   ],
+   "why": "Same artifact on both sides (E-ardia.window.small)"
+  },
+  {
+   "text": "chrome://ardia/",
+   "engineUses": 2,
+   "files": 9,
+   "occurrences": 15,
+   "decision": "protect",
+   "protectedOccurrences": 15,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "F-chrome-host"
+   ],
+   "why": "Same artifact on both sides (F-chrome-host)"
+  },
+  {
+   "text": "ARDIA_CLI_URL",
+   "engineUses": 2,
+   "files": 8,
+   "occurrences": 18,
+   "decision": "protect",
+   "protectedOccurrences": 18,
+   "renamedOccurrences": 0,
+   "notRsFiles": 6,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "Ardia Scripts",
+   "engineUses": 1,
+   "files": 8,
+   "occurrences": 8,
+   "decision": "protect",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "ArdiaCli.install",
+   "engineUses": 3,
+   "files": 8,
+   "occurrences": 22,
+   "decision": "protect-linux",
+   "protectedOccurrences": 22,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ardia-import-",
+   "engineUses": 1,
+   "files": 8,
+   "occurrences": 15,
+   "decision": "rename",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 14,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-same-words"
+   ],
+   "why": "Mac and Windows snapshot prefixes are the app's own temp names; the Linux handle prefix is protected in Linux paths."
+  },
+  {
+   "text": "/ardia/cli",
+   "engineUses": 1,
+   "files": 7,
+   "occurrences": 28,
+   "decision": "protect",
+   "protectedOccurrences": 28,
+   "renamedOccurrences": 0,
+   "notRsFiles": 18,
+   "coveredBy": [
+    "N-linux-layout",
+    "N-cli-home"
+   ],
+   "why": "Same artifact on both sides (N-linux-layout, N-cli-home)"
+  },
+  {
+   "text": "ARDIA_CONFIG_HOME",
+   "engineUses": 1,
+   "files": 7,
+   "occurrences": 24,
+   "decision": "protect",
+   "protectedOccurrences": 24,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "Add to Ardia",
+   "engineUses": 2,
+   "files": 7,
+   "occurrences": 8,
+   "decision": "protect",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "G-webstore"
+   ],
+   "why": "Same artifact on both sides (G-webstore)"
+  },
+  {
+   "text": "ArdiaControl.sock",
+   "engineUses": 1,
+   "files": 7,
+   "occurrences": 12,
+   "decision": "protect",
+   "protectedOccurrences": 12,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "A-rendezvous",
+    "H-linux-modules"
+   ],
+   "why": "Same artifact on both sides (A-rendezvous, H-linux-modules)"
+  },
+  {
+   "text": "ArdiaPictureInPicture.plist",
+   "engineUses": 1,
+   "files": 7,
+   "occurrences": 9,
+   "decision": "protect",
+   "protectedOccurrences": 9,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "J-plist"
+   ],
+   "why": "Same artifact on both sides (J-plist)"
+  },
+  {
+   "text": "dev.ardia.linux",
+   "engineUses": 2,
+   "files": 7,
+   "occurrences": 22,
+   "decision": "protect",
+   "protectedOccurrences": 22,
+   "renamedOccurrences": 0,
+   "notRsFiles": 13,
+   "coveredBy": [
+    "N-linux-ids"
+   ],
+   "why": "Same artifact on both sides (N-linux-ids)"
+  },
+  {
+   "text": "https://ardia.dev/otel/v1/logs",
+   "engineUses": 1,
+   "files": 7,
+   "occurrences": 7,
+   "decision": "protect",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "U-hosts"
+   ],
+   "why": "Same artifact on both sides (U-hosts)"
+  },
+  {
+   "text": "webView.setLittleArdiaOpensNewTabLinks",
+   "engineUses": 2,
+   "files": 7,
+   "occurrences": 8,
+   "decision": "protect",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "G-little-links"
+   ],
+   "why": "Same artifact on both sides (G-little-links)"
+  },
+  {
+   "text": "ArdiaAutomation.start",
+   "engineUses": 2,
+   "files": 6,
+   "occurrences": 8,
+   "decision": "protect-linux",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaHTM",
+   "engineUses": 1,
+   "files": 6,
+   "occurrences": 45,
+   "decision": "protect",
+   "protectedOccurrences": 45,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "E-ArdiaHTM"
+   ],
+   "why": "Same artifact on both sides (E-ArdiaHTM)"
+  },
+  {
+   "text": "ArdiaPasswords.",
+   "engineUses": 1,
+   "files": 6,
+   "occurrences": 31,
+   "decision": "class",
+   "protectedOccurrences": 29,
+   "renamedOccurrences": 2,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux module prefix: class H."
+  },
+  {
+   "text": "ArdiaShell.openWindow",
+   "engineUses": 1,
+   "files": 6,
+   "occurrences": 10,
+   "decision": "protect-linux",
+   "protectedOccurrences": 10,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.toggleFullScreen",
+   "engineUses": 2,
+   "files": 6,
+   "occurrences": 8,
+   "decision": "protect-linux",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.windowFrame",
+   "engineUses": 2,
+   "files": 6,
+   "occurrences": 8,
+   "decision": "protect-linux",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaUserScripts.watch",
+   "engineUses": 2,
+   "files": 6,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "__ardiaReply",
+   "engineUses": 2,
+   "files": 6,
+   "occurrences": 10,
+   "decision": "protect",
+   "protectedOccurrences": 10,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "C-page-globals"
+   ],
+   "why": "Same artifact on both sides (C-page-globals)"
+  },
+  {
+   "text": "ardia-cli.sha256",
+   "engineUses": 1,
+   "files": 6,
+   "occurrences": 8,
+   "decision": "protect",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "N-cli-artifacts"
+   ],
+   "why": "Same artifact on both sides (N-cli-artifacts)"
+  },
+  {
+   "text": "ardia-linux-bridge",
+   "engineUses": 1,
+   "files": 6,
+   "occurrences": 7,
+   "decision": "protect",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-names"
+   ],
+   "why": "Same artifact on both sides (S-switch-names)"
+  },
+  {
+   "text": "isn't allowed for the ardia command",
+   "engineUses": 1,
+   "files": 6,
+   "occurrences": 12,
+   "decision": "protect",
+   "protectedOccurrences": 12,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-cli-refusals"
+   ],
+   "why": "Same artifact on both sides (Q-cli-refusals)"
+  },
+  {
+   "text": " isn't allowed for the ardia command",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 9,
+   "decision": "protect",
+   "protectedOccurrences": 9,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-cli-refusals"
+   ],
+   "why": "Same artifact on both sides (Q-cli-refusals)"
+  },
+  {
+   "text": "/ardia/active",
+   "engineUses": 1,
+   "files": 5,
+   "occurrences": 8,
+   "decision": "protect",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "A-rendezvous"
+   ],
+   "why": "Same artifact on both sides (A-rendezvous)"
+  },
+  {
+   "text": "Ardia Passwords.csv",
+   "engineUses": 1,
+   "files": 5,
+   "occurrences": 7,
+   "decision": "rename",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 5,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-same-words"
+   ],
+   "why": "The Mac save panel and Windows dialog name their own export; the Linux engine's name is protected in Linux paths."
+  },
+  {
+   "text": "Ardia Safe Storage",
+   "engineUses": 3,
+   "files": 5,
+   "occurrences": 10,
+   "decision": "protect",
+   "protectedOccurrences": 10,
+   "renamedOccurrences": 0,
+   "notRsFiles": 8,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "ArdiaApp.postNotification",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 11,
+   "decision": "protect-linux",
+   "protectedOccurrences": 11,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaCli.installedVersion",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 8,
+   "decision": "protect-linux",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPasswords.save",
+   "engineUses": 3,
+   "files": 5,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 2,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.focusWindow",
+   "engineUses": 3,
+   "files": 5,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.launchSteps",
+   "engineUses": 3,
+   "files": 5,
+   "occurrences": 10,
+   "decision": "protect-linux",
+   "protectedOccurrences": 10,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.launchAtLoginStatus",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.setAsDefaultBrowser",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 6,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaUserScripts.read",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 11,
+   "decision": "protect-linux",
+   "protectedOccurrences": 11,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaUserScripts.readStatus",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaUserScripts.writeStatus",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "__ardiaEvent",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 10,
+   "decision": "protect",
+   "protectedOccurrences": 10,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "C-page-globals"
+   ],
+   "why": "Same artifact on both sides (C-page-globals)"
+  },
+  {
+   "text": "ardia-cli-install.sh",
+   "engineUses": 1,
+   "files": 5,
+   "occurrences": 8,
+   "decision": "protect",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "N-cli-artifacts"
+   ],
+   "why": "Same artifact on both sides (N-cli-artifacts)"
+  },
+  {
+   "text": "ardiaRequest",
+   "engineUses": 2,
+   "files": 5,
+   "occurrences": 5,
+   "decision": "protect",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "C-ardiaRequest"
+   ],
+   "why": "Same artifact on both sides (C-ardiaRequest)"
+  },
+  {
+   "text": "https://ardia.dev/switches.json",
+   "engineUses": 1,
+   "files": 5,
+   "occurrences": 6,
+   "decision": "protect",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "U-hosts"
+   ],
+   "why": "Same artifact on both sides (U-hosts)"
+  },
+  {
+   "text": "//chrome/browser/ardia",
+   "engineUses": 4,
+   "files": 4,
+   "occurrences": 11,
+   "decision": "protect",
+   "protectedOccurrences": 11,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "ArdiaApp.hardwareInfo",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaApp.notificationPermission",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaApp.openExternalURL",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 6,
+   "decision": "protect-linux",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaAppStop",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 6,
+   "decision": "protect",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "P-windows-exports"
+   ],
+   "why": "Same artifact on both sides (P-windows-exports)"
+  },
+  {
+   "text": "ArdiaSettings",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 4,
+   "notRsFiles": 2,
+   "coveredBy": [],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.completeLaunchStep",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 8,
+   "decision": "protect-linux",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.fetchKillSwitches",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.minimizeWindow",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.privateWindows",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 5,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.readDocument",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.smallWindows",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.windowIds",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.fileStatus",
+   "engineUses": 3,
+   "files": 4,
+   "occurrences": 15,
+   "decision": "protect-linux",
+   "protectedOccurrences": 15,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.isDefaultBrowser",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 6,
+   "decision": "protect-linux",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.setLaunchAtLogin",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.setThinScrollBars",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaTabs.unclaimedTabs",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaUpdates.releases",
+   "engineUses": 2,
+   "files": 4,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ardia-content-blocker-dir",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 4,
+   "decision": "protect",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-switches",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 4,
+   "decision": "protect",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-trace",
+   "engineUses": 1,
+   "files": 4,
+   "occurrences": 5,
+   "decision": "protect",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "//ardia/core",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 16,
+   "decision": "protect",
+   "protectedOccurrences": 16,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "Ardia Tab History",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "B-profile-files"
+   ],
+   "why": "Same artifact on both sides (B-profile-files)"
+  },
+  {
+   "text": "Ardia couldn't take that tab off-screen.",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 3,
+   "notRsFiles": 1,
+   "coveredBy": [],
+   "why": "Display text the app passes through or produces itself (offscreen.ts, ArdiaHost.mm); no code matches it."
+  },
+  {
+   "text": "ArdiaApp.removeNotifications",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 6,
+   "decision": "protect-linux",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaApp.requestNotificationPermission",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaAppStart",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 11,
+   "decision": "protect",
+   "protectedOccurrences": 11,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "P-windows-exports"
+   ],
+   "why": "Same artifact on both sides (P-windows-exports)"
+  },
+  {
+   "text": "ArdiaAppStartFailure",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "P-windows-exports"
+   ],
+   "why": "Same artifact on both sides (P-windows-exports)"
+  },
+  {
+   "text": "ArdiaAutofill.",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 13,
+   "decision": "class",
+   "protectedOccurrences": 13,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux module prefix: class H."
+  },
+  {
+   "text": "ArdiaAutofill.cardNumber",
+   "engineUses": 3,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaAutofill.status",
+   "engineUses": 3,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaAutomation.broadcast",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaAutomation.reply",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaAutomation.stop",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaCalendar.status",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaConfig.readFile",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaControl.sock.lock",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "A-rendezvous",
+    "H-linux-modules"
+   ],
+   "why": "Same artifact on both sides (A-rendezvous, H-linux-modules)"
+  },
+  {
+   "text": "ArdiaCrash.list",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaCrash.read",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.listBrowsers",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 11,
+   "decision": "protect-linux",
+   "protectedOccurrences": 10,
+   "renamedOccurrences": 1,
+   "notRsFiles": 10,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaLive.request",
+   "engineUses": 4,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaMedia",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPasswords.reveal",
+   "engineUses": 3,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPasswords.status",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPasswords.unlock",
+   "engineUses": 3,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPermissions",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 2,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaReport.post",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 8,
+   "decision": "protect-linux",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSearch.suggest",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.beginDialog",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 6,
+   "decision": "protect-linux",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.cancelDialog",
+   "engineUses": 3,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.fetchBangList",
+   "engineUses": 3,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.listenForOpenURLs",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.onOpenURLs",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.readText",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 6,
+   "decision": "protect-linux",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setActiveProfile",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setAppearance",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.watchSidebarEdge",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 8,
+   "decision": "protect-linux",
+   "protectedOccurrences": 8,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.windowIdentity",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.writeDocument",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.read",
+   "engineUses": 3,
+   "files": 3,
+   "occurrences": 6,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 1,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.readPasswords",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 1,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.savePassword",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.fileIcon",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "Remove from Ardia",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "G-webstore"
+   ],
+   "why": "Same artifact on both sides (G-webstore)"
+  },
+  {
+   "text": "ardia-downloads-dir",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-links",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 4,
+   "decision": "protect",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 4,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Same artifact on both sides"
+  },
+  {
+   "text": "ardia-linux-bridge.js",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-names"
+   ],
+   "why": "Same artifact on both sides (S-switch-names)"
+  },
+  {
+   "text": "ardia-pip-",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 34,
+   "decision": "class",
+   "protectedOccurrences": 34,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "D-dom-hooks"
+   ],
+   "why": "Covered by D-dom-hooks."
+  },
+  {
+   "text": "ardia-ver",
+   "engineUses": 1,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-names"
+   ],
+   "why": "Same artifact on both sides (S-switch-names)"
+  },
+  {
+   "text": "ardiaOffscreen",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "C-ardiaOffscreen"
+   ],
+   "why": "Same artifact on both sides (C-ardiaOffscreen)"
+  },
+  {
+   "text": "no scratch ARDIA_DATA_DIR",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "on a tab the ardia command didn't open",
+   "engineUses": 2,
+   "files": 3,
+   "occurrences": 5,
+   "decision": "protect",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-cli-refusals"
+   ],
+   "why": "Same artifact on both sides (Q-cli-refusals)"
+  },
+  {
+   "text": " ms for a previous Ardia, ",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "//ardia/win",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 10,
+   "decision": "protect",
+   "protectedOccurrences": 10,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "Ardia Recovery Kit.txt",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 2,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Mac and Windows write their own kit file; the Linux engine's copy is protected in Linux paths (Linux sync is off)."
+  },
+  {
+   "text": "Ardia Tab History Cleared",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "B-profile-files"
+   ],
+   "why": "Same artifact on both sides (B-profile-files)"
+  },
+  {
+   "text": "Ardia Test Sink",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "Ardia has no data folder",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 3,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Produced by the Mac shell itself (ControlSocket.swift, UserScripts.swift); nothing matches it."
+  },
+  {
+   "text": "ArdiaAppPreTranslateMessage",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "P-windows-exports"
+   ],
+   "why": "Same artifact on both sides (P-windows-exports)"
+  },
+  {
+   "text": "ArdiaAutofill.saveCard",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaCalendar.objects",
+   "engineUses": 3,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaCalendar.timezones",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaConfig.watch",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaConfig.writeSchemas",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.forgetUnlockedKeys",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 1,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.unlockBrowser",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 7,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaLive.cancel",
+   "engineUses": 3,
+   "files": 2,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaLive.connect",
+   "engineUses": 4,
+   "files": 2,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaLocation.locationPermission",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPasswords.export",
+   "engineUses": 3,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPasswords.update",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaReport.draftDirectory",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaReport.gzipText",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSearch.cancelSuggest",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.commandsReady",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.copyText",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 2,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.downloadsInProgress",
+   "engineUses": 3,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.isDarkAppearance",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.pickFolder",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 5,
+   "decision": "protect-linux",
+   "protectedOccurrences": 5,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.quit",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 7,
+   "decision": "protect-linux",
+   "protectedOccurrences": 7,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.removeDocument",
+   "engineUses": 3,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.resignActive",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setDragEscapeCapture",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setKeyboardShortcuts",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setMenuState",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 1,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.shellPainted",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.toggleMaximizeWindow",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.typeaheadReady",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 15,
+   "decision": "protect-linux",
+   "protectedOccurrences": 15,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.utilityReady",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.enterPhrase",
+   "engineUses": 4,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.folderInfo",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystemSignals.devPost",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystemSignals.watchIdle",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaTelemetry.post",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ardia-background",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-data-dir",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-linux-bridge.html",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-names"
+   ],
+   "why": "Same artifact on both sides (S-switch-names)"
+  },
+  {
+   "text": "ardia-sandbox-decision",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia/linux/ac_linux_page_operations.h",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "R-engine-paths"
+   ],
+   "why": "Same artifact on both sides (R-engine-paths)"
+  },
+  {
+   "text": "ardiaReloadPending",
+   "engineUses": 2,
+   "files": 2,
+   "occurrences": 6,
+   "decision": "protect",
+   "protectedOccurrences": 6,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "D-uBO-reload"
+   ],
+   "why": "Same artifact on both sides (D-uBO-reload)"
+  },
+  {
+   "text": "dev.ardia.linux.reauthenticate",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 4,
+   "decision": "protect",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "N-linux-ids"
+   ],
+   "why": "Same artifact on both sides (N-linux-ids)"
+  },
+  {
+   "text": "http://127.0.0.1:53682/ardia-oauth",
+   "engineUses": 1,
+   "files": 2,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "F-oauth"
+   ],
+   "why": "Same artifact on both sides (F-oauth)"
+  },
+  {
+   "text": " ms for the previous Ardia on this profile to finish exiting",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": ") has no ardia command release.",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Produced by the Mac shell itself (CliInstaller.swift); wave 3 writes nilla-browser."
+  },
+  {
+   "text": ".ardia-staging",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "K-staging"
+   ],
+   "why": "Same artifact on both sides (K-staging)"
+  },
+  {
+   "text": ".ardia-staging-",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "K-staging"
+   ],
+   "why": "Same artifact on both sides (K-staging)"
+  },
+  {
+   "text": "//ardia/core/mojom",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "//ardia/core:hooks",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "//ardia/core:launch_switches",
+   "engineUses": 5,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "//chrome/app/theme/ardia/BRANDING",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "/^(?:ardia-blocking-off|)/",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "D-dom-hooks"
+   ],
+   "why": "Same artifact on both sides (D-dom-hooks)"
+  },
+  {
+   "text": "ARDIA_DATA_DIR is not an absolute path",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ARDIA_INPUT_TRACE",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ARDIA_PACKAGE_DIR",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ARDIA_PROBE_COOKIE_URL",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ARDIA_PROBE_DOWNLOAD_URL",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "ARDIA_PROBE_SLOW_DOWNLOAD_URL",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-env"
+   ],
+   "why": "Same artifact on both sides (S-env)"
+  },
+  {
+   "text": "Another Ardia is serving this data folder.",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Produced by the Mac shell itself (ControlSocket.swift)."
+  },
+  {
+   "text": "Ardia HTML Document",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "Ardia Live Folder Token",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "Ardia can't read its Safe Storage key.",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "Ardia can't save downloads in that folder",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "Ardia couldn't take that tab off-screen, and closed it.",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Produced by the Mac host itself (ArdiaHost.mm)."
+  },
+  {
+   "text": "Ardia engine ",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Linux UI copy (hostCalendar.ts); no engine artifact reads it."
+  },
+  {
+   "text": "Ardia has no data folder.",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Produced by the Mac shell itself (ControlSocket.swift)."
+  },
+  {
+   "text": "Ardia's Safe Storage key is damaged.",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-engine-texts"
+   ],
+   "why": "Same artifact on both sides (Q-engine-texts)"
+  },
+  {
+   "text": "ArdiaCalendar.requestAccess",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaCalendar.sources",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaExtensionView",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaFileDrag.begin",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaFileDrop.takeDrop",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.cancelChooser",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.cancelImport",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.chooseImportFile",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.discardImported",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.discardPasswords",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.importBookmarksHTML",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 4,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.importPasswordsCSV",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.startImport",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 2,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.writeImported",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaImport.writePasswords",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 3,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaLinuxWindowOutputs",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaLive.disconnect",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaLocation.requestLocationPermission",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaPip",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaProbe",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "E-ArdiaProbe"
+   ],
+   "why": "Same artifact on both sides (E-ArdiaProbe)"
+  },
+  {
+   "text": "ArdiaReport.cancelUploads",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaReport.fileSize",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaReport.gzipFile",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaReport.removeFile",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaReport.upload",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.captionDoubleClick",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.pickFiles",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.restoreFullScreen",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.restoreShortcutFocus",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setMenuBookmarks",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setShortcutRecording",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setSwitcherCapture",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.setWindowTitle",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaShell.startWindowMove",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.chainStatus",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.chooseFolder",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.claimAuthority",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.copyRecoveryKit",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.copyRecoveryPhrase",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.createChain",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.createPhrase",
+   "engineUses": 4,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.deleteChain",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.deviceName",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.forget",
+   "engineUses": 4,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.openLocal",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.qrCode",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.recoveryKitPreview",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.recoveryWords",
+   "engineUses": 6,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.releaseAuthority",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.remove",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.revealFolder",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.saveRecoveryKit",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.sealLocal",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.shareRecoveryKit",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.status",
+   "engineUses": 5,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect-linux",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.unlock",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSync.write",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.moveToTrash",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.openFile",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 3,
+   "decision": "protect-linux",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaSystem.revealFile",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 4,
+   "decision": "protect-linux",
+   "protectedOccurrences": 4,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "H-linux-modules"
+   ],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaTabs.prepareTransfer",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "ArdiaTabs.releaseTransfer",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect-linux",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Linux wire name (class H): protected in Linux paths; the Mac and Windows modules are app-side and become Nilla*."
+  },
+  {
+   "text": "IDR_ARDIA_GAME_HTML",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "O-offline-game"
+   ],
+   "why": "Same artifact on both sides (O-offline-game)"
+  },
+  {
+   "text": "The installer isn't in this build of Ardia.",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "Produced by the Mac shell itself (CliInstaller.swift)."
+  },
+  {
+   "text": "[control] the ardia command's socket didn't start: ",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "rename",
+   "protectedOccurrences": 0,
+   "renamedOccurrences": 1,
+   "notRsFiles": 0,
+   "coveredBy": [],
+   "why": "The Mac shell's own log line (ControlSocket.swift)."
+  },
+  {
+   "text": "ardia-chromium-win-$WIN_CPU",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "P-windows-engine-files"
+   ],
+   "why": "Same artifact on both sides (P-windows-engine-files)"
+  },
+  {
+   "text": "ardia-default-search-engine",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-names"
+   ],
+   "why": "Same artifact on both sides (S-switch-names)"
+  },
+  {
+   "text": "ardia-hyprland-instance",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-hyprland-runtime-dir",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-keyboard-diagnostics",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-test-cast-sink",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia-test-instance",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "S-switch-prefix"
+   ],
+   "why": "Same artifact on both sides (S-switch-prefix)"
+  },
+  {
+   "text": "ardia/core/ac_hooks.h",
+   "engineUses": 32,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "ardia/core/ac_prerender_posts.h",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-paths"
+   ],
+   "why": "Same artifact on both sides (R-engine-paths)"
+  },
+  {
+   "text": "ardia/linux/ac_linux_open_urls.h",
+   "engineUses": 3,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-paths"
+   ],
+   "why": "Same artifact on both sides (R-engine-paths)"
+  },
+  {
+   "text": "ardia/linux/ac_linux_page_evaluation.h",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "R-engine-paths"
+   ],
+   "why": "Same artifact on both sides (R-engine-paths)"
+  },
+  {
+   "text": "ardia/linux/ac_linux_sidebar_edge.h",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-paths"
+   ],
+   "why": "Same artifact on both sides (R-engine-paths)"
+  },
+  {
+   "text": "ardia/linux/ac_linux_suggest_policy.h",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "R-engine-paths"
+   ],
+   "why": "Same artifact on both sides (R-engine-paths)"
+  },
+  {
+   "text": "ardia/linux/host_bootstrap.h",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "ardia/linux/page_script.h",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "ardia: Target.getTargetInfo on that target ",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "Q-cli-refusals"
+   ],
+   "why": "Same artifact on both sides (Q-cli-refusals)"
+  },
+  {
+   "text": "ardia://page-script",
+   "engineUses": 2,
+   "files": 1,
+   "occurrences": 2,
+   "decision": "protect",
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "F-scheme"
+   ],
+   "why": "Same artifact on both sides (F-scheme)"
+  },
+  {
+   "text": "ardia_resources_win.txt",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "P-windows-engine-files"
+   ],
+   "why": "Same artifact on both sides (P-windows-engine-files)"
+  },
+  {
+   "text": "chrome/browser/ardia/ac_engine_dispatch.inc",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-gn"
+   ],
+   "why": "Same artifact on both sides (R-engine-gn)"
+  },
+  {
+   "text": "chrome/browser/ardia/public/ac_engine.h",
+   "engineUses": 10,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "R-engine-paths"
+   ],
+   "why": "Same artifact on both sides (R-engine-paths)"
+  },
+  {
+   "text": "data-ardia-bridge",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 3,
+   "decision": "protect",
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "D-dom-hooks"
+   ],
+   "why": "Same artifact on both sides (D-dom-hooks)"
+  },
+  {
+   "text": "dev.ardia.linux.LiveToken",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "N-linux-ids"
+   ],
+   "why": "Same artifact on both sides (N-linux-ids)"
+  },
+  {
+   "text": "dev.ardia.linux.SyncKey",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 0,
+   "coveredBy": [
+    "N-linux-ids"
+   ],
+   "why": "Same artifact on both sides (N-linux-ids)"
+  },
+  {
+   "text": "trusted-types ardia-symbols;",
+   "engineUses": 1,
+   "files": 1,
+   "occurrences": 1,
+   "decision": "protect",
+   "protectedOccurrences": 1,
+   "renamedOccurrences": 0,
+   "notRsFiles": 1,
+   "coveredBy": [
+    "D-dom-hooks"
+   ],
+   "why": "Same artifact on both sides (D-dom-hooks)"
+  }
+ ],
+ "excludedEngineLiterals": [
+  {
+   "text": "                          ? g_ardia_tab_shown_by_host(GetObservedWebContents())\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "          ? g_ardia_browser_window_factory(this)\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "          ? g_ardia_tab_shown_by_host(tab_interface_->GetContents())\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "      !g_ardia_history_eligible(web_contents())) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "      g_ardia_extension_installed(profile(), extension, icon)) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "      g_ardia_external_protocol_dialog(url, web_contents, initiating_origin,\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "      g_ardia_file_system_restore_prompt(request, callback, web_contents)) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "      g_ardia_skip_cpu_health_sampling ? nullptr\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "      g_ardia_tab_shown_by_host(active) == 0) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "      g_ardia_tab_shown_by_host(tab_interface_->GetContents()) == 1) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "    *g_ardia_create_permission_prompt)(\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "    *g_ardia_create_web_contents_delegate)(\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "    ArdiaSetHybridUiShown(this, step_ == Step::kCableV2QRCode ||\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "    auto ardia_alive = GetWeakPtr();\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "    auto prompt = g_ardia_create_permission_prompt(web_contents, delegate,\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "    browser_web_contents_delegate_ = g_ardia_create_web_contents_delegate(\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "    g_ardia_dnr_rule_matched(browser_context_, tab_id, request_action,\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "    g_ardia_dnr_rulesets_in_force(\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "    if (std::optional<bool> shown = g_ardia_open_action_popup(\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  ArdiaSetHybridUiShown(this, false);\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "  ThrottleCheckResult WillProcessResponse() override {\n    if (should_defer_ && g_ardia_scripts_wait_at_response) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  bool ArdiaHostVisibilityChanged(content::WebContents* contents);\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "  bool record = !g_ardia_embedder;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (!g_ardia_embedder) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (!g_ardia_embedder) {\n    crash_reporter::InitializeCrashKeys();\n  }\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (!suspended && g_ardia_global_shortcuts_resumed) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (!web_contents && g_ardia_prompts_without_tab) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_autofill_suggestions_shown && IsRootPopup() && web_contents_) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_bluetooth_poll_on_demand && !IsDiscovering()) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_bluetooth_poll_on_demand) {\n    PollAdapterOnDemand();\n  }\n  DCHECK(callback);\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_disk_space_check_seconds > 0) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_embedder) {\n    ExtensionActionDispatcher::Get(browser_context_)\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_hybrid_scan_on_demand && ModelsShowingHybrid().empty() &&\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_hybrid_scan_on_demand && scan_wanted_ && !discovery_session_) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_opacity_from_default_color) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_reserved_accelerator && g_ardia_reserved_accelerator(accelerator)) {\n",
+   "engineUses": 2,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_reserved_global_accelerator &&\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "  if (g_ardia_script_loader_ready_at_once &&\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": " window.dispatchEvent(new Event(\"ardiapagecolor\"));",
+   "engineUses": 1,
+   "coveredBy": "O-offline-game"
+  },
+  {
+   "text": "$env:TEMP\\ardia-throwaway-profile",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "%TEMP%\\ardia-throwaway-profile",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "1. Open Ardia › Settings › Sync, and choose the same sync folder.\n",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "Ardia",
+   "engineUses": 19,
+   "coveredBy": "rule 14 and the class rules (bare product name)"
+  },
+  {
+   "text": "Ardia ",
+   "engineUses": 6,
+   "coveredBy": "rule 14 and the class rules (bare product name)"
+  },
+  {
+   "text": "Ardia Recovery Kit\nCreated ",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "Ardia Trace %@.json",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "Ardia couldn't start.\n\n",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "BrowserWindow* (*g_ardia_browser_window_factory)(Browser*) = nullptr;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "BrowserWindow* (*g_ardia_browser_window_factory)(Browser*) = nullptr;\n\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "Local\\ArdiaBrowser.",
+   "engineUses": 2,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "[Desktop Entry]\nType=Application\nName=Ardia\nExec=",
+   "engineUses": 1,
+   "coveredBy": "N-linux-layout"
+  },
+  {
+   "text": "\n  if (!g_ardia_embedder) {\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "\n;\n} catch (ardiaError) {}\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "\nIcon=ardia\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
+   "engineUses": 1,
+   "coveredBy": "N-linux-layout"
+  },
+  {
+   "text": "\n\nInstalling Ardia again from ardia.dev usually ",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "\nglobalThis.ardiaPeek && globalThis.ardiaPeek.config(",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "ardia",
+   "engineUses": 18,
+   "coveredBy": "rule 14 and the class rules (bare product name)"
+  },
+  {
+   "text": "ardia.elementPicker\")].linuxPick = { value: v === undefined ? null : v }; }, () => { window[Symbol.for(\"ardia.elementPicker\")].linuxPick = { value: null }; });",
+   "engineUses": 1,
+   "coveredBy": "C-elementPicker"
+  },
+  {
+   "text": "ardia:",
+   "engineUses": 1,
+   "coveredBy": "rule 14 and the class rules (bare product name)"
+  },
+  {
+   "text": "ardia: ",
+   "engineUses": 2,
+   "coveredBy": "rule 14 and the class rules (bare product name)"
+  },
+  {
+   "text": "bool (*g_ardia_extension_installed)(\n",
+   "engineUses": 2,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool (*g_ardia_external_protocol_dialog)(\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool (*g_ardia_file_system_restore_prompt)(\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool (*g_ardia_history_eligible)(content::WebContents*) = nullptr;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool (*g_ardia_history_eligible)(content::WebContents*) = nullptr;\n\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool (*g_ardia_reserved_accelerator)(const ui::Accelerator& accelerator) = nullptr;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool (*g_ardia_reserved_accelerator)(const ui::Accelerator& accelerator) = nullptr;\n\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool (*g_ardia_reserved_global_accelerator)(const ui::Accelerator& accelerator) = nullptr;\n",
+   "engineUses": 2,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool ArdiaTabActive(content::WebContents* contents, bool chrome_says) {\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "bool g_ardia_bluetooth_poll_on_demand = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_embedder = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_hybrid_scan_on_demand = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_lazy_storage_usage = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_opacity_from_default_color = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_opacity_from_default_color = false;\n\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_prompts_without_tab = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_prompts_without_tab = false;\n\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_script_loader_ready_at_once = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_scripts_wait_at_response = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_skip_cpu_health_sampling = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "bool g_ardia_viewless_browsers = false;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "const post = (kind, value) => { if (kind === \"result\" && ardiaResult === null && typeof value === \"string\") ardiaResult = value; };\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "folder can read your synced data. Ardia can’t recover the words for you: there’s no server and no other copy.\n",
+   "engineUses": 1,
+   "coveredBy": "engine-only text with no app occurrence at the base (hand check)"
+  },
+  {
+   "text": "int (*g_ardia_permission_tab_shown)(content::WebContents*) = nullptr;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "int (*g_ardia_tab_shown_by_host)(content::WebContents*) = nullptr;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "int g_ardia_disk_space_check_seconds = 0;\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "keychain from a backup, or delete \\u201CArdia Safe Storage\\u201D in ",
+   "engineUses": 1,
+   "coveredBy": "Q-engine-texts"
+  },
+  {
+   "text": "let ardiaResult = null;\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "login keychain, or allow Ardia to use \\u201CArdia Safe Storage\\u201D ",
+   "engineUses": 1,
+   "coveredBy": "Q-engine-texts"
+  },
+  {
+   "text": "return ardiaResult;\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "std::optional<bool> (*g_ardia_open_action_popup)(\n",
+   "engineUses": 2,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "the engine\\'s launch gate refused it (see ardia/win/test_gate.cc)",
+   "engineUses": 1,
+   "coveredBy": "R-engine-gn"
+  },
+  {
+   "text": "value_store::ValueStore::WriteResult ArdiaWriteAfterValueRestore(Write write) {\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "void (*g_ardia_autofill_suggestions_shown)(\n",
+   "engineUses": 2,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "void (*g_ardia_dnr_rule_matched)(\n",
+   "engineUses": 2,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "void (*g_ardia_dnr_rulesets_in_force)(\n",
+   "engineUses": 2,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "void (*g_ardia_global_shortcuts_resumed)() = nullptr;\n\n",
+   "engineUses": 1,
+   "coveredBy": "R-g-ardia"
+  },
+  {
+   "text": "void ArdiaAutoPictureInPictureHostVisibilityChanged(\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "void ArdiaReregisterGlobalCommands(content::BrowserContext* context) {\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "void ArdiaSetHybridUiShown(const void* model, bool shown) {\n",
+   "engineUses": 1,
+   "coveredBy": "engine-internal name with no app occurrence at the base"
+  },
+  {
+   "text": "window.ardiaPageColor = \"",
+   "engineUses": 1,
+   "coveredBy": "O-offline-game"
+  }
+ ],
+ "frozenTokens": [
+  "ArdiaAppPreTranslateFunction",
+  "ArdiaAppRunFunction",
+  "ArdiaAppStartFailureFunction",
+  "ArdiaAppStartFunction",
+  "ArdiaAppStopFunction",
+  "ArdiaEngineApi",
+  "ardiaPageColor",
+  "ardiapagecolor",
+  "setLittleArdiaOpensNewTabLinks"
+ ],
+ "pruned": [
+  {
+   "literal": "ardia-cli-",
+   "path": "scripts/release.sh",
+   "why": "The Mac release names its own CLI tarball; the Linux engine never reads it."
+  },
+  {
+   "literal": "ardia-links",
+   "path": "apps/browser/scripts/little-ardia-links-test.mjs",
+   "why": "File name, not the switch (kebab boundary excludes it)."
+  },
+  {
+   "literal": "ardia-links",
+   "path": "apps/phone/*",
+   "why": "Log text, not the Windows switch (S-switch-names except)."
+  },
+  {
+   "literal": "ardia-links",
+   "path": "docs/dia-feature-parity.md",
+   "why": "Part of little-ardia-links, not the switch."
+  },
+  {
+   "literal": "ardia-",
+   "path": ".claude/settings.json",
+   "why": "Known false positive (plan 0.4): G rewrites the file in wave 1."
+  },
+  {
+   "literal": "ardia-",
+   "path": "packages/demo/public/favicons/*",
+   "why": "Known false positive (plan 0.4): binary favicon bytes."
+  }
+ ]
+}
