@@ -444,6 +444,39 @@ fake device, "Ardia Test Sink", and records routes without sending anything anyw
 - **Proof.** `pnpm --filter @ardia/linux test:graph` asserts that the Linux production module graph loads nothing
   from `packages/demo` and only the Linux adapters it means to.
 
+## Local Linux setup
+
+To work on the UI you don't need a Chromium tree: run the shared UI on a prebuilt engine, as CI does.
+
+```bash
+sudo apt-get install clang pkg-config patch fakeroot xz-utils unzip curl util-linux openssl dbus dbus-x11 \
+  libnss3-tools gnome-keyring python3-gi gir1.2-glib-2.0 libglib2.0-dev libgtk-3-0t64 libsecret-1-0
+pnpm install --frozen-lockfile
+scripts/linux/fetch-engine.sh --nearest
+pnpm --filter @ardia/linux build
+"$(scripts/linux/fetch-engine.sh --nearest)/chrome" --ardia-ui-dir="$PWD/apps/linux/dist" \
+  --user-data-dir="$(mktemp -d)" --remote-debugging-port=9222
+```
+
+- **Toolchain.** Node 24 (`.nvmrc`) and the pnpm in `package.json`'s `packageManager`.
+- **Engine.** `fetch-engine.sh` prints the engine directory, under
+  `apps/browser/build-ardiacore/prebuilt-linux-x86_64/`. Without `--nearest` it needs an engine published for this
+  exact engine key, which most commits don't have ([linux-ci.md](linux-ci.md) › Nearest engine). It refuses to run
+  while `engine/` has uncommitted changes.
+- **Sandbox.** The fetched `chrome` has no setuid sandbox helper, so its sandbox needs user namespaces. On Ubuntu 24.04
+  and later, AppArmor denies them to programs without a profile (`kernel.apparmor_restrict_unprivileged_userns=1`).
+  Grant them to the fetched engine the way `install.sh` does for an installed one: copy `scripts/linux/ardia.apparmor`
+  to `/etc/apparmor.d/ardia-dev`, rename its profile to `ardia-dev` so it can't collide with an installed Ardia's,
+  replace `/usr/lib/ardia/chrome` with the engine's `chrome` path (AppArmor globs such as
+  `/home/*/ardia/apps/browser/build-ardiacore/prebuilt-linux-x86_64/*/chrome` work), and load it with
+  `sudo apparmor_parser -r`. Don't run with `--no-sandbox`.
+- **Checks.** `scripts/linux/ci-checks.sh` ([Tests](#tests)) also compiles the engine fixtures under ASan and UBSan
+  and against OpenSSL and SQLite. On Ubuntu that needs `libclang-rt-<clang major>-dev libssl-dev libsqlite3-dev` too.
+- **Headless.** Under Xvfb, add `--ozone-platform=x11 --use-gl=angle --use-angle=swiftshader
+  --enable-unsafe-swiftshader`. The shell is the `chrome://ardia/` CDP target; `window.ardiaLinux.store` is the
+  shared store and `window.__ardiaHost` the bridge ([linux-acceptance.md](linux-acceptance.md) › Hooks the scenarios
+  use).
+
 ## Building on Linux
 
 Use a dedicated build root, apart from any Mac Chromium tree. `01-sync.sh` is for a fresh tree and refuses to run
