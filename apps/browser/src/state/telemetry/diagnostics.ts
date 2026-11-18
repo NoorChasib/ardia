@@ -7,7 +7,7 @@ import { hermesHeapMegabytes } from "../../lib/hermesHeap";
 import { activeTab } from "../browser/model";
 import { useBrowser } from "../browser/store";
 import { capture, isSharing, saveContext, useTelemetry } from "./client";
-import { consentCrossed } from "./choice";
+import { consentCrossed, consentStamp } from "./choice";
 import { formatRecentPages, readRecentPages, type RecentPage, type SavedContext } from "./savedContext";
 import { noteDragsEnded } from "./stuckDrags";
 import { noteWindowlessPages } from "./cliCounts";
@@ -252,6 +252,7 @@ export function trackPageProcessGone(info: { reason: string; code: number }, vis
   pageProcessesGone++;
   if (pageProcessEvents >= MAX_PAGE_PROCESS_EVENTS) return;
   pageProcessEvents++;
+  const consent = consentStamp();
   const reason = GONE_REASONS.has(info.reason) ? info.reason : "unknown";
   const props = {
     process: "renderer",
@@ -263,7 +264,7 @@ export function trackPageProcessGone(info: { reason: string; code: number }, vis
     session_min: sessionMinutes(),
     gone_this_session: pageProcessesGone,
   };
-  void memoryPressure().then((memory_pressure) => capture("page_process_gone", { ...props, memory_pressure }));
+  void memoryPressure().then((memory_pressure) => capture("page_process_gone", { ...props, memory_pressure }, { consent }));
 }
 
 const HOVER_REASONS = new Set(["halfActive", "staleMenu", "notKeyOrMain", "coveredByView", "responderLost", "coveredByWindow"]);

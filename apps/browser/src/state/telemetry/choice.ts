@@ -2,7 +2,7 @@ import { readDocument, writeDocument } from "../../platform/documents";
 import { create } from "zustand";
 import { readContext, type SavedContext } from "./savedContext";
 import { uuidv7 } from "./ids";
-import { telemetryRelay } from "./relay";
+import { telemetryRelay, type ConsentStamp } from "./relay";
 import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject } from "../../lib/savedDocument";
 import { isFields, isString, numberOr, stringOr } from "../../lib/decode";
 
@@ -146,6 +146,9 @@ export function save(patch: Partial<Session> | (Partial<Session> & Sharing)) {
 
 export const isSharing = () => saved.sharing;
 export const sharingAgreed = () => saved.sharing && useTelemetry.getState().sharing;
+export const consentStamp = (): ConsentStamp => ({ epoch: saved.consentEpoch, installId: saved.installId, agreed: sharingAgreed() });
+export const consentHolds = (stamp: ConsentStamp) => stamp.agreed && stamp.epoch === saved.consentEpoch && stamp.installId === saved.installId;
+export type { ConsentStamp };
 export const consentCrossed = (current: Shown, previous: Shown) => current.sharing !== previous.sharing || current.consentEpoch !== previous.consentEpoch;
 
 let currentSession: string | null = null;

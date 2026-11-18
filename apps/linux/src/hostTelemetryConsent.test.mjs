@@ -8,6 +8,7 @@ const telemetry = `${browser}/state/telemetry`;
 const runAs = process.env.ARDIA_CONSENT_TEST_WINDOW;
 const COUNT_KEYS = ["find_opens", "imported_pinned_rows", "imported_splits"];
 const turn = () => new Promise(setImmediate);
+const GONE = "page_process_gone";
 
 async function runWindow() {
   const { docs, telemetryLocal } = await import(`${browser}/test-native/index.ts`);
@@ -34,9 +35,16 @@ async function runWindow() {
   const choice = await import(`${telemetry}/choice.ts`);
   const { noteFind } = await import(`${telemetry}/findCounts.ts`);
   const { noteImportedPins } = await import(`${telemetry}/usage.ts`);
+  const { trackPageProcessGone } = await import(`${telemetry}/diagnostics.ts`);
   const { startHostTelemetry, settleHostTelemetry } = await import(`${linux}/hostTelemetry.ts`);
   const channel = { postMessage: (data) => process.send({ kind: "wire", data }), onmessage: null };
-  const role = startHostTelemetry({ host: { bootstrap: { capabilities: [] } }, candidate: runAs === "leader", channel });
+  let localCopiesSaved = 0;
+  const localSettled = async () => {
+    await Bun.sleep(30);
+    localCopiesSaved++;
+  };
+  let releasePressure = null;
+  const role = startHostTelemetry({ host: { bootstrap: { capabilities: [] } }, candidate: runAs === "leader", channel, localSettled });
   const counted = (properties) => Object.fromEntries(COUNT_KEYS.filter((key) => properties[key]).map((key) => [key, properties[key]]));
   const actions = {
     choice: (on) => {
@@ -47,16 +55,31 @@ async function runWindow() {
     find: () => noteFind("opened"),
     pins: () => noteImportedPins({ rows: 3, splits: 1 }),
     log: () => client.queueLog("warn", "consent-fixture", {}),
-    close: () => settleHostTelemetry(false),
+    gone: () => {
+      globalThis.acTestSystemState = () => new Promise((resolve) => (releasePressure = resolve));
+      trackPageProcessGone({ reason: "oom", code: 9 }, true);
+    },
+    pressure: async () => {
+      delete globalThis.acTestSystemState;
+      releasePressure({ onBattery: false, batteryLevel: null, lowPowerMode: false, memoryPressure: "critical", physicalMemory: 1 });
+      for (let i = 0; i < 10; i++) await turn();
+    },
+    close: async () => {
+      const before = localCopiesSaved;
+      await settleHostTelemetry(false);
+      return { localCopySaved: localCopiesSaved > before };
+    },
     queue: async () => {
       await client.saveQueueNow();
       const queue = JSON.parse(docs.get("telemetry-queue.json") ?? '{"events":[],"logs":[]}');
       return { counts: queue.events.filter((item) => item.event === "usage_counts").map(({ properties }) => counted(properties)), logs: queue.logs.length };
     },
-    local: () => {
-      client.saveQueueNow();
-      return telemetryLocal.records().filter((item) => item.event === "usage_counts" || item.kind === "log").map((item) => ({ kind: item.kind, sent: item.sent, ...(item.properties ? counted(item.properties) : {}) }));
+    queued: async (event) => {
+      await client.saveQueueNow();
+      return JSON.parse(docs.get("telemetry-queue.json") ?? '{"events":[]}').events.filter((item) => item.event === event).map(({ properties }) => properties.memory_pressure);
     },
+    local: () => telemetryLocal.records().filter((item) => item.event === "usage_counts" || item.kind === "log").map((item) => ({ kind: item.kind, sent: item.sent, ...(item.properties ? counted(item.properties) : {}) })),
+    localEvent: (event) => telemetryLocal.records().filter((item) => item.event === event).map((item) => ({ sent: item.sent, memory_pressure: item.properties.memory_pressure })),
   };
   await new Promise((resolve, reject) => {
     process.on("message", async (message) => {
@@ -153,7 +176,7 @@ else {
       await call("follower", "pins");
       await call("follower", "find");
       await call("follower", "log");
-      await call("follower", "close");
+      assert.deepEqual(await call("follower", "close"), { localCopySaved: true });
       assert.deepEqual(await call("leader", "queue"), { counts: [], logs: 0 });
       assert.deepEqual(await call("follower", "local"), [
         { kind: "log", sent: false },
@@ -169,8 +192,39 @@ else {
       await call("follower", "pins");
       await call("follower", "find");
       await call("follower", "log");
+      await call("follower", "gone");
+      await call("follower", "pressure");
       await call("follower", "close");
       assert.deepEqual(await call("leader", "queue"), { counts: [{ find_opens: 1, imported_pinned_rows: 3, imported_splits: 1 }], logs: 1 });
+      assert.deepEqual(await call("leader", "queued", GONE), ["critical"]);
+    }), { timeout: 20000 });
+
+  test("a renderer failure a follower saw while sharing was off isn't relayed once sharing turns on before its memory pressure arrives, and stays an unsent local row", () =>
+    withWindows(async ({ call, setChoice, announce }) => {
+      assert.deepEqual(await call("follower", "flags"), [false, false]);
+      await call("follower", "gone");
+      await setChoice(true);
+      await announce();
+      assert.deepEqual(await call("follower", "flags"), [true, true]);
+      await call("follower", "pressure");
+      await call("follower", "close");
+      assert.deepEqual(await call("leader", "queued", GONE), []);
+      assert.deepEqual(await call("follower", "localEvent", GONE), [{ sent: false, memory_pressure: "critical" }]);
+    }), { timeout: 20000 });
+
+  test("a renderer failure a follower saw before sharing went off and on again isn't relayed under the new choice", () =>
+    withWindows(async ({ call, setChoice, announce }) => {
+      await setChoice(true);
+      await announce();
+      await call("follower", "gone");
+      await setChoice(false);
+      await setChoice(true);
+      await announce(2);
+      assert.deepEqual(await call("follower", "flags"), [true, true]);
+      await call("follower", "pressure");
+      await call("follower", "close");
+      assert.deepEqual(await call("leader", "queued", GONE), []);
+      assert.deepEqual(await call("follower", "localEvent", GONE), [{ sent: false, memory_pressure: "critical" }]);
     }), { timeout: 20000 });
 
   test("a follower that only reads the final choice after an off and on again drops what it counted in between", () =>

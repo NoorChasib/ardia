@@ -3,6 +3,7 @@ import { advanceCrashCursor, capture, crashCursor, loadChoice, saveQueueNow } fr
 import { contextAt, contextProperties, recentWebuiPages, sessionStart } from "./diagnostics";
 import type { SavedContext } from "./savedContext";
 import { recordLog } from "./logs";
+import { consentStamp } from "./choice";
 import { errorCode, errorMessage, errorType, jsFatalKind, nativeCrashExceptions, nativeCrashTermination, parseStack, type ExceptionFrame } from "./sanitize";
 
 type Mechanism = "onerror" | "onunhandledrejection" | "react" | "react_recovered" | "console" | "native_crash" | "helper_crash";
@@ -132,6 +133,7 @@ const optional = (value: string | undefined, pattern: RegExp) => (value && patte
 const whole = (value: number | undefined) => (typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : null);
 
 export async function reportNativeCrashes(contexts: (SavedContext | null)[] = []) {
+  const consent = consentStamp();
   const since = crashCursor();
   const reports = await crashReports(since).catch(() => []);
   let latest = since;
@@ -162,6 +164,7 @@ export async function reportNativeCrashes(contexts: (SavedContext | null)[] = []
         ctx_webui_pages: recentWebuiPages(context, report.time),
       },
       {
+        consent,
         urgent: true,
         persist: true,
         raw: { ...exceptionProperties(exceptions, mechanism, false), crash_images: images },

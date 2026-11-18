@@ -13,12 +13,14 @@ import { uuidv4 } from "../../browser/src/state/telemetry/ids";
 import { setTelemetryHost } from "../../browser/src/state/telemetry/transport";
 import { emitWindowUsage, sessionEnding } from "../../browser/src/state/telemetry/usage";
 import { documentSaved } from "../../browser/src/platform/documents";
+import { flushLocalNow } from "../../browser/src/state/telemetry/localStore";
 import { withDeadline } from "../../browser/src/lib/deadline";
 import { refreshDocument } from "./shims/shellBase";
 import { hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
 import { startTelemetryLeadership, TELEMETRY_CHANNEL, type LeaderChannel, type LeaderLocks, type Relayed, type TelemetryLeadership, type TelemetryOp } from "./telemetryLeader.ts";
 import { createEndLedger, setTelemetrySettle } from "./telemetrySettle.ts";
 import { parseChoiceChange, shownAfter } from "./telemetryChoice.ts";
+import { settledLocalCopy } from "./hostTelemetryLocal.ts";
 
 export const TELEMETRY_POST = "ArdiaTelemetry.post";
 export const TELEMETRY_STEP = "telemetry";
@@ -111,6 +113,7 @@ export async function handleTelemetryOp(op: TelemetryOp, arg?: string): Promise<
 }
 
 let leadership: TelemetryLeadership | null = null;
+let localCopySettled: () => Promise<void> = settledLocalCopy;
 let offeredInstallId: string | null = null;
 
 function deliverRelayed(message: Relayed) {
@@ -127,8 +130,9 @@ async function refreshState() {
   if (savedChoice().installId) offeredInstallId = null;
 }
 
-export function startHostTelemetry(options: { host: ArdiaHost; candidate: boolean; locks?: LeaderLocks; channel?: LeaderChannel | null }) {
+export function startHostTelemetry(options: { host: ArdiaHost; candidate: boolean; locks?: LeaderLocks; channel?: LeaderChannel | null; localSettled?: () => Promise<void> }) {
   const { host, candidate } = options;
+  localCopySettled = options.localSettled ?? settledLocalCopy;
   setTelemetrySettle({ settle: settleHostTelemetry, reopen: reopenHostTelemetry });
   setTelemetryHost({ os: "Linux", osType: "linux", send: hostSupports(TELEMETRY_POST, host) ? hostTelemetrySend(host) : null });
   loadChoice();
@@ -140,7 +144,7 @@ export function startHostTelemetry(options: { host: ArdiaHost; candidate: boolea
     locks: options.locks,
     channel,
     relay: (forward) => setTelemetryRelay(forward && {
-      capture: (event, props, captureOptions) => forward({ kind: "capture", event, props, options: { ...captureOptions }, consentEpoch: savedChoice().consentEpoch }),
+      capture: (event, props, { consent, ...captureOptions }) => forward({ kind: "capture", event, props, options: captureOptions, consentEpoch: consent?.epoch ?? savedChoice().consentEpoch }),
       log: (level, message, attributes) => forward({ kind: "log", level, message, attributes, consentEpoch: savedChoice().consentEpoch }),
       resetId: async () => {
         const installId = await current.request("reset", RESET_TIMEOUT_MS);
@@ -189,15 +193,23 @@ export function startHostTelemetry(options: { host: ArdiaHost; candidate: boolea
   return current;
 }
 
+async function saveLocalCopy() {
+  try {
+    flushLocalNow();
+  } catch (error) {
+    report(error);
+  }
+  await localCopySettled().catch(report);
+}
+
 export async function settleHostTelemetry(endsSession: boolean): Promise<string | null> {
   if (!leadership) return null;
   if (!endsSession || !leadership.leading()) emitWindowUsage();
-  if (endsSession) {
-    const token = await leadership.request("end", END_TIMEOUT_MS).catch(report);
-    return typeof token === "string" ? token : null;
-  }
-  if (leadership.leading()) await withDeadline(saveState(), END_TIMEOUT_MS, undefined);
-  return null;
+  let token: unknown = null;
+  if (endsSession) token = await leadership.request("end", END_TIMEOUT_MS).catch(report);
+  else if (leadership.leading()) await withDeadline(saveState(), END_TIMEOUT_MS, undefined);
+  await withDeadline(saveLocalCopy(), END_TIMEOUT_MS, undefined);
+  return typeof token === "string" ? token : null;
 }
 
 export async function reopenHostTelemetry(token: string) {

@@ -82,12 +82,15 @@ function forgetRepeats() {
   repeatsLandedOn = new Map();
 }
 
+let consentGeneration = 0;
+
 export function noteRowPress(shownTabEmpty: boolean): Promise<void> {
   const at = Date.now();
+  const generation = consentGeneration;
   const rowPressBefore = lastRowPressAt;
   lastRowPressAt = at;
   return pressRepeated().then((earlier) => {
-    if (!earlier || rowPressBefore > at - earlier.ms - REPEAT_SLACK_MS) return;
+    if (!earlier || generation !== consentGeneration || rowPressBefore > at - earlier.ms - REPEAT_SLACK_MS) return;
     repeats.presses++;
     if (shownTabEmpty) repeats.onNewTab++;
     if (repeatGaps.length < MAX_SAMPLES) repeatGaps.push(earlier.ms);
@@ -95,7 +98,11 @@ export function noteRowPress(shownTabEmpty: boolean): Promise<void> {
   });
 }
 
-useTelemetry.subscribe((s, prev) => consentCrossed(s, prev) && forgetPresses());
+useTelemetry.subscribe((s, prev) => {
+  if (!consentCrossed(s, prev)) return;
+  consentGeneration++;
+  forgetPresses();
+});
 
 export function notePressStarted(switchedOnPress = false, windowKey = true) {
   if (pending) tally.unanswered++;
