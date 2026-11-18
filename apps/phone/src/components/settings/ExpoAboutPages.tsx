@@ -1,6 +1,7 @@
 import { PlatformColor } from "react-native";
 import { Button, Form, HStack, Image, LabeledContent, NavigationLink, Section, Spacer, Text, VStack } from "@expo/ui/swift-ui";
 import { accessibilityAddTraits, accessibilityHidden, accessibilityHint, font, foregroundStyle, frame, lineLimit, listRowBackground, navigationBarTitleDisplayMode, navigationTitle, opacity, padding, shadow, textSelection, tint, truncationMode } from "@expo/ui/swift-ui/modifiers";
+import { services } from "@ardia/core/src/services.ts";
 import { copy } from "../../lib/platformCopy";
 import { appVersion, openFromSettings } from "../../state/settings/actions";
 import { settingsRouteKey } from "../../state/settings/nav";
@@ -10,11 +11,7 @@ import { dataCredits, LIBRARY_CREDITS } from "./DataPages";
 const FILL = Number.MAX_SAFE_INTEGER;
 const SECONDARY = { type: "hierarchical", style: "secondary" } as const;
 const BLUE = PlatformColor("systemBlue");
-const LINKS = [
-  { title: "ardia.dev", url: "https://ardia.dev" },
-  { title: "Release Notes", url: "https://ardia.dev/release-notes" },
-  { title: "Source Code", url: "https://github.com/mantrakp04/ardia" },
-] as const;
+const LINKS = [{ title: "Source Code", url: `https://github.com/${services().sourceRepo}` }] as const;
 
 const page = (title: string) => modifierList(navigationTitle(title), navigationBarTitleDisplayMode("inline"), tint(BLUE), settingsChrome());
 

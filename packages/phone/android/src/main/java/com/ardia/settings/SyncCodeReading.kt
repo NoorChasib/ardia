@@ -58,7 +58,7 @@ class QrDecoder {
 }
 
 object SketchQr {
-    const val CONTENT = "https://ardia.dev"
+    const val CONTENT = "https://github.com/NoorChasib/nilla"
 
     val matrix: BitMatrix by lazy {
         QRCodeWriter().encode(CONTENT, BarcodeFormat.QR_CODE, 0, 0, mapOf(EncodeHintType.MARGIN to 0, EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M))

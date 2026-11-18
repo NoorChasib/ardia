@@ -3,13 +3,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { Button } from "../../../../../apps/browser/src/components/ui/Button";
 import { useTheme } from "../../../../../apps/browser/src/components/ui/theme";
 import type { PageTheme } from "../../pages";
+import { services } from "@ardia/core/src/services.ts";
 
 export const REFUSED_PAGE_THEME: { light: PageTheme; dark: PageTheme } = {
   light: { color: "#F6F5F6", source: "background" },
   dark: { color: "#1C1A1B", source: "background" },
 };
 
-const DOWNLOAD_URL = "https://ardia.dev";
+const DOWNLOAD_URL = `https://github.com/${services().sourceRepo}`;
 
 export function RefusedPage({ host }: { host: string }) {
   const theme = useTheme();
