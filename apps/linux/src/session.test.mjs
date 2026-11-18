@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createUtilitySessionSnapshot, initialLinuxSession } from "./session.ts";
-import { linuxSessionShape, snapshotHostSession, startHostPersistence } from "./hostSession.ts";
+import { STRUCTURAL_SAVE_MS, VOLATILE_SAVE_MS, linuxSessionShape, snapshotHostSession, startHostPersistence, volatileSessionChange } from "./hostSession.ts";
 import { sessionStatePatch } from "./hostSessionState.ts";
 import { useBrowser } from "../../browser/src/state/browser/store.ts";
-import { mergeSession } from "./hostSessionMerge.ts";
+import { cloneSessionValue, mergeSession } from "./hostSessionMerge.ts";
 import { SESSION_VERSION } from "../../browser/src/state/session/persist.ts";
+import { takeSessionWrites } from "../../browser/src/state/telemetry/sessionWrites.ts";
 
 const host = (windowId = "main") => ({ bootstrap: { windowId, profileId: "default", startup: false } });
 
@@ -716,4 +717,239 @@ test("a launch that doesn't restore windows keeps each one as a closed window wi
   assert.equal(fromLaunch.window.tabLayout, "top");
   assert.equal(fromLaunch.tabs[0].url, "https://example.test/playing");
   assert.equal(launched.windows[windowId], undefined);
+});
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function waitFor(check, deadline) {
+  const until = Date.now() + deadline;
+  while (!check() && Date.now() < until) await wait(10);
+  return check();
+}
+
+async function persistedTabs({ count = 4, holdWrites = false } = {}) {
+  const previous = { window: globalThis.window, document: globalThis.document };
+  globalThis.window = new EventTarget();
+  globalThis.document = Object.assign(new EventTarget(), { hidden: false });
+  const initial = browserSession();
+  initial.settings.restoreSession = true;
+  useBrowser.getState().hydrate(initial);
+  const ids = [Object.keys(initial.tabs)[0]];
+  for (let index = 1; index < count; index++) ids.push(useBrowser.getState().newTab("main", { url: `https://example.test/${index}`, background: true }));
+  const listeners = new Set();
+  const state = { disk: cloneSessionValue(initial), writes: [], reads: 0, held: [], final: undefined };
+  const native = {
+    ...host(),
+    invoke(method, pair) {
+      assert.equal(method, "session.write");
+      state.writes.push(cloneSessionValue(pair));
+      state.readsAtWrite = state.reads;
+      const answer = () => {
+        state.disk = mergeSession(pair.base, pair.session, state.disk);
+        const session = cloneSessionValue(state.disk);
+        setTimeout(() => { for (const listener of listeners) listener("ArdiaHost", "session", { base: cloneSessionValue(pair.session), session: cloneSessionValue(session), sourceWindowId: "main" }); }, 0);
+        return session;
+      };
+      if (state.hold) return new Promise((resolve) => state.held.push(() => resolve(answer())));
+      return Promise.resolve(answer());
+    },
+    onEvent(listener) { listeners.add(listener); return () => listeners.delete(listener); },
+    onBeforeClose(listener) { state.final = listener; return () => {}; },
+  };
+  const store = { getState: () => { state.reads++; return useBrowser.getState(); }, setState: (patch) => useBrowser.setState(patch), subscribe: (listener) => useBrowser.subscribe(listener) };
+  const persistence = startHostPersistence(native, store, initial);
+  await persistence.flush();
+  await wait(5);
+  state.writes.length = 0;
+  state.hold = holdWrites;
+  return {
+    ids, state, persistence,
+    S: () => useBrowser.getState(),
+    hide: async () => { document.hidden = true; document.dispatchEvent(new Event("visibilitychange")); document.hidden = false; await wait(5); },
+    restore() { persistence(); globalThis.window = previous.window; globalThis.document = previous.document; },
+  };
+}
+
+test("tab switches, titles, icons and last-used times change only volatile fields; anything else is structural", () => {
+  const saved = browserSession();
+  useBrowser.getState().hydrate(saved);
+  const S = () => useBrowser.getState();
+  const second = S().newTab("main", { url: "https://example.test/second", background: true });
+  const changed = (change) => {
+    const before = S();
+    change();
+    return volatileSessionChange(before, S());
+  };
+  assert.equal(changed(() => S().activate(second)), true);
+  assert.equal(changed(() => S().updateTab(second, { title: "Retitled" })), true);
+  assert.equal(changed(() => S().updateTab(second, { favicon: "https://example.test/icon.png" })), true);
+  assert.equal(changed(() => S().updateTab(second, { url: "https://example.test/moved" })), false);
+  assert.equal(changed(() => S().updateTab(second, { pin: { as: "row" } })), false);
+  assert.equal(changed(() => S().newTab("main", { url: "https://example.test/third", background: true })), false);
+  assert.equal(changed(() => S().closeTab(second)), false);
+  assert.equal(changed(() => S().updateSettings({ sidebarWidth: 301 })), false);
+  const before = S();
+  const window = before.windows.main;
+  assert.equal(volatileSessionChange(before, { ...before, windows: { ...before.windows, main: { ...window, tabIds: [...window.tabIds].reverse() } } }), false);
+  assert.equal(volatileSessionChange(before, { ...before, windows: { ...before.windows, main: { ...window, frame: { x: 1, y: 2, width: 3, height: 4 } } } }), false);
+});
+
+test("tab switches inside the volatile wait are saved together, once, with the last switch", async () => {
+  const fixture = await persistedTabs();
+  try {
+    takeSessionWrites();
+    const started = Date.now();
+    for (let round = 0; round < 12; round++) {
+      fixture.S().activate(fixture.ids[(round + 1) % 4]);
+      await wait(100);
+    }
+    assert.ok(Date.now() - started < VOLATILE_SAVE_MS);
+    assert.equal(fixture.state.writes.length, 0, "no write before the volatile wait ends");
+    assert.ok(await waitFor(() => fixture.state.writes.length > 0, VOLATILE_SAVE_MS));
+    const lastShown = fixture.ids[12 % 4];
+    assert.equal(fixture.state.disk.windows.main.activeTabIds.default, lastShown);
+    assert.equal(fixture.state.disk.tabs[lastShown].lastActiveAt, fixture.S().tabs[lastShown].lastActiveAt);
+    await wait(STRUCTURAL_SAVE_MS + 100);
+    assert.equal(fixture.state.writes.length, 1, "twelve switches in under two seconds make one write and no echo writes");
+    const counted = takeSessionWrites();
+    assert.deepEqual([counted.session_writes, counted.session_cosmetic_writes], [1, 1]);
+    assert.ok(counted.session_kb_written >= 1);
+  } finally {
+    fixture.restore();
+  }
+});
+
+test("a structural change during the volatile wait is written within the structural delay, with the switch", async () => {
+  const fixture = await persistedTabs();
+  try {
+    takeSessionWrites();
+    fixture.S().activate(fixture.ids[1]);
+    await wait(150);
+    const changedAt = Date.now();
+    fixture.S().updateTab(fixture.ids[2], { url: "https://example.test/moved" });
+    assert.ok(await waitFor(() => fixture.state.writes.length > 0, VOLATILE_SAVE_MS));
+    assert.ok(Date.now() - changedAt < STRUCTURAL_SAVE_MS + 150, `${Date.now() - changedAt} ms`);
+    assert.equal(fixture.state.disk.tabs[fixture.ids[2]].url, "https://example.test/moved");
+    assert.equal(fixture.state.disk.windows.main.activeTabIds.default, fixture.ids[1]);
+    const counted = takeSessionWrites();
+    assert.deepEqual([counted.session_writes, counted.session_cosmetic_writes], [1, 0]);
+  } finally {
+    fixture.restore();
+  }
+});
+
+for (const [name, trigger] of [
+  ["hiding the window", (fixture) => fixture.hide()],
+  ["quitting", async (fixture) => { fixture.state.final(); await wait(5); }],
+  ["a flush before a window opens or closes", (fixture) => fixture.persistence.flush()],
+  ["tearing persistence down", async (fixture) => { fixture.persistence(); await wait(5); }],
+]) {
+  test(`${name} writes a pending volatile change at once`, async () => {
+    const fixture = await persistedTabs();
+    try {
+      fixture.S().activate(fixture.ids[3]);
+      fixture.S().updateTab(fixture.ids[3], { title: "Shown last" });
+      await trigger(fixture);
+      assert.equal(fixture.state.writes.length, 1);
+      assert.equal(fixture.state.writes[0].session.windows.main.activeTabIds.default, fixture.ids[3]);
+      assert.equal(fixture.state.writes[0].session.tabs[fixture.ids[3]].title, "Shown last");
+    } finally {
+      fixture.restore();
+    }
+  });
+}
+
+test("a crash during a burst of switches restores every tab, window, group and pin of the last structural save", async () => {
+  const fixture = await persistedTabs();
+  try {
+    const S = fixture.S;
+    const added = S().newTab("main", { url: "https://example.test/added", background: true });
+    S().updateTab(fixture.ids[1], { pin: { as: "row" } });
+    S().activate(fixture.ids[2]);
+    const group = S().createGroup([fixture.ids[3]], { name: "Kept" });
+    assert.ok(group);
+    assert.ok(await waitFor(() => fixture.state.writes.length > 0, STRUCTURAL_SAVE_MS + 300));
+    await wait(20);
+    const structural = cloneSessionValue(fixture.state.disk);
+    for (const id of [fixture.ids[0], added, fixture.ids[3]]) {
+      S().activate(id);
+      S().updateTab(id, { title: `Burst ${id}` });
+      await wait(50);
+    }
+    const crashed = cloneSessionValue(fixture.state.disk);
+    assert.deepEqual(crashed, structural, "the burst is still inside its volatile wait");
+    const relaunched = initialLinuxSession({ bootstrap: { windowId: "main", profileId: "default", startup: true } }, linuxSessionShape(crashed));
+    useBrowser.getState().hydrate(relaunched);
+    const restored = useBrowser.getState();
+    for (const id of [...fixture.ids, added]) assert.ok(restored.tabs[id], `tab ${id} restored`);
+    assert.deepEqual(restored.windows.main.tabIds.filter((id) => [...fixture.ids, added].includes(id)).sort(), [...fixture.ids, added].sort());
+    assert.deepEqual(restored.tabs[fixture.ids[1]].pin, { as: "row" });
+    assert.equal(restored.windows.main.activeTabIds.default, fixture.ids[2]);
+    assert.ok(restored.groups[group]);
+    assert.ok(restored.groups[group].tabIds.includes(fixture.ids[3]));
+  } finally {
+    fixture.restore();
+  }
+});
+
+test("an echo of the session just written is settled without merging it again", async () => {
+  const fixture = await persistedTabs();
+  try {
+    fixture.S().updateTab(fixture.ids[1], { url: "https://example.test/echo" });
+    assert.ok(await waitFor(() => fixture.state.writes.length > 0, STRUCTURAL_SAVE_MS + 300));
+    await wait(20);
+    const reads = fixture.state.reads - fixture.state.readsAtWrite;
+    assert.ok(reads <= 2, `${reads} store reads for the reply and its event`);
+    await wait(STRUCTURAL_SAVE_MS + 100);
+    assert.equal(fixture.state.writes.length, 1);
+  } finally {
+    fixture.restore();
+  }
+});
+
+test("a reply that carries another window's change is still merged into this window", async () => {
+  const fixture = await persistedTabs();
+  try {
+    fixture.state.disk = { ...fixture.state.disk, settings: { ...fixture.state.disk.settings, sidebarWidth: 444 } };
+    fixture.S().activate(fixture.ids[2]);
+    await fixture.hide();
+    await wait(20);
+    assert.equal(fixture.S().settings.sidebarWidth, 444);
+    assert.equal(fixture.state.disk.windows.main.activeTabIds.default, fixture.ids[2]);
+  } finally {
+    fixture.restore();
+  }
+});
+
+test("a switch made while its predecessor's write is in flight is saved after the reply that matches the earlier write", async () => {
+  const fixture = await persistedTabs({ holdWrites: true });
+  try {
+    fixture.S().activate(fixture.ids[1]);
+    await fixture.hide();
+    assert.equal(fixture.state.held.length, 1);
+    fixture.S().activate(fixture.ids[2]);
+    fixture.state.held.shift()();
+    await wait(20);
+    assert.equal(fixture.state.disk.windows.main.activeTabIds.default, fixture.ids[1]);
+    fixture.state.hold = false;
+    assert.ok(await waitFor(() => fixture.state.disk.windows.main.activeTabIds.default === fixture.ids[2], VOLATILE_SAVE_MS + 300));
+    assert.equal(fixture.state.writes.length, 2);
+  } finally {
+    fixture.restore();
+  }
+});
+
+test("closing the window saves a switch still waiting in the volatile delay before the seal", async () => {
+  const fixture = await closeSessionFixture();
+  try {
+    const second = useBrowser.getState().newTab("main", { url: "https://example.test/second", background: true });
+    await fixture.persistence.flush();
+    useBrowser.getState().activate(second);
+    fixture.answer({ decision: "allow", suppressWarning: false });
+    await fixture.coordinator.accept(closeRequest());
+    assert.equal(fixture.state.canonical.windows.main.activeTabIds.default, second);
+    assert.deepEqual(fixture.state.log.filter(([step]) => step !== "write").map(([step]) => step), ["begin", "quiesce", "seal"]);
+  } finally {
+    fixture.restore();
+  }
 });
