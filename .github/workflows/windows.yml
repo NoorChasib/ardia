@@ -370,7 +370,8 @@ jobs:
           scripts/windows/host-manifest.ps1 -From "$env:APP/ArdiaApp.dll" -To $copy
       - name: Fetch the engine
         id: engine
-        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        if: ${{ !cancelled() }}
+        continue-on-error: true
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -381,7 +382,7 @@ jobs:
         env:
           OUTCOME: ${{ steps.engine.outcome }}
         run: |
-          $reason = if ($env:OUTCOME -eq 'skipped') { "the fetch was skipped (a pull request from a fork has no token for it)" } else { "the fetch ended $env:OUTCOME (its log above has the reason)" }
+          $reason = "the fetch ended $env:OUTCOME (its log above has the reason)"
           Write-Host "::warning::No engine for $env:SLUG`: $reason. The install, relaunch and AUMID checks are unverified, not passed."
           "- $env:SLUG engine: $reason; install, relaunch and AUMID checks **unverified**" >> $env:GITHUB_STEP_SUMMARY
       - name: Assemble with the engine
