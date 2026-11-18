@@ -1,10 +1,10 @@
-import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { countRender } from "../../state/app/interactionPerf";
 import { Platform, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { BAR_SHOWN, barShown, followScroll, obscuredBottom, pageInsets } from "../../lib/barCollapse";
+import { BAR_SHOWN, barShown, followScroll, obscuredBottom, pageInsets, type BarCollapse } from "../../lib/barCollapse";
 import { neighbours, PAGER } from "../../lib/pagerPhysics";
 import { useSystemBars } from "../../state/app/systemBars";
 import { useFrozenOrder, useNavigation, usePageTone, watchPageLoad } from "../../state/browse/hooks";
@@ -255,11 +255,13 @@ function PageStack({ column, children }: { column: ScreenColumn | null; children
 
 function useBarCollapse(tabId: string, finding: boolean, folds: boolean) {
   const collapses = usePreferences((p) => p.collapsesBottomBar);
-  const direction = useNavigation(tabId, (n) => n?.scrollDirection ?? "up");
-  const page = useNavigation(tabId, (n) => n?.url ?? null);
+  const direction = useNavigation(tabId, (n) => (collapses ? (n?.scrollDirection ?? "up") : "up"));
+  const page = useNavigation(tabId, (n) => (collapses ? (n?.url ?? null) : null));
   const reduceMotion = useReduceMotion();
-  const [state, setState] = useState(() => followScroll(BAR_SHOWN, tabId, page, direction, collapses));
-  useEffect(() => setState((now) => followScroll(now, tabId, page, direction, collapses)), [tabId, page, direction, collapses]);
+  const followed = useRef<BarCollapse>(BAR_SHOWN);
+  const [, redraw] = useReducer((count: number) => count + 1, 0);
+  const state = followScroll(followed.current, tabId, page, direction, collapses);
+  followed.current = state;
   const scrolledAway = state.hidden && state.tabId === tabId;
   const collapsed = folds && scrolledAway && !finding;
   const hidden = finding || (!folds && scrolledAway);
@@ -269,7 +271,10 @@ function useBarCollapse(tabId: string, finding: boolean, folds: boolean) {
     hide.value = reduceMotion ? withTiming(hidden ? 1 : 0, { duration: tabsMotion.barCollapseReduced }) : withSpring(hidden ? 1 : 0, tabsMotion.barCollapse);
   }, [hidden, reduceMotion]);
   const style = useAnimatedStyle(() => ({ opacity: 1 - hide.value, transform: [{ translateY: hide.value * browseLayout.barCollapseTravel }] }));
-  const expand = () => setState(barShown);
+  const expand = () => {
+    followed.current = barShown(followed.current);
+    redraw();
+  };
   return { collapses, hidden, collapsed, fold, expand, style };
 }
 
