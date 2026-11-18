@@ -16,9 +16,7 @@
     "packages/phone/ios/ArdiaKit/Sources/ArdiaSync/SyncService.swift": 1
   },
   "env": {},
-  "naming": {
-    "packages/phone/ios/ArdiaKit/Sources/ArdiaSync/SyncFolderAccess.swift": 1
-  },
+  "naming": {},
   "comments": {
     "packages/phone/ios/ArdiaKit/Tests/ArdiaBrowserTests/BlockingTests.swift": 2
   },
