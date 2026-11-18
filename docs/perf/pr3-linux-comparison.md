@@ -106,15 +106,33 @@ full-instrumentation probe and aren't in this run.
 | Harness | protocol 2, this tree's (`ddfa35a63`), `--instrument full`, `--scenarios S3,S4,S5`, `--tabs 100`, `--runs 5` |
 | Settings around S4 and S5 | `showMemoryInTabHoverMenu=true`, `showPagePreviewInTabHoverMenu=true`, `tabCloseButtonSide=left`, `sidebarRevealSpeed=default`; read back as applied in both scenarios of all 15 launches |
 | Engine, blocker | `engine-3a64a10704ff`, the same packaged content blocker as the light run |
+| Display and GL | As above: Xvfb, no GPU, ANGLE on Mesa llvmpipe |
+| Limits | 5 launches per build, one machine, Linux only, partitioned cores, software GL. Not a claim about macOS, Windows or a GPU |
+
+The command, run from this tree at `ddfa35a63` through the partition helper (`partition.sh run --max-hours N --audit
+audit.json -- ...`, outside the repo; see [CPU isolation](linux-bench.md#cpu-isolation)):
+
+```
+taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run \
+  --engine <prebuilt-linux-x86_64/3a64a10704ff> --content-blocker <pkg/ardia/lib/ardia/extensions/ublock> \
+  --lock-scope run \
+  --builds pr2=<pr2-head/linux-ui>,pre-e4=<p3-int/linux-ui>,pr3=<pr3-head/linux-ui> \
+  --runs 5 --tabs 100 --scenarios S3,S4,S5 --instrument full \
+  --settings showMemoryInTabHoverMenu=true --settings showPagePreviewInTabHoverMenu=true \
+  --settings tabCloseButtonSide=left --settings sidebarRevealSpeed=default \
+  --control pr2 --display-base 240 --out <out/pr3-final-full>
+```
 
 | Build | Commit | UI sha256 | What it is |
 | --- | --- | --- | --- |
 | pr2 | db3139706 | `8aba21f1867e` | PR 2's head, with #1679 |
 | pre-e4 | e02d6c59c | `7c176e356de9` | PR 3's integration with E1, E2, E3, E5 and E6, before E4 and #1679 |
-| pr3 | e15125104 | `1bf0c0c37c4b` | PR 3's head, with #1679 and the review's telemetry and tab-lifecycle commits |
+| pr3 | e15125104 | `1bf0c0c37c4b` | PR 3's head, with #1679 and the review's telemetry and tab-lifecycle commits, built from a `git archive` of that commit |
 
-pr3 against pr2 is PR 3 alone: both contain #1679. pre-e4 against pr3 is E4 plus #1679 plus the review commits; of
-those, only E4 runs in S3 (S3 drags and closes nothing).
+pr3 against pr2 is PR 3 alone: both contain #1679. pre-e4 against pr3 is E4 plus #1679 plus the review commits. In S3,
+which drags and closes nothing, the code that differs on its path is E4's save coalescing (`hostSession.ts`) and the
+review's consent-epoch checks in the press and save counters (constant-time comparisons; the harness never turns
+sharing on).
 
 Median over 5 launches (min-max); "vs pr2" is the median per-block difference, with the blocks where the build was
 higher and the Mann-Whitney p. CPU is percent of one core under the full probe, whose patched calls cost CPU in
@@ -135,10 +153,11 @@ CPU from the light run, not from this table.
 | S4 reveal max, ms | 148.3 (146.1-158.9) | 138.6 (136.7-142.1) | 138.0 (134.6-142.3) | | |
 | S4 reveals confirmed, late steps | 20 of 20, 0 | 20 of 20, 0 | 20 of 20, 0 | | |
 | S4 LoAF count | 0 | 0 | 0 | | |
-| S4 rAF gaps over 25 ms, max gap | 44 (39-59), 50 ms | 8 (6-17), 33-50 ms | 5 (4-11), 33 ms | -36, 0/5 | -40, 0/5 |
+| S4 rAF gaps over 25 ms | 44 (39-59) | 8 (6-17) | 5 (4-11) | -36, 0/5 | -40, 0/5 |
+| S4 longest rAF gap, ms | 50.0 (33.4-50.1) | 33.4 (33.4-50.1) | 33.4 (33.3-33.4) | | |
 | S4 CPU total | 68.6 (66.1-70.6) | 48.6 (47.0-54.2) | 47.8 (46.5-54.9) | -18.7, 0/5, p 0.008 | -19.7 (-29 %), 0/5, p 0.008 |
 | S5 cold card, ms | 873.2 (871.6-897.3) | 872.6 (869.7-874.3) | 871.9 (869.0-873.9) | -2.0, 1/5, p 0.60 | -2.7, 2/5, p 0.31 |
-| S5 warm cards shown | 0 of 69 | 0 of 69 | 0 of 69 | | |
+| S5 warm cards shown (row entries superseded) | 0 (69 of 72) | 0 (69 of 72) | 0 (69 of 72) | | |
 | S5 memory-line reads (`engine.tasks`) per window | 2 | 2 | 2 | 0 | 0 |
 | S5 LoAF count, rAF gaps over 25 ms | 1 (1-2), 10 (4-30) | 0, 0 | 0, 0 (0-1) | | |
 | S5 CPU total | 30.5 (29.7-32.5) | 23.7 (23.5-25.8) | 23.4 (22.8-23.9) | -6.8, 0/5, p 0.008 | -7.3 (-24 %), 0/5, p 0.008 |
@@ -152,14 +171,20 @@ CPU from the light run, not from this table.
 - **Hover card, options on.** The cold card is the same on all three builds (about 872 ms, the card's own delay).
   The warm card isn't measured: at the harness's 300 ms dwell no build showed a card for a second row before the
   pointer moved on (69 of 72 row entries superseded on every build), so the "hover after a card opens" lead needs a
-  run with `--hover-dwell` of 400 ms or more. The memory line reads the engine twice per sweep on every build.
+  run with `--hover-dwell 500`. The memory line reads the engine twice per sweep on every build.
 - **S3's tail.** The p90 is level: 38 ms on pr2 and pr3, 37 on pre-e4, and the light run's 40 against 33 doesn't repeat
   against PR 2's head under the full probe. Above the p90 pr3 has a tail the other two don't: 4 of 197 presses at
   67-85 ms, in 3 of 5 windows, against none over 50 ms on pr2 and none over 44 on pre-e4 (Fisher p = 0.06 against
   either). Those presses reached the store in 7-11 ms, so the time goes after the store change, in the shell's frame
-  or the page's show. Since pre-e4 and pr3 differ in S3 only by E4, E4 is implicated in the tail but not proven: the
-  harness doesn't record when each session write lands, so the slow presses can't be lined up with E4's 2 s save, and
-  press time modulo 2 s shows no clustering.
+  or the page's show. E4 is the one substantive change between pre-e4 and pr3 on S3's path, so it is implicated in the
+  tail, but the tail isn't confirmed (p = 0.06 on 4 presses) or tied to E4's save: the harness doesn't record when each
+  session write lands, so the slow presses can't be lined up with the 2 s save, and press time modulo 2 s shows no
+  clustering (pr3's 5 presses over 45 ms fall in 4 of the 8 250 ms bins).
+- **What rides on the tail.** In S3, E4 cuts session writes from 40 to 11 per window and, from pre-e4 to pr3, the
+  window's CPU from 58.8 to 52.2 % of a core under the full probe (shell 30.7 to 27.1). Against that, if the tail is
+  E4's, about 2 % of presses at a steady 500 ms switching cadence take 67-85 ms instead of under 50. If item 4 below
+  ties them to the save, the follow-up is to keep the coalescing and move the volatile save off the press cadence
+  (write after a pause in switching, or after the next frame), not to revert E4.
 
 ## How to read S3 and S4
 
@@ -189,7 +214,7 @@ above the p90 rather than in the p90. Still open:
 4. S3's tail: whether pr3's presses over 50 ms land on E4's session writes. That needs the harness to record each
    `session.write` time beside each press, then a key run at `--runs 6` or more on pre-e4 against pr3, and a
    `--switch-via store` run for S3 CPU without put-backs. If they line up, the volatile save should wait for a pause
-   in switching.
+   in switching (see "What rides on the tail" above).
 5. The F23 discard-race rerun (`discard-race2.mjs`) on quiet cores.
 6. S1 on the commits after 2e9c24a46 that change the UI dist (the telemetry consent gate, the tab lifecycle's kept
    claims). The full run's pr3 includes them in S3-S5; S1 against 2e9c24a46 would confirm they change nothing at idle.
