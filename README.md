@@ -138,6 +138,12 @@ bun install --frozen-lockfile
 `bunfig.toml` keeps `node_modules` hoisted at the root; `apps/phone`, `apps/site`, `apps/dashboard` and `apps/videos`
 each have their own `bun.lock` and install with `bun install --frozen-lockfile --cwd <dir>`.
 
+`bun check` runs the folder's `check` script, which type checks with the pinned TypeScript 7 (`tsc`; the site's runs
+`astro check`). In a folder without one it runs Bun's own built-in type checker instead, so type check a package with
+`bun run --cwd <dir> check`. Builds go through
+Bun and keep their own bundlers (Vite, Metro, esbuild, Astro, Remotion); [docs/bundling.md](docs/bundling.md) says
+which target uses which, why it isn't Bun's bundler, and what still runs outside Bun.
+
 ### macOS
 
 The macOS app also needs Xcode 26+ and CocoaPods.
@@ -211,7 +217,7 @@ The Windows app is `apps/browser/windows` (React Native for Windows) hosting Chr
 10.0.26100.0. Build the x64 app (it bundles the JavaScript itself) from `apps/browser`, in PowerShell:
 
 ```powershell
-bun x react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager
+bun x --no-install react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager
 ```
 
 `bun run --cwd apps/browser bundle:windows` bundles the JavaScript alone, into `apps/browser/build-windows`.

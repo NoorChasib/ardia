@@ -78,7 +78,7 @@ jobs:
         if: matrix.part == 'bundle'
         working-directory: apps/browser
         run: |
-          bun x react-native bundle --platform macos --entry-file index.js --dev false --minify false --reset-cache --bundle-output "$RUNNER_TEMP/main.jsbundle" --assets-dest "$RUNNER_TEMP/assets"
+          bun x --no-install react-native bundle --platform macos --entry-file index.js --dev false --minify false --reset-cache --bundle-output "$RUNNER_TEMP/main.jsbundle" --assets-dest "$RUNNER_TEMP/assets"
           ls -l "$RUNNER_TEMP/main.jsbundle"
       - name: Compile the bundle with Hermes
         if: matrix.part == 'bundle'

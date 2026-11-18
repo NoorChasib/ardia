@@ -1334,7 +1334,7 @@ does run in a test instance. A scratch folder with the marker must get both powe
 - To build the app on a PC you need Visual Studio 2022 with the C++ desktop workload and the Windows SDK
   **10.0.26100.0**, the version `Ardia.vcxproj` names; with another SDK the build stops before compiling. The
   GitHub runners have it. Then `bun install` and, in `apps/browser`,
-  `bun x react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager`.
+  `bun x --no-install react-native run-windows --release --arch x64 --no-launch --no-deploy --no-packager`.
 - `.github/workflows/windows.yml` builds the x64 app on a Windows runner and runs `scripts/windows/launch-smoke.ps1`,
   which launches it three times and uploads each launch's log: a first launch (onboarding) and a launch with
   onboarding done (the browser window), each with a screenshot when the runner allows a capture, then a hidden
