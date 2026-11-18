@@ -15,7 +15,7 @@ import { showToast } from "../../browser/src/state/app/toasts";
 import { engineInfo, systemInfo } from "../../browser/src/platform/app";
 import { appServices } from "../../browser/src/platform/launchConfig";
 import { openUrls } from "../../browser/src/state/browser/actions";
-import { BASED_ON_ARDIA, LEGAL_NOTICE, sourceRepositoryUrl } from "../../browser/src/state/app/legalNotice";
+import { BASED_ON_ARDIA, LEGAL_NOTICE, sourceLinks } from "../../browser/src/state/app/legalNotice";
 import "./linkShareSurface";
 
 const hiddenCommands = () => {
@@ -30,9 +30,10 @@ async function showAbout(windowId: string) {
   const { appName, appVersion, appBuild } = systemInfo();
   const engine = await engineInfo().catch(() => null);
   const chromium = engine?.chromiumVersion ? `Chromium ${engine.chromiumVersion}. ` : "";
-  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, `${chromium}${LEGAL_NOTICE} ${BASED_ON_ARDIA} Source: ${sourceRepositoryUrl()}`, {
+  const { source } = sourceLinks();
+  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, `${chromium}${LEGAL_NOTICE} ${BASED_ON_ARDIA} Source: ${source}`, {
     sticky: true,
-    action: { title: "Licenses", run: () => openUrls(["chrome://credits"], windowId) },
+    action: { title: "Source and Licenses", run: () => openUrls([source, "chrome://credits"], windowId) },
   });
 }
 

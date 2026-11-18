@@ -145,8 +145,9 @@ public final class AppUpdater: NSObject {
     NSApp.orderFrontStandardAboutPanel(options: [.applicationVersion: Self.displayVersion, .credits: Self.aboutCredits])
   }
 
+  static let sourceRef = "main"
+
   private static var aboutCredits: NSAttributedString {
-    let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
     let repository = ServicesConfig.sourceURL.absoluteString
     let centered = NSMutableParagraphStyle()
     centered.alignment = .center
@@ -156,9 +157,9 @@ public final class AppUpdater: NSObject {
       .paragraphStyle: centered,
     ]
     let links = [
-      ("Source code", "\(repository)/tree/v\(version)"),
-      ("License", "\(repository)/blob/v\(version)/LICENSE"),
-      ("Credits", "\(repository)/blob/v\(version)/NOTICE"),
+      ("Source code", "\(repository)/tree/\(sourceRef)"),
+      ("License", "\(repository)/blob/\(sourceRef)/LICENSE"),
+      ("Credits", "\(repository)/blob/\(sourceRef)/NOTICE"),
     ]
     let credits = NSMutableAttributedString(string: "\(aboutNotice)\n\n", attributes: plain)
     for (index, (title, url)) in links.enumerated() {
