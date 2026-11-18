@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import test, { after, before } from "node:test";
 import { createUtilitySessionSnapshot, initialLinuxSession } from "./session.ts";
 import { STRUCTURAL_SAVE_MS, VOLATILE_SAVE_MS, linuxSessionShape, snapshotHostSession, startHostPersistence, volatileSessionChange } from "./hostSession.ts";
 import { sessionStatePatch } from "./hostSessionState.ts";
@@ -7,6 +7,10 @@ import { useBrowser } from "../../browser/src/state/browser/store.ts";
 import { cloneSessionValue, mergeSession } from "./hostSessionMerge.ts";
 import { SESSION_VERSION } from "../../browser/src/state/session/persist.ts";
 import { takeSessionWrites } from "../../browser/src/state/telemetry/sessionWrites.ts";
+import { save as saveTelemetryChoice } from "../../browser/src/state/telemetry/choice.ts";
+
+before(() => saveTelemetryChoice({ sharing: true, installId: "session-test" }));
+after(() => saveTelemetryChoice({ sharing: false, installId: null }));
 
 const host = (windowId = "main") => ({ bootstrap: { windowId, profileId: "default", startup: false } });
 

@@ -1,17 +1,16 @@
-let writes = 0;
-let cosmeticWrites = 0;
-let characters = 0;
+import { consentedCount, sharingAgreed } from "./consentedCount";
+
+const writes = consentedCount();
+const cosmeticWrites = consentedCount();
+const characters = consentedCount();
 
 export function noteSessionWrite(length: number, cosmeticOnly: boolean) {
-  writes++;
-  if (cosmeticOnly) cosmeticWrites++;
-  characters += length;
+  if (!sharingAgreed()) return;
+  writes.note();
+  if (cosmeticOnly) cosmeticWrites.note();
+  characters.add(length);
 }
 
 export function takeSessionWrites() {
-  const taken = { session_writes: writes, session_cosmetic_writes: cosmeticWrites, session_kb_written: Math.round(characters / 1024) };
-  writes = 0;
-  cosmeticWrites = 0;
-  characters = 0;
-  return taken;
+  return { session_writes: writes.take(), session_cosmetic_writes: cosmeticWrites.take(), session_kb_written: Math.round(characters.take() / 1024) };
 }

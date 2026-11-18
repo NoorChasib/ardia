@@ -1,5 +1,4 @@
 import { capture as send } from "./client";
-import { isSharing } from "./choice";
 import { takeDownloadsPanelCauses } from "./downloadsPanelCauses";
 import { takeSessionWrites } from "./sessionWrites";
 import { takeEditKeyAckCounts } from "./editKeyAcks";
@@ -22,12 +21,13 @@ import { takeShellCounts } from "./shellCounts";
 import { takeSwipeHistoryListCounts } from "./swipeHistoryListCounts";
 import { takeSyncFileCounts } from "./syncFileCounts";
 import { takeTabReleaseCounts } from "./tabReleaseCounts";
+import { sharingAgreed } from "./consentedCount";
 
 export { watchPlatformCounts };
 
 export const USAGE_COUNTS_EVENT = "usage_counts";
 
-export const takeHourlyExtras = () => ({ ...takePlatformCounts(), ...takeImportRuns(), ...takeArcImportCounts(), ...takeProfileDataCounts(), ...takeExportCounts(), ...takeInlineCompletionCounts(), ...takeFirstRunCounts(), ...takeMemoryTrimCounts(), ...takeDownloadsPanelCauses(), ...takeExternalAppCounts(), ...takeDialogPageCounts(), ...takeFindCounts(), ...takeSyncFileCounts(), ...takeKeyboardFollowCounts(), ...takePagerCounts(), ...takeSwipeHistoryListCounts(), ...takeEditKeyAckCounts(), ...takeQuitWarningCounts(), ...takeInputSourceKeyCounts(), ...takeDevToolsKeyCounts(), ...takeSessionWrites(), ...takeShellCounts(isSharing()), ...takeTabReleaseCounts() });
+export const takeHourlyExtras = () => ({ ...takePlatformCounts(), ...takeImportRuns(), ...takeArcImportCounts(), ...takeProfileDataCounts(), ...takeExportCounts(), ...takeInlineCompletionCounts(), ...takeFirstRunCounts(), ...takeMemoryTrimCounts(), ...takeDownloadsPanelCauses(), ...takeExternalAppCounts(), ...takeDialogPageCounts(), ...takeFindCounts(), ...takeSyncFileCounts(), ...takeKeyboardFollowCounts(), ...takePagerCounts(), ...takeSwipeHistoryListCounts(), ...takeEditKeyAckCounts(), ...takeQuitWarningCounts(), ...takeInputSourceKeyCounts(), ...takeDevToolsKeyCounts(), ...takeSessionWrites(), ...takeShellCounts(sharingAgreed()), ...takeTabReleaseCounts() });
 
 type Send = typeof send;
 

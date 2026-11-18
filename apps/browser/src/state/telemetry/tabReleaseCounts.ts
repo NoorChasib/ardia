@@ -1,5 +1,4 @@
-import { isSharing, useTelemetry } from "./choice";
-import { consentedCount } from "./consentedCount";
+import { consentedCount, sharingAgreed } from "./consentedCount";
 
 export type TabReleaseOutcome = "released" | "alreadyClosed" | "failed";
 
@@ -8,7 +7,7 @@ const alreadyClosed = consentedCount();
 const failed = consentedCount();
 
 export function noteTabRelease(outcome: TabReleaseOutcome) {
-  if (!isSharing() || !useTelemetry.getState().sharing) return;
+  if (!sharingAgreed()) return;
   releases.note();
   if (outcome === "alreadyClosed") alreadyClosed.note();
   else if (outcome === "failed") failed.note();
