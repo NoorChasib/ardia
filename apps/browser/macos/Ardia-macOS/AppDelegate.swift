@@ -3,7 +3,6 @@ import ArdiaCore
 import Expo
 import React
 import ArdiaShell
-import ArdiaSync
 import ReactAppDependencyProvider
 
 final class AppDelegate: ExpoAppDelegate {
