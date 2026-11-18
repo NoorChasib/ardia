@@ -20,6 +20,7 @@ import {
   notePageFullScreenPeek,
   noteSidebarPeekClosedWhileResizing,
   noteSidebarPeekResize,
+  noteSidebarPeekTabDragHold,
   noteSidebarSlide,
 } from "../../state/telemetry/dockCounts";
 import { ProfileSwipe } from "./ProfileSwipe";
@@ -230,7 +231,22 @@ function SidebarDock({
     dismissHoverIn(windowId);
   };
   const revealSpeed = useSettings((s) => s.sidebarRevealSpeed);
-  const peek = usePeek((!open || fullscreen) && !moving, arc, () => edgeOver.current || peekHeld(windowId), closed, opened, revealSpeed);
+  const draggingTabNow = useRef(draggingTab);
+  draggingTabNow.current = draggingTab;
+  const tabDragHoldNoted = useRef(false);
+  useEffect(() => {
+    if (!draggingTab) tabDragHoldNoted.current = false;
+  }, [draggingTab]);
+  const peekHeldOpen = () => {
+    if (edgeOver.current) return true;
+    if (!peekHeld(windowId)) return false;
+    if (draggingTabNow.current && !tabDragHoldNoted.current) {
+      tabDragHoldNoted.current = true;
+      noteSidebarPeekTabDragHold();
+    }
+    return true;
+  };
+  const peek = usePeek((!open || fullscreen) && !moving, arc, peekHeldOpen, closed, opened, revealSpeed);
   const latestPeek = useRef(peek);
   latestPeek.current = peek;
   useEffect(() => {

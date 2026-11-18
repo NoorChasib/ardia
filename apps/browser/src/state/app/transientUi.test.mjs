@@ -8,10 +8,11 @@ const { usePages } = await import("../tabs/pageState.ts");
 const { useHistoryMenu } = await import("../tabs/navigation.ts");
 const { useExtensions } = await import("../extensions/store.ts");
 const { showMenu } = await import("../../platform/menus.ts");
-const { hoverHeld, peekHeld, toolbarHeld, topStripPeekHeld } = await import("./transientUi.ts");
+const { hoverHeld, peekHeld, toolbarHeld, topStripPeekHeld, watchHolds } = await import("./transientUi.ts");
 const { setPeekShown } = await import("../windows/dockMotion.ts");
 const { setToolbarPeek } = await import("../windows/toolbarAutoHide.ts");
 const { cardEntered, dismissHover } = await import("../sidebar/hover.ts");
+const { useTabDrag } = await import("../drag/tabDragStore.ts");
 
 const S = () => useBrowser.getState();
 
@@ -25,6 +26,8 @@ function twoWindows(settings = {}) {
 
 const focus = (win) => useBrowser.setState((s) => ({ ui: { ...s.ui, focusOrder: [win, ...s.ui.focusOrder.filter((id) => id !== win)] } }));
 const menuClosed = () => new Promise((r) => setTimeout(r, 0));
+const tabDragFrom = (windowId, tabId) =>
+  useTabDrag.setState({ phase: "tab", tabId, tabIds: [tabId], windowId, x: -1, y: -1, lifted: null, onPage: false, target: null, outside: false, overWindow: null, overPoint: null, insert: null, session: {} }, true);
 
 const SURFACES = {
   menuFromSidebar: {
@@ -72,6 +75,8 @@ const SURFACES = {
   find: { open: ({ tab }) => S().setFind(tab, { open: true }), close: ({ tab }) => S().setFind(tab, { open: false }) },
   historyMenu: { open: ({ tab }) => useHistoryMenu.setState({ menu: { tabId: tab } }), close: () => useHistoryMenu.setState({ menu: null }) },
   extensionPopup: { open: ({ w }) => useExtensions.setState({ popup: { windowId: w } }), close: () => useExtensions.setState({ popup: null }) },
+  tabDrag: { open: ({ w, tab }) => tabDragFrom(w, tab), close: () => useTabDrag.setState({ phase: "idle" }, true) },
+  tabDragElsewhere: { open: ({ other }) => tabDragFrom(other, activeTabId(S(), other)), close: () => useTabDrag.setState({ phase: "idle" }, true) },
 };
 
 async function heldWhileOpen(held, settings) {
@@ -87,11 +92,11 @@ async function heldWhileOpen(held, settings) {
   return out;
 }
 
-test("the floating sidebar stays out for what's anchored in it: its menus, rename, the icon pickers, the hover card, Downloads and the sidebar field's popover", async () => {
+test("the floating sidebar stays out for what's anchored in it: its menus, rename, the icon pickers, the hover card, Downloads, the sidebar field's popover and a tab dragged from its window", async () => {
   assert.deepEqual(await heldWhileOpen(({ w }) => peekHeld(w)), {
     menuFromSidebar: true, menuFromToolbar: false, menuFromPage: false, menuElsewhere: false,
     rename: true, renameElsewhere: false, iconPicker: true, iconPickerElsewhere: false, deletedProfileIconPicker: false, profileIconPicker: true, hoverCard: true, resize: true, resizeElsewhere: false, downloads: true,
-    popover: false, panel: false, find: false, historyMenu: false, extensionPopup: false,
+    popover: false, panel: false, find: false, historyMenu: false, extensionPopup: false, tabDrag: true, tabDragElsewhere: false,
   });
 });
 
@@ -99,7 +104,7 @@ test("with the address bar in the sidebar, its tab's page popover and back/forwa
   assert.deepEqual(await heldWhileOpen(({ w }) => peekHeld(w), { addressBar: "sidebar" }), {
     menuFromSidebar: true, menuFromToolbar: false, menuFromPage: false, menuElsewhere: false,
     rename: true, renameElsewhere: false, iconPicker: true, iconPickerElsewhere: false, deletedProfileIconPicker: false, profileIconPicker: true, hoverCard: true, resize: true, resizeElsewhere: false, downloads: true,
-    popover: true, panel: false, find: false, historyMenu: true, extensionPopup: false,
+    popover: true, panel: false, find: false, historyMenu: true, extensionPopup: false, tabDrag: true, tabDragElsewhere: false,
   });
 });
 
@@ -107,7 +112,7 @@ test("the peeking tab strip stays out for a menu opened in its own window and fo
   assert.deepEqual(await heldWhileOpen(({ w }) => topStripPeekHeld(w), { autoHideTabs: true }), {
     menuFromSidebar: true, menuFromToolbar: true, menuFromPage: true, menuElsewhere: false,
     rename: false, renameElsewhere: false, iconPicker: false, iconPickerElsewhere: false, deletedProfileIconPicker: false, profileIconPicker: false, hoverCard: false, resize: false, resizeElsewhere: false, downloads: true,
-    popover: false, panel: false, find: false, historyMenu: false, extensionPopup: false,
+    popover: false, panel: false, find: false, historyMenu: false, extensionPopup: false, tabDrag: false, tabDragElsewhere: false,
   });
 });
 
@@ -115,7 +120,7 @@ test("the auto-hidden toolbar stays shown for what's anchored in it: its menus, 
   assert.deepEqual(await heldWhileOpen(({ w, tab }) => toolbarHeld(w, tab)), {
     menuFromSidebar: false, menuFromToolbar: true, menuFromPage: false, menuElsewhere: false,
     rename: false, renameElsewhere: false, iconPicker: false, iconPickerElsewhere: false, deletedProfileIconPicker: false, profileIconPicker: false, hoverCard: false, resize: false, resizeElsewhere: false, downloads: false,
-    popover: true, panel: true, find: true, historyMenu: true, extensionPopup: true,
+    popover: true, panel: true, find: true, historyMenu: true, extensionPopup: true, tabDrag: false, tabDragElsewhere: false,
   });
 });
 
@@ -123,6 +128,18 @@ test("no hover card starts in a window while anything is open in it, and somethi
   assert.deepEqual(await heldWhileOpen(({ w }) => hoverHeld(w)), {
     menuFromSidebar: true, menuFromToolbar: true, menuFromPage: true, menuElsewhere: false,
     rename: true, renameElsewhere: false, iconPicker: true, iconPickerElsewhere: false, deletedProfileIconPicker: false, profileIconPicker: true, hoverCard: false, resize: false, resizeElsewhere: false, downloads: true,
-    popover: true, panel: true, find: true, historyMenu: true, extensionPopup: true,
+    popover: true, panel: true, find: true, historyMenu: true, extensionPopup: true, tabDrag: false, tabDragElsewhere: false,
   });
+});
+
+test("the floating sidebar's holds are asked again when a tab drag from its window starts and ends, not on every move of the drag", () => {
+  const { w, tab } = twoWindows();
+  let asked = 0;
+  const stop = watchHolds("peek", () => asked++);
+  tabDragFrom(w, tab);
+  useTabDrag.setState({ x: 10, y: 20 });
+  useTabDrag.setState({ x: 30, y: 40 });
+  useTabDrag.setState({ phase: "idle" }, true);
+  stop();
+  assert.equal(asked, 2);
 });
