@@ -208,7 +208,7 @@ export class HostTab {
       this.nextViewport = undefined;
       if (!latest || this.disposed || !this.identity || claims.get(this.host)?.get(this.key) !== this) return;
       const json = JSON.stringify(latest);
-      if (json === this.lastViewport) return;
+      if (json === this.lastViewport || (!latest.visible && this.lastViewport && !(JSON.parse(this.lastViewport) as TabViewport).visible)) return;
       this.lastViewport = json;
       return invokeHost<void>("tab.viewport", { id: this.identity.browserId, claim: this.claim, ...latest }, this.host).catch((error) => {
         if (this.lastViewport === json) this.lastViewport = "";

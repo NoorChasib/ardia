@@ -667,6 +667,21 @@ test("viewports deduplicate geometry and send explicit visibility changes", asyn
   tab.dispose();
 });
 
+test("a hidden tab's rect changes send nothing until it is shown again", async () => {
+  const { host, requests } = fixture(async () => ({ browserId: 15, chromeTabId: 23 }));
+  const tab = new HostTab(host, { key: "hidden-rect" }, () => {});
+  await tab.ready;
+  const card = { x: 240, y: 52, width: 800, height: 600 };
+  await tab.viewport({ rect: card, visible: true });
+  await tab.viewport({ rect: card, visible: false });
+  await tab.viewport({ rect: { x: 0, y: 0, width: 0, height: 0 }, visible: false });
+  await tab.viewport({ rect: { ...card, x: 300 }, visible: false });
+  await tab.viewport({ rect: card, visible: true });
+  const updates = requests.filter(([method]) => method === "tab.viewport").map(([, args]) => [args.rect.x, args.rect.width, args.visible]);
+  assert.deepEqual(updates, [[240, 800, true], [240, 800, false], [240, 800, true]]);
+  tab.dispose();
+});
+
 test("logical tab presentations batch returns and departures independently of viewport coverage", async () => {
   let next = 20;
   const { host, requests } = fixture(async (method) => method === "tab.create" ? { browserId: ++next, chromeTabId: next } : null);
