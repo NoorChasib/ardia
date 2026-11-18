@@ -243,6 +243,7 @@ export const TabDeck = memo(function TabDeck() {
   );
   const tabs = useMemo(() => new Map(live.map((t) => [t.id, t])), [live]);
   const shownIds = useMemo(() => deckShownIds(order, leavingCards), [order, leavingCards]);
+  const shownAt = useMemo(() => (leavingCards.length ? new Map(shownIds.map((id, at) => [id, at])) : null), [shownIds, leavingCards.length]);
   const contained = containedDeckScroll();
   const DeckCardView = contained ? ContainedDeckCard : DeckCard;
   const backdropStyle = useAnimatedStyle(() => ({ opacity: deckPhase.value === DECK_PHASE.closing ? 1 : Math.min(1, positionProgress.value * BACKDROP_LEAD) }));
@@ -927,11 +928,9 @@ export const TabDeck = memo(function TabDeck() {
         >
           <GestureDetector gesture={shown ? Gesture.Race(pan, longPress, tap) : Gesture.Race(Gesture.Manual().enabled(false).onTouchesDown(ignoreTouch))}>
             <Animated.View testID="deckCards" style={[styles.touch, { height: g.height }, cardsStyle]} collapsable={false}>
-              {containedCards(contained, { ids: shownIds, geometry: g, motion }, shownIds.map((id) => {
-                const flying = leavingCards.find((card) => card.id === id);
+              {containedCards(contained, { ids: shownIds, geometry: g, motion }, grid && !stackLayer ? [] : mountedDeckCards(order, leavingCards, shownAt, anchor).map(({ id, index, flying }) => {
                 const tab = flying?.tab ?? tabs.get(id);
-                const index = flying ? -1 : order.indexOf(id);
-                if (!tab || (!flying && hidden.current.has(id)) || !deckCardMounted(flying ? flying.at : index, anchor) || (grid && !stackLayer)) return null;
+                if (!tab || (!flying && hidden.current.has(id))) return null;
                 return (
                   <DeckCardView
                     key={id}
@@ -1159,7 +1158,22 @@ const ENTRANCE_CAPTURE_CAP_MS = 180;
 const DECK_RENDER_REACH = 6;
 const DECK_GESTURE_REACH = 3;
 
-const deckCardMounted = (index: number, anchor: number) => Math.abs(index - anchor) <= DECK_RENDER_REACH + DECK_GESTURE_REACH;
+const DECK_MOUNT_REACH = DECK_RENDER_REACH + DECK_GESTURE_REACH;
+
+const deckCardMounted = (index: number, anchor: number) => Math.abs(index - anchor) <= DECK_MOUNT_REACH;
+
+type MountedDeckCard = { id: string; index: number; flying: LeavingCard | null; shownAt: number };
+
+export function mountedDeckCards(order: readonly string[], leaving: readonly LeavingCard[], shownAt: ReadonlyMap<string, number> | null, anchor: number): MountedDeckCard[] {
+  const flyingIds = new Set(leaving.map((card) => card.id));
+  const mounted: MountedDeckCard[] = [];
+  for (let index = Math.max(0, anchor - DECK_MOUNT_REACH); index <= Math.min(order.length - 1, anchor + DECK_MOUNT_REACH); index++) {
+    const id = order[index]!;
+    if (!flyingIds.has(id)) mounted.push({ id, index, flying: null, shownAt: shownAt?.get(id) ?? index });
+  }
+  for (const card of leaving) if (deckCardMounted(card.at, anchor)) mounted.push({ id: card.id, index: -1, flying: card, shownAt: shownAt?.get(card.id) ?? -1 });
+  return leaving.length ? mounted.sort((a, b) => a.shownAt - b.shownAt) : mounted;
+}
 const BACKDROP_LEAD = 1.4;
 const FLY_CLOCK_SPAN_MS = 600_000;
 const LEAVE_SLACK_MS = 34;
