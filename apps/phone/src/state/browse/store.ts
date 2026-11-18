@@ -18,7 +18,7 @@ import { showOnboarding, useOnboarding } from "../onboarding/store";
 import { pageUi, usePageUi } from "../page/store";
 import { settingsNav, useSettingsNav } from "../settings/nav";
 import { refreshDefaultBrowser } from "../settings/defaultBrowser";
-import { followFrontPage, forgetPosition, noteFrontScrolled, notePageNavigated, saveChangedPages, saveTabPosition, watchFrontScroll } from "./positions";
+import { followFrontPage, forgetPosition, noteFrontScrolled, notePageNavigated, notePageSession, saveChangedPages, saveTabPosition, watchFrontScroll } from "./positions";
 import { noteLocalChange, showSpace } from "../sync/store";
 import { spaceToShow, tabsInSpace } from "../tabs/spaces";
 import { currentPreferences, loadPreferences } from "../settings/store";
@@ -539,6 +539,7 @@ function scheduleSnapshot(id: string, tries = SNAPSHOT_RETRIES) {
 function backgroundPageState(id: string, state: PageState) {
   const tab = findTab(currentTabs(), id);
   if (!tab) return;
+  notePageSession(id, state);
   noteCrash(tab, state);
   keepTitleThroughFailure(tab, state);
   const patch = pageStatePatch(tab, state, false);
@@ -576,6 +577,7 @@ export function pageStateChanged(id: string, state: PageState) {
   storeNavigation(id, state);
   const tab = findTab(currentTabs(), id);
   if (!tab) return;
+  notePageSession(id, state);
   noteCrash(tab, state);
   keepTitleThroughFailure(tab, state);
   const title = state.failure ? null : state.title.trim() ? state.title : null;

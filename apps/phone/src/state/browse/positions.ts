@@ -1,6 +1,7 @@
-import { livePageIds, pageScrollPosition, savePageState, type PageScrollPosition } from "../pages/store";
+import { livePageIds, pageScrollPosition, savePageState, type PageScrollPosition, type PageState } from "../pages/store";
 import { currentTabs, saveTabState } from "../tabs/store";
 import { findTab } from "../tabs/tabsState";
+import { isSyncableUrl } from "../tabs/tabModels";
 import { scrollAtRest, scrollMovedSinceSave, scrollSaveDecision, type ScrollWatch } from "../../lib/scrollSettle";
 import { usageCountingWindow } from "../telemetry/telemetry";
 
@@ -9,6 +10,7 @@ const STILL_CHECK_MAX_MS = 16_000;
 
 const watches = new Map<string, ScrollWatch>();
 const savedAt = new Map<string, number>();
+const sessions = new Map<string, string>();
 const navigatedSinceSave = new Map<string, number>();
 const frontSinceCheck = new Set<string>();
 let frontPage: () => string | null = () => null;
@@ -32,6 +34,16 @@ export async function saveTabPosition(id: string, known?: PageScrollPosition | n
 
 export function notePageNavigated(id: string) {
   navigatedSinceSave.set(id, (navigatedSinceSave.get(id) ?? 0) + 1);
+}
+
+type PageSession = Pick<PageState, "url" | "canGoBack" | "canGoForward" | "isLoading">;
+
+export function notePageSession(id: string, state: PageSession) {
+  if (state.isLoading || state.url === null || !isSyncableUrl(state.url)) return;
+  const session = `${state.canGoBack ? "b" : "-"}${state.canGoForward ? "f" : "-"}${state.url}`;
+  const before = sessions.get(id);
+  sessions.set(id, session);
+  if (before !== undefined && before !== session) notePageNavigated(id);
 }
 
 function scheduleCheck() {
@@ -104,6 +116,7 @@ export async function saveChangedPages() {
 export function forgetPosition(id: string) {
   watches.delete(id);
   savedAt.delete(id);
+  sessions.delete(id);
   navigatedSinceSave.delete(id);
   frontSinceCheck.delete(id);
 }
