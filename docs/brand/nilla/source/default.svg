@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 100 824 824" width="1024" height="1024">
+<defs><clipPath id="dclip"><path d="M360 100H664C861.3 100 924 162.7 924 360V664C924 861.3 861.3 924 664 924H360C162.7 924 100 861.3 100 664V360C100 162.7 162.7 100 360 100Z"/></clipPath><linearGradient id="dsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6E6EC"/><stop offset=".6" stop-color="#E4ECE6"/><stop offset="1" stop-color="#EEF0E2"/></linearGradient></defs>
+<g><path d="M360 100H664C861.3 100 924 162.7 924 360V664C924 861.3 861.3 924 664 924H360C162.7 924 100 861.3 100 664V360C100 162.7 162.7 100 360 100Z" fill="url(#dsky)"/></g>
+<g clip-path="url(#dclip)"><circle cx="334" cy="372" r="112" fill="#F2C14E"/><path d="M100 700C320 640 560 610 924 560V924H100Z" fill="#8A9F6A"/><path d="M100 812C380 760 650 600 924 338V924H100Z" fill="#43506E"/></g>
+<path d="M360 100H664C861.3 100 924 162.7 924 360V664C924 861.3 861.3 924 664 924H360C162.7 924 100 861.3 100 664V360C100 162.7 162.7 100 360 100Z" fill="none" stroke="#000000" stroke-opacity=".08" stroke-width="4"/>
+</svg>

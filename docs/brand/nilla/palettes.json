@@ -1,0 +1,342 @@
+{
+  "default": "highland",
+  "shape": "Dusk slope: a sun at the upper left and one hillside rising to the right, on Apple's 1024 grid (824 px squircle, 100 px inset).",
+  "icons": [
+    {
+      "id": "highland",
+      "name": "Highland",
+      "group": "Default",
+      "order": 0,
+      "colors": {
+        "skyTop": "#D6E6EC",
+        "skyMiddle": "#E4ECE6",
+        "skyBottom": "#EEF0E2",
+        "sun": "#F2C14E",
+        "backHill": "#8A9F6A",
+        "frontHill": "#43506E"
+      }
+    },
+    {
+      "id": "original",
+      "name": "Dusk",
+      "group": "Closest to today",
+      "order": 1,
+      "colors": {
+        "skyTop": "#F8CBA2",
+        "skyMiddle": "#EE9A7E",
+        "skyBottom": "#DC7A72",
+        "sun": "#FFF3DC",
+        "backHill": "#8A5A8F",
+        "frontHill": "#4A3166"
+      }
+    },
+    {
+      "id": "brand",
+      "name": "Parchment",
+      "group": "Closest to today",
+      "order": 2,
+      "colors": {
+        "skyTop": "#FBF8EA",
+        "skyMiddle": "#F7F2DE",
+        "skyBottom": "#F1EAD0",
+        "sun": "#E6BC62",
+        "backHill": "#71955A",
+        "frontHill": "#203F32"
+      }
+    },
+    {
+      "id": "forest-dusk",
+      "name": "Forest dusk",
+      "group": "Closest to today",
+      "order": 3,
+      "colors": {
+        "skyTop": "#F8D3A8",
+        "skyMiddle": "#F0AE86",
+        "skyBottom": "#E39678",
+        "sun": "#FFF4DE",
+        "backHill": "#6F8F5E",
+        "frontHill": "#20402F"
+      }
+    },
+    {
+      "id": "noon",
+      "name": "Meadow noon",
+      "group": "Daylight",
+      "order": 4,
+      "colors": {
+        "skyTop": "#B9E0F4",
+        "skyMiddle": "#DDF0F5",
+        "skyBottom": "#F2F2DF",
+        "sun": "#F6C343",
+        "backHill": "#8CC56E",
+        "frontHill": "#2F6B3A"
+      }
+    },
+    {
+      "id": "spring",
+      "name": "Spring",
+      "group": "Daylight",
+      "order": 5,
+      "colors": {
+        "skyTop": "#D7F0E0",
+        "skyMiddle": "#E8F5E3",
+        "skyBottom": "#F4F7E4",
+        "sun": "#FFCF5A",
+        "backHill": "#A6D488",
+        "frontHill": "#4C9853"
+      }
+    },
+    {
+      "id": "summer-haze",
+      "name": "Summer haze",
+      "group": "Daylight",
+      "order": 6,
+      "colors": {
+        "skyTop": "#F7EBCB",
+        "skyMiddle": "#F3DCAB",
+        "skyBottom": "#ECCB8F",
+        "sun": "#EE8A3C",
+        "backHill": "#B7A25E",
+        "frontHill": "#6A7B38"
+      }
+    },
+    {
+      "id": "mint-coral",
+      "name": "Mint and coral",
+      "group": "Daylight",
+      "order": 7,
+      "colors": {
+        "skyTop": "#DDF4EC",
+        "skyMiddle": "#CBEEE2",
+        "skyBottom": "#B9E7D8",
+        "sun": "#FF7A59",
+        "backHill": "#5CC2A7",
+        "frontHill": "#1E7466"
+      }
+    },
+    {
+      "id": "golden",
+      "name": "Golden hour",
+      "group": "Golden hour",
+      "order": 8,
+      "colors": {
+        "skyTop": "#FCE3A9",
+        "skyMiddle": "#F6B66C",
+        "skyBottom": "#EA8C5C",
+        "sun": "#FFF5D8",
+        "backHill": "#C0623F",
+        "frontHill": "#6B2E2A"
+      }
+    },
+    {
+      "id": "harvest",
+      "name": "Harvest",
+      "group": "Golden hour",
+      "order": 9,
+      "colors": {
+        "skyTop": "#F8DE9C",
+        "skyMiddle": "#F0C474",
+        "skyBottom": "#E6AE57",
+        "sun": "#FFF4D2",
+        "backHill": "#C4883A",
+        "frontHill": "#584822"
+      }
+    },
+    {
+      "id": "apricot-teal",
+      "name": "Apricot and teal",
+      "group": "Golden hour",
+      "order": 10,
+      "colors": {
+        "skyTop": "#FFE1C4",
+        "skyMiddle": "#FFC49E",
+        "skyBottom": "#FFAA84",
+        "sun": "#FFF6EA",
+        "backHill": "#3E9A8F",
+        "frontHill": "#1D5B5A"
+      }
+    },
+    {
+      "id": "rose",
+      "name": "Rose",
+      "group": "Golden hour",
+      "order": 11,
+      "colors": {
+        "skyTop": "#FCE6DF",
+        "skyMiddle": "#F8D2C8",
+        "skyBottom": "#F2BDB1",
+        "sun": "#FFF7F2",
+        "backHill": "#D48A8C",
+        "frontHill": "#843D55"
+      }
+    },
+    {
+      "id": "blue-hour",
+      "name": "Blue hour",
+      "group": "Dusk and night",
+      "order": 12,
+      "colors": {
+        "skyTop": "#A8C2EC",
+        "skyMiddle": "#7C9ADB",
+        "skyBottom": "#6077C6",
+        "sun": "#FFE6AC",
+        "backHill": "#3E4D9A",
+        "frontHill": "#1D2460"
+      }
+    },
+    {
+      "id": "lavender",
+      "name": "Lavender",
+      "group": "Dusk and night",
+      "order": 13,
+      "colors": {
+        "skyTop": "#ECDDF4",
+        "skyMiddle": "#D5C0EB",
+        "skyBottom": "#BBA3E0",
+        "sun": "#FFF8EC",
+        "backHill": "#7E64B9",
+        "frontHill": "#3D2D72"
+      }
+    },
+    {
+      "id": "moonrise",
+      "name": "Moonrise",
+      "group": "Dusk and night",
+      "order": 14,
+      "colors": {
+        "skyTop": "#33467A",
+        "skyMiddle": "#25335F",
+        "skyBottom": "#1A2447",
+        "sun": "#F3ECD4",
+        "backHill": "#43578F",
+        "frontHill": "#111833"
+      }
+    },
+    {
+      "id": "aurora",
+      "name": "Aurora",
+      "group": "Dusk and night",
+      "order": 15,
+      "colors": {
+        "skyTop": "#1C3A4D",
+        "skyMiddle": "#1F5D5B",
+        "skyBottom": "#2E8A6D",
+        "sun": "#E6F7E8",
+        "backHill": "#1E4E49",
+        "frontHill": "#0E282B"
+      }
+    },
+    {
+      "id": "clay",
+      "name": "Clay and sage",
+      "group": "Muted",
+      "order": 16,
+      "colors": {
+        "skyTop": "#F1E6D7",
+        "skyMiddle": "#EADBC6",
+        "skyBottom": "#E2CEB5",
+        "sun": "#C9673F",
+        "backHill": "#A3B18A",
+        "frontHill": "#4F6146"
+      }
+    },
+    {
+      "id": "fog",
+      "name": "Fog",
+      "group": "Muted",
+      "order": 17,
+      "colors": {
+        "skyTop": "#DEE3E3",
+        "skyMiddle": "#D0D7D8",
+        "skyBottom": "#C1CACC",
+        "sun": "#FFFFFF",
+        "backHill": "#94A3A5",
+        "frontHill": "#46555A"
+      }
+    },
+    {
+      "id": "heather",
+      "name": "Heather moor",
+      "group": "Muted",
+      "order": 18,
+      "colors": {
+        "skyTop": "#E4CFDD",
+        "skyMiddle": "#D6B8CC",
+        "skyBottom": "#C79FBA",
+        "sun": "#FFF6E6",
+        "backHill": "#9A6D8D",
+        "frontHill": "#4D3350"
+      }
+    },
+    {
+      "id": "graphite",
+      "name": "Graphite and snow",
+      "group": "Muted",
+      "order": 19,
+      "colors": {
+        "skyTop": "#3A3E44",
+        "skyMiddle": "#2D3035",
+        "skyBottom": "#212327",
+        "sun": "#F2B33D",
+        "backHill": "#555B63",
+        "frontHill": "#8A929C"
+      }
+    },
+    {
+      "id": "electric",
+      "name": "Electric sunset",
+      "group": "Bold",
+      "order": 20,
+      "colors": {
+        "skyTop": "#FFA25C",
+        "skyMiddle": "#FF7A70",
+        "skyBottom": "#FF5F8A",
+        "sun": "#FFF2AE",
+        "backHill": "#7B2FBF",
+        "frontHill": "#2B0F5C"
+      }
+    },
+    {
+      "id": "sumi",
+      "name": "Red sun",
+      "group": "Bold",
+      "order": 21,
+      "colors": {
+        "skyTop": "#F6F2E8",
+        "skyMiddle": "#F2EDE1",
+        "skyBottom": "#ECE6D8",
+        "sun": "#E0574B",
+        "backHill": "#A3A7A3",
+        "frontHill": "#262A2A"
+      }
+    },
+    {
+      "id": "citrus",
+      "name": "Citrus",
+      "group": "Bold",
+      "order": 22,
+      "colors": {
+        "skyTop": "#FFF07A",
+        "skyMiddle": "#FFE155",
+        "skyBottom": "#FFD23F",
+        "sun": "#FFFFFF",
+        "backHill": "#8ED14F",
+        "frontHill": "#1F6B3C"
+      }
+    },
+    {
+      "id": "ultramarine",
+      "name": "Ultramarine",
+      "group": "Bold",
+      "order": 23,
+      "colors": {
+        "skyTop": "#5B8CFF",
+        "skyMiddle": "#3F6FF0",
+        "skyBottom": "#2E57D6",
+        "sun": "#FF9A3D",
+        "backHill": "#1F3FA8",
+        "frontHill": "#0E1F66"
+      }
+    }
+  ]
+}
