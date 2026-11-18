@@ -36,7 +36,7 @@ const HostTabWebView = forwardRef<WebViewHandle, WebViewProps>(function HostTabW
 
   const receive = (event: HostTabEvent) => {
     if (event.type !== "ready") return;
-    refreshTabViewports();
+    refreshTabViewports(element.current ?? undefined);
     if (!ready.current) latest.current.onReady?.();
     ready.current = true;
   };
@@ -62,7 +62,7 @@ const HostTabWebView = forwardRef<WebViewHandle, WebViewProps>(function HostTabW
 
   useEffect(() => {
     void tab.current?.presentation(props.visible !== false).catch(reportHostError);
-    refreshTabViewports();
+    refreshTabViewports(element.current ?? undefined);
   }, [props.visible]);
 
   useImperativeHandle(ref, () => hostTabHandle(() => tab.current), []);

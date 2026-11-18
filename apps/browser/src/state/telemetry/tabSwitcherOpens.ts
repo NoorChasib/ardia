@@ -1,4 +1,4 @@
-import { isSharing, useTelemetry } from "./choice";
+import { consentCrossed, isSharing, useTelemetry } from "./choice";
 
 let inWebKit = 0;
 
@@ -26,8 +26,8 @@ export function takeTabSwitcherRowCloses(): number {
 
 let menuReleases = 0;
 
-useTelemetry.subscribe((state) => {
-  if (!state.sharing) menuReleases = 0;
+useTelemetry.subscribe((state, previous) => {
+  if (!state.sharing || consentCrossed(state, previous)) menuReleases = 0;
 });
 
 export function noteTabSwitcherReleasedInMenu() {

@@ -2,7 +2,7 @@ import { readDocument, writeDocument } from "../../platform/documents";
 import { create } from "zustand";
 import { readContext, type SavedContext } from "./savedContext";
 import { uuidv7 } from "./ids";
-import { telemetryRelay } from "./relay";
+import { telemetryRelay, type ConsentStamp } from "./relay";
 import { parseSaved, versionedJson, unchanged, type Migrations, type SavedObject } from "../../lib/savedDocument";
 import { isFields, isString, numberOr, stringOr } from "../../lib/decode";
 
@@ -33,6 +33,7 @@ export type Session = {
   lastBuild: string | null;
   settingsDay: string | null;
   context: SavedContext | null;
+  consentEpoch: number;
 } & Watch;
 type Sharing = { sharing: false; installId: string | null } | { sharing: true; installId: string };
 export type Saved = Session & Sharing;
@@ -62,6 +63,7 @@ const DEFAULT: Saved = {
   lastBuild: null,
   settingsDay: null,
   context: null,
+  consentEpoch: 0,
   ...NO_WATCH,
 };
 
@@ -100,6 +102,7 @@ function readSaved(doc: SavedObject | null): Saved {
     lastBuild: stringOr(doc.lastBuild, null),
     settingsDay: stringOr(doc.settingsDay, null),
     context: readContext(doc.context),
+    consentEpoch: numberOr(doc.consentEpoch, 0),
     ...readWatch(doc),
   };
 }
@@ -108,7 +111,7 @@ let saved: Saved = DEFAULT;
 
 export const savedChoice = (): Readonly<Saved> => saved;
 
-type Shown = { sharing: boolean; decided: boolean; askDone: boolean; installId: string | null; watchReport: string | null; watchUntil: number | null; sharingUntil: number | null };
+type Shown = { sharing: boolean; decided: boolean; askDone: boolean; installId: string | null; watchReport: string | null; watchUntil: number | null; sharingUntil: number | null; consentEpoch: number };
 
 export const useTelemetry = create<Shown>()(() => ({
   sharing: false,
@@ -118,6 +121,7 @@ export const useTelemetry = create<Shown>()(() => ({
   watchReport: null,
   watchUntil: null,
   sharingUntil: null,
+  consentEpoch: 0,
 }));
 
 const shown = (s: Saved): Shown => ({
@@ -128,10 +132,13 @@ const shown = (s: Saved): Shown => ({
   watchReport: s.watchReport,
   watchUntil: s.watchUntil,
   sharingUntil: s.sharingUntil,
+  consentEpoch: s.consentEpoch,
 });
 
 export function save(patch: Partial<Session> | (Partial<Session> & Sharing)) {
-  saved = { ...saved, ...patch } as Saved;
+  const replacesInstallId = "installId" in patch && saved.installId !== null && patch.installId !== saved.installId;
+  const crossesConsent = ("sharing" in patch && patch.sharing !== saved.sharing) || replacesInstallId;
+  saved = { ...saved, ...patch, ...(crossesConsent ? { consentEpoch: saved.consentEpoch + 1 } : {}) } as Saved;
   try {
     writeDocument(STATE_DOC, versionedJson(saved, STATE_VERSION));
   } catch {}
@@ -139,6 +146,11 @@ export function save(patch: Partial<Session> | (Partial<Session> & Sharing)) {
 }
 
 export const isSharing = () => saved.sharing;
+export const sharingAgreed = () => saved.sharing && useTelemetry.getState().sharing;
+export const consentStamp = (): ConsentStamp => ({ epoch: saved.consentEpoch, installId: saved.installId, agreed: sharingAgreed() });
+export const consentHolds = (stamp: ConsentStamp) => stamp.agreed && stamp.epoch === saved.consentEpoch && stamp.installId === saved.installId;
+export type { ConsentStamp };
+export const consentCrossed = (current: Shown, previous: Shown) => current.sharing !== previous.sharing || current.consentEpoch !== previous.consentEpoch;
 
 let currentSession: string | null = null;
 export const sessionId = () => (currentSession ??= uuidv7());
@@ -158,6 +170,8 @@ function readStateDoc(): SavedObject | null {
 }
 
 let loaded = false;
+
+export const choiceLoaded = () => loaded;
 
 export function loadChoice() {
   if (loaded) return;

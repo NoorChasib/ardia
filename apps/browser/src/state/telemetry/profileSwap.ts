@@ -2,6 +2,7 @@ import type { WindowProfileSwapped } from "../../platform/profiles";
 import { useBrowser } from "../browser/store";
 import { engineProfile } from "../browser/model";
 import { capture } from "./client";
+import { consentStamp } from "./choice";
 
 export const SWAP_WAIT_MS = 12_000;
 
@@ -56,12 +57,13 @@ export function noteProfileSwapped(windowId: string, report: WindowProfileSwappe
 
 export function profileSwitched(windowId: string, from: string, to: string, profiles: number, via: Record<string, unknown>) {
   const start = Date.now();
+  const consent = consentStamp();
   const s = useBrowser.getState();
   const swapped = engineProfile(s, from) === engineProfile(s, to) ? Promise.resolve({}) : awaitSwap(windowId);
   requestAnimationFrame(() =>
     requestAnimationFrame(() => {
       const switchMs = Date.now() - start;
-      void swapped.then((swap) => capture("profile_switched", { switch_ms: switchMs, profiles, ...via, ...swap }));
+      void swapped.then((swap) => capture("profile_switched", { switch_ms: switchMs, profiles, ...via, ...swap }, { consent }));
     }),
   );
 }

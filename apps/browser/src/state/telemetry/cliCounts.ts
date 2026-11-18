@@ -30,11 +30,13 @@ export function noteCliPillShown(compact: boolean) {
 }
 export const noteCliAutoEnabled = () => void counts.cli_auto_enables++;
 
-export function noteWindowlessPages(totals: { given: number; missed: number } | undefined) {
+export function noteWindowlessPages(totals: { given: number; missed: number } | undefined, counted = true) {
   if (!totals) return;
   const given = Number(totals.given) || 0, missed = Number(totals.missed) || 0;
-  counts.windowless_pages_given_geometry += Math.max(0, given - windowlessSeen.given);
-  counts.windowless_pages_missing_geometry += Math.max(0, missed - windowlessSeen.missed);
+  if (counted) {
+    counts.windowless_pages_given_geometry += Math.max(0, given - windowlessSeen.given);
+    counts.windowless_pages_missing_geometry += Math.max(0, missed - windowlessSeen.missed);
+  }
   windowlessSeen = { given: Math.max(given, windowlessSeen.given), missed: Math.max(missed, windowlessSeen.missed) };
 }
 

@@ -6,11 +6,11 @@ const none = (): DragsEnded => ({ ownerGone: 0, debuggerUnowned: 0, nativeRefuse
 let seen = none();
 let pending = none();
 
-export function noteDragsEnded(totals: DragsEnded | undefined) {
+export function noteDragsEnded(totals: DragsEnded | undefined, counted = true) {
   if (!totals) return;
   for (const kind of KINDS) {
     const total = Number(totals[kind]) || 0;
-    if (total > seen[kind]) pending[kind] += total - seen[kind];
+    if (counted && total > seen[kind]) pending[kind] += total - seen[kind];
     seen[kind] = Math.max(seen[kind], total);
   }
 }

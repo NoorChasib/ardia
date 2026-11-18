@@ -1,4 +1,7 @@
+export type ConsentStamp = { epoch: number; installId: string | null; agreed: boolean };
+
 export type CaptureOptions = {
+  consent?: ConsentStamp;
   raw?: Record<string, unknown>;
   urgent?: boolean;
   persist?: boolean;

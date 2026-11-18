@@ -4,6 +4,8 @@ import { test } from "node:test";
 globalThis.__DEV__ = false;
 await import("../../test-native/index.ts");
 const { setTelemetryRelay } = await import("./relay.ts");
+const { save } = await import("./choice.ts");
+save({ sharing: true, installId: "id" });
 const { noteTopAppsSharing, releaseTopAppsSharing } = await import("./topAppsSharing.ts");
 
 test("more events before telemetry starts than the buffer holds are counted, not lost without a trace", () => {

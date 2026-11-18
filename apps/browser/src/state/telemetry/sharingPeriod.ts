@@ -1,9 +1,9 @@
-import { useTelemetry } from "./choice";
+import { consentCrossed, useTelemetry } from "./choice";
 
 let period = 0;
 
 useTelemetry.subscribe((s, prev) => {
-  if (prev.sharing !== s.sharing) period++;
+  if (consentCrossed(s, prev)) period++;
 });
 
 export function sameSharingPeriod() {

@@ -412,6 +412,8 @@ function hostTelemetryLocal(host: ArdiaHost | undefined): TelemetryLocal {
 let shared: TelemetryLocal | undefined;
 const local = () => shared ??= hostTelemetryLocal(ardiaHost);
 
+export const settledLocalCopy = () => local().settled();
+
 export const TELEMETRY_LOCAL_METHODS: Record<string, (...args: unknown[]) => unknown> = {
   append: (day, text) => local().append(day as string, text as string),
   appendNow: (day, text) => local().appendNow(day as string, text as string),

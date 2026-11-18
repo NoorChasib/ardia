@@ -67,7 +67,7 @@ function window({ locks, channel, candidate = true, lead = async () => {}, handl
     report: (error) => assert.fail(String(error)),
     newId: () => `id-${++ids}`,
   });
-  const capture = (event) => relay ? relay({ kind: "capture", event, props: {}, options: {} }) : delivered.push({ kind: "capture", event, local: true });
+  const capture = (event) => relay ? relay({ kind: "capture", event, props: {}, options: {}, consentEpoch: 0 }) : delivered.push({ kind: "capture", event, local: true });
   return { delivered, handled, changes, capture, leadership, channel, relaying: () => relay !== null };
 }
 
@@ -106,10 +106,12 @@ test("other windows forward their events to the leader, and a utility window nev
 });
 
 test("messages that aren't relayed telemetry are ignored", () => {
-  assert.equal(isRelayed({ kind: "capture", event: "x", props: {}, options: {} }), true);
-  assert.equal(isRelayed({ kind: "log", level: "error", message: "m", attributes: {} }), true);
-  assert.equal(isRelayed({ kind: "capture", event: 1, props: {}, options: {} }), false);
-  assert.equal(isRelayed({ kind: "log", level: "info", message: "m", attributes: {} }), false);
+  assert.equal(isRelayed({ kind: "capture", event: "x", props: {}, options: {}, consentEpoch: 0 }), true);
+  assert.equal(isRelayed({ kind: "log", level: "error", message: "m", attributes: {}, consentEpoch: 3 }), true);
+  assert.equal(isRelayed({ kind: "capture", event: 1, props: {}, options: {}, consentEpoch: 0 }), false);
+  assert.equal(isRelayed({ kind: "log", level: "info", message: "m", attributes: {}, consentEpoch: 0 }), false);
+  assert.equal(isRelayed({ kind: "capture", event: "x", props: {}, options: {} }), false);
+  assert.equal(isRelayed({ kind: "log", level: "error", message: "m", attributes: {}, consentEpoch: 1.5 }), false);
   assert.equal(isRelayed("capture"), false);
 });
 

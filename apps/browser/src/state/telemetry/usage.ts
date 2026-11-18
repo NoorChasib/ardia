@@ -13,6 +13,7 @@ import { appIconSetting, currentThemeFileSnapshot, customColorProfiles, narrowWi
 import { utcDay } from "./daily";
 import { percentile } from "./transport";
 import { reportNativeCrashes } from "./errors";
+import { consentStamp } from "./choice";
 import { emitJourneys, journeysEnding, startJourneys } from "./journeys";
 import { commandBarPlacementLabel, takeExternalAppRequests, takeNotificationRequestCounts, takeRecentlyClosedCounts, takeHistoryRemovalCounts, takeOmniboxLatency, takePopupTabCounts, takeSearchSuggests } from "./track";
 import { contextSamples, noteAppMemory, recordContext, takeMainProcessWork, takeContentDriftCounts, takeColdTabHoldCounts, startContextSamples, stopContextSamples, watchEngineReports } from "./diagnostics";
@@ -284,6 +285,7 @@ function watchExtensions() {
 const mb = (bytes: number) => Math.round(bytes / 1_048_576);
 
 async function sampleMemory() {
+  const consent = consentStamp();
   try {
     await listTasks().catch((): EngineTask[] => []);
     await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -308,7 +310,7 @@ async function sampleMemory() {
       renderer_processes: renderers,
       tabs: size(useBrowser.getState().tabs),
       uptime_hours: Math.round((Date.now() - startedAt) / HOUR_MS),
-    });
+    }, { consent });
   } catch {}
 }
 
@@ -323,11 +325,12 @@ function snapshotSettings() {
   const today = utcDay(Date.now());
   if (settingsSnapshotDay() === today) return;
   markSettingsSnapshot(today);
+  const consent = consentStamp();
   const state = useBrowser.getState();
   const settings = { ...settingsSnapshot(state.settings), ...customColorProfiles(state.profiles), ...openTabSyncProfiles(state.profiles), ...narrowWindows(state.windows, state.settings.sidebarWidth), ...airTrafficSnapshot(), ...currentThemeFileSnapshot() };
   void currentAppIcon()
     .catch(() => null)
-    .then((icon) => capture(SETTINGS_SNAPSHOT_EVENT, { ...settings, ...appIconSetting(icon) }));
+    .then((icon) => capture(SETTINGS_SNAPSHOT_EVENT, { ...settings, ...appIconSetting(icon) }, { consent }));
 }
 
 let previousContext: SavedContext | null = null;

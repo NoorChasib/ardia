@@ -43,6 +43,7 @@ const testGlobals = globalThis as {
   acTestCliOwns?: (tabId: string) => { owned: boolean; shown: boolean };
   acTestCliMoveOffscreen?: (tabId: string) => { ok: boolean; reason?: string };
   acTestTasks?: () => EngineTask[];
+  acTestSystemState?: () => Promise<CallResult<"engine.systemState">> | undefined;
   acTestEngineInfo?: () => CallResult<"engine.info">;
   acTestUserScripts?: { engine: ExtensionEngine };
   acTestSuggest?: (args: { url: string; id: number; profile: string }) => CallResult<"search.suggest"> | undefined;
@@ -343,7 +344,7 @@ const fakeModules = {
       beginTracing: () => false,
       endTracing: () => null,
       isTracing: () => false,
-      systemState: () => ({ onBattery: false, batteryLevel: null, lowPowerMode: false, memoryPressure: "normal", physicalMemory: 16 * 2 ** 30 }),
+      systemState: () => testGlobals.acTestSystemState?.() ?? { onBattery: false, batteryLevel: null, lowPowerMode: false, memoryPressure: "normal", physicalMemory: 16 * 2 ** 30 },
       batterySaver: ({ mode }) => ({ state: 0, active: mode === "on" }),
       trimMemory: () => ({ ok: true }),
       openTaskManager: () => ({ ok: true }),

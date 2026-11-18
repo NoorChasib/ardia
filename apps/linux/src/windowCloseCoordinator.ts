@@ -25,6 +25,7 @@ export type WindowCloseCoordinatorHooks = {
   resumeDialogs?(suspension: DialogSuspension): boolean;
   closeUtilities?(): Promise<void>;
   settleTelemetry?(endsSession: boolean): Promise<string | null>;
+  saveLocalTelemetry?(): Promise<void>;
   reopenTelemetry?(token: string): Promise<void>;
   report?(error: unknown): void;
 };
@@ -137,7 +138,8 @@ export function createWindowCloseCoordinator(hooks: WindowCloseCoordinatorHooks)
     if (!hooks.utility && !attempt.quitting && drain?.endsSession === true)
       await hooks.closeUtilities?.().catch((error) => hooks.report?.(error));
     if (!current(attempt, key)) throw attempt.cancelled ? cancelledClose() : staleClose();
-    if (!hooks.utility && hooks.settleTelemetry) {
+    if (hooks.utility) await hooks.saveLocalTelemetry?.().catch((error) => hooks.report?.(error));
+    else if (hooks.settleTelemetry) {
       attempt.endedTelemetry = await hooks.settleTelemetry(attempt.quitting || drain?.endsSession === true).catch((error) => {
         hooks.report?.(error);
         return null;

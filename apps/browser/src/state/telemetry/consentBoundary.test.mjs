@@ -9,6 +9,8 @@ const client = await import("./client.ts");
 const usage = await import("./usage.ts");
 const track = await import("./track.ts");
 const presses = await import("./tabPresses.ts");
+const { noteFind } = await import("./findCounts.ts");
+const { noteSessionWrite } = await import("./sessionWrites.ts");
 after(() => client.setSharing(false, "settings"));
 
 async function sent(event) {
@@ -59,4 +61,23 @@ test("turning sharing off and on again drops what was counted before", async () 
   client.setSharing(true, "settings");
   usage.sessionEnding();
   assert.ok((await sent("usage_counts")).every((p) => p.imported_pinned_rows !== 7 && !p.focus_handoffs_delivered));
+});
+
+test("in a single-context app the hourly extras reach the queue while sharing is on, and only the local copy while it is off", async () => {
+  client.loadChoice();
+  client.setSharing(false, "settings");
+  noteFind("opened");
+  noteSessionWrite(2048, false);
+  usage.sessionEnding();
+  assert.deepEqual(await sent("usage_counts"), []);
+  const local = stub.telemetryLocal.records().filter((item) => item.event === "usage_counts").at(-1);
+  assert.deepEqual([local.sent, local.properties.find_opens, local.properties.session_writes], [false, 1, 0]);
+
+  client.setSharing(true, "settings");
+  noteFind("opened");
+  noteFind("stepped");
+  noteSessionWrite(2048, false);
+  usage.sessionEnding();
+  const last = (await sent("usage_counts")).at(-1);
+  assert.deepEqual([last.find_opens, last.find_steps, last.session_writes, last.session_kb_written], [1, 1, 1, 2]);
 });

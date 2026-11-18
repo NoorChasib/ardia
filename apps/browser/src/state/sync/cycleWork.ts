@@ -1,11 +1,11 @@
-import { isSharing, useTelemetry } from "../telemetry/choice";
+import { consentCrossed, isSharing, useTelemetry } from "../telemetry/choice";
 
 const NO_CYCLES = { cycles: 0, ms: 0, longestMs: 0 };
 let work = NO_CYCLES;
 let consentGeneration = 0;
 
 useTelemetry.subscribe((current, previous) => {
-  if (current.sharing === previous.sharing) return;
+  if (!consentCrossed(current, previous)) return;
   consentGeneration++;
   work = NO_CYCLES;
 });

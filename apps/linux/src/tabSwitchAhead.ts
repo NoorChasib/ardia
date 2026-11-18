@@ -6,6 +6,13 @@ type ActiveStore = { subscribe(listener: (state: ActiveWindows, previous: Active
 
 const views = new Map<string, SwitchView>();
 let switchedAhead = 0;
+let regionsHeld = 0;
+let reported = { switchedAhead: 0, regionsHeld: 0 };
+
+const laidOut = (slot: Element) => {
+  const rect = slot.getBoundingClientRect?.();
+  return !rect || (rect.width > 0 && rect.height > 0);
+};
 
 export function registerSwitchView(tabId: string, view: SwitchView) {
   views.set(tabId, view);
@@ -15,6 +22,12 @@ export function registerSwitchView(tabId: string, view: SwitchView) {
 }
 
 export const tabsSwitchedAhead = () => switchedAhead;
+
+export function takeSwitchAheadCounts() {
+  const counts = { linux_switch_aheads: switchedAhead - reported.switchedAhead, linux_switch_regions_held: regionsHeld - reported.regionsHeld };
+  reported = { switchedAhead, regionsHeld };
+  return counts;
+}
 
 function switchAhead(fromId: string, toId: string) {
   const from = views.get(fromId);
@@ -26,7 +39,8 @@ function switchAhead(fromId: string, toId: string) {
   if (!showInPlaceOf(fromTab, toTab)) return;
   switchedAhead++;
   to.regions.setPage(to.slot, true);
-  from.regions.setPage(from.slot, false);
+  if (laidOut(to.slot)) from.regions.setPage(from.slot, false);
+  else regionsHeld++;
 }
 
 export function watchTabSwitches(store: ActiveStore) {
@@ -45,4 +59,6 @@ export function watchTabSwitches(store: ActiveStore) {
 export function forgetSwitchViews() {
   views.clear();
   switchedAhead = 0;
+  regionsHeld = 0;
+  reported = { switchedAhead: 0, regionsHeld: 0 };
 }

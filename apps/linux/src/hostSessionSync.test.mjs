@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { useBrowser } from "../../browser/src/state/browser/store.ts";
-import { createSessionWriter, hydrateLaunchSession, initialHostSession, snapshotHostSession, startHostPersistence } from "./hostSession.ts";
+import { STRUCTURAL_SAVE_MS, VOLATILE_SAVE_MS, createSessionWriter, hydrateLaunchSession, initialHostSession, snapshotHostSession, startHostPersistence } from "./hostSession.ts";
 import { cloneSessionValue, mergeSession } from "./hostSessionMerge.ts";
 
 const tick = () => new Promise(setImmediate);
@@ -125,6 +125,31 @@ test("global settings reach the other window without echo saves or focus resets"
     const count = native.requests.length;
     await new Promise((resolve) => setTimeout(resolve, 330));
     assert.equal(native.requests.length, count);
+  } finally {
+    for (const stop of stops) stop();
+  }
+}));
+
+test("a title and last-used change in one window reaches the other within the volatile delay, in one save", () => withBrowserEvents(async () => {
+  const { initial, aKey } = sharedSession();
+  const native = nativeService(initial);
+  const a = stateStore(initial, "a");
+  const b = stateStore(initial, "b");
+  const stops = [startHostPersistence(native.client("a"), a, initial), startHostPersistence(native.client("b"), b, initial)];
+  try {
+    await flush();
+    const count = native.requests.length;
+    const s = a.getState();
+    a.setState({ tabs: { ...s.tabs, [aKey]: { ...s.tabs[aKey], title: "A retitled", lastActiveAt: s.tabs[aKey].lastActiveAt + 1 } } });
+    await new Promise((resolve) => setTimeout(resolve, STRUCTURAL_SAVE_MS + 100));
+    assert.equal(native.requests.length, count);
+    await new Promise((resolve) => setTimeout(resolve, VOLATILE_SAVE_MS));
+    assert.equal(native.requests.length, count + 1);
+    assert.equal(native.session.tabs[aKey].title, "A retitled");
+    assert.equal(b.getState().tabs[aKey].title, "A retitled");
+    assert.equal(b.getState().tabs[aKey].lastActiveAt, s.tabs[aKey].lastActiveAt + 1);
+    await new Promise((resolve) => setTimeout(resolve, STRUCTURAL_SAVE_MS + 100));
+    assert.equal(native.requests.length, count + 1);
   } finally {
     for (const stop of stops) stop();
   }

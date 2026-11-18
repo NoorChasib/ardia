@@ -4,6 +4,11 @@ How to measure Ardia and gate a release on it. Every script prints its flags wit
 documents the same flags, so you don't need to read the rest of a script to run it. Results from past
 comparisons: [0.2.19 → 0.2.20](0.2.19-to-0.2.20.md), [0.2.22 → 0.2.23](0.2.22-to-0.2.23.md), [0.2.23 → 0.2.24](0.2.23-to-0.2.24.md), [0.2.24 → 0.2.25](0.2.24-to-0.2.25.md), [0.2.25 → 0.2.26](0.2.25-to-0.2.26.md), [0.2.26 → 0.2.27](0.2.26-to-0.2.27.md).
 
+Linux has its own harness, `apps/linux/scripts/perf/bench.mjs`: CPU, context switches and memory per process kind,
+interaction latency and long frames with 100 loaded tabs under Xvfb, interleaved across UI builds on one engine. How
+to run it, what it measures, how to reproduce PR 3's stock, feature, Bun and final comparison, and its limits:
+[linux-bench.md](linux-bench.md). PR 3's results: [pr3-linux-comparison.md](pr3-linux-comparison.md).
+
 ## Files
 
 All of them are in `apps/browser/scripts/perf/`.

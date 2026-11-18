@@ -9,7 +9,7 @@ type SwitcherPress = { windowId: string; profileId: string; icons: boolean; corr
 let presses: SwitcherPress[] = [];
 
 useTelemetry.subscribe((s, prev) => {
-  if (prev.sharing && !s.sharing) presses = [];
+  if ((prev.sharing && !s.sharing) || s.consentEpoch !== prev.consentEpoch) presses = [];
 });
 
 export function noteSwitcherPress(windowId: string, profileId: string, icons: boolean, now = Date.now()) {

@@ -1,5 +1,5 @@
 import type { Adapter } from "../../platform/sync";
-import { isSharing, useTelemetry } from "./choice";
+import { consentCrossed, isSharing, useTelemetry } from "./choice";
 import { takePopupProtectedMediaCounts } from "./popupProtectedMedia";
 
 export type SyncWorkKind = "bookmark" | "history";
@@ -74,9 +74,9 @@ let pending = none();
 let consentGeneration = 0;
 
 useTelemetry.subscribe((current, previous) => {
-  if (current.sharing === previous.sharing) return;
+  if (!consentCrossed(current, previous)) return;
   consentGeneration++;
-  if (!current.sharing) { syncPending = noSync(); pending = none(); }
+  if (!current.sharing || current.consentEpoch !== previous.consentEpoch) { syncPending = noSync(); pending = none(); }
 });
 
 const count = (key: keyof ReturnType<typeof none>) => {

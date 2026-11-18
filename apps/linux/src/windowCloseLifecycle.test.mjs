@@ -77,6 +77,7 @@ function harness(options = {}) {
     closeUtilities: options.closeUtilities && (() => { log.push(["utilities"]); return options.closeUtilities(); }),
     settleTelemetry: options.settleTelemetry && ((ends) => { log.push(["telemetry", ends]); return options.settleTelemetry(ends); }),
     reopenTelemetry: options.settleTelemetry && (async (token) => { log.push(["reopen-telemetry", token]); }),
+    saveLocalTelemetry: options.saveLocalTelemetry && (() => { log.push(["save-local"]); return options.saveLocalTelemetry(); }),
     report: (error) => log.push(["report", error.message]),
   });
   return { log, asks, coordinator };
@@ -284,6 +285,27 @@ test("telemetry settles after the drain, ends the session only when the close do
   const utility = harness({ utility: true, settleTelemetry });
   await utility.coordinator.accept(main);
   assert.equal(steps(utility.log).includes("telemetry"), false);
+});
+
+test("a utility window's close saves its local telemetry copy, without ending the session, before its producers quiesce", async () => {
+  const saved = deferred();
+  const settleTelemetry = async () => "token";
+  const utility = harness({ utility: true, settleTelemetry, saveLocalTelemetry: () => saved.promise });
+  const closing = utility.coordinator.accept(main);
+  await tick(); await tick(); await tick();
+  assert.deepEqual(steps(utility.log), ["begin", "save-local"]);
+  saved.resolve();
+  await closing;
+  assert.deepEqual(steps(utility.log), ["begin", "save-local", "quiesce", "drain", "acknowledge"]);
+  const failing = harness({ utility: true, saveLocalTelemetry: async () => { throw new Error("no store"); } });
+  await failing.coordinator.accept(main);
+  assert.deepEqual(steps(failing.log), ["begin", "save-local", "report", "quiesce", "drain", "acknowledge"]);
+  const browser = harness({ endsSession: false, settleTelemetry, saveLocalTelemetry: async () => {} });
+  const left = browser.coordinator.accept(main);
+  await tick();
+  browser.asks[0].answer.resolve({ confirmed: true, suppressed: false });
+  await left;
+  assert.equal(steps(browser.log).includes("save-local"), false);
 });
 
 test("a close cancelled while telemetry is still settling reopens the session it ended", async () => {

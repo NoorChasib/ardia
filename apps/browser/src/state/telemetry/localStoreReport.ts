@@ -1,5 +1,6 @@
 import { capture, queuedChars } from "./client";
 import { pruneLocalStore, type LocalStoreReading } from "./localStore";
+import { consentStamp } from "./choice";
 import { percentile, takePostStats } from "./transport";
 
 export const LOCAL_STORE_EVENT = "telemetry_local_store";
@@ -35,10 +36,11 @@ export function localStoreProperties(reading: LocalStoreReading, posts: ReturnTy
 let launchPrune: ReturnType<typeof setTimeout> | undefined;
 
 export async function reportLocalStore() {
+  const consent = consentStamp();
   const reading = await pruneLocalStore(Date.now(), true);
   if (!reading) return null;
   const props = localStoreProperties(reading, takePostStats(), queuedChars());
-  capture(LOCAL_STORE_EVENT, props);
+  capture(LOCAL_STORE_EVENT, props, { consent });
   return props;
 }
 

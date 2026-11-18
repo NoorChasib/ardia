@@ -1,26 +1,27 @@
 import type { BrowserState } from "../browser/store";
 import { capture } from "./client";
-import { onTelemetryRelay } from "./relay";
+import { onTelemetryRelay, type ConsentStamp } from "./relay";
+import { choiceLoaded, consentStamp } from "./choice";
 
 type Counts = Record<string, number | boolean | string | null>;
 
 export type TopAppsSharingPath = "synced_record" | "link_profiles" | "linked_profile_created";
 
 const MAX_HELD = 16;
-const held: [string, Counts][] = [];
+const held: [string, Counts, ConsentStamp | undefined][] = [];
 let dropped = 0;
 let released = false;
 let savedMerged: string | null = null;
 
 export function noteTopAppsSharing(event: string, counts: Counts) {
   if (released) capture(event, counts);
-  else if (held.length < MAX_HELD) held.push([event, counts]);
+  else if (held.length < MAX_HELD) held.push([event, counts, choiceLoaded() ? consentStamp() : undefined]);
   else dropped++;
 }
 
 export function releaseTopAppsSharing() {
   released = true;
-  for (const [event, counts] of held.splice(0)) capture(event, counts);
+  for (const [event, counts, consent] of held.splice(0)) capture(event, counts, { consent });
   if (dropped) capture("top_apps_sharing_dropped", { dropped });
   dropped = 0;
 }

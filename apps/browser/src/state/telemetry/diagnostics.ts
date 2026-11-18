@@ -7,9 +7,11 @@ import { hermesHeapMegabytes } from "../../lib/hermesHeap";
 import { activeTab } from "../browser/model";
 import { useBrowser } from "../browser/store";
 import { capture, isSharing, saveContext, useTelemetry } from "./client";
+import { consentCrossed, consentStamp } from "./choice";
 import { formatRecentPages, readRecentPages, type RecentPage, type SavedContext } from "./savedContext";
 import { noteDragsEnded } from "./stuckDrags";
 import { noteWindowlessPages } from "./cliCounts";
+import { sameSharingPeriod } from "./sharingPeriod";
 import { mainProcessWork } from "./mainProcessWork";
 import { appInfo } from "./transport";
 import { readDocument } from "../../platform/documents";
@@ -82,9 +84,11 @@ export const noteAppMemory = (totalMb: number) => (appMemoryMb = totalMb);
 
 export async function recordContext(): Promise<SavedContext | null> {
   if (!isSharing()) return null;
+  const statusInSamePeriod = sameSharingPeriod();
   void cliControlStatus().then((status) => {
-    noteDragsEnded(status.dragsEnded);
-    noteWindowlessPages(status.windowlessPages);
+    const counted = statusInSamePeriod();
+    noteDragsEnded(status.dragsEnded, counted);
+    noteWindowlessPages(status.windowlessPages, counted);
   }, () => {});
   const epoch = contextEpoch;
   const [sample, pressure] = await Promise.all([diagnosticsSample().catch(() => ({ footprintMB: undefined, freeDiskGB: undefined })), memoryPressure()]);
@@ -148,7 +152,7 @@ function forgetContext() {
   pageProcessesGone = 0;
 }
 
-useTelemetry.subscribe((s, prev) => prev.sharing !== s.sharing && forgetContext());
+useTelemetry.subscribe((s, prev) => consentCrossed(s, prev) && forgetContext());
 
 useBrowser.subscribe((s, prev) => {
   if (s.profiles === prev.profiles || size(s.profiles) >= size(prev.profiles)) return;
@@ -251,6 +255,7 @@ export function trackPageProcessGone(info: { reason: string; code: number }, vis
   pageProcessesGone++;
   if (pageProcessEvents >= MAX_PAGE_PROCESS_EVENTS) return;
   pageProcessEvents++;
+  const consent = consentStamp();
   const reason = GONE_REASONS.has(info.reason) ? info.reason : "unknown";
   const props = {
     process: "renderer",
@@ -262,7 +267,7 @@ export function trackPageProcessGone(info: { reason: string; code: number }, vis
     session_min: sessionMinutes(),
     gone_this_session: pageProcessesGone,
   };
-  void memoryPressure().then((memory_pressure) => capture("page_process_gone", { ...props, memory_pressure }));
+  void memoryPressure().then((memory_pressure) => capture("page_process_gone", { ...props, memory_pressure }, { consent }));
 }
 
 const HOVER_REASONS = new Set(["halfActive", "staleMenu", "notKeyOrMain", "coveredByView", "responderLost", "coveredByWindow"]);

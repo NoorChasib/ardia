@@ -11,7 +11,7 @@ import { uuidv4, uuidv7 } from "./ids";
 import { parseSaved, versionedJson } from "../../lib/savedDocument";
 import { withDeadline } from "../../lib/deadline";
 import { isFields, isString } from "../../lib/decode";
-import { dismissAsk, isSharing, loadChoice, NO_WATCH, resumeSession, save, savedChoice as saved, sessionId, startNewSession, useTelemetry } from "./choice";
+import { consentHolds, dismissAsk, isSharing, loadChoice, NO_WATCH, resumeSession, save, savedChoice as saved, sessionId, sharingAgreed, startNewSession, useTelemetry } from "./choice";
 import { flushLocalNow, LOCAL_KEEP_DAYS, recordLocal } from "./localStore";
 
 const QUEUE_DOC = "telemetry-queue.json";
@@ -129,9 +129,11 @@ export type { CaptureOptions };
 
 export function capture(event: string, props: Record<string, unknown> = {}, options: CaptureOptions = {}) {
   const relay = telemetryRelay();
-  if (relay) return relay.capture(event, props, options);
+  const eligible = !options.consent || consentHolds(options.consent);
+  if (relay && eligible && sharingAgreed()) return relay.capture(event, props, options);
   try {
-    const { sharing, installId } = saved();
+    const { installId } = saved();
+    const sharing = eligible && !relay && saved().sharing;
     const at = Date.now();
     const record: QueuedEvent = {
       uuid: uuidv7(),
@@ -155,9 +157,9 @@ export function capture(event: string, props: Record<string, unknown> = {}, opti
 
 export function queueLog(level: "warn" | "error", message: string, attributes: Record<string, string | number | boolean>) {
   const relay = telemetryRelay();
-  if (relay) return relay.log(level, message, attributes);
+  if (relay && sharingAgreed()) return relay.log(level, message, attributes);
   try {
-    const sharing = saved().sharing;
+    const sharing = !relay && saved().sharing;
     const at = Date.now();
     const withSession = { ...attributes, $session_id: sessionId() };
     recordLocal("log", sharing, { level, message, attributes: withSession }, at);
