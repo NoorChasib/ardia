@@ -165,11 +165,12 @@ Every result records the blocker tree's sha256, so a different blocker shows up 
 PR 3's four-build run used the harness's first protocol, the scenario code as committed in a7abec0e0. The harness in
 this tree is protocol 2: S4 reads tab 1's row after every hold and S3 records its put-backs, so its windows do slightly
 different work, every result records its `protocol`, and `report --all` refuses to pool runs of different protocols.
-To reproduce the published numbers exactly, run a7abec0e0's harness:
+To reproduce the published numbers exactly, run a7abec0e0's harness. Take only `bench.mjs` and `lib`, which are all
+it runs:
 
 ```bash
 harness=$(mktemp -d)
-git archive a7abec0e0 apps/linux/scripts/perf | tar -x -C "$harness"
+git archive a7abec0e0 apps/linux/scripts/perf/bench.mjs apps/linux/scripts/perf/lib | tar -x -C "$harness"
 bench=$harness/apps/linux/scripts/perf/bench.mjs
 ```
 
@@ -373,19 +374,20 @@ dedicated host isolates fully.
 
 - **Xvfb and software GL.** There is no GPU, real display or vsync, so frame gaps and latencies are only meaningful
   relative between builds measured the same way, never as absolute numbers or against macOS. Where compositor work
-  lands depends on the GL backend a GPU-less machine gets, and the two setups PR 3 used disagree:
-  - **The harness** (ANGLE on Mesa llvmpipe at 1920x1080, as every result's `gpu.renderer` records). The GPU process
+  lands depends on the GL backend, and the two setups PR 3 used disagree:
+  - **The harness** passes no GL flags (every result's `gpuFlags` is empty), and on this host the engine chose ANGLE on
+    Mesa llvmpipe by itself (`gpu.implementation` `(gl=egl-angle,angle=opengl)`, at 1920x1080). The GPU process
     stays small on every build, about 7-11 % of a core in S6 and S7, so the shell's drop reaches the whole browser.
     In the integration's contended full-instrumentation run of the loading scenarios, the shell went from 106-112 % to
     13-14 % of a core in S6 and total CPU from 127-136 % to 35-38 %, with the GPU process at 9-10 % on both builds.
     The partitioned light run's figures are in [pr3-linux-comparison.md](pr3-linux-comparison.md).
-  - **SwiftShader** (`--use-gl=angle --use-angle=swiftshader`, at 1600x1000: the instances PR 3's screen recordings
-    came from). The GPU process dominates: moving the loading animation to the compositor took the shell from 27-31 %
-    to 1.4-1.9 % of a core, while the GPU process stayed at 160-212 % on both builds, and the whole-browser ranges
-    overlap in that attribution run.
+  - **SwiftShader**, forced: the instances PR 3's screen recordings came from were launched with
+    `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader`, at 1600x1000. The GPU process dominates:
+    moving the loading animation to the compositor took the shell from 27-31 % to 1.4-1.9 % of a core, while the GPU
+    process stayed at 160-212 % on both builds, and the whole-browser ranges overlap in that attribution run.
 
-  On a machine with a GPU that compositor work is cheap; on a GPU-less one it depends on which of these paths Chromium
-  picks.
+  So the whole-browser drop holds on the path the engine picks by default on this host, and the SwiftShader numbers
+  only show what happens when that path is forced. On a machine with a GPU, compositor work is cheaper still.
 - **No window manager.** The window sits at 0,0 and has focus because nothing else does. There is no occlusion
   tracking, so the window always counts as visible.
 - **A shared VPS.** Other agents' builds, tests, ClickHouse and Postgres used 100 to 500 % of a core on the bench CPUs
@@ -438,7 +440,7 @@ on quiet cores, and each needs the rerun named here before PR 3 can claim respon
 | Default-speed reveals over 80 ms (E1) | 20 of 64 against 8 of 64, equal medians, under load 12-28 | S4, full instrumentation, partitioned: median, p90 and reveals over 80 ms |
 | Reveal and hover timing at Faster and Slower (screen-recording A/B) | Faster 850 against 750 ms, Slower 1017 against 983 ms, hover after a card opens 200-333 against 167-267 ms, 8 visits each, SwiftShader at about 95 % load | The options-on S4/S5 run, partitioned |
 | Discard refused during a switch (F23, integration) | 12 of 40 loops against 5 of 40 (Fisher p about 0.09) at about twice the load; every refused tab discarded on the retry 1.5 s later | `discard-race2.mjs`, 20 loops x about 4 launches per side, on quiet cores |
-| ctrl+Next p90 with switches every 500 ms (E4) | 41 to 52 ms at 20 tabs, in step with the 2 s volatile save | S3 key->shown p90 from the partitioned full run |
+| ctrl+Next p90 with switches every 500 ms (E4) | 41 to 52 ms at 20 tabs, in step with the 2 s volatile save | S3 key->shown p90 from the partitioned full run, plus e02d6c59c (before E4) against final on S3 at `--runs 6` to isolate E4 ([pr3-linux-comparison.md](pr3-linux-comparison.md), item 3) |
 | Pointer resting at x=0 hovers the row level with it (screen recordings) | The final build showed that row's ✕ (3 of 3), the PR 2 build didn't (0 of 3), inside the long demo session | Not reproduced in fresh instances: with the pointer moved to x=40 and then x=0 and left there 1.8-2.5 s, neither build hovers the row (0 of 7 each, at Faster and Slower, on llvmpipe and on SwiftShader), and both hover it with the pointer on the row. Rows start at x=18, so a hover at x=0 needs the shell to have kept an older pointer position; repeat inside a recorded session before attributing it |
 | Loading scenarios on quiet cores | Every integration CPU window for S6 and S7 was contended | Settled by the partitioned light run ([pr3-linux-comparison.md](pr3-linux-comparison.md)): final's S6 and S7 total is 79-81 % below bun's in every block |
 | S3 key->shown p90 (partitioned light run) | Final 40 ms against bun's 33, higher in 4 of 4 blocks (Mann-Whitney p = 0.14); medians inside the A/A spread | The partitioned full run's S3 p90, at `--runs 6` |
