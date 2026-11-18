@@ -174,8 +174,8 @@ bun run macos
 
 | Task | Command |
 |---|---|
-| Type check (every package in the root workspace) | `bun check` |
-| Type check the separately installed projects too | `bun run check:all` |
+| Type check the 10 packages of the root workspace | `bun check` |
+| The same, then `apps/phone` (with `packages/phone`), `apps/dashboard` (it generates the router's route tree first), `apps/videos` and `apps/site`; each needs its own `bun install --frozen-lockfile --cwd <dir>` | `bun run check:all` |
 | Every test, cached by Turbo | `bun run test` |
 | The shaders, compiled offline | `bun run shaders:check` |
 | A Release `.app` with a Hermes bytecode bundle | `scripts/agent/build-app --config Release` (in `apps/browser/build-<name>`, under the shared build locks; `--help`) |
@@ -201,7 +201,7 @@ bun run --cwd apps/linux build
 | Host, symbol and module-graph tests | `bun run --cwd apps/linux test:host`, `test:symbols`, `test:graph` |
 | Every test that runs without a Mac | `bun run test:portable` |
 | Every Linux check CI runs | `scripts/linux/ci-checks.sh` |
-| A test release (tarball and CLI, smoke-tested) | `scripts/linux/release.sh <version> --engine nearest` |
+| A test release (tarball and CLI, smoke-tested; needs `bun` and `uv`) | `scripts/linux/release.sh <version> --engine nearest` |
 | Packages (tarball, `.deb`, AppImage) | `scripts/linux/package.py` ([docs/linux-port.md](docs/linux-port.md) › Packaging and installing) |
 
 ### Windows
@@ -232,7 +232,10 @@ New-Item -ItemType Directory -Force $env:ARDIA_DATA_DIR | Out-Null
 & "$env:TEMP\Ardia\Ardia.exe"
 ```
 
-Settings still live in `%APPDATA%\Ardia`: only a test build keeps them apart (docs/windows.md › Test instances).
+`ARDIA_DATA_DIR` keeps everything in that folder in any build: settings in `<folder>\config`, Chromium's profile in
+`<folder>\Chromium`, nothing in `%APPDATA%\Ardia` or `%LOCALAPPDATA%\Ardia`. Only the test keys (`ARDIA_TEST`,
+`ARDIA_TRACE`, `ARDIA_CONFIG_DIR`, `ARDIA_REMOTE_DEBUGGING_PORT`) need a test build, which the assembled folder is not
+(docs/windows.md › Test instances).
 Build the installer from the same folder:
 
 ```powershell

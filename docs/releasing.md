@@ -272,7 +272,7 @@ The script refuses what `release.sh` refuses: a missing notes file or one whose 
 `MARKETING_VERSION` other than `<version>`, and uncommitted changes (here under `apps/browser`, `apps/linux`,
 `apps/cli`, `packages`, `engine` or `scripts/linux`). It uses the exact Linux engine for HEAD's engine key
 (`engine/engine-key.sh`), published in ardia-browser/ardia. Without one the `linux` job fails and the macOS release
-ships alone; build the engine, then run `scripts/linux/release.sh <version>` on a Linux machine at the release commit
+ships alone; build the engine, then run `scripts/linux/release.sh <version>` on a Linux machine with Bun and uv at the release commit
 and the `gh release upload` command it prints. A nightly and a stable go the same way.
 See [linux-ci.md](linux-ci.md) › Linux releases.
 

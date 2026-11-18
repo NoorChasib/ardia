@@ -165,8 +165,8 @@ acceptance suite ([linux-acceptance.md](linux-acceptance.md)) runs by hand.
 
 ## Linux releases
 
-`scripts/linux/release.sh <version>` is the Linux half of a release (`docs/releasing.md` › Linux package). In order,
-it:
+`scripts/linux/release.sh <version>` is the Linux half of a release (`docs/releasing.md` › Linux package). It needs
+`bun` (on `PATH`, else `~/.bun/bin` or `~/.local/bin`) and `uv` (the CLI build). In order, it:
 
 1. checks the version's channel, `MARKETING_VERSION`, the notes file and a clean tree;
 2. fetches the exact engine (`--engine nearest`, an engine dir or a Chromium out dir make test builds);

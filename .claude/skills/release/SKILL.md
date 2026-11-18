@@ -419,7 +419,7 @@ scripts/linux/publish-engine.sh --out "$CB/chromium_git/chromium/src/out/$GN_OUT
 `packages/ardiacore/prebuilt-engines-linux.tsv` without committing it. Commit that row on `main` (stage it, then a
 bare `git commit`) before dispatching the release; fetches also read the table on `main`, so older commits find it.
 
-To add Linux to a release that shipped without it: publish the engine, then on a Linux machine at the release commit
+To add Linux to a release that shipped without it: publish the engine, then on a Linux machine with Bun and uv at the release commit
 run `scripts/linux/release.sh <version>` and the `gh release upload` line it prints. `--engine nearest` or
 `--allow-dirty` make test builds, never releases (`docs/linux-ci.md` › Linux releases).
 

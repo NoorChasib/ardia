@@ -48,9 +48,9 @@ check linux-acceptance-self-test bun run --cwd apps/linux acceptance:self-test
 check linux-build bun run --cwd apps/linux build
 check patches-build-tests python3 -m unittest discover -s engine/patches/build/tests
 check chromium-ardia-tests python3 -m unittest discover -s engine/chromium/src/chrome/browser/ardia/tests
-check ardiacore-linux-bootstrap node --test engine/ardiacore-linux/tests/bootstrap.test.mjs
-check linux-smoke-gate bun test --timeout=0 ./scripts/linux/smoke.test.mjs
-check linux-ubo-seed bun test --timeout=0 ./scripts/linux/ubo-seed.test.mjs
+check ardiacore-linux-bootstrap bun run test:engine-linux
+check linux-smoke-gate bun run test:linux-smoke
+check linux-ubo-seed bun run test:linux-ubo-seed
 
 modules=$(cd engine/ardiacore-linux/tests && ls test_*.py | sed 's/\.py$//')
 started=$(date +%s)

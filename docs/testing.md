@@ -34,8 +34,16 @@ The files that need Node (a stub for one importer only, `--expose-gc`, V8's nati
 loader, which transpiles `.tsx` with the TypeScript 6 API (`@typescript/typescript6`, cached in
 `node_modules/.cache/ardia-test-tsx`). The loader stays for Node's other users too: the engine's Linux tests, the perf
 scripts and `scripts/command-tables.mjs`. The runner is `scripts/lib/bun-tests.mjs` (`--help`); it passes `--shard=N/M`
-to both runners, which is how CI splits the suite in four. One file, on whichever runner it belongs to:
-`bun run --cwd apps/browser test ./src/state/tabs/tabs.test.mjs`.
+to both runners, which is how CI splits the suite in four (`bun run --cwd apps/browser test --shard=1/4`). One file,
+on whichever runner it belongs to: `bun run --cwd apps/browser test ./src/state/tabs/tabs.test.mjs`. A new test that
+stubs a module with `node:module` `registerHooks`, calls `gc()` or checks V8's printing goes on
+`apps/browser/node-tests.json` with its reason; Bun's `mock.module` replaces a module for every importer, not one.
+The Linux host tests keep their own list in `apps/linux/host-node-tests.json`, and each new host test file is also
+named in `apps/linux` `test:host`.
+
+The Linux suites run with `bun run --cwd apps/linux test:host`, `test:symbols`, `test:graph` and
+`acceptance:self-test`; `scripts/linux/ci-checks.sh` runs them all. The acceptance suite against a packaged build is
+`bun run acceptance:linux <executable> [uiDir]` from the repository root ([linux-acceptance.md](linux-acceptance.md)).
 
 End-to-end checks need a built app and are run by hand. Each runs hidden instances through `scripts/lib/instance.mjs`
 and prints one line per check (PASS/FAIL, ms), a failure's first lines, then a summary with the path of the log that

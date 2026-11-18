@@ -13,7 +13,6 @@
     "test:graph": "bun test --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./scripts/module-graph.test.mjs",
     "fixture:csp": "node scripts/host-csp-fixture.mjs",
     "fixture:csp:check": "node scripts/host-csp-check.mjs",
-    "acceptance": "node scripts/acceptance/run.mjs",
     "acceptance:self-test": "bun ../../scripts/lib/bun-tests.mjs --node-only=scripts/acceptance/node-tests.json --default=./scripts/acceptance/tests --isolate --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json"
   },
   "dependencies": {

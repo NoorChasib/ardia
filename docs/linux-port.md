@@ -654,7 +654,7 @@ Against a built package:
 
 ```bash
 node scripts/linux/smoke.mjs --package <ardia-linux-x64.tar.xz> --results <dir>
-bun run --cwd apps/linux acceptance "$PWD/<extracted>/ardia/bin/ardia"
+bun run acceptance:linux <extracted>/ardia/bin/ardia
 ```
 
 - **Smoke gate.** Twelve checks: libraries resolve; the shell renders the packaged UI; the bootstrap reports
