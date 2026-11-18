@@ -17,9 +17,13 @@ bun run --cwd apps/linux build
 bun run acceptance:linux <path to the packaged ardia executable> apps/linux/dist
 ```
 
-- **Paths.** `bun run acceptance:linux` runs in the repository root even when called from a subdirectory, and Bun sets
-  no `INIT_CWD`, so relative paths resolve against the repository root. (Under npm, which sets `INIT_CWD`, they resolve
-  against the directory it was called from.)
+- **Where to run it.** From the repository root, from `apps/linux`, or from a folder with no `package.json` of its own.
+  Any other package folder (`apps/browser`, `packages/*`) has its own `package.json` without the script, and Bun stops
+  there with `Script not found`.
+- **Paths.** Bun runs the script in the folder of the `package.json` that defines it and sets no `INIT_CWD`, so relative
+  paths resolve against the repository root, or against `apps/linux` when run there
+  (`bun run acceptance:linux <executable> dist`). (Under npm, which sets `INIT_CWD`, they resolve against the directory
+  it was called from.)
 - **UI directory.** The second argument is optional. When given, the UI is loaded from it (`--ardia-ui-dir`);
   otherwise the bundled UI is used.
 - **`--only F01,#33`** runs a subset by scenario id or issue number.

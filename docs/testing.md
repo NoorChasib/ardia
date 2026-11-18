@@ -43,7 +43,8 @@ named in `apps/linux` `test:host`.
 
 The Linux suites run with `bun run --cwd apps/linux test:host`, `test:symbols`, `test:graph` and
 `acceptance:self-test`; `scripts/linux/ci-checks.sh` runs them all. The acceptance suite against a packaged build is
-`bun run acceptance:linux <executable> [uiDir]` from the repository root ([linux-acceptance.md](linux-acceptance.md)).
+`bun run acceptance:linux <executable> [uiDir]` from the repository root or `apps/linux`, where relative paths resolve
+against that folder ([linux-acceptance.md](linux-acceptance.md)).
 
 End-to-end checks need a built app and are run by hand. Each runs hidden instances through `scripts/lib/instance.mjs`
 and prints one line per check (PASS/FAIL, ms), a failure's first lines, then a summary with the path of the log that
