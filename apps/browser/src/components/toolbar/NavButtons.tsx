@@ -14,6 +14,7 @@ import type { ToolbarPalette } from "../ui/toolbarColors";
 import { useShortcutHint, withShortcut } from "../../state/commands/commandShortcuts";
 import { GLYPH, HISTORY_GLYPH, HISTORY_BUTTON_MOTION, RELOAD_BUTTON_MOTION, SYMBOL_BOX } from "./tokens";
 import { showReloadMenu } from "../../state/site/reloadMenu";
+import { useReloadBreathe } from "./reloadBreathe";
 
 const ICON_CENTER = { width: GLYPH, height: GLYPH, alignItems: "center" as const, justifyContent: "center" as const };
 const ICON_LAYER = { ...ICON_CENTER, position: "absolute" as const };
@@ -28,7 +29,6 @@ function ReloadSymbol({ name }: { name: "arrow.clockwise" | "xmark" }) {
 const ReloadGlyph = memo(function ReloadGlyph({ loading, color, press }: { loading: boolean; color: string; press: Animated.Value }) {
   const stateMotion = useRef(new Animated.Value(loading ? 1 : 0)).current;
   const returnMotion = useRef(new Animated.Value(0)).current;
-  const breatheMotion = useRef(new Animated.Value(0)).current;
   const previousLoading = useRef(loading);
   const [motionReady, setMotionReady] = useState(() => reduceMotion() !== null);
   const [motionReduced, setMotionReduced] = useState(() => reduceMotion() === true);
@@ -74,20 +74,7 @@ const ReloadGlyph = memo(function ReloadGlyph({ loading, color, press }: { loadi
       Animated.timing(returnMotion, { toValue: 0, duration: RELOAD_BUTTON_MOTION.stateOut, easing: curve.enter, useNativeDriver: true }),
     ]).start();
   }, [loading, motionReduced, returnMotion, stateMotion]);
-  useEffect(() => {
-    if (!loading || !motionReady || motionReduced) return;
-    const halfCycle = RELOAD_BUTTON_MOTION.breatheCycle / 2;
-    const breathe = Animated.loop(Animated.sequence([
-      Animated.timing(breatheMotion, { toValue: 1, duration: halfCycle, easing: curve.pulse, useNativeDriver: true }),
-      Animated.timing(breatheMotion, { toValue: 0, duration: halfCycle, easing: curve.pulse, useNativeDriver: true }),
-    ]));
-    breathe.start();
-    return () => {
-      breathe.stop();
-      breatheMotion.stopAnimation();
-      breatheMotion.setValue(0);
-    };
-  }, [breatheMotion, loading, motionReady, motionReduced]);
+  const breathe = useReloadBreathe(loading && motionReady && !motionReduced);
   const layers = useMemo(() => {
     const reload = {
       opacity: stateMotion.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
@@ -97,23 +84,19 @@ const ReloadGlyph = memo(function ReloadGlyph({ loading, color, press }: { loadi
       ],
     };
     const stop = { opacity: stateMotion, transform: [{ scale: stateMotion.interpolate({ inputRange: [0, 1], outputRange: [RELOAD_BUTTON_MOTION.hiddenScale, 1] }) }] };
-    const breathe = {
-      opacity: breatheMotion.interpolate({ inputRange: [0, 1], outputRange: [...RELOAD_BUTTON_MOTION.breatheOpacity] }),
-      transform: [{ scale: breatheMotion.interpolate({ inputRange: [0, 1], outputRange: [...RELOAD_BUTTON_MOTION.breatheScale] }) }],
-    };
     return (
       <Animated.View style={[ICON_CENTER, { transform: [{ scale: press }] }]}>
         <Animated.View pointerEvents="none" style={[ICON_LAYER, reload]}>
           <ReloadSymbol name="arrow.clockwise" />
         </Animated.View>
         <Animated.View pointerEvents="none" style={[ICON_LAYER, stop]}>
-          <Animated.View style={[ICON_CENTER, breathe]}>
+          <Animated.View ref={breathe.ref} style={[ICON_CENTER, breathe.style]}>
             <ReloadSymbol name="xmark" />
           </Animated.View>
         </Animated.View>
       </Animated.View>
     );
-  }, [press, stateMotion, returnMotion, breatheMotion]);
+  }, [press, stateMotion, returnMotion, breathe.ref, breathe.style]);
   return <ReloadGlyphColor.Provider value={color}>{layers}</ReloadGlyphColor.Provider>;
 });
 
