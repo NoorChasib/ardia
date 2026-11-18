@@ -139,7 +139,7 @@ public final class AppUpdater: NSObject {
     return "\(version[..<range.lowerBound]) Nightly \(number)"
   }
 
-  static let aboutNotice = "© 2026 Mantra Patel. Ardia is free software under the GNU General Public License v3, with ABSOLUTELY NO WARRANTY. Its source is at the link below. It's built on Chromium and uBlock Origin, each under its own license."
+  static let aboutNotice = "© 2026 Noor Chasib. Based on Ardia, © 2026 Mantra Patel. Nilla is free software under the GNU General Public License v3, with ABSOLUTELY NO WARRANTY. Its source is at the link below. It's built on Chromium, Helium and uBlock Origin, each under its own license."
 
   @objc public func showAbout(_ sender: Any?) {
     NSApp.orderFrontStandardAboutPanel(options: [.applicationVersion: Self.displayVersion, .credits: Self.aboutCredits])
@@ -147,7 +147,7 @@ public final class AppUpdater: NSObject {
 
   private static var aboutCredits: NSAttributedString {
     let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-    let repository = "https://github.com/mantrakp04/ardia"
+    let repository = ServicesConfig.sourceURL.absoluteString
     let centered = NSMutableParagraphStyle()
     centered.alignment = .center
     let plain: [NSAttributedString.Key: Any] = [

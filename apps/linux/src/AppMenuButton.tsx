@@ -13,6 +13,8 @@ import { linuxCapabilities, unavailableCommands } from "./hostCapabilities";
 import { videoTourUrl } from "../../browser/src/state/onboarding/tour";
 import { showToast } from "../../browser/src/state/app/toasts";
 import { engineInfo, systemInfo } from "../../browser/src/platform/app";
+import { openUrls } from "../../browser/src/state/browser/actions";
+import { BASED_ON_ARDIA, LEGAL_NOTICE, sourceRepositoryUrl } from "../../browser/src/state/app/legalNotice";
 import "./linkShareSurface";
 
 const hiddenCommands = () => {
@@ -26,7 +28,11 @@ const hiddenCommands = () => {
 async function showAbout(windowId: string) {
   const { appName, appVersion, appBuild } = systemInfo();
   const engine = await engineInfo().catch(() => null);
-  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, engine?.chromiumVersion ? `ArdiaCore on Chromium ${engine.chromiumVersion}` : undefined);
+  const chromium = engine?.chromiumVersion ? `Chromium ${engine.chromiumVersion}. ` : "";
+  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, `${chromium}${LEGAL_NOTICE} ${BASED_ON_ARDIA} Source: ${sourceRepositoryUrl()}`, {
+    sticky: true,
+    action: { title: "Licenses", run: () => openUrls(["chrome://credits"], windowId) },
+  });
 }
 
 export async function openAppMenu(windowId: string, button: HTMLElement) {
