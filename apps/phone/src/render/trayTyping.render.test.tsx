@@ -1,6 +1,8 @@
 import { act } from "react-test-renderer";
 import { DesignProvider, appDesign } from "../components/ui";
 import { SearchTray } from "../components/search/SearchTray";
+import * as url from "../lib/url";
+import type { SyncedView } from "../platform/sync";
 import * as perf from "../state/app/interactionPerf";
 import * as browse from "../state/browse/store";
 import { history } from "../state/history/store";
@@ -79,5 +81,44 @@ test("remote suggestions that arrive redraw only the rows they changed", async (
   const changed = after.filter((row, index) => row !== before[index]).length;
   expect(after.filter((row) => before.includes(row)).length).toBeGreaterThan(0);
   expect(rowRenders).toBe(changed);
+  unmount(root);
+});
+
+const macView = (tabs: number): SyncedView =>
+  ({
+    devices: [{ id: "mac", name: "MacBook Pro", kind: "mac", lastSeen: 1, isCurrent: false, canReceiveTabs: true }],
+    profiles: [
+      {
+        syncId: "work",
+        name: "Work",
+        color: null,
+        icon: null,
+        isDefault: true,
+        theme: null,
+        deviceTabs: [{ deviceId: "mac", deviceName: "MacBook Pro", kind: "mac", tabs: Array.from({ length: tabs }, (_, i) => ({ url: `https://mac${i}.example/page`, title: `Mac ${i}` })) }],
+        pinned: { tiles: [], sections: [] },
+        bookmarks: [],
+        history: [],
+        sendTargets: null,
+      },
+    ],
+    search: null,
+    syncedAt: 1,
+    selectedProfileId: "work",
+    receivers: [],
+  }) as unknown as SyncedView;
+
+test("typing with 200 Mac tabs synced reads each Mac tab's address once, not once per keystroke", async () => {
+  global.fetch = jest.fn(() => Promise.reject(new Error("offline"))) as unknown as typeof fetch;
+  act(() => useSync.setState({ status: { ...OFF_STATUS, isEnabled: true, phase: "updated", selectedProfileId: "work" }, view: macView(200) }));
+  const root = openTray();
+  const keys = jest.spyOn(url, "landingKey");
+  const word = "otter";
+  for (let i = 1; i <= word.length; i++) {
+    act(() => typeSearch(word.slice(0, i)));
+    await settle(16);
+  }
+  const macKeys = keys.mock.calls.filter(([address]) => address.startsWith("https://mac")).length;
+  expect(macKeys).toBe(200);
   unmount(root);
 });

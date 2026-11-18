@@ -161,14 +161,26 @@ export function syncedBookmarks(profile: SyncedProfile): readonly SyncedBookmark
   return next;
 }
 
-export function macTabIndex(profile: SyncedProfile | null, devices: readonly SyncedDevice[]): Map<string, string> {
+function buildMacTabIndex(profile: SyncedProfile | null, devices: readonly SyncedDevice[]): Map<string, string> {
   const index = new Map<string, string>();
   if (!profile) return index;
   const current = new Set(devices.filter((d) => d.isCurrent).map((d) => d.id));
   for (const device of profile.deviceTabs) {
     if (device.kind !== "mac" || current.has(device.deviceId)) continue;
-    for (const tab of device.tabs) if (!index.has(landingKey(tab.url))) index.set(landingKey(tab.url), device.deviceName);
+    for (const tab of device.tabs) {
+      const key = landingKey(tab.url);
+      if (!index.has(key)) index.set(key, device.deviceName);
+    }
   }
+  return index;
+}
+
+let lastMacIndex: { profile: SyncedProfile | null; devices: readonly SyncedDevice[]; index: ReadonlyMap<string, string> } | null = null;
+
+export function macTabIndex(profile: SyncedProfile | null, devices: readonly SyncedDevice[]): ReadonlyMap<string, string> {
+  if (lastMacIndex && lastMacIndex.profile === profile && lastMacIndex.devices === devices) return lastMacIndex.index;
+  const index = buildMacTabIndex(profile, devices);
+  lastMacIndex = { profile, devices, index };
   return index;
 }
 
