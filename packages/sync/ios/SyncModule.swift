@@ -344,8 +344,8 @@ public class SyncModule: Module {
 
   static var defaultFolder: URL {
     if let testFolder { return testFolder }
-    if let dataDirectory { return dataDirectory.appendingPathComponent("Ardia Sync", isDirectory: true) }
-    return SyncFolder.iCloudDrive.appendingPathComponent("Ardia Sync", isDirectory: true)
+    if let dataDirectory { return dataDirectory.appendingPathComponent("Nilla Sync", isDirectory: true) }
+    return SyncFolder.iCloudDrive.appendingPathComponent("Nilla Sync", isDirectory: true)
   }
 
   static let keyStore: SyncKeyStore = dataDirectory.map { FileKeyStore(directory: $0) } ?? KeychainKeyStore()

@@ -14,11 +14,11 @@ class SyncKeysTest {
     @Test
     fun theFormatIsUnchanged() {
         val zero = SyncKeys(ByteArray(32))
-        assertEquals("gbcx4r55mk3rlaegbggknyx4ta", zero.chainTag)
-        assertEquals("nr4ncp5iyqzqgjn6ol4zksqtne", zero.scopeTag("app"))
+        assertEquals("d7edxrj7vwlaygcfhaqnqlb544", zero.chainTag)
+        assertEquals("cmuewgnqxzle7emjmpiisvntxi", zero.scopeTag("app"))
         val fixtures = File(System.getProperty("ardia.syncFixtures") ?: error("ardia.syncFixtures isn't set"))
-        val sealed = Base64.getDecoder().decode(File(fixtures, "sealed-0.2.32.b64").readText().trim())
-        assertArrayEquals("from 0.2.32".toByteArray(), zero.open(sealed, zero.scopeTag("app"), "f1"))
+        val sealed = Base64.getDecoder().decode(File(fixtures, "sealed-nilla-0.1.b64").readText().trim())
+        assertArrayEquals("from nilla 0.1".toByteArray(), zero.open(sealed, zero.scopeTag("app"), "f1"))
     }
 
     @Test

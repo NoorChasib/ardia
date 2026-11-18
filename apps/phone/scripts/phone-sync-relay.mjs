@@ -289,7 +289,7 @@ function options(argv) {
   const savedFile = path.join(found.work, "relay.json");
   const saved = fs.existsSync(savedFile) ? JSON.parse(fs.readFileSync(savedFile, "utf8")) : {};
   const merged = { ...saved, ...Object.fromEntries(Object.entries(found).filter(([, v]) => v !== undefined)) };
-  return { ...merged, every: merged.every ?? 3, adb: merged.adb ?? "adb", phoneFolder: merged.phoneFolder ?? "/sdcard/Documents/Ardia Sync" };
+  return { ...merged, every: merged.every ?? 3, adb: merged.adb ?? "adb", phoneFolder: merged.phoneFolder ?? "/sdcard/Documents/Nilla Sync" };
 }
 
 const alive = (pid) => {

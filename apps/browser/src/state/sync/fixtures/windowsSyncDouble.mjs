@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, s
 import { join } from "node:path";
 import { base32, isTag } from "../../../../../../packages/expo-windows/src/sync/base32.ts";
 
-const MAGIC = Buffer.from("NNS1");
-const SALT = Buffer.from("netnyahoo-sync/v1");
+const MAGIC = Buffer.from("NLS1");
+const SALT = Buffer.from("nilla-sync/v1");
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32BE(n);

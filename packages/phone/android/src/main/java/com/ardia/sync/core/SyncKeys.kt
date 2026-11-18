@@ -81,8 +81,8 @@ class SyncKeys(entropy: ByteArray) {
     }
 
     companion object {
-        val MAGIC = "NNS1".toByteArray()
-        private val SALT = "netnyahoo-sync/v1".toByteArray()
+        val MAGIC = "NLS1".toByteArray()
+        private val SALT = "nilla-sync/v1".toByteArray()
         const val PADDING = 1024
         private const val PASSWORD_PADDING = 32
         private const val PASSWORD_VERSION: Byte = 1

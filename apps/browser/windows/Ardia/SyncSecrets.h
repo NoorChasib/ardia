@@ -27,7 +27,7 @@ namespace Ardia::SyncSecrets {
 
 using SyncCrypto::WipedBytes;
 
-constexpr std::string_view KeyPurpose = "ardia-sync-key/v1";
+constexpr std::string_view KeyPurpose = "nilla-sync-key/v1";
 constexpr std::string_view TestInstancePurpose = "/test-instance";
 
 inline bool IsAccountName(std::string const &account) noexcept {
@@ -57,7 +57,7 @@ inline bool SaveKey(std::string const &account, WipedBytes const &entropy) noexc
     DATA_BLOB plain{static_cast<DWORD>(entropy.size()), const_cast<BYTE *>(entropy.data())};
     DATA_BLOB extra{static_cast<DWORD>(purpose.size()), reinterpret_cast<BYTE *>(purpose.data())};
     DATA_BLOB sealed{};
-    if (!CryptProtectData(&plain, L"Ardia sync key", &extra, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &sealed)) return false;
+    if (!CryptProtectData(&plain, L"Nilla sync key", &extra, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &sealed)) return false;
     std::string bytes(reinterpret_cast<char const *>(sealed.pbData), sealed.cbData);
     LocalFree(sealed.pbData);
     std::error_code error;

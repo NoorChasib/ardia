@@ -175,7 +175,7 @@ export function SyncPage() {
         </Group>
       ) : null}
       {status.attention === "folder" ? (
-        <Group footer="Choose the Ardia Sync folder again.">
+        <Group footer="Choose the Nilla Sync folder again.">
           <ButtonRow title="Choose Folder…" onPress={() => void chooseFolder()} />
         </Group>
       ) : null}
@@ -217,7 +217,7 @@ export function SyncPage() {
           ) : null}
           <DeviceName current={status.deviceName} />
           <Group header="Sync Folder" footer={folderError ?? "Encrypted so only your devices can read it."}>
-            <ValueRow title="Folder" value={status.folderName ?? "Ardia Sync"} divider />
+            <ValueRow title="Folder" value={status.folderName ?? "Nilla Sync"} divider />
             <ButtonRow title="Change Folder…" onPress={() => void chooseFolder()} />
           </Group>
           <Group footer={copy().stopSyncingFooter}>

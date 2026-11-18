@@ -91,7 +91,7 @@ class FakeDevice(var enabledOnStart: Boolean = true) : SyncDevice {
         isEnabled = true
         isRunning = true
         phase = SyncPhase.Starting
-        folderName = "Ardia Sync"
+        folderName = "Nilla Sync"
     }
 
     override fun start() {

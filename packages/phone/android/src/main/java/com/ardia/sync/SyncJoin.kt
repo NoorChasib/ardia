@@ -19,7 +19,7 @@ sealed interface ConnectResult {
             is InvalidPhrase -> problem
             Mismatch -> "This recovery phrase doesn’t match the synced data in this folder. Check the phrase, or choose the folder your other devices sync to."
             NoSyncData -> "There’s no synced data in this folder yet. Choose the folder your other devices sync to, or wait for it to finish downloading."
-            FolderUnavailable -> "Ardia can’t open this folder. Choose the Ardia Sync folder your Mac syncs to."
+            FolderUnavailable -> "Ardia can’t open this folder. Choose the Nilla Sync folder your Mac syncs to."
             KeyStoreFailed -> "Couldn’t save the sync key on this phone."
             Busy -> "Ardia is still turning off sync. Try again in a moment."
         }

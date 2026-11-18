@@ -268,6 +268,16 @@ final class SyncVectorsTests: XCTestCase {
     XCTAssertEqual(listed.sorted(), committedTree.keys.sorted())
   }
 
+  func testTheNillaVectorOpensWithTheZeroKey() throws {
+    let zero = SyncKeys(entropy: Data(count: 32))
+    XCTAssertEqual(zero.chainTag, "d7edxrj7vwlaygcfhaqnqlb544")
+    XCTAssertEqual(zero.scopeTag("app"), "cmuewgnqxzle7emjmpiisvntxi")
+    let text = try String(contentsOf: Self.root.deletingLastPathComponent().appendingPathComponent("sealed-nilla-0.1.b64"), encoding: .utf8)
+    let sealed = try XCTUnwrap(Data(base64Encoded: text.trimmingCharacters(in: .whitespacesAndNewlines)))
+    XCTAssertEqual(sealed.prefix(4), Data("NLS1".utf8))
+    XCTAssertEqual(try zero.open(sealed, scopeTag: zero.scopeTag("app"), fileId: "f1"), Data("from nilla 0.1".utf8))
+  }
+
   func testRandomNoncesKeepTheFormatAndOpen() throws {
     let inputs = try Self.inputs()
     let keys = Self.keys(inputs, "ordinary")
@@ -276,7 +286,7 @@ final class SyncVectorsTests: XCTestCase {
       let sealed = try keys.seal(plain, scopeTag: keys.scopeTag("app"), fileId: "f")
       let padded = (4 + plain.count + 1023) / 1024 * 1024
       XCTAssertEqual(sealed.count, 4 + 12 + padded + 16, name)
-      XCTAssertEqual(sealed.prefix(4), Data("NNS1".utf8))
+      XCTAssertEqual(sealed.prefix(4), Data("NLS1".utf8))
       XCTAssertEqual(try keys.open(sealed, scopeTag: keys.scopeTag("app"), fileId: "f"), plain)
       XCTAssertNotEqual(try keys.seal(plain, scopeTag: keys.scopeTag("app"), fileId: "f"), sealed)
     }
@@ -419,7 +429,7 @@ final class SyncVectorsTests: XCTestCase {
       for file in mine {
         XCTAssertEqual(file.path, Self.vaultPath(keys, scope: scope, name: "\(file.id).nns"))
         let sealed = try Data(contentsOf: folder.appendingPathComponent(file.path))
-        XCTAssertEqual(sealed.prefix(4), Data("NNS1".utf8))
+        XCTAssertEqual(sealed.prefix(4), Data("NLS1".utf8))
         XCTAssertEqual(try keys.open(sealed, scopeTag: keys.scopeTag(scope), fileId: file.id), Self.payload(inputs, file.payload))
         XCTAssertThrowsError(try keys.open(sealed, scopeTag: keys.scopeTag(scope), fileId: "state"))
       }

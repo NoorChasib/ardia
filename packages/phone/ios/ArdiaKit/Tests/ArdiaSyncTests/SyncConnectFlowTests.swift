@@ -4,7 +4,7 @@ import Testing
 @testable import ArdiaSync
 
 @Suite struct SyncConnectFlowTests {
-  let folder = URL(fileURLWithPath: "/tmp/Ardia Sync")
+  let folder = URL(fileURLWithPath: "/tmp/Nilla Sync")
   let right = RecoveryPhrase.words(for: RecoveryPhrase.generateEntropy()).joined(separator: " ")
   let wrong = RecoveryPhrase.words(for: RecoveryPhrase.generateEntropy()).joined(separator: " ")
 
