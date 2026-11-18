@@ -105,7 +105,14 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
 ### Tabs and viewports
 
 - **Ownership.** Each real tab stays in Chromium's `TabStripModel`. Releasing a native tab detaches its viewport;
-  only an explicit close ends the tab. Moving or remounting a UI view never closes its tab.
+  only an explicit close ends the tab. Moving or remounting a UI view never closes its tab. A closed view's `HostTab`
+  goes as soon as `tab.release` answers, whatever the answer (`hostTab.ts`). When the engine refuses the release (`No
+  owned live tab`, or any other error), the window keeps only that key's claim string, which the next `tab.create` for
+  the key sends as `previousClaim`; it goes when the key is created again, released, or closed (`tab.close` in
+  `hostTabLifecycle.ts` calls `forgetClosedTabClaim`). Each window has one `onEvent` subscription for page events,
+  which hands an event to the one tab whose claim it carries (`hostPageEvents.ts` turns away other claims before
+  reading anything else), so an event costs the same at any tab count. `usage_counts` `host_tab_releases`,
+  `host_tab_releases_already_closed` and `host_tab_releases_failed` count the answers.
 - **Reopened and duplicated tabs.** As on macOS, every tab of a regular profile is tagged with its key
   (`ac_tab_restore_tag`), so Chromium's `TabRestoreService` keeps the key with a closed tab's navigations. Tabs in
   private windows and temporary web views (a `WebView` with no tab id) aren't tagged. Reopening a closed tab or window
@@ -118,17 +125,48 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   browser overlays and clip themselves.
 - **Tracking.** `watchTabViewport` measures a page's rectangle, overlays and coverage only when something changes: a
   DOM mutation, a resize, scroll or visibility change, a CSS transition or animation, or a page's own presentation
-  change (`refreshTabViewports`). One coordinator serves every tab: one document observer, one set of listeners and
-  at most one animation frame, in which only tabs shown now or in their last report are measured and the input
-  regions flush once for the pass; an overlay's own mutation still flushes at once so it is held back before it paints.
-  A hidden tab is measured again on a full refresh, its own refresh or resize, and a document visibility change; a
-  resize whose rect the frame's pass already measured is not reported again. A scroll in something that holds no shown page (the sidebar list) waits for that frame. It keeps
-  measuring each frame only while a running animation targets a shown page's ancestors or an overlay; animations
-  inside `[data-ardia-paint-motion]` (transform or opacity inside a box that doesn't move) don't count. Idle windows run no measuring code;
-  the earlier version polled every frame and used about 5% of a core. Mutation-triggered measures run in the next
-  frame rather than in a later task, so a React commit and the animated transform that offsets it are never seen
-  apart. Each tab keeps at most one `tab.viewport` request in flight; later rectangles replace the queued one, so a
-  busy browser thread can't build up a backlog of stale positions.
+  change (`refreshTabViewports`). Idle windows run no measuring code; the earlier version polled every frame and used
+  about 5% of a core.
+  - **One coordinator** serves every tab (`hostViewport.ts`): one document observer, one `ResizeObserver`, one set of
+    listeners and at most one animation frame. Other per-frame work, such as the input regions' settle frames, runs in
+    that frame after the measuring pass (`requestViewportFrame`).
+  - **Only shown tabs are measured** in that frame: tabs shown now or in their last report, and tabs marked by their
+    own `refreshTabViewports(element)`. A hidden tab is measured again on a full refresh, its own refresh or resize, and
+    a document visibility change. A resize whose rect the frame's pass already measured is not reported again.
+  - **Flushes.** The input regions flush once per pass. An overlay's own mutation still flushes at once, so it is held
+    back before it paints, and a resize the pass didn't see flushes once more: flushes per frame are bounded by those
+    sources, never by the tab count. Hidden slots get no holes.
+  - **Scrolls.** A scroll in something that holds a shown page measures that page at once. A scroll anywhere else (the
+    sidebar list) waits for the frame.
+  - **Animations.** It keeps measuring each frame only while a running animation targets a shown page's ancestors or
+    an overlay. Animations inside `[data-ardia-paint-motion]` (transform or opacity inside a box that doesn't move)
+    don't count; see Loading motion below.
+  - **Ordering.** Mutation-triggered measures run in the next frame rather than in a later task, so a React commit and
+    the animated transform that offsets it are never seen apart. Each tab keeps at most one `tab.viewport` request in
+    flight; later rectangles replace the queued one, so a busy browser thread can't build up a backlog of stale
+    positions.
+  - **Hidden panes leave layout.** `main.tsx` calls `setHiddenPanesDetached(true)`, so a pane that isn't visible, warm,
+    lingering or prewarmed gets `display: none` (`state/windows/paneHiding.ts`; macOS and Windows never opt in). Its
+    web view stays mounted and its page stays bound, but the pane costs no layout or hit testing
+    (`elementFromPoint` through 99 hidden panes was most of the per-frame cost left at 100 tabs). Its slot measures
+    0×0 and reports `visible: false`; the engine already unbinds a hidden pane's page, so the rect is never used.
+    Nothing inside a hidden pane may depend on its own layout (`onLayout` reads 0×0 there).
+- **Switching ahead.** A tab switch shows the next page in the shown page's place from the store subscription, before
+  React commits (`tabSwitchAhead.ts`, `showInPlaceOf`). The next pane is still out of layout then, so the shown page
+  keeps its input region until the next pane is laid out, and its own watcher drops it after the commit; every region
+  flush in between finds exactly one page at the card's rect. A warm or lingering next pane, already laid out, swaps
+  at once.
+- **Loading motion.** The loading pill's sweep (`LoadingPill.tsx`) and the reload button's breathe (`reloadBreathe.ts`)
+  are WAAPI loops on the compositor (`paintMotion.ts`), not JS-driven `Animated` loops, so a loading tab costs the shell
+  no frames. Their layers carry `data-ardia-paint-motion`, which the viewport coordinator and the input regions skip.
+  Reduce Motion turned on mid-load ends the sweep after the cycle it is in, each pill with its own `matchMedia`
+  listener. macOS and Windows keep the shared `Animated` versions.
+- **Shell counts.** `usage_counts` carries the Linux shell's own work once an hour (`state/telemetry/shellCounts.ts`,
+  sources added from `shellAbove.ts` and `main.tsx`, sent only from a window that has applied sharing itself):
+  `linux_viewport_frames`, `linux_viewport_measures`, `linux_region_flushes`, `linux_region_sends`,
+  `linux_long_frames`, `linux_long_frame_ms`, `linux_switch_aheads`, `linux_switch_regions_held` and
+  `linux_compositor_load_loops`. Flushes per viewport frame should stay about 1, measures per frame about the number of
+  shown panes, held regions per switch-ahead near 1, and long frames shouldn't rise with the tab count.
 - **Overlays.** The shell WebView sits above the page views and is transparent over them (`ShellHostView::Restack`,
   `ShellTransparency`), so menus, hover cards, popovers, the command panel and the sidebar peek draw straight over the
   live page, as on the Mac. Each overlay registers an input region (`useInputRegion`); the shell sends

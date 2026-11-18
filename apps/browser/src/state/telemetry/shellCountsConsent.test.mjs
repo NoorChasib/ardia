@@ -7,9 +7,9 @@ const { save, isSharing } = await import("./choice.ts");
 await import("./consentBoundary.ts");
 const { setTelemetryRelay } = await import("./relay.ts");
 const { USAGE_COUNTS_EVENT, withHourlyExtras } = await import("./hourlyExtras.ts");
-const { setShellFrameCountSource } = await import("./shellFrameCounts.ts");
+const { addShellCountSource } = await import("./shellCounts.ts");
 
-const CHANNEL = "ardia-test-shell-frame-consent";
+const CHANNEL = "ardia-test-shell-count-consent";
 const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
 function leaderWindow() {
@@ -31,10 +31,15 @@ function followerWindow() {
     change: () => {},
     installId: () => "id",
   });
-  const recorded = { frames: 0, longFrames: 0, longFrameMs: 0 };
-  setShellFrameCountSource(() => {
+  const recorded = { frames: 0, longFrames: 0, longFrameMs: 0, switches: 0 };
+  const removeFrames = addShellCountSource("frames", () => {
     const counts = { linux_viewport_frames: recorded.frames, linux_long_frames: recorded.longFrames, linux_long_frame_ms: recorded.longFrameMs };
     Object.assign(recorded, { frames: 0, longFrames: 0, longFrameMs: 0 });
+    return counts;
+  });
+  const removeSwitches = addShellCountSource("switchAhead", () => {
+    const counts = { linux_switch_aheads: recorded.switches };
+    recorded.switches = 0;
     return counts;
   });
   return {
@@ -45,10 +50,12 @@ function followerWindow() {
         recorded.longFrameMs += longMs;
       }
     },
+    switchAhead: () => void recorded.switches++,
     flushUsage: () => withHourlyExtras(() => {}),
     refreshConsent: (sharing) => save(sharing ? { sharing: true, installId: "id" } : { sharing: false, installId: null }),
     close: () => {
-      setShellFrameCountSource(null);
+      removeFrames();
+      removeSwitches();
       setTelemetryRelay(null);
       channel.close();
     },
@@ -57,13 +64,14 @@ function followerWindow() {
 
 const shellCounts = (queue) => queue.filter(({ event }) => event === USAGE_COUNTS_EVENT).map(({ props }) => Object.fromEntries(Object.entries(props).filter(([key]) => key.startsWith("linux_"))));
 
-test("a follower window's frames from before it applies opt-in never reach the leader's queue; its first eligible frame does", async () => {
+test("a follower window's shell counts from before it applies opt-in never reach the leader's queue; its first eligible ones do", async () => {
   const leader = leaderWindow();
   const follower = followerWindow();
   try {
     follower.refreshConsent(false);
     for (let frame = 0; frame < 8; frame++) follower.frame();
     follower.frame(78);
+    follower.switchAhead();
     leader.sharing = true;
     assert.equal(isSharing(), false, "the follower hasn't refreshed its choice yet");
     follower.flushUsage();
@@ -71,11 +79,13 @@ test("a follower window's frames from before it applies opt-in never reach the l
     assert.deepEqual(shellCounts(leader.queue).filter((counts) => Object.keys(counts).length), [], "the hourly flush or close before the refresh relays none of the off-window counts");
 
     follower.frame(40);
+    follower.switchAhead();
     follower.refreshConsent(true);
     follower.frame(55);
+    follower.switchAhead();
     follower.flushUsage();
     await settle();
-    assert.deepEqual(shellCounts(leader.queue).at(-1), { linux_viewport_frames: 1, linux_long_frames: 1, linux_long_frame_ms: 55 }, "only the frame after the refresh is counted");
+    assert.deepEqual(shellCounts(leader.queue).at(-1), { linux_viewport_frames: 1, linux_long_frames: 1, linux_long_frame_ms: 55, linux_switch_aheads: 1 }, "only the frame and switch after the refresh are counted");
   } finally {
     follower.close();
     leader.close();

@@ -2,7 +2,6 @@ import { capture as send } from "./client";
 import { isSharing } from "./choice";
 import { takeDownloadsPanelCauses } from "./downloadsPanelCauses";
 import { takeSessionWrites } from "./sessionWrites";
-import { takeShellFrameCounts } from "./shellFrameCounts";
 import { takeEditKeyAckCounts } from "./editKeyAcks";
 import { takeExportCounts } from "./exportCounts";
 import { takeDevToolsKeyCounts } from "./devToolsKeyCounts";
@@ -19,6 +18,7 @@ import { takePagerCounts } from "./pagerCounts";
 import { takePlatformCounts, watchPlatformCounts } from "./platformCounts";
 import { takeProfileDataCounts } from "./profileDataCounts";
 import { takeQuitWarningCounts } from "./quitWarningCounts";
+import { takeShellCounts } from "./shellCounts";
 import { takeSwipeHistoryListCounts } from "./swipeHistoryListCounts";
 import { takeSyncFileCounts } from "./syncFileCounts";
 import { takeTabReleaseCounts } from "./tabReleaseCounts";
@@ -27,7 +27,7 @@ export { watchPlatformCounts };
 
 export const USAGE_COUNTS_EVENT = "usage_counts";
 
-export const takeHourlyExtras = () => ({ ...takePlatformCounts(), ...takeImportRuns(), ...takeArcImportCounts(), ...takeProfileDataCounts(), ...takeExportCounts(), ...takeInlineCompletionCounts(), ...takeFirstRunCounts(), ...takeMemoryTrimCounts(), ...takeDownloadsPanelCauses(), ...takeExternalAppCounts(), ...takeDialogPageCounts(), ...takeFindCounts(), ...takeSyncFileCounts(), ...takeKeyboardFollowCounts(), ...takePagerCounts(), ...takeSwipeHistoryListCounts(), ...takeEditKeyAckCounts(), ...takeQuitWarningCounts(), ...takeInputSourceKeyCounts(), ...takeDevToolsKeyCounts(), ...takeSessionWrites(), ...takeShellFrameCounts(isSharing()), ...takeTabReleaseCounts() });
+export const takeHourlyExtras = () => ({ ...takePlatformCounts(), ...takeImportRuns(), ...takeArcImportCounts(), ...takeProfileDataCounts(), ...takeExportCounts(), ...takeInlineCompletionCounts(), ...takeFirstRunCounts(), ...takeMemoryTrimCounts(), ...takeDownloadsPanelCauses(), ...takeExternalAppCounts(), ...takeDialogPageCounts(), ...takeFindCounts(), ...takeSyncFileCounts(), ...takeKeyboardFollowCounts(), ...takePagerCounts(), ...takeSwipeHistoryListCounts(), ...takeEditKeyAckCounts(), ...takeQuitWarningCounts(), ...takeInputSourceKeyCounts(), ...takeDevToolsKeyCounts(), ...takeSessionWrites(), ...takeShellCounts(isSharing()), ...takeTabReleaseCounts() });
 
 type Send = typeof send;
 

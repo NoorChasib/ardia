@@ -7,7 +7,6 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 import { build } from "vite";
 import { inputAdapters, rawBookmarkAdapter } from "../inputAdapters.ts";
-import "../src/paintMotion.test.mjs";
 
 const nodeBinary = process.versions.bun ? "node" : process.execPath;
 

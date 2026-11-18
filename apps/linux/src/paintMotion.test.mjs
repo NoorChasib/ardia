@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { breatheKeyframes, breatheTiming, createPillMotion, growKeyframes, onReduceMotion, PAINT_MOTION, PAINT_MOTION_ATTRIBUTE, sweepCycle, sweepKeyframes } from "./paintMotion.ts";
+import { breatheKeyframes, breatheTiming, createPillMotion, growKeyframes, loopOnCompositor, onReduceMotion, PAINT_MOTION, PAINT_MOTION_ATTRIBUTE, PAINT_MOTION_SELECTOR, sweepCycle, sweepKeyframes, takeCompositorLoopCounts } from "./paintMotion.ts";
 
 const SPEC = {
   travel: 128,
@@ -276,4 +276,24 @@ test("the reload breathe is one infinite loop between the token bounds", () => {
 test("the paint-motion data set renders as the attribute the viewport watchers ignore", () => {
   const [key] = Object.keys(PAINT_MOTION);
   assert.equal(`data-${key.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`, PAINT_MOTION_ATTRIBUTE);
+});
+
+test("the viewport watchers' selector matches the attribute the paint-motion layers carry", () => {
+  assert.equal(PAINT_MOTION_SELECTOR, `[${PAINT_MOTION_ATTRIBUTE}]`);
+});
+
+test("each looping sweep and breathe counts once as a compositor load loop; a reduced grow and a fade count none", () => {
+  takeCompositorLoopCounts();
+  const { motion, fire } = stage();
+  motion.show(false);
+  motion.leave(() => {});
+  fire();
+  motion.show(true);
+  motion.show(false);
+  motion.stop();
+  const log = [];
+  loopOnCompositor(fakeElement("breathe", log), breatheKeyframes({ cycle: 1420, opacity: [0.86, 1], scale: [0.96, 1.06], easing: "linear(0, 1)" }), { duration: 1420, iterations: Infinity });
+  assert.deepEqual(log, ["breathe.animate"]);
+  assert.deepEqual(takeCompositorLoopCounts(), { linux_compositor_load_loops: 3 });
+  assert.deepEqual(takeCompositorLoopCounts(), { linux_compositor_load_loops: 0 });
 });

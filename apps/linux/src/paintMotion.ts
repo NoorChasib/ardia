@@ -1,8 +1,22 @@
 export const PAINT_MOTION_ATTRIBUTE = "data-ardia-paint-motion";
 export const PAINT_MOTION = { ardiaPaintMotion: "" };
+export const PAINT_MOTION_SELECTOR = `[${PAINT_MOTION_ATTRIBUTE}]`;
 
 export type Timing = { duration: number; easing: string };
 export type Animatable = { animate(keyframes: Keyframe[], options: KeyframeAnimationOptions): Animation };
+
+let compositorLoops = 0;
+
+export function loopOnCompositor(target: Animatable, keyframes: Keyframe[], options: KeyframeAnimationOptions) {
+  compositorLoops++;
+  return target.animate(keyframes, options);
+}
+
+export function takeCompositorLoopCounts() {
+  const counts = { linux_compositor_load_loops: compositorLoops };
+  compositorLoops = 0;
+  return counts;
+}
 
 export type SweepMotion = { travel: number; sweep: Timing; rest: number };
 export type PillMotionSpec = SweepMotion & { show: Timing; hide: Timing; leaveScale: number };
@@ -93,7 +107,7 @@ export function createPillMotion(deps: PillDeps, spec: PillMotionSpec) {
       cyclic = !reduced;
       sweep = reduced
         ? deps.fill.animate(growKeyframes(spec), { ...spec.sweep, fill: "forwards" })
-        : deps.fill.animate(sweepKeyframes(spec), { duration: cycle, iterations: Infinity });
+        : loopOnCompositor(deps.fill, sweepKeyframes(spec), { duration: cycle, iterations: Infinity });
     },
     leave(gone: () => void) {
       cancelLeave();

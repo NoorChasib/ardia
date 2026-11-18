@@ -1,6 +1,6 @@
 import { createContext, useContext, useLayoutEffect, type RefObject } from "react";
 import { hostSupports, INPUT_REGIONS_METHOD, invokeHost, reportHostError, type ArdiaHost } from "./host.ts";
-import { setShellFrameCountSource } from "../../browser/src/state/telemetry/shellFrameCounts";
+import { addShellCountSource } from "../../browser/src/state/telemetry/shellCounts";
 import { paintsOnly, requestViewportFrame, viewportCounts } from "./hostViewport.ts";
 import { createInputRegions, type InputRegionsRegistry, type RegionDeps, type RegionShape } from "./inputRegions.ts";
 import { createPageHoles, type PageHoles } from "./pageHoles.ts";
@@ -112,7 +112,7 @@ export function startShellAbove(host: ArdiaHost, root: HTMLElement = document.bo
   holes = painter;
   regions = registry;
   const frames = shellFrameCounts(registry, viewportCounts);
-  setShellFrameCountSource(frames.take);
+  const removeFrameCounts = addShellCountSource("frames", frames.take);
   const refresh = () => registry.refresh();
   window.addEventListener("resize", refresh);
   window.addEventListener("scroll", refresh, true);
@@ -122,7 +122,7 @@ export function startShellAbove(host: ArdiaHost, root: HTMLElement = document.bo
     document.documentElement.classList.remove(SHELL_ABOVE_CLASS);
     glass.stop();
     frames.stop();
-    setShellFrameCountSource(null);
+    removeFrameCounts();
     if (regions === registry) regions = null;
     if (holes === painter) holes = null;
   };

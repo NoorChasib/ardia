@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, type RefCallback } from "react";
 import { curve } from "../../browser/src/components/ui/motion";
 import { cssEasing } from "../../browser/src/components/ui/cssMotion";
 import { RELOAD_BUTTON_MOTION } from "../../browser/src/components/toolbar/tokens";
-import { breatheKeyframes, breatheTiming, PAINT_MOTION_ATTRIBUTE, type BreatheSpec } from "./paintMotion";
+import { breatheKeyframes, breatheTiming, loopOnCompositor, PAINT_MOTION_ATTRIBUTE, type BreatheSpec } from "./paintMotion";
 
 const BREATHE: BreatheSpec = {
   cycle: RELOAD_BUTTON_MOTION.breatheCycle,
@@ -23,7 +23,7 @@ export function useReloadBreathe(breathing: boolean): { style: object; ref?: Ref
   useEffect(() => {
     const element = node.current;
     if (!breathing || !element?.animate) return;
-    const loop = element.animate(KEYFRAMES, TIMING);
+    const loop = loopOnCompositor(element, KEYFRAMES, TIMING);
     return () => loop.cancel();
   }, [breathing]);
   return { style: RESTING, ref };

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createInputRegions } from "./inputRegions.ts";
-import { PAINT_MOTION, STACKED_PAGE, refreshTabViewports, requestViewportFrame, tabViewport, viewportCounts, watchTabViewport } from "./hostViewport.ts";
+import { PAINT_MOTION_SELECTOR } from "./paintMotion.ts";
+import { STACKED_PAGE, refreshTabViewports, requestViewportFrame, tabViewport, viewportCounts, watchTabViewport } from "./hostViewport.ts";
 
 const GLOBALS = ["window", "document", "getComputedStyle", "ResizeObserver", "requestAnimationFrame", "cancelAnimationFrame", "MutationObserver"];
 const box = (x, y, width, height) => ({ x, y, width, height, left: x, top: y, right: x + width, bottom: y + height });
@@ -382,7 +383,7 @@ test("a scroll in the sidebar waits for the next frame; a scroll in something ho
 test("an animation inside [data-ardia-paint-motion] keeps no frames alive and its motion events ask for none", () => {
   const counts = new Map();
   const page = slot(200, counts);
-  const painted = { closest: (selector) => (selector === PAINT_MOTION ? painted : null), contains: () => true };
+  const painted = { closest: (selector) => (selector === PAINT_MOTION_SELECTOR ? painted : null), contains: () => true };
   let running = painted;
   const s = stage({ width: 1440, height: 900, elementFromPoint: () => page, getAnimations: () => (running ? [{ playState: "running", effect: { target: running } }] : []) });
   let stop = () => {};

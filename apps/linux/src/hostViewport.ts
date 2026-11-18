@@ -1,5 +1,6 @@
 import type { TabViewport } from "./hostTab";
 import { PAGE_STACK_ATTRIBUTE } from "./pageHoles.ts";
+import { PAINT_MOTION_SELECTOR } from "./paintMotion.ts";
 
 export type { TabViewport };
 
@@ -7,7 +8,6 @@ type Bounds = TabViewport["rect"];
 
 const EXTENSION_POPUP_DISMISS = '[data-testid="ardia-extension-popup-dismiss"]';
 export const STACKED_PAGE = `[${PAGE_STACK_ATTRIBUTE}] [data-ardia-native-tab]`;
-export const PAINT_MOTION = "[data-ardia-paint-motion]";
 const MOTION_EVENTS = ["transitionrun", "transitionend", "transitioncancel", "animationstart", "animationend", "animationcancel"] as const;
 
 export type OverlayCover = { overlayAt: (x: number, y: number) => boolean; overlayElements: () => readonly Element[]; overlayRects?: () => readonly Bounds[] };
@@ -27,7 +27,7 @@ const counts = { frames: 0, measures: 0 };
 export const viewportCounts = () => ({ ...counts, watchers: watchers.size });
 
 export function paintsOnly(target: Element) {
-  return typeof target.closest === "function" && target.closest(PAINT_MOTION) !== null;
+  return typeof target.closest === "function" && target.closest(PAINT_MOTION_SELECTOR) !== null;
 }
 
 export function movingTargets(): Element[] {
