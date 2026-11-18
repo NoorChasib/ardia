@@ -6,12 +6,15 @@ const stub = await import("../../test-native/index.ts");
 Object.assign(stub.appInfo, { appVersion: "0.3.0", appBuild: "300", osVersion: "27.0.1", arch: "arm64", isolatedInstance: false });
 stub.docs.set("telemetry.json", JSON.stringify({ version: 1, sharing: true, decidedAt: 1, askDoneAt: 1, installId: "install-1", crashCursor: 0, lastVersion: "0.3.0", sessionOpen: false }));
 const requests = [];
+const { overrideServicesForTests, resetServicesForTests } = await import("@ardia/core/src/services.testing.ts");
+const ENDPOINT = { telemetryUrl: "https://logs.example.test/v1/logs", ingestKeys: { app: "app-key", cli: "cli-key", site: "site-key" } };
+overrideServicesForTests(ENDPOINT);
 globalThis.fetch = async (url, init) => (requests.push({ url, ...init }), { status: 200 });
 
 const client = await import("./client.ts");
 const local = await import("./localStore.ts");
-const { sendDailyPing } = await import("./daily.ts");
-const { APP_INGEST_KEY } = await import("@ardia/core");
+const transport = await import("./transport.ts");
+const { requestLog } = await import("./requestLog.ts");
 
 const UUID7 = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const state = () => JSON.parse(stub.docs.get("telemetry.json"));
@@ -41,10 +44,13 @@ test("every event and log line carries the session id, queued and in the local c
   for (const line of stub.telemetryLocal.lines()) assert.match(line, /^\{"at":\d+,"kind":"(event|log)","sent":(true|false),/);
 });
 
-test("posts send the app's ingest key", async () => {
+test("posts go only to the configured endpoint, with its app ingest key", async () => {
   await client.flush();
   assert.ok(requests.length > 0);
-  for (const r of requests) assert.equal(r.headers["X-Ardia-Key"], APP_INGEST_KEY);
+  for (const r of requests) {
+    assert.equal(r.url, ENDPOINT.telemetryUrl);
+    assert.equal(r.headers["X-Ardia-Key"], ENDPOINT.ingestKeys.app);
+  }
 });
 
 test("local writes are batched: nothing reaches the store until 10 s pass, then one append per day", (t) => {
@@ -85,10 +91,26 @@ test("with sharing off events are still built and kept locally, without the inst
   assert.equal(state().installId, "install-1");
 });
 
-test("the daily count stays out of the local copy, so it can't be tied to anything", async () => {
-  await sendDailyPing(Date.parse("2026-11-07T12:00:00Z"));
+test("with no endpoint an opted-in event stays in the local copy and the queue, and the send is reported not sent", async () => {
+  resetServicesForTests();
+  client.setSharing(true, "settings");
+  transport.takePostStats();
+  const posts = requests.length;
+  client.capture("no_endpoint", { x: 1 }, { persist: true });
+  await client.flush();
   local.flushLocal();
-  assert.ok(!stub.telemetryLocal.records().some((r) => r.event === "daily_active"));
+  assert.equal(requests.length, posts);
+  assert.equal(stub.telemetryLocal.records().find((r) => r.event === "no_endpoint").sent, true);
+  client.saveQueueNow();
+  assert.ok(queued().events.some((e) => e.event === "no_endpoint"));
+  const last = requestLog().at(-1);
+  assert.equal(last.status, transport.NOT_SENT);
+  assert.equal(last.dryRun, true);
+  assert.equal(last.url, null);
+  assert.deepEqual(transport.takePostStats(), { bytes: 0, failed: 0, requests: 0 });
+  assert.equal(transport.mayPost(), false);
+  overrideServicesForTests(ENDPOINT);
+  client.setSharing(false, "settings");
 });
 
 test("a line over 256 KB is dropped and counted instead of written", () => {

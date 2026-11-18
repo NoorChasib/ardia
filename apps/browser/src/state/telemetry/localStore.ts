@@ -8,7 +8,7 @@ const MAX_BUFFER_CHARS = 1_000_000;
 export const MAX_LINE_CHARS = 256_000;
 const MAX_FLUSH_SAMPLES = 1_000;
 
-const utcDay = (at: number) => new Date(at).toISOString().slice(0, 10);
+export const utcDay = (at: number) => new Date(at).toISOString().slice(0, 10);
 
 type Pending = { day: string; line: string };
 

@@ -5,7 +5,7 @@ import { EVENTS_SCOPE, eventRecord, LOGS_SCOPE, logRecord, logsRequest, outcome,
 import { cleanProperties } from "./sanitize";
 import type { SavedContext } from "./savedContext";
 import type { RequestLogEntry } from "./requestLog";
-import { appInfo, mayPost, post, telemetryHost } from "./transport";
+import { appInfo, mayPost, NOT_SENT, post, telemetryHost } from "./transport";
 import { telemetryRelay, type AskPlacement, type CaptureOptions, type SharingSource } from "./relay";
 import { uuidv4, uuidv7 } from "./ids";
 import { parseSaved, versionedJson } from "../../lib/savedDocument";
@@ -221,7 +221,7 @@ const eventsBody = (batch: QueuedEvent[]) =>
 
 const logsBody = (batch: OtlpLogRecord[]) => logsRequest(resource(), LOGS_SCOPE, batch);
 
-type DrainResult = "done" | "failed" | "stale";
+type DrainResult = "done" | "failed" | "stale" | "held";
 
 async function drain<T>(
   kind: RequestLogEntry["kind"],
@@ -239,6 +239,7 @@ async function drain<T>(
     }
     const status = await send(kind, body, batch.length);
     if (gen !== generation) return "stale";
+    if (status === NOT_SENT) return "held";
     const result = outcome(status, batch.length);
     if (result === "retry") return "failed";
     if (result === "split") size = Math.ceil(batch.length / 2);
@@ -387,4 +388,4 @@ export const saveContext = (context: SavedContext | null) => saved().sharing && 
 export const crashCursor = () => saved().crashCursor;
 export const advanceCrashCursor = (to: number) => to > saved().crashCursor && save({ crashCursor: to });
 
-export const devState = () => ({ saved: saved(), queued: { events: queue.events.length, logs: queue.logs.length }, droppedWhileOff, canSend: mayPost("events") });
+export const devState = () => ({ saved: saved(), queued: { events: queue.events.length, logs: queue.logs.length }, droppedWhileOff, canSend: mayPost() });

@@ -5,7 +5,9 @@ export const SHARING_COPY = {
   summary: "Crashes, errors, rough feature counts and speed. Never the sites you visit, anything you type or search, or what's in your tabs.",
   whatsSent: "What's Sent",
   footnote:
-    "Sent to ardia.dev with a random ID made on this Mac, and kept on our own servers. No third parties. Turning this off stops it at once and deletes anything waiting to be sent. This setting doesn't sync.",
+    "Sent only to a server this build is set up to use, with a random ID made on this Mac. This build has none, so nothing leaves this Mac. Turning this off stops it at once and deletes anything waiting to be sent. This setting doesn't sync.",
+  noServer: "Nilla sends no usage data.",
+  noServerDetail: "This build has no server for crash reports or usage stats, so it never sends them. What it records stays on this Mac.",
   keptOnThisMac: "Kept on this Mac",
   ask: {
     title: "Help fix Ardia?",
@@ -13,18 +15,15 @@ export const SHARING_COPY = {
     share: "Share",
     notNow: "Not now",
   },
-  dailyCount:
-    "One anonymous “opened today” count a day: app version, update channel, macOS version, chip, and whether it's this copy's first day, week or month. No persistent ID.",
-  dailyCountShort: "Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID.",
-  updateChecks: "ardia.dev counts update checks by version and day, and whether it's this copy's first. Nothing else.",
+  sharingShort: "Nothing is sent unless you turn this on, and never without a server this build is set up to use.",
+  updateChecks: "Update checks go only to an update server this build is set up to use. This build has none, so it never checks.",
   switchFile:
-    "While update checks are on, each launch also reads ardia.dev/switches.json: one small file, the same for everyone, that lets us turn off a speed-up that misbehaves. It sends no ID, no cookies and nothing about you.",
+    "Each launch reads the speed-up switch file only from a server this build is set up to use: one small file, the same for everyone, sent with no ID, no cookies and nothing about you. This build has none, so it reads nothing.",
   onboarding: {
     title: "Help us fix what breaks",
     row: "Crashes, errors, feature counts and speed. Never your sites, typing or tabs.",
-    note: "Off unless you turn it on. Either way, Ardia sends one anonymous “opened today” count a day, with no ID.",
-    subtitle:
-      "Off unless you turn it on; change it any time in Settings › Privacy & Security. Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID.",
+    note: "Off unless you turn it on.",
+    subtitle: "Off unless you turn it on; change it any time in Settings › Privacy & Security.",
   },
 } as const;
 
@@ -201,7 +200,7 @@ export const WHATS_SENT: { title: string; items: string[] }[] = [
   },
   {
     title: "Even with sharing off",
-    items: [SHARING_COPY.dailyCount, SHARING_COPY.updateChecks, SHARING_COPY.switchFile],
+    items: [SHARING_COPY.updateChecks, SHARING_COPY.switchFile],
   },
   {
     title: "The local copy",

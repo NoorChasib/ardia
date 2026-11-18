@@ -12,6 +12,7 @@ import { NtpCard, NtpCardSlot, NtpCardSurface, NtpCardTitle, useCardRetire } fro
 import { useNtpColors } from "./tokens";
 import { openSettings } from "../../state/settings/settingsWindows";
 import { usePendingReleaseNotes } from "../../state/releaseNotes/releaseNotes";
+import { telemetryOffered } from "../../state/telemetry/transport";
 
 const FRAME = { width: 300, estimatedHeight: 118, clearOfBar: space.xxxl };
 
@@ -26,7 +27,7 @@ function clearOfBar(size: { width: number; height: number }, bar: Frame, height:
 }
 
 export function TelemetryAsk({ windowId, size, bar }: { windowId: string; size: { width: number; height: number }; bar: Frame }) {
-  const due = useTelemetry((s) => !s.decided && !s.askDone);
+  const due = useTelemetry((s) => !s.decided && !s.askDone) && telemetryOffered();
   const incognito = useWindow(windowId, (w) => w?.kind === "private");
   const onboarding = useOnboarding((s) => s.windowId !== null);
   const checkIn = useDefaultBrowserCheckIn(windowId).visible;

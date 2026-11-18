@@ -12,10 +12,6 @@
   "What's Sent"
  ],
  [
-  "Sent to ardia.dev with a random ID made on this Mac, and kept on our own servers. No third parties. Turning this off stops it at once and deletes anything waiting to be sent. This setting doesn't sync.",
-  "Sent to ardia.dev with a random ID made on this PC, and kept on our own servers. No third parties. Turning this off stops it at once and deletes anything waiting to be sent. This setting doesn't sync."
- ],
- [
   "Kept on this Mac",
   "Kept on this PC"
  ],
@@ -36,36 +32,12 @@
   "Not now"
  ],
  [
-  "One anonymous “opened today” count a day: app version, update channel, macOS version, chip, and whether it's this copy's first day, week or month. No persistent ID.",
-  "One anonymous “opened today” count a day: app version, update channel, Windows version, chip, and whether it's this copy's first day, week or month. No persistent ID."
- ],
- [
-  "Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID.",
-  "Either way, Ardia sends one anonymous “opened today” count a day, with its version and Windows version and no persistent ID."
- ],
- [
-  "ardia.dev counts update checks by version and day, and whether it's this copy's first. Nothing else.",
-  "ardia.dev counts update checks by version and day, and whether it's this copy's first. Nothing else."
- ],
- [
-  "While update checks are on, each launch also reads ardia.dev/switches.json: one small file, the same for everyone, that lets us turn off a speed-up that misbehaves. It sends no ID, no cookies and nothing about you.",
-  "While update checks are on, each launch also reads ardia.dev/switches.json: one small file, the same for everyone, that lets us turn off a speed-up that misbehaves. It sends no ID, no cookies and nothing about you."
- ],
- [
   "Help us fix what breaks",
   "Help us fix what breaks"
  ],
  [
   "Crashes, errors, feature counts and speed. Never your sites, typing or tabs.",
   "Crashes, errors, feature counts and speed. Never your sites, typing or tabs."
- ],
- [
-  "Off unless you turn it on. Either way, Ardia sends one anonymous “opened today” count a day, with no ID.",
-  "Off unless you turn it on. Either way, Ardia sends one anonymous “opened today” count a day, with no ID."
- ],
- [
-  "Off unless you turn it on; change it any time in Settings › Privacy & Security. Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID.",
-  "Off unless you turn it on; change it any time in Settings › Privacy & Security. Either way, Ardia sends one anonymous “opened today” count a day, with its version and Windows version and no persistent ID."
  ],
  [
   "No anonymous ID yet",
@@ -580,18 +552,6 @@
   "Even with sharing off"
  ],
  [
-  "One anonymous “opened today” count a day: app version, update channel, macOS version, chip, and whether it's this copy's first day, week or month. No persistent ID.",
-  "One anonymous “opened today” count a day: app version, update channel, Windows version, chip, and whether it's this copy's first day, week or month. No persistent ID."
- ],
- [
-  "ardia.dev counts update checks by version and day, and whether it's this copy's first. Nothing else.",
-  "ardia.dev counts update checks by version and day, and whether it's this copy's first. Nothing else."
- ],
- [
-  "While update checks are on, each launch also reads ardia.dev/switches.json: one small file, the same for everyone, that lets us turn off a speed-up that misbehaves. It sends no ID, no cookies and nothing about you.",
-  "While update checks are on, each launch also reads ardia.dev/switches.json: one small file, the same for everyone, that lets us turn off a speed-up that misbehaves. It sends no ID, no cookies and nothing about you."
- ],
- [
   "The local copy",
   "The local copy"
  ],
@@ -630,5 +590,37 @@
  [
   "Screen recordings",
   "Screen recordings"
+ ],
+ [
+  "Sent only to a server this build is set up to use, with a random ID made on this Mac. This build has none, so nothing leaves this Mac. Turning this off stops it at once and deletes anything waiting to be sent. This setting doesn't sync.",
+  "Sent only to a server this build is set up to use, with a random ID made on this PC. This build has none, so nothing leaves this PC. Turning this off stops it at once and deletes anything waiting to be sent. This setting doesn't sync."
+ ],
+ [
+  "Nilla sends no usage data.",
+  "Nilla sends no usage data."
+ ],
+ [
+  "This build has no server for crash reports or usage stats, so it never sends them. What it records stays on this Mac.",
+  "This build has no server for crash reports or usage stats, so it never sends them. What it records stays on this PC."
+ ],
+ [
+  "Nothing is sent unless you turn this on, and never without a server this build is set up to use.",
+  "Nothing is sent unless you turn this on, and never without a server this build is set up to use."
+ ],
+ [
+  "Update checks go only to an update server this build is set up to use. This build has none, so it never checks.",
+  "Update checks go only to an update server this build is set up to use. This build has none, so it never checks."
+ ],
+ [
+  "Each launch reads the speed-up switch file only from a server this build is set up to use: one small file, the same for everyone, sent with no ID, no cookies and nothing about you. This build has none, so it reads nothing.",
+  "Each launch reads the speed-up switch file only from a server this build is set up to use: one small file, the same for everyone, sent with no ID, no cookies and nothing about you. This build has none, so it reads nothing."
+ ],
+ [
+  "Off unless you turn it on.",
+  "Off unless you turn it on."
+ ],
+ [
+  "Off unless you turn it on; change it any time in Settings › Privacy & Security.",
+  "Off unless you turn it on; change it any time in Settings › Privacy & Security."
  ]
 ]

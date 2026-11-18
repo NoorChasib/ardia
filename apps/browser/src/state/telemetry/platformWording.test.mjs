@@ -29,7 +29,7 @@ function strings(value, out = []) {
 const live = strings(EXPORTS.map((name) => copy[name]));
 
 test("Windows words every sentence as the branch wrote it by hand on 2026-11-14", () => {
-  assert.equal(pairs.length, 158);
+  assert.equal(pairs.length, 156);
   for (const [mac, windows] of pairs) {
     const missed = KEYS_THE_BRANCH_MISSED.find(([before]) => mac.startsWith(before));
     const expected = missed ? windows.replace(missed[0], missed[1]) : windows;

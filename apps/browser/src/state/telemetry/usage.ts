@@ -8,9 +8,9 @@ import { takeOpenTabSyncCounts, takeSnapshotWrites, useSync } from "../sync/engi
 import { takeSyncCodeCounts } from "../sync/recoveryKit";
 import { capture, endSession, flush, isSharing, markSettingsSnapshot, settingsSnapshotDay, startClient, watchConsentBoundary, withHourlyExtras } from "./usageClient";
 import { reportLocalStore, startLocalStore } from "./localStoreReport";
+import { utcDay } from "./localStore";
 import { startWatchChecks } from "./watch";
 import { appIconSetting, currentThemeFileSnapshot, customColorProfiles, narrowWindows, openTabSyncProfiles, SETTINGS_SNAPSHOT_EVENT, settingsSnapshot } from "./settingsSnapshot";
-import { utcDay } from "./daily";
 import { percentile } from "./transport";
 import { reportNativeCrashes } from "./errors";
 import { consentStamp } from "./choice";

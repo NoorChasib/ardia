@@ -1,9 +1,7 @@
-import { APP_INGEST_KEY } from "@ardia/core";
 import { installErrorReporting, resetAnonymousId, startTelemetry } from "../../browser/src/state/telemetry/index.ts";
 import { captureException } from "../../browser/src/state/telemetry/errors";
 import { capture, devState, endSession, flush, loadChoice, queueLog, saveQueueNow, setSharing } from "../../browser/src/state/telemetry/client";
 import { dismissAsk, reloadChoice, savedChoice, useTelemetry } from "../../browser/src/state/telemetry/choice";
-import { DAILY_DOC } from "../../browser/src/state/telemetry/daily";
 import { requestLog } from "../../browser/src/state/telemetry/requestLog";
 import { adoptInstallId } from "../../browser/src/state/telemetry/installId";
 import { setTelemetryRelay, type ChoiceChange } from "../../browser/src/state/telemetry/relay";
@@ -11,6 +9,7 @@ import { reopenSession } from "../../browser/src/state/telemetry/sessionControl"
 import { startWatch, stopWatch, watchNoticeShown } from "../../browser/src/state/telemetry/watch";
 import { uuidv4 } from "../../browser/src/state/telemetry/ids";
 import { setTelemetryHost } from "../../browser/src/state/telemetry/transport";
+import { appServices } from "../../browser/src/platform/launchConfig";
 import { emitWindowUsage, sessionEnding } from "../../browser/src/state/telemetry/usage";
 import { documentSaved } from "../../browser/src/platform/documents";
 import { flushLocalNow } from "../../browser/src/state/telemetry/localStore";
@@ -25,7 +24,7 @@ import { settledLocalCopy } from "./hostTelemetryLocal.ts";
 export const TELEMETRY_POST = "ArdiaTelemetry.post";
 export const TELEMETRY_STEP = "telemetry";
 const STATE_DOC = "telemetry.json";
-const TELEMETRY_DOCUMENTS = [STATE_DOC, "telemetry-queue.json", DAILY_DOC];
+const TELEMETRY_DOCUMENTS = [STATE_DOC, "telemetry-queue.json"];
 const END_TIMEOUT_MS = 2_000;
 const RESET_TIMEOUT_MS = 10_000;
 const WINDOW_USAGE_MS = 60 * 60 * 1000;
@@ -34,7 +33,7 @@ const report = (error: unknown) => console.warn("[ardia linux] telemetry", error
 
 export function hostTelemetrySend(host: ArdiaHost) {
   return async (body: string) => {
-    const reply = await invokeHost<{ status?: unknown } | null>(TELEMETRY_POST, { args: [body, APP_INGEST_KEY] }, host);
+    const reply = await invokeHost<{ status?: unknown } | null>(TELEMETRY_POST, { args: [body, appServices().ingestKeys?.app ?? ""] }, host);
     const status = reply?.status;
     return typeof status === "number" && Number.isSafeInteger(status) ? status : 0;
   };

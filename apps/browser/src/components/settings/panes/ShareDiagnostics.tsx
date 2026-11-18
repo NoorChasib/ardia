@@ -9,6 +9,7 @@ import { Group, Row, SectionHeader } from "../Form";
 import { closeSettingsSheet, showSettingsSheet } from "../../../state/settings/sheet";
 import { AnonymousAvatar } from "../AnonymousAvatar";
 import { perLook } from "../../ui/tokens";
+import { telemetryOffered } from "../../../state/telemetry/transport";
 
 const AVATAR_SIZE = 28;
 
@@ -16,6 +17,7 @@ const longDate = (ms: number) => new Date(ms).toLocaleDateString(UI_LOCALE, { mo
 
 export function ShareDiagnosticsToggle() {
   const sharing = useTelemetry((s) => s.sharing);
+  if (!telemetryOffered()) return <Row anchor="general.shareDiagnostics" title={SHARING_COPY.noServer} description={SHARING_COPY.noServerDetail} />;
   return (
     <Row anchor="general.shareDiagnostics" description={SHARING_COPY.summary}>
       <Toggle value={sharing} accessibilityLabel={SHARING_COPY.toggle} onChange={(on) => setSharing(on, "settings")} />
@@ -24,9 +26,10 @@ export function ShareDiagnosticsToggle() {
 }
 
 export function ShareDiagnosticsSection() {
+  if (!telemetryOffered()) return <SectionHeader title="Crash reports and usage" description={`${SHARING_COPY.noServer} ${SHARING_COPY.noServerDetail}`} />;
   return (
     <>
-      <SectionHeader title="Crash reports and usage" description={SHARING_COPY.dailyCountShort} />
+      <SectionHeader title="Crash reports and usage" description={SHARING_COPY.sharingShort} />
       <Group>
         <ShareDiagnosticsToggle />
         <Row title={SHARING_COPY.whatsSent} onPress={() => showSettingsSheet(<WhatsSentSheet />)} />
@@ -40,7 +43,7 @@ export function CrashReportDetails() {
   const until = useWatchUntil();
   return (
     <View>
-      <SectionHeader title="Your anonymous ID" description={SHARING_COPY.dailyCountShort} />
+      <SectionHeader title="Your anonymous ID" description={telemetryOffered() ? SHARING_COPY.sharingShort : SHARING_COPY.noServer} />
       <Group>
         {report && until !== null ? <WatchRow report={report} until={until} /> : null}
         <IdentityRow />

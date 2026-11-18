@@ -16,6 +16,7 @@ import { OptionCard } from "./OptionCard";
 import { SelectTile, useOnboardingColors } from "./Parts";
 import { useSiteRing } from "./GlassBacking";
 import { onboardingType, receiptStamp } from "./tokens";
+import { telemetryOffered } from "../../state/telemetry/transport";
 
 const KEYS = keysOf("searchPrivacy");
 const ENGINES = ["google", "duckduckgo", "bing", "kagi", "ecosia", "brave", "startpage"];
@@ -31,6 +32,20 @@ export function SearchPrivacyStep() {
   const all = useSettings((st) => searchEngines(st));
   const engines = all.filter((e) => ENGINES.includes(e.id) || e.id === values.searchEngine);
 
+  if (id === "crash" && !telemetryOffered())
+    return (
+      <Page
+        id={id}
+        title={SHARING_COPY.onboarding.title}
+        subtitle={`${SHARING_COPY.noServer} ${SHARING_COPY.noServerDetail}`}
+        patch={{}}
+        picked={[]}
+        onConfirm={() => {}}
+        preview={<MockPanel settings={mock} focus={null} overlay={<Receipt on={false} />} />}
+      >
+        {null}
+      </Page>
+    );
   if (id === "crash")
     return (
       <Page
@@ -76,7 +91,6 @@ function EngineTile({ title, url, selected, onPress }: { title: string; url: str
 }
 
 const SENT = ["Crash reports", "Error types", "Feature counts", "Speed and memory"];
-const ALWAYS = ["Daily open count"];
 const NEVER = ["Sites you visit", "What you type", "Your tabs", "Your name"];
 
 const RECEIPT_WIDTH = 250;
@@ -120,7 +134,6 @@ function Receipt({ on }: { on: boolean }) {
       {rule}
       <View style={{ gap: space.s }}>
         {SENT.map((label) => line(label, on ? "SENT" : "—", !on))}
-        {ALWAYS.map((label) => line(label, "SENT", false))}
       </View>
       {rule}
       <View style={{ gap: space.s }}>{NEVER.map((label) => line(label, "NEVER", false))}</View>

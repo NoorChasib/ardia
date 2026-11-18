@@ -1,8 +1,6 @@
 import { devCrash } from "../../platform/dev";
-import { onboardingCompletedAt } from "../onboarding/onboarding";
 import { capture, devState, flush, setSharing, useTelemetry } from "./client";
 import { requestLog } from "./requestLog";
-import { devDaily, sendDailyPing, startDaily } from "./daily";
 import { captureException, installErrorReporting, reportNativeCrashes } from "./errors";
 import { devJourneys, emitJourneys } from "./journeys";
 import { devOmniboxSampler } from "./track";
@@ -31,7 +29,6 @@ export function startTelemetry({ continuing = false }: { continuing?: boolean } 
   watchPasteRefused();
   startWatchNotice();
   watchPressLoops();
-  startDaily(onboardingCompletedAt() !== null);
   if (__DEV__) {
     (globalThis as { acTelemetry?: unknown }).acTelemetry = {
       store: useTelemetry,
@@ -40,8 +37,6 @@ export function startTelemetry({ continuing = false }: { continuing?: boolean } 
       setSharing,
       flush,
       hourly: devHourly,
-      daily: devDaily,
-      sendDaily: () => sendDailyPing(),
       omniboxSampler: devOmniboxSampler,
       journeys: devJourneys,
       emitJourneys,
