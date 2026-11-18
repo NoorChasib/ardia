@@ -5,7 +5,7 @@ import { switchOn } from "../../state/app/switches";
 import { useTheme } from "../ui/theme";
 import { curve, useGated } from "../ui/motion";
 import { Panel, reduceMotion, WindowBackdrop, WindowDragRegion } from "../ui";
-import { useSidebarSide, useWindowFullScreen, useWindowId } from "../../state/browser/hooks";
+import { useSettings, useSidebarSide, useWindowFullScreen, useWindowId } from "../../state/browser/hooks";
 import { useSidebarDockState } from "../../state/windows/hooks";
 import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { useCardTopInset, useSidebarControlsRowIn, useToolbarLightsCenter } from "../../state/windows/layout";
@@ -231,9 +231,10 @@ function SidebarDock({
     fullScreenPeekAt.current = null;
     dismissHoverIn(windowId);
   };
-  const peek = usePeek((!open || fullscreen) && !moving, arc, () => edgeOver.current || peekHeld(windowId), closed, opened);
+  const revealSpeed = useSettings((s) => s.sidebarRevealSpeed);
+  const peek = usePeek((!open || fullscreen) && !moving, arc, () => edgeOver.current || peekHeld(windowId), closed, opened, revealSpeed);
   const reveal = () => {
-    if (arm.current.armed) latestPeek.current.show();
+    if (arm.current.armed) latestPeek.current.showAfterWait();
     else noteSidebarPeekRevealHeldBack();
   };
   const latestPeek = useRef(peek);
@@ -265,7 +266,7 @@ function SidebarDock({
       edgeOver.current = e.over;
       arm.current = edgeSeen(arm.current, "native", e.over);
       if (e.over) latestReveal.current.reveal();
-      else latestPeek.current.hide();
+      else latestPeek.current.hide(arm.current.strip);
     });
     watchSidebarEdge(windowId, true, nativeHold, right, holding || draggingTab);
     return () => {

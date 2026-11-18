@@ -1,6 +1,7 @@
 import { layout } from "../ui/theme";
-import { DOCK_SLIDE, DOCK_SLIDE_CURVE } from "./tokens";
+import { DOCK_SLIDE, DOCK_SLIDE_CURVE, SIDEBAR_REVEAL } from "./tokens";
 import type { SpringSpec } from "../ui/motion";
+import type { SidebarRevealSpeed } from "../../state/settings/settings";
 import { WINDOW_CHROME } from "../../lib/windowChrome";
 
 export const easeOutCubic = (u: number) => 1 - (1 - u) ** 3;
@@ -61,6 +62,8 @@ export const TAB_DRAG_EDGE_STRIP = 8;
 export const PEEK_HOLD_SLACK = 40;
 export const PEEK_CLOSE_DELAY_MS = 200;
 export const PEEK_BLEED = 16;
+
+export const revealWaitMs = (speed: SidebarRevealSpeed, peekOut: boolean) => (peekOut ? 0 : SIDEBAR_REVEAL[speed].waitMs);
 
 export const peekBleed = (peekLeft: number) => (peekLeft > 0 ? 0 : PEEK_BLEED);
 

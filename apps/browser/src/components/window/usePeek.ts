@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, AppState } from "react-native";
-import { easeInOutCubic, PEEK_CLOSE_DELAY_MS } from "./dockMotion";
+import { easeInOutCubic, PEEK_CLOSE_DELAY_MS, revealWaitMs } from "./dockMotion";
 import { curve, duration, spring } from "../ui/motion";
-import { ARC_PEEK_OUT_MS, ARC_PEEK_SPRING } from "./tokens";
+import { ARC_PEEK_OUT_MS, SIDEBAR_REVEAL } from "./tokens";
+import { revealWait } from "./revealWait";
 import { backgroundInstance } from "../../state/app/appSettings";
+import { noteSidebarPeekRevealWait, noteSidebarPeekRevealWaitAbandoned } from "../../state/telemetry/dockCounts";
+import type { SidebarRevealSpeed } from "../../state/settings/settings";
 
 const SLIDE_MS = duration.base;
-const ARC_IN = spring(ARC_PEEK_SPRING);
+const ARC_IN = {
+  faster: spring(SIDEBAR_REVEAL.faster.arcSpring),
+  default: spring(SIDEBAR_REVEAL.default.arcSpring),
+  slower: spring(SIDEBAR_REVEAL.slower.arcSpring),
+} as const;
 const appInFront = () => backgroundInstance || AppState.currentState === "active";
 
 export function usePeek(
@@ -15,6 +22,7 @@ export function usePeek(
   held: () => boolean = () => false,
   onSlideOut: () => void = () => {},
   onOpen: (bounce: boolean) => void = () => {},
+  speed: SidebarRevealSpeed = "default",
 ) {
   const slide = useRef(new Animated.Value(0)).current;
   const [live, setLive] = useState(false);
@@ -23,12 +31,13 @@ export function usePeek(
   const heldBack = useRef(false);
   const out = useRef(false);
   const waitingForFocus = useRef(false);
+  const [wait] = useState(revealWait);
   const animate = (to: number, done?: () => void) =>
     (arc
       ? to > 0
-        ? Animated.spring(slide, { toValue: to, ...ARC_IN, restDisplacementThreshold: 0.001, restSpeedThreshold: 0.01, useNativeDriver: true })
+        ? Animated.spring(slide, { toValue: to, ...ARC_IN[speed], restDisplacementThreshold: 0.001, restSpeedThreshold: 0.01, useNativeDriver: true })
         : Animated.timing(slide, { toValue: to, duration: ARC_PEEK_OUT_MS, easing: easeInOutCubic, useNativeDriver: true })
-      : Animated.timing(slide, { toValue: to, duration: SLIDE_MS, easing: curve.enter, useNativeDriver: true })
+      : Animated.timing(slide, { toValue: to, duration: to > 0 ? SIDEBAR_REVEAL[speed].slideMs : SLIDE_MS, easing: curve.enter, useNativeDriver: true })
     ).start(({ finished }) => finished && done?.());
   const slideOut = () => {
     out.current = false;
@@ -41,6 +50,7 @@ export function usePeek(
   };
   const show = () => {
     clearTimeout(hideTimer.current);
+    wait.cancel();
     heldBack.current = false;
     if (!enabled) return;
     if (!out.current && !appInFront()) {
@@ -54,12 +64,27 @@ export function usePeek(
     setLive(true);
     animate(1);
   };
+  const showAfterWait = () => {
+    const ms = revealWaitMs(speed, out.current || live);
+    if (!ms) return show();
+    if (wait.pending()) return;
+    noteSidebarPeekRevealWait();
+    wait.start(ms, () => latestShow.current());
+  };
+  const dropWait = (pointerStillAtEdge: boolean) => {
+    if (!pointerStillAtEdge && wait.cancel()) noteSidebarPeekRevealWaitAbandoned();
+  };
   const cancelPending = (pointerStillAtEdge = false) => {
     waitingForFocus.current &&= pointerStillAtEdge;
+    dropWait(pointerStillAtEdge);
   };
-  const hide = () => {
+  const hide = (pointerStillAtEdge = false) => {
     clearTimeout(hideTimer.current);
-    if (!out.current) return cancelPending();
+    dropWait(pointerStillAtEdge);
+    if (!out.current) {
+      waitingForFocus.current = false;
+      return;
+    }
     hideTimer.current = setTimeout(() => {
       heldBack.current = held();
       if (!heldBack.current) slideOut();
@@ -77,6 +102,7 @@ export function usePeek(
     out.current = false;
     heldBack.current = false;
     waitingForFocus.current = false;
+    wait.cancel();
     setLive(false);
     setLeaving(false);
   };
@@ -89,9 +115,16 @@ export function usePeek(
   useEffect(() => {
     if (enabled) return;
     waitingForFocus.current = false;
+    wait.cancel();
     clearTimeout(hideTimer.current);
     if (live) slideOut();
   }, [enabled]);
-  useEffect(() => () => clearTimeout(hideTimer.current), []);
-  return { slide, live, leaving, show, hide, recheck, cancelPending, reset };
+  useEffect(
+    () => () => {
+      clearTimeout(hideTimer.current);
+      wait.cancel();
+    },
+    [],
+  );
+  return { slide, live, leaving, show, showAfterWait, hide, recheck, cancelPending, reset };
 }
