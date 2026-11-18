@@ -8,6 +8,8 @@ import { tabSpacesFor } from "../tabs/spaces";
 import type { Design } from "../../lib/design";
 import { pinKey, pinsStillOnTheirWay } from "./spaces";
 import { shownProfile } from "./syncRules";
+import { sharedWith } from "./structuralSharing";
+import { countUsage } from "../telemetry/telemetry";
 
 export const notePinSent = (profileSyncId: string | null, url: string) =>
   useSync.setState((state) => ({ pinsOnTheirWay: [...state.pinsOnTheirWay, pinKey(profileSyncId, url)] }));
@@ -76,9 +78,27 @@ function publish(patch: Partial<SyncData>) {
   useSync.setState((state) => ({ ...patch, revision: state.revision + 1 }));
 }
 
+function pinsAfter(onTheirWay: string[], view: SyncedView): string[] {
+  if (!onTheirWay.length) return onTheirWay;
+  const still = pinsStillOnTheirWay(onTheirWay, view);
+  return still.length === onTheirWay.length ? onTheirWay : still;
+}
+
+function publishChanged(patch: Pick<Partial<SyncData>, "status" | "view">) {
+  const state = syncData();
+  const status = patch.status ? sharedWith(state.status, patch.status) : state.status;
+  const view = patch.view ? sharedWith(state.view, patch.view) : state.view;
+  const pins = patch.view ? pinsAfter(state.pinsOnTheirWay, view) : state.pinsOnTheirWay;
+  if (status === state.status && view === state.view && pins === state.pinsOnTheirWay) {
+    countUsage("sync_updates_unchanged");
+    return;
+  }
+  publish({ status, view, pinsOnTheirWay: pins });
+}
+
 function onEvent(event: SyncEvent) {
-  if (event.name === "sync.status") publish({ status: event.status });
-  else if (event.name === "sync.view") publish({ view: event.view, pinsOnTheirWay: pinsStillOnTheirWay(syncData().pinsOnTheirWay, event.view) });
+  if (event.name === "sync.status") publishChanged({ status: event.status });
+  else if (event.name === "sync.view") publishChanged({ view: event.view });
   else if (event.name === "sync.inbox" && event.count > 0) for (const listener of inboxListeners) listener();
 }
 
