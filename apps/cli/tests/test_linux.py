@@ -68,7 +68,7 @@ class DataDir(unittest.TestCase):
 
     def test_macos_data_dir_is_unchanged(self):
         with mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": str(self.temp / "xdg")}):
-            self.assertEqual(endpoint.installed_data_dir(linux=False), self.home / "Library" / "Application Support" / "com.ardia.browser")
+            self.assertEqual(endpoint.installed_data_dir(linux=False), self.home / "Library" / "Application Support" / "com.nilladigital.nilla")
         self.assertEqual(endpoint.chromium_dir(self.temp, linux=False), self.temp / "Chromium")
         self.assertEqual(endpoint.chromium_dir(self.temp, linux=True), self.temp)
 

@@ -16,6 +16,8 @@ NOT_REACHABLE = (
 CONTROL_FILE = "ArdiaControl.json"
 DATA_DIR_HELP = "the Ardia data dir (default: $ARDIA_DATA_DIR, else the installed app's)"
 LINUX = sys.platform.startswith("linux")
+ID_PREFIX = "com.nilladigital"
+BUNDLE_ID = f"{ID_PREFIX}.nilla"
 
 
 def xdg_dir(variable: str, *fallback: str, absolute: bool = False) -> Path:
@@ -31,7 +33,7 @@ def config_home(absolute: bool = False) -> Path:
 
 def installed_data_dir(linux: bool | None = None) -> Path:
     if not (LINUX if linux is None else linux):
-        return Path.home() / "Library" / "Application Support" / "com.ardia.browser"
+        return Path.home() / "Library" / "Application Support" / BUNDLE_ID
     override = os.environ.get("ARDIA_CONFIG_HOME")
     return (Path(override) if override else config_home()) / "ardia"
 
