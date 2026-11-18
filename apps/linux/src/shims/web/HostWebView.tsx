@@ -2,7 +2,9 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { View } from "react-native";
 import { toAppUrl, toEngineUrl } from "@ardia/core";
 import type { WebViewHandle, WebViewProps } from "@ardia-real/ardiacore";
-import { ardiaHost, reportHostError } from "../../host";
+import { setPagePicturesSupported } from "../../../../browser/src/platform/webviews";
+import { ardiaHost, hostSupports, reportHostError, type ArdiaHost } from "../../host";
+import { PAGE_PICTURE_COMMAND } from "../../hostCapabilities";
 import { HostPageEvents } from "../../hostPageEvents";
 import { applyHostPageThemeState, forgetHostPageState, resetHostPageState } from "../../hostPageHooks";
 import { hostPageScript } from "../../hostPageScripts";
@@ -17,6 +19,8 @@ import type { CornerRadii } from "../../hostExtensionView";
 import { focusPageIfShellUnfocused, notePageFocusRequest, notingPageFocus } from "../../pageFocus";
 import { withPopupDismissal } from "../../popupDismissal";
 import { registerSwitchView } from "../../tabSwitchAhead";
+
+setPagePicturesSupported(!!ardiaHost && hostSupports(PAGE_PICTURE_COMMAND, ardiaHost));
 
 export const HostWebView = forwardRef<WebViewHandle, WebViewProps>(function HostWebView(props, ref) {
   return props.extensionHost && extensionViewsSupported(ardiaHost) ? <HostExtensionWebView ref={ref} {...props} /> : <HostTabWebView ref={ref} {...props} />;
@@ -61,12 +65,31 @@ const HostTabWebView = forwardRef<WebViewHandle, WebViewProps>(function HostTabW
     refreshTabViewports();
   }, [props.visible]);
 
-  useImperativeHandle(ref, () => new Proxy({} as WebViewHandle, {
+  useImperativeHandle(ref, () => hostTabHandle(() => tab.current), []);
+
+  useEffect(() => {
+    const node = element.current;
+    const regions = inputRegions();
+    if (!node || !regions) return;
+    const stop = watchPageBelowShell(node, regions, () => latest.current.visible !== false, () => tab.current);
+    const unregister = props.tabId ? registerSwitchView(props.tabId, { tab: () => tab.current, slot: node, regions }) : () => {};
+    return () => {
+      unregister();
+      stop();
+    };
+  }, []);
+
+  return <View style={[props.style, { backgroundColor: "transparent" }]}><div ref={element} data-ardia-native-tab={key.current} style={{ position: "absolute", inset: 0 }} /></View>;
+});
+
+export function hostTabHandle(mounted: () => HostTab | null, host: ArdiaHost | undefined = ardiaHost): WebViewHandle {
+  return new Proxy({} as WebViewHandle, {
     get(_target, property) {
       if (typeof property !== "string" || property === "then") return undefined;
       if (property === "nativeTag") return () => null;
+      if (property === "capturePicture" && !(host && hostSupports(PAGE_PICTURE_COMMAND, host))) return async () => null;
       return async (...args: unknown[]) => {
-        const current = tab.current;
+        const current = mounted();
         if (!current) throw new Error("Ardia tab is not mounted");
         if (property === "loadUrl") {
           args[0] = toEngineUrl(args[0] as string);
@@ -91,22 +114,8 @@ const HostTabWebView = forwardRef<WebViewHandle, WebViewProps>(function HostTabW
         return result;
       };
     },
-  }), []);
-
-  useEffect(() => {
-    const node = element.current;
-    const regions = inputRegions();
-    if (!node || !regions) return;
-    const stop = watchPageBelowShell(node, regions, () => latest.current.visible !== false, () => tab.current);
-    const unregister = props.tabId ? registerSwitchView(props.tabId, { tab: () => tab.current, slot: node, regions }) : () => {};
-    return () => {
-      unregister();
-      stop();
-    };
-  }, []);
-
-  return <View style={[props.style, { backgroundColor: "transparent" }]}><div ref={element} data-ardia-native-tab={key.current} style={{ position: "absolute", inset: 0 }} /></View>;
-});
+  });
+}
 
 export function watchPageBelowShell(node: HTMLElement, regions: InputRegionsRegistry, visible: () => boolean, page: () => { identity?: unknown; disposed?: boolean; viewport(viewport: TabViewport): Promise<void> } | null, radii?: () => CornerRadii) {
   let last = "";

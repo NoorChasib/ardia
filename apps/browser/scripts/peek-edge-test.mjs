@@ -8,7 +8,7 @@ import { launch, reporter, session } from "../../../scripts/lib/instance.mjs";
 const args = process.argv.slice(2);
 const appArg = args.find((a) => !a.startsWith("--"));
 if (!appArg) {
-  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a second push goes on through. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, and Reveal hidden tabs on hover off leaves the edge alone.");
+  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a push 350 ms after the stop goes on through, whatever the reveal speed. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
   process.exit(2);
 }
 const appPath = resolve(appArg);
@@ -43,6 +43,10 @@ const until = (test, ms) => { const end = Date.now() + ms; const poll = () => (t
 const ROW_Y = 94;
 const peek = () => at(-4, 400).then(() => settle(500)).then(() => at(80, 400)).then(() => settle(300)).then(live);
 const away = () => at(700, 400).then(() => settle(700)).then(live);
+const speed = (sidebarRevealSpeed) => (st().updateSettings({ sidebarRevealSpeed }), settle(200));
+const firstLive = (ms) => new Promise((r) => { const t0 = Date.now(); const iv = setInterval(() => { const t = Date.now() - t0; if (live() || t > ms) { clearInterval(iv); r(live() ? t : null); } }, 5); });
+const opensOver = (ms) => new Promise((r) => { let was = live(), n = 0; const iv = setInterval(() => { const now = live(); if (now && !was) n++; was = now; }, 5); setTimeout(() => (clearInterval(iv), r(n)), ms); });
+const revealAfter = (x, y) => at(300, 400).then(() => settle(700)).then(() => { const opened = firstLive(1200); return at(x, y).then(() => opened); });
 `;
 const run = (body) => app.eval(`${HELPERS}\n${body}`);
 
@@ -216,6 +220,114 @@ try {
     } finally {
       await run(`st().updateSettings({ sidebarSide: "left" }); return settle(400);`);
     }
+  });
+
+  for (const [layout, addressBar, side] of [["Dia's layout", "toolbar", "left"], ["Arc's layout", "sidebar", "left"], ["the right side", "toolbar", "right"]]) {
+    await rep.check(`reveal speed in ${layout}: Faster and Default open at once, Slower waits 250 ms for the pointer to rest at the edge`, async () => {
+      const edgeX = side === "right" ? WIDTH - 2 : 2;
+      await run(`st().updateSettings({ addressBar: "${addressBar}", sidebarSide: "${side}" }); return settle(600);`);
+      try {
+        const opened = {};
+        for (const s of ["faster", "default", "slower"]) opened[s] = await run(`return speed("${s}").then(() => revealAfter(${edgeX}, 400)).then((ms) => at(${side === "right" ? WIDTH - 700 : 700}, 400).then(() => settle(700)).then(() => ms));`);
+        assert.ok(opened.faster !== null && opened.faster < 120, `Faster: ${opened.faster} ms`);
+        assert.ok(opened.default !== null && opened.default < 120, `Default: ${opened.default} ms`);
+        assert.ok(opened.slower !== null && opened.slower >= 230 && opened.slower < 450, `Slower: ${opened.slower} ms`);
+      } finally {
+        await run(`st().updateSettings({ addressBar: "toolbar", sidebarSide: "left", sidebarRevealSpeed: "default" }); return settle(600);`);
+      }
+    });
+  }
+
+  await rep.check("Slower: passing by the edge never opens it, and resting there opens it once", async () => {
+    const out = await run(`return speed("slower").then(() => at(300, 400)).then(() => settle(700)).then(() => {
+        const passing = opensOver(1700);
+        const cross = (i) => (i ? at(2, 400).then(() => settle(80)).then(() => at(300, 400)).then(() => settle(80)).then(() => cross(i - 1)) : Promise.resolve());
+        return at(2, 400).then(() => settle(120)).then(() => at(300, 400)).then(() => settle(80)).then(() => cross(5)).then(() => passing);
+      }).then((passOpens) => { const resting = opensOver(900); return at(2, 400).then(() => resting).then((restOpens) => ({ passOpens, restOpens })); });`);
+    assert.equal(out.passOpens, 0, "120 ms on the edge, then 5 crossings of 80/80 ms");
+    assert.equal(out.restOpens, 1, "resting at the edge");
+    await run(`return away().then(() => speed("default"));`);
+  });
+
+  await rep.check("Slower: stepping back off the 3 pt edge during the wait never opens it, and coming back waits the full 250 ms again", async () => {
+    const out = await run(`return speed("slower").then(() => at(300, 400)).then(() => settle(700)).then(() => {
+        const stepped = opensOver(900);
+        return at(1, 400).then(() => settle(120)).then(() => at(5, 400)).then(() => stepped);
+      }).then((steppedOpens) => at(300, 400).then(() => settle(700)).then(() => at(1, 400)).then(() => settle(120)).then(() => at(5, 400)).then(() => settle(80))
+        .then(() => { const back = firstLive(900); return at(1, 400).then(() => back).then((backMs) => ({ steppedOpens, backMs })); }));`);
+    assert.equal(out.steppedOpens, 0, "1 pt for 120 ms, then 5 pt");
+    assert.ok(out.backMs !== null && out.backMs >= 200, `back at 1 pt: opened ${out.backMs} ms after the return`);
+    await run(`return away().then(() => speed("default"));`);
+  });
+
+  await rep.check("Slower: back at the edge while it slides away, it comes back at once (#1192 unchanged)", async () => {
+    const out = await run(`return speed("slower").then(() => peek()).then((opened) => at(700, 400).then(() => settle(260)).then(() => {
+        const leaving = !!globalThis.acLayout.peek.w1?.leaving; const t0 = Date.now();
+        return at(2, 400).then(() => until(() => live() && !globalThis.acLayout.peek.w1?.leaving, 400)).then((back) => ({ opened, leaving, back, ms: Date.now() - t0 }));
+      }));`);
+    assert.equal(out.opened, true);
+    assert.equal(out.leaving, true, "it was sliding away when the pointer came back");
+    assert.equal(out.back, true);
+    assert.ok(out.ms < 120, `re-shown after ${out.ms} ms, no wait`);
+    await run(`return away().then(() => speed("default"));`);
+  });
+
+  await rep.check("Slower: ⌘S during the wait docks the sidebar with no peek after, and hiding it again at the edge doesn't spring back", async () => {
+    const out = await run(`return speed("slower").then(() => at(300, 400)).then(() => settle(700)).then(() => at(2, 400)).then(() => settle(80))
+      .then(() => { st().toggleSidebar("w1"); return settle(900); })
+      .then(() => { const docked = !(st().windows.w1.autoHideTabs ?? st().settings.autoHideTabs); const peeked = live(); st().toggleSidebar("w1");
+        return settle(1000).then(() => ({ docked, peeked, sprangBack: live() })); })
+      .then((r) => at(300, 400).then(() => settle(500)).then(() => at(2, 400)).then(() => settle(700)).then(() => ({ ...r, reopened: live() })));`);
+    assert.equal(out.docked, true, "docked");
+    assert.equal(out.peeked, false, "no peek once docked");
+    assert.equal(out.sprangBack, false, "hidden again with the pointer at the edge: stays closed");
+    assert.equal(out.reopened, true, "leave and come back: opens after the wait");
+    await run(`return away().then(() => speed("default"));`);
+  });
+
+  await rep.check("Slower in a full-screen window: the screen's edge opens it after the wait", async () => {
+    const fullScreen = (on) => `return ac.engine.call("windows.list", {}).then((l) => ac.engine.call("windows.dev", { window: l.find((w) => w.hasRoot).window, action: "fakeFullScreen:${on ? 1 : 0}" })).then(() => settle(900));`;
+    await run(fullScreen(true));
+    try {
+      const ms = await run(`return speed("slower").then(() => revealAfter(0, 400));`);
+      assert.ok(ms !== null && ms >= 230 && ms < 450, `opened after ${ms} ms`);
+      assert.equal(await run(`return away();`), false);
+    } finally {
+      await run(`return speed("default");`);
+      await run(fullScreen(false));
+    }
+  });
+
+  for (const s of ["default", "slower"]) {
+    await rep.check(`${s} at a screen-edge stop: a push 200 ms after the stop stays at the edge, one 460 ms after it goes through`, async () => {
+      const frame = (x) => `return globalThis.expo.modules.ArdiaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
+      await run(frame(0));
+      try {
+        const out = await run(`const notes = []; const sub = globalThis.expo.modules.ArdiaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
+          return speed("${s}").then(() => at(300, 400)).then(() => settle(700)).then(() => { const t0 = Date.now(); const opened = firstLive(1200);
+            const pushAt = (ms) => settle(Math.max(0, t0 + ms - Date.now())).then(() => at(-30, 400));
+            return at(-30, 400).then(() => pushAt(200)).then(() => settle(40)).then(() => ({ early: [...notes] }))
+              .then((r) => pushAt(460).then(() => opened).then((ms) => settle(700).then(() => (sub.remove(), { ...r, ms, late: [...notes], after: live() })))); });`);
+        if (s === "slower") assert.ok(out.ms !== null && out.ms >= 230 && out.ms < 450, `opened ${out.ms} ms after the stop`);
+        else assert.ok(out.ms !== null && out.ms < 120, `opened ${out.ms} ms after the stop`);
+        assert.deepEqual(out.early, ["stopped"], "200 ms after the stop the push is held at the edge");
+        assert.deepEqual(out.late, ["stopped", "passed"], "460 ms after the stop the push goes on to the next display");
+        assert.equal(out.after, false, "and the peek closes behind it");
+      } finally {
+        await run(`return away().then(() => speed("default"));`);
+        await run(frame(200));
+      }
+    });
+  }
+
+  await rep.check("the reveal speed survives a relaunch", async () => {
+    await run(`return speed("slower").then(() => settle(1500));`);
+    await app.quit();
+    app = await launch(appPath, { data, port, onboarded: true });
+    assert.equal(await run(`return settle(900).then(() => st().settings.sidebarRevealSpeed);`), "slower");
+    const ms = await run(`return revealAfter(2, 400);`);
+    assert.ok(ms !== null && ms >= 230, `still waits after the relaunch: ${ms} ms`);
+    await run(`return away().then(() => speed("default"));`);
   });
 } finally {
   await run(`return globalThis.expo.modules.ArdiaDev.devSidebarEdgePointer("w1", 0, 0, false).then(() => ac.shell.devSetPointer("w1", null));`).catch(() => {});

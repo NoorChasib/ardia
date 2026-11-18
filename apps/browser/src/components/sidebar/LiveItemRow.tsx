@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Animated, Pressable, View } from "react-native";
 import { closeTab } from "../../state/browser/actions";
 import { COMPLETION_MS, openLiveItem, returnLiveTab } from "../../state/live/engine";
@@ -21,9 +21,12 @@ import { useRowHover } from "./hoverController";
 import { openLiveItemMenu } from "../../state/sidebar/liveMenus";
 import { registerRow } from "../../state/sidebar/sidebarUi";
 import { withShortcut } from "../../state/commands/commandShortcuts";
-import { TabIcon } from "./TabIcon";
+import { sidebarTabIconSize, TabIcon } from "./TabIcon";
 import { SIDEBAR_MOTION, sidebarTokens, TAB_ROW, useSidebarTokens } from "./tokens";
 import { useSidebarRowLook } from "./rowLook";
+import { LeadingClose, TrailingBackToPin } from "./LeadingClose";
+import { rowEnds } from "../../state/sidebar/closeSide";
+import { noteTabCloseButtonPress } from "../../state/telemetry/hoverCardCounts";
 import { SidebarRowLabel, SidebarRowSurface } from "./SidebarRow";
 
 const liveRowKey = (folderId: string, itemId: string) => `live|${folderId}|${itemId}`;
@@ -32,8 +35,9 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
   const indent = inStack ? STACK_INDENT : 0;
   const theme = useTheme();
   const tokens = useSidebarTokens();
-  const { closeTabHint: closeHint, backToPinHint, quiet } = useSidebarRowLook();
+  const { closeTabHint: closeHint, backToPinHint, quiet, closeLeft } = useSidebarRowLook();
   const backToPin = useHover();
+  const [trailingBackHovered, setTrailingBackHovered] = useState(false);
   const colors = useLiveColors();
   const key = liveRowKey(folderId, item.id);
   const profileId = usePageProfileId();
@@ -58,8 +62,24 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
   const pressedFill = quiet ? tokens.quietPressed : theme.tabPressed;
   const titleColor = completion ? theme.textSecondary : quiet ? hex(withAlpha(theme.textTab, active ? tokens.quietActiveText : tokens.quietText)) : active ? theme.rowSelectedText : theme.textTab;
   const resettable = away && !completion;
-  const resetting = resettable && backToPin.hovered;
+  const resetting = resettable && (closeLeft ? trailingBackHovered && hovered : backToPin.hovered);
   const control = liveRowControl(folderId, item, tabId, tabOpen, closeHint);
+  const ends = rowEnds(closeLeft ? "left" : "right", hovered && !!control && !completion, resettable);
+  const backToPinTooltip = withShortcut("Back to Pinned URL", backToPinHint);
+  const closeButton = control ? (
+    <Button
+      variant="icon"
+      icon={control.icon}
+      size="s"
+      weight="semibold"
+      onPress={() => {
+        if (control.closesTab) noteTabCloseButtonPress(closeLeft);
+        control.press();
+      }}
+      tooltip={control.tooltip}
+    />
+  ) : null;
+  const itemIcon = <ItemIcon item={item} completion={completion} colors={colors} />;
 
   return (
     <Animated.View style={completion ? { height: fold.interpolate({ inputRange: [0, 1], outputRange: [0, layout.rowHeight] }), opacity: fold, overflow: "hidden" } : null}>
@@ -79,24 +99,30 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
             {({ pressed }) => (
               <SidebarRowSurface fill={!active && pressed ? pressedFill : fill} selected={active && !quiet} border={border} padLeft={TAB_ROW.contentLeft + indent - border} padRight={TAB_ROW.trailing - border}>
                 {unread ? <Dot size={5} color={theme.accent} style={{ position: "absolute", left: UNREAD_DOT_LEFT + indent - border }} /> : null}
-                <View {...backToPin.hoverProps}>
-                  {resettable ? (
-                    <Pressable
-                      onPress={() => tabId && returnLiveTab(tabId)}
-                      tooltip={withShortcut("Back to Pinned URL", backToPinHint)}
-                      accessibilityRole="button"
-                      accessibilityLabel="Back to Pinned URL"
-                    >
-                      {resetting ? (
-                        <Symbol name="arrow.uturn.backward" size={11} weight="semibold" color={active ? theme.rowSelectedText : theme.textTab} style={{ width: 16, height: 16 }} />
-                      ) : (
-                        <ItemIcon item={item} completion={completion} colors={colors} />
-                      )}
-                    </Pressable>
-                  ) : (
-                    <ItemIcon item={item} completion={completion} colors={colors} />
-                  )}
-                </View>
+                {closeLeft ? (
+                  <LeadingClose iconBox={item.pr ? LIVE_GLYPH : sidebarTabIconSize(false)} close={ends.lead === "close" ? closeButton : null}>
+                    {itemIcon}
+                  </LeadingClose>
+                ) : (
+                  <View {...backToPin.hoverProps}>
+                    {resettable ? (
+                      <Pressable
+                        onPress={() => tabId && returnLiveTab(tabId)}
+                        tooltip={backToPinTooltip}
+                        accessibilityRole="button"
+                        accessibilityLabel="Back to Pinned URL"
+                      >
+                        {resetting ? (
+                          <Symbol name="arrow.uturn.backward" size={11} weight="semibold" color={active ? theme.rowSelectedText : theme.textTab} style={{ width: LIVE_GLYPH, height: LIVE_GLYPH }} />
+                        ) : (
+                          itemIcon
+                        )}
+                      </Pressable>
+                    ) : (
+                      itemIcon
+                    )}
+                  </View>
+                )}
                 <SidebarRowLabel
                   text={resetting ? "Back to Pinned URL" : item.title}
                   weight={unread ? "medium" : undefined}
@@ -106,10 +132,13 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
                 <HoverSlot
                   hovered={hovered && !!control && !completion}
                   reserve={inStack && item.pr?.stack ? "always" : "hover"}
-                  hover={control ? <Button variant="icon" icon={control.icon} size="s" weight="semibold" onPress={control.press} tooltip={control.tooltip} /> : null}
+                  hover={ends.trail === "close" ? closeButton : null}
                 >
                   <Trailing item={item} completion={completion} colors={colors} />
                 </HoverSlot>
+                {ends.trailingBackToPin === "none" ? null : (
+                  <HoverSlot hovered={ends.trailingBackToPin === "shown"} hover={<TrailingBackToPin tooltip={backToPinTooltip} onPress={() => tabId && returnLiveTab(tabId)} onHover={setTrailingBackHovered} />} />
+                )}
               </SidebarRowSurface>
             )}
           </Pressable>
@@ -120,17 +149,20 @@ export function LiveItemRow({ folderId, item, windowId, inStack = false }: { fol
 }
 
 const UNREAD_DOT_LEFT = 2;
+const LIVE_GLYPH = 16;
+const LIVE_GLYPH_BOX = { width: LIVE_GLYPH, height: LIVE_GLYPH } as const;
 const STACK_INDENT = 10;
 const POSITION_CHIP = { marginLeft: space.xs } as const;
 
-type LiveRowControl = CloseControl & { press(): void };
+type LiveRowControl = CloseControl & { closesTab: boolean; press(): void };
 
 function liveRowControl(folderId: string, item: LiveItem, tabId: string | null, tabOpen: boolean, closeHint: string | undefined): LiveRowControl | null {
-  if (tabId) return { icon: "minus", tooltip: withShortcut("Close Tab", closeHint), press: () => void closeTab(tabId) };
+  if (tabId) return { icon: "minus", tooltip: withShortcut("Close Tab", closeHint), closesTab: true, press: () => void closeTab(tabId) };
   if (item.pr && !tabOpen)
     return {
       icon: "xmark",
       tooltip: "Hide Until Refresh",
+      closesTab: false,
       press: () => {
         hideItems(folderId, [item]);
         noteLiveRowHide();
@@ -169,7 +201,7 @@ function ItemIcon({ item, completion, colors }: { item: LiveItem; completion: Co
     );
   }
   if (item.pr) {
-    return <Symbol name="arrow.triangle.pull" size={12} weight="semibold" color={item.pr.draft ? colors.draft : colors.success} style={{ width: 16, height: 16 }} />;
+    return <Symbol name="arrow.triangle.pull" size={12} weight="semibold" color={item.pr.draft ? colors.draft : colors.success} style={LIVE_GLYPH_BOX} />;
   }
   if (item.icon && /^https?:/.test(item.icon)) return <TabIcon url={item.url} favicon={item.icon} direct />;
   return <TabIcon url={item.source === "confluence" && !item.icon ? SOURCES.confluence.site : item.url} icon={item.icon} />;

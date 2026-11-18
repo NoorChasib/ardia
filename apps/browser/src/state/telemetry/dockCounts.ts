@@ -7,6 +7,9 @@ const NONE = {
   sidebar_slides_past_target: 0,
   sidebar_page_full_screen_peeks: 0,
   sidebar_peek_reveals_held_back: 0,
+  sidebar_peek_reveal_waits: 0,
+  sidebar_peek_reveal_waits_abandoned: 0,
+  sidebar_peek_edge_band_returns: 0,
   sidebar_peek_resizes: 0,
   sidebar_peek_closes_while_resizing: 0,
   sidebar_screen_edge_stops: 0,
@@ -25,6 +28,12 @@ export function noteSidebarSlide(pastTarget: boolean) {
 }
 
 export const noteSidebarPeekRevealHeldBack = () => void counts.sidebar_peek_reveals_held_back++;
+
+export const noteSidebarPeekRevealWait = () => void counts.sidebar_peek_reveal_waits++;
+
+export const noteSidebarPeekRevealWaitAbandoned = () => void counts.sidebar_peek_reveal_waits_abandoned++;
+
+export const noteSidebarEdgeBandReturn = () => void counts.sidebar_peek_edge_band_returns++;
 
 export const notePageFullScreenPeek = () => void counts.sidebar_page_full_screen_peeks++;
 

@@ -1,12 +1,14 @@
 import { useLayoutEffect, useMemo, useState } from "react";
-import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { Animated, Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import { displayUrl } from "@ardia/core";
 import { useTheme } from "../ui/theme";
-import { useIsBookmarked, useSidebarSide, useTab } from "../../state/browser/hooks";
+import { useIsBookmarked, useSettings, useSidebarSide, useTab } from "../../state/browser/hooks";
 import { plural, tabTitle } from "../../state/browser/model";
 import { useTileFolderLabel, useTileFolderMembers } from "../../state/pins/hooks";
 import { returnToPinnedUrl } from "../../state/pins/actions";
 import { togglePin } from "../../state/tabs/actions";
+import { pagePreviewOn } from "../../state/tabs/tabPictures";
+import { memoryLineOn } from "../../state/tabs/tabMemory";
 import { useHoverOrphaned, useIsShownTab } from "../../state/sidebar/hooks";
 import { useFolderPanel } from "../../state/sidebar/tileFolderUi";
 import { awayTitle } from "../../state/pins/organize";
@@ -32,6 +34,7 @@ import { TabCardPreview } from "./TabCardPreview";
 import { useSidebarUi, type Anchor, type Hover } from "../../state/sidebar/sidebarUi";
 import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { TabIcon } from "./TabIcon";
+import { HOVER_CARD_WINDOW_MARGIN } from "./tokens";
 import { HoverPlayer, useShowsMiniPlayer } from "../media/HoverPlayer";
 import { useMedia, usePictureInPicture } from "../../state/media/media";
 import { noteTabHoverCardPress } from "../../state/telemetry/hoverCardCounts";
@@ -70,29 +73,43 @@ function HoverContent({ hover, windowId, player, windowHeight }: { hover: Hover;
   if (hover.kind === "tab" && player) return <HoverPlayer tabId={hover.id} windowId={windowId} anchor={hover.anchor} />;
   if (hover.kind === "tab" && calendar) return <CalendarPreview tabId={hover.id} windowId={windowId} anchor={hover.anchor} />;
   if (hover.kind === "folder") return <FolderPeek folderId={hover.id} windowId={windowId} anchor={hover.anchor} />;
-  return hover.kind === "tab" ? <TabCard tabId={hover.id} windowId={windowId} anchor={hover.anchor} /> : <GroupPanel key={`${windowId}:${hover.id}`} groupId={hover.id} windowId={windowId} anchor={hover.anchor} windowHeight={windowHeight} />;
+  return hover.kind === "tab" ? <TabCard tabId={hover.id} windowId={windowId} anchor={hover.anchor} windowHeight={windowHeight} /> : <GroupPanel key={`${windowId}:${hover.id}`} groupId={hover.id} windowId={windowId} anchor={hover.anchor} windowHeight={windowHeight} />;
 }
 
-function Card({ anchor, children }: { anchor: Anchor; children: React.ReactNode }) {
+function Card({ anchor, fitWindowHeight, children }: { anchor: Anchor; fitWindowHeight?: number; children: React.ReactNode }) {
   const origin = useHoverCardOrigin(anchor);
+  const [height, setHeight] = useState(0);
+  if (fitWindowHeight === undefined) {
+    return (
+      <HoverPanel {...cardHoverProps} width={WIDTH} pad="ml" style={{ position: "absolute", ...origin }}>
+        {children}
+      </HoverPanel>
+    );
+  }
+  const onLayout = (e: LayoutChangeEvent) => {
+    cardHoverProps.onLayout(e);
+    setHeight(e.nativeEvent.layout.height);
+  };
+  const top = height > 0 && fitWindowHeight > 0 ? Math.max(HOVER_CARD_WINDOW_MARGIN, Math.min(origin.top, fitWindowHeight - height - HOVER_CARD_WINDOW_MARGIN)) : origin.top;
   return (
-    <HoverPanel {...cardHoverProps} width={WIDTH} pad="ml" style={{ position: "absolute", ...origin }}>
+    <HoverPanel {...cardHoverProps} onLayout={onLayout} width={WIDTH} pad="ml" style={{ position: "absolute", ...origin, top }}>
       {children}
     </HoverPanel>
   );
 }
 
-function TabCard({ tabId, windowId, anchor }: { tabId: string; windowId: string; anchor: Anchor }) {
+function TabCard({ tabId, windowId, anchor, windowHeight }: { tabId: string; windowId: string; anchor: Anchor; windowHeight: number }) {
   const tab = useTab(tabId);
   const isActive = useIsShownTab(windowId, tabId);
   const bookmarked = useIsBookmarked(tab?.url ?? "");
   const showBookmarks = useBookmarksShown();
   const video = useMedia((m) => !!m.sessions[tabId]?.hasVideo || !!m.pipOpen[tabId]);
   const [pip, togglePip] = usePictureInPicture(tabId);
+  const grows = useSettings((s) => pagePreviewOn(s) || memoryLineOn(s));
   if (!tab) return null;
   const away = awayTitle(tab);
   return (
-    <Card anchor={anchor}>
+    <Card anchor={anchor} fitWindowHeight={grows ? windowHeight : undefined}>
       <TabCardSummary tab={tab} />
       {away && tab.pinnedUrl ? (
         <Text lines={1} size="caption" tone="textTertiary" style={PINNED_LINE}>

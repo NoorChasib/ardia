@@ -36,7 +36,7 @@ export const TabIcon = memo(function TabIcon({
 }) {
   useTheme();
   const inSidebar = useContext(TextScopeContext) === "sidebar";
-  const size = compact ? (inSidebar ? sidebarIconSize(COMPACT_ICON) : COMPACT_ICON) : (givenSize ?? (inSidebar ? sidebarIconSize(ICON) : ICON));
+  const size = compact ? (inSidebar ? sidebarTabIconSize(true) : COMPACT_ICON) : (givenSize ?? (inSidebar ? sidebarTabIconSize(false) : ICON));
   const sleeping = useIsSleeping(tabId ?? "");
   const marks = useIconMarks(tabId, givenMarks);
   const engine = tabId && size >= 14 ? markedEngine(marks) : null;
@@ -81,6 +81,10 @@ function TabProfileIcon({ tabId, ...props }: Omit<Parameters<typeof Icon>[0], "p
 const SLEEPING_OPACITY = 0.45;
 const ICON = 16;
 const COMPACT_ICON = 14;
+
+export function sidebarTabIconSize(compact: boolean): number {
+  return sidebarIconSize(compact ? COMPACT_ICON : ICON);
+}
 
 function Icon({
   url,

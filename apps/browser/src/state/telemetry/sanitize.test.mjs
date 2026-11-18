@@ -400,3 +400,13 @@ test("the snapshot reports the interface size in whole percent with its default,
   }
   assert.equal(settingsSnapshot(DEFAULT_SETTINGS).setting_interfaceScale, "100");
 });
+
+test("the snapshot reports which side the tab close button sits on, with its default, and survives cleaning", () => {
+  const right = settingsSnapshot(DEFAULT_SETTINGS);
+  assert.equal(right.setting_tabCloseButtonSide, "right");
+  assert.equal(right.default_tabCloseButtonSide, "right");
+  const left = settingsSnapshot({ ...DEFAULT_SETTINGS, tabCloseButtonSide: "left" });
+  assert.equal(left.setting_tabCloseButtonSide, "left");
+  assert.equal(left.default_tabCloseButtonSide, "right");
+  assert.deepEqual(cleanProperties(left), left);
+});

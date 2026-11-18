@@ -240,3 +240,28 @@ test("the shell's first load of the URL a tab was just created with is dropped, 
   const shim = readFileSync(new URL("./shims/web/HostWebView.tsx", import.meta.url), "utf8");
   assert.match(shim, /if \(property === "loadUrl"\) \{\n\s+args\[0\] = toEngineUrl\(args\[0\] as string\);\n\s+if \(current\.repeatsCreate\(args\[0\] as string\)\) return undefined;/);
 });
+
+test("a page picture is never asked of an engine without tab.capturePicture, and is asked once it has it", async () => {
+  const { hostTabHandle } = await import("./shims/web/HostWebView.tsx");
+  const { pagePicturesSupported } = await import("../../browser/src/platform/webviews.ts");
+  assert.equal(pagePicturesSupported(), false, "the shared preview reads the same answer, so it schedules nothing");
+  const pictureCommands = (native) => native.requests.filter((r) => r.method === "tab.command" && r.args?.command === "capturePicture").length;
+  const without = nativeHost();
+  const { tab: plain } = mount(without);
+  await plain.ready;
+  const sent = without.requests.length;
+  assert.equal(await hostTabHandle(() => plain, without.host).capturePicture(0.25), null);
+  assert.equal(await hostTabHandle(() => null, without.host).capturePicture(0.25), null, "even before the tab mounts");
+  assert.equal(await hostTabHandle(() => plain, undefined).capturePicture(0.25), null);
+  await settle();
+  assert.equal(without.requests.length, sent, "no host call at all");
+  plain.dispose();
+  const able = nativeHost();
+  able.host.bootstrap.capabilities = ["tab.capturePicture"];
+  const { tab } = mount(able);
+  await tab.ready;
+  await hostTabHandle(() => tab, able.host).capturePicture(0.25);
+  assert.equal(pictureCommands(able), 1);
+  tab.dispose();
+  await settle();
+});

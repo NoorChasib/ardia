@@ -1,11 +1,10 @@
-import { onWindowEvent, watchSidebarEdge } from "../../state/windows/nativeWindow";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { switchOn } from "../../state/app/switches";
 import { useTheme } from "../ui/theme";
 import { curve, useGated } from "../ui/motion";
 import { Panel, reduceMotion, WindowBackdrop, WindowDragRegion } from "../ui";
-import { useSidebarSide, useWindowFullScreen, useWindowId } from "../../state/browser/hooks";
+import { useSettings, useSidebarSide, useWindowFullScreen, useWindowId } from "../../state/browser/hooks";
 import { useSidebarDockState } from "../../state/windows/hooks";
 import { useSidebarWidth } from "../../state/sidebar/hooks";
 import { useCardTopInset, useSidebarControlsRowIn, useToolbarLightsCenter } from "../../state/windows/layout";
@@ -21,8 +20,6 @@ import {
   notePageFullScreenPeek,
   noteSidebarPeekClosedWhileResizing,
   noteSidebarPeekResize,
-  noteSidebarPeekRevealHeldBack,
-  noteSidebarScreenEdge,
   noteSidebarSlide,
 } from "../../state/telemetry/dockCounts";
 import { ProfileSwipe } from "./ProfileSwipe";
@@ -36,10 +33,10 @@ import {
   dockState,
   dockedCardInset,
   edgeClosed,
-  edgeEventReveals,
   edgeSeen,
   edgeStripOverPage,
   edgeWatchWidth,
+  leftStripInward,
   peekBleed,
   peekHoldWidth,
   peekOnScreen,
@@ -58,6 +55,7 @@ import {
 } from "../../state/windows/dockMotion";
 import { useTabDrag } from "../../state/drag/tabDrag";
 import { usePeek } from "./usePeek";
+import { useSidebarEdgeWatch } from "./useSidebarEdgeWatch";
 import { useSidebarLights, useTopStripLights } from "./useDockLights";
 import { useCardFrame } from "./cardFrame";
 import { forgetSidebarDock, noteSidebarDock } from "./sidebarDockCheck";
@@ -231,11 +229,8 @@ function SidebarDock({
     fullScreenPeekAt.current = null;
     dismissHoverIn(windowId);
   };
-  const peek = usePeek((!open || fullscreen) && !moving, arc, () => edgeOver.current || peekHeld(windowId), closed, opened);
-  const reveal = () => {
-    if (arm.current.armed) latestPeek.current.show();
-    else noteSidebarPeekRevealHeldBack();
-  };
+  const revealSpeed = useSettings((s) => s.sidebarRevealSpeed);
+  const peek = usePeek((!open || fullscreen) && !moving, arc, () => edgeOver.current || peekHeld(windowId), closed, opened, revealSpeed);
   const latestPeek = useRef(peek);
   latestPeek.current = peek;
   useEffect(() => {
@@ -244,8 +239,8 @@ function SidebarDock({
   useEffect(() => (peek.live ? watchHolds("peek", () => latestPeek.current.recheck()) : undefined), [peek.live]);
   const state = dockState({ open, fullscreen, moving, peekLive: peek.live, peekLeaving: peek.leaving });
   const band = draggingTab ? TAB_DRAG_EDGE_STRIP : PEEK_EDGE_STRIP;
-  const latestReveal = useRef({ state, right, windowWidth, band, reveal });
-  latestReveal.current = { state, right, windowWidth, band, reveal };
+  const latestReveal = useRef({ state, right, windowWidth, band });
+  latestReveal.current = { state, right, windowWidth, band };
   const frame = useCardFrame();
   const peekAt = frame.peek;
   const holdWidth = peekHoldWidth(width, peekAt.left);
@@ -255,25 +250,8 @@ function SidebarDock({
   useLayoutEffect(() => () => dismissHoverIn(windowId), [windowId, shown]);
   const watching = watchesEdge(state, moving);
   const nativeHold = edgeWatchWidth(holding, draggingTab, holdWidth, fullscreen ? 0 : frame.inset);
-  useEffect(() => {
-    if (!watching) return;
-    const sub = onWindowEvent((e) => {
-      if (e.type !== "sidebarEdge" || e.id !== windowId) return;
-      if (e.screenEdge) noteSidebarScreenEdge(e.screenEdge);
-      const at = latestReveal.current;
-      if (e.over && !edgeEventReveals(at.state, e.point[0], at.right, at.windowWidth, at.band)) return;
-      edgeOver.current = e.over;
-      arm.current = edgeSeen(arm.current, "native", e.over);
-      if (e.over) latestReveal.current.reveal();
-      else latestPeek.current.hide();
-    });
-    watchSidebarEdge(windowId, true, nativeHold, right, holding || draggingTab);
-    return () => {
-      sub.remove();
-      watchSidebarEdge(windowId, false);
-      edgeOver.current = false;
-    };
-  }, [windowId, watching, nativeHold, right, holding || draggingTab]);
+  const edgeWatch = { windowId, watching, hold: nativeHold, right, whilePressed: holding || draggingTab, peekLive: peek.live };
+  const reveal = useSidebarEdgeWatch(edgeWatch, latestReveal, latestPeek, edgeOver, arm);
   useEffect(() => {
     if (!open) arm.current = EDGE_DISARMED;
   }, [open]);
@@ -308,8 +286,9 @@ function SidebarDock({
     arm.current = edgeSeen(arm.current, "strip", true);
     reveal();
   };
-  const leaveStrip = () => {
+  const leaveStrip = (e: { nativeEvent: { clientX: number } }) => {
     arm.current = edgeSeen(arm.current, "strip", false);
+    if (leftStripInward(e.nativeEvent.clientX, right, windowWidth)) peek.abandonWait();
     if (!peek.live) peek.cancelPending(edgeOver.current);
   };
 

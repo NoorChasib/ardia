@@ -98,6 +98,9 @@ export function startDevHarness() {
     get reveal(): typeof import("../../state/sidebar/reveal") {
       return require("../../state/sidebar/reveal");
     },
+    get tabMemory(): typeof import("../../state/tabs/tabMemory") {
+      return require("../../state/tabs/tabMemory");
+    },
     get tileFolders(): typeof import("../../state/pins/tileFolders") & typeof import("../../state/sidebar/tileFolderUi") {
       return { ...require("../../state/pins/tileFolders"), ...require("../../state/sidebar/tileFolderUi") };
     },
