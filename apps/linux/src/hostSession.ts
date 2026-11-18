@@ -281,10 +281,13 @@ export function snapshotHostSession(s: BrowserState): HydrateData {
 }
 
 type SessionPair = { base: HydrateData; session: HydrateData };
-export type SessionWriteNote = { length: number; cosmetic: boolean };
+export type SessionWriteNote = { cosmetic: boolean };
+export type SessionWriteReport = SessionWriteNote & { bytes: number };
+const utf8 = new TextEncoder();
+const sessionBytes = (session: HydrateData) => utf8.encode(JSON.stringify(session)).byteLength;
 const sessionObject = (value: unknown): value is HydrateData => value !== null && typeof value === "object" && !Array.isArray(value);
 
-export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, onCanonical?: (base: HydrateData, session: HydrateData) => void, onWrite?: (note: SessionWriteNote) => void) {
+export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, onCanonical?: (base: HydrateData, session: HydrateData) => void, onWrite?: (report: SessionWriteReport) => void) {
   let writes = Promise.resolve();
   let canonical = cloneSessionValue(initial);
   let observation = 0;
@@ -299,9 +302,10 @@ export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, 
   let finalized = false;
   let finalWrite = Promise.resolve();
   const notes = new WeakMap<HydrateData, SessionWriteNote>();
-  const written = (session: HydrateData) => {
+  const waiting = new Set<SessionPair>();
+  const written = (session: HydrateData, reply: unknown) => {
     const note = notes.get(session);
-    if (note) onWrite?.(note);
+    if (note && onWrite) onWrite({ ...note, bytes: sessionBytes(sessionObject(reply) ? reply : session) });
   };
   const acceptCanonical = (session: HydrateData) => {
     canonical = cloneSessionValue(session);
@@ -321,7 +325,9 @@ export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, 
     const pair = pending;
     const version = generation;
     pending = undefined;
+    waiting.add(pair);
     const write = writes.catch((error) => { if (!finalized) reportHostError(error); }).then(async () => {
+      waiting.delete(pair);
       if (finalized || version !== generation) return;
       issued = pair;
       issuedFailed = false;
@@ -330,7 +336,7 @@ export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, 
       inFlight = pair;
       try {
         const reply = await host.invoke("session.write", pair);
-        written(pair.session);
+        written(pair.session, reply);
         if (finalized) return;
         const reconciled = generation;
         if (observed === observation && sessionObject(reply)) {
@@ -383,18 +389,23 @@ export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, 
     finalized = true;
     generation++;
     pending = undefined;
+    waiting.clear();
     if (!dirty || !latest || latest === issued && !issuedFailed) return finalWrite;
     const final = inFlight ? { base: mergeSession(inFlight.base, inFlight.session, latest.base), session: latest.session } : latest;
     issued = latest;
     try {
-      finalWrite = Promise.resolve(host.invoke("session.write", final)).then(() => written(final.session));
+      finalWrite = Promise.resolve(host.invoke("session.write", final)).then((reply) => written(final.session, reply));
     } catch (error) {
       finalWrite = Promise.reject(error);
     }
     return finalWrite;
   };
-  const pendingNote = () => pending && notes.get(pending.session);
-  return { queue: (session: HydrateData, note?: SessionWriteNote) => reconcile(session, true, note), reconcile, acceptCanonical, flush, drain, flushFinal, pendingNote };
+  const unacknowledged = () => {
+    const held = [...(pending ? [pending] : []), ...waiting].flatMap((pair) => notes.get(pair.session) ?? []);
+    const note: SessionWriteNote | undefined = held.length ? { cosmetic: held.every((each) => each.cosmetic) } : undefined;
+    return { note, due: waiting.size > 0 };
+  };
+  return { queue: (session: HydrateData, note?: SessionWriteNote) => reconcile(session, true, note), reconcile, acceptCanonical, flush, drain, flushFinal, unacknowledged };
 }
 
 type SessionStore = {
@@ -464,7 +475,7 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
   const plainSnapshot = snapshot === snapshotHostSession;
   const snapshotOf = (state: BrowserState) => snapshot(withoutStandIn(state, standIn), canonical);
   const written = linuxSessionVersion(stored) === linuxSessionVersion(initial) ? initial : unmigratedSessionShape(stored);
-  const writer = createSessionWriter(host, written, (base, session) => receive(base, session), (note) => noteSessionWrite(note.length, note.cosmetic));
+  const writer = createSessionWriter(host, written, (base, session) => receive(base, session), (report) => noteSessionWrite(report.bytes, report.cosmetic));
   let timer: ReturnType<typeof setTimeout> | undefined;
   let due = 0;
   let last = canonicalSessionValue(equalSessionValue({ ...initial, version: undefined }, { ...written, version: undefined }) ? initial : written)!;
@@ -488,7 +499,7 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
   };
   const commit = () => {
     if (!unsaved) return;
-    const kind = heavier(unsaved, noteKind(writer.pendingNote()));
+    const kind = heavier(unsaved, noteKind(writer.unacknowledged().note));
     unsaved = undefined;
     const state = store.getState();
     const session = snapshotOf(state);
@@ -496,7 +507,7 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
     settled = { sources: sessionSources(state), json, snapshot: session };
     if (json === last) return;
     last = json;
-    writer.queue(session, { length: json.length, cosmetic: kind === "volatile" });
+    writer.queue(session, { cosmetic: kind === "volatile" });
   };
   const flush = () => {
     cancel();
@@ -539,13 +550,14 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
     const snapshot = snapshotOf(current);
     if (closeTokens.size) frozen = snapshot;
     const outstanding = !equalSessionValue(withoutFocus(snapshot), withoutFocus(session));
-    const kind = heavier(unsaved, noteKind(writer.pendingNote())) ?? "structural";
+    const held = writer.unacknowledged();
+    const kind = heavier(unsaved, noteKind(held.note)) ?? "structural";
     unsaved = undefined;
     lastSources = sessionSources(current);
     last = canonicalSessionValue(snapshot)!;
     settled = { sources: lastSources, json: last, snapshot };
-    writer.reconcile(snapshot, outstanding, { length: last.length, cosmetic: kind === "volatile" });
-    if (outstanding && !closeTokens.size) schedule(kind === "volatile" ? VOLATILE_SAVE_MS : STRUCTURAL_SAVE_MS);
+    writer.reconcile(snapshot, outstanding, { cosmetic: kind === "volatile" });
+    if (outstanding && !closeTokens.size) schedule(held.due ? 0 : kind === "volatile" ? VOLATILE_SAVE_MS : STRUCTURAL_SAVE_MS);
     else cancel();
   };
   const receive = (base: HydrateData, session: HydrateData) => {

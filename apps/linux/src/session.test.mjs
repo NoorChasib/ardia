@@ -990,6 +990,57 @@ for (const eventFirst of [false, true]) {
   });
 }
 
+for (const eventFirst of [false, true]) {
+  test(`a new tab whose save is queued behind an in-flight save is written as soon as that save settles, even after a switch, with its ${eventFirst ? "event and then its reply" : "reply and then its event"}`, async () => {
+    const fixture = await persistedTabs({ holdWrites: true, eventFirst });
+    try {
+      takeSessionWrites();
+      fixture.S().updateSettings({ sidebarWidth: 299 });
+      await fixture.hide();
+      assert.equal(fixture.state.held.length, 1);
+      const made = fixture.S().newTab("main", { url: "https://example.test/structural", background: true });
+      await wait(STRUCTURAL_SAVE_MS + 70);
+      assert.equal(fixture.state.writes.length, 1, "the new tab's save waits behind the held one");
+      fixture.S().activate(fixture.ids[2]);
+      fixture.state.hold = false;
+      const released = Date.now();
+      fixture.state.held.shift()();
+      assert.ok(await waitFor(() => fixture.state.disk.tabs[made], STRUCTURAL_SAVE_MS), "the new tab reaches disk within the structural delay of the release");
+      assert.ok(Date.now() - released < 150, `${Date.now() - released} ms after the release`);
+      assert.equal(fixture.state.disk.windows.main.activeTabIds.default, fixture.ids[2]);
+      await wait(VOLATILE_SAVE_MS + 100);
+      assert.equal(fixture.state.writes.length, 2, "the settings save, then one save with the tab and the switch");
+      const counted = takeSessionWrites();
+      assert.deepEqual([counted.session_writes, counted.session_cosmetic_writes], [2, 0]);
+    } finally {
+      fixture.restore();
+    }
+  });
+}
+
+const utf8Kilobytes = (session) => Math.round(new TextEncoder().encode(JSON.stringify(session)).byteLength / 1024);
+
+for (const final of [false, true]) {
+  test(`session_kb_written counts the UTF-8 size of the merged session the native side acknowledged${final ? " at quit" : ""}`, async () => {
+    const fixture = await persistedTabs();
+    try {
+      takeSessionWrites();
+      fixture.state.disk = { ...fixture.state.disk, tabs: { ...fixture.state.disk.tabs, [fixture.ids[3]]: { ...fixture.state.disk.tabs[fixture.ids[3]], title: "界".repeat(4096) } } };
+      fixture.S().updateTab(fixture.ids[1], { url: "https://example.test/acknowledged" });
+      if (final) fixture.state.final();
+      else await fixture.persistence.flush();
+      await wait(10);
+      assert.equal(fixture.state.writes.length, 1);
+      const counted = takeSessionWrites();
+      assert.equal(counted.session_writes, 1);
+      assert.ok(utf8Kilobytes(fixture.state.disk) >= 12);
+      assert.equal(counted.session_kb_written, utf8Kilobytes(fixture.state.disk));
+    } finally {
+      fixture.restore();
+    }
+  });
+}
+
 test("a rejected save counts as no write, and its successful retry counts once", async () => {
   const fixture = await persistedTabs();
   try {
