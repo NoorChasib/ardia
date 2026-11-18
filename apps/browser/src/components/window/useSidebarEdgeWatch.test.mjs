@@ -18,6 +18,7 @@ const WIDTH = 1200;
 const PROBE_IDLE_MS = EDGE_PROBE_IDLE_LIMIT * EDGE_PROBE_MS;
 const LINUX_STRIP = 8;
 const REACH = 24;
+const WINDOWS_TICK_MS = 40;
 
 function linuxWatcher() {
   const native = { x: 600, watching: false, over: false, hold: 0, right: false, calls: 0, band: false, bandReports: 0 };
@@ -57,6 +58,50 @@ function linuxWatcher() {
   return native;
 }
 
+function exactHoldWatcher({ answersOnTick }) {
+  const native = { x: 600, watching: false, over: false, hold: 0, right: false, calls: 0, unanswered: false };
+  const inset = () => (native.right ? WIDTH - 1 - native.x : native.x);
+  const within = () => inset() >= -REACH && inset() < native.hold;
+  const send = (over) => {
+    const point = [native.x, 300];
+    setTimeout(() => windows.emit({ type: "sidebarEdge", id: "w", over, point }), 1);
+  };
+  const report = (fresh) => {
+    const over = within();
+    if (!native.watching || (!fresh && over === native.over)) return;
+    native.over = over;
+    send(over);
+  };
+  if (answersOnTick)
+    setInterval(() => {
+      if (!native.watching) return;
+      const fresh = native.unanswered;
+      native.unanswered = false;
+      report(fresh);
+    }, WINDOWS_TICK_MS);
+  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false) => {
+    native.calls++;
+    if (!on) Object.assign(native, { watching: false, over: false });
+    else {
+      Object.assign(native, { watching: true, hold, right });
+      if (answersOnTick) native.unanswered = true;
+      else report(true);
+    }
+    return Promise.resolve();
+  };
+  native.move = (x) => {
+    native.x = x;
+    if (!answersOnTick) report(false);
+  };
+  return native;
+}
+
+const WATCHERS = {
+  linux: linuxWatcher,
+  mac: () => exactHoldWatcher({ answersOnTick: false }),
+  windows: () => exactHoldWatcher({ answersOnTick: true }),
+};
+
 function dock({ speed, right, borderless }) {
   const edgeOver = React.useRef(false);
   const arm = React.useRef(EDGE_ARMED);
@@ -76,9 +121,9 @@ function dock({ speed, right, borderless }) {
   return { live: peek.live, strip };
 }
 
-function harness(t, { speed = "slower", right = false, borderless = true } = {}) {
+function harness(t, { speed = "slower", right = false, borderless = true, platform = "linux" } = {}) {
   t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
-  const native = linuxWatcher();
+  const native = WATCHERS[platform]();
   const h = mount(dock, { props: { speed, right, borderless } });
   const edge = (inset) => (right ? WIDTH - 1 - inset : inset);
   let clock = 0;
@@ -306,3 +351,49 @@ test("a Slower wait started while sharing still counts its abandon", (t) => {
   const counted = takeDockCounts();
   assert.deepEqual([counted.sidebar_peek_reveal_waits, counted.sidebar_peek_reveal_waits_abandoned], [1, 1]);
 });
+
+for (const platform of ["mac", "windows"])
+  for (const right of [false, true])
+    for (const borderless of [true, false]) {
+      const name = `${platform === "mac" ? "macOS" : "Windows"}'s watcher, ${right ? "right" : "left"} side, ${borderless ? "strip off" : "strip on"}`;
+      const enter = (s) => {
+        s.at(1);
+        if (!borderless) s.h.value.strip(true);
+      };
+      const stepBack = (s) => {
+        s.at(5);
+        if (!borderless) s.h.value.strip(false);
+      };
+      const latest = platform === "windows" ? 250 + 3 * WINDOWS_TICK_MS : 330;
+
+      test(`${name}: Slower resting on the edge opens it after the wait`, (t) => {
+        const s = harness(t, { platform, right, borderless });
+        s.run(100);
+        enter(s);
+        const ms = s.firstLive(900);
+        assert.ok(ms !== null && ms >= 250 && ms < latest, `opened after ${ms} ms`);
+      });
+
+      test(`${name}: Slower stepping back never opens it, the asking stops, and a late return starts a fresh wait`, (t) => {
+        const s = harness(t, { platform, right, borderless });
+        s.run(100);
+        enter(s);
+        s.run(120);
+        stepBack(s);
+        assert.equal(s.firstLive(1500), null);
+        const calls = s.native.calls;
+        s.run(5000);
+        assert.equal(s.native.calls, calls, "no native call while the pointer rests off the edge");
+        enter(s);
+        const ms = s.firstLive(900);
+        assert.ok(ms !== null && ms >= 250 && ms < latest, `the late return opened after ${ms} ms`);
+      });
+
+      test(`${name}: Default opens it at once`, (t) => {
+        const s = harness(t, { platform, speed: "default", right, borderless });
+        s.run(100);
+        enter(s);
+        const ms = s.firstLive(300);
+        assert.ok(ms !== null && ms < 2 * WINDOWS_TICK_MS, `opened after ${ms} ms`);
+      });
+    }
