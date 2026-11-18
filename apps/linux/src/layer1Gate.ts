@@ -28,26 +28,31 @@ const gatedHosts = new WeakSet<object>();
 
 export function gateHost<T extends ArdiaHost | undefined>(host: T): T {
   if (!host || gatedHosts.has(host)) return host;
-  let source: string[] | undefined;
+  const source: ArdiaHost = host;
+  let seen: string[] | undefined;
   let filtered: string[] | undefined;
-  const bootstrap = new Proxy(host.bootstrap, {
-    get(target, key, receiver) {
-      if (key !== "capabilities") return Reflect.get(target, key, receiver);
-      if (target.capabilities !== source) {
-        source = target.capabilities;
-        filtered = ungated(source);
+  const bootstrap = new Proxy({} as ArdiaHost["bootstrap"], {
+    get(_target, key) {
+      if (key !== "capabilities") return Reflect.get(source.bootstrap, key);
+      if (source.bootstrap.capabilities !== seen) {
+        seen = source.bootstrap.capabilities;
+        filtered = ungated(seen);
       }
       return filtered;
     },
+    has: (_target, key) => key in source.bootstrap,
+    set: (_target, key, value) => Reflect.set(source.bootstrap, key, value),
   });
-  const gated = new Proxy(host, {
-    get(target, key, receiver) {
+  const gated = new Proxy({} as ArdiaHost, {
+    get(_target, key) {
       if (key === "bootstrap") return bootstrap;
-      if (key === "invoke") return (method: string, args: Record<string, unknown>) => (isGated(method) ? Promise.reject(gatedError(method)) : target.invoke(method, args));
-      if (key === "call") return (name: string, profile: string, args: string | null) => (isGated(name) ? Promise.reject(gatedError(name)) : target.call(name, profile, args));
-      const value = Reflect.get(target, key, receiver);
-      return typeof value === "function" ? value.bind(target) : value;
+      if (key === "invoke") return (method: string, args: Record<string, unknown>) => (isGated(method) ? Promise.reject(gatedError(method)) : source.invoke(method, args));
+      if (key === "call") return (name: string, profile: string, args: string | null) => (isGated(name) ? Promise.reject(gatedError(name)) : source.call(name, profile, args));
+      const value = Reflect.get(source, key);
+      return typeof value === "function" ? value.bind(source) : value;
     },
+    has: (_target, key) => key in source,
+    set: (_target, key, value) => Reflect.set(source, key, value),
   });
   gatedHosts.add(gated);
   return gated as T;

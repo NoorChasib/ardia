@@ -1016,8 +1016,9 @@ test("the Layer 1 gate hides and refuses every service and independence call bef
     call: async (name) => (nativeCalls.push(["call", name]), "{}"),
     onEvent: () => () => {},
   };
-  const gated = gateHost(raw);
+  const gated = gateHost(Object.freeze({ ...raw, bootstrap: Object.freeze({ ...raw.bootstrap, capabilities: Object.freeze([...engine]) }) }));
   assert.equal(gateHost(gated), gated);
+  assert.equal("onEvent" in gated, true);
   assert.deepEqual(gated.bootstrap.capabilities, engine.filter((name) => !isGated(name)));
   assert.equal(gated.bootstrap.windowId, "w_gate");
   const settle = async (run) => {
