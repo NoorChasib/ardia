@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, View } from "react-native";
+import { View } from "react-native";
 import { useLastingLoad } from "../../browser/src/state/tabs/lastingLoad";
 import { notePageOverlay } from "../../browser/src/state/telemetry/usage";
 import { capsule, curve, hairline, reduceMotion, useTheme } from "../../browser/src/components/ui";
 import { cssEasing } from "../../browser/src/components/ui/cssMotion";
 import { HudPlate } from "../../browser/src/components/window/Hud";
 import { LOADING_PILL } from "../../browser/src/components/window/tokens";
-import { createPillMotion, PAINT_MOTION, type PillMotion, type PillMotionSpec } from "./paintMotion";
+import { createPillMotion, onReduceMotion, PAINT_MOTION, type MotionPreference, type PillMotion, type PillMotionSpec } from "./paintMotion";
 
 const { width, height, top, track, motion } = LOADING_PILL;
 
@@ -18,6 +18,9 @@ const PILL_MOTION: PillMotionSpec = {
   hide: { duration: motion.hide.duration, easing: cssEasing(curve.exit) },
   leaveScale: LOADING_PILL.leaveScale,
 };
+
+const reduceMotionPreference: MotionPreference | null =
+  typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
 
 const domNode = (ref: { current: HTMLElement | null }) => (view: unknown) => void (ref.current = view as HTMLElement | null);
 
@@ -50,10 +53,10 @@ export function LoadingPill({ tabId }: { tabId: string }) {
       notePageOverlay("loadingPill");
       const long = setTimeout(() => notePageOverlay("loadingPillLong"), LOADING_PILL.longShowMs);
       motionOf.show(!!reduceMotion());
-      const reduced = AccessibilityInfo.addEventListener("reduceMotionChanged", (on) => on && motionOf.endAfterThisCycle());
+      const stopWatching = onReduceMotion(reduceMotionPreference, motionOf.endAfterThisCycle);
       return () => {
         clearTimeout(long);
-        reduced.remove();
+        stopWatching();
       };
     }
     motionOf.leave(() => {

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { breatheKeyframes, breatheTiming, createPillMotion, growKeyframes, PAINT_MOTION, PAINT_MOTION_ATTRIBUTE, sweepCycle, sweepKeyframes } from "./paintMotion.ts";
+import { breatheKeyframes, breatheTiming, createPillMotion, growKeyframes, onReduceMotion, PAINT_MOTION, PAINT_MOTION_ATTRIBUTE, sweepCycle, sweepKeyframes } from "./paintMotion.ts";
 
 const SPEC = {
   travel: 128,
@@ -186,6 +186,44 @@ test("Reduce Motion turned on mid-load ends the sweep after the cycle it is in a
   assert.equal(sweep.playState, "running");
   assert.deepEqual(log, ["plate.animate", "fill.animate", "fill.updateTiming"]);
   assert.equal(timers.size, 0);
+});
+
+function reducedMotionMedia() {
+  const media = new EventTarget();
+  const turn = (matches) => media.dispatchEvent(Object.assign(new Event("change"), { matches }));
+  return { media, turn };
+}
+
+test("in split view, a pane whose load ended stops watching without taking the other pane's Reduce Motion watch with it", () => {
+  const { media, turn } = reducedMotionMedia();
+  const first = stage();
+  const second = stage();
+  first.motion.show(false);
+  const stopFirst = onReduceMotion(media, first.motion.endAfterThisCycle);
+  second.motion.show(false);
+  const stopSecond = onReduceMotion(media, second.motion.endAfterThisCycle);
+  stopFirst();
+  first.motion.leave(() => {});
+  first.fire();
+  last(second.fill).currentTime = 990 + 200;
+  turn(true);
+  assert.deepEqual(last(second.fill).timing, { duration: 990, iterations: 2, fill: "forwards" });
+  assert.ok(!first.log.includes("fill.updateTiming"));
+  assert.equal(second.timers.size, 0);
+  stopSecond();
+});
+
+test("the Reduce Motion watch acts only when the preference turns on and ends with its pane", () => {
+  const { media, turn } = reducedMotionMedia();
+  const { log, motion } = stage();
+  motion.show(false);
+  const stop = onReduceMotion(media, motion.endAfterThisCycle);
+  turn(false);
+  assert.ok(!log.includes("fill.updateTiming"));
+  stop();
+  turn(true);
+  assert.ok(!log.includes("fill.updateTiming"));
+  assert.doesNotThrow(() => onReduceMotion(null, motion.endAfterThisCycle)());
 });
 
 test("a load that ends after the held sweep shrinks at once from the full bar", () => {

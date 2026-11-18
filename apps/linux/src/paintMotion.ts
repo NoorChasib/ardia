@@ -39,6 +39,20 @@ export function breatheKeyframes({ opacity, scale, easing }: BreatheSpec): Keyfr
 
 export const breatheTiming = ({ cycle }: BreatheSpec): KeyframeAnimationOptions => ({ duration: cycle, iterations: Infinity });
 
+export type MotionPreference = {
+  addEventListener(type: "change", listener: (event: { matches: boolean }) => void): void;
+  removeEventListener(type: "change", listener: (event: { matches: boolean }) => void): void;
+};
+
+export function onReduceMotion(preference: MotionPreference | null, reduce: () => void) {
+  if (!preference) return () => {};
+  const changed = (event: { matches: boolean }) => {
+    if (event.matches) reduce();
+  };
+  preference.addEventListener("change", changed);
+  return () => preference.removeEventListener("change", changed);
+}
+
 export type PillDeps = {
   plate: Animatable;
   fill: Animatable;
