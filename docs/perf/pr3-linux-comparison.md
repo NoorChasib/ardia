@@ -2,9 +2,10 @@
 
 CPU and RAM of four UI builds on one engine, 100 loaded tabs, measured with the Linux harness
 ([linux-bench.md](linux-bench.md), which also has the reproduction steps and the limits). This page holds the light
-run, the one builds are ranked by. The full-instrumentation run (edge reveal and hover card latency, frames, counters)
-and the options-on run haven't been done yet; see [What isn't measured yet](#what-isnt-measured-yet). [Leads not
-taken](#leads-not-taken) lists the optimizations PR 3 found and left for later.
+run, the one builds are ranked by, and the [full-instrumentation run on the PR heads](#full-instrumentation-on-the-pr-heads-options-on)
+(S3-S5 latency, frames and counters, with PR 1's options on). What is still open is in
+[What isn't measured yet](#what-isnt-measured-yet). [Leads not taken](#leads-not-taken) lists the optimizations PR 3
+found and left for later.
 
 ## The run
 
@@ -26,7 +27,8 @@ taken](#leads-not-taken) lists the optimizations PR 3 found and left for later.
 | final | 2e9c24a46 | `e4db64f61996` |
 
 `final` includes PR 1's #1679 (the tab-drag peek hold), and the measured `feature` and `bun` don't, so final against
-bun is PR 3 plus #1679. Its share hasn't been bounded yet.
+bun is PR 3 plus #1679. The [full run](#full-instrumentation-on-the-pr-heads-options-on) compares PR heads that both
+carry it.
 
 ## CPU
 
@@ -92,8 +94,72 @@ The light run records S3's key-to-shown latency (from the page's own frame times
 
 The median is inside the A/A spread (final 3 ms above bun, spread 6 ms). The p90 leans the wrong way: final is higher
 than bun in 4 of 4 blocks, 40 against 33 ms (Mann-Whitney p = 0.14). That matches E4's earlier ctrl+Next p90 lead and
-stays open until the full run and the E4 ablation (item 3 below) settle it. Edge reveal and hover-card latency need
-the full-instrumentation probe and aren't in this run.
+stayed open until the full run and the E4 ablation below. Edge reveal and hover-card latency need the
+full-instrumentation probe and aren't in this run.
+
+## Full instrumentation on the PR heads, options on
+
+| | |
+| --- | --- |
+| Run | `20261118T174444`, 15 launches, all ok: 5 per build in ABBA blocks (pr2 pre-e4 pr3, pr3 pre-e4 pr2, ...), every S3, S4 and S5 window valid and uncontended |
+| Machine | As above, partitioned; foreign CPU on the app's cores averaged 0.1 % of a core over the run (`cpu-audit.py`) |
+| Harness | protocol 2, this tree's (`ddfa35a63`), `--instrument full`, `--scenarios S3,S4,S5`, `--tabs 100`, `--runs 5` |
+| Settings around S4 and S5 | `showMemoryInTabHoverMenu=true`, `showPagePreviewInTabHoverMenu=true`, `tabCloseButtonSide=left`, `sidebarRevealSpeed=default`; read back as applied in both scenarios of all 15 launches |
+| Engine, blocker | `engine-3a64a10704ff`, the same packaged content blocker as the light run |
+
+| Build | Commit | UI sha256 | What it is |
+| --- | --- | --- | --- |
+| pr2 | db3139706 | `8aba21f1867e` | PR 2's head, with #1679 |
+| pre-e4 | e02d6c59c | `7c176e356de9` | PR 3's integration with E1, E2, E3, E5 and E6, before E4 and #1679 |
+| pr3 | e15125104 | `1bf0c0c37c4b` | PR 3's head, with #1679 and the review's telemetry and tab-lifecycle commits |
+
+pr3 against pr2 is PR 3 alone: both contain #1679. pre-e4 against pr3 is E4 plus #1679 plus the review commits; of
+those, only E4 runs in S3 (S3 drags and closes nothing).
+
+Median over 5 launches (min-max); "vs pr2" is the median per-block difference, with the blocks where the build was
+higher and the Mann-Whitney p. CPU is percent of one core under the full probe, whose patched calls cost CPU in
+proportion to what they count (pr2 makes 21 to 38 times more patched geometry and style calls than pr3 in S4 and S5), so rank
+CPU from the light run, not from this table.
+
+| Metric | pr2 | pre-e4 | pr3 | pre-e4 vs pr2 | pr3 vs pr2 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| S3 key->shown median, ms | 28 (27-28) | 27 (25-28) | 28 (25.5-30) | -0.5, 0/3, p 0.24 | 0, 2/4, p 1.0 |
+| S3 key->shown p90 per window, ms | 38 (36-39) | 37 (34-39) | 38 (36-41) | -1, 1/4, p 0.51 | 0, 3/4, p 0.99 |
+| S3 key->shown over all presses, p50 / p90 / p99 / max, ms | 28 / 38 / 48 / 50 | 27 / 36 / 43 / 44 | 27 / 38 / 68 / 85 | | |
+| S3 presses over 50 ms | 0 of 199 | 0 of 199 | 4 of 197 (67, 68, 78, 85) | | Fisher p 0.06 |
+| S3 CPU total | 65.1 (63.3-67.5) | 58.8 (58.0-59.9) | 52.2 (51.5-53.1) | -7.1, 0/5, p 0.008 | -12.9 (-20 %), 0/5, p 0.008 |
+| S3 LoAF count | 36 (34-39) | 13 (3-15) | 6 (4-11) | -23, 0/5 | -28, 0/5 |
+| S3 `session.write` per window | 40 | 40 | 11 (10-11) | 0 | -29 |
+| S4 reveal median, ms | 127.7 (123.2-130.6) | 122.8 (120.8-124.4) | 121.6 (120.1-123.8) | -3.8, 0/5, p 0.016 | -7.6, 1/5, p 0.032 |
+| S4 reveal p90, ms | 145.6 (137.4-152.8) | 137.1 (131.9-141.0) | 130.3 (126.4-138.9) | -8.5, 0/5, p 0.056 | -11.2, 0/5, p 0.016 |
+| S4 reveal max, ms | 148.3 (146.1-158.9) | 138.6 (136.7-142.1) | 138.0 (134.6-142.3) | | |
+| S4 reveals confirmed, late steps | 20 of 20, 0 | 20 of 20, 0 | 20 of 20, 0 | | |
+| S4 LoAF count | 0 | 0 | 0 | | |
+| S4 rAF gaps over 25 ms, max gap | 44 (39-59), 50 ms | 8 (6-17), 33-50 ms | 5 (4-11), 33 ms | -36, 0/5 | -40, 0/5 |
+| S4 CPU total | 68.6 (66.1-70.6) | 48.6 (47.0-54.2) | 47.8 (46.5-54.9) | -18.7, 0/5, p 0.008 | -19.7 (-29 %), 0/5, p 0.008 |
+| S5 cold card, ms | 873.2 (871.6-897.3) | 872.6 (869.7-874.3) | 871.9 (869.0-873.9) | -2.0, 1/5, p 0.60 | -2.7, 2/5, p 0.31 |
+| S5 warm cards shown | 0 of 69 | 0 of 69 | 0 of 69 | | |
+| S5 memory-line reads (`engine.tasks`) per window | 2 | 2 | 2 | 0 | 0 |
+| S5 LoAF count, rAF gaps over 25 ms | 1 (1-2), 10 (4-30) | 0, 0 | 0, 0 (0-1) | | |
+| S5 CPU total | 30.5 (29.7-32.5) | 23.7 (23.5-25.8) | 23.4 (22.8-23.9) | -6.8, 0/5, p 0.008 | -7.3 (-24 %), 0/5, p 0.008 |
+
+- **Edge reveal, options on.** PR 3 reveals the sidebar sooner than PR 2 at every percentile the probe records,
+  has no rAF gap over 33.4 ms in S4, and every reveal and hide on every build was confirmed by the row read, so
+  S4's rows count. "Over 80 ms" doesn't separate builds with this probe: it times the first frame with tab 1's row on
+  screen at the Default speed, and no reveal on any build came in under 105 ms. E1's earlier 20 of 64 against 8 of 64
+  isn't reproduced: here pr3 is the faster side. The harness has no "settled" time (the end of the reveal animation),
+  so that row stays unmeasured.
+- **Hover card, options on.** The cold card is the same on all three builds (about 872 ms, the card's own delay).
+  The warm card isn't measured: at the harness's 300 ms dwell no build showed a card for a second row before the
+  pointer moved on (69 of 72 row entries superseded on every build), so the "hover after a card opens" lead needs a
+  run with `--hover-dwell` of 400 ms or more. The memory line reads the engine twice per sweep on every build.
+- **S3's tail.** The p90 is level: 38 ms on pr2 and pr3, 37 on pre-e4, and the light run's 40 against 33 doesn't repeat
+  against PR 2's head under the full probe. Above the p90 pr3 has a tail the other two don't: 4 of 197 presses at
+  67-85 ms, in 3 of 5 windows, against none over 50 ms on pr2 and none over 44 on pre-e4 (Fisher p = 0.06 against
+  either). Those presses reached the store in 7-11 ms, so the time goes after the store change, in the shell's frame
+  or the page's show. Since pre-e4 and pr3 differ in S3 only by E4, E4 is implicated in the tail but not proven: the
+  harness doesn't record when each session write lands, so the slow presses can't be lined up with E4's 2 s save, and
+  press time modulo 2 s shows no clustering.
 
 ## How to read S3 and S4
 
@@ -109,25 +175,27 @@ the full-instrumentation probe and aren't in this run.
 
 ## What isn't measured yet
 
-1. The options-on S4 and S5 run on feature, bun and final (`sidebarRevealSpeed` at faster and slower,
-   `showMemoryInTabHoverMenu`, `tabCloseButtonSide=left`): the recipe in linux-bench.md ("With PR 1's options on"),
-   this tree's harness (protocol 2), full instrumentation, `--runs 6`, partitioned. Stock has no row: it doesn't have
-   these options. `showPagePreviewInTabHoverMenu` is hidden on Linux, which can't capture pages. A separate light run
-   of the feature build with its defaults patched (off, on at slower, on at faster) measures what turning PR 1's
-   options on costs on PR 1's own build. It is PR 1 evidence: it compares neither final with bun nor any reveal or
-   hover-card latency.
-2. The full-instrumentation four-build run (protocol 2, `--runs 6`): S3 key->shown median and p90, S4 reveal median,
-   p90 and reveals over 80 ms, S5 cold card, frames and counters. S4 counts only if every build has 20 of 20 reveals
-   and `workload late` at 0; then S4's CPU rows stop being unchecked.
-3. E4's share of the S3 p90: a build of e02d6c59c (E1, E2, E3, E5 and E6, before E4 and #1679) against final on S3,
-   partitioned, full instrumentation, `--runs 6`, plus a `--switch-via store` run for CPU. If the gap is E4's, the
-   volatile save should wait for a pause in switching; otherwise E4 can be split from the rest.
-4. #1679's share: bun rebuilt at db3139706 against bun at 48c7e3e67 on S4 and S5.
-5. The F23 discard-race rerun (`discard-race2.mjs`) on quiet cores.
-6. The commits after 2e9c24a46 that change the UI dist (the telemetry consent gate, the tab lifecycle's kept claims).
-   This run measured 2e9c24a46. Measuring them on S1 and S3 against it would confirm they change nothing.
+Settled by the [full run on the PR heads](#full-instrumentation-on-the-pr-heads-options-on): S3 key->shown median
+and p90, S4 reveal latency with every reveal confirmed, S5 cold card, frames and counters, all with PR 1's options on at
+the Default reveal speed; #1679's share, since pr2 and pr3 both carry it; and the E4 ablation, which puts pr3's S3 difference in the tail
+above the p90 rather than in the p90. Still open:
 
-Until 1 to 3 are done, PR 3 claims the CPU and RAM numbers above and does not claim responsiveness parity.
+1. The options-on S4 and S5 rows at `sidebarRevealSpeed` faster and slower: the recipe in linux-bench.md ("With PR 1's
+   options on"), on pr2 against pr3. Stock has no row: it doesn't have these options. `showPagePreviewInTabHoverMenu`
+   is hidden on Linux, which can't capture pages.
+2. The S5 warm card: the same run with `--hover-dwell 500`, since no build shows a second card within 300 ms.
+3. S4's "settled" time (the end of the reveal animation): the probe records only the first frame with the row on
+   screen.
+4. S3's tail: whether pr3's presses over 50 ms land on E4's session writes. That needs the harness to record each
+   `session.write` time beside each press, then a key run at `--runs 6` or more on pre-e4 against pr3, and a
+   `--switch-via store` run for S3 CPU without put-backs. If they line up, the volatile save should wait for a pause
+   in switching.
+5. The F23 discard-race rerun (`discard-race2.mjs`) on quiet cores.
+6. S1 on the commits after 2e9c24a46 that change the UI dist (the telemetry consent gate, the tab lifecycle's kept
+   claims). The full run's pr3 includes them in S3-S5; S1 against 2e9c24a46 would confirm they change nothing at idle.
+
+PR 3 claims the CPU and RAM numbers above, and responsiveness parity with PR 2 on S3's median and p90, S4's reveal and
+S5's cold card. It doesn't claim parity on S3's tail above the p90.
 
 ## Leads not taken
 
