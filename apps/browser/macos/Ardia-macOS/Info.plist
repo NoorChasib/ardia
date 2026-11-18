@@ -154,6 +154,8 @@
 	<string>https://github.com/NoorChasib/nilla/issues/new?body=%s</string>
 	<key>NLReleaseNotesURL</key>
 	<string></string>
+	<key>NLReportServerURL</key>
+	<string></string>
 	<key>NSDockTilePlugIn</key>
 	<string>ArdiaDockTile.plugin</string>
 	<key>NSLocalNetworkUsageDescription</key>

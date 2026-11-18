@@ -41,6 +41,16 @@ test("a snapshot with an unknown field, a non-https URL or a wrong type is refus
   expect(servicesProblems({ telemetryUrl: "https://logs.example.test/v1/logs", ingestKeys: { app: "a", cli: "c", site: "s" } })).toEqual([]);
 });
 
+test("the Windows trusted prefix must be a whole https folder, so a neighbouring host or folder can't match it", () => {
+  for (const prefix of ["https://updates.example.test", "https://updates.example.test/releases", "https://updates.example.test/r?x=/", "https://me@updates.example.test/r/", "https://Updates.example.test/r/", "http://updates.example.test/r/", ""]) {
+    expect(servicesProblems({ windowsTrustedPrefix: prefix })).toEqual([{ field: "windowsTrustedPrefix", problem: "not a folder URL" }]);
+  }
+  expect(servicesProblems({ windowsTrustedPrefix: 3 })).toEqual([{ field: "windowsTrustedPrefix", problem: "wrong type" }]);
+  expect(servicesProblems({ windowsTrustedPrefix: null })).toEqual([]);
+  expect(servicesProblems({ windowsTrustedPrefix: "https://updates.example.test/releases/" })).toEqual([]);
+  expect(servicesProblems({ windowsTrustedPrefix: "https://updates.example.test/" })).toEqual([]);
+});
+
 test("the test override applies a partial snapshot over the defaults, and resets", () => {
   overrideServicesForTests({ telemetryUrl: "https://logs.example.test/v1/logs" });
   expect(services().telemetryUrl).toBe("https://logs.example.test/v1/logs");

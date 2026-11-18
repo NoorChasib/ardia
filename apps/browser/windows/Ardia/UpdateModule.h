@@ -32,16 +32,25 @@ namespace AppServices {
 inline constexpr uint64_t kLargestFileBytes = 64 * 1024;
 inline constexpr std::wstring_view kUrlFields[] = {L"telemetryUrl", L"feedbackUrl", L"switchesUrl", L"macFeedUrl", L"windowsFeedUrl", L"windowsTrustedPrefix", L"linuxReleasesUrl", L"releaseNotesUrl", L"siteUrl", L"issueUrl"};
 inline constexpr std::wstring_view kIngestKeyFields[] = {L"app", L"cli", L"site"};
+inline constexpr std::wstring_view kBuiltWindowsFeedUrl = L"";
+inline constexpr std::wstring_view kBuiltWindowsTrustedPrefix = L"";
 
 struct Snapshot {
   std::string json;
-  std::wstring windowsFeedUrl;
-  std::wstring windowsTrustedPrefix;
+  std::wstring windowsFeedUrl{kBuiltWindowsFeedUrl};
+  std::wstring windowsTrustedPrefix{kBuiltWindowsTrustedPrefix};
 };
 
+inline constexpr std::wstring_view kHttps = L"https://";
+
 inline bool IsHttps(std::wstring_view text) noexcept {
-  constexpr std::wstring_view kHttps = L"https://";
   return text.size() > kHttps.size() && text.substr(0, kHttps.size()) == kHttps && text.find_first_of(L" \\") == std::wstring_view::npos;
+}
+
+inline bool IsFolderPrefix(std::wstring_view text) noexcept {
+  if (!IsHttps(text) || text.back() != L'/' || text.find(L"..") != std::wstring_view::npos || text.find_first_of(L"%?#@") != std::wstring_view::npos) return false;
+  size_t hostEnd = text.find(L'/', kHttps.size());
+  return hostEnd != std::wstring_view::npos && hostEnd > kHttps.size();
 }
 
 inline bool IsUrlField(std::wstring_view field) noexcept {
@@ -68,6 +77,10 @@ inline std::wstring Refusal(winrt::Windows::Data::Json::JsonObject const &fields
         std::wstring repo{value.GetString()};
         size_t slash = repo.find(L'/');
         if (slash == std::wstring::npos || slash == 0 || slash + 1 == repo.size() || repo.find(L'/', slash + 1) != std::wstring::npos) return field + L" has the wrong type";
+      } else if (field == L"windowsTrustedPrefix") {
+        if (type == JsonValueType::Null) continue;
+        if (type != JsonValueType::String) return field + L" has the wrong type";
+        if (!IsFolderPrefix(std::wstring_view{value.GetString()})) return field + L" is not a folder URL";
       } else if (IsUrlField(field)) {
         if (type == JsonValueType::Null && field != L"issueUrl") continue;
         if (type != JsonValueType::String) return field + L" has the wrong type";
@@ -82,9 +95,10 @@ inline std::wstring Refusal(winrt::Windows::Data::Json::JsonObject const &fields
   }
 }
 
-inline std::wstring StringField(winrt::Windows::Data::Json::JsonObject const &fields, std::wstring_view field) noexcept {
+inline std::wstring StringField(winrt::Windows::Data::Json::JsonObject const &fields, std::wstring_view field, std::wstring_view built) noexcept {
   try {
-    if (!fields.HasKey(field) || fields.GetNamedValue(field).ValueType() != winrt::Windows::Data::Json::JsonValueType::String) return {};
+    if (!fields.HasKey(field)) return std::wstring{built};
+    if (fields.GetNamedValue(field).ValueType() != winrt::Windows::Data::Json::JsonValueType::String) return {};
     return std::wstring{fields.GetNamedString(field)};
   } catch (...) {
     return {};
@@ -102,12 +116,12 @@ inline Snapshot Read() noexcept {
     if (!contents || contents->size() > kLargestFileBytes || !Files::IsValidUtf8(*contents) || !winrt::Windows::Data::Json::JsonObject::TryParse(winrt::to_hstring(*contents), fields)) refusal = L"the file could not be read";
     else refusal = Refusal(fields);
     if (!refusal.empty()) {
-      AppLaunch::Note(L"services: " + Paths::Wide(*path) + L" refused (" + refusal + L"); every service stays off");
+      AppLaunch::Note(L"services: " + Paths::Wide(*path) + L" refused (" + refusal + L"); the build's own settings stay");
       return snapshot;
     }
     snapshot.json = *contents;
-    snapshot.windowsFeedUrl = StringField(fields, L"windowsFeedUrl");
-    snapshot.windowsTrustedPrefix = StringField(fields, L"windowsTrustedPrefix");
+    snapshot.windowsFeedUrl = StringField(fields, L"windowsFeedUrl", kBuiltWindowsFeedUrl);
+    snapshot.windowsTrustedPrefix = StringField(fields, L"windowsTrustedPrefix", kBuiltWindowsTrustedPrefix);
   } catch (...) {
     snapshot = {};
   }
@@ -183,7 +197,7 @@ inline bool StartsWith(std::wstring_view text, std::wstring_view prefix) noexcep
 
 inline bool ServicesConfigured() noexcept {
   auto const &services = AppServices::Shared();
-  return !services.windowsFeedUrl.empty() && !services.windowsTrustedPrefix.empty();
+  return AppServices::IsHttps(services.windowsFeedUrl) && AppServices::IsFolderPrefix(services.windowsTrustedPrefix);
 }
 
 inline std::wstring Feed() noexcept {
@@ -203,6 +217,15 @@ inline std::wstring TrustedPrefix() noexcept {
     return feed.substr(0, folderEnd + 1);
   } catch (...) {
     return {};
+  }
+}
+
+inline bool IsFeed(std::wstring_view url) noexcept {
+  try {
+    std::wstring feed = Feed();
+    return !feed.empty() && url == feed;
+  } catch (...) {
+    return false;
   }
 }
 
@@ -503,7 +526,7 @@ struct UpdateModule {
   REACT_METHOD(fetchText)
   void fetchText(std::string url, winrt::Microsoft::ReactNative::ReactPromise<std::string> promise) noexcept {
     std::wstring address = Paths::Wide(url);
-    if (!AppUpdate::Allowed(address)) return promise.Reject("Updates do not come from that address");
+    if (!AppUpdate::IsFeed(address)) return promise.Reject("Updates do not come from that address");
     OnAThread(promise, [address, promise]() noexcept {
       std::string text;
       std::string failure;

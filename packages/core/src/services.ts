@@ -58,6 +58,12 @@ const isHttpsUrl = (value: unknown): value is string => {
   }
 };
 
+export const isFolderPrefix = (value: unknown): value is string => {
+  if (!isHttpsUrl(value)) return false;
+  const url = new URL(value);
+  return !url.username && !url.password && !url.search && !url.hash && url.pathname.endsWith("/") && value === `${url.origin}${url.pathname}`;
+};
+
 const isIngestKeys = (value: unknown): value is IngestKeys =>
   !!value &&
   typeof value === "object" &&
@@ -65,7 +71,7 @@ const isIngestKeys = (value: unknown): value is IngestKeys =>
   Object.keys(value).every((k) => (INGEST_KEY_FIELDS as readonly string[]).includes(k)) &&
   INGEST_KEY_FIELDS.every((k) => typeof (value as Record<string, unknown>)[k] === "string" && !!(value as Record<string, string>)[k]);
 
-export type ServicesProblem = { field: string; problem: "unknown field" | "not an https URL" | "wrong type" | "read already" };
+export type ServicesProblem = { field: string; problem: "unknown field" | "not an https URL" | "not a folder URL" | "wrong type" | "read already" };
 
 export function servicesProblems(partial: unknown): ServicesProblem[] {
   if (!partial || typeof partial !== "object" || Array.isArray(partial)) return [{ field: "", problem: "wrong type" }];
@@ -76,6 +82,8 @@ export function servicesProblems(partial: unknown): ServicesProblem[] {
       if (value !== null && !isIngestKeys(value)) problems.push({ field, problem: "wrong type" });
     } else if (field === "sourceRepo") {
       if (typeof value !== "string" || !/^[\w.-]+\/[\w.-]+$/.test(value)) problems.push({ field, problem: "wrong type" });
+    } else if (field === "windowsTrustedPrefix") {
+      if (value !== null && !isFolderPrefix(value)) problems.push({ field, problem: typeof value === "string" ? "not a folder URL" : "wrong type" });
     } else if (field === "issueUrl") {
       if (!isHttpsUrl(value)) problems.push({ field, problem: "not an https URL" });
     } else if (value !== null && !isHttpsUrl(value)) problems.push({ field, problem: typeof value === "string" ? "not an https URL" : "wrong type" });

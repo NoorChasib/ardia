@@ -49,6 +49,32 @@ test("with no trusted prefix every installer is dropped, since an empty prefix w
   assert.equal(offered(read, "x64", 1), null);
 });
 
+test("a trusted prefix that isn't a whole folder trusts nothing, so a neighbouring host or folder can't pass", () => {
+  const host = "https://updates.example.test";
+  const neighbour = { ...installer("x"), url: "https://updates.example.test.attacker.test/Setup-x64.exe" };
+  for (const prefix of [host, `${host}/releases`, `${host}/r?x=/`, `https://me@updates.example.test/r/`]) {
+    assert.deepEqual(readManifest(manifest({ x64: neighbour, arm64: { ...installer("x"), url: `${host}/releases/Setup.exe` } }), prefix).installers, {}, prefix);
+  }
+  const folder = `${host}/releases/`;
+  const dropped = [
+    "https://updates.example.test.attacker.test/releases/Setup-x64.exe",
+    "https://updates.example.test:8443/releases/Setup-x64.exe",
+    "https://updates.example.test/releases-old/Setup-x64.exe",
+    "https://updates.example.test/other/Setup-x64.exe",
+    "https://updates.example.test/releases/%2e%2e/Setup-x64.exe",
+    "https://updates.example.test/releases/Setup-x64.exe?x=.exe",
+    "https://updates.example.test/releases/@evil/Setup-x64.exe",
+  ];
+  for (const url of dropped) assert.equal(readManifest(manifest({ x64: { url, sha256: sha, bytes: 10 } }), folder).installers.x64, undefined, url);
+  assert.ok(readManifest(manifest({ x64: { url: `${folder}nightly/Setup-x64.exe`, sha256: sha, bytes: 10 } }), folder).installers.x64);
+});
+
+test("a feed hosted apart from its installers still offers installers under the trusted folder", () => {
+  const folder = "https://downloads.example.test/nilla/";
+  const read = readManifest(manifest({ x64: { url: `${folder}Setup-x64.exe`, sha256: sha, bytes: 10 } }), folder);
+  assert.equal(offered(read, "x64", 1).url, `${folder}Setup-x64.exe`);
+});
+
 test("only a higher build with an installer for this processor is offered", () => {
   const read = readManifest(manifest(), under);
   assert.equal(offered(read, "x64", 59).url, `${under}windows-alpha/Ardia-Setup-x64.exe`);

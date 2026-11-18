@@ -171,7 +171,7 @@ public final class AppUpdater: NSObject {
   }
 
   private static var isOff: Bool {
-    LaunchConfig.shared.isolated && LaunchConfig.shared.instance("updateFeed") == nil
+    LaunchConfig.shared.isolated && LaunchConfig.shared.instance("updateFeed") == nil && !ServicesConfig.testsMacFeed
   }
 
   private lazy var userDriver = ChannelUserDriver(
@@ -197,7 +197,7 @@ public final class AppUpdater: NSObject {
   public var isConfigured: Bool {
     guard !Self.isOff else { return false }
     let info = Bundle.main.infoDictionary ?? [:]
-    let feed = (Self.feedOverride ?? info["SUFeedURL"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+    let feed = (Self.feedOverride ?? "").trimmingCharacters(in: .whitespaces)
     let key = (info["SUPublicEDKey"] as? String ?? "").trimmingCharacters(in: .whitespaces)
     guard let scheme = URL(string: feed)?.scheme?.lowercased() else { return false }
     return (scheme == "https" || scheme == "http") && !key.isEmpty

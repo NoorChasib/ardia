@@ -30,6 +30,28 @@ final class ServicesSnapshotTests: XCTestCase {
     XCTAssertEqual(read("not json"), .failure(.unreadable))
   }
 
+  func testTheWindowsTrustedPrefixMustBeAWholeFolder() {
+    for prefix in ["https://u.example.test", "https://u.example.test/r", "https://u.example.test/r?x=/", "https://me@u.example.test/r/"] {
+      XCTAssertEqual(read(#"{"windowsTrustedPrefix":"\#(prefix)"}"#), .failure(.notAFolder("windowsTrustedPrefix")), prefix)
+    }
+    XCTAssertNotNil(try? read(#"{"windowsTrustedPrefix":"https://u.example.test/r/"}"#).get())
+    XCTAssertNotNil(try? read(#"{"windowsTrustedPrefix":null}"#).get())
+  }
+
+  func testATestSnapshotFieldWinsOverTheBuiltValueAndAMissingFieldKeepsIt() throws {
+    let built = "https://feedback.example.test/api"
+    XCTAssertEqual(ServicesSnapshot.url("feedbackUrl", in: nil, built: built)?.absoluteString, built)
+    XCTAssertNil(ServicesSnapshot.url("feedbackUrl", in: nil, built: ""))
+    XCTAssertNil(ServicesSnapshot.url("feedbackUrl", in: nil, built: nil))
+    XCTAssertNil(ServicesSnapshot.url("feedbackUrl", in: nil, built: "http://feedback.example.test/api"))
+    let off = try read(#"{"feedbackUrl":null}"#).get()
+    XCTAssertNil(ServicesSnapshot.url("feedbackUrl", in: off, built: built))
+    let other = try read(#"{"switchesUrl":null}"#).get()
+    XCTAssertEqual(ServicesSnapshot.url("feedbackUrl", in: other, built: built)?.absoluteString, built)
+    let on = try read(#"{"feedbackUrl":"https://test.example.test/f"}"#).get()
+    XCTAssertEqual(ServicesSnapshot.url("feedbackUrl", in: on, built: nil)?.absoluteString, "https://test.example.test/f")
+  }
+
   func testTheFieldListMatchesTheSharedConfig() throws {
     let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../core/src/services.ts")
     let source = try String(contentsOf: root, encoding: .utf8)

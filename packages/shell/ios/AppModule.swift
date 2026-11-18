@@ -71,7 +71,7 @@ public class AppModule: Module {
         "feedbackURL": Self.infoString("NLFeedbackURL") as Any,
         "feedbackEmail": Self.infoString("ACFeedbackEmail") as Any,
         "videoTourURL": Self.infoString("ACVideoTourURL") as Any,
-        "releaseNotesURL": (ServicesConfig.releaseNotesURL?.absoluteString ?? Self.infoString("NLReleaseNotesURL")) as Any,
+        "releaseNotesURL": ServicesConfig.releaseNotesURL?.absoluteString as Any,
         "isolatedInstance": config.isolated,
         "forceReleaseNotes": config.instanceFlag("releaseNotes"),
         "processStart": Self.processStart as Any,
