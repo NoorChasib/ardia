@@ -95,7 +95,7 @@ class FeedbackCase(unittest.TestCase):
         self.home = self.temp / "cli"
         self.service = FeedbackService()
         self.addCleanup(self.service.close)
-        dropped = CLEARED + ("ARDIA_CLI_HOME", feedback.TEST_URL_ENV, usage.STAR_PROMPT_ENV) + usage.CI_ENV
+        dropped = CLEARED + ("ARDIA_CLI_HOME", feedback.TEST_URL_ENV)
         env = {k: v for k, v in os.environ.items() if k not in dropped}
         env.update({"ARDIA_CLI_HOME": str(self.home), feedback.TEST_URL_ENV: self.service.url})
         for patch in (
@@ -362,7 +362,7 @@ class SendingTest(FeedbackCase):
         self.assertEqual(status, 0)
         self.assertEqual(self.service.steps(), ["create", "upload", "complete"])
         for request in self.service.requests:
-            self.assertEqual(request["headers"]["X-Ardia-Key"], telemetry.CLI_INGEST_KEY)
+            self.assertEqual(request["headers"]["X-Ardia-Key"], feedback.LOCAL_CLI_KEY)
         upload, complete = self.service.requests[1], self.service.requests[2]
         self.assertEqual(upload["path"], "/api/feedback/FB-7K2Q/files/attachment-1.png")
         self.assertEqual(upload["headers"]["Authorization"], "Bearer FB-7K2Q.1999999999.sig")
@@ -404,7 +404,7 @@ class SendingTest(FeedbackCase):
             ({"ARDIA_TELEMETRY": "off"}, "ARDIA_TELEMETRY=off is set"),
             ({"ARDIA_PORT": "9222"}, "ARDIA_PORT points ardia at a test browser"),
             ({feedback.TEST_URL_ENV: "https://evil.example/api/feedback"}, "ARDIA_FEEDBACK_URL isn't a loopback http:// URL"),
-            ({feedback.TEST_URL_ENV: ""}, "this ardia is a checkout build (0.0.0.dev0)"),
+            ({feedback.TEST_URL_ENV: ""}, "no feedback service is set up for this build"),
         ]
         for extra, reason in cases:
             with self.subTest(extra=extra), mock.patch.dict(os.environ, extra):
@@ -412,6 +412,8 @@ class SendingTest(FeedbackCase):
                 self.assertEqual(status, 1)
                 self.assertIn(f"Not sent: {reason}", out)
                 self.assertNotIn("sharing", out.lower())
+                if reason.startswith("no feedback service"):
+                    self.assertTrue(out.endswith(f"Open an issue instead: {feedback.ISSUE_URL}\n"), out)
         self.assertEqual(self.service.requests, [])
         self.assertEqual(len(self.kept()), len(cases))
 
@@ -559,22 +561,37 @@ class TelemetrySessionAndKeyTest(unittest.TestCase):
             write_consent(self.root, version=version, futureField=[1, 2])
             self.assertEqual(telemetry.consent(self.root), INSTALL_ID)
 
-    def test_posts_carry_the_cli_ingest_key(self):
+    def test_posts_carry_the_cli_ingest_key_only_when_one_is_set(self):
         write_consent(self.root)
         self.run_cli("config", "path")
         self.assertEqual(telemetry.flush(self.root, self.stub.url, "test"), "done")
         self.assertTrue(self.stub.headers)
-        self.assertTrue(all(headers["X-Ardia-Key"] == telemetry.CLI_INGEST_KEY for headers in self.stub.headers))
+        self.assertIsNone(telemetry.CLI_INGEST_KEY)
+        self.assertTrue(all("X-Ardia-Key" not in headers for headers in self.stub.headers))
+        with mock.patch.object(telemetry, "CLI_INGEST_KEY", "cli-test-key"):
+            self.run_cli("config", "path")
+            telemetry.flush(self.root, self.stub.url, "test")
+        self.assertEqual(self.stub.headers[-1]["X-Ardia-Key"], "cli-test-key")
         sent = attributes(self.stub.records()[-1])
         self.assertTrue(sent["$session_id"])
 
-    def test_the_cli_key_matches_the_shared_constants(self):
-        source = REPO / "packages" / "core" / "src" / "ingestKeys.ts"
-        if not source.exists():
-            self.skipTest("packages/core/src/ingestKeys.ts isn't there yet")
-        found = re.search(r'CLI_INGEST_KEY = "([^"]+)"', source.read_text())
-        self.assertEqual(found.group(1), telemetry.CLI_INGEST_KEY)
-        self.assertIn(f'INGEST_KEY_HEADER = "{telemetry.INGEST_KEY_HEADER}"', source.read_text())
+    def test_every_cli_endpoint_matches_the_shared_services_config(self):
+        from ardia_cli import star
+
+        source = (REPO / "packages" / "core" / "src" / "services.ts").read_text()
+        repo = re.search(r'export const SOURCE_REPO = "([^"]+)";', source).group(1)
+        block = source[source.index("DEFAULT_SERVICES"):]
+        block = block[: block.index("});")]
+        fields = {}
+        for name, value in re.findall(r"^\s+(\w+): (null|\"[^\"]*\"|`[^`]*`|SOURCE_REPO),$", block, re.M):
+            fields[name] = None if value == "null" else repo if value == "SOURCE_REPO" else value[1:-1].replace("${SOURCE_REPO}", repo)
+        self.assertEqual(set(fields), {"telemetryUrl", "feedbackUrl", "switchesUrl", "ingestKeys", "macFeedUrl", "windowsFeedUrl", "windowsTrustedPrefix", "linuxReleasesUrl", "releaseNotesUrl", "siteUrl", "sourceRepo", "issueUrl"})
+        self.assertEqual(telemetry.LOGS_URL, fields["telemetryUrl"])
+        self.assertEqual(feedback.FEEDBACK_URL, fields["feedbackUrl"])
+        self.assertEqual(telemetry.CLI_INGEST_KEY, fields["ingestKeys"])
+        self.assertEqual(feedback.ISSUE_URL, fields["issueUrl"])
+        self.assertEqual(star.REPO, fields["sourceRepo"])
+        self.assertIn(f'INGEST_KEY_HEADER = "{telemetry.INGEST_KEY_HEADER}"', (REPO / "packages" / "core" / "src" / "ingestKeys.ts").read_text())
 
     def test_local_copy_keeps_events_with_sharing_on_and_off(self):
         write_consent(self.root)

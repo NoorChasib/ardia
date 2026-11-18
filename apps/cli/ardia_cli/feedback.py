@@ -10,7 +10,9 @@ from pathlib import Path
 
 from ardia_cli import __version__
 
-FEEDBACK_URL = "https://ardia.dev/api/feedback"
+FEEDBACK_URL: str | None = None
+ISSUE_URL = "https://github.com/NoorChasib/nilla/issues/new"
+LOCAL_CLI_KEY = "local-cli-key"
 TEST_URL_ENV = "ARDIA_FEEDBACK_URL"
 KINDS = ("bug", "slow", "idea", "other")
 MAX_TITLE = 67
@@ -39,9 +41,9 @@ DESCRIPTION = """\
 Report a problem or an idea to Ardia's developer: a confusing error, a missing command, output that cost you extra
 turns, something slow. Give it a short title and say what you ran, what happened and what you expected.
 
-It goes to the feedback service on ardia.dev (sent even while "Share anonymous crash reports and usage stats" is off:
-sending a report is consent for that report) and opens a public GitHub issue with the title and description; files you
-attach stay private. Before it leaves, secrets are removed by exact pattern (key=value and key: value secrets, auth
+This build has no feedback service set up, so nothing is sent: the report is kept on this Mac and the command prints
+the GitHub page to open an issue on instead. A build with a feedback service sends it there (even while "Share
+anonymous crash reports and usage stats" is off: sending a report is consent for that report). Before it leaves, secrets are removed by exact pattern (key=value and key: value secrets, auth
 headers, known key formats, JWTs), along with emails, URL logins and queries, card numbers and the name in
 /Users/<name>. At most 20 a day are sent. When it can't be sent, it's kept on this Mac and the reason is printed.
 """
@@ -181,8 +183,10 @@ def feedback_url(env) -> tuple[str | None, str]:
             base = override.rstrip("/")
             return (base + "/api/feedback" if urlsplit(base).path in ("", "/") else base), ""
         return None, f"{TEST_URL_ENV} isn't a loopback http:// URL"
+    if not FEEDBACK_URL:
+        return None, "no feedback service is set up for this build"
     if telemetry.is_dev_build():
-        return None, f"this ardia is a checkout build ({__version__}), which never sends to ardia.dev; set {TEST_URL_ENV} to a local service"
+        return None, f"this ardia is a checkout build ({__version__}), which never sends to a feedback service; set {TEST_URL_ENV} to a local service"
     return FEEDBACK_URL, ""
 
 
@@ -251,7 +255,8 @@ def request(method: str, url: str, data, headers: dict, timeout: float) -> tuple
 
     from ardia_cli import telemetry
 
-    headers = {telemetry.INGEST_KEY_HEADER: telemetry.CLI_INGEST_KEY, **headers}
+    key = telemetry.CLI_INGEST_KEY or (LOCAL_CLI_KEY if telemetry.LOOPBACK_URL.match(url) else None)
+    headers = {**({telemetry.INGEST_KEY_HEADER: key} if key else {}), **headers}
     try:
         with urllib.request.urlopen(urllib.request.Request(url, data=data, headers=headers, method=method), timeout=timeout) as response:
             raw = response.read(64 * 1024)
@@ -409,7 +414,10 @@ def run(args, stdin=None, env=None) -> int:
     base, url_problem = feedback_url(env)
     reason = blocked_reason(env) or url_problem
     if reason or base is None:
-        return keep(home, entry, reason)
+        status = keep(home, entry, reason)
+        if base is None and not FEEDBACK_URL:
+            print(f"Open an issue instead: {ISSUE_URL}")
+        return status
     digest = hashlib.sha256(f"{args.kind}\0{title}\0{description}".encode()).hexdigest()[:16]
     slot = usage.take_feedback_slot(home, digest, DAILY_LIMIT, WINDOW_S, time.time()) if home is not None else "ok"
     if slot == "duplicate":

@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 
-REPO = "mantrakp04/ardia"
+REPO = "NoorChasib/nilla"
 URL = f"https://github.com/{REPO}"
 SESSION = "ardia-star"
 GH_TIMEOUT_S = 20

@@ -8,9 +8,9 @@ from pathlib import Path
 
 from ardia_cli import __version__
 
-LOGS_URL = "https://ardia.dev/otel/v1/logs"
+LOGS_URL: str | None = None
 INGEST_KEY_HEADER = "X-Ardia-Key"
-CLI_INGEST_KEY = "ak_cli_67adb8ebc49841125eda860e"
+CLI_INGEST_KEY: str | None = None
 TEST_URL_ENV = "ARDIA_TELEMETRY_URL"
 EVENTS_SCOPE = "ardia.analytics"
 SERVICE_NAME = "ardia-cli"
@@ -97,7 +97,7 @@ def logs_url(env) -> str | None:
     override = env.get(TEST_URL_ENV)
     if override:
         return override if LOOPBACK_URL.match(override) else None
-    return None if is_dev_build() else LOGS_URL
+    return None if is_dev_build() or not LOGS_URL else LOGS_URL
 
 
 def environment_for(root: Path) -> str:
@@ -787,7 +787,7 @@ def flush_main() -> None:
         config = json.loads(sys.stdin.read(64 * 1024) or "{}")
         sys.stdin.close()
         url = config.get("url")
-        if url == LOGS_URL or (isinstance(url, str) and LOOPBACK_URL.match(url)):
+        if (LOGS_URL and url == LOGS_URL) or (isinstance(url, str) and LOOPBACK_URL.match(url)):
             flush(Path(config["data_root"]), url, config.get("environment") or "production")
     except Exception:
         pass
@@ -907,7 +907,8 @@ def post(url: str, body: bytes) -> int:
     import urllib.error
     import urllib.request
 
-    request = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", INGEST_KEY_HEADER: CLI_INGEST_KEY}, method="POST")
+    headers = {"Content-Type": "application/json", **({INGEST_KEY_HEADER: CLI_INGEST_KEY} if CLI_INGEST_KEY else {})}
+    request = urllib.request.Request(url, data=body, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(request, timeout=SEND_TIMEOUT_S) as response:
             return response.status
