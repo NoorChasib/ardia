@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { scrollMovedSinceSave, scrollSaveDecision, type ScrollWatch } from "./scrollSettle.ts";
+import { scrollAtRest, scrollMovedSinceSave, scrollSaveDecision, type ScrollWatch } from "./scrollSettle.ts";
 
 const run = (start: ScrollWatch, ys: number[]) => {
   let watch = start;
@@ -25,4 +25,11 @@ test("a page counts as scrolled since its save when it has no save yet or moved 
   assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: null }, 40), true);
   assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: 40 }, 41), false);
   assert.equal(scrollMovedSinceSave({ lastSeen: 40, lastSaved: 40 }, 400), true);
+});
+
+test("a page is at rest only when it is where it was last seen and last saved", () => {
+  assert.equal(scrollAtRest({ lastSeen: 300, lastSaved: 300 }, 301), true);
+  assert.equal(scrollAtRest({ lastSeen: 300, lastSaved: 0 }, 300), false);
+  assert.equal(scrollAtRest({ lastSeen: 0, lastSaved: 0 }, 300), false);
+  assert.equal(scrollAtRest({ lastSeen: null, lastSaved: null }, 0), false);
 });

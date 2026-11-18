@@ -1,16 +1,19 @@
 import { livePageIds, pageScrollPosition, savePageState, type PageScrollPosition } from "../pages/store";
 import { currentTabs, saveTabState } from "../tabs/store";
 import { findTab } from "../tabs/tabsState";
-import { scrollMovedSinceSave, scrollSaveDecision, type ScrollWatch } from "../../lib/scrollSettle";
+import { scrollAtRest, scrollMovedSinceSave, scrollSaveDecision, type ScrollWatch } from "../../lib/scrollSettle";
 import { countUsage } from "../telemetry/telemetry";
 
 const SCROLL_CHECK_MS = 2000;
+const STILL_CHECK_MAX_MS = 16_000;
 
 const watches = new Map<string, ScrollWatch>();
 const navigatedSinceSave = new Map<string, number>();
 const frontSinceCheck = new Set<string>();
 let frontPage: () => string | null = () => null;
-let timer: ReturnType<typeof setInterval> | null = null;
+let polledPage: string | null = null;
+let stillChecks = 0;
+let timer: ReturnType<typeof setTimeout> | null = null;
 let checking = false;
 
 export async function saveTabPosition(id: string, known?: PageScrollPosition | null) {
@@ -27,6 +30,13 @@ export function notePageNavigated(id: string) {
   navigatedSinceSave.set(id, (navigatedSinceSave.get(id) ?? 0) + 1);
 }
 
+function scheduleCheck() {
+  timer = setTimeout(() => {
+    timer = null;
+    void checkFront();
+  }, Math.min(SCROLL_CHECK_MS * 2 ** stillChecks, STILL_CHECK_MAX_MS));
+}
+
 async function checkFront() {
   const id = frontPage();
   if (!id || checking) return;
@@ -34,12 +44,23 @@ async function checkFront() {
   try {
     const at = await pageScrollPosition(id);
     if (!at || frontPage() !== id) return;
-    const step = scrollSaveDecision(watches.get(id) ?? { lastSeen: null, lastSaved: null }, at.y);
+    const watch = watches.get(id) ?? { lastSeen: null, lastSaved: null };
+    stillChecks = scrollAtRest(watch, at.y) ? stillChecks + 1 : 0;
+    const step = scrollSaveDecision(watch, at.y);
     watches.set(id, step.next);
     if (step.save) await saveTabPosition(id);
   } finally {
     checking = false;
+    if (!timer && polledPage) scheduleCheck();
   }
+}
+
+export function noteFrontScrolled(id: string) {
+  if (id !== polledPage || stillChecks === 0) return;
+  stillChecks = 0;
+  if (!timer) return;
+  clearTimeout(timer);
+  scheduleCheck();
 }
 
 export function watchFrontScroll(frontId: () => string | null) {
@@ -50,11 +71,12 @@ export function watchFrontScroll(frontId: () => string | null) {
 export function followFrontPage() {
   const id = frontPage();
   if (id) frontSinceCheck.add(id);
-  if (id && !timer) timer = setInterval(() => void checkFront(), SCROLL_CHECK_MS);
-  else if (!id && timer) {
-    clearInterval(timer);
-    timer = null;
-  }
+  if (id === polledPage) return;
+  polledPage = id;
+  stillChecks = 0;
+  if (timer) clearTimeout(timer);
+  timer = null;
+  if (id && !checking) scheduleCheck();
 }
 
 async function changedSinceSave(id: string): Promise<{ changed: boolean; at?: PageScrollPosition | null }> {

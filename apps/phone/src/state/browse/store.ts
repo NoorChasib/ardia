@@ -18,7 +18,7 @@ import { showOnboarding, useOnboarding } from "../onboarding/store";
 import { pageUi, usePageUi } from "../page/store";
 import { settingsNav, useSettingsNav } from "../settings/nav";
 import { refreshDefaultBrowser } from "../settings/defaultBrowser";
-import { followFrontPage, forgetPosition, notePageNavigated, saveChangedPages, saveTabPosition, watchFrontScroll } from "./positions";
+import { followFrontPage, forgetPosition, noteFrontScrolled, notePageNavigated, saveChangedPages, saveTabPosition, watchFrontScroll } from "./positions";
 import { noteLocalChange, showSpace } from "../sync/store";
 import { spaceToShow, tabsInSpace } from "../tabs/spaces";
 import { currentPreferences, loadPreferences } from "../settings/store";
@@ -569,6 +569,8 @@ function noteCrash(tab: BrowserTab, state: PageState) {
 }
 
 export function pageStateChanged(id: string, state: PageState) {
+  const before = pageNavigation(id);
+  if (before && (before.scrollDirection !== state.scrollDirection || before.isScrolledToTop !== state.isScrolledToTop)) noteFrontScrolled(id);
   storeNavigation(id, state);
   const tab = findTab(currentTabs(), id);
   if (!tab) return;

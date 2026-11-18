@@ -1,5 +1,6 @@
 import { act } from "react-test-renderer";
 import { pages } from "../platform/pages";
+import type { PageState } from "../state/pages/store";
 import * as browse from "../state/browse/store";
 import { useOnboarding } from "../state/onboarding/store";
 import { usePageUi } from "../state/page/store";
@@ -111,11 +112,27 @@ test("a page in front still polls its scroll and saves it once after the reader 
   await idle(10);
   await resetCounts();
   scrollY = 900;
-  await idle(4);
-  await idle(10);
+  await idle(40);
   expect(saved).toEqual([selected()]);
   expect(tabSavedState(selected())).toBe(`state of ${selected()} at 900`);
   expect(counted.filter((field) => field === "page_states_saved")).toHaveLength(1);
+});
+
+test("a still, saved page in front checks its scroll less and less often, and a scroll direction change brings the checks back at once", async () => {
+  await act(async () => browse.useBrowse.setState({ surface: "browsing" }));
+  await idle(60);
+  await resetCounts();
+  await idle(60);
+  expect({ wakeUps: wakeUps.count, scrollReads, saved }).toEqual({ wakeUps: 3, scrollReads: 3, saved: [] });
+
+  const state: PageState = { url: "https://site4.example/", title: "Site 4", progress: 1, isLoading: false, canGoBack: false, canGoForward: false, faviconUrl: null, themeColor: null, backgroundColor: null, security: "secure", failure: null, pageZoom: 1, isDesktopSite: false, scrollDirection: "up", isScrolledToTop: false, blockedRequests: 0, isLive: true, isPrivate: false };
+  await act(async () => browse.pageStateChanged(selected(), state));
+  await idle(60);
+  await resetCounts();
+  scrollY += 700;
+  await act(async () => browse.pageStateChanged(selected(), { ...state, scrollDirection: "down" }));
+  await idle(5);
+  expect(saved).toEqual([selected()]);
 });
 
 test("going inactive saves only the pages that navigated or scrolled since their last save, not every live page", async () => {
