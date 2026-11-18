@@ -112,7 +112,7 @@ ARDIA_FEEDBACK_URL=http://127.0.0.1:4319                          # in the app's
   `issue.md` (the would-be public issue, already scrubbed), `event.json` (the exact OTLP request the
   collector would get) and `complete.json`, plus every event appended to `events.jsonl`. `issue_url` is a
   `file://` link to `issue.md`.
-- Tests: `node --test` in `infra/feedback`.
+- Tests: `bun run --cwd infra/feedback test`.
 
 ## Report a Problem (app)
 

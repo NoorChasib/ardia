@@ -2,7 +2,7 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
-    "typecheck": {
+    "check": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/apps/browser/src/**"]
     }
   }

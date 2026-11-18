@@ -10,7 +10,7 @@ converts it to constant 60 fps (a repeated frame stays repeated), and writes src
   node apps/videos/scripts/fixes/scroll-perf-film.mjs --before <metrics.json>[,<metrics.json>] [--after <metrics.json>[,…]]
        [--footage <scratch>/footage] [--before-label TEXT] [--after-label TEXT] [--kind pan|trackpad]
 
-Without --after the after panels are placeholders. Render with: pnpm -C apps/videos render scroll-perf`;
+Without --after the after panels are placeholders. Render with: bun run --cwd apps/videos render scroll-perf`;
 
 const argv = process.argv.slice(2);
 if (argv.includes("--help") || argv.includes("-h") || !argv.includes("--before")) {

@@ -8,7 +8,7 @@ hexclave_deploy() {
   elif [ -x "$infra_dir/hexclave-cli/node_modules/.bin/hexclave" ]; then
     cli=("$infra_dir/hexclave-cli/node_modules/.bin/hexclave")
   else
-    cli=(npx "@hexclave/cli@$(node -p "require('$infra_dir/hexclave-cli/package.json').dependencies['@hexclave/cli']")")
+    cli=(bun x "@hexclave/cli@$(node -p "require('$infra_dir/hexclave-cli/package.json').dependencies['@hexclave/cli']")")
   fi
   "${cli[@]}" deploy --cloud-project-id "$HEXCLAVE_PROJECT_ID" "$@"
 }

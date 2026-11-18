@@ -11,7 +11,7 @@
 #     the build phases keep each build's writes in its own folder); two into the same one take turns. A command
 #     without -derivedDataPath (one run through `sh -c`, say) takes the single shared xcodebuild lock.
 #     scripts/agent/build-app is the quiet way to build the app.
-#   - pod covers pod install, pnpm install and edits to apps/browser/package.json; chromium covers ~/chromium-build.
+#   - pod covers pod install, bun install and edits to apps/browser/package.json; chromium covers ~/chromium-build.
 #   - The Pods directory is a readers-writer lock between them: any number of xcodebuild commands read it at once,
 #     a pod command rewrites it alone. A pod command waits for running builds to finish, and builds that start
 #     meanwhile wait for it, so it isn't starved.

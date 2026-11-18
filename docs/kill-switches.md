@@ -21,7 +21,7 @@ backed out without another build. `apps/browser/src/platform/killSwitches.ts` is
 ```
 
 Only names the app knows and booleans count; anything else is ignored. Leaving a switch out means on (the cache follows
-the file, not the first answer). Editing the file is a site deploy (`pnpm -C apps/site run deploy`: an owner-approved
+the file, not the first answer). Editing the file is a site deploy (`bun run --cwd apps/site deploy`: an owner-approved
 public action like any other).
 
 ## The request

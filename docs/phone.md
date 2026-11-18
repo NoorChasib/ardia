@@ -8,7 +8,7 @@ Swift code that already exists. Both phones run it: Android and the iPhone.
 ## Layout
 
 ```
-apps/phone/                 the app, and the root of its own pnpm workspace with packages/phone: Expo 58, React
+apps/phone/                 the app, and the root of its own Bun workspace with packages/phone: Expo 58, React
                             Native 0.88.1, React 19.3, Reanimated 4.7, Worklets 0.13, Gesture Handler 3.3, Hermes V1
   android/                  the Android project, checked in (application id com.ardia.browser.android, minSdk 29,
                             arm64-v8a and x86_64)
@@ -27,12 +27,12 @@ packages/phone/             @ardia/phone-native, the Expo module package
 
 `@ardia/core` is imported straight from `src/mobile.ts`; no bundle, no script engine.
 
-The phone is its own pnpm workspace, apart from the Mac's, so the two apps can run different Expo and React Native
+The phone is its own Bun workspace, apart from the Mac's, so the two apps can run different Expo and React Native
 versions (decided 2026-11-15 for the move to Expo 58 and React Native 0.88, which the Mac can't follow: Expo 58 has no
 macOS and react-native-macos stops at 0.83):
-- `apps/phone/pnpm-workspace.yaml` holds `apps/phone` and `packages/phone`, with its own `pnpm-lock.yaml` and a
-  hoisted `apps/phone/node_modules`. `@ardia/core` comes in as `link:../../packages/core`; it imports only `node:`
-  modules. The root workspace leaves both out. Install with `scripts/agent/locked pod -- pnpm -C apps/phone install`.
+- `apps/phone/package.json`'s `workspaces` holds `packages/phone`, with its own `bun.lock` and, through
+  `apps/phone/bunfig.toml` (`linker = "hoisted"`, `peer = false`), a hoisted `apps/phone/node_modules`. `@ardia/core` comes in as `link:../../packages/core`; it imports only `node:`
+  modules. The root workspace leaves both out. Install with `scripts/agent/locked pod -- bun install --cwd apps/phone`.
 - Nothing of the Mac's is on the phone's resolution path. Metro reads only `apps/phone/node_modules` and watches
   `packages/phone` and `packages/core`. TypeScript keeps symlinks (`preserveSymlinks` in the three tsconfigs), so
   `packages/phone` is read through `apps/phone/node_modules/@ardia/phone-native` and its imports find the phone's
@@ -40,7 +40,7 @@ macOS and react-native-macos stops at 0.83):
   `moduleSuffixes: [".native", ""]` resolve types as Metro resolves code. Jest's `test/render/resolver.js` resolves a
   bare import from `packages/phone` as if from `apps/phone`, through Reanimated's own jest resolver.
 - Why not one workspace: with the hoisted linker one copy of `react-native` and `expo-modules-core` sits at the root,
-  and whichever version pnpm picks is what `packages/phone` (whose React Native is a peer) and Expo's autolinking see.
+  and whichever version Bun picks is what `packages/phone` (whose React Native is a peer) and Expo's autolinking see.
   A Mac dependency change could flip it, and one install rewrote both apps' trees.
 
 ## The page view
@@ -1817,12 +1817,17 @@ Not audited at all: Compose's `SyncSetupContent` internals inside onboarding.
 ## Build and run
 
 ```
-scripts/agent/locked pod -- pnpm install             once, from the repo root
+scripts/agent/locked pod -- bun install --frozen-lockfile --cwd apps/phone   once
 apps/phone/scripts/gradle-locked :app:assembleRelease   JS bundled in, app/build/outputs/apk/release/app-release.apk
 apps/phone/scripts/gradle-locked :app:assembleDebug     loads JS from Metro
-pnpm -C apps/phone dev                               Metro on :8091 (the Mac's Metro keeps :8081); adb reverse tcp:8091 tcp:8091
-pnpm -C apps/phone typecheck
+bun run --cwd apps/phone dev                               Metro on :8091 (the Mac's Metro keeps :8081); adb reverse tcp:8091 tcp:8091
+bun run --cwd apps/phone check
+bun run --cwd apps/phone test:unit
 ```
+
+CI's `phone.yml` runs `check` and `test:unit` on Linux for any change to the phone's JavaScript, tests or config,
+including the ones `ios.yml` and `android.yml` skip. Those two also run when `metro.config.js` or
+`metro-nested-modules.js` changes.
 
 Needs JDK 17 and the Android SDK (`local.properties` or `ANDROID_HOME`). The first build compiles React Native's and
 Expo's Gradle plugins and the C++ of every native module, about 15 minutes on a busy Mac; JS-only changes rebuild the
@@ -1854,7 +1859,9 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
 - **Where it runs.** In the `bots` container (14 GB); it refuses `dev`, which holds the owner's T3. It waits while
   another Gradle build runs there or less than 8 GB is free, and never moves to `dev`. One Android build at a time:
   the Gradle lock, as on the Mac.
-- **What it builds.** A pushed commit on `t3/unify-expo-architecture`. `~/Developer/ardia-android-build/src` is a
+- **What it builds.** A pushed commit on `t3/unify-expo-architecture`, or on the branch `ARDIA_BUILD_BRANCH` names
+  (`corex-test` reads it too). The branch's head must hold the Bun files (`apps/phone/bunfig.toml`): both scripts refuse
+  one from before Bun. `~/Developer/ardia-android-build/src` is a
   build-only clone: every build fetches, detaches it at the commit, resets and cleans it (only the build outputs Git
   ignores stay).
   - **Never edit, commit or push there.** All work happens in the main checkout; the folder's README says so.
@@ -1870,11 +1877,11 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
   - Phone runs on corex read them there: no `scp` from the Mac for Android.
   - The Compose app's release build, the reference in every run, is `reference/ardia-compose-release.{apk,txt}`
     (signer `eeb05c92…`); pruning never touches `reference/`.
-- **The tools it adds, beside the clone, not in the shared SDK:** `pnpm-<version>/` (the version `packageManager`
-  pins, first on the path, since `bundle-export` runs pnpm too) and `sdk-view/`. `sdk-view/` is cmdline-tools 23.0,
-  pinned by checksum, which `check-names.py` needs for `apkanalyzer`; it must sit in an SDK layout, so the view links
-  the shared SDK's other parts. Bundle exports go to `tmp/` there, so their offline install finds pnpm's store on the
-  same filesystem.
+- **The tools it adds, beside the clone, not in the shared SDK:** `bun-<version>/` (the version `packageManager`
+  pins, first on the path, since `bundle-export` runs `bun install` too), `bun-cache/` (its install cache) and
+  `sdk-view/`. `sdk-view/` is cmdline-tools 23.0, pinned by checksum, which `check-names.py` needs for `apkanalyzer`;
+  it must sit in an SDK layout, so the view links the shared SDK's other parts. Bundle exports go to `tmp/` there, so
+  their offline install finds Bun's cache on the same filesystem.
 - **Starting it.** From the Mac, or from a corex thread through `ssh corex`:
 
   ```
@@ -1893,8 +1900,8 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
   - **On the F4,** the corex APK installed over the Mac one as an update, kept the app's data and ran.
   - **Build times:** the first full build took about 11 min 20 s, an incremental one 107 s.
 - **Toolchain on corex.** JDK 17.0.21, NDK 27.1.12297006, build-tools 37.0.0 and android-37.0 are in the containers'
-  `~/Android/Sdk`. The Linux `hermesc` is pinned by hash in `packages/phone/android/build.gradle`. pnpm 11.1.3 comes
-  from `packageManager` (corex's own is 12).
+  `~/Android/Sdk`. The Linux `hermesc` is pinned by hash in `packages/phone/android/build.gradle`. Bun 1.4.4 comes
+  from `packageManager`.
 
 ### Android release
 
@@ -2187,7 +2194,7 @@ conventions check now covers ArdiaKit).
   present.
 - The phone's typecheck and suites, `packages/core` and `packages/sync` pass, and so do the Mac app's typecheck and
   tests, except one dated test (`watch.test.mjs`, its fixed clock's 14-day watch ended on 15 Nov).
-- Not proved: a native build from a fresh clone (`pnpm install` and `pod install` from nothing), for disk.
+- Not proved: a native build from a fresh clone (`bun install` and `pod install` from nothing), for disk.
 
 ### The lab switch
 
@@ -2204,7 +2211,7 @@ A store build leaves both off:
 ARDIA_LAB=0 apps/phone/scripts/gradle-locked :app:bundleRelease
 ```
 
-To see the lab with Metro, start it with `EXPO_PUBLIC_ARDIA_LAB=true pnpm -C apps/phone dev` and run a debug
+To see the lab with Metro, start it with `EXPO_PUBLIC_ARDIA_LAB=true bun run --cwd apps/phone dev` and run a debug
 build from `gradle-locked`.
 
 ### Launch arguments on Android
@@ -2968,7 +2975,7 @@ and scroll speed on the root list.
 Nothing here is run by an agent on its own: the coordinator picks the moment, and no agent uploads or touches the
 Apple developer account. This is what the build needs and how the switch is proved.
 
-**A commit is uploadable only after a CI dry run at that exact commit** (`ios-release.yml`, `mode=dry-run`). A local `release-ios` run proves the build, not the tree CI sees: CI runs `pnpm install` and `pod install`
+**A commit is uploadable only after a CI dry run at that exact commit** (`ios-release.yml`, `mode=dry-run`). A local `release-ios` run proves the build, not the tree CI sees: CI runs `bun install` and `pod install`
 fresh, and its dependencies step now fails, showing the diff, when `pod install` rewrites anything under
 `apps/phone/ios`. Run 43861288422 stopped on exactly that: 042a23ace had added a build file to the project by hand
 out of the id order CocoaPods writes in (fixed in 8304ed5c6, and on `expo-ios-internal-0.2.47-nightly.4` as

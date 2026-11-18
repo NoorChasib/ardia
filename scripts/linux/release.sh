@@ -24,8 +24,7 @@ publishes: it prints the gh release upload command for the assets.
 
 It needs MARKETING_VERSION to be <version> and docs/release-notes/<version>.md,
 as scripts/release.sh does: the Linux assets go on the GitHub release the
-macOS release made. pnpm comes from PATH, else
-~/ardia-linux-build-156/tools/pnpm/node_modules/.bin.'
+macOS release made. bun comes from PATH, else ~/.bun/bin or ~/.local/bin.'
 
 die() { echo "release.sh: $*" >&2; exit 1; }
 warn() { echo "warning: $*" >&2; }
@@ -64,10 +63,11 @@ if [ -n "$dirty" ]; then
   warn "building with the uncommitted changes above: a test build, never a release"
 fi
 
-if ! command -v pnpm >/dev/null; then
-  fallback="$HOME/ardia-linux-build-156/tools/pnpm/node_modules/.bin"
-  [ -x "$fallback/pnpm" ] || die "pnpm is neither on PATH nor in $fallback"
-  PATH="$fallback:$PATH"
+if ! command -v bun >/dev/null; then
+  for fallback in "$HOME/.bun/bin" "$HOME/.local/bin"; do
+    [ -x "$fallback/bun" ] && { PATH="$fallback:$PATH"; break; }
+  done
+  command -v bun >/dev/null || die "bun is neither on PATH nor in ~/.bun/bin or ~/.local/bin"
 fi
 for tool in node python3 sha256sum tar xz git dpkg-deb; do
   command -v "$tool" >/dev/null || die "$tool is required"
@@ -136,7 +136,7 @@ else
 fi
 
 echo "==> UI (apps/linux/dist)"
-pnpm --filter @ardia/linux build >"$out/ui-build.log" 2>&1 \
+bun run --cwd apps/linux build >"$out/ui-build.log" 2>&1 \
   || { tail -20 "$out/ui-build.log" >&2; die "building apps/linux/dist failed ($out/ui-build.log)"; }
 
 echo "==> ardia CLI"

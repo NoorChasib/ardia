@@ -87,7 +87,7 @@ Shared code: `Model.swift` (`ImportKind`, `ImportResult` and the other result ty
 
 ## Fixtures
 
-`pnpm --filter @ardia/import fixtures` runs `fixtures/generate.py`, which wipes `fixtures/home/` and
+`bun run --cwd packages/import fixtures` runs `fixtures/generate.py`, which wipes `fixtures/home/` and
 `fixtures/misc/` and rebuilds everything below deterministically. The test secrets are in `fixtures/secrets.json`.
 `fixtures/dia/` and `fixtures/extensions/` are written by hand. Don't open the Firefox `places.sqlite` with the
 sqlite3 CLI: it checkpoints the WAL the tests depend on.
@@ -110,9 +110,9 @@ sqlite3 CLI: it checkpoints the WAL the tests depend on.
 
 | What | Command |
 |---|---|
-| Swift tests (`tests/`, against `fixtures/`) | `pnpm --filter @ardia/import test` (`swift test`, scratch path in `$TMPDIR`) |
-| Rebuild fixtures | `pnpm --filter @ardia/import fixtures` |
-| Typecheck the JS wrapper | `pnpm --filter @ardia/import typecheck` |
+| Swift tests (`tests/`, against `fixtures/`) | `bun run --cwd packages/import test` (`swift test`, scratch path in `$TMPDIR`) |
+| Rebuild fixtures | `bun run --cwd packages/import fixtures` |
+| Typecheck the JS wrapper | `bun run --cwd packages/import check` |
 | End to end in a hidden Debug instance (cookies, addresses, cards) | `node packages/import/scripts/e2e.mjs <Ardia.app> <scratch dir>` (`--help`) |
 | Run one script in that instance (`e2e.mjs --keep`) | `scripts/agent/ac eval <scratch dir>/data '<js>'` |
 
@@ -137,9 +137,9 @@ sqlite3 CLI: it checkpoints the WAL the tests depend on.
 3. Write the reader in `ios/Core/<Source><Kind>.swift`. Read SQLite through `SQLiteSnapshot`, check `cancellation`,
    and throw `ImportError`. Then add its `(kind, family)` case in `Importer.importData`.
 4. Add a fixture: a `build_*` function in `fixtures/generate.py`, or a branch of an existing one. Run
-   `pnpm --filter @ardia/import fixtures` and write a test in `tests/`.
+   `bun run --cwd packages/import fixtures` and write a test in `tests/`.
 5. Apply it in the app. Add the kind to `IMPORT_KINDS` (and `ENCRYPTED_KINDS` if it's encrypted) in
    `apps/browser/src/state/import/flow.ts`, its title and icon to `KIND_LOOK` in `components/import/model.ts`, and write
    it in `state/import/apply.ts`. A secret kind goes through `ImportWriter` and a new engine call instead.
-6. Run `test`, `typecheck` and `pnpm -w typecheck`. For anything that reaches the engine, also run `scripts/e2e.mjs`
+6. Run `test`, `check` and `bun check`. For anything that reaches the engine, also run `scripts/e2e.mjs`
    against a fresh Debug build.

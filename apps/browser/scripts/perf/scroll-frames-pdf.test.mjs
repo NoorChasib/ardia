@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { frameRates } from "./frame-rates.mjs";
 import { frameOrigin, pdfDocument, pdfFrameTargets, pdfRates, pdfRep, servePdf } from "./scroll-frames-pdf.mjs";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 const here = dirname(fileURLToPath(import.meta.url));
 const bench = join(here, "scroll-frames.mjs");
 const PAGE = "http://127.0.0.1:9571/pdf";
@@ -59,11 +61,11 @@ test("the local server answers the PDF with the application/pdf content type", a
 });
 
 test("pdf/trackpad is a case, and the bench's --list and --help name it", () => {
-  const list = spawnSync(process.execPath, [bench, "--list"], { encoding: "utf8" });
+  const list = spawnSync(nodeBinary, [bench, "--list"], { encoding: "utf8" });
   assert.equal(list.status, 0, list.stderr);
   assert.ok(list.stdout.split("\n").includes("pdf/trackpad"));
   assert.ok(list.stdout.split("\n").includes("article/trackpad"));
-  const help = spawnSync(process.execPath, [bench, "--help"], { encoding: "utf8" });
+  const help = spawnSync(nodeBinary, [bench, "--help"], { encoding: "utf8" });
   assert.equal(help.status, 0, help.stderr);
   assert.match(help.stdout, /pdf\/trackpad scrolls a generated multi-page PDF/);
 });

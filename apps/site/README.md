@@ -1,17 +1,17 @@
 # Ardia site
 
 The landing page. Astro, built to static files (`dist/`) and served by nginx on Hexclave (`infra/site`,
-`pnpm run deploy`).
+`bun run deploy`).
 
-It's a standalone package: the repo's pnpm workspace excludes it (the root hoists `node_modules` for React
+It's a standalone package: the repo's Bun workspace excludes it (the root hoists `node_modules` for React
 Native), so install it on its own.
 
 ```bash
 cd apps/site
-pnpm install
-pnpm dev        # http://localhost:4321
-pnpm build      # → dist/
-pnpm preview    # serve dist/
+bun install --frozen-lockfile
+bun run dev        # http://localhost:4321
+bun run build      # → dist/
+bun run preview    # serve dist/
 ```
 
 `SITE_URL` sets the canonical/OG origin.
@@ -33,7 +33,7 @@ pnpm preview    # serve dist/
 - **Hero poster:** until WebGL draws its first frame, the hero shows a WebP of that exact frame (dawn, or
   morning with reduced motion) in five framings: `tall` (phones), `mid`, `laptop` (16:10), `wide` (16:9) and
   `wider`. `src/data/heroPoster.ts` holds the media queries; the canvas crossfades in over it. After changing
-  the meadow's look or the hero text, run `pnpm dev` and `node scripts/hero-posters.mjs --url <dev url>`: it
+  the meadow's look or the hero text, run `bun run dev` and `node scripts/hero-posters.mjs --url <dev url>`: it
   captures each frame in headless Chrome on the GPU, works out the text tones the scene picks, and rewrites
   `src/assets/hero/`.
 - **Screenshots:** `src/assets/shots/*.webp` are real window captures of Ardia (2×, transparent outside
@@ -78,7 +78,7 @@ the same. Console warnings and errors go out as plain logs. Replays mask every i
 minimum session length, flags) are in `src/data/telemetry.ts`, with the event names (`SITE_EVENTS`), the
 sources and libs, the noise rules and the replay upload contract that `scripts/stats.mjs` and `scripts/replay.mjs` import
 too. Tag a link with `data-track="event"` and `data-track-<prop>="value"`, or call `capture()` from
-`src/scripts/telemetry`; `src/data/telemetry.test.ts` (in `pnpm test`) fails when an event isn't listed or a listed one
+`src/scripts/telemetry`; `src/data/telemetry.test.ts` (run by `bun run test:root` from the repository root) fails when an event isn't listed or a listed one
 is no longer sent. Every event carries `ardia_device` (`mac`, `phone`, `other`) and `ardia_os` from `Device.astro`, the
 same answer the page acted on.
 
@@ -87,6 +87,6 @@ Visitors are sorted before the first paint (`src/components/Device.astro`): phon
 line, and only Macs evaluate the `download-band` experiment (`src/components/Showcase.astro`). On localhost,
 `?nndevice=phone|mac|other` and `?nnflag=band|control` force them. The experiment log is `docs/growth.md`.
 
-Only ardia.dev reports. `pnpm dev`, `pnpm preview` and any other host stay silent unless you opt in from
+Only ardia.dev reports. `bun run dev`, `bun run preview` and any other host stay silent unless you opt in from
 the console with `localStorage.setItem("ac:telemetry", "dev")`, and then
 events go to the same paths on that host and carry `environment: development`. Remove the item when you're done.

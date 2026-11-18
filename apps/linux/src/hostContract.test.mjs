@@ -8,6 +8,8 @@ import { createNativeEvents } from "./hostEvents.ts";
 import { hostLaunchConfig } from "./hostLaunchConfig.ts";
 import { HostTab } from "./hostTab.ts";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 function fixture() {
   const listeners = new Set();
   const requests = [];
@@ -143,7 +145,7 @@ test("late temporary surface creation releases its private native lifetime witho
 test("current shared domain wrappers use the production Linux Expo adapter", () => {
   const loader = fileURLToPath(new URL("../scripts/host-contract-loader.mjs", import.meta.url));
   const fixture = fileURLToPath(new URL("../scripts/host-contract-production.mjs", import.meta.url));
-  const result = spawnSync(process.execPath, ["--experimental-strip-types", "--import", loader, fixture], { encoding: "utf8", timeout: 10000 });
+  const result = spawnSync(nodeBinary, ["--experimental-strip-types", "--import", loader, fixture], { encoding: "utf8", timeout: 10000 });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /production domain wrappers, bootstrap adapter, errors and events passed/);
 });

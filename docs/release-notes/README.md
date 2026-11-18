@@ -132,5 +132,5 @@ user's expense.
    `Co-authored-by:` who isn't the owner or Claude, end its item with `Thanks, [@handle](<PR url>).` (their
    GitHub handle, linking the PR). One credit per item, even when several commits fed it.
 6. Pick the headline from the top item.
-7. Check it renders: `pnpm -C apps/site build`, then `pnpm -C apps/site preview` and open
+7. Check it renders: `bun run --cwd apps/site build`, then `bun run --cwd apps/site preview` and open
    `http://localhost:4321/release-notes#<version>`.

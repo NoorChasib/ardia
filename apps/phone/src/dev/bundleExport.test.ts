@@ -24,10 +24,10 @@ function repo() {
   git("config", "user.email", "export@example.com");
   git("config", "user.name", "export");
   write("package.json", "{}\n");
-  write("pnpm-workspace.yaml", "packages: []\n");
-  write("pnpm-lock.yaml", "lockfileVersion: 9\n");
-  write("apps/phone/pnpm-workspace.yaml", "packages: []\n");
-  write("apps/phone/pnpm-lock.yaml", "lockfileVersion: 9\n");
+  write("bunfig.toml", "[install]\nlinker = \"hoisted\"\n");
+  write("bun.lock", "{\n  \"lockfileVersion\": 2,\n}\n");
+  write("apps/phone/bunfig.toml", "[install]\nlinker = \"hoisted\"\n");
+  write("apps/phone/bun.lock", "{\n  \"lockfileVersion\": 2,\n}\n");
   write("patches/a.patch", "x\n");
   write("apps/phone/index.js", "require('./src/App');\n");
   write("apps/phone/src/App.tsx", "export default 'first';\n");
@@ -53,10 +53,10 @@ test("an export holds the commit's JavaScript, not an edit in the working tree, 
   assert.equal(exportCommit(made.dir), first);
   assert.equal(read(made.dir, "apps/phone/src/App.tsx"), "export default 'first';\n");
   assert.equal(fs.existsSync(path.join(made.dir, "apps/phone/src/New.tsx")), false);
-  for (const kept of ["apps/phone/pnpm-workspace.yaml", "apps/phone/pnpm-lock.yaml", "patches/a.patch", "apps/phone/index.js", "packages/phone/src/index.ts", "packages/core/src/index.ts"]) {
+  for (const kept of ["apps/phone/bunfig.toml", "apps/phone/bun.lock", "patches/a.patch", "apps/phone/index.js", "packages/phone/src/index.ts", "packages/core/src/index.ts"]) {
     assert.ok(fs.existsSync(path.join(made.dir, kept)), kept);
   }
-  for (const left of ["apps/phone/android", "packages/phone/android", "apps/browser", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml"]) {
+  for (const left of ["apps/phone/android", "packages/phone/android", "apps/browser", "package.json", "bunfig.toml", "bun.lock"]) {
     assert.equal(fs.existsSync(path.join(made.dir, left)), false, left);
   }
   assert.equal(made.dir, fs.realpathSync(made.dir));

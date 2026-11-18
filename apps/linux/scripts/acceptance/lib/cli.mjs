@@ -2,7 +2,13 @@ import { isAbsolute, resolve } from "node:path";
 
 export const USAGE = `Ardia Linux native acceptance suite
 
-Usage: pnpm --filter @ardia/linux acceptance -- <executable> [uiDir] [options]
+Usage: bun run acceptance:linux <executable> [uiDir] [options]
+
+Run it from the repository root, from apps/linux, or from a folder with no
+package.json of its own. Bun runs a script in the folder of the package.json
+that defines it and sets no INIT_CWD, so relative paths resolve against the
+repository root, or against apps/linux when run there. Under a runner that sets
+INIT_CWD (npm), they resolve against INIT_CWD.
 
 Runs each feature issue's runtime acceptance scenarios headlessly against a packaged
 Linux Ardia build with throwaway profiles, and prints per-issue results as JSON.

@@ -88,7 +88,7 @@ For the architecture and the test tooling, read `docs/agent-brief.md`.
 ## Platforms
 One browser UI (`apps/browser/src` and `packages/*/src`) runs on three platforms, each with its own native layer and
 engine. A change to the shared UI reaches all three, so check the other two before calling it done: Linux's
-`pnpm -C apps/linux typecheck`, `test:graph` and `test:host`, and the Windows workflow, which runs on any pull
+`bun run --cwd apps/linux check`, `test:graph` and `test:host`, and the Windows workflow, which runs on any pull
 request touching shared code. Copy that names Mac things (⌘, "macOS", the menu bar) needs its Linux and Windows
 wording. When the machine you're on isn't the platform you're changing, use a Boat VM (`boat` CLI, signed in):
 `boat new --type xlarge --no-auto-stop`, an idle-stop watchdog that stops it after 20 idle minutes, `boat desktop`
@@ -113,7 +113,7 @@ rules are for the owner's Mac.
 
 ## Building features
 - **Conventions.** Folders, import direction, tokens, state, names, the translation layer and environment
-  variables follow `docs/conventions.md`; its check runs in `pnpm -C apps/browser test`.
+  variables follow `docs/conventions.md`; its check runs in `bun run --cwd apps/browser test`.
 - **Sources of truth.** `docs/dia-feature-parity.md` is the checklist; update its row when you ship.
   `docs/dia-spec.md` has Dia's measured values.
 - **Match Dia with numbers.** Compare against a capture with the same crop and the same state; "looks
@@ -162,7 +162,7 @@ rules are for the owner's Mac.
   - After a fix, test that fix and move on. Don't re-run the full suite, the whole release sequence or
     checks that already passed; run only what covers the fix (the failed row, the smoke checks for its area).
 - **Build safely.** Build the app with `scripts/agent/build-app --as <you>`: quiet, in parallel with other agents'
-  builds, and it refuses JS-only changes. Run `pod install`/`pnpm install` and Chromium builds through
+  builds, and it refuses JS-only changes. Run `pod install`/`bun install` and Chromium builds through
   `scripts/agent/locked <pod|chromium> -- <command>` (usage in the script); its lock dies with its holder.
 - **Never wait open-ended.** Every wait has a deadline under the Bash tool's 10-minute limit and fails
   fast when the thing it waits on dies: `scripts/agent/await --pid <pid> -- <test>` instead of
@@ -191,7 +191,7 @@ rules are for the owner's Mac.
   - run the smoke test on that build (and, for a stable, the perf gate);
   - dispatch it again with `dry_run=false`, which publishes the GitHub release and the appcast;
   - point the site at it (`.claude/skills/release/scripts/site-version.mjs <version>`);
-  - deploy the site with `pnpm -C apps/site run deploy`.
+  - deploy the site with `bun run --cwd apps/site deploy`.
 
   The owner has authorized releases to go all the way through. After an update, the app opens the
   release notes on ardia.dev.
@@ -202,7 +202,7 @@ rules are for the owner's Mac.
 - **Site** (`apps/site`, Astro): short and witty, with real product captures and no generic AI-site
   patterns. It has to look great on phones.
 - **Videos** (`apps/videos`): Remotion videos (Remocn Studio project); each folder in `src/videos` is a
-  composition; render with `pnpm -C apps/videos render <id>`.
+  composition; render with `bun run --cwd apps/videos render <id>`.
 - **Demo videos are also UX reviews.** An agent making a demo, mockup or before/after film watches its own frames
   for UI and UX problems in the "after": clipped or overlapping elements, unclear copy, extra steps, missing
   feedback, states that contradict a decision. It reports each one to the main agent (SendMessage) with the

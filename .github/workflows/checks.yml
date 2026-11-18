@@ -13,13 +13,14 @@ on:
       - ".claude/**"
       - ".github/vouch/**"
       - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
+      - "bun.lock"
+      - "bunfig.toml"
       - "turbo.json"
       - "tsconfig.base.json"
       - ".nvmrc"
       - "patches/**"
       - ".github/workflows/checks.yml"
+      - ".github/actions/bun-install/**"
   push:
     branches: [main]
     paths: *code
@@ -50,37 +51,34 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+      - uses: ./.github/actions/bun-install
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: Typecheck
+          lockfile-drift: ${{ matrix.part == 'rest' }}
+      - name: Type check
         if: matrix.part == 'rest'
-        run: pnpm typecheck
+        run: bun check
       - name: Tests that need no Mac, the browser's aside
         if: ${{ !cancelled() && matrix.part == 'rest' }}
-        run: pnpm run test:portable:packages --filter=!@ardia/browser
+        run: bun run test:portable:packages --filter=!@ardia/browser
       - name: The tests of the Mac packages that need no Mac
         if: ${{ !cancelled() && matrix.part == 'rest' }}
-        run: pnpm run test:portable:mac
+        run: bun run test:portable:mac
       - name: Repository tests
         if: ${{ !cancelled() && matrix.part == 'rest' }}
-        run: pnpm run test:root
+        run: bun run test:root
       - name: Vouch tests
         if: ${{ !cancelled() && matrix.part == 'rest' }}
-        run: node --test .github/vouch/vouch.test.cjs
+        run: bun run test:vouch
       - name: This share of the browser's tests
         if: matrix.part == 'browser'
         env:
-          NODE_OPTIONS: --test-shard=${{ matrix.shard }}/4
-        run: pnpm --filter @ardia/browser test
+          SHARD: ${{ matrix.shard }}
+        run: bun run --cwd apps/browser test --shard="$SHARD/4"
       - name: Bundle the Mac app's JavaScript as a release build does
         if: matrix.part == 'bundle'
         working-directory: apps/browser
         run: |
-          npx react-native bundle --platform macos --entry-file index.js --dev false --minify false --reset-cache --bundle-output "$RUNNER_TEMP/main.jsbundle" --assets-dest "$RUNNER_TEMP/assets"
+          bun x --no-install react-native bundle --platform macos --entry-file index.js --dev false --minify false --reset-cache --bundle-output "$RUNNER_TEMP/main.jsbundle" --assets-dest "$RUNNER_TEMP/assets"
           ls -l "$RUNNER_TEMP/main.jsbundle"
       - name: Compile the bundle with Hermes
         if: matrix.part == 'bundle'

@@ -92,7 +92,7 @@ describe("drop geometry", () => {
 });
 
 describe("command line", () => {
-  it("resolves paths against the caller's directory and drops pnpm's separator", () => {
+  it("resolves paths against the caller's directory and drops a leading -- separator", () => {
     const options = parseArgs(["--", "out/ardia", "dist", "--only", "F01,#33", "--keep", "--results=r"], { cwd: "/work" });
     assert.equal(options.executable, "/work/out/ardia");
     assert.equal(options.uiDir, "/work/dist");

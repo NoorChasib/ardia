@@ -7,6 +7,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { plan, pullNumberOf, sweep } from "./prune-caches.mjs";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 const cache = (id, key, ref, createdAt) => ({ id, key, ref, size: 100, createdAt });
 const MAIN = "refs/heads/main";
 
@@ -18,9 +20,9 @@ test("a pull request ref names its number; a branch names none", () => {
 
 test("the caches of closed pull requests go; those of open ones and of branches stay", () => {
   const caches = [
-    cache(1, "node-cache-Windows-x64-pnpm-aa", "refs/pull/10/merge", "2026-11-01T00:00:00Z"),
-    cache(2, "node-cache-Windows-x64-pnpm-aa", "refs/pull/11/merge", "2026-11-02T00:00:00Z"),
-    cache(3, "node-cache-Windows-x64-pnpm-aa", MAIN, "2026-11-03T00:00:00Z"),
+    cache(1, "bun-install-Windows-aa", "refs/pull/10/merge", "2026-11-01T00:00:00Z"),
+    cache(2, "bun-install-Windows-aa", "refs/pull/11/merge", "2026-11-02T00:00:00Z"),
+    cache(3, "bun-install-Windows-aa", MAIN, "2026-11-03T00:00:00Z"),
   ];
   const doomed = plan({ caches, openPulls: [11], newestOnly: [] });
   assert.deepEqual(doomed.map((item) => item.id), [1]);
@@ -85,5 +87,5 @@ test("a cache that is already gone counts as freed, and one failed delete does n
 test("the script still runs when it is started through a symlinked path", () => {
   const link = join(mkdtempSync(join(tmpdir(), "prune-caches-")), "prune.mjs");
   symlinkSync(fileURLToPath(new URL("./prune-caches.mjs", import.meta.url)), link);
-  assert.match(execFileSync(process.execPath, [link, "--help"], { encoding: "utf8" }), /Frees GitHub Actions cache space/);
+  assert.match(execFileSync(nodeBinary, [link, "--help"], { encoding: "utf8" }), /Frees GitHub Actions cache space/);
 });

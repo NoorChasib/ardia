@@ -10,7 +10,7 @@ import { test } from "node:test";
 const here = dirname(fileURLToPath(import.meta.url));
 const hermes = resolve(here, "../../../macos/Pods/hermes-engine/destroot/bin/hermes");
 const omnibox = resolve(here, "../../../../../packages/core/src/omnibox.ts");
-const typescript = createRequire(import.meta.url)("typescript");
+const typescript = createRequire(import.meta.url)("@typescript/typescript6");
 
 function hermesScript(entry, driver) {
   const modules = new Map();

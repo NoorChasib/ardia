@@ -1,0 +1,2 @@
+patches/*.patch text eol=lf
+bun.lock text eol=lf

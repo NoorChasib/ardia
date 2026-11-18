@@ -13,7 +13,7 @@ case "$step" in
 esac
 
 if [ "$step" != deploy ]; then
-  SITE_URL=https://ardia.dev pnpm -C "$site" exec astro build
+  (cd "$site" && SITE_URL=https://ardia.dev bun x --no-install astro build)
   rsync -a --delete --exclude 'release-videos/*.mp4' "$site/dist/" "$here/dist/"
   package_mb=$(( $(du -sk "$here/dist" | cut -f1) / 1024 ))
   if [ "$package_mb" -gt "$package_limit_mb" ]; then

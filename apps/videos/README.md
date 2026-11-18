@@ -1,7 +1,7 @@
 # Videos
 
 Remotion videos for Ardia, a Remocn Studio project. Each folder in `src/videos` is a composition, named after the
-folder. Render one with `pnpm -C apps/videos render <id>`, which writes `out/<id>.mp4` (gitignored).
+folder. Render one with `bun run --cwd apps/videos render <id>`, which writes `out/<id>.mp4` (gitignored).
 
 `render` runs `scripts/deliver.sh`. Remotion's own AAC carries 2048 samples of encoder priming with no edit list, so
 every hit would land 43 ms late. The script keeps Remotion's video, re-encodes the score from its WAV with ffmpeg
@@ -114,7 +114,7 @@ It ends on a chat callback ("it's all in the folder 📁") and the end card. Cap
 - `morph.tsx` (arrivals composited from captured before and after frames);
 - `kit.tsx` and `Film.tsx`.
 
-`src/entries/shared-folders.tsx` registers only these three compositions, so `VIDEOS_ENTRY=src/entries/shared-folders.tsx pnpm render <id>` works while another film in `src/videos` is half-written. `scripts/sf-studio-docs.mts` writes their `studio.json` documents.
+`src/entries/shared-folders.tsx` registers only these three compositions, so `VIDEOS_ENTRY=src/entries/shared-folders.tsx bun run render <id>` works while another film in `src/videos` is half-written. `scripts/sf-studio-docs.mts` writes their `studio.json` documents.
 
 ### Footage
 
@@ -159,7 +159,7 @@ To recreate the mix, run `python3 scripts/music/shared-folders.py --check`. It w
 Every release's before-and-after film (`fixes-<id>`) is `src/lib/fixes-film/Film.tsx` fed with data: the composition's
 `index.tsx` names the release, the build before it and the channel, and `segments.json` holds the clips.
 `scripts/fixes` films and builds that data (`run.mjs`, `gen.py <id>`, `sessions-lib.mjs`); the release skill's
-step 6b has the steps. `pnpm test` checks that the two scored films' beat grids in `plan.ts` match their `cuts.json`.
+step 6b has the steps. `bun run test` checks that the two scored films' beat grids in `plan.ts` match their `cuts.json`.
 
 ## Recreating the media (not in git)
 
@@ -275,9 +275,11 @@ appeared on 2026-10-03.
 
 ## Checking a render
 
+From `apps/videos`:
+
 ```bash
-pnpm exec tsc --noEmit
-pnpm -C apps/videos render launch-16x9
+bun run check
+bun run render launch-16x9
 ffmpeg -i out/launch-16x9.mp4 -af ebur128=peak=true -f null - 2>&1 | tail -12   # -11 LUFS, true peak under -1 dBTP
 ```
 

@@ -166,7 +166,7 @@ stays up. That's GPL-3.0 §6(d) for the GPL parts (uBlock Origin today), and it'
    compares: it must go up every release) in both configurations of the `Ardia-macOS` target in
    `apps/browser/macos/Ardia.xcodeproj`. The helpers and the Dock tile plug-in take the same values.
 2. Write `docs/release-notes/<version>.md` from `git log v<previous>..HEAD` (`docs/release-notes/README.md`)
-   and check it on the site: `pnpm -C apps/site build && pnpm -C apps/site preview`, then
+   and check it on the site: `bun run --cwd apps/site build && bun run --cwd apps/site preview`, then
    `http://localhost:4321/release-notes#<version>`.
 3. Commit both ("Release <version>" or "Nightly <version>"), push, and dispatch the Release workflow ("CI releases"
    below), which runs the rest. Or run it here: `scripts/release.sh <version>` (a `-nightly.<n>`
@@ -238,7 +238,7 @@ stays up. That's GPL-3.0 §6(d) for the GPL parts (uBlock Origin today), and it'
    (https://github.com/ardia-browser/homebrew-tap) at the new DMG: it sets `version` and `sha256` from GitHub's
    digest of the published DMG and pushes the tap (`PUBLISH_TAP=0` skips it).
 5. Deploy the site so `/release-notes` shows the new version (for a nightly too: the updated app opens its entry on its first launch):
-   `pnpm -C apps/site run deploy` builds `apps/site` with `SITE_URL=https://ardia.dev` and ships it
+   `bun run --cwd apps/site deploy` builds `apps/site` with `SITE_URL=https://ardia.dev` and ships it
    (`infra/site/hexclave.deploy.ts`). For a stable, run `.claude/skills/release/scripts/site-version.mjs <version>`
    first so the download buttons and the README point at the new DMG. The owner has authorized releases to go all the way
    through, so an agent cutting a release deploys too; a site deploy outside a release needs the owner's OK.
@@ -272,7 +272,7 @@ The script refuses what `release.sh` refuses: a missing notes file or one whose 
 `MARKETING_VERSION` other than `<version>`, and uncommitted changes (here under `apps/browser`, `apps/linux`,
 `apps/cli`, `packages`, `engine` or `scripts/linux`). It uses the exact Linux engine for HEAD's engine key
 (`engine/engine-key.sh`), published in ardia-browser/ardia. Without one the `linux` job fails and the macOS release
-ships alone; build the engine, then run `scripts/linux/release.sh <version>` on a Linux machine at the release commit
+ships alone; build the engine, then run `scripts/linux/release.sh <version>` on a Linux machine with Bun and uv at the release commit
 and the `gh release upload` command it prints. A nightly and a stable go the same way.
 See [linux-ci.md](linux-ci.md) › Linux releases.
 
@@ -285,11 +285,11 @@ the engine if `engine/` changed (below).
 
 - **preflight** checks the version against the channel, `MARKETING_VERSION`, the notes file and that `v<version>` isn't
   out yet.
-- **checks**: `pnpm typecheck`, `pnpm test`, `pnpm shaders:check`.
+- **checks**: `bun check`, `bun run test`, `bun run shaders:check`.
 - **build**, on the `xcode-27` runner (Xcode 27.1, the same build as here), with no secrets: fetches the engine for
-  this exact `engine/` tree (`fetch-engine.sh`), installs (pnpm, Pods, uv), runs
+  this exact `engine/` tree (`fetch-engine.sh`), installs (Bun, Pods, uv), runs
   `scripts/release.sh <version> --phase build` (the archive, signed ad hoc, and the CLI tarball)
-  and uploads them as one tar. Caches: pnpm, Pods with Hermes, uBO, the engine, the CLI's downloads and Xcode's
+  and uploads them as one tar. Caches: Bun's packages, Pods with Hermes, uBO, the engine, the CLI's downloads and Xcode's
   compilation cache (per Xcode build and month).
 - **sign** installs nothing and restores no cache, so no dependency code runs next to the keys. It
   treats the build as untrusted: `.github/release/unpack-build.py` unpacks it into a new directory outside the checkout

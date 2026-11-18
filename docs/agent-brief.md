@@ -9,7 +9,11 @@ How the code is laid out and named (folders, import direction, tokens, state, th
 variables) is in `docs/conventions.md`, enforced by `apps/browser/src/conventions.test.mjs`.
 
 ## Stack
-- Turborepo + pnpm (hoisted `node_modules` at the repo root).
+- Turborepo + Bun 1.4.4, the package manager and the script runner (hoisted `node_modules` at the repo root,
+  `bunfig.toml` `[install] linker = "hoisted"`). Node 24 still runs Metro, Vite, jest and the engine's own tests.
+  Which bundler builds each target, why none is Bun's, and what still runs outside Bun: `docs/bundling.md`.
+  `bun check` runs a folder's `check` script, or Bun's built-in checker where there is none, so use
+  `bun run --cwd <pkg> check` for one package.
 - `apps/browser`: Expo SDK 54 + react-native-macos 0.81 (Legacy architecture), zustand store,
   inline styles.
 - Native code lives in Expo modules under `packages/*/ios` (Swift / Objective-C++):
@@ -43,12 +47,13 @@ variables) is in `docs/conventions.md`, enforced by `apps/browser/src/convention
   - `packages/core`: pure TS (omnibox parsing, suggestions) with tests.
 - react-native-macos quirks: RN shadow props crash → use `Surface` for shadows; RCTView resets
   layer props → draw in sublayers; native views must size subviews in `setFrameSize`.
-- **Patched dependencies** live in `patches/` and are listed under `patchedDependencies` in
-  `pnpm-workspace.yaml` (pnpm 11 reads them there); every `pnpm install` applies them, and the Podfile
+- **Patched dependencies** live in `patches/` and are listed under `patchedDependencies` in the root
+  `package.json` (Bun reads them only there); every `bun install` applies them, and the Podfile
   (`macos`) compiles React from `node_modules`, so a rebuild picks a change up (`pod install`
-  only if a patch adds or removes files). To change one: `pnpm patch <pkg>@<version> --edit-dir <scratch dir>`,
-  edit there, then `scripts/agent/locked pod -- pnpm patch-commit <scratch dir>`, and read the new `.patch`:
-  pnpm can add bogus `deleted file` entries (drop them and run `pnpm install` again under the same lock).
+  only if a patch adds or removes files). To change one: `bun patch <pkg>@<version>`, which makes
+  `node_modules/<pkg>` safe to edit, edit it there, then `scripts/agent/locked pod -- bun patch --commit node_modules/<pkg>`
+  (it rewrites the `.patch`, `package.json` and `bun.lock`), and read the new `.patch` for noise such as bogus
+  `deleted file` entries (drop them and run `bun install` again under the same lock).
   Mark edits `[Ardia: … Ardia]`. Current patches: `react-native-macos` (a view's `transform` survives
   AppKit layout and applies from its centre; RCTTiming's display link, c7ebd600; a view in a scroll view observes its bounds once, not once per re-add; focus() on a text field being edited keeps its edit, caret and selection; a placeholder change on an empty field being edited isn't a blur; a placeholder colour change on a field being edited reaches its field editor, so it shows once the field is emptied, and its text keeps the field's own colour; a single-line field with pastedTypes pastes only those as plain text, line breaks folded as in Chrome's omnibox, a088913e; a container whose children change leaves the ones already in place alone instead of re-adding every one, 6d7277fd; a mouse touch matches its own down on the same button and is never recorded twice, so JS never gets a null touch, 8bd086c8; mounts go through one queue in layout order, and a live-resize layout, which React Native mounts on the main thread at once, first mounts every older one still queued, so a zoomed window never keeps an older layout and its views track the window during the animation, 2f4aa603; a network task's callback blocks are atomic and only one of
   cancel, error and completion finishes it, so a cancel racing a completion never frees the block being called, #955; a React view whose parent and children are all React views leaves Auto Layout, which every macOS 26+ window engages and whose memory exploded with thousands of sidebar rows, #952; a view whose `overflow` changes redisplays its layer, so one that stops clipping at the same size stops masking its children; `measureInWindow` answers in the owning React root's points from its top left, and border images and decoded images use the view's own backing density, interface size included, and redraw when it changes; on a fractional pixel grid Yoga gives a node thinner than 3 device pixels one whole-pixel size wherever it sits, at least 1, so hairlines and 1 point rules neither vanish nor vary) and `expo-modules-core` (the JS
@@ -203,13 +208,13 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
       app, and its dev harness answers every script with that error: rebuild it.
     - A JS exception while modules load (an import cycle, say) opens LogBox, which crashes
       react-native-macos (`RCTView didUpdateShadow`), so every instance dies at launch. Run
-      `pnpm -w typecheck` and relaunch your instance after risky import changes.
+      `bun check` and relaunch your instance after risky import changes.
     - Fast Refresh doesn't always apply (and has crashed Hermes' debugger). Relaunch your instance
       before judging a change.
   - `pod install` (after adding/removing native source files, changing a podspec, or adding native
     packages) must hold the shared lock: `scripts/agent/locked pod -- sh -c 'cd apps/browser/macos &&
     LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install'`.
-    Same lock for `pnpm install` and edits to apps/browser/package.json. A new Expo module in an
+    Same lock for `bun install` and edits to apps/browser/package.json. A new Expo module in an
     existing source file only needs its `expo-module.config.json` entry (the build regenerates
     the module provider).
 - **Shared files** several agents must touch — `packages/shell/ios/MainMenu.swift`,
@@ -225,7 +230,7 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
 - Tests, test-instance variables and what background mode changes: `docs/testing.md`. Benchmarks and the perf gate:
   `docs/perf/README.md`.
 - The Bash tool runs zsh: quote globs (`--include='*.mm'`, `'/tmp/ac-*.holder'`) or use `git grep -n PAT -- '*.mm'`.
-- **Verify before reporting done.** At minimum: `pnpm -w typecheck` (or `npx tsc -p <pkg>`)
+- **Verify before reporting done.** At minimum: `bun check` (or `bun run --cwd <pkg> check`)
   passes for what you touched, the app builds, and you exercised the feature in a running
   instance.
   - Drive the app through the dev harness: `scripts/agent/ac eval <data dir> '<body>'` (a function body that

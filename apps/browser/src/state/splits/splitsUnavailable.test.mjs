@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
 const { useBrowser } = await import("../browser/store.ts");
 const { splitTabIdsOf } = await import("./splits.ts");
 
@@ -22,7 +23,7 @@ registerHooks({ resolve(specifier, context, next) {
 } });`;
 
 const runStore = (hook) => {
-  const run = spawnSync(process.execPath, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(hook)}`, "--input-type=module", "-e", STORE_ON_WINDOWS], { cwd: APP, encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", "--import", "./src/test-loader.mjs", "--import", `data:text/javascript,${encodeURIComponent(hook)}`, "--input-type=module", "-e", STORE_ON_WINDOWS], { cwd: APP, encoding: "utf8" });
   assert.equal(run.status, 0, run.stderr);
   return JSON.parse(run.stdout.trim().split("\n").at(-1));
 };

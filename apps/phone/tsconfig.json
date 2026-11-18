@@ -6,6 +6,6 @@
     "customConditions": ["react-native"],
     "moduleSuffixes": [".native", ""]
   },
-  "include": ["src", "index.js"],
+  "include": ["src", "index.js", "node_modules/@ardia/phone-native/src"],
   "exclude": ["src/**/*.test.ts", "src/**/*.render.test.tsx"]
 }

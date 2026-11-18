@@ -7,6 +7,8 @@ import { after as afterAll, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { after, before, BundleRefused, check } from "../../scripts/bundle-guard.ts";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 const guardScript = fileURLToPath(new URL("../../scripts/bundle-guard.ts", import.meta.url));
 
 
@@ -28,7 +30,9 @@ function repo(): { root: string; state: string; write: (file: string, text: stri
   write("packages/phone/src/index.ts", "export {};\n");
   write("packages/core/src/index.ts", "export {};\n");
   write("apps/phone/package.json", "{}\n");
-  write("apps/phone/pnpm-lock.yaml", "lockfileVersion: 9\n");
+  write("apps/phone/metro.config.js", "module.exports = require(\"./metro-nested-modules.js\");\n");
+  write("apps/phone/metro-nested-modules.js", "module.exports = {};\n");
+  write("apps/phone/bun.lock", "{\n  \"lockfileVersion\": 2,\n}\n");
   write("packages/phone/ios/SyncModule.swift", "let a = 1\n");
   write(".gitignore", "build/\n");
   git("add", "-A");
@@ -70,8 +74,21 @@ test("a modified, a staged and an untracked file under the bundled trees each re
 
 test("a changed lockfile refuses", () => {
   const { root, write } = repo();
-  write("apps/phone/pnpm-lock.yaml", "lockfileVersion: 10\n");
-  assert.match(refusal(() => check(root)), /apps\/phone\/pnpm-lock\.yaml/);
+  write("apps/phone/bun.lock", "{\n  \"lockfileVersion\": 3,\n}\n");
+  assert.match(refusal(() => check(root)), /apps\/phone\/bun\.lock/);
+});
+
+test("the Metro resolver that metro.config.js loads is guarded like the config: dirty refuses, and a change mid-bundle fails", () => {
+  const { root, state, write } = repo();
+  write("apps/phone/metro-nested-modules.js", "module.exports = { changed: true };\n");
+  assert.match(refusal(() => before(root, state)), / M apps\/phone\/metro-nested-modules\.js/);
+
+  const clean = repo();
+  before(clean.root, clean.state);
+  clean.write("apps/phone/metro-nested-modules.js", "module.exports = { changed: true };\n");
+  const message = refusal(() => after(clean.root, clean.state));
+  assert.match(message, /the files Metro reads changed/);
+  assert.match(message, /apps\/phone\/metro-nested-modules\.js/);
 });
 
 test("another agent's native files and ignored output do not block the bundle", () => {
@@ -112,10 +129,10 @@ test("the after step without a before step fails", () => {
 test("the command refuses with exit 1 and prints the offending paths", () => {
   const { root, write } = repo();
   write("apps/phone/src/App.tsx", "export default 2;\n");
-  const run = spawnSync(process.execPath, ["--no-warnings", guardScript, "check", "--root", root], { encoding: "utf8" });
+  const run = spawnSync(nodeBinary, ["--no-warnings", guardScript, "check", "--root", root], { encoding: "utf8" });
   assert.equal(run.status, 1);
   assert.match(run.stderr, /refusing to bundle: 1 uncommitted change/);
   assert.match(run.stderr, /apps\/phone\/src\/App\.tsx/);
-  const dirty = spawnSync(process.execPath, ["--no-warnings", guardScript, "dirty", "--root", root], { encoding: "utf8" });
+  const dirty = spawnSync(nodeBinary, ["--no-warnings", guardScript, "dirty", "--root", root], { encoding: "utf8" });
   assert.equal(dirty.stdout.trim(), "yes");
 });

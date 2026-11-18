@@ -50,7 +50,7 @@ needsFree() {
 }
 needsFree 4 "a bundle over the cached native app"
 started=$(date +%s)
-nativePaths=(apps/phone/ios packages/phone/ios apps/phone/app.json packages/phone/expo-module.config.json apps/phone/pnpm-lock.yaml apps/phone/pnpm-workspace.yaml patches)
+nativePaths=(apps/phone/ios packages/phone/ios apps/phone/app.json packages/phone/expo-module.config.json apps/phone/bun.lock apps/phone/bunfig.toml patches)
 nativeHash() {
   (cd "$root" && git ls-files -z -co --exclude-standard -- "${nativePaths[@]}" | sort -z | while IFS= read -r -d '' file; do
     [ -f "$file" ] && printf '%s %s\n' "$(git hash-object -- "$file")" "$file"

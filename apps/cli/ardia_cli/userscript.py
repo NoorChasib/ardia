@@ -219,9 +219,6 @@ def find_esbuild() -> str | None:
         native = modules / "@esbuild" / ESBUILD_PACKAGE / "bin" / "esbuild"
         if os.access(native, os.X_OK):
             return str(native)
-        for candidate in sorted((modules / ".pnpm").glob(f"@esbuild+{ESBUILD_PACKAGE}@*/node_modules/@esbuild/{ESBUILD_PACKAGE}/bin/esbuild"), reverse=True):
-            if os.access(candidate, os.X_OK):
-                return str(candidate)
     return shutil.which("esbuild")
 
 
@@ -309,7 +306,7 @@ def build(path: str | Path, sourcemap: bool = False, data_dirs=()) -> Build:
     meta = parse_meta(source, path.name)
     esbuild = find_esbuild()
     if not esbuild:
-        hint = "reinstall the ardia command" if installed() else "run pnpm install, or put esbuild on PATH"
+        hint = "reinstall the ardia command" if installed() else "run bun install, or put esbuild on PATH"
         raise ScriptError(f"esbuild isn't available: {hint}")
     entry = Path(os.path.realpath(path))
     check_file(entry, {item for item in (identity(root) for root in forbidden_roots(data_dirs)) if item}, "a script")

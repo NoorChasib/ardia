@@ -11,13 +11,25 @@ const fakes = new Map([
 ]);
 
 const tsxCache = new URL("../node_modules/.cache/ardia-test-tsx/", import.meta.url);
+const requireHere = createRequire(import.meta.url);
+const TYPESCRIPT = "@typescript/typescript6";
 let typescript;
+let typescriptVersion;
+
+function compilerVersions() {
+  const wrapperJson = requireHere.resolve(`${TYPESCRIPT}/package.json`);
+  const wrapper = JSON.parse(readFileSync(wrapperJson, "utf8"));
+  const fromWrapper = createRequire(wrapperJson);
+  const compilers = Object.keys(wrapper.dependencies ?? {}).map((name) => `${name}@${fromWrapper(`${name}/package.json`).version}`);
+  return [`${TYPESCRIPT}@${wrapper.version}`, ...compilers].join(" ");
+}
 
 function transpiledTsx(url) {
   const source = readFileSync(new URL(url), "utf8");
-  const cached = new URL(`${createHash("sha1").update(url).update("\0").update(source).digest("hex")}.mjs`, tsxCache);
+  typescriptVersion ??= compilerVersions();
+  const cached = new URL(`${createHash("sha1").update(typescriptVersion).update("\0").update(url).update("\0").update(source).digest("hex")}.mjs`, tsxCache);
   if (existsSync(cached)) return readFileSync(cached, "utf8");
-  typescript ??= createRequire(import.meta.url)("typescript");
+  typescript ??= requireHere(TYPESCRIPT);
   const { outputText } = typescript.transpileModule(source, {
     fileName: fileURLToPath(url),
     compilerOptions: {

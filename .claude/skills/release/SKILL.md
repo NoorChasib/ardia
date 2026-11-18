@@ -117,7 +117,7 @@ commit co-authored by one, end with `Thanks, [@handle](<PR url>).` (README step 
 `git log --format='%h %an %(trailers:key=Co-authored-by)' v<previous>..HEAD` and the merged PRs
 (`gh pr list --state merged --search "merged:>=<previous release date>"`) so nobody is missed.
 
-Check it renders: `pnpm -C apps/site build` and grep the headline in
+Check it renders: `bun run --cwd apps/site build` and grep the headline in
 `apps/site/dist/release-notes/index.html` (or preview it on port 4321, the "site" launch config).
 
 ## 3. Bump and build
@@ -303,7 +303,7 @@ node apps/browser/scripts/perf/xbench.mjs clean --out $X/out --apps $X/apps --br
 - Check `git diff apps/site/src/data/bench.json`: Ardia's figures, `date`, `machine` and `best` change; no rival's
   figure, version or `measured` date does (the first merge also stamps `measured` on every entry). Read `$X/table.md` against the perf gate's numbers; a row that moved by more than the ranges deserves a look before
   it goes on the site.
-- Commit it as "Site bench: <version> against the stored rivals", and step 6's `pnpm -C apps/site run deploy` ships it
+- Commit it as "Site bench: <version> against the stored rivals", and step 6's `bun run --cwd apps/site deploy` ships it
   with the rest of the site.
 
 ## 5. Publish
@@ -419,7 +419,7 @@ scripts/linux/publish-engine.sh --out "$CB/chromium_git/chromium/src/out/$GN_OUT
 `packages/ardiacore/prebuilt-engines-linux.tsv` without committing it. Commit that row on `main` (stage it, then a
 bare `git commit`) before dispatching the release; fetches also read the table on `main`, so older commits find it.
 
-To add Linux to a release that shipped without it: publish the engine, then on a Linux machine at the release commit
+To add Linux to a release that shipped without it: publish the engine, then on a Linux machine with Bun and uv at the release commit
 run `scripts/linux/release.sh <version>` and the `gh release upload` line it prints. `--engine nearest` or
 `--allow-dirty` make test builds, never releases (`docs/linux-ci.md` › Linux releases).
 
@@ -493,11 +493,11 @@ app (listed in `apps/site/README.md` › Screenshots):
 - **Don't touch the rest:** leave the painted logo (`ardia-mark.png`, from `docs/brand/ardia`) alone unless
   the brand changed.
 
-Keep to the site's bar: few words, witty over wordy (see the existing lines). Build with `pnpm -C apps/site build`
+Keep to the site's bar: few words, witty over wordy (see the existing lines). Build with `bun run --cwd apps/site build`
 and check the changed sections and shots render, on a phone width too (the "site" launch config, port 4321).
 
 ```bash
-pnpm -C apps/site run deploy   # the upload can drop on a weak connection: rerun it until it succeeds
+bun run --cwd apps/site deploy   # the upload can drop on a weak connection: rerun it until it succeeds
 ```
 
 Then verify live: `https://ardia.dev/release-notes/` contains the new headline, the home page links
@@ -538,7 +538,7 @@ instances, captured by pid). A film is data, never a copied folder. In `apps/vid
 Once the release is published:
 
 ```bash
-pnpm -C apps/videos render fixes-<id>
+bun run --cwd apps/videos render fixes-<id>
 ffmpeg -i apps/videos/out/fixes-<id>.mp4 -an -c:v libx264 -preset slow -crf 26 -pix_fmt yuv420p -movflags +faststart \
   apps/site/public/release-videos/fixes-<id>.mp4
 ffmpeg -ss 1 -i apps/site/public/release-videos/fixes-<id>.mp4 -frames:v 1 -vf scale=1600:-1 -q:v 4 \

@@ -26,12 +26,13 @@ export const watchedPaths = [
   "apps/phone/package.json",
   "apps/phone/babel.config.js",
   "apps/phone/metro.config.js",
+  "apps/phone/metro-nested-modules.js",
   "packages/phone/src",
   "packages/phone/package.json",
   "packages/core/src",
   "packages/core/package.json",
-  "apps/phone/pnpm-lock.yaml",
-  "apps/phone/pnpm-workspace.yaml",
+  "apps/phone/bun.lock",
+  "apps/phone/bunfig.toml",
 ];
 
 export const nativePaths = [
@@ -39,8 +40,8 @@ export const nativePaths = [
   "apps/phone/app.json",
   "packages/phone/android",
   "packages/phone/expo-module.config.json",
-  "apps/phone/pnpm-lock.yaml",
-  "apps/phone/pnpm-workspace.yaml",
+  "apps/phone/bun.lock",
+  "apps/phone/bunfig.toml",
   "patches",
 ];
 

@@ -8,6 +8,8 @@ import test from "node:test";
 import { build } from "vite";
 import { inputAdapters, rawBookmarkAdapter } from "../inputAdapters.ts";
 
+const nodeBinary = process.versions.bun ? "node" : process.execPath;
+
 const root = fileURLToPath(new URL("../", import.meta.url));
 const repo = fileURLToPath(new URL("../../../", import.meta.url));
 const browser = `${repo}apps/browser/src/`;
@@ -287,7 +289,7 @@ test("the Linux connection wrapper renders unknown honestly and delegates every 
 
 test("Linux shell exports and shared package Expo dialogs use one adapter", () => {
   const script = fileURLToPath(new URL("./dialog-module-production.mjs", import.meta.url));
-  const result = spawnSync(process.execPath, ["--experimental-strip-types", script], { encoding: "utf8", timeout: 10000 });
+  const result = spawnSync(nodeBinary, ["--experimental-strip-types", script], { encoding: "utf8", timeout: 10000 });
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /share the production adapter/);
 });
