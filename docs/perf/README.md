@@ -7,7 +7,7 @@ comparisons: [0.2.19 → 0.2.20](0.2.19-to-0.2.20.md), [0.2.22 → 0.2.23](0.2.2
 Linux has its own harness, `apps/linux/scripts/perf/bench.mjs`: CPU, context switches and memory per process kind,
 interaction latency and long frames with 100 loaded tabs under Xvfb, interleaved across UI builds on one engine. How
 to run it, what it measures, how to reproduce PR 3's stock, feature, Bun and final comparison, and its limits:
-[linux-bench.md](linux-bench.md).
+[linux-bench.md](linux-bench.md). PR 3's results: [pr3-linux-comparison.md](pr3-linux-comparison.md).
 
 ## Files
 

@@ -4,7 +4,7 @@
 `--ardia-ui-dir`) on one prebuilt engine, with many loaded tabs, under Xvfb. It measures CPU and context switches per
 process kind, memory per process kind, shell main-thread work, interaction latency and long frames, and deterministic
 shell counters, over seven scenarios. PR 3's (the CPU and RAM hill climb) stock, feature, Bun and final comparison runs
-on it; the recipe is below.
+on it; the recipe is below and the results are in [pr3-linux-comparison.md](pr3-linux-comparison.md).
 
 It needs Node 22 or later (the global `WebSocket`) and no npm dependencies, plus `Xvfb`, `xdotool`, `xdpyinfo`,
 `taskset` and `flock`. For exact CPU totals and teardown it also needs a user systemd (`systemd-run --user --scope`).
@@ -162,16 +162,29 @@ Every result records the blocker tree's sha256, so a different blocker shows up 
 
 ### The command
 
+PR 3's four-build run used the harness's first protocol, the scenario code as committed in a7abec0e0. The harness in
+this tree is protocol 2: S4 reads tab 1's row after every hold and S3 records its put-backs, so its windows do slightly
+different work, every result records its `protocol`, and `report --all` refuses to pool runs of different protocols.
+To reproduce the published numbers exactly, run a7abec0e0's harness:
+
+```bash
+harness=$(mktemp -d)
+git archive a7abec0e0 apps/linux/scripts/perf | tar -x -C "$harness"
+bench=$harness/apps/linux/scripts/perf/bench.mjs
+```
+
+For new measurements, including the options-on run below, use this tree's `apps/linux/scripts/perf/bench.mjs`.
+
 Four builds, 4 launches each, interleaved (stock feature bun final, then final bun feature stock, and so on), all
 seven scenarios, 100 tabs, light instrumentation, paired against `bun`, with the run holding the lock from the first
 template to the last launch:
 
 ```bash
 out=$(mktemp -d)
-taskset -c 0-9 node apps/linux/scripts/perf/bench.mjs run --engine "$engine" --content-blocker "$blocker" \
+taskset -c 0-9 node "$bench" run --engine "$engine" --content-blocker "$blocker" \
   --lock-scope run --builds stock=$builds/stock/linux-ui,feature=$builds/feature/linux-ui,bun=$builds/bun/linux-ui,final=$builds/final/linux-ui \
   --runs 4 --tabs 100 --instrument light --control bun --display-base 240 --out "$out"
-node apps/linux/scripts/perf/bench.mjs report --out "$out" --control bun --md "$out/report.md"
+node "$bench" report --out "$out" --control bun --md "$out/report.md"
 ```
 
 Each launch takes about 6.5 minutes, and each template about 2 minutes, so the run takes about 2 hours. `--instrument
@@ -261,8 +274,8 @@ and `/pending` lists its open requests.
 | --- | --- | --- |
 | S1 idle | Nothing; tab 1 (static) is active. An untimed idle window of `--idle-discard` runs first and is kept under `discarded`. | `--idle-seconds` (60 s) |
 | S2 active | The first rAF tab, split with the first ticker tab (`createSplit`), so both are in the foreground. Not comparable when the split fails or either page isn't visible. | `--active-seconds` (45 s) |
-| S3 tab switching | Tabs 1 and 2 (both static), then 40 real `xdotool key ctrl+Tab` presses 500 ms apart. On Linux ctrl+Tab goes to the most recent tab, so every press must land on the other one. A press that leaves the switcher open or lands elsewhere is put back (Escape, then two store activations) and counted as a miss. That is extra work inside the window, so a window with any put-back press keeps only its latency and workload rows in the report. | about 21 s |
-| S4 sidebar edge reveal | `--settings` applied and read back (without `autoHideTabs`), then `autoHideTabs: true`, then 20 times: pointer to x=40, then x=0 at mid-height, hold 600 ms, read tab 1's row once, back to the middle, hold 600 ms, read it again. Not comparable unless tab 1's row was off screen first; a window where any reveal or hide didn't happen keeps only its latency and workload rows, so a broken reveal can't look cheaper. The settings go back afterwards, and the launch fails if they don't. | about 25 s |
+| S3 tab switching | Tabs 1 and 2 (both static), then 40 real `xdotool key ctrl+Tab` presses 500 ms apart. On Linux ctrl+Tab goes to the most recent tab, so every press must land on the other one. A press that leaves the switcher open or lands elsewhere is put back (Escape, then two store activations) and counted as a miss. The put-back runs inside the window, so the report shows each window's put-backs (`workload recoveries`) beside its CPU rather than dropping the window: at 100 tabs nearly every window has one to five. To rank S3 CPU with no put-backs at all, run it with `--switch-via store` and keep the key run for latency. | about 21 s |
+| S4 sidebar edge reveal | `--settings` applied and read back (without `autoHideTabs`), then `autoHideTabs: true`, then 20 times: pointer to x=40, then x=0 at mid-height, hold 600 ms, read tab 1's row, back to the middle, hold 600 ms, read it again. A reveal means the row's left edge is on screen (left >= 0) and a hide that it is parked again (left < -1000), the same tests the latency probe uses; when a read misses, the harness polls every 100 ms up to 1.5 s from the move and counts the step as late. Not comparable unless tab 1's row was off screen first; a window where any reveal or hide didn't happen keeps only its latency and workload rows, so a broken reveal can't look cheaper. The settings go back afterwards, and the launch fails if they don't. | about 25 s |
 | S5 hover sweep | `--settings` applied and read back. Over the first 24 sidebar rows whose centre hit-tests to the row, 3 passes: row 1 for 1,200 ms (the card's cold delay), rows 2-24 for 300 ms each, then the pointer away for 1 s. The settings go back afterwards, and the launch fails if they don't. | about 3 x 9 s at N >= 24 |
 | S6 loading | Tab 1 loads `/slow/<--slow-ms>` and stays loading in the default layout (address field in the toolbar, the reload button breathing, the row spinner). The window counts only if tab 1 is active and loading and its request is open, at its first and its last moment. | `--loading-seconds` (45 s) |
 | S7 pill | As S6, with the address field in the sidebar and the sidebar hidden, so the LoadingPill shows over the page. | `--loading-seconds` (45 s) |
@@ -365,7 +378,7 @@ dedicated host isolates fully.
     stays small on every build, about 7-11 % of a core in S6 and S7, so the shell's drop reaches the whole browser.
     In the integration's contended full-instrumentation run of the loading scenarios, the shell went from 106-112 % to
     13-14 % of a core in S6 and total CPU from 127-136 % to 35-38 %, with the GPU process at 9-10 % on both builds.
-    The partitioned light run's figures are in PR 3's results.
+    The partitioned light run's figures are in [pr3-linux-comparison.md](pr3-linux-comparison.md).
   - **SwiftShader** (`--use-gl=angle --use-angle=swiftshader`, at 1600x1000: the instances PR 3's screen recordings
     came from). The GPU process dominates: moving the loading animation to the compositor took the shell from 27-31 %
     to 1.4-1.9 % of a core, while the GPU process stayed at 160-212 % on both builds, and the whole-browser ranges
@@ -410,6 +423,8 @@ dedicated host isolates fully.
   against bun is PR 3 plus #1679; the measured `bun` and `feature` dists are byte-identical, an A/A pair (see
   "Builds"). A rebuild of `feature` and `bun` at 6d9c3956c and db3139706 isn't byte-identical to the measured dists.
   Compare UI sha256 in the report header before pooling with the published run.
+- **Harness protocol.** The four-build run is protocol 1: its S4 windows never confirmed a reveal, so their CPU rows
+  are unchecked, and its S3 windows include their put-backs. Protocol 2 results can't be pooled with it.
 - **Options.** The four-build run measures S4 and S5 with PR 1's options at their defaults, because stock doesn't
   have them; the options-on numbers come from the separate run in "With PR 1's options on".
 
@@ -425,5 +440,7 @@ on quiet cores, and each needs the rerun named here before PR 3 can claim respon
 | Discard refused during a switch (F23, integration) | 12 of 40 loops against 5 of 40 (Fisher p about 0.09) at about twice the load; every refused tab discarded on the retry 1.5 s later | `discard-race2.mjs`, 20 loops x about 4 launches per side, on quiet cores |
 | ctrl+Next p90 with switches every 500 ms (E4) | 41 to 52 ms at 20 tabs, in step with the 2 s volatile save | S3 key->shown p90 from the partitioned full run |
 | Pointer resting at x=0 hovers the row level with it (screen recordings) | The final build showed that row's ✕ (3 of 3), the PR 2 build didn't (0 of 3), inside the long demo session | Not reproduced in fresh instances: with the pointer moved to x=40 and then x=0 and left there 1.8-2.5 s, neither build hovers the row (0 of 7 each, at Faster and Slower, on llvmpipe and on SwiftShader), and both hover it with the pointer on the row. Rows start at x=18, so a hover at x=0 needs the shell to have kept an older pointer position; repeat inside a recorded session before attributing it |
-| Loading scenarios on quiet cores | Every integration CPU window for S6 and S7 was contended | The partitioned light run |
+| Loading scenarios on quiet cores | Every integration CPU window for S6 and S7 was contended | Settled by the partitioned light run ([pr3-linux-comparison.md](pr3-linux-comparison.md)): final's S6 and S7 total is 79-81 % below bun's in every block |
+| S3 key->shown p90 (partitioned light run) | Final 40 ms against bun's 33, higher in 4 of 4 blocks (Mann-Whitney p = 0.14); medians inside the A/A spread | The partitioned full run's S3 p90, at `--runs 6` |
+| ctrl+Tab leaves the switcher open (every build, stock included) | 2.5-12.5 % of S3's presses in the light run needed a put-back, every one of them a switcher still open after `xdotool key --clearmodifiers ctrl+Tab`, never a wrong tab. A guess to check: the engine delivers the key as an `onCommand` while the page has focus, and the Control release reaches the page before `restoreShortcutFocus` gives the shell focus, so the shell never sees the keyup (`apps/linux/src/shortcutsRuntime.ts`) | Log `switcherReleased` and the shell's Control keyup per press in a full S3 run; if the release is lost, reproduce it with a person's quick ctrl+Tab before calling it a product bug |
 
