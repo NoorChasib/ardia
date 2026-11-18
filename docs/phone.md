@@ -1871,10 +1871,10 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
   - The Compose app's release build, the reference in every run, is `reference/ardia-compose-release.{apk,txt}`
     (signer `eeb05c92…`); pruning never touches `reference/`.
 - **The tools it adds, beside the clone, not in the shared SDK:** `bun-<version>/` (the version `packageManager`
-  pins, first on the path, since `bundle-export` runs `bun install` too) and `sdk-view/`. `sdk-view/` is cmdline-tools 23.0,
-  pinned by checksum, which `check-names.py` needs for `apkanalyzer`; it must sit in an SDK layout, so the view links
-  the shared SDK's other parts. Bundle exports go to `tmp/` there, so their offline install finds Bun's cache on the
-  same filesystem.
+  pins, first on the path, since `bundle-export` runs `bun install` too), `bun-cache/` (its install cache) and
+  `sdk-view/`. `sdk-view/` is cmdline-tools 23.0, pinned by checksum, which `check-names.py` needs for `apkanalyzer`;
+  it must sit in an SDK layout, so the view links the shared SDK's other parts. Bundle exports go to `tmp/` there, so
+  their offline install finds Bun's cache on the same filesystem.
 - **Starting it.** From the Mac, or from a corex thread through `ssh corex`:
 
   ```
