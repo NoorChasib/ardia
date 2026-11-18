@@ -1,16 +1,10 @@
-import { listTasks, type EngineTask } from "../../platform/performance";
+import type { EngineTask } from "../../platform/performance";
+import { sampleTasks } from "../tabs/taskSampler";
 import type { FolderNode, GroupNode, TabNode, Workspace } from "./workspaceTree";
 
 export type TabUsage = { pid: number | null; cpu: number | null; memory: number | null };
 
-const FIRST_SAMPLE_MS = 2200;
-const SAMPLER_KEPT_MS = 12000;
 const NO_PROCESS: TabUsage = { pid: null, cpu: null, memory: null };
-
-let samplingSince = 0;
-let lastRead = 0;
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usageByTab(tasks: EngineTask[]): Map<string, TabUsage> {
   const usage = new Map<string, TabUsage>();
@@ -26,16 +20,7 @@ export function usageByTab(tasks: EngineTask[]): Map<string, TabUsage> {
 }
 
 export async function sampleTabUsage(): Promise<Map<string, TabUsage>> {
-  if (Date.now() - lastRead > SAMPLER_KEPT_MS) samplingSince = Date.now();
-  lastRead = Date.now();
-  let tasks = await listTasks();
-  const untilMeasured = samplingSince + FIRST_SAMPLE_MS - Date.now();
-  if (untilMeasured > 0) {
-    await wait(untilMeasured);
-    lastRead = Date.now();
-    tasks = await listTasks();
-  }
-  return usageByTab(tasks);
+  return usageByTab((await sampleTasks()).tasks);
 }
 
 type Node = TabNode | GroupNode | FolderNode;
