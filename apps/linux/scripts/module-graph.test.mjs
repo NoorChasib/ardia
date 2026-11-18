@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
 import { build } from "vite";
 import { inputAdapters, rawBookmarkAdapter } from "../inputAdapters.ts";
+import "../src/paintMotion.test.mjs";
 
 const nodeBinary = process.versions.bun ? "node" : process.execPath;
 
@@ -83,6 +84,15 @@ test("production graph uses current Linux adapters and one canonical shared stat
     }
     assert.deepEqual(graph.get(original)?.importers, [id], `${shared} is only loaded by its adapter`);
     assert.ok(graph.get(id).importedIds.includes(original));
+  }
+
+  for (const [shared, adapter, importer] of [
+    ["components/window/LoadingPill.tsx", "LoadingPill.tsx", "components/window/PageOverlays.tsx"],
+    ["components/toolbar/reloadBreathe.ts", "reloadBreathe.ts", "components/toolbar/NavButtons.tsx"],
+  ]) {
+    assert.ok(!graph.has(`${browser}${shared}`), `the JS-driven ${shared} loop stays out of the Linux bundle`);
+    assert.ok(graph.get(`${browser}${importer}`).importedIds.includes(`${linux}${adapter}`), `${importer} loops on the compositor through ${adapter}`);
+    assert.ok(graph.get(`${linux}${adapter}`).importedIds.includes(`${linux}paintMotion.ts`), `${adapter} marks its loop as paint-only motion`);
   }
 
   const permissions = graph.get(`${browser}state/site/permissions.ts`);
