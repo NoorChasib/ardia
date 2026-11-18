@@ -29,7 +29,7 @@ export const advancedRows = {
           title: "Memory Saver",
           explained: true,
           description: "How hard Ardia works to free memory.",
-          keywords: ["sleep", "sleeping tabs", "tab sleeping", "discard", "hibernate", "memory", "ram", "inactive tabs", "unload", "suspend", "performance", "moderate", "balanced", "maximum", "memory savings", "profiles", "launch", "extensions", "lazy", "defer", "load profiles when opened", "idle", "inactive", "timeout", "unload inactive profiles"],
+          keywords: ["sleep", "sleeping tabs", "tab sleeping", "discard", "hibernate", "memory", "save ram", "inactive tabs", "unload", "suspend", "performance", "moderate", "balanced", "maximum", "memory savings", "profiles", "launch", "extensions", "lazy", "defer", "load profiles when opened", "idle", "inactive", "timeout", "unload inactive profiles"],
         },
         keepActiveSites: {
           title: "Keep these sites awake",

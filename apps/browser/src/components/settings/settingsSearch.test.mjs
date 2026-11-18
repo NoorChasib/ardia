@@ -36,6 +36,7 @@ const TOP = [
   ["close button", ["tabs.tabCloseButtonSide"]],
   ["reveal speed", ["tabs.sidebarRevealSpeed"]],
   ["page preview", ["tabs.showPagePreviewInTabHoverMenu"]],
+  ["ram", ["tabs.showMemoryInTabHoverMenu"]],
   ["memory use", ["tabs.showMemoryInTabHoverMenu"]],
   ["vertical tabs", ["tabs.layout"]],
   ["pinned", ["profiles.shareTopApps", "tabs.balancedTopApps", "tabs.sleepingTabs"]],
