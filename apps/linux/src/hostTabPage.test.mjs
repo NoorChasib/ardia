@@ -243,6 +243,8 @@ test("the shell's first load of the URL a tab was just created with is dropped, 
 
 test("a page picture is never asked of an engine without tab.capturePicture, and is asked once it has it", async () => {
   const { hostTabHandle } = await import("./shims/web/HostWebView.tsx");
+  const { pagePicturesSupported } = await import("../../browser/src/platform/webviews.ts");
+  assert.equal(pagePicturesSupported(), false, "the shared preview reads the same answer, so it schedules nothing");
   const pictureCommands = (native) => native.requests.filter((r) => r.method === "tab.command" && r.args?.command === "capturePicture").length;
   const without = nativeHost();
   const { tab: plain } = mount(without);

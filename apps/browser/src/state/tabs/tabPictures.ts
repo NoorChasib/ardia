@@ -1,7 +1,8 @@
 import { useBrowser } from "../browser/store";
 import { isIncognitoProfile } from "../browser/model";
 import type { BrowserState } from "../browser/store";
-import { webviews } from "../../platform/webviews";
+import type { Settings } from "../settings/settings";
+import { pagePicturesSupported, webviews } from "../../platform/webviews";
 import { noteTabHoverPreviewCapture } from "../telemetry/hoverCardCounts";
 
 export type Picture = { data: string; frame: [number, number, number, number]; url: string; at: number; settled: boolean };
@@ -12,6 +13,8 @@ const KEEP = 40;
 const pictures = new Map<string, Picture>();
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
 const loadTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const loadStarts = new Map<string, number>();
+const asking = new Map<string, number>();
 const listeners = new Set<() => void>();
 let started = false;
 
@@ -32,7 +35,9 @@ export function rememberPicture(tabId: string): Promise<void> {
   return remember(tabId, false);
 }
 
-export const previewCaptures = (s: Pick<BrowserState, "settings">) => s.settings.showTabHoverMenu && s.settings.showPagePreviewInTabHoverMenu;
+export const pagePreviewOn = (settings: Pick<Settings, "showPagePreviewInTabHoverMenu">) => settings.showPagePreviewInTabHoverMenu && pagePicturesSupported();
+
+export const previewCaptures = (s: Pick<BrowserState, "settings">) => s.settings.showTabHoverMenu && pagePreviewOn(s.settings);
 
 export const tabNeverCaptured = (s: Pick<BrowserState, "windows" | "tabs">, tabId: string) => {
   const tab = s.tabs[tabId];
@@ -47,6 +52,13 @@ function remember(tabId: string, afterLoad: boolean): Promise<void> {
   const url = state.tabs[tabId]!.url;
   const loadingAtRequest = !!state.live[tabId]?.isLoading;
   const requested = Date.now();
+  const load = loadStarts.get(tabId) ?? 0;
+  asking.set(tabId, (asking.get(tabId) ?? 0) + 1);
+  const answered = () => {
+    const left = (asking.get(tabId) ?? 1) - 1;
+    if (left > 0) asking.set(tabId, left);
+    else asking.delete(tabId);
+  };
   const missed = () => {
     if (!afterLoad) return;
     noteTabHoverPreviewCapture(true);
@@ -59,7 +71,7 @@ function remember(tabId: string, afterLoad: boolean): Promise<void> {
       if (afterLoad) noteTabHoverPreviewCapture(false);
       const now = useBrowser.getState();
       if (now.tabs[tabId]?.url !== url) return;
-      const settled = !loadingAtRequest && !now.live[tabId]?.isLoading;
+      const settled = !loadingAtRequest && !now.live[tabId]?.isLoading && (loadStarts.get(tabId) ?? 0) === load;
       pictures.delete(tabId);
       pictures.set(tabId, { data: picture.data, frame: picture.frame, url, at: Date.now(), settled });
       for (const old of pictures.keys()) {
@@ -68,7 +80,8 @@ function remember(tabId: string, afterLoad: boolean): Promise<void> {
       }
       changed();
     }, missed)
-    .catch(() => {});
+    .catch(() => {})
+    .finally(answered);
 }
 
 function unsettle(tabId: string, url: string, requested: number) {
@@ -106,6 +119,22 @@ function followActiveTabs(s: BrowserState, prev: BrowserState) {
   }
 }
 
+function noteLoadStart(s: BrowserState, prev: BrowserState, tabId: string): boolean {
+  if (!s.live[tabId]?.isLoading || prev.live[tabId]?.isLoading) return false;
+  loadStarts.set(tabId, (loadStarts.get(tabId) ?? 0) + 1);
+  const picture = pictures.get(tabId);
+  if (!picture?.settled) return false;
+  pictures.set(tabId, { ...picture, settled: false });
+  return true;
+}
+
+function followLoadStarts(s: BrowserState, prev: BrowserState) {
+  let unsettled = false;
+  for (const id of pictures.keys()) if (noteLoadStart(s, prev, id)) unsettled = true;
+  for (const id of asking.keys()) if (!pictures.has(id)) noteLoadStart(s, prev, id);
+  if (unsettled) changed();
+}
+
 function followFinishedLoads(s: BrowserState, prev: BrowserState) {
   clearGone(s, loadTimers);
   for (const w of Object.values(s.windows)) {
@@ -139,8 +168,12 @@ export function startTabPictures() {
     const loads = s.live !== prev.live && previewCaptures(s);
     if (s.windows === prev.windows && s.tabs === prev.tabs && !loads) return;
     if (s.windows !== prev.windows || s.tabs !== prev.tabs) followActiveTabs(s, prev);
-    if (loads) followFinishedLoads(s, prev);
+    if (loads) {
+      followLoadStarts(s, prev);
+      followFinishedLoads(s, prev);
+    }
     if (s.tabs !== prev.tabs) {
+      for (const id of loadStarts.keys()) if (!s.tabs[id]) loadStarts.delete(id);
       const before = pictures.size;
       for (const id of pictures.keys()) if (!s.tabs[id]) pictures.delete(id);
       if (pictures.size !== before) changed();

@@ -7,6 +7,7 @@ import { plural, tabTitle } from "../../state/browser/model";
 import { useTileFolderLabel, useTileFolderMembers } from "../../state/pins/hooks";
 import { returnToPinnedUrl } from "../../state/pins/actions";
 import { togglePin } from "../../state/tabs/actions";
+import { pagePreviewOn } from "../../state/tabs/tabPictures";
 import { useHoverOrphaned, useIsShownTab } from "../../state/sidebar/hooks";
 import { useFolderPanel } from "../../state/sidebar/tileFolderUi";
 import { awayTitle } from "../../state/pins/organize";
@@ -103,7 +104,7 @@ function TabCard({ tabId, windowId, anchor, windowHeight }: { tabId: string; win
   const showBookmarks = useBookmarksShown();
   const video = useMedia((m) => !!m.sessions[tabId]?.hasVideo || !!m.pipOpen[tabId]);
   const [pip, togglePip] = usePictureInPicture(tabId);
-  const grows = useSettings((s) => s.showPagePreviewInTabHoverMenu || s.showMemoryInTabHoverMenu);
+  const grows = useSettings((s) => pagePreviewOn(s) || s.showMemoryInTabHoverMenu);
   if (!tab) return null;
   const away = awayTitle(tab);
   return (

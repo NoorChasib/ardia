@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const { webviews, webviewRef } = await import("../../platform/webviews.ts");
-const { LOADED_SETTLE_MS, lastPicture, onPicturesChanged, rememberPicture, startTabPictures } = await import("./tabPictures.ts");
+const { LOADED_SETTLE_MS, lastPicture, onPicturesChanged, pagePreviewOn, previewCaptures, rememberPicture, startTabPictures } = await import("./tabPictures.ts");
+const { pagePicturesSupported, setPagePicturesSupported } = await import("../../platform/webviews.ts");
 const { takeHoverCardCounts } = await import("../telemetry/hoverCardCounts.ts");
 const { previewState } = await import("./tabPreview.ts");
 
@@ -293,4 +294,71 @@ test("with the hover menu off, the preview setting alone schedules nothing and c
   await flush();
   assert.equal(calls.length, 0, "a menu turned off before the settle cancels the capture");
   S().updateSettings({ showTabHoverMenu: true });
+});
+
+test("a same-address reload switched away from before its capture leaves the old document's picture unshown, for the switcher only", async () => {
+  const { w, a } = await setup({ preview: true });
+  assert.equal(hoverState(a), "shown");
+  fake(a, () => Promise.resolve({ data: "GREEN", frame: FRAME }));
+  finishLoad(a);
+  mock.timers.tick(LOADED_SETTLE_MS / 2);
+  S().newTab(w, { url: "https://blue.example/" });
+  mock.timers.tick(10 * SETTLE_MS);
+  await flush();
+  assert.equal(capturesOf(a), 0, "switched away before the settle");
+  assert.equal(lastPicture(a).data, "AA", "the switcher and drag still have the red picture");
+  assert.equal(lastPicture(a).url, S().tabs[a].url);
+  assert.equal(hoverState(a), "stale", "but it is of the document before the reload");
+  S().activate(a);
+  mock.timers.tick(SETTLE_MS);
+  await flush();
+  assert.deepEqual([lastPicture(a).data, hoverState(a)], ["GREEN", "shown"]);
+});
+
+test("a picture asked for before a same-address reload that starts and ends while it is taken is kept but not shown", async () => {
+  for (const ask of ["switch", "load"]) {
+    const { a } = await setup({ preview: true });
+    let answer;
+    fake(a, () => new Promise((resolve) => (answer = resolve)));
+    if (ask === "switch") void rememberPicture(a);
+    else {
+      finishLoad(a);
+      mock.timers.tick(LOADED_SETTLE_MS);
+      await flush();
+    }
+    assert.equal(capturesOf(a), 1);
+    fake(a, () => new Promise(() => {}));
+    finishLoad(a);
+    answer({ data: "BEFORE", frame: FRAME });
+    await flush();
+    assert.equal(lastPicture(a).data, "BEFORE");
+    assert.equal(hoverState(a), "stale", ask);
+  }
+});
+
+test("an engine that can't take pictures makes the preview setting inert: no timer, no capture, no miss", async () => {
+  const { a } = await setup({ preview: true });
+  assert.equal(pagePicturesSupported(), true);
+  setPagePicturesSupported(false);
+  try {
+    assert.equal(pagePreviewOn(S().settings), false);
+    assert.equal(previewCaptures(S()), false);
+    const schedule = globalThis.setTimeout;
+    let scheduled = 0;
+    globalThis.setTimeout = (...args) => (scheduled++, schedule(...args));
+    try {
+      for (let i = 0; i < 10; i++) finishLoad(a);
+    } finally {
+      globalThis.setTimeout = schedule;
+    }
+    assert.equal(scheduled, 0);
+    mock.timers.tick(10 * SETTLE_MS);
+    await flush();
+    assert.equal(calls.length, 0);
+    const counts = takeHoverCardCounts();
+    assert.deepEqual([counts.tab_hover_preview_captures, counts.tab_hover_preview_capture_misses], [0, 0]);
+  } finally {
+    setPagePicturesSupported(true);
+  }
+  assert.equal(pagePreviewOn(S().settings), true, "it lights up once the engine can");
 });

@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { View } from "react-native";
 import { toAppUrl, toEngineUrl } from "@ardia/core";
 import type { WebViewHandle, WebViewProps } from "@ardia-real/ardiacore";
+import { setPagePicturesSupported } from "../../../../browser/src/platform/webviews";
 import { ardiaHost, hostSupports, reportHostError, type ArdiaHost } from "../../host";
 import { PAGE_PICTURE_COMMAND } from "../../hostCapabilities";
 import { HostPageEvents } from "../../hostPageEvents";
@@ -18,6 +19,8 @@ import type { CornerRadii } from "../../hostExtensionView";
 import { focusPageIfShellUnfocused, notePageFocusRequest, notingPageFocus } from "../../pageFocus";
 import { withPopupDismissal } from "../../popupDismissal";
 import { registerSwitchView } from "../../tabSwitchAhead";
+
+setPagePicturesSupported(!!ardiaHost && hostSupports(PAGE_PICTURE_COMMAND, ardiaHost));
 
 export const HostWebView = forwardRef<WebViewHandle, WebViewProps>(function HostWebView(props, ref) {
   return props.extensionHost && extensionViewsSupported(ardiaHost) ? <HostExtensionWebView ref={ref} {...props} /> : <HostTabWebView ref={ref} {...props} />;
