@@ -1,7 +1,9 @@
 import { act } from "react-test-renderer";
+import { Platform } from "react-native";
 import { pages } from "../platform/pages";
 import type { PageState } from "../state/pages/store";
 import * as browse from "../state/browse/store";
+import { closeLibrary, openLibrary } from "../state/library/store";
 import { useOnboarding } from "../state/onboarding/store";
 import { currentTabs, openNewTab, tabSavedState } from "../state/tabs/store";
 import { withTabs } from "../../test/render/harness";
@@ -16,6 +18,7 @@ let finishHeldSave: (state: null) => void = () => undefined;
 const state: PageState = { url, title: "Example", progress: 1, isLoading: false, canGoBack: false, canGoForward: false, faviconUrl: null, themeColor: null, backgroundColor: null, security: "secure", failure: null, pageZoom: 1, isDesktopSite: false, scrollDirection: "up", isScrolledToTop: false, blockedRequests: 0, isLive: true, isPrivate: false };
 
 const saveState = () => pages.saveState as unknown as jest.Mock;
+const scrollPosition = () => pages.scrollPosition as unknown as jest.Mock;
 const savesOf = (id: string) => saveState().mock.calls.filter(([saved]) => saved === id).length;
 
 beforeAll(() => {
@@ -35,6 +38,7 @@ beforeAll(() => {
 
 afterEach(async () => {
   await act(async () => browse.appBecameActive());
+  act(closeLibrary);
   finishHeldSave(null);
   await settle();
   scrollY = 120;
@@ -129,4 +133,22 @@ test("a failed scroll save is not retried by the poll but is retried when the ap
   await cycleAppState();
   expect(savesOf(tab.id)).toBe(2);
   expect(tabSavedState(tab.id)).toBe(`${url} at 640`);
+});
+
+test("the Library sheet covers the page on iOS, so the scroll poll stops under it and comes back when it closes", async () => {
+  await act(async () => browse.useBrowse.setState({ surface: "browsing" }));
+  await tick(5000);
+  act(() => openLibrary("history"));
+  await settle();
+  scrollPosition().mockClear();
+  await tick(60_000);
+  const underLibrary = scrollPosition().mock.calls.length;
+  act(closeLibrary);
+  await settle();
+  scrollPosition().mockClear();
+  await tick(10_000);
+  const afterClose = scrollPosition().mock.calls.length;
+  if (Platform.OS === "ios") expect(underLibrary).toBe(0);
+  else expect(underLibrary).toBeGreaterThan(0);
+  expect(afterClose).toBeGreaterThan(0);
 });

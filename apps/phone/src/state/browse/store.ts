@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { Platform } from "react-native";
 import { history } from "../history/store";
 import { HISTORY_RETENTION_MS } from "../history/historySummary";
 import {
@@ -19,6 +20,7 @@ import { pageUi, usePageUi } from "../page/store";
 import { settingsNav, useSettingsNav } from "../settings/nav";
 import { refreshDefaultBrowser } from "../settings/defaultBrowser";
 import { followFrontPage, forgetPosition, noteFrontScrolled, notePageNavigated, notePageSession, saveChangedPages, saveTabPosition, watchFrontScroll } from "./positions";
+import { useLibrary } from "../library/store";
 import { noteLocalChange, showSpace } from "../sync/store";
 import { spaceToShow, tabsInSpace } from "../tabs/spaces";
 import { currentPreferences, loadPreferences } from "../settings/store";
@@ -88,7 +90,7 @@ export function startBrowser(beforeOpening: () => void = () => undefined) {
   archiveDueTabs();
   archiveTimer = setInterval(archiveDueTabs, AUTO_ARCHIVE_CHECK_MS);
   listenToPages(pageEvent);
-  for (const subscribe of [useBrowse.subscribe, useTabs.subscribe, useSearch.subscribe, usePageUi.subscribe, useSettingsNav.subscribe, useOnboarding.subscribe]) subscribe(followFrontPage);
+  for (const subscribe of [useBrowse.subscribe, useTabs.subscribe, useSearch.subscribe, usePageUi.subscribe, useSettingsNav.subscribe, useOnboarding.subscribe, useLibrary.subscribe]) subscribe(followFrontPage);
   watchFrontScroll(frontPageId);
   if (!currentPreferences().hasFinishedOnboarding) showOnboarding();
   else if (currentPreferences().autoOpensKeyboard) presentSearch("home", "", useTabs.getState().incognito, null, "atRest");
@@ -96,8 +98,10 @@ export function startBrowser(beforeOpening: () => void = () => undefined) {
 
 let appActive = true;
 
+const LIBRARY_SHEET_COVERS_PAGE = Platform.OS === "ios";
+
 function frontPageId() {
-  if (!appActive || useBrowse.getState().surface !== "browsing" || pageCovered()) return null;
+  if (!appActive || useBrowse.getState().surface !== "browsing" || pageCovered() || (LIBRARY_SHEET_COVERS_PAGE && useLibrary.getState().open)) return null;
   return currentTabs().selectedId;
 }
 
