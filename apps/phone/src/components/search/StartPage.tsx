@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -25,9 +25,13 @@ export function StartPage() {
   const dark = incognito || theme.dark;
   const reduceMotion = useReduceMotion();
   const column = useColumn();
-  const geometry: StartGeometry = column
-    ? { width: columnContentWidth(column, width), height, safeSide: 0, barCenterY: startBarCenterY(height, insets.bottom), dotsOnBar: true }
-    : { width, height, safeSide: Math.max(insets.left, insets.right), barCenterY: startBarCenterY(height, insets.bottom) };
+  const geometry = useMemo<StartGeometry>(
+    () =>
+      column
+        ? { width: columnContentWidth(column, width), height, safeSide: 0, barCenterY: startBarCenterY(height, insets.bottom), dotsOnBar: true }
+        : { width, height, safeSide: Math.max(insets.left, insets.right), barCenterY: startBarCenterY(height, insets.bottom) },
+    [column, width, height, insets.bottom, insets.left, insets.right],
+  );
   const shown = useSharedValue(trayUp ? 0 : 1);
   useEffect(() => {
     shown.value = reduceMotion

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { FlatList, Platform, PlatformColor, Pressable, StyleSheet, Text, View, type NativeScrollEvent, type NativeSyntheticEvent, type ViewStyle } from "react-native";
 import { Host, Image as SystemImage } from "@expo/ui/swift-ui";
 import { font as systemFont } from "@expo/ui/swift-ui/modifiers";
@@ -9,10 +9,12 @@ import { haptics } from "../../state/app/haptics";
 import { copyLink, menuOpenedHaptic, shareUrl } from "../../state/browse/tabMenus";
 import { openSettings } from "../../state/settings/nav";
 import { openRemote, selectProfile } from "../../state/sync/actions";
-import { useSelectedProfile, useSyncStatus, useSyncView } from "../../state/sync/hooks";
+import { useSelectedProfile } from "../../state/sync/hooks";
 import { remoteTitle } from "../../state/sync/spaces";
-import type { PinnedTile, SyncedProfile } from "../../state/sync/store";
+import { useSync, type PinnedTile, type SyncedProfile } from "../../state/sync/store";
+import type { PinnedTab } from "../../platform/sync";
 import { countUsage } from "../../state/telemetry/telemetry";
+import { countRender } from "../../state/app/interactionPerf";
 import {
   browseLayout,
   capsule,
@@ -41,11 +43,12 @@ export type StartGeometry = { width: number; height: number; safeSide: number; b
 
 export const startBarCenterY = (height: number, safeBottom: number, os: string = Platform.OS) => height - redesignedBarCenterFromBottom(safeBottom, os);
 
-export function StartSpaces({ geometry, dark, incognito }: { geometry: StartGeometry; dark: boolean; incognito: boolean }) {
-  const status = useSyncStatus();
-  const view = useSyncView();
+const NO_SPACES: SyncedProfile[] = [];
+
+export const StartSpaces = memo(function StartSpaces({ geometry, dark, incognito }: { geometry: StartGeometry; dark: boolean; incognito: boolean }) {
+  const syncOff = useSync((s) => s.status.phase === "off");
+  const spaces = useSync((s) => (s.status.isEnabled ? s.view.profiles : NO_SPACES));
   const shown = useSelectedProfile();
-  const spaces = status.isEnabled ? view.profiles : [];
   const [chosen, setChosen] = useState<string | null>(null);
   const current = (chosen ? spaces.find((p) => p.syncId === chosen) : undefined) ?? shown ?? spaces[0] ?? null;
   useEffect(() => {
@@ -126,26 +129,33 @@ export function StartSpaces({ geometry, dark, incognito }: { geometry: StartGeom
         </>
       ) : spaces.length === 1 ? (
         page(spaces[0]!)
-      ) : status.phase === "off" ? (
+      ) : syncOff ? (
         syncOffered() ? <SyncInvitation y={geometry.height * startLayout.switcherRatio} dark={dark} incognito={incognito} /> : null
       ) : null}
     </View>
   );
-}
+});
 
-function StartSpacePage({
-  geometry,
-  space: profile,
-  dark,
-  incognito,
-}: {
-  geometry: StartGeometry;
-  space: SyncedProfile;
-  dark: boolean;
-  incognito: boolean;
-}) {
+const samePinnedTab = (a: PinnedTab, b: PinnedTab) => a.key === b.key && a.title === b.title && a.url === b.url && a.icon === b.icon;
+
+const sameFolder = (a: readonly PinnedTab[] | null, b: readonly PinnedTab[] | null) => a === b || (!!a && !!b && a.length === b.length && a.every((tab, index) => samePinnedTab(tab, b[index]!)));
+
+const sameTile = (a: PinnedTile, b: PinnedTile) => a === b || (samePinnedTab(a, b) && sameFolder(a.folder, b.folder));
+
+const sameTiles = (a: readonly PinnedTile[], b: readonly PinnedTile[]) => a === b || (a.length === b.length && a.every((tile, index) => sameTile(tile, b[index]!)));
+
+type SpacePageProps = { geometry: StartGeometry; space: SyncedProfile; dark: boolean; incognito: boolean };
+
+const sameSpacePage = (a: SpacePageProps, b: SpacePageProps) =>
+  a.geometry === b.geometry &&
+  a.dark === b.dark &&
+  a.incognito === b.incognito &&
+  (a.space === b.space || (a.space.syncId === b.space.syncId && a.space.name === b.space.name && a.space.icon === b.space.icon && sameTiles(a.space.pinned.tiles, b.space.pinned.tiles)));
+
+const StartSpacePage = memo(function StartSpacePage({ geometry, space: profile, dark, incognito }: SpacePageProps) {
+  countRender("StartSpacePage");
   const switcherY = geometry.height * startLayout.switcherRatio;
-  const menuPlace = { left: (geometry.width - tabsLayout.menuWidth) / 2, width: tabsLayout.menuWidth };
+  const menuPlace = useMemo(() => ({ left: (geometry.width - tabsLayout.menuWidth) / 2, width: tabsLayout.menuWidth }), [geometry.width]);
   return (
     <View style={{ width: geometry.width, height: geometry.height }} pointerEvents="box-none">
       <View testID="startSwitcher" pointerEvents="box-none" style={[styles.switcherRow, { top: switcherY - browseLayout.hitTarget / 2, height: browseLayout.hitTarget }]}>
@@ -160,7 +170,7 @@ function StartSpacePage({
       ) : null}
     </View>
   );
-}
+}, sameSpacePage);
 
 function PinnedTiles({ tiles, width, profileId, dark, incognito, menuPlace }: { tiles: PinnedTile[]; width: number; profileId: string; dark: boolean; incognito: boolean; menuPlace: ViewStyle }) {
   const columns = Math.max(1, Math.min(startLayout.tilesPerRow, tiles.length));
@@ -180,7 +190,13 @@ function PinnedTiles({ tiles, width, profileId, dark, incognito, menuPlace }: { 
   );
 }
 
-function PinnedTileButton({ tile, width, profileId, dark, incognito, menuPlace }: { tile: PinnedTile; width: number; profileId: string; dark: boolean; incognito: boolean; menuPlace: ViewStyle }) {
+type TileProps = { tile: PinnedTile; width: number; profileId: string; dark: boolean; incognito: boolean; menuPlace: ViewStyle };
+
+const sameTileButton = (a: TileProps, b: TileProps) =>
+  a.width === b.width && a.profileId === b.profileId && a.dark === b.dark && a.incognito === b.incognito && a.menuPlace === b.menuPlace && sameTile(a.tile, b.tile);
+
+const PinnedTileButton = memo(function PinnedTileButton({ tile, width, profileId, dark, incognito, menuPlace }: TileProps) {
+  countRender("PinnedTileButton");
   const folder = tile.folder?.length ? tile.folder : null;
   const label = remoteTitle(tile.title, tile.url);
   const items: MenuItem[] = folder
@@ -214,7 +230,7 @@ function PinnedTileButton({ tile, width, profileId, dark, incognito, menuPlace }
       {button}
     </MenuTrigger>
   );
-}
+}, sameTileButton);
 
 function TileIcon({ tile, isFolder, dark }: { tile: PinnedTile; isFolder: boolean; dark: boolean }) {
   const roles = rolesFor(dark);
