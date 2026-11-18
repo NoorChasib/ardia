@@ -76,8 +76,9 @@ import { connectCalendar, refreshCalendar, setCalendarHidden, useCalendar } from
 import { useMeetingAlert } from "../../browser/src/state/live/alerts";
 import { linuxTelemetryHooks, reportRecoverableRender, reportUncaughtRender, startHostTelemetry } from "./hostTelemetry";
 import type { LeaderLocks } from "./telemetryLeader";
+import { setTabMemoryAttributed, useTabMemorySnapshot } from "../../browser/src/state/tabs/tabMemory";
 
-Object.assign(globalThis, { ardiaLinux: { store: useBrowser, pages: usePages, emitCommand, extensions: useExtensions, openExtension: openExtensionFromMenu, webviews, media: useMedia, lifecycle: { state: useLifecycle }, sync: linuxSyncHooks, live: linuxLiveHooks, toolbar: useToolbarAutoHide, windowMenu: linuxWindowMenu, selection: { state: usePageSelection, jump: jumpToSelection, copyQuoteLink: copyLinkToSelection, replaceInField }, calendar: { state: useCalendar, connect: connectCalendar, refresh: refreshCalendar, hide: setCalendarHidden, alert: useMeetingAlert }, inputRegions, telemetry: linuxTelemetryHooks } });
+Object.assign(globalThis, { ardiaLinux: { store: useBrowser, pages: usePages, emitCommand, extensions: useExtensions, openExtension: openExtensionFromMenu, webviews, media: useMedia, lifecycle: { state: useLifecycle }, sync: linuxSyncHooks, live: linuxLiveHooks, toolbar: useToolbarAutoHide, windowMenu: linuxWindowMenu, selection: { state: usePageSelection, jump: jumpToSelection, copyQuoteLink: copyLinkToSelection, replaceInField }, calendar: { state: useCalendar, connect: connectCalendar, refresh: refreshCalendar, hide: setCalendarHidden, alert: useMeetingAlert }, inputRegions, telemetry: linuxTelemetryHooks, tabMemory: useTabMemorySnapshot } });
 setHostPageHooks({ reset: resetHostPage, applyTheme: applyHostPageTheme, depart: (tabId) => ardiaHost && forgetDepartedPage(tabId, ardiaHost.bootstrap.windowId) });
 setWindowCloseDecider(decideLinuxWindowClose);
 
@@ -112,6 +113,7 @@ async function start() {
   startHostTelemetry({ host: ardiaHost, candidate: !utility, locks: navigator.locks as unknown as LeaderLocks });
   countLoginPasswordChecks(linuxTelemetryHooks.leading);
   const capabilities = linuxCapabilities(ardiaHost);
+  setTabMemoryAttributed(capabilities.tabMemory);
   if (capabilities.cliControl) startCliControl();
   await startLinuxShortcuts(ardiaHost);
   if (utility) {
