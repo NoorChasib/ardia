@@ -45,6 +45,7 @@ beforeAll(() => {
   });
   jest.spyOn(pages, "ids").mockImplementation(async () => [...currentTabs().open, ...currentTabs().privates].map((tab) => tab.id) as never);
   jest.spyOn(telemetry, "countUsage").mockImplementation((field) => void counted.push(field));
+  jest.spyOn(telemetry, "usageCountingWindow").mockImplementation(() => (field) => void counted.push(field));
   browse.useBrowse.setState({ surface: "deck", sheet: null });
   browse.startBrowser();
   useOnboarding.setState({ showing: false });

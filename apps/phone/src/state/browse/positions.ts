@@ -2,7 +2,7 @@ import { livePageIds, pageScrollPosition, savePageState, type PageScrollPosition
 import { currentTabs, saveTabState } from "../tabs/store";
 import { findTab } from "../tabs/tabsState";
 import { scrollAtRest, scrollMovedSinceSave, scrollSaveDecision, type ScrollWatch } from "../../lib/scrollSettle";
-import { countUsage } from "../telemetry/telemetry";
+import { usageCountingWindow } from "../telemetry/telemetry";
 
 const SCROLL_CHECK_MS = 2000;
 const STILL_CHECK_MAX_MS = 16_000;
@@ -17,11 +17,12 @@ let timer: ReturnType<typeof setTimeout> | null = null;
 let checking = false;
 
 export async function saveTabPosition(id: string, known?: PageScrollPosition | null) {
+  const count = usageCountingWindow();
   const navigations = navigatedSinceSave.get(id);
   const at = known === undefined ? await pageScrollPosition(id) : known;
   const saved = await savePageState(id);
   if (!saved || !findTab(currentTabs(), id)) return;
-  if (saveTabState(id, saved)) countUsage("page_states_saved");
+  if (saveTabState(id, saved)) count("page_states_saved");
   if (navigatedSinceSave.get(id) === navigations) navigatedSinceSave.delete(id);
   if (at) watches.set(id, { lastSeen: at.y, lastSaved: at.y });
 }
