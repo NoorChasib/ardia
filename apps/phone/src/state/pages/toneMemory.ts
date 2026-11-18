@@ -1,5 +1,5 @@
 import { parseRememberedTones, rememberedTonesText } from "../../lib/toneMemory";
-import { readPreferences, writePreference } from "../store/browserDatabase";
+import { readPreference, writePreference } from "../store/browserDatabase";
 import { tabDatabase } from "../store/database";
 import { usePages } from "./store";
 
@@ -12,7 +12,7 @@ let lastWritten: string | null = null;
 export function restorePageTones(keep: ReadonlySet<string>) {
   let remembered = {};
   try {
-    const stored = readPreferences(tabDatabase())[TONES_KEY] ?? null;
+    const stored = readPreference(tabDatabase(), TONES_KEY);
     remembered = parseRememberedTones(stored, keep);
     lastWritten = stored;
   } catch {
