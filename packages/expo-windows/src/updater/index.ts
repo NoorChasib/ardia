@@ -1,10 +1,8 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
 import type { AppNative, ConfirmOptions, DialogsNative, DocumentsNative, UpdateChannel, UpdaterNative, UpdaterState } from "@ardia/shell";
 import type { AppWindowsModule, WindowsUpdateConstants, WindowsUpdateModule } from "../nativeModuleTypes";
-import { failureText, feedNotPublished, folderOf, megabytes, offered, readBuild, readManifest, type BuildIdentity } from "./manifest";
+import { failureText, feedNotPublished, megabytes, offered, readBuild, readManifest, type BuildIdentity } from "./manifest";
 
-const PUBLISHED_UNDER = "https://github.com/ardia-browser/ardia/releases/download/";
-const FEED = `${PUBLISHED_UNDER}windows-alpha/windows-update.json`;
 const PREFERENCES = "windows-updates.json";
 const FIRST_CHECK_AFTER_MS = 30_000;
 const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
@@ -12,7 +10,7 @@ const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 type Preferences = Pick<Extract<UpdaterState, { available: true }>, "automaticChecks" | "automaticDownloads" | "lastCheck">;
 
 const native = () => TurboModuleRegistry.get<WindowsUpdateModule>("ArdiaWindowsUpdate");
-const constants = (): WindowsUpdateConstants => native()?.getConstants?.() ?? {};
+const constants = (): WindowsUpdateConstants & { feed?: unknown; publishedUnder?: unknown } => native()?.getConstants?.() ?? {};
 const dialogs = () => TurboModuleRegistry.get<TurboModule & Pick<DialogsNative, "confirm">>("ArdiaDialogs");
 const documents = () => TurboModuleRegistry.get<TurboModule & Pick<DocumentsNative, "readDocument" | "writeDocument">>("ArdiaDocuments");
 const launch = () => TurboModuleRegistry.get<TurboModule & Pick<AppNative, "launchConfig">>("ArdiaApp")?.launchConfig?.();
@@ -35,10 +33,11 @@ export function stampedSystemInfo(info: unknown): unknown {
   return { ...info, appVersion: stamped.version, appBuild: String(stamped.build) };
 }
 
-const feedOverride = () => (typeof constants().feedOverride === "string" ? (constants().feedOverride as string) : "");
-const feed = () => feedOverride() || FEED;
-const publishedUnder = () => (feedOverride() ? folderOf(feedOverride()) : PUBLISHED_UNDER);
-const configured = () => !!native() && constants().installed === true && identity() !== null;
+const text = (value: unknown) => (typeof value === "string" ? value : "");
+const feedOverride = () => text(constants().feedOverride);
+const feed = () => text(constants().feed);
+const publishedUnder = () => text(constants().publishedUnder);
+const configured = () => !!native() && constants().installed === true && identity() !== null && feed() !== "" && publishedUnder() !== "";
 const named = (version: string, build: number) => `${version}, Windows alpha ${build}`;
 
 function preferences(): Preferences {

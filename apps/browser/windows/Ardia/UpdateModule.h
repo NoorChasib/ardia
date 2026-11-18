@@ -123,7 +123,6 @@ inline Snapshot const &Shared() noexcept {
 
 namespace AppUpdate {
 
-inline constexpr std::wstring_view kPublishedUnder = L"https://github.com/ardia-browser/ardia/releases/download/";
 inline constexpr uint64_t kLargestManifestBytes = 64 * 1024;
 inline constexpr uint64_t kLargestInstallerBytes = 1ull << 30;
 inline constexpr size_t kLargestBuildFileBytes = 4096;
@@ -182,13 +181,36 @@ inline bool StartsWith(std::wstring_view text, std::wstring_view prefix) noexcep
   return text.size() >= prefix.size() && text.substr(0, prefix.size()) == prefix;
 }
 
+inline bool ServicesConfigured() noexcept {
+  auto const &services = AppServices::Shared();
+  return !services.windowsFeedUrl.empty() && !services.windowsTrustedPrefix.empty();
+}
+
+inline std::wstring Feed() noexcept {
+  try {
+    return ServicesConfigured() ? AppServices::Shared().windowsFeedUrl : FeedOverride();
+  } catch (...) {
+    return {};
+  }
+}
+
+inline std::wstring TrustedPrefix() noexcept {
+  try {
+    if (ServicesConfigured()) return AppServices::Shared().windowsTrustedPrefix;
+    std::wstring feed = FeedOverride();
+    size_t folderEnd = feed.find_last_of(L'/');
+    if (folderEnd == std::wstring::npos || folderEnd < 8) return {};
+    return feed.substr(0, folderEnd + 1);
+  } catch (...) {
+    return {};
+  }
+}
+
 inline bool Allowed(std::wstring_view url) noexcept {
   if (url.find(L"..") != std::wstring_view::npos || url.find_first_of(L"%\\?#@ ") != std::wstring_view::npos) return false;
-  if (StartsWith(url, kPublishedUnder)) return true;
-  std::wstring feed = FeedOverride();
-  size_t folderEnd = feed.find_last_of(L'/');
-  if (folderEnd == std::wstring::npos || folderEnd < 8) return false;
-  return StartsWith(url, std::wstring_view(feed).substr(0, folderEnd + 1));
+  std::wstring prefix = TrustedPrefix();
+  if (prefix.empty() || Feed().empty()) return false;
+  return StartsWith(url, prefix);
 }
 
 struct Connection {
@@ -471,6 +493,12 @@ struct UpdateModule {
 
   REACT_CONSTANT(services)
   const std::string services = AppServices::Shared().json;
+
+  REACT_CONSTANT(feed)
+  const std::string feed = Paths::Utf8(AppUpdate::Feed());
+
+  REACT_CONSTANT(publishedUnder)
+  const std::string publishedUnder = Paths::Utf8(AppUpdate::TrustedPrefix());
 
   REACT_METHOD(fetchText)
   void fetchText(std::string url, winrt::Microsoft::ReactNative::ReactPromise<std::string> promise) noexcept {

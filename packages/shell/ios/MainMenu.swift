@@ -333,7 +333,7 @@ enum MainMenu {
 
   private static func releaseNotesItem() -> NSMenuItem {
     let item = CommandItem(.releaseNotes)
-    let url = Bundle.main.object(forInfoDictionaryKey: "ACReleaseNotesURL") as? String ?? ""
+    let url = ServicesConfig.releaseNotesURL?.absoluteString ?? Bundle.main.object(forInfoDictionaryKey: "NLReleaseNotesURL") as? String ?? ""
     item.isHidden = URL(string: url)?.scheme?.hasPrefix("http") != true
     return item
   }

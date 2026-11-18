@@ -28,8 +28,6 @@ type Call = (...values: unknown[]) => unknown;
 
 const modules = new Map<string, object>();
 
-const RELEASE_NOTES_PAGE = "https://ardia.dev/release-notes";
-
 function launchServices(): unknown {
   const constants = ((TurboModuleRegistry.get<TurboModule>("ArdiaWindowsUpdate") as NativeModule | null)?.getConstants?.() ?? {}) as Record<string, unknown>;
   const text = constants.services;
@@ -48,11 +46,7 @@ const around: Record<string, Record<string, (native: Call) => Call>> = {
       if (typeof config !== "object" || config === null) return config;
       return { ...config, services: launchServices() };
     },
-    systemInfo: (native) => () => {
-      const info = stampedSystemInfo(native());
-      if (typeof info !== "object" || info === null) return info;
-      return { releaseNotesURL: RELEASE_NOTES_PAGE, ...info };
-    },
+    systemInfo: (native) => () => stampedSystemInfo(native()),
   },
   ArdiaAppWindows: {
     openWindow: (native) => (id, options) => {

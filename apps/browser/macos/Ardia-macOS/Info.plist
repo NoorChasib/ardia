@@ -4,10 +4,6 @@
 <dict>
 	<key>ACFeedbackEmail</key>
 	<string></string>
-	<key>ACFeedbackURL</key>
-	<string>https://github.com/mantrakp04/ardia/issues/new?body=%s</string>
-	<key>ACReleaseNotesURL</key>
-	<string>https://ardia.dev/release-notes</string>
 	<key>ACUpdateChannel</key>
 	<string>$(AC_UPDATE_CHANNEL)</string>
 	<key>ACVideoTourURL</key>
@@ -154,6 +150,10 @@
 	<string>Ardia shows your upcoming meetings on pinned calendar tabs, alerts you before they start, and groups the tabs you open during a call.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Websites may ask to use your camera.</string>
+	<key>NLFeedbackURL</key>
+	<string>https://github.com/NoorChasib/nilla/issues/new?body=%s</string>
+	<key>NLReleaseNotesURL</key>
+	<string></string>
 	<key>NSDockTilePlugIn</key>
 	<string>ArdiaDockTile.plugin</string>
 	<key>NSLocalNetworkUsageDescription</key>
@@ -179,9 +179,9 @@
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://ardia.dev/appcast.xml</string>
+	<string></string>
 	<key>SUPublicEDKey</key>
-	<string>gi1pBCemmSVpHM36dT5BJPPTcKC98QwS19mztCTyd4s=</string>
+	<string></string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>28800</integer>
 </dict>

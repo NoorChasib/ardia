@@ -3,7 +3,7 @@ import { test } from "node:test";
 import { failureText, feedNotPublished, folderOf, megabytes, offered, readBuild, readManifest } from "../../../../packages/expo-windows/src/updater/manifest.ts";
 import { noteReleaseNotesHeldForFirstRun, takeFirstRunCounts } from "../state/telemetry/firstRunCounts.ts";
 
-const under = "https://github.com/ardia-browser/ardia/releases/download/";
+const under = "https://github.com/NoorChasib/nilla/releases/download/";
 const sha = "a".repeat(64);
 const installer = (name) => ({ url: `${under}windows-alpha/${name}`, sha256: sha, bytes: 180_000_000 });
 const manifest = (changes = {}) => JSON.stringify({ version: "0.2.46", build: 60, x64: installer("Ardia-Setup-x64.exe"), arm64: installer("Ardia-Setup-arm64.exe"), ...changes });
@@ -25,7 +25,7 @@ test("a manifest that is not JSON, not an object, or has no usable build is refu
 test("an installer from another address, with another ending, or a path that climbs is dropped", () => {
   const dropped = [
     { ...installer("Ardia-Setup-x64.exe"), url: "https://example.com/Ardia-Setup-x64.exe" },
-    { ...installer("Ardia-Setup-x64.exe"), url: `http://github.com/ardia-browser/ardia/releases/download/windows-alpha/Ardia-Setup-x64.exe` },
+    { ...installer("Ardia-Setup-x64.exe"), url: `http://github.com/NoorChasib/nilla/releases/download/windows-alpha/Ardia-Setup-x64.exe` },
     { ...installer("Ardia-Setup-x64.exe"), url: `${under}windows-alpha/Ardia-Setup-x64.msi` },
     { ...installer("Ardia-Setup-x64.exe"), url: `${under}../../../other/repo/releases/download/x/Setup.exe` },
     { ...installer("Ardia-Setup-x64.exe"), url: `${under}windows-alpha/Ardia Setup.exe` },
@@ -41,6 +41,12 @@ test("an installer from another address, with another ending, or a path that cli
     assert.equal(read.installers.x64, undefined, JSON.stringify(x64));
     assert.ok(read.installers.arm64);
   }
+});
+
+test("with no trusted prefix every installer is dropped, since an empty prefix would match any address", () => {
+  const read = readManifest(manifest(), "");
+  assert.deepEqual(read.installers, {});
+  assert.equal(offered(read, "x64", 1), null);
 });
 
 test("only a higher build with an installer for this processor is offered", () => {

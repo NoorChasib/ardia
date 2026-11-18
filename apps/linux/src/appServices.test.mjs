@@ -8,6 +8,7 @@ import { useReportSheet } from "../../browser/src/state/report/store.ts";
 import { APP_COMMAND_HANDLERS } from "../../browser/src/state/commands/appCommands.ts";
 import { LINUX_REPORT_TEMPLATE, openReport } from "./reportProblem.ts";
 import { APP_LAUNCH_LOCK, APP_LAUNCH_MARK, FRESH_PROFILE_DOCUMENT, LAUNCH_STEPS, LINUX_APP_COMMANDS, UTILITY_APP_COMMANDS, claimAppLaunch, hostLaunchRecord, onboardingAction, recordFreshProfile, runAppCommand, runLaunchServices, serveUtilityCommands, startAppCommands } from "./appServices.ts";
+import { overrideServicesForTests, resetServicesForTests } from "@ardia/core/src/services.testing.ts";
 
 const capabilities = { defaultBrowser: false, launchAtLogin: false, thinScrollBars: false, webkit: false, cliControl: false, cliInstall: false, externalLinks: false, performanceRecording: false, taskManager: false };
 
@@ -353,23 +354,23 @@ test("only the renderer that runs launch steps leaves the evidence mark", async 
 test("release notes still open when the holder died between recording versionUpdated and version", async () => {
   const { first } = twoWindows();
   appInfo.appVersion = "4.0";
-  appInfo.releaseNotesURL = "https://ardia.dev/release-notes";
+  overrideServicesForTests({ releaseNotesUrl: "https://notes.example.test/release-notes" });
   appInfo.forceReleaseNotes = true;
   docs.set("release-notes.json", JSON.stringify({ lastVersion: "4.0", pending: null, version: 1 }));
   docs.set("onboarding.json", JSON.stringify({ completedAt: 1, version: 1 }));
   try {
     const record = await launch(first, { done: new Set(["versionUpdated"]), savedSession: true });
     assert.deepEqual(record.completions, ["version", "onboarding", "releaseNotes", "defaultBrowserOffer"]);
-    assert.ok(Object.values(useBrowser.getState().tabs).some((tab) => (tab.url ?? tab.navigation?.url ?? "").startsWith("https://ardia.dev/release-notes")));
+    assert.ok(Object.values(useBrowser.getState().tabs).some((tab) => (tab.url ?? tab.navigation?.url ?? "").startsWith("https://notes.example.test/release-notes")));
   } finally {
-    delete appInfo.releaseNotesURL;
+    resetServicesForTests();
     delete appInfo.forceReleaseNotes;
   }
 });
 
 test("a changed app version counts as an update but opens no release-notes tab on an isolated or unreleased build, even with a release-notes page set", async () => {
   const releaseNoteTabs = () => Object.values(useBrowser.getState().tabs).filter((tab) => tabURL(tab).includes("release-notes"));
-  appInfo.releaseNotesURL = "https://ardia.dev/release-notes";
+  overrideServicesForTests({ releaseNotesUrl: "https://notes.example.test/release-notes" });
   try {
     for (const [before, after] of [["156.0.8078.79", "0.2.44-nightly.3"], ["0.2.44-nightly.3", "156.0.8078.79"]]) {
       const { first } = twoWindows();
@@ -390,7 +391,7 @@ test("a changed app version counts as an update but opens no release-notes tab o
     assert.equal(releaseNoteTabs().length, 1);
   } finally {
     appInfo.appVersion = "1.0";
-    delete appInfo.releaseNotesURL;
+    resetServicesForTests();
     delete appInfo.forceReleaseNotes;
   }
 });

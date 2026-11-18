@@ -20,7 +20,7 @@ function parsed(text: string): Record<string, unknown> | null {
 }
 
 function readInstaller(value: unknown, publishedUnder: string): Installer | null {
-  if (!isRecord(value)) return null;
+  if (!isRecord(value) || !publishedUnder) return null;
   const { url, sha256, bytes } = value;
   if (typeof url !== "string" || !url.startsWith(publishedUnder) || !/^[\x21-\x7e]+\.exe$/.test(url) || url.includes("..")) return null;
   if (typeof sha256 !== "string" || !/^[0-9a-f]{64}$/.test(sha256)) return null;

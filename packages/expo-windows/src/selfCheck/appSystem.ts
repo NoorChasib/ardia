@@ -175,11 +175,12 @@ export const checks: Check[] = [
   {
     name: "ArdiaWindowsUpdate knows this build and refuses other addresses",
     async run() {
-      const update = requireNativeModule<Omit<WindowsUpdateModule, "getConstants"> & WindowsUpdateConstants>("ArdiaWindowsUpdate");
+      const update = requireNativeModule<Omit<WindowsUpdateModule, "getConstants"> & WindowsUpdateConstants & { feed?: unknown; publishedUnder?: unknown }>("ArdiaWindowsUpdate");
       expectTrue(update.cpu === "x64" || update.cpu === "arm64", `cpu is ${JSON.stringify(update.cpu)}`);
       expectTrue(typeof update.installed === "boolean", `installed is ${JSON.stringify(update.installed)}`);
       expectTrue(typeof update.buildFile === "string", `buildFile is ${JSON.stringify(update.buildFile)}`);
-      const published = "https://github.com/ardia-browser/ardia/releases/download/";
+      const published = typeof update.publishedUnder === "string" && update.publishedUnder ? update.publishedUnder : "https://github.com/NoorChasib/nilla/releases/download/";
+      const updatesSetUp = typeof update.feed === "string" && update.feed.length > 0 && typeof update.publishedUnder === "string" && update.publishedUnder.length > 0;
       const refused = async (what: string, call: Promise<unknown>) => {
         const outcome = await call.then(
           () => "answered",
@@ -194,7 +195,11 @@ export const checks: Check[] = [
       await refused("an installer with no size", update.download(`${published}windows-alpha/Ardia-Setup-x64.exe`, "a".repeat(64), 0));
       const state = await requireNativeModule<Pick<UpdaterNative, "updaterState">>("ArdiaUpdater").updaterState();
       expectTrue(state.available === true, "the updater says it is not built in");
-      expectTrue(state.configured === (update.installed === true && typeof update.buildFile === "string" && update.buildFile.length > 0), `configured is ${String(state.configured)}`);
+      expectTrue(state.configured === (updatesSetUp && update.installed === true && typeof update.buildFile === "string" && update.buildFile.length > 0), `configured is ${String(state.configured)}`);
+      if (!updatesSetUp) {
+        await refused("any feed while no update server is set up", update.fetchText(`${published}windows-alpha/windows-update.json`));
+        expectTrue(state.configured === false, "an installed, stamped build with no update server says updates are set up");
+      }
     },
   },
   {
