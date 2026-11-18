@@ -1,3 +1,5 @@
+> Archived from Ardia (https://github.com/ardia-browser/ardia) when Nilla forked it on 2026-11-18. Issue and pull request numbers here are Ardia's.
+
 # Field journeys (real-user timing)
 
 What the app measures on users' Macs for the four sprint journeys ([sprint.md](sprint.md)), and the ClickHouse queries

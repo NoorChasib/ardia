@@ -1,3 +1,5 @@
+> Archived from Ardia (https://github.com/ardia-browser/ardia) when Nilla forked it on 2026-11-18. Issue and pull request numbers here are Ardia's.
+
 # Releasing
 
 Releases are GitHub releases of `mantrakp04/ardia`, tagged `v<version>`, on two channels: **stable** (`0.2.37`, a full

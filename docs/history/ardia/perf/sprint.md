@@ -1,3 +1,5 @@
+> Archived from Ardia (https://github.com/ardia-browser/ardia) when Nilla forked it on 2026-11-18. Issue and pull request numbers here are Ardia's.
+
 # Speed sprint (October 2026)
 
 Modeled on claude.dev's "How we made claude.ai 3x faster in two weeks": pick the journeys people spend their time in,

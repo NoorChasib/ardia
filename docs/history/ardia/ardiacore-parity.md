@@ -1,3 +1,5 @@
+> Archived from Ardia (https://github.com/ardia-browser/ardia) when Nilla forked it on 2026-11-18. Issue and pull request numbers here are Ardia's.
+
 # ArdiaCore parity: the app's engine API on ArdiaCore
 
 History: the CEF → ArdiaCore cutover ledger (2026-10-01 to 0.2.31); how to run the acceptance checks today is in `docs/testing.md` › "ArdiaCore acceptance".

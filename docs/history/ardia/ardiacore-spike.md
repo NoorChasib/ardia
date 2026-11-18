@@ -1,3 +1,5 @@
+> Archived from Ardia (https://github.com/ardia-browser/ardia) when Nilla forked it on 2026-11-18. Issue and pull request numbers here are Ardia's.
+
 # ArdiaCore spike: our own Chromium layer instead of CEF
 
 Spike for the 2026-10-01 architecture review's recommendation 5 (in git history: `git show 2713787d:docs/architecture-review.md`),
