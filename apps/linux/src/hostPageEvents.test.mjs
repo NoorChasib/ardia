@@ -239,3 +239,45 @@ test("snapshot reasons are validated", () => {
   assert.equal(h.send(control(2, "1", { action: "snapshot", reason: "restore", events: [] })), true);
   assert.equal(h.send(control(3, "1", { action: "snapshot", reason: "document", events: [] })), true);
 });
+
+test("a document committed after a discard wakes the tab, so its hover card reads memory again", async () => {
+  const { noteDiscarded, noteReady } = await import("../../browser/src/state/tabs/tabLifecycle.ts");
+  const { isSleeping } = await import("../../browser/src/state/tabs/sleepingTabs.ts");
+  const { tabMemoryReading } = await import("../../browser/src/state/tabs/tabMemory.ts");
+  const h = setup();
+  let readies = 0;
+  h.props.onDiscarded = () => noteDiscarded(h.tab);
+  h.props.onReady = () => { readies++; noteReady(h.tab); };
+  const card = () => tabMemoryReading({ at: Date.now(), tasks: [{ type: "renderer", pid: 41, memory: 64e6, tabIds: [h.tab] }], reading: false, failed: false }, isSleeping(h.tab), h.tab, Date.now()).memory.kind;
+  h.receiver.install(snapshot());
+  h.send(message(2, "discarded", { url: navigation.url }));
+  assert.equal(card(), "asleep");
+  h.send(control(3, "1", { reason: "provisional" }));
+  h.send(control(4, "1", { action: "snapshot", reason: "restore", events: [] }));
+  assert.equal(h.send(control(5, "2", { bindingGeneration: "2" })), false);
+  assert.equal(card(), "asleep");
+  assert.equal(readies, 0);
+  h.send(control(6, "2"));
+  h.send(control(7, "2", { action: "snapshot", reason: "document", events: [event("navigation", navigation)] }));
+  assert.equal(readies, 1);
+  assert.equal(card(), "exact");
+  h.send(control(8, "3"));
+  assert.equal(readies, 1);
+  h.send(message(9, "discarded", { url: navigation.url }, { documentEpoch: "3" }));
+  h.send(message(10, "ready", {}, { documentEpoch: "3" }));
+  assert.equal(card(), "exact");
+  h.send(control(11, "4"));
+  assert.equal(readies, 2);
+});
+
+test("a tab mounted asleep wakes on its first committed document", async () => {
+  const { noteDiscarded, noteReady } = await import("../../browser/src/state/tabs/tabLifecycle.ts");
+  const { isSleeping } = await import("../../browser/src/state/tabs/sleepingTabs.ts");
+  const h = setup();
+  h.props.onDiscarded = () => noteDiscarded(h.tab);
+  h.props.onReady = () => noteReady(h.tab);
+  h.receiver.install(snapshot(1, [event("navigation", navigation), event("discarded", { url: navigation.url })]));
+  assert.equal(isSleeping(h.tab), true);
+  h.send(control(2, "2"));
+  assert.equal(isSleeping(h.tab), false);
+});

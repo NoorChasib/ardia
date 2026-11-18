@@ -1,7 +1,7 @@
 import { Easing } from "react-native";
 import { useTheme } from "../ui/theme";
 import { duration } from "../ui/motion";
-import { font, ink, radius, shadow, sidebarFont, sidebarIconSize, sidebarPoints, space, withAlpha, type ShadowLevel } from "../ui/tokens";
+import { font, hairline, ink, radius, shadow, sidebarFont, sidebarIconSize, sidebarPoints, space, withAlpha, type ShadowLevel } from "../ui/tokens";
 import type { GroupColor } from "../../state/browser/types";
 import { GROUP_COLORS } from "../../state/groups/tokens";
 import { mix } from "../../lib/color";
@@ -123,6 +123,18 @@ export const TAB_SWITCHER = {
   onPage: "#000000A6",
   title: "#FFFFFF",
 } as const;
+
+export const TAB_PREVIEW = {
+  maxHeight: 152,
+  gap: space.m,
+  get radius() {
+    return radius.tile;
+  },
+  ring: hairline.ring,
+  pageFill: TAB_SWITCHER.pageFill,
+} as const;
+
+export const HOVER_CARD_WINDOW_MARGIN = 8;
 
 export const SELECTED_ROW_SHADOW_OFFSET: [number, number] = [0, 0.5];
 

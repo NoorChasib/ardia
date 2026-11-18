@@ -4,6 +4,8 @@ import { useTab } from "../../state/browser/hooks";
 import { stripChipEntered, stripChipGone, stripChipLeft, stripChipPressed, useStripHover } from "../../state/tabs/stripHover";
 import { HoverCard as HoverPanel, useOffstage } from "../ui";
 import { TabCardSummary } from "../sidebar/TabCardSummary";
+import { TabMemoryLine } from "../sidebar/TabMemoryLine";
+import { TabCardPreview } from "../sidebar/TabCardPreview";
 import { useHoverCardMotion, useHoverCardPlacement } from "../sidebar/hoverMotion";
 import type { ChipHover } from "./reachableHover";
 import { STRIP_CARD_GAP, STRIP_CARD_MARGIN, STRIP_CARD_WIDTH } from "./tokens";
@@ -47,17 +49,19 @@ export function StripHoverCard({ windowId, stripBottom, windowWidth }: { windowI
       onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
       style={[{ position: "absolute", left, top: stripBottom + STRIP_CARD_GAP, width: STRIP_CARD_WIDTH }, motion.style]}
     >
-      <StripCardContent tabId={drawn.tabId} />
+      <StripCardContent windowId={windowId} tabId={drawn.tabId} />
     </Animated.View>
   );
 }
 
-function StripCardContent({ tabId }: { tabId: string }) {
+function StripCardContent({ windowId, tabId }: { windowId: string; tabId: string }) {
   const tab = useTab(tabId);
   if (!tab) return null;
   return (
     <HoverPanel width={STRIP_CARD_WIDTH} pad="ml">
       <TabCardSummary tab={tab} />
+      <TabMemoryLine tabId={tabId} />
+      <TabCardPreview windowId={windowId} tabId={tabId} />
     </HoverPanel>
   );
 }

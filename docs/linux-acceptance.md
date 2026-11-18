@@ -71,6 +71,7 @@ Requirements: `openssl` and Node 22 or newer (for the built-in WebSocket client)
 | F26 | #36 | Unsupported platform settings are hidden and startup has no backend rejections |
 | F27 | #37 | Onboarding starts once on a fresh profile and app services run once per launch |
 | F28 | #2341 | Sidebar rows and Top Apps tiles reorder by drag in a space the window switched to, not only the one it opened in |
+| F29 | — | Settings › Tabs › Close button position: the hover ✕ sits 6 pt from the row's end on the Right and over the favicon on the Left (tab, active, pinned, group member, split pane, live item and PR rows), titles don't move, Back to Pinned URL moves trailing beside a spinner or badge, renaming shows none, both sides close, unload and hide, at widths 160 and 400 with the sidebar on either side, and the choice survives a relaunch |
 
 Each scenario's report lists its manual steps, such as touchpad pinch zoom, Web Store installs, popup placement and
 onboarding by hand.

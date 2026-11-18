@@ -372,3 +372,56 @@ test("the dock jumps when it can't animate or Arc docks from an open peek, Arc h
   assert.equal(mv({ open: false }), "slide");
   assert.equal(mv({ peekOut: true }), "slide");
 });
+
+const { duration: motionDuration } = await import("../ui/motion.ts");
+const SPEEDS = ["faster", "default", "slower"];
+const springPeak = (s) => {
+  let peak = 0;
+  let at = 0;
+  for (let ms = 0; ms <= 600; ms++) {
+    const x = springAt(ms / 1000, s);
+    if (x > peak) [peak, at] = [x, ms];
+  }
+  return { peak, at };
+};
+const springSettledMs = (s, within = 0.02) => {
+  let last = 0;
+  for (let ms = 0; ms <= 600; ms++) if (Math.abs(springAt(ms / 1000, s) - 1) > within) last = ms;
+  return last + 1;
+};
+const fullyOutMs = (speed, arc) => {
+  const r = dm.SIDEBAR_REVEAL[speed];
+  return r.waitMs + (arc ? springSettledMs(r.arcSpring) : r.slideMs);
+};
+
+test("the reveal waits only on Slower, and never for a peek that is already out or sliding away", () => {
+  assert.equal(dm.revealWaitMs("faster", false), 0);
+  assert.equal(dm.revealWaitMs("default", false), 0);
+  assert.equal(dm.revealWaitMs("slower", false), motionDuration.slow);
+  for (const speed of SPEEDS) assert.equal(dm.revealWaitMs(speed, true), 0, speed);
+  assert.ok(dm.SIDEBAR_REVEAL.slower.waitMs < 350, "starts before macOS lets a pushed pointer through to the next display (0.35 s)");
+});
+
+test("Default reveal speed is today's peek: no wait, the 150 ms slide and Arc's measured spring", () => {
+  assert.deepEqual(dm.SIDEBAR_REVEAL.default, { waitMs: 0, slideMs: 150, arcSpring: dm.ARC_PEEK_SPRING });
+  assert.equal(dm.SIDEBAR_REVEAL.default.slideMs, motionDuration.base);
+  assert.deepEqual(dm.ARC_PEEK_SPRING, { response: 0.18, damping: 0.8 });
+  assert.equal(dm.SIDEBAR_REVEAL.slower.slideMs, dm.SIDEBAR_REVEAL.default.slideMs, "Slower waits, then slides like Default");
+  assert.equal(dm.SIDEBAR_REVEAL.slower.arcSpring, dm.SIDEBAR_REVEAL.default.arcSpring);
+});
+
+test("Faster is out sooner than Default and Slower later, in Dia's slide and Arc's spring", () => {
+  for (const arc of [false, true]) {
+    const [faster, normal, slower] = SPEEDS.map((speed) => fullyOutMs(speed, arc));
+    assert.ok(faster < normal && normal < slower, `${arc ? "Arc" : "Dia"}: ${faster} < ${normal} < ${slower} ms`);
+    assert.ok(faster <= normal * 0.7, `${arc ? "Arc" : "Dia"}: Faster takes ${faster} ms against ${normal}, a third less`);
+  }
+});
+
+test("Faster's spring peaks sooner without overshooting more than Arc's", () => {
+  const faster = springPeak(dm.SIDEBAR_REVEAL.faster.arcSpring);
+  const normal = springPeak(dm.SIDEBAR_REVEAL.default.arcSpring);
+  assert.ok(faster.peak <= normal.peak + 1e-9, `${faster.peak} vs ${normal.peak}`);
+  assert.ok(faster.at < normal.at, `${faster.at} vs ${normal.at} ms`);
+  assert.equal(dm.SIDEBAR_REVEAL.faster.arcSpring.damping, dm.ARC_PEEK_SPRING.damping);
+});

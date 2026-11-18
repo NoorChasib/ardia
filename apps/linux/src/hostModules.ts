@@ -8,6 +8,7 @@ import { syncModuleMethod } from "./hostSync.ts";
 import { linuxSystemMethod } from "./hostFiles.ts";
 import { linuxModuleMethod } from "./hostSystem.ts";
 import { linuxShellMethod, watchSidebarEdgeBesideNativeLeftEdge } from "./shellMethods.ts";
+import { watchingRevealBand } from "./sidebarRevealBand.ts";
 import { appModuleFallback } from "./appModuleFallbacks.ts";
 import { cliModuleMethod } from "./hostCli.ts";
 import { configModuleMethod } from "./hostConfig.ts";
@@ -43,7 +44,7 @@ export const reachesNativeHostUnchecked = (resolved: unknown) => typeof resolved
 export function resolveHostModule(host: ArdiaHost, name: string, method: string): unknown {
   if (name === "ArdiaApp" && method === "launchConfig") return () => hostLaunchConfig(host);
   if (name === "ArdiaShell" && method === "watchSidebarEdge" && !hostSupports("ArdiaShell.watchSidebarEdge", host) && hostSupports("ArdiaShell.watchLeftEdge", host)) {
-    return watchSidebarEdgeBesideNativeLeftEdge(host);
+    return watchingRevealBand(watchSidebarEdgeBesideNativeLeftEdge(host));
   }
   if (name === "ArdiaShell" && !hostSupports(`${name}.${method}`, host)) {
     const local = linuxShellMethod(method, host);
@@ -95,7 +96,8 @@ export function resolveHostModule(host: ArdiaHost, name: string, method: string)
   if (constants && method in constants) return constants[method];
   const defaults = synchronousDefaults[name];
   if (defaults && method in defaults) return defaults[method];
-  const fallthrough = hostModuleMethod(name, method, host);
-  nativeFallthroughs.add(fallthrough);
+  const native = hostModuleMethod(name, method, host);
+  const fallthrough = name === "ArdiaShell" && method === "watchSidebarEdge" ? watchingRevealBand(native) : native;
+  nativeFallthroughs.add(fallthrough as object);
   return fallthrough;
 }

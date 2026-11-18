@@ -98,6 +98,9 @@ export function startDevHarness() {
     get reveal(): typeof import("../../state/sidebar/reveal") {
       return require("../../state/sidebar/reveal");
     },
+    get tabMemory(): typeof import("../../state/tabs/tabMemory") {
+      return require("../../state/tabs/tabMemory");
+    },
     get tileFolders(): typeof import("../../state/pins/tileFolders") & typeof import("../../state/sidebar/tileFolderUi") {
       return { ...require("../../state/pins/tileFolders"), ...require("../../state/sidebar/tileFolderUi") };
     },
@@ -106,6 +109,9 @@ export function startDevHarness() {
     },
     get sidebarHover(): typeof import("../../state/sidebar/hover") & typeof import("../sidebar/hoverMotion") {
       return { ...require("../../state/sidebar/hover"), ...require("../sidebar/hoverMotion") };
+    },
+    get tabPictures(): typeof import("../../state/tabs/tabPictures") {
+      return require("../../state/tabs/tabPictures");
     },
     get stripHover(): typeof import("../../state/tabs/stripHover") {
       return require("../../state/tabs/stripHover");

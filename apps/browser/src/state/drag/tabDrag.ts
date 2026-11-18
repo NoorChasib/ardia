@@ -1,52 +1,18 @@
 import { dragPreview, windowFrame, type DragPreviewShape } from "../../platform/windows";
 import { hapticTick } from "../../platform/haptics";
-import { create } from "zustand";
 import { focus } from "../browser/actions";
 import { lastPicture, startTabPictures } from "../tabs/tabPictures";
 import { webviews } from "../../platform/webviews";
 import { useBrowser } from "../browser/store";
-import type { Frame } from "../browser/types";
 import { tabTitle } from "../browser/model";
-import { splitOf, type SplitSide, splitTabIdsOf, splitViewAvailable } from "../splits/splits";
+import { splitOf, splitTabIdsOf, splitViewAvailable } from "../splits/splits";
 import { dropTabIntoSplit } from "../splits/actions";
 import { dropTabsOutside, rootPointIn, screenPoint, windowUnder } from "./windowDrop";
 import { dropTabsOnBar, followTabDragOnBar } from "../bookmarks/barDrag";
+import { TAB_DRAG_IDLE, useTabDrag, type DropTarget, type TabDragging, type TabDragPicture, type TabDragSession } from "./tabDragStore";
 
-export type DropTarget = { tabId: string; side: SplitSide };
-type Insert = { windowId: string; beforeId: string | null };
-type Picture = { chip: () => [number, number, number, number]; grab: [number, number] };
-type TabDragSession = { seq: number; liveFrame: Frame | null; pointer: [number, number]; picture: Picture | null; sentShape: DragPreviewShape };
+export { useTabDrag, type DropTarget, type ExternalDragging, type TabDrag, type TabDragging } from "./tabDragStore";
 
-export type TabDragging = {
-  phase: "tab";
-  tabId: string | null;
-  tabIds: string[];
-  windowId: string;
-  x: number;
-  y: number;
-  lifted: boolean | null;
-  onPage: boolean;
-  target: DropTarget | null;
-  outside: boolean;
-  overWindow: string | null;
-  overPoint: [number, number] | null;
-  insert: Insert | null;
-  session: TabDragSession;
-};
-
-export type ExternalDragging = {
-  phase: "external";
-  owner: { windowId: string; token: number };
-  overWindow: string;
-  overPoint: [number, number];
-  insert: Insert | null;
-};
-
-export type TabDrag = { phase: "idle" } | TabDragging | ExternalDragging;
-
-const IDLE: TabDrag = { phase: "idle" };
-
-export const useTabDrag = create<TabDrag>()(() => IDLE);
 
 useTabDrag.subscribe(followTabDragOnBar);
 
@@ -72,7 +38,7 @@ export function beginTabDrag(tabId: string | null, tabIds: string[] = tabId ? [t
   const seq = ++dragSeq;
   const windowId = useBrowser.getState().tabs[tabIds[0] ?? ""]?.windowId;
   if (!windowId) {
-    useTabDrag.setState(IDLE, true);
+    useTabDrag.setState(TAB_DRAG_IDLE, true);
     return seq;
   }
   const session: TabDragSession = { seq, liveFrame: null, pointer: [-1, -1], picture: null, sentShape: "hidden" };
@@ -146,7 +112,7 @@ export function setDragPicture(drag: number, chip: [number, number, number, numb
   syncPreview();
 }
 
-function takePicture({ session, windowId, tabId }: TabDragging, { chip, grab }: Picture) {
+function takePicture({ session, windowId, tabId }: TabDragging, { chip, grab }: TabDragPicture) {
   session.picture = null;
   previewShown = true;
   const rect = chip();
@@ -190,7 +156,7 @@ export function setOnPage(onPage: boolean) {
 export function endTabDrag(): boolean {
   const drag = tabDragState();
   if (!drag) {
-    useTabDrag.setState(IDLE, true);
+    useTabDrag.setState(TAB_DRAG_IDLE, true);
     if (previewShown) dragPreview.end();
     return false;
   }
@@ -200,7 +166,7 @@ export function endTabDrag(): boolean {
   const insertBefore = resolveInsert && overPoint ? resolveInsert(overPoint) : drag.insert?.windowId === overWindow ? drag.insert?.beforeId : undefined;
   const target = !splitViewAvailable ? null : resolveTarget ? resolveTarget(x, y, drag.target, outside) : drag.target;
   const onPage = !outside && !!(drag.lifted ?? drag.onPage);
-  useTabDrag.setState(IDLE, true);
+  useTabDrag.setState(TAB_DRAG_IDLE, true);
   const shown = previewShown;
   if (!outside && dropTabsOnBar(tabIds, windowId, x, y)) {
     if (shown) dragPreview.end();
@@ -224,7 +190,7 @@ export function endTabDrag(): boolean {
 }
 
 export function cancelTabDrag() {
-  useTabDrag.setState(IDLE, true);
+  useTabDrag.setState(TAB_DRAG_IDLE, true);
   if (previewShown) dragPreview.cancel();
   previewShown = false;
 }
@@ -247,6 +213,6 @@ export function endExternalDrag(windowId: string, point: [number, number] | null
   if (!ownedExternal(windowId, token)) return undefined;
   const resolve = point ? insertResolvers.get(windowId) : undefined;
   const beforeId = resolve && point ? resolve(point) : undefined;
-  useTabDrag.setState(IDLE, true);
+  useTabDrag.setState(TAB_DRAG_IDLE, true);
   return beforeId;
 }

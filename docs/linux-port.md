@@ -444,6 +444,39 @@ fake device, "Ardia Test Sink", and records routes without sending anything anyw
 - **Proof.** `pnpm --filter @ardia/linux test:graph` asserts that the Linux production module graph loads nothing
   from `packages/demo` and only the Linux adapters it means to.
 
+## Local Linux setup
+
+To work on the UI you don't need a Chromium tree: run the shared UI on a prebuilt engine, as CI does.
+
+```bash
+sudo apt-get install clang pkg-config patch fakeroot xz-utils unzip curl util-linux openssl dbus dbus-x11 \
+  libnss3-tools gnome-keyring python3-gi gir1.2-glib-2.0 libglib2.0-dev libgtk-3-0t64 libsecret-1-0
+pnpm install --frozen-lockfile
+scripts/linux/fetch-engine.sh --nearest
+pnpm --filter @ardia/linux build
+"$(scripts/linux/fetch-engine.sh --nearest)/chrome" --ardia-ui-dir="$PWD/apps/linux/dist" \
+  --user-data-dir="$(mktemp -d)" --remote-debugging-port=9222
+```
+
+- **Toolchain.** Node 24 (`.nvmrc`) and the pnpm in `package.json`'s `packageManager`.
+- **Engine.** `fetch-engine.sh` prints the engine directory, under
+  `apps/browser/build-ardiacore/prebuilt-linux-x86_64/`. Without `--nearest` it needs an engine published for this
+  exact engine key, which most commits don't have ([linux-ci.md](linux-ci.md) › Nearest engine). It refuses to run
+  while `engine/` has uncommitted changes.
+- **Sandbox.** The fetched `chrome` has no setuid sandbox helper, so its sandbox needs user namespaces. On Ubuntu 24.04
+  and later, AppArmor denies them to programs without a profile (`kernel.apparmor_restrict_unprivileged_userns=1`).
+  Grant them to the fetched engine the way `install.sh` does for an installed one: copy `scripts/linux/ardia.apparmor`
+  to `/etc/apparmor.d/ardia-dev`, rename its profile to `ardia-dev` so it can't collide with an installed Ardia's,
+  replace `/usr/lib/ardia/chrome` with the engine's `chrome` path (AppArmor globs such as
+  `/home/*/ardia/apps/browser/build-ardiacore/prebuilt-linux-x86_64/*/chrome` work), and load it with
+  `sudo apparmor_parser -r`. Don't run with `--no-sandbox`.
+- **Checks.** `scripts/linux/ci-checks.sh` ([Tests](#tests)) also compiles the engine fixtures under ASan and UBSan
+  and against OpenSSL and SQLite. On Ubuntu that needs `libclang-rt-<clang major>-dev libssl-dev libsqlite3-dev` too.
+- **Headless.** Under Xvfb, add `--ozone-platform=x11 --use-gl=angle --use-angle=swiftshader
+  --enable-unsafe-swiftshader`. The shell is the `chrome://ardia/` CDP target; `window.ardiaLinux.store` is the
+  shared store and `window.__ardiaHost` the bridge ([linux-acceptance.md](linux-acceptance.md) › Hooks the scenarios
+  use).
+
 ## Building on Linux
 
 Use a dedicated build root, apart from any Mac Chromium tree. `01-sync.sh` is for a fresh tree and refuses to run
@@ -769,7 +802,22 @@ pnpm --filter @ardia/linux acceptance -- <extracted>/ardia/bin/ardia
   - The zone is 8 px from the client's edge, plus anything of the window beyond it (the resize border), up to
     24 px. The right edge mirrors the left pixel for pixel.
   - While the peek is out, the pointer counts as over anywhere in its column, 5 + sidebar width + 24 px wide, over the
-    page too. Dismissal keeps the shared 120 ms delay.
+    page too. Dismissal keeps the shared 200 ms delay.
+  - Settings › Tabs › Sidebar reveal speed acts on the shared side, after the native report: Faster and Default open
+    at once, Slower waits 250 ms for the pointer to rest on the 3 px edge. The native zone is 8 px wide and reports
+    only transitions, so while Slower's wait runs the shared UI calls `watchSidebarEdge` again every 40 ms for a fresh
+    report with the pointer, and opens only if the pointer is still on the 3 px band (`useSidebarEdgeWatch.ts`);
+    stepping back to x 5 ends the wait. The asking stops once the peek opens or waits for the app to come forward, and
+    at most 1 s (25 asks) after a wait ends with the pointer still inside the 8 px zone. Default and Faster never ask.
+    On the leave-the-window path the 250 ms runs after the 90 ms settle, about 340 ms in all.
+  - A return to the edge after the asking stops comes in through the dock's 3 px strip where the strip is live (a framed
+    window). Borderless and full screen windows, where the strip would sit over the page, get the reveal band instead
+    (`apps/linux/src/sidebarRevealBand.ts`). While the native zone reports the pointer inside it but off the 3 px edge,
+    the band is a 3 px input region at the edge. When the pointer reaches it, the band sends one exact `sidebarEdge`
+    report at the edge, with no native call and no timer. It closes on that report, when the pointer leaves the zone,
+    and when the watch stops or widens. It works at every speed, so a slow approach that pauses 4 to 7 px from the edge
+    now opens the peek too; before, nothing was reported between 8 px and the edge. Telemetry:
+    `usage_counts.sidebar_peek_edge_band_returns`.
   - Wayland has no global pointer, so the 24 pt reach macOS gives outside the window becomes this: when the pointer
     leaves through the sidebar's edge of the active window, the peek opens after 90 ms. If focus moves first
     (Hyprland's `follow_mouse` focusing the neighbouring window), it doesn't open. A peek that is already out stays out
@@ -1797,7 +1845,9 @@ These were open at the time of the PR.
   (`webView.setCommandScrollZoom`), Keep new-tab links inside a Little Ardia window
   (`webView.setLittleArdiaOpensNewTabLinks`), Open a Peek window when clicking on links to other sites
   (`webView.setPeekOtherSiteTabs`), Scroll bars (`ArdiaSystem.setThinScrollBars`), all four advertised by the
-  current host, Haptic feedback when reordering tabs (`ArdiaSystem.hapticTick`), and the two rows
+  current host, Haptic feedback when reordering tabs (`ArdiaSystem.hapticTick`), Show page preview in tab hover menu
+  (`tab.capturePicture`, which no engine serves yet), Show memory use in tab hover menu (`engine.tasks`, which every
+  pinned engine serves), and the two rows
   about links from other apps, Open links from other apps in Little Ardia and Put links from other apps first
   (`ArdiaShell.onOpenURLs`, which the host advertises now that it sends that event; an older engine leaves such
   links to Chromium, which opens them as tabs). The command bar's Dictate button follows `ArdiaShell.startDictation`
@@ -1806,6 +1856,14 @@ These were open at the time of the PR.
   `settingsForm.tsx`). Calendar › Show alerts is hidden until a host posts Ardia's own notifications
   (`ArdiaApp.postNotification`), and the commands that need WebKit or AppleScript (Open Page in WebKit, Allow
   JavaScript from Apple Events) have no menu entry or shortcut row.
+- **Tab pictures.** The web view handle answers `capturePicture` with null and makes no host call unless the host
+  advertises `tab.capturePicture` (`hostTabHandle` in `shims/web/HostWebView.tsx`), so the tab switcher's pictures,
+  the pin handoff and the tab drag preview cost no IPC on Linux (before, every tab switch sent one rejected
+  `tab.command`). The web view module also tells the shared UI that pictures can't be taken, so a synced-on Show
+  page preview in tab hover menu schedules no load capture, counts no misses and doesn't move the hover card up for
+  a preview that can't render. Both light up by themselves once an engine serves the command. The hover card's
+  memory line needs `engine.tasks` at run time too (`setTabMemoryAttributed` from `main.tsx`); the engine names
+  only tabs of the same window in it, so a sharer in another window reads as "shared with other pages".
 - **Session migrations.** The saved Linux session carries the shared `version`. `linuxSessionShape` runs the shared
   `SESSION_MIGRATIONS` from that version on the shape the Mac saves (windows, tabs, groups and splits as lists), and a
   session without the stamp counts as version 9, the last one Linux's own shape checks cover. A migration that changes

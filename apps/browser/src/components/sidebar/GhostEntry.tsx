@@ -21,7 +21,7 @@ import { groupBoxAtRest, groupSurface, SIDEBAR_TYPE, TAB_ROW, TABULAR_NUMS, useS
 import { SidebarRowLabel } from "./SidebarRow";
 import { entryKey, parseEntry } from "../../state/sidebar/entryKey";
 
-type TabShot = { kind: "tab"; key: string; title: string; url: string; favicon?: string | null; icon?: string | null; textOnly: boolean; profileId: string; uri: string | null; template: boolean; sound: "muted" | "playing" | null; hovered: boolean };
+type TabShot = { kind: "tab"; key: string; title: string; url: string; favicon?: string | null; icon?: string | null; textOnly: boolean; profileId: string; uri: string | null; template: boolean; sound: "muted" | "playing" | null; hovered: boolean; closeLeft: boolean };
 type SplitShot = { kind: "split"; key: string; panes: TabShot[] };
 type GroupShot = {
   kind: "group";
@@ -53,6 +53,7 @@ function tabShot(s: BrowserState, tabId: string, hovered: boolean): TabShot | nu
     profileId: tab.profileId,
     sound: isSilenced(s, tab) ? "muted" : s.live[tabId]?.playingAudio ? "playing" : null,
     hovered,
+    closeLeft: s.settings.tabCloseButtonSide === "left",
   };
 }
 
@@ -93,7 +94,14 @@ function ghostIcon(shot: TabShot, theme: ReturnType<typeof useTheme>) {
   return shot.url ? <FaviconFallback url={shot.url} /> : <NewTabIcon />;
 }
 
+function ghostClose(theme: ReturnType<typeof useTheme>, overIcon: boolean) {
+  return <Symbol name="xmark" size={10} weight="semibold" color={theme.icon} style={{ width: TAB_ROW.closeSlot, height: TAB_ROW.closeSlot, marginHorizontal: overIcon ? -(TAB_ROW.closeSlot - GHOST_ICON) / 2 : 0 }} />;
+}
+
+const GHOST_ICON = 16;
+
 function tabGhost(shot: TabShot, theme: ReturnType<typeof useTheme>, top = 0) {
+  const leadingClose = shot.hovered && shot.closeLeft;
   return (
     <View
       key={shot.key}
@@ -108,10 +116,10 @@ function tabGhost(shot: TabShot, theme: ReturnType<typeof useTheme>, top = 0) {
         backgroundColor: shot.hovered ? theme.tabHover : undefined,
       }}
     >
-      {shot.textOnly ? null : ghostIcon(shot, theme)}
+      {leadingClose ? ghostClose(theme, !shot.textOnly) : shot.textOnly ? null : ghostIcon(shot, theme)}
       {shot.sound ? <Symbol name={shot.sound === "muted" ? "speaker.slash" : "speaker.wave.2"} size={12} color={theme.textTab} style={{ width: 18, height: 16, marginLeft: space.s }} /> : null}
       <SidebarRowLabel text={shot.title} color={theme.textTab} />
-      {shot.hovered ? <Symbol name="xmark" size={10} weight="semibold" color={theme.icon} style={{ width: TAB_ROW.closeSlot, height: TAB_ROW.closeSlot }} /> : null}
+      {shot.hovered && !shot.closeLeft ? ghostClose(theme, false) : null}
     </View>
   );
 }

@@ -2,12 +2,13 @@ import { createContext, useContext, useMemo } from "react";
 import { useSelectedTabGlowSetting } from "../../state/app/theme";
 import { useShortcutHint } from "../../state/commands/commandShortcuts";
 import { DEFAULT_SETTINGS } from "../../state/settings/settings";
+import { useSettings } from "../../state/browser/hooks";
 import { useMinimalism } from "../../state/windows/layout";
 import { selectedTabGlow, useTheme, type SelectedTabGlowLevel } from "../ui/theme";
 
-export type SidebarRowLook = { glow: SelectedTabGlowLevel; backToPinHint: string | undefined; closeTabHint: string | undefined; quiet: boolean };
+export type SidebarRowLook = { glow: SelectedTabGlowLevel; backToPinHint: string | undefined; closeTabHint: string | undefined; quiet: boolean; closeLeft: boolean };
 
-export const SidebarRowLookContext = createContext<SidebarRowLook>({ glow: DEFAULT_SETTINGS.selectedTabGlow, backToPinHint: undefined, closeTabHint: undefined, quiet: false });
+export const SidebarRowLookContext = createContext<SidebarRowLook>({ glow: DEFAULT_SETTINGS.selectedTabGlow, backToPinHint: undefined, closeTabHint: undefined, quiet: false, closeLeft: DEFAULT_SETTINGS.tabCloseButtonSide === "left" });
 
 export function useSidebarRowLookSource(): SidebarRowLook {
   const quiet = useMinimalism();
@@ -15,7 +16,8 @@ export function useSidebarRowLookSource(): SidebarRowLook {
   const glow = quiet ? "off" : chosenGlow;
   const backToPinHint = useShortcutHint("returnToPinnedUrl");
   const closeTabHint = useShortcutHint("closeTab");
-  return useMemo(() => ({ glow, backToPinHint, closeTabHint, quiet }), [glow, backToPinHint, closeTabHint, quiet]);
+  const closeLeft = useSettings((s) => s.tabCloseButtonSide === "left");
+  return useMemo(() => ({ glow, backToPinHint, closeTabHint, quiet, closeLeft }), [glow, backToPinHint, closeTabHint, quiet, closeLeft]);
 }
 
 export const useQuietRows = () => useContext(SidebarRowLookContext).quiet;

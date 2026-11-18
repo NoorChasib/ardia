@@ -9,6 +9,7 @@ import { reloadRecentTabs } from "./recentTabWarmup";
 import { everySlowly } from "../../platform/slowTimers";
 import { webviews } from "../../platform/webviews";
 import { useLifecycle } from "./sleepingTabs";
+import { forgetTabMemory } from "./tabMemory";
 import { startMemorySaver } from "./memorySaver";
 import { noteTabGone, noteTabWoke, startLoadedTabBudget } from "./loadedTabBudget";
 import { focusedWindowOf } from "../windows/ui";
@@ -41,6 +42,7 @@ export function noteDiscarded(tabId: string, reason: string | null = null) {
 export function noteGone(tabId: string) {
   noteTabGone(tabId);
   forget(tabId);
+  if (!store().tabs[tabId]) forgetTabMemory(tabId);
 }
 
 function forget(tabId: string) {

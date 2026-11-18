@@ -80,7 +80,9 @@ export const SETTING_SPECS = {
   showSelectionSearch: flag(true, SYNCED),
   tabLayout: oneOf(["sidebar", "top"], "sidebar", SYNCED),
   sidebarSide: oneOf(["left", "right"], "left", SYNCED),
+  tabCloseButtonSide: oneOf(["left", "right"], "right", SYNCED),
   autoHideTabs: flag(false, SYNCED),
+  sidebarRevealSpeed: oneOf(["faster", "default", "slower"], "default", SYNCED),
   hideToolbarWhileScrolling: flag(true, SYNCED),
   newTabPosition: oneOf(["top", "bottom", "nextToCurrent"], "bottom", SYNCED),
   newTabButtonPosition: oneOf(["top", "bottom"], "bottom", SYNCED),
@@ -109,6 +111,8 @@ export const SETTING_SPECS = {
   showTopAppBadges: flag(false, SYNCED),
   showTabHoverMenu: flag(true, SYNCED),
   showFullUrlInTabHoverMenu: flag(false, SYNCED),
+  showPagePreviewInTabHoverMenu: flag(false, SYNCED),
+  showMemoryInTabHoverMenu: flag(false, SYNCED),
   closedTopAppTiles: flag(true, SYNCED), topAppFolders: flag(false, SYNCED),
   unreadHiddenSites: shaped<string[]>([], isStringList, STRING_LIST, SYNCED),
   neverTranslateSites: shaped<Record<string, string[]>>({}, (v) => isRecordOf(v, isStringList), recordOf(STRING_LIST)),
@@ -188,6 +192,7 @@ export type BatterySaverWhen = Settings["batterySaverWhen"];
 export type PeekModifier = Settings["peekModifier"];
 export type PeekButtons = Settings["peekButtons"];
 export type SplitLinkModifier = Settings["splitLinkModifier"];
+export type SidebarRevealSpeed = Settings["sidebarRevealSpeed"];
 
 export const splitLinkModifierOf = (settings: Pick<Settings, "peekModifier" | "splitLinkModifier">): SplitLinkModifier =>
   settings.splitLinkModifier === "alt" && settings.peekModifier === "alt" ? "altShift" : settings.splitLinkModifier;

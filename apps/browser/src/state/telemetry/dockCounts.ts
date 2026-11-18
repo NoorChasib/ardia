@@ -7,8 +7,12 @@ const NONE = {
   sidebar_slides_past_target: 0,
   sidebar_page_full_screen_peeks: 0,
   sidebar_peek_reveals_held_back: 0,
+  sidebar_peek_reveal_waits: 0,
+  sidebar_peek_reveal_waits_abandoned: 0,
+  sidebar_peek_edge_band_returns: 0,
   sidebar_peek_resizes: 0,
   sidebar_peek_closes_while_resizing: 0,
+  sidebar_peek_tab_drag_holds: 0,
   sidebar_screen_edge_stops: 0,
   sidebar_screen_edge_pass_throughs: 0,
   sidebar_full_screen_peeks: 0,
@@ -26,11 +30,19 @@ export function noteSidebarSlide(pastTarget: boolean) {
 
 export const noteSidebarPeekRevealHeldBack = () => void counts.sidebar_peek_reveals_held_back++;
 
+export const noteSidebarPeekRevealWait = () => void counts.sidebar_peek_reveal_waits++;
+
+export const noteSidebarPeekRevealWaitAbandoned = () => void counts.sidebar_peek_reveal_waits_abandoned++;
+
+export const noteSidebarEdgeBandReturn = () => void counts.sidebar_peek_edge_band_returns++;
+
 export const notePageFullScreenPeek = () => void counts.sidebar_page_full_screen_peeks++;
 
 export const noteSidebarPeekResize = () => void counts.sidebar_peek_resizes++;
 
 export const noteSidebarPeekClosedWhileResizing = () => void counts.sidebar_peek_closes_while_resizing++;
+
+export const noteSidebarPeekTabDragHold = () => void counts.sidebar_peek_tab_drag_holds++;
 
 export const noteSidebarScreenEdge = (edge: ScreenEdge) => void counts[edge === "stopped" ? "sidebar_screen_edge_stops" : "sidebar_screen_edge_pass_throughs"]++;
 
