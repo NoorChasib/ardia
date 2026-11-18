@@ -64,40 +64,41 @@ function harness({ version = "0.2.45", body = JSON.stringify(LIST), status = 200
   return { updater, docs, seen };
 }
 
-test("Check Now finds the newest stable Linux release, offers its page and records the check", async () => {
+test("Check Now never reaches the engine's release list behind the Layer 1 gate, and says it couldn't check", async () => {
   takeUpdateCounts();
   const { updater, docs, seen } = harness();
   await updater.methods.checkForUpdates();
-  assert.deepEqual(seen.asked, [["0.2.46", "0.2.45"]]);
-  assert.deepEqual(seen.opened, [page("v0.2.46")]);
+  assert.equal(seen.requests, 0);
+  assert.deepEqual(seen.asked, []);
+  assert.deepEqual(seen.opened, []);
+  assert.deepEqual(seen.told, ["Ardia couldn't check for updates"]);
   const state = await updater.methods.updaterState();
-  assert.equal(state.configured, true);
-  assert.equal(state.lastCheck, 1_000);
-  assert.deepEqual(state.switchCheck, { phase: "found", channel: "stable", version: "0.2.46" });
+  assert.equal(state.switchCheck.phase, "failed");
   assert.equal(state.automaticDownloads, false);
-  assert.equal(JSON.parse(docs.get(UPDATE_PREFERENCES)).lastCheck, 1_000);
+  assert.equal(docs.has(UPDATE_PREFERENCES) ? JSON.parse(docs.get(UPDATE_PREFERENCES)).lastCheck : null, null);
   const counts = takeUpdateCounts();
   assert.equal(counts.update_checks_asked, 1);
-  assert.equal(counts.update_checks_found, 1);
-  assert.equal(counts.update_release_page_opens, 1);
+  assert.equal(counts.update_check_failures, 1);
 });
 
-test("a nightly build follows nightly releases, and switching channel checks again", async () => {
+test("a nightly build follows the nightly channel, and switching channel still never reaches the engine", async () => {
   const { updater, seen } = harness({ version: "0.2.47-nightly.2" });
   assert.equal((await updater.methods.updaterState()).channel, "nightly");
   await updater.methods.checkForUpdates();
-  assert.deepEqual(seen.asked.at(-1), ["0.2.47-nightly.3", "0.2.47-nightly.2"]);
   await updater.methods.setUpdateChannel("stable");
   assert.equal((await updater.methods.updaterState()).channel, "stable");
-  assert.deepEqual(seen.told, ["Ardia is up to date"], "0.2.46 is older than this nightly");
+  assert.equal(seen.requests, 0);
+  assert.deepEqual(seen.asked, []);
 });
 
-test("an automatic check offers a new release once and never opens a dialog", async () => {
+test("an automatic check offers nothing and never opens a dialog behind the Layer 1 gate", async () => {
   const { updater, seen } = harness();
   await updater.check(false);
   await updater.check(false);
-  assert.deepEqual(seen.offered, ["0.2.46"]);
+  assert.deepEqual(seen.offered, []);
   assert.deepEqual(seen.asked, []);
+  assert.deepEqual(seen.told, []);
+  assert.equal(seen.requests, 0);
 });
 
 test("a failed check says so when asked, counts the failure and shows failed in Settings", async () => {
@@ -141,23 +142,20 @@ test("turning automatic checks off or switching channel in the Settings window r
   await settings.updater.methods.setUpdateChannel("nightly");
   assert.equal((await browser.updater.methods.updaterState()).channel, "nightly");
   await browser.updater.methods.checkForUpdates();
-  assert.deepEqual(browser.seen.asked.at(-1), ["0.2.47-nightly.3", "0.2.45"]);
+  assert.equal(browser.seen.requests, 0);
   const saved = JSON.parse(disk.get(UPDATE_PREFERENCES));
-  assert.equal(saved.automaticChecks, false, "recording the check doesn't write the old switch back");
+  assert.equal(saved.automaticChecks, false, "a refused check doesn't write the old switch back");
   assert.equal(saved.channel, "nightly");
-  assert.equal(saved.lastCheck, 1_000);
 });
 
-test("the kill-switch file comes through the native host and every other fetch is left alone", async () => {
+test("the engine's kill-switch file is refused before the native host, and every other fetch is left alone", async () => {
   const calls = [];
   const host = { bootstrap: { capabilities: ["ArdiaShell.fetchKillSwitches"] }, invoke: async (method) => (calls.push(method), { status: 200, body: "{\"version\":1,\"switches\":{}}" }) };
   const original = async (input) => new Response(`original ${input}`);
   const fetchFn = linuxSwitchesFetch(host, original);
-  assert.equal(await (await fetchFn("https://ardia.dev/switches.json")).text(), "{\"version\":1,\"switches\":{}}");
+  await assert.rejects(fetchFn("https://ardia.dev/switches.json"), { code: "ERR_UNSUPPORTED" });
   assert.equal(await (await fetchFn("https://example.com/")).text(), "original https://example.com/");
-  assert.deepEqual(calls, ["ArdiaShell.fetchKillSwitches"]);
-  const refused = linuxSwitchesFetch({ ...host, invoke: async () => ({ status: 0, body: "" }) }, original);
-  await assert.rejects(refused("https://ardia.dev/switches.json"), TypeError);
+  assert.deepEqual(calls, []);
 });
 
 test("with no switches URL the switch refresh is off and never asks the native host", async () => {
