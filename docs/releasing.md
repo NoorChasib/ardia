@@ -20,6 +20,7 @@ keys, none of which are Nilla's. The first Nilla version is `0.1.0`.
 | An update host: GitHub Releases on `NoorChasib/nilla` (the Mac appcast, the Windows feed and its approved download prefix, the Linux release list), with no server of its own | updates on every platform | every endpoint in `packages/core/src/services.ts` is empty (`docs/services.md`) |
 | An Authenticode certificate | the Windows app and installer | unsigned, and built only in CI or a disposable VM |
 | An Android keystore, and an Apple team for the iPhone app | the phone apps | not uploaded anywhere |
+| Nilla's Apache-2.0 text and `NOTICE` under the phone apps' Open Source Licenses, checked in each build | the phone apps' licence obligations | not checked for Nilla |
 | The engine source archives, per platform (below) | GPL-3.0 §6(d) | not built for Nilla |
 
 When these exist, write a Nilla release guide here, replacing this page, with Nilla's own secrets, hosts and steps.
