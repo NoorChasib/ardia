@@ -40,6 +40,7 @@ import {
   edgeSeen,
   edgeStripOverPage,
   edgeWatchWidth,
+  leftStripInward,
   peekBleed,
   peekHoldWidth,
   peekOnScreen,
@@ -309,8 +310,9 @@ function SidebarDock({
     arm.current = edgeSeen(arm.current, "strip", true);
     reveal();
   };
-  const leaveStrip = () => {
+  const leaveStrip = (e: { nativeEvent: { clientX: number } }) => {
     arm.current = edgeSeen(arm.current, "strip", false);
+    if (leftStripInward(e.nativeEvent.clientX, right, windowWidth)) peek.abandonWait();
     if (!peek.live) peek.cancelPending(edgeOver.current);
   };
 

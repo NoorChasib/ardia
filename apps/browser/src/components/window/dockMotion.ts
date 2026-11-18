@@ -1,6 +1,6 @@
 import { layout } from "../ui/theme";
-import { DOCK_SLIDE, DOCK_SLIDE_CURVE, SIDEBAR_REVEAL } from "./tokens";
-import type { SpringSpec } from "../ui/motion";
+import { ARC_PEEK_OUT_MS, DOCK_SLIDE, DOCK_SLIDE_CURVE, SIDEBAR_REVEAL } from "./tokens";
+import { curve, duration, spring, type SpringSpec } from "../ui/motion";
 import type { SidebarRevealSpeed } from "../../state/settings/settings";
 import { WINDOW_CHROME } from "../../lib/windowChrome";
 
@@ -65,6 +65,16 @@ export const PEEK_BLEED = 16;
 
 export const revealWaitMs = (speed: SidebarRevealSpeed, peekOut: boolean) => (peekOut ? 0 : SIDEBAR_REVEAL[speed].waitMs);
 
+export type PeekAnimation =
+  | { kind: "spring"; config: ReturnType<typeof spring> & { restDisplacementThreshold: number; restSpeedThreshold: number } }
+  | { kind: "timing"; config: { duration: number; easing: (u: number) => number } };
+
+export function peekAnimation(to: number, arc: boolean, speed: SidebarRevealSpeed): PeekAnimation {
+  if (arc && to > 0) return { kind: "spring", config: { ...spring(SIDEBAR_REVEAL[speed].arcSpring), restDisplacementThreshold: 0.001, restSpeedThreshold: 0.01 } };
+  if (arc) return { kind: "timing", config: { duration: ARC_PEEK_OUT_MS, easing: easeInOutCubic } };
+  return { kind: "timing", config: { duration: to > 0 ? SIDEBAR_REVEAL[speed].slideMs : duration.base, easing: curve.enter } };
+}
+
 export const peekBleed = (peekLeft: number) => (peekLeft > 0 ? 0 : PEEK_BLEED);
 
 export type DockState = "fullscreen" | "docked" | "peeking" | "leaving" | "hiding" | "away";
@@ -82,6 +92,9 @@ export const peekOnScreen = (state: DockState) => state === "peeking" || state =
 export const shownAs = (state: DockState) => (peekOnScreen(state) ? "peek" : state === "hiding" ? "away" : state);
 
 export const watchesEdge = (state: DockState, moving: boolean) => (peekOnScreen(state) || state === "away" || state === "fullscreen") && !moving;
+
+export const leftStripInward = (x: number, right: boolean, windowWidth: number, band: number = PEEK_EDGE_STRIP) =>
+  right ? x < 0 && x > -windowWidth : x >= band && x < windowWidth;
 
 export const atRevealEdge = (x: number, right: boolean, windowWidth: number, band: number = PEEK_EDGE_STRIP) => (right ? x >= windowWidth - band : x < band);
 

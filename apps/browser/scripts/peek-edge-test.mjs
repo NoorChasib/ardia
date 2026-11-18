@@ -8,7 +8,7 @@ import { launch, reporter, session } from "../../../scripts/lib/instance.mjs";
 const args = process.argv.slice(2);
 const appArg = args.find((a) => !a.startsWith("--"));
 if (!appArg) {
-  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a second push goes on through. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
+  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a second push goes on through. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
   process.exit(2);
 }
 const appPath = resolve(appArg);
@@ -246,6 +246,17 @@ try {
       }).then((passOpens) => { const resting = opensOver(900); return at(2, 400).then(() => resting).then((restOpens) => ({ passOpens, restOpens })); });`);
     assert.equal(out.passOpens, 0, "120 ms on the edge, then 5 crossings of 80/80 ms");
     assert.equal(out.restOpens, 1, "resting at the edge");
+    await run(`return away().then(() => speed("default"));`);
+  });
+
+  await rep.check("Slower: stepping back off the 3 pt edge during the wait never opens it, and coming back waits the full 250 ms again", async () => {
+    const out = await run(`return speed("slower").then(() => at(300, 400)).then(() => settle(700)).then(() => {
+        const stepped = opensOver(900);
+        return at(1, 400).then(() => settle(120)).then(() => at(5, 400)).then(() => stepped);
+      }).then((steppedOpens) => at(300, 400).then(() => settle(700)).then(() => at(1, 400)).then(() => settle(120)).then(() => at(5, 400)).then(() => settle(80))
+        .then(() => { const back = firstLive(900); return at(1, 400).then(() => back).then((backMs) => ({ steppedOpens, backMs })); }));`);
+    assert.equal(out.steppedOpens, 0, "1 pt for 120 ms, then 5 pt");
+    assert.ok(out.backMs !== null && out.backMs >= 200, `back at 1 pt: opened ${out.backMs} ms after the return`);
     await run(`return away().then(() => speed("default"));`);
   });
 

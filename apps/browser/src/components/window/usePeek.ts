@@ -1,19 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, AppState } from "react-native";
-import { easeInOutCubic, PEEK_CLOSE_DELAY_MS, revealWaitMs } from "./dockMotion";
-import { curve, duration, spring } from "../ui/motion";
-import { ARC_PEEK_OUT_MS, SIDEBAR_REVEAL } from "./tokens";
+import { PEEK_CLOSE_DELAY_MS, peekAnimation, revealWaitMs } from "./dockMotion";
 import { revealWait } from "./revealWait";
 import { backgroundInstance } from "../../state/app/appSettings";
 import { noteSidebarPeekRevealWait, noteSidebarPeekRevealWaitAbandoned } from "../../state/telemetry/dockCounts";
 import type { SidebarRevealSpeed } from "../../state/settings/settings";
 
-const SLIDE_MS = duration.base;
-const ARC_IN = {
-  faster: spring(SIDEBAR_REVEAL.faster.arcSpring),
-  default: spring(SIDEBAR_REVEAL.default.arcSpring),
-  slower: spring(SIDEBAR_REVEAL.slower.arcSpring),
-} as const;
 const appInFront = () => backgroundInstance || AppState.currentState === "active";
 
 export function usePeek(
@@ -32,13 +24,13 @@ export function usePeek(
   const out = useRef(false);
   const waitingForFocus = useRef(false);
   const [wait] = useState(revealWait);
-  const animate = (to: number, done?: () => void) =>
-    (arc
-      ? to > 0
-        ? Animated.spring(slide, { toValue: to, ...ARC_IN[speed], restDisplacementThreshold: 0.001, restSpeedThreshold: 0.01, useNativeDriver: true })
-        : Animated.timing(slide, { toValue: to, duration: ARC_PEEK_OUT_MS, easing: easeInOutCubic, useNativeDriver: true })
-      : Animated.timing(slide, { toValue: to, duration: to > 0 ? SIDEBAR_REVEAL[speed].slideMs : SLIDE_MS, easing: curve.enter, useNativeDriver: true })
+  const animate = (to: number, done?: () => void) => {
+    const motion = peekAnimation(to, arc, speed);
+    (motion.kind === "spring"
+      ? Animated.spring(slide, { toValue: to, ...motion.config, useNativeDriver: true })
+      : Animated.timing(slide, { toValue: to, ...motion.config, useNativeDriver: true })
     ).start(({ finished }) => finished && done?.());
+  };
   const slideOut = () => {
     out.current = false;
     setLeaving(true);
@@ -74,6 +66,7 @@ export function usePeek(
   const dropWait = (pointerStillAtEdge: boolean) => {
     if (!pointerStillAtEdge && wait.cancel()) noteSidebarPeekRevealWaitAbandoned();
   };
+  const abandonWait = () => dropWait(false);
   const cancelPending = (pointerStillAtEdge = false) => {
     waitingForFocus.current &&= pointerStillAtEdge;
     dropWait(pointerStillAtEdge);
@@ -126,5 +119,5 @@ export function usePeek(
     },
     [],
   );
-  return { slide, live, leaving, show, showAfterWait, hide, recheck, cancelPending, reset };
+  return { slide, live, leaving, show, showAfterWait, hide, recheck, abandonWait, cancelPending, reset };
 }
