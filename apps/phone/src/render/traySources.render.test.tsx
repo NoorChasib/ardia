@@ -4,7 +4,7 @@ import * as omnibox from "../state/search/omnibox";
 import { dismissSearch, presentSearch, useSearch } from "../state/search/store";
 import { startSync } from "../state/sync/actions";
 import { OFF_STATUS, setStatus, useSync } from "../state/sync/store";
-import { currentTabs, updateTabById } from "../state/tabs/store";
+import { currentTabs, updateTabById, useTabs } from "../state/tabs/store";
 import * as telemetry from "../state/telemetry/telemetry";
 import type { SyncedProfile, SyncedView } from "../platform/sync";
 import { withTabs } from "../../test/render/harness";
@@ -155,6 +155,20 @@ test("the first tray open after launch counts one full rebuild, and a visit afte
   expect(rebuilds).toBe(1);
   seededUntil += 1;
   history().record("https://visited9.example/page", "Visited 9", "link", null, seededUntil);
+  open();
+  expect(rebuilds).toBe(1);
+});
+
+test("a full rebuild while Incognito is on counts nothing", () => {
+  history().pruneBefore(0);
+  rebuilds = 0;
+  act(() => useTabs.setState({ incognito: true }));
+  open();
+  close();
+  expect(latest!.history!.length).toBeGreaterThan(0);
+  expect(rebuilds).toBe(0);
+  act(() => useTabs.setState({ incognito: false }));
+  history().pruneBefore(0);
   open();
   expect(rebuilds).toBe(1);
 });
