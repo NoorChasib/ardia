@@ -67,6 +67,10 @@ export const setTabProfile = (profileSyncId: string | null) => {
   tabProfile = profileSyncId;
 };
 
+const pagesGoneListeners: ((ids: readonly string[]) => void)[] = [];
+
+export const whenPagesGo = (listener: (ids: readonly string[]) => void) => void pagesGoneListeners.push(listener);
+
 const changesNothing = (change: TabsChange) => change.data === data() && !change.put.length && !change.remove.length && !change.endedPages.length && !change.clearArchived;
 
 function apply(change: TabsChange) {
@@ -78,6 +82,8 @@ function apply(change: TabsChange) {
   const cleared = change.clearArchived ? deleteArchivedTabs(db) : [];
   const listed = change.put.some((t) => !t.isPrivate) || change.remove.length > 0;
   useTabs.setState((s) => ({ ...change.data, listing: listed ? s.listing + 1 : s.listing }));
+  const gone = [...change.endedPages, ...change.remove];
+  if (gone.length) for (const listener of pagesGoneListeners) listener(gone);
   const archived = new Set(change.put.filter((t) => t.archivedAt !== null && !t.isPrivate).map((t) => t.id));
   endPages(change.endedPages.filter((id) => !archived.has(id)));
   for (const id of change.endedPages) if (archived.has(id)) void saveAndEnd(id);

@@ -43,6 +43,7 @@ import {
   rewriteTab,
   updateTabById,
   useTabs,
+  whenPagesGo,
 } from "../tabs/store";
 import { labTrace } from "../../platform/lab";
 import { pictureCaptured, pictureLanded } from "../tabs/pictures";
@@ -599,10 +600,14 @@ useTabs.subscribe((tabs) => {
     hidesFromRecents = hides;
     void settled(() => setHidesFromRecents(hides), false);
   }
-  for (const id of [...lastVisits.keys(), ...loading.keys()]) {
-    if (findTab(tabs, id)) continue;
+});
+
+whenPagesGo((ids) => {
+  for (const id of ids) {
     lastVisits.delete(id);
     loading.delete(id);
+    titlesBeforeLoad.delete(id);
+    crashedPages.delete(id);
     forgetPosition(id);
     clearTimeout(snapshotTimers.get(id));
     snapshotTimers.delete(id);
