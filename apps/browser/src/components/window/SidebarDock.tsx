@@ -12,7 +12,7 @@ import { Sidebar } from "../sidebar/Sidebar";
 import { ResizeHandle } from "../sidebar/ResizeHandle";
 import { dismissHoverIn } from "../../state/sidebar/hover";
 import { sidebarUi, useSidebarUi } from "../../state/sidebar/sidebarUi";
-import { peekHeld, watchHolds } from "../../state/app/transientUi";
+import { peekHeld, peekHeldBy, watchHolds } from "../../state/app/transientUi";
 import { noteSidebarPeek } from "../../state/telemetry/usage";
 import {
   noteFullScreenPeek,
@@ -186,6 +186,11 @@ export function DockedLayout({
   );
 }
 
+const onlyTabDragHolds = (windowId: string) => {
+  const by = peekHeldBy(windowId);
+  return by.length === 1 && by[0] === "tabDrag";
+};
+
 function SidebarDock({
   dock,
   open,
@@ -240,7 +245,7 @@ function SidebarDock({
   const peekHeldOpen = () => {
     if (edgeOver.current) return true;
     if (!peekHeld(windowId)) return false;
-    if (draggingTabNow.current && !tabDragHoldNoted.current) {
+    if (draggingTabNow.current && !tabDragHoldNoted.current && onlyTabDragHolds(windowId)) {
       tabDragHoldNoted.current = true;
       noteSidebarPeekTabDragHold();
     }

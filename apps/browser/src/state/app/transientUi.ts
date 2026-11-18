@@ -76,9 +76,16 @@ export const HOLDS: Record<Held, { chrome: Chrome | null; surfaces: Surface[] }>
 
 const noTab = () => false;
 
+const where = (held: Held, windowId: string, tab: (tabId: string) => boolean): Where => ({ windowId, chrome: HOLDS[held].chrome, tab });
+
 function holds(held: Held, windowId: string, tab: (tabId: string) => boolean): boolean {
-  const at: Where = { windowId, chrome: HOLDS[held].chrome, tab };
+  const at = where(held, windowId, tab);
   return HOLDS[held].surfaces.some((surface) => SURFACES[surface].open(at));
+}
+
+function holdingSurfaces(held: Held, windowId: string, tab: (tabId: string) => boolean): Surface[] {
+  const at = where(held, windowId, tab);
+  return HOLDS[held].surfaces.filter((surface) => SURFACES[surface].open(at));
 }
 
 const watches = (held: Held) => [...new Set(HOLDS[held].surfaces.flatMap((s) => SURFACES[s].watch))];
@@ -93,10 +100,14 @@ const sidebarFieldTab = (windowId: string) => {
   return addressBarInSidebar(s, windowId) ? activeTabId(s, windowId) : undefined;
 };
 
-export const peekHeld = (windowId: string) => {
+const peekFieldTab = (windowId: string) => {
   const field = sidebarFieldTab(windowId);
-  return holds("peek", windowId, field ? (id) => id === field : noTab);
+  return field ? (id: string) => id === field : noTab;
 };
+
+export const peekHeld = (windowId: string) => holds("peek", windowId, peekFieldTab(windowId));
+
+export const peekHeldBy = (windowId: string) => holdingSurfaces("peek", windowId, peekFieldTab(windowId));
 
 export const topStripPeekHeld = (windowId: string) => holds("topStrip", windowId, noTab);
 

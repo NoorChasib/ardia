@@ -8,7 +8,7 @@ const { usePages } = await import("../tabs/pageState.ts");
 const { useHistoryMenu } = await import("../tabs/navigation.ts");
 const { useExtensions } = await import("../extensions/store.ts");
 const { showMenu } = await import("../../platform/menus.ts");
-const { hoverHeld, peekHeld, toolbarHeld, topStripPeekHeld, watchHolds } = await import("./transientUi.ts");
+const { hoverHeld, peekHeld, peekHeldBy, toolbarHeld, topStripPeekHeld, watchHolds } = await import("./transientUi.ts");
 const { setPeekShown } = await import("../windows/dockMotion.ts");
 const { setToolbarPeek } = await import("../windows/toolbarAutoHide.ts");
 const { cardEntered, dismissHover } = await import("../sidebar/hover.ts");
@@ -142,4 +142,18 @@ test("the floating sidebar's holds are asked again when a tab drag from its wind
   useTabDrag.setState({ phase: "idle" }, true);
   stop();
   assert.equal(asked, 2);
+});
+
+test("the floating sidebar names what holds it out, so a tab drag that holds it alongside Downloads isn't counted as the drag's hold", () => {
+  const { w, other, tab } = twoWindows();
+  assert.deepEqual(peekHeldBy(w), []);
+  tabDragFrom(w, tab);
+  assert.deepEqual(peekHeldBy(w), ["tabDrag"]);
+  assert.deepEqual(peekHeldBy(other), []);
+  S().setDownloadsOpen(w, true);
+  assert.deepEqual(peekHeldBy(w), ["downloads", "tabDrag"]);
+  useTabDrag.setState({ phase: "idle" }, true);
+  assert.deepEqual(peekHeldBy(w), ["downloads"]);
+  S().setDownloadsOpen(w, false);
+  assert.deepEqual(peekHeldBy(w), []);
 });
