@@ -65,6 +65,7 @@ on:
 
 env:
   PRIVACY_URL: ${{ vars.IOS_PRIVACY_URL || format('https://github.com/{0}/blob/main/PRIVACY.md', github.repository) }}
+  PRIVACY_URL_SET: ${{ vars.IOS_PRIVACY_URL }}
 
 permissions:
   contents: read
@@ -124,6 +125,7 @@ jobs:
           BUILD: ${{ inputs.build }}
         run: |
           set -euo pipefail
+          [ -n "$PRIVACY_URL_SET" ] || [ -f PRIVACY.md ] || { echo "::error::a public test link needs a privacy policy: set the IOS_PRIVACY_URL repository variable or add PRIVACY.md"; exit 1; }
           [ -n "$BUILD" ] || { echo "::error::public-link mode needs build"; exit 1; }
           key="$RUNNER_TEMP/AuthKey.p8"
           (umask 077 && printf '%s' "$ASC_KEY_P8" | base64 -d > "$key")
@@ -330,6 +332,7 @@ jobs:
           BUILD: ${{ steps.plan.outputs.build }}
         run: |
           set -euo pipefail
+          [ -n "$PRIVACY_URL_SET" ] || [ -f PRIVACY.md ] || { echo "::error::a public test link needs a privacy policy: set the IOS_PRIVACY_URL repository variable or add PRIVACY.md"; exit 1; }
           node apps/phone/scripts/asc.mjs public-link --build "$BUILD" \
             --what-to-test apps/phone/ios/Config/TestFlight-WhatToTest.txt --privacy-policy "$PRIVACY_URL" | tee -a "$GITHUB_STEP_SUMMARY"
       - if: always()
