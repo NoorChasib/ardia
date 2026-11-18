@@ -3,6 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { reachesNativeHostUnchecked, resolveHostModule } from "./hostModules.ts";
 import { linuxShellMethod, sidebarEdgeEvent } from "./shellMethods.ts";
+import { NATIVE_EDGE_ZONE, createRevealBands } from "./sidebarRevealBand.ts";
 import { dominantAccent } from "./iconAccent.ts";
 import { hostModuleName, requireNativeModule } from "./shims/expo-modules-core.ts";
 import { setTrafficLightsCenter } from "./shims/web/windowChrome.tsx";
@@ -348,6 +349,111 @@ test("the native sidebar-edge watcher reports the shared sidebarEdge event, an o
   const frame = { type: "frame", id: "main", frame: [0, 0, 1, 1] };
   assert.equal(sidebarEdgeEvent("ArdiaShell", "onWindowEvent", frame), frame);
   assert.equal(sidebarEdgeEvent("ArdiaApp", "onWindowEvent", payload), payload);
+});
+
+function edgeWithBand({ right = false, width = 1200 } = {}) {
+  const native = { x: 600, hold: 0, right, watching: false, over: false };
+  const sent = [];
+  const band = { open: null, opens: 0, returns: 0 };
+  const bands = createRevealBands({
+    open: (side, entered) => {
+      band.opens++;
+      band.open = { side, entered };
+      return () => void (band.open = null);
+    },
+    windowWidth: () => width,
+    emit: (report) => sent.push(report),
+    noteReturn: () => band.returns++,
+  });
+  const inset = (x) => (native.right ? width - 1 - x : x);
+  const within = () => inset(native.x) >= -24 && inset(native.x) < Math.max(native.hold, NATIVE_EDGE_ZONE);
+  const report = (fresh) => {
+    const over = within();
+    if (!native.watching || (!fresh && over === native.over)) return;
+    native.over = over;
+    const payload = { type: "sidebarEdge", id: "main", over, point: [native.x, 300] };
+    sent.push(payload);
+    bands.reported(payload);
+  };
+  const watch = (on, hold = 0) => {
+    bands.watch("main", on, hold, right);
+    Object.assign(native, on ? { watching: true, hold } : { watching: false, over: false });
+    if (on) report(true);
+  };
+  const at = (edgeInset) => {
+    native.x = right ? width - 1 - edgeInset : edgeInset;
+    const reach = band.open && (right ? native.x >= width - band.open.side.hold : native.x < band.open.side.hold);
+    if (reach) band.open.entered([native.x, 300]);
+    report(false);
+  };
+  return { native, sent, band, watch, at, bands };
+}
+
+test("Linux's 8 px native zone keeps the engine's width, so the reveal band covers only what the shared 3 px edge can't hear", () => {
+  const edge = read("../../../engine/ardiacore-linux/src/ardia/linux/ac_linux_sidebar_edge.h");
+  assert.match(edge, new RegExp(`static constexpr double kStrip = ${NATIVE_EDGE_ZONE};`));
+});
+
+for (const right of [false, true]) {
+  const side = right ? "right" : "left";
+  test(`${side} edge: a pointer resting inside the native zone but off the 3 px edge gets an exact re-entry report when it reaches the edge, with no native call`, () => {
+    const e = edgeWithBand({ right });
+    e.watch(true, 3);
+    e.at(5);
+    assert.equal(e.band.opens, 1, "the band opens once the native zone reports the pointer off the edge");
+    assert.deepEqual(e.band.open.side, { hold: 3, right });
+    e.sent.length = 0;
+    e.at(6);
+    e.at(4);
+    assert.deepEqual(e.sent, [], "moves inside the zone report nothing, natively or through the band");
+    e.at(1);
+    const x = right ? 1198 : 1;
+    assert.deepEqual(e.sent, [{ type: "sidebarEdge", id: "main", over: true, point: [x, 300] }], "one re-entry report at the edge, and the native zone stays silent");
+    assert.equal(e.band.open, null, "the band closes as the pointer reaches the edge");
+    assert.equal(e.band.returns, 1);
+    e.at(5);
+    assert.equal(e.band.opens, 1, "the native zone sends nothing for a step back from the edge");
+    e.watch(true, 3);
+    assert.equal(e.band.opens, 2, "the next fresh native report off the edge opens it again");
+  });
+
+  test(`${side} edge: the band closes when the pointer leaves the native zone, when watching stops, and never opens for a wide hold or the framed strip`, () => {
+    const e = edgeWithBand({ right });
+    e.watch(true, 3);
+    e.at(5);
+    e.at(20);
+    assert.equal(e.band.open, null, "leaving the 8 px zone closes it");
+    e.at(5);
+    assert.ok(e.band.open);
+    e.watch(false);
+    assert.equal(e.band.open, null, "stopping the watch closes it");
+    for (const hold of [0, NATIVE_EDGE_ZONE, 264]) {
+      e.at(600);
+      e.watch(true, hold);
+      e.at(5);
+      assert.equal(e.band.open, null, `hold ${hold}`);
+    }
+    e.at(600);
+    e.watch(true, 3);
+    e.at(1);
+    assert.equal(e.band.open, null, "a pointer already on the edge needs no band");
+    e.at(5);
+    e.watch(true, 3);
+    const opened = e.band.opens;
+    assert.ok(e.band.open);
+    e.watch(true, 3);
+    assert.equal(e.band.opens, opened, "the same watch again keeps the open band");
+    assert.ok(e.band.open);
+  });
+}
+
+test("the band ignores reports with no pointer position and other windows' reports", () => {
+  const e = edgeWithBand({ right: true });
+  e.watch(true, 3);
+  e.bands.reported({ type: "sidebarEdge", id: "main", over: true, point: [-1, -1] });
+  e.bands.reported({ type: "sidebarEdge", id: "other", over: true, point: [600, 300] });
+  e.bands.reported({ type: "frame", id: "main", frame: [0, 0, 1, 1] });
+  assert.equal(e.band.opens, 0);
 });
 
 test("Open File… reaches the native chooser, and an engine without it rejects explicitly instead of hanging", async () => {

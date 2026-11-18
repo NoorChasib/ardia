@@ -5,6 +5,7 @@ import { ardiaHost, hostSupports } from "../host";
 import { createNativeEvents } from "../hostEvents";
 import { resolveHostModule } from "../hostModules";
 import { sidebarEdgeEvent } from "../shellMethods";
+import { sidebarEdgeReported } from "../sidebarRevealBand";
 
 export type EventSubscription = { remove(): void };
 
@@ -13,7 +14,11 @@ export const uuid = { v4: (): string => crypto.randomUUID() };
 type Listener = (event: unknown) => void;
 const events = createNativeEvents();
 
-ardiaHost?.onEvent((module, event, payload) => emitNativeEvent(module, event, sidebarEdgeEvent(module, event, payload)));
+ardiaHost?.onEvent((module, event, payload) => {
+  const report = sidebarEdgeEvent(module, event, payload);
+  emitNativeEvent(module, event, report);
+  if (module === "ArdiaShell" && event === "onWindowEvent") sidebarEdgeReported(report);
+});
 
 let sharedCommand: (command: string) => boolean = () => true;
 

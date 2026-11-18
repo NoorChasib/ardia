@@ -808,9 +808,16 @@ pnpm --filter @ardia/linux acceptance -- <extracted>/ardia/bin/ardia
     only transitions, so while Slower's wait runs the shared UI calls `watchSidebarEdge` again every 40 ms for a fresh
     report with the pointer, and opens only if the pointer is still on the 3 px band (`useSidebarEdgeWatch.ts`);
     stepping back to x 5 ends the wait. The asking stops once the peek opens or waits for the app to come forward, and
-    at most 1 s (25 asks) after a wait ends with the pointer still inside the 8 px zone; a return to the edge after
-    that comes in through the dock's 3 px strip. Default and Faster never ask. On the leave-the-window path the 250 ms runs
-    after the 90 ms settle, about 340 ms in all.
+    at most 1 s (25 asks) after a wait ends with the pointer still inside the 8 px zone. Default and Faster never ask.
+    On the leave-the-window path the 250 ms runs after the 90 ms settle, about 340 ms in all.
+  - A return to the edge after the asking stops comes in through the dock's 3 px strip where the strip is live (a framed
+    window). Borderless and full screen windows, where the strip would sit over the page, get the reveal band instead
+    (`apps/linux/src/sidebarRevealBand.ts`). While the native zone reports the pointer inside it but off the 3 px edge,
+    the band is a 3 px input region at the edge. When the pointer reaches it, the band sends one exact `sidebarEdge`
+    report at the edge, with no native call and no timer. It closes on that report, when the pointer leaves the zone,
+    and when the watch stops or widens. It works at every speed, so a slow approach that pauses 4 to 7 px from the edge
+    now opens the peek too; before, nothing was reported between 8 px and the edge. Telemetry:
+    `usage_counts.sidebar_peek_edge_band_returns`.
   - Wayland has no global pointer, so the 24 pt reach macOS gives outside the window becomes this: when the pointer
     leaves through the sidebar's edge of the active window, the peek opens after 90 ms. If focus moves first
     (Hyprland's `follow_mouse` focusing the neighbouring window), it doesn't open. A peek that is already out stays out

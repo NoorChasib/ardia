@@ -20,22 +20,31 @@ const LINUX_STRIP = 8;
 const REACH = 24;
 
 function linuxWatcher() {
-  const native = { x: 600, watching: false, over: false, hold: 0, right: false, calls: 0 };
-  const within = () => {
-    const inset = native.right ? WIDTH - 1 - native.x : native.x;
-    return inset >= -REACH && inset < Math.max(native.hold, LINUX_STRIP);
-  };
-  const report = (fresh) => {
-    const over = within();
-    if (!native.watching || (!fresh && over === native.over)) return;
-    native.over = over;
+  const native = { x: 600, watching: false, over: false, hold: 0, right: false, calls: 0, band: false, bandReports: 0 };
+  const inset = () => (native.right ? WIDTH - 1 - native.x : native.x);
+  const within = () => inset() >= -REACH && inset() < Math.max(native.hold, LINUX_STRIP);
+  const bandable = () => native.hold > 0 && native.hold < LINUX_STRIP;
+  const send = (over) => {
     const point = [native.x, 300];
     setTimeout(() => windows.emit({ type: "sidebarEdge", id: "w", over, point }), 1);
   };
+  const report = (fresh) => {
+    if (native.band && inset() < native.hold) {
+      native.band = false;
+      native.bandReports++;
+      send(true);
+    }
+    const over = within();
+    if (!native.watching || (!fresh && over === native.over)) return;
+    native.over = over;
+    native.band = over && bandable() && inset() >= native.hold;
+    send(over);
+  };
   shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false) => {
     native.calls++;
-    if (!on) Object.assign(native, { watching: false, over: false });
+    if (!on) Object.assign(native, { watching: false, over: false, band: false });
     else {
+      if (hold !== native.hold || right !== native.right) native.band = false;
       Object.assign(native, { watching: true, hold, right });
       report(true);
     }
@@ -143,6 +152,38 @@ for (const right of [false, true]) {
       s.h.value.strip(true);
       const ms = s.firstLive(800);
       assert.ok(ms !== null && ms >= 250 && ms < 330, `opened ${ms} ms after the return`);
+    });
+  }
+
+  test(`Slower, ${side} side, borderless or page full screen: a return to the edge long after the asking stopped starts a fresh wait from Linux's reveal band, with no strip event and no polling`, (t) => {
+    const s = harness(t, { right, borderless: true });
+    s.run(100);
+    s.at(1);
+    s.run(120);
+    s.at(5);
+    s.run(PROBE_IDLE_MS + 4 * EDGE_PROBE_MS);
+    const calls = s.native.calls;
+    s.run(2000);
+    assert.equal(s.native.calls, calls, "nothing asks the native watcher while the pointer rests at 5 px");
+    assert.equal(s.native.band, true, "the reveal band waits for the pointer at the edge");
+    takeDockCounts();
+    s.at(1);
+    const ms = s.firstLive(700);
+    assert.ok(ms !== null && ms >= 250 && ms < 330, `opened ${ms} ms after the return`);
+    assert.equal(s.native.bandReports, 1);
+    assert.equal(takeDockCounts().sidebar_peek_reveal_waits, 1, "one fresh wait");
+  });
+
+  for (const speed of ["default", "faster"]) {
+    test(`${speed}, ${side} side, borderless or page full screen: a slow approach that stops inside the native band opens it once the pointer reaches the edge`, (t) => {
+      const s = harness(t, { speed, right, borderless: true });
+      s.run(100);
+      s.at(6);
+      s.run(500);
+      assert.equal(s.h.value.live, false, "6 px is not the edge");
+      s.at(1);
+      const ms = s.firstLive(50);
+      assert.ok(ms !== null && ms <= 2, `opened after ${ms} ms`);
     });
   }
 
