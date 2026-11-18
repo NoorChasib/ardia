@@ -9,7 +9,9 @@ import { storeNavigation, storeTone, usePages, type PageState } from "../state/p
 import { rememberPageTones } from "../state/pages/toneMemory";
 import * as browserDatabase from "../state/store/browserDatabase";
 import { setPreference } from "../state/settings/store";
-import { currentTabs } from "../state/tabs/store";
+import { swipeOrder } from "../state/browse/store";
+import { currentTabs, updateTabById } from "../state/tabs/store";
+import * as tabModels from "../state/tabs/tabModels";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 
 let renders: string[] = [];
@@ -94,5 +96,18 @@ test("a page reporting the tone it already shows renders nothing and rewrites no
   act(() => jest.advanceTimersByTime(2000));
   expect({ renders: screenRenders(), toneWrites: writes.mock.calls.filter(([, key]) => key === "pageTones").length }).toEqual({ renders: 1, toneWrites: 1 });
   stopRemembering();
+  unmount(root);
+});
+
+test("a background tab's title change sorts the deck order once for the page chrome and its swipe neighbours, not once per reader", async () => {
+  const root = await page();
+  const sorts = jest.spyOn(tabModels, "recencyOrder");
+  const before = swipeOrder();
+  sorts.mockClear();
+  act(() => updateTabById("t3", { title: "Renamed" }));
+  const after = swipeOrder();
+  expect(sorts).toHaveBeenCalledTimes(1);
+  expect(after).toEqual(before);
+  expect(currentTabs().open.find((tab) => tab.id === "t3")!.title).toBe("Renamed");
   unmount(root);
 });

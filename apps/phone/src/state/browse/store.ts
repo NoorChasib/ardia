@@ -32,6 +32,7 @@ import {
   closeEveryTab,
   closePrivateTabs,
   closeTabById,
+  currentDeckOrder,
   currentTabs,
   loadTabs,
   openNewTab,
@@ -45,7 +46,7 @@ import {
 } from "../tabs/store";
 import { labTrace } from "../../platform/lab";
 import { pictureCaptured, pictureLanded } from "../tabs/pictures";
-import { deckOrder, findTab, isPrivateOnScreen, isPrivateTab, selectedTab } from "../tabs/tabsState";
+import { findTab, isPrivateOnScreen, isPrivateTab, selectedTab } from "../tabs/tabsState";
 import { setHidesFromRecents } from "../../platform/links";
 import { copyText, pasteText } from "../../platform/system";
 import { noteSnapshotPageTop, noteSnapshotShown } from "../../lib/shownSnapshots";
@@ -417,7 +418,7 @@ export function reopenArchived(tab: BrowserTab) {
 }
 
 export function swipeOrder(): string[] {
-  const live = deckOrder(currentTabs()).map((t) => t.id);
+  const live = currentDeckOrder().map((t) => t.id);
   const frozen = useBrowse.getState().frozenOrder;
   if (!frozen) return live;
   const alive = new Set(live);

@@ -27,6 +27,7 @@ import {
   closeAllPrivateTabs,
   closeAllTabs,
   closeTab,
+  deckOrder,
   deleteArchived,
   emptyTabs,
   findTab,
@@ -230,3 +231,16 @@ export function receiveSentTabs(incoming: readonly IncomingTab[]): BrowserTab[] 
 }
 
 export const currentTabs = data;
+
+let orderedFrom: TabsData | null = null;
+let ordered: BrowserTab[] = [];
+
+export function deckOrderOf(tabs: TabsData): BrowserTab[] {
+  const from = orderedFrom;
+  if (from && from.open === tabs.open && from.privates === tabs.privates && from.selectedId === tabs.selectedId && from.spaces === tabs.spaces) return ordered;
+  ordered = deckOrder(tabs);
+  orderedFrom = tabs;
+  return ordered;
+}
+
+export const currentDeckOrder = () => deckOrderOf(data());
