@@ -7,11 +7,14 @@ const TONES_KEY = "pageTones";
 const WRITE_DELAY_MS = 1500;
 
 let stopRemembering: (() => void) | null = null;
+let lastWritten: string | null = null;
 
 export function restorePageTones(keep: ReadonlySet<string>) {
   let remembered = {};
   try {
-    remembered = parseRememberedTones(readPreferences(tabDatabase())[TONES_KEY], keep);
+    const stored = readPreferences(tabDatabase())[TONES_KEY] ?? null;
+    remembered = parseRememberedTones(stored, keep);
+    lastWritten = stored;
   } catch {
     return;
   }
@@ -24,7 +27,10 @@ export function rememberPageTones(keep: () => ReadonlySet<string>): () => void {
   const write = () => {
     timer = null;
     try {
-      writePreference(tabDatabase(), TONES_KEY, rememberedTonesText(usePages.getState().lastTones, keep()));
+      const text = rememberedTonesText(usePages.getState().lastTones, keep());
+      if (text === lastWritten) return;
+      writePreference(tabDatabase(), TONES_KEY, text);
+      lastWritten = text;
     } catch {
       return;
     }

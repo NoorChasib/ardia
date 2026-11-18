@@ -5,7 +5,9 @@ import type { Design } from "../lib/design";
 import * as perf from "../state/app/interactionPerf";
 import { useBrowse } from "../state/browse/store";
 import { usePageUi } from "../state/page/store";
-import { storeNavigation, usePages, type PageState } from "../state/pages/store";
+import { storeNavigation, storeTone, usePages, type PageState } from "../state/pages/store";
+import { rememberPageTones } from "../state/pages/toneMemory";
+import * as browserDatabase from "../state/store/browserDatabase";
 import { setPreference } from "../state/settings/store";
 import { currentTabs } from "../state/tabs/store";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
@@ -75,5 +77,22 @@ test("on the original bar a scroll direction flip renders the page chrome once",
   setPreference("collapsesBottomBar", true);
   const root = await page("original");
   expect([flip("down"), flip("up"), flip("down"), flip("down", "https://site8.example/next")]).toEqual([1, 1, 1, 1]);
+  unmount(root);
+});
+
+test("a page reporting the tone it already shows renders nothing and rewrites no remembered tones", async () => {
+  const stopRemembering = rememberPageTones(() => new Set(currentTabs().open.map((tab) => tab.id)));
+  const root = await page();
+  act(() => storeTone(front().id, { top: "#112233", bottom: "#445566" }));
+  act(() => jest.advanceTimersByTime(2000));
+  const writes = jest.spyOn(browserDatabase, "writePreference");
+  renders = [];
+  act(() => storeTone(front().id, { top: "#112233", bottom: "#445566" }));
+  act(() => jest.advanceTimersByTime(2000));
+  expect({ renders: screenRenders(), toneWrites: writes.mock.calls.filter(([, key]) => key === "pageTones").length }).toEqual({ renders: 0, toneWrites: 0 });
+  act(() => storeTone(front().id, { top: "#112233", bottom: "#778899" }));
+  act(() => jest.advanceTimersByTime(2000));
+  expect({ renders: screenRenders(), toneWrites: writes.mock.calls.filter(([, key]) => key === "pageTones").length }).toEqual({ renders: 1, toneWrites: 1 });
+  stopRemembering();
   unmount(root);
 });
