@@ -44,6 +44,10 @@ const predatesRenderer = (snapshot: TabMemorySnapshot, tabId: string) => {
 
 export const attributesTabMemory = () => attributed;
 
+export function forgetTabMemory(tabId: string) {
+  lastReadBeforeRendererChange.delete(tabId);
+}
+
 export const memoryLineOn = (settings: Pick<Settings, "showMemoryInTabHoverMenu">) => settings.showMemoryInTabHoverMenu && attributed;
 
 export function setTabMemoryAttributed(on: boolean) {
@@ -139,7 +143,10 @@ export function useTabMemory(tabId: string): TabMemoryReading {
 
 export function useTabMemoryLine(tabId: string): TabMemory {
   const asleep = useIsSleeping(tabId);
-  useEffect(() => measureTabMemory(tabId), [tabId, asleep]);
+  const reading = useTabMemorySnapshot((s) => s.reading);
+  useEffect(() => {
+    if (!reading) measureTabMemory(tabId);
+  }, [tabId, asleep, reading]);
   const { memory, settled } = useTabMemory(tabId);
   const noted = useRef<string | null>(null);
   useEffect(() => {

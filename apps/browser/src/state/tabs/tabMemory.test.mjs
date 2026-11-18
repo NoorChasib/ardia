@@ -6,7 +6,7 @@ globalThis.__DEV__ = false;
 
 globalThis.fetch = async () => ({ status: 200 });
 
-const { attributeTabMemory, attributesTabMemory, measureTabMemory, memoryLineOn, setTabMemoryAttributed, tabMemoryReading, useTabMemoryLine, useTabMemorySnapshot, SNAPSHOT_KEPT_MS } = await import("./tabMemory.ts");
+const { attributeTabMemory, attributesTabMemory, forgetTabMemory, measureTabMemory, memoryLineOn, setTabMemoryAttributed, tabMemoryReading, useTabMemoryLine, useTabMemorySnapshot, SNAPSHOT_KEPT_MS } = await import("./tabMemory.ts");
 const { useLifecycle } = await import("./sleepingTabs.ts");
 const { takeHoverCardCounts } = await import("../telemetry/hoverCardCounts.ts");
 const stub = await import("../../test-native/index.ts");
@@ -267,9 +267,13 @@ test("a card open on a sleeping tab reads once when the tab wakes, without remou
   await settle();
   assert.deepEqual(line.value, { kind: "exact", bytes: 100 * MB });
   assert.equal(reads(), 2);
-  mock.timers.tick(60_000);
-  await settle();
+  for (let s = 0; s < 60; s++) {
+    mock.timers.tick(1000);
+    await settle();
+    void line.value;
+  }
   assert.equal(reads(), 2);
+  assert.equal(useTabMemorySnapshot.getState().reading, false);
 });
 
 test("a card that opens on a cached miss counts only the kind the refresh settles on", async (t) => {
@@ -347,7 +351,51 @@ test("a read already running when a tab wakes doesn't count as the woken rendere
   assert.equal(snapshot.reading, false);
   assert.equal(tabMemoryReading(snapshot, false, "a", Date.now()).memory.kind, "measuring");
   tasks = [task("renderer", 20, 70 * MB, ["a"])];
-  measureTabMemory("a");
+  const before = reads();
+  const line = mount((props) => useTabMemoryLine(props.tabId), { props: { tabId: "a" } });
   await settle();
-  assert.deepEqual(tabMemoryReading(useTabMemorySnapshot.getState(), false, "a", Date.now()).memory, { kind: "exact", bytes: 70 * MB });
+  assert.deepEqual(line.value, { kind: "exact", bytes: 70 * MB });
+  assert.equal(reads(), before + 1);
+});
+
+test("a card opened on a tab that woke during another tab's cold read reads again once that read ends, and then stops", async (t) => {
+  let tasks = [task("renderer", 10, 100 * MB, ["a"]), task("renderer", 11, 60 * MB, ["b"])];
+  fresh(t, () => tasks);
+  useLifecycle.setState({ discarded: { a: true } });
+  measureTabMemory("b");
+  await settle();
+  assert.equal(useTabMemorySnapshot.getState().reading, true);
+  mock.timers.tick(500);
+  tasks = [task("renderer", 20, 70 * MB, ["a"]), task("renderer", 11, 60 * MB, ["b"])];
+  useLifecycle.setState({ discarded: {} });
+  mock.timers.tick(1000);
+  const line = mount((props) => useTabMemoryLine(props.tabId), { props: { tabId: "a" } });
+  await settle();
+  assert.deepEqual(line.value, { kind: "measuring" });
+  assert.equal(reads(), 1);
+  mock.timers.tick(700);
+  await settle();
+  assert.equal(reads(), 2);
+  assert.equal(line.value.kind, "measuring");
+  await settle();
+  assert.equal(reads(), 3, "the cold read's second engine read, then one for the woken renderer");
+  assert.deepEqual(line.value, { kind: "exact", bytes: 70 * MB });
+  for (let s = 0; s < 60; s++) {
+    mock.timers.tick(1000);
+    await settle();
+    void line.value;
+  }
+  assert.equal(reads(), 3);
+  assert.equal(useTabMemorySnapshot.getState().reading, false);
+});
+
+test("a closed tab's wake marker is dropped even when no read ever runs", async (t) => {
+  fresh(t);
+  await coldRead("a");
+  useLifecycle.setState({ discarded: { a: true } });
+  useLifecycle.setState({ discarded: {} });
+  const snapshot = useTabMemorySnapshot.getState();
+  assert.equal(tabMemoryReading(snapshot, false, "a", Date.now()).memory.kind, "measuring");
+  forgetTabMemory("a");
+  assert.deepEqual(tabMemoryReading(snapshot, false, "a", Date.now()).memory, { kind: "exact", bytes: 100 * MB });
 });
