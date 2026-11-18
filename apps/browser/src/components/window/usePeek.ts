@@ -56,12 +56,12 @@ export function usePeek(
     setLive(true);
     animate(1);
   };
-  const showAfterWait = () => {
+  const showAfterWait = (confirm: (go: () => void) => void = (go) => go()) => {
     const ms = revealWaitMs(speed, out.current || live);
     if (!ms) return show();
     if (wait.pending()) return;
     noteSidebarPeekRevealWait();
-    wait.start(ms, () => latestShow.current());
+    wait.start(ms, () => confirm(() => latestShow.current()));
   };
   const dropWait = (pointerStillAtEdge: boolean) => {
     if (!pointerStillAtEdge && wait.cancel()) noteSidebarPeekRevealWaitAbandoned();
@@ -119,5 +119,5 @@ export function usePeek(
     },
     [],
   );
-  return { slide, live, leaving, show, showAfterWait, hide, recheck, abandonWait, cancelPending, reset };
+  return { slide, live, leaving, show, showAfterWait, waiting: wait.pending, hide, recheck, abandonWait, cancelPending, reset };
 }

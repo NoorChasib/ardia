@@ -1,0 +1,192 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import React from "react";
+import { mount } from "../../test-hooks.mjs";
+
+globalThis.__DEV__ = false;
+const { shellNativeModules, windows } = await import("../../test-native/shell.ts");
+const { usePeek } = await import("./usePeek.ts");
+const { useSidebarEdgeWatch } = await import("./useSidebarEdgeWatch.ts");
+const { EDGE_ARMED, PEEK_EDGE_STRIP, edgeSeen, peekHoldWidth } = await import("./dockMotion.ts");
+const { takeDockCounts } = await import("../../state/telemetry/dockCounts.ts");
+
+const WIDTH = 1200;
+const LINUX_STRIP = 8;
+const REACH = 24;
+
+function linuxWatcher() {
+  const native = { x: 600, watching: false, over: false, hold: 0, right: false, calls: 0 };
+  const within = () => {
+    const inset = native.right ? WIDTH - 1 - native.x : native.x;
+    return inset >= -REACH && inset < Math.max(native.hold, LINUX_STRIP);
+  };
+  const report = (fresh) => {
+    const over = within();
+    if (!native.watching || (!fresh && over === native.over)) return;
+    native.over = over;
+    const point = [native.x, 300];
+    setTimeout(() => windows.emit({ type: "sidebarEdge", id: "w", over, point }), 1);
+  };
+  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false) => {
+    native.calls++;
+    if (!on) Object.assign(native, { watching: false, over: false });
+    else {
+      Object.assign(native, { watching: true, hold, right });
+      report(true);
+    }
+    return Promise.resolve();
+  };
+  native.move = (x) => {
+    native.x = x;
+    report(false);
+  };
+  return native;
+}
+
+function dock({ speed, right, borderless }) {
+  const edgeOver = React.useRef(false);
+  const arm = React.useRef(EDGE_ARMED);
+  const peek = usePeek(true, false, () => edgeOver.current, () => {}, () => {}, speed);
+  const latestPeek = React.useRef(peek);
+  latestPeek.current = peek;
+  const at = React.useRef(null);
+  at.current = { state: peek.live ? "peeking" : "away", right, windowWidth: WIDTH, band: PEEK_EDGE_STRIP };
+  const hold = peek.live ? peekHoldWidth(240, 0) : borderless ? PEEK_EDGE_STRIP : 0;
+  const watch = { windowId: "w", watching: true, hold, right, whilePressed: peek.live, peekLive: peek.live };
+  const reveal = useSidebarEdgeWatch(watch, at, latestPeek, edgeOver, arm);
+  const strip = (inside) => {
+    arm.current = edgeSeen(arm.current, "strip", inside);
+    if (inside) reveal();
+    else latestPeek.current.abandonWait();
+  };
+  return { live: peek.live, strip };
+}
+
+function harness(t, { speed = "slower", right = false, borderless = true } = {}) {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  const native = linuxWatcher();
+  const h = mount(dock, { props: { speed, right, borderless } });
+  const edge = (inset) => (right ? WIDTH - 1 - inset : inset);
+  let clock = 0;
+  const run = (ms) => {
+    for (let i = 0; i < ms; i++) {
+      t.mock.timers.tick(1);
+      clock++;
+      void h.value;
+    }
+  };
+  const firstLive = (limit) => {
+    const from = clock;
+    while (!h.value.live && clock - from < limit) run(1);
+    return h.value.live ? clock - from : null;
+  };
+  t.after(() => h.unmount());
+  return { native, h, run, firstLive, at: (inset) => native.move(edge(inset)) };
+}
+
+for (const right of [false, true]) {
+  const side = right ? "right" : "left";
+  for (const borderless of [true, false]) {
+    const layout = borderless ? "borderless or page full screen" : "framed";
+    test(`Slower, ${side} side, ${layout}: resting in the 3 px band opens it after the wait`, (t) => {
+      const s = harness(t, { right, borderless });
+      s.run(100);
+      s.at(1);
+      const ms = s.firstLive(800);
+      assert.ok(ms !== null && ms >= 250 && ms < 330, `opened after ${ms} ms`);
+    });
+
+    test(`Slower, ${side} side, ${layout}: stepping back to 5 px inside the 8 px native band never opens it`, (t) => {
+      const s = harness(t, { right, borderless });
+      s.run(100);
+      takeDockCounts();
+      s.at(1);
+      s.run(120);
+      s.at(5);
+      assert.equal(s.firstLive(1000), null);
+      assert.equal(s.native.over, true, "the native watcher still reports the pointer over its 8 px band and never sends an exit");
+      const counted = takeDockCounts();
+      assert.deepEqual([counted.sidebar_peek_reveal_waits, counted.sidebar_peek_reveal_waits_abandoned], [1, 1], "one wait, counted as abandoned once");
+    });
+
+    test(`Slower, ${side} side, ${layout}: a return to the edge after stepping back starts a fresh wait`, (t) => {
+      const s = harness(t, { right, borderless });
+      s.run(100);
+      s.at(1);
+      s.run(120);
+      s.at(5);
+      s.run(150);
+      s.at(1);
+      const ms = s.firstLive(800);
+      assert.ok(ms !== null && ms >= 250 && ms < 330, `opened ${ms} ms after the return, not on the first deadline`);
+    });
+  }
+
+  test(`Slower, ${side} side: a step back just before the deadline, between two probes, still never opens it`, (t) => {
+    const s = harness(t, { right });
+    s.run(100);
+    s.at(1);
+    s.run(245);
+    s.at(5);
+    assert.equal(s.firstLive(1000), null);
+  });
+
+  test(`Slower, ${side} side: arriving from past the window's edge still opens it after the wait`, (t) => {
+    const s = harness(t, { right });
+    s.run(100);
+    s.at(-10);
+    const ms = s.firstLive(800);
+    assert.ok(ms !== null && ms >= 250 && ms < 330, `opened after ${ms} ms`);
+  });
+
+  test(`Slower, ${side} side: going on to 12 px, past the native band, never opens it`, (t) => {
+    const s = harness(t, { right });
+    s.run(100);
+    s.at(1);
+    s.run(120);
+    s.at(12);
+    assert.equal(s.firstLive(1000), null);
+  });
+
+  test(`Default, ${side} side: the edge opens it on the first report, with no probing, and a step back keeps it out`, (t) => {
+    const s = harness(t, { speed: "default", right });
+    s.run(100);
+    const calls = s.native.calls;
+    s.at(1);
+    const ms = s.firstLive(50);
+    assert.ok(ms !== null && ms <= 2, `opened after ${ms} ms`);
+    s.run(10);
+    s.at(5);
+    s.run(600);
+    assert.equal(s.h.value.live, true);
+    assert.equal(s.native.calls - calls, 2, "only the hold-width change re-watches the edge: off, then on");
+  });
+}
+
+test("Slower with the shell's strip and no native band (macOS framed): the strip alone confirms the wait, and leaving it ends the wait", (t) => {
+  const s = harness(t, { borderless: false });
+  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0) => {
+    if (on) setTimeout(() => windows.emit({ type: "sidebarEdge", id: "w", over: hold > PEEK_EDGE_STRIP && s.native.x < hold, point: [s.native.x, 300] }), 1);
+    return Promise.resolve();
+  };
+  s.run(100);
+  s.native.x = 1;
+  s.h.value.strip(true);
+  const ms = s.firstLive(800);
+  assert.ok(ms !== null && ms >= 250 && ms < 330, `opened after ${ms} ms`);
+});
+
+test("Slower with the shell's strip on macOS framed: stepping back off the strip never opens it", (t) => {
+  const s = harness(t, { borderless: false });
+  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on) => {
+    if (on) setTimeout(() => windows.emit({ type: "sidebarEdge", id: "w", over: false, point: [s.native.x, 300] }), 1);
+    return Promise.resolve();
+  };
+  s.run(100);
+  s.native.x = 1;
+  s.h.value.strip(true);
+  s.run(120);
+  s.native.x = 5;
+  s.h.value.strip(false);
+  assert.equal(s.firstLive(1000), null);
+});
