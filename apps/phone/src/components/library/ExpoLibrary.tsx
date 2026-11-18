@@ -193,10 +193,10 @@ function HistoryContent({ query, page }: { query: string; page: PageModifiers })
   const syncEnabled = useSyncEnabled();
   const syncing = useSync((s) => s.status.isSyncing);
   const syncedHistory = useSync((s) => shownProfile(s.view, s.status)?.history ?? null);
-  const space = useTabs((s) => s.spaces.current);
+  const spaces = useTabs((s) => s.spaces);
   useEffect(() => {
     if (open) loadHistory();
-  }, [open, syncEnabled, syncing, syncedHistory, space]);
+  }, [open, syncEnabled, syncing, syncedHistory, spaces]);
   const shown = useMemo(() => filterHistory(entries, query), [entries, query]);
   const days = useMemo(() => historyDays(shown), [shown]);
   const sizes = useMemo(() => days.map((day) => day.entries.length), [days]);

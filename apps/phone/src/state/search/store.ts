@@ -13,6 +13,7 @@ import { clipboardOffer } from "../../platform/system";
 import { settled } from "../pages/store";
 import { NO_SOURCE_BOOKMARKS, recentSearches, sourceTabs, type Sources } from "./sources";
 import { spaceTabs } from "../tabs/tabsState";
+import type { TabSpaces } from "../tabs/spaces";
 
 export type SearchOrigin = "home" | "start" | "page";
 
@@ -52,7 +53,7 @@ export const useSearch = create<SearchState>()(() => ({
 
 let remote: { text: string; values: string[] } = { text: "", values: [] };
 let inFlight: AbortController | null = null;
-let fed: (Sources & { listing: number; space: string | null; profile: SyncedProfile | null; devices: readonly SyncedDevice[] }) | null = null;
+let fed: (Sources & { listing: number; spaces: TabSpaces; profile: SyncedProfile | null; devices: readonly SyncedDevice[] }) | null = null;
 let context: SuggestContext = { currentUrl: null, currentTabId: null };
 let paste: PasteOffer | null = null;
 
@@ -64,11 +65,11 @@ export function feedSources() {
   const historyRows = profile ? mergeSyncedHistory(local, profile.history) : local;
   const bookmarks = profile ? syncedBookmarks(profile) : NO_SOURCE_BOOKMARKS;
   const prior = fed;
-  const sameTabs = prior !== null && prior.listing === listing && prior.space === spaces.current;
+  const sameTabs = prior !== null && prior.listing === listing && prior.spaces === spaces;
   const sameSources = sameTabs && prior.history === historyRows && prior.bookmarks === bookmarks;
   if (sameSources && prior.profile === profile && prior.devices === devices) return;
   const tabs = sameTabs ? prior.tabs : sourceTabs(spaceTabs(currentTabs()));
-  fed = { tabs, history: historyRows, bookmarks, listing, space: spaces.current, profile, devices };
+  fed = { tabs, history: historyRows, bookmarks, listing, spaces, profile, devices };
   if (!sameSources) setSources({ tabs, history: historyRows, bookmarks });
   const shown = useSearch.getState();
   if (shown.open && !shown.text.trim()) useSearch.setState({ rows: rowsFor(shown.text, []) });
