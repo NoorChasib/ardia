@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { tabSet } from "../lib/fixtures.mjs";
 import { Launch, pageRates, switchLatency } from "../lib/runner.mjs";
+import { flattenScenario } from "../lib/report.mjs";
 import { pause } from "../lib/util.mjs";
 
 const MEASURE = {
@@ -27,6 +28,9 @@ const MEASURE = {
   hoverPasses: 2,
   hoverDwellMs: 1,
   hoverFirstDwellMs: 1,
+  loadingSeconds: 0.01,
+  loadingWarmupMs: 1,
+  slowMs: 600000,
 };
 
 const quoted = (expression, pattern) => {
@@ -51,9 +55,17 @@ function fakeLaunch(overrides = {}) {
   });
   const world = {
     active: tabs[0].id,
-    settings: { autoHideTabs: false, showTabHoverMenu: false },
+    settings: { autoHideTabs: false, showTabHoverMenu: false, sidebarRevealSpeed: "default", addressBar: "toolbar" },
     stuckSettings: false,
     rowLeft: -1200,
+    revealOnEdge: true,
+    pointerX: 0,
+    loading: false,
+    pending: false,
+    sidebarHidden: false,
+    pillBroken: false,
+    layoutReads: 0,
+    loadingStopsAtRead: null,
     foreign: [],
     commands: [],
     activations: [],
@@ -86,7 +98,10 @@ function fakeLaunch(overrides = {}) {
   };
   launch.xdotool = async (args) => {
     world.keys.push(args.join(" "));
-    if (args[0] === "mousemove") world.moves.push([Number(args[2]), Number(args[3])]);
+    if (args[0] === "mousemove") {
+      world.moves.push([Number(args[2]), Number(args[3])]);
+      world.pointerX = Number(args[2]);
+    }
     if (args[0] === "key" && args.at(-1) === "ctrl+Tab") {
       const at = Date.now();
       world.presses++;
@@ -98,6 +113,9 @@ function fakeLaunch(overrides = {}) {
   launch.state = async (body) => {
     const target = quoted(body, /s\.activate\(("[^"]+")\)/);
     if (target) activate(target);
+    const navigation = body.match(/s\.navigate\(("[^"]+"), ("[^"]+")\)/);
+    if (navigation) world.loading = world.pending = JSON.parse(navigation[2]).includes("/slow/");
+    if (body.includes("s.toggleSidebar(")) world.sidebarHidden = !world.sidebarHidden;
     const patch = quoted(body, /s\.updateSettings\((\{.*?\})\)/);
     if (patch && !(world.stuckSettings && world.settingsApplied)) {
       Object.assign(world.settings, patch);
@@ -115,7 +133,7 @@ function fakeLaunch(overrides = {}) {
     if (expression.startsWith("__benchProbe.snapshot")) return { mode: launch.instrument, counts: { rafCallbacks: world.presses * 10, getAnimations: 0 }, chromeSend: { "invoke:tab.command:capturePicture": world.presses }, hostEvents: {}, loaf: { count: 0, blockingMs: 0, durationMs: 0, maxMs: 0 }, events: {}, commands: world.commands, activations: world.activations, keys: [] };
     if (expression.startsWith("__benchProbe.startFrames")) return { rowsFound: launch.hoverRows };
     if (expression.startsWith("__benchProbe.stopFrames")) return world.stopFrames();
-    if (expression.startsWith("__benchProbe.rowLeft")) return world.rowLeft;
+    if (expression.startsWith("__benchProbe.rowLeft")) return world.settings.autoHideTabs && world.revealOnEdge && world.pointerX <= 2 ? 0 : world.rowLeft;
     if (expression.startsWith("__benchProbe.findRow")) {
       const index = tabs.findIndex((t) => t.title === quoted(expression, /findRow\(("[^"]+")\)/));
       return { clientLeft: 8, clientRight: 248, clientTop: 100 + index * 40, clientBottom: 136 + index * 40, hittable: true };
@@ -134,6 +152,14 @@ function fakeLaunch(overrides = {}) {
       window: { visibleMs: t.id === world.active ? 1000 : 0, hiddenMs: t.id === world.active ? 0 : 1000, rafVisible: 0, rafHidden: t.kind === "raf" ? 2 : 0, ticksVisible: 0, ticksHidden: t.kind === "ticker" ? 1 : 0, transitions: 0 },
     }));
     return { pages, targets: pages.length, failed: 0 };
+  };
+  launch.fixtures = { base: "http://fixture" };
+  launch.pendingSlow = async () => world.pending;
+  launch.layoutState = async () => {
+    world.layoutReads++;
+    if (world.layoutReads === world.loadingStopsAtRead) world.loading = world.pending = false;
+    const addressBar = world.settings.addressBar;
+    return { active: world.active, loading: world.loading, pill: { present: true, visible: !world.pillBroken && world.loading && addressBar === "sidebar" && world.sidebarHidden }, addressBar, rowLeft: world.sidebarHidden ? -1200 : 0 };
   };
   return { launch, world, tabs };
 }
@@ -190,6 +216,11 @@ describe("scenarios in memory", () => {
     assert.equal(s3.switches.keyToStore.median, 1);
     assert.equal(s3.switches.keyToShown.median, 8);
     assert.equal(s3.switches.raw[2].outcome, "recovered:wrong-tab");
+    assert.deepEqual(s3.workload, { expected: 6, presses: 6, recoveries: 1, matched: false });
+    const rows = flattenScenario(s3);
+    assert.ok(rows.some(([metric]) => metric === "switch recovered"), "latency rows stay");
+    assert.ok(rows.some(([metric, kind]) => metric === "workload recoveries" && kind === "workload"));
+    assert.ok(!rows.some(([metric]) => metric === "CPU %"), "a window with a put-back press did extra work, so its CPU rows go");
     assert.deepEqual(s3.frames, { frames: 30, gapsOver25: 2, maxGapMs: 41.3, gaps: { "25-33": 1, "33-50": 1 } });
     assert.equal(world.active, tabs[0].id);
   });
@@ -203,6 +234,8 @@ describe("scenarios in memory", () => {
     assert.deepEqual({ median: s4.reveal.median, arms: s4.reveal.arms, unarmed: s4.reveal.unarmed, misses: s4.reveal.misses }, { median: 130, arms: 3, unarmed: 1, misses: 1 });
     assert.equal(hidden.world.moves.filter(([x]) => x === 0).length, 4);
     assert.equal(hidden.world.settings.autoHideTabs, false);
+    assert.deepEqual(s4.workload, { expected: 4, revealed: 4, hidden: 4, matched: true });
+    assert.ok(flattenScenario(s4).some(([metric, kind]) => metric === "CPU %" && kind === "total"));
     const shown = fakeLaunch();
     shown.world.rowLeft = 0;
     shown.world.stopFrames = () => ({ frames: 1, gapsOver25: 0, maxGapMs: 0, gaps: {}, arms: 0, reveals: [], misses: 0 });
@@ -211,13 +244,39 @@ describe("scenarios in memory", () => {
     assert.match(shown.launch.result.scenarios.S4.invalidReason, /sidebar not hidden/);
   });
 
+  it("S4 keeps only its latency rows when a reveal doesn't happen, so a broken reveal can't look cheaper", async () => {
+    const { launch, world } = fakeLaunch({ instrument: "light" });
+    world.revealOnEdge = false;
+    await launch.scenario("S4");
+    const s4 = launch.result.scenarios.S4;
+    assert.equal(s4.valid, true);
+    assert.deepEqual(s4.workload, { expected: 4, revealed: 0, hidden: 4, matched: false });
+    assert.ok(!flattenScenario(s4).some(([metric]) => metric === "CPU %"));
+  });
+
+  it("S4 runs with --settings applied (except autoHideTabs, which it sets itself) and puts them back", async () => {
+    const { launch, world } = fakeLaunch({ instrument: "light", settings: { sidebarRevealSpeed: "slower", autoHideTabs: true } });
+    const seen = [];
+    const move = launch.move.bind(launch);
+    launch.move = async (x, y) => {
+      if (x === 0) seen.push(world.settings.sidebarRevealSpeed);
+      return move(x, y);
+    };
+    await launch.scenario("S4");
+    assert.deepEqual(launch.result.settingsApplied, { S4: { sidebarRevealSpeed: "slower" } });
+    assert.deepEqual([...new Set(seen)], ["slower"]);
+    assert.equal(world.settings.sidebarRevealSpeed, "default");
+    assert.equal(world.settings.autoHideTabs, false);
+    assert.equal(launch.result.scenarios.S4.workload.matched, true);
+  });
+
   it("S5 sweeps the rows with the settings on and fails the launch when they don't go back", async () => {
     const ok = fakeLaunch({ settings: { showTabHoverMenu: true } });
     ok.world.stopFrames = () => ({ frames: 20, gapsOver25: 0, maxGapMs: 16, gaps: {}, rowEntries: 6, offRow: 0, superseded: 0, misses: 0, hovers: [{ warm: false, ms: 870 }, { warm: true, ms: 40 }, { warm: false, ms: 880 }] });
     await ok.launch.scenario("S5");
     const s5 = ok.launch.result.scenarios.S5;
     assert.equal(s5.valid, true, s5.invalidReason);
-    assert.deepEqual(ok.launch.result.settingsApplied, { showTabHoverMenu: true });
+    assert.deepEqual(ok.launch.result.settingsApplied, { S5: { showTabHoverMenu: true } });
     assert.equal(s5.hover.cold.median, 875);
     assert.equal(s5.hover.expected, 6);
     assert.equal(ok.world.settings.showTabHoverMenu, false);
@@ -225,6 +284,53 @@ describe("scenarios in memory", () => {
     stuck.world.stuckSettings = true;
     stuck.world.stopFrames = ok.world.stopFrames;
     await assert.rejects(stuck.launch.scenario("S5"), /S5 settings were not restored: showTabHoverMenu/);
+  });
+
+  it("S6 counts a window that stays loading in the default layout, and restores the page after", async () => {
+    const { launch, world } = fakeLaunch();
+    await launch.scenario("S6");
+    const s6 = launch.result.scenarios.S6;
+    assert.equal(s6.valid, true, s6.invalidReason);
+    assert.deepEqual([s6.loading.pill, s6.loading.pillShown, s6.loading.start.problems, s6.loading.end.problems], [false, false, [], []]);
+    assert.deepEqual([world.loading, world.settings.addressBar, world.sidebarHidden], [false, "toolbar", false]);
+  });
+
+  it("S6 marks a window not comparable when the load ends inside it", async () => {
+    const { launch, world } = fakeLaunch();
+    world.loadingStopsAtRead = 3;
+    await launch.scenario("S6");
+    const s6 = launch.result.scenarios.S6;
+    assert.equal(s6.valid, false);
+    assert.match(s6.invalidReason, /^at the end: the active tab is not loading; its \/slow request is not pending/);
+  });
+
+  it("S7 counts a window with the pill shown over the hidden sidebar, and puts the layout back", async () => {
+    const { launch, world } = fakeLaunch();
+    await launch.scenario("S7");
+    const s7 = launch.result.scenarios.S7;
+    assert.equal(s7.valid, true, s7.invalidReason);
+    assert.deepEqual([s7.loading.pillShown, s7.loading.sidebarHidden], [true, true]);
+    assert.deepEqual([world.settings.addressBar, world.sidebarHidden], ["toolbar", false]);
+  });
+
+  it("S7 marks a window not comparable when the pill isn't shown", async () => {
+    const { launch, world } = fakeLaunch();
+    world.pillBroken = true;
+    await launch.scenario("S7");
+    const s7 = launch.result.scenarios.S7;
+    assert.equal(s7.valid, false);
+    assert.match(s7.invalidReason, /^at the start: the loading pill is not visible/);
+  });
+
+  it("a startup failure whose teardown left chrome running fails the teardown and keeps the scratch profile", async () => {
+    const { launch } = fakeLaunch();
+    launch.app = undefined;
+    launch.sampler = undefined;
+    launch.startupTeardown = { clean: false, leftover: [4242] };
+    await launch.finish("/nonexistent/scratch/launch");
+    assert.equal(launch.result.teardownFailed, true);
+    assert.deepEqual(launch.result.teardown, { app: false, leftover: [4242], xvfb: true, fixtures: true, duringStartup: true });
+    assert.ok(launch.result.notes.some((n) => n.includes("scratch profile kept at /nonexistent/scratch/launch")));
   });
 
   it("stops a scenario at its next step once the launch is aborted", async () => {

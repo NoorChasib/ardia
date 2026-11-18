@@ -18,24 +18,27 @@ run options:
   --runs N                launches per build (default 1)
   --tabs N                loaded tabs in the window (default 100)
   --scenarios LIST        any of S1,S2,S3,S4,S5,S6,S7 (default all, in that order)
-  --settings K=V          setting applied through updateSettings before S5 (repeatable; V is JSON or a bare string);
-                          a key the build does not know fails the launch
+  --settings K=V          setting applied through updateSettings around S4 and S5 (repeatable; V is JSON or a bare
+                          string), read back before the scenario and restored after it; S4 leaves out autoHideTabs,
+                          which it sets itself. A key the build does not know fails the launch
   --instrument MODE       full (default: counters, observers, frame and latency probes) or light (CPU/RAM only:
                           no patched DOM calls, no observers, no frame loop, no latency rows)
-  --engine DIR            engine dir with chrome (default: the newest under
-                          <repo>/apps/browser/build-ardiacore/prebuilt-linux-x86_64, where scripts/linux/fetch-engine.sh
-                          caches them)
-  --content-blocker DIR   uBlock Origin component dir (default: $ARDIA_BENCH_CONTENT_BLOCKER, else
-                          <repo>/packages/ardiacore/vendor/ubo/ext from scripts/linux/fetch-ubo.sh; a packaged build's
-                          lib/ardia/extensions/ublock adds the Linux bridge and the seeded engine; 'none' launches
-                          without one)
-  --cpus LIST             CPUs for the app, Xvfb and fixture server (default 10-15)
+  --engine DIR            engine dir with chrome (default: the cache entry under
+                          <repo>/apps/browser/build-ardiacore/prebuilt-linux-x86_64 whose directory changed last, which
+                          is not necessarily the engine for HEAD's key: pass the dir scripts/linux/fetch-engine.sh prints)
+  --content-blocker DIR   the content blocker as a packaged build ships it, lib/ardia/extensions/ublock (uBlock Origin
+                          plus the Linux bridge and the seeded engine); default $ARDIA_BENCH_CONTENT_BLOCKER. A tree
+                          without ardia-linux-bridge.js (the raw one from scripts/linux/fetch-ubo.sh) is refused, since
+                          it never starts on the Linux engine; 'none' launches without one
+  --cpus LIST             CPUs for the app, Xvfb and fixture server (default 10-15, for a 16-vCPU host; checked
+                          against the online CPUs)
   --scope MODE            where each chrome runs: user (default: its own systemd-run --user --scope), delegated (a
-                          child cgroup of this process's own delegated cgroup; what partition.sh sets through
-                          ARDIA_BENCH_SCOPE=delegated, since the partition confines user.slice to the other CPUs) or
-                          none (process-tree walk). Default: $ARDIA_BENCH_SCOPE, else user
-  --lock FILE             flock file (default /tmp/ardia-perflab.lock); when $ARDIA_PERFLAB_LEASE names the same file,
-                          partition.sh already holds it for the whole partition and the run takes no lock of its own
+                          child cgroup of this process's own delegated cgroup, for a run inside an external CPU
+                          partition that confines user.slice to the other CPUs) or none (process-tree walk).
+                          Default: $ARDIA_BENCH_SCOPE, else user
+  --lock FILE             flock file (default /tmp/ardia-perflab.lock); when $ARDIA_PERFLAB_LEASE names the same file
+                          and $ARDIA_PARTITION_STATE exists, an external partition already holds it for the whole
+                          partition and the run takes no lock of its own
   --lock-scope S          launch, block (default: one launch of every build, so each ABBA pair runs back to back)
                           or run (held from the first template to the last launch)
   --lock-timeout S        how long to wait for the lock (default 3600)
@@ -55,8 +58,10 @@ run options:
   --switch-via V          key (default: real xdotool keys) or store (the store's activate); both alternate the first two
                           static tabs, and a press that leaves the switcher open or lands elsewhere is put back
                           (Escape, then the store) and counted as a miss. Latency starts when the shell receives the
-                          engine's ArdiaShell:onCommand for the key
-  --edge-repeats N        S4 reveals (default 20)
+                          engine's ArdiaShell:onCommand for the key. A window with any put-back press did extra work:
+                          its CPU and counter rows are left out of the report, its latency rows stay
+  --edge-repeats N        S4 reveals (default 20); after each hold the harness reads tab 1's row once, and a window
+                          where any reveal or hide didn't happen keeps only its latency rows
   --loading-seconds S     S6 and S7 window (default 45): the active tab (tab 1) loads the fixture server's /slow/<ms>
                           and stays loading for the whole window; S6 keeps the default layout (address field in the
                           toolbar, reload button breathing), S7 puts the address field in the sidebar and hides the
@@ -98,11 +103,11 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { join, resolve } from "node:path";
-import { acquireLock, cleanupActive, configureScopes, hashFile, hashTree, makeTemplate, newestEngine } from "./lib/instance.mjs";
+import { acquireLock, cleanupActive, configureScopes, cpusProblem, hashFile, hashTree, makeTemplate, newestEngine } from "./lib/instance.mjs";
 import { launchOrder, parse, parseBuilds, parseSettings } from "./lib/options.mjs";
 import { SCENARIOS, abortCurrent, runLaunch, writeResult } from "./lib/runner.mjs";
 import { buildReport, buildNoise } from "./lib/report.mjs";
-import { DEFAULT_LOCK, DEFAULT_OUT, ENGINE_STORE, defaultContentBlocker, log } from "./lib/util.mjs";
+import { DEFAULT_LOCK, DEFAULT_OUT, ENGINE_STORE, contentBlockerProblem, log } from "./lib/util.mjs";
 
 const sha = (value) => createHash("sha256").update(JSON.stringify(value)).digest("hex").slice(0, 16);
 
@@ -117,10 +122,12 @@ async function runCommand(args) {
   if (!engineDir) throw new Error(`no engine under ${ENGINE_STORE}; run scripts/linux/fetch-engine.sh --nearest or pass --engine DIR`);
   const chrome = join(engineDir, "chrome");
   if (!existsSync(chrome)) throw new Error(`no chrome at ${chrome}; pass --engine`);
+  if (!args.engine) log(`no --engine: using ${engineDir}, the newest cache entry, which may not match HEAD's engine key`);
   const blockerArg = args["content-blocker"] ?? process.env.ARDIA_BENCH_CONTENT_BLOCKER;
-  const contentBlocker = blockerArg === "none" ? null : blockerArg ? resolve(blockerArg) : defaultContentBlocker();
-  if (blockerArg === undefined && !contentBlocker) throw new Error("no content blocker: run scripts/linux/fetch-ubo.sh, or pass --content-blocker DIR (or none)");
-  if (contentBlocker && !existsSync(join(contentBlocker, "manifest.json"))) throw new Error(`no uBlock Origin manifest in ${contentBlocker}`);
+  if (!blockerArg) throw new Error("no content blocker: pass --content-blocker <packaged build>/lib/ardia/extensions/ublock (docs/perf/linux-bench.md, \"Engine and content blocker\"), or --content-blocker none");
+  const contentBlocker = blockerArg === "none" ? null : resolve(blockerArg);
+  const blockerProblem = contentBlocker && contentBlockerProblem(contentBlocker);
+  if (blockerProblem) throw new Error(blockerProblem);
   const instrument = args.instrument ?? "full";
   if (!["full", "light"].includes(instrument)) throw new Error("--instrument is full or light");
   const lockScope = args["lock-scope"] ?? "block";
@@ -128,6 +135,8 @@ async function runCommand(args) {
   const switchVia = args["switch-via"] ?? "key";
   if (!["key", "store"].includes(switchVia)) throw new Error("--switch-via is key or store");
   const cpus = args.cpus ?? "10-15";
+  const cpuProblem = cpusProblem(cpus);
+  if (cpuProblem) throw new Error(cpuProblem);
   const scope = configureScopes(args.scope ?? process.env.ARDIA_BENCH_SCOPE ?? "user", cpus);
   const lockFile = resolve(args.lock ?? DEFAULT_LOCK);
   const leased = !!process.env.ARDIA_PERFLAB_LEASE && resolve(process.env.ARDIA_PERFLAB_LEASE) === lockFile && !!process.env.ARDIA_PARTITION_STATE && existsSync(process.env.ARDIA_PARTITION_STATE);
@@ -212,7 +221,7 @@ async function runCommand(args) {
   const take = async (why) => {
     if (held) return;
     if (leased) {
-      log(`${lockFile} is held by partition.sh for the whole partition (${why})`);
+      log(`${lockFile} is held by the external partition for its whole run (${why})`);
       held = () => {};
       return;
     }

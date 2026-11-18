@@ -138,7 +138,15 @@ export const PRIMARY = new Set([
   "PSS MiB\u0000shell",
 ]);
 
+export const workloadMatched = (record) => record?.workload?.matched !== false;
+
 export function flattenScenario(record) {
+  const rows = flattenWindow(record);
+  if (record.workload) for (const [name, v] of Object.entries(record.workload)) put(rows, `workload ${name}`, "workload", typeof v === "boolean" ? Number(v) : v);
+  return workloadMatched(record) ? rows : rows.filter(([, kind]) => kind === "latency" || kind === "workload");
+}
+
+function flattenWindow(record) {
   const rows = [];
   for (const [kind, v] of Object.entries(record.cpu ?? {})) {
     put(rows, "CPU %", kind, v.cpuPct);
@@ -416,9 +424,11 @@ export function buildReport(out, options = {}) {
   const sequence = all.map((r) => `${r.label}${r.ok ? "" : "(failed)"}`).join(" ");
   lines.push(`Launch order: ${sequence}`, "");
   const invalid = [];
+  const unmatched = [];
   for (const scenario of scenarios) {
     const usable = ok.filter((r) => validWindow(r, scenario));
     for (const r of ok) if (r.scenarios?.[scenario] && !validWindow(r, scenario)) invalid.push(`${r.launchId} ${scenario}: ${r.scenarios[scenario].invalidReason}`);
+    for (const r of usable) if (!workloadMatched(r.scenarios[scenario])) unmatched.push(`${r.launchId} ${scenario}: ${JSON.stringify(r.scenarios[scenario].workload)}`);
     const perResult = collect(usable, (r) => flattenScenario(r.scenarios[scenario]));
     lines.push(table(scenario, perResult, labels), "");
   }
@@ -427,6 +437,7 @@ export function buildReport(out, options = {}) {
   const memory = collect(ok.filter((r) => r.memory), (r) => flattenMemory(r.memory));
   lines.push(table("Memory at the end of the run (after shell GC + 10 s; depends on which scenarios ran and repeated), MiB", memory, labels), "");
   if (invalid.length) lines.push("### Windows left out (not comparable)", "", ...invalid.map((n) => `- ${n}`), "");
+  if (unmatched.length) lines.push("### Windows left out of the CPU and counter rows (their interaction work differed: recoveries in S3, reveals or hides that didn't happen in S4); their latency and workload rows stay", "", ...unmatched.map((n) => `- ${n}`), "");
   if (failed.length) {
     lines.push("### Failed launches", "");
     for (const r of failed) lines.push(`- ${r.launchId} (${r.label}, attempt ${r.attempt}): ${r.error}`);

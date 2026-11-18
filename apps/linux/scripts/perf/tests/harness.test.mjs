@@ -6,11 +6,12 @@ import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { fixturePath, startFixtureServer, tabSet } from "../lib/fixtures.mjs";
 import { createServer } from "node:net";
-import { launchArguments, launchEnvironment, newestEngine, portFree, readBuildInfo } from "../lib/instance.mjs";
+import { createServer as createHttpServer } from "node:http";
+import { cpusProblem, devtoolsEndpoint, launchArguments, launchEnvironment, newestEngine, portFree, readBuildInfo, requireOwnBrowser } from "../lib/instance.mjs";
 import { launchOrder, parse, parseBuilds, parseSettings } from "../lib/options.mjs";
 import { classify, parseCpuList } from "../lib/procs.mjs";
 import { buildNoise, buildReport, mannWhitney } from "../lib/report.mjs";
-import { DEFAULT_OUT, ENGINE_STORE, REPO_ROOT } from "../lib/util.mjs";
+import { DEFAULT_OUT, ENGINE_STORE, LINUX_BRIDGE, REPO_ROOT, contentBlockerProblem } from "../lib/util.mjs";
 
 let root;
 before(async () => { root = await mkdtemp(join(tmpdir(), "ardia-linux-bench-")); });
@@ -74,6 +75,26 @@ describe("defaults", () => {
     assert.equal(newestEngine(store), newer);
     assert.equal(newestEngine(join(root, "nowhere")), null);
   });
+
+  it("takes only the packaged content blocker, with the Linux bridge", async () => {
+    const raw = join(root, "ubo-raw");
+    const packaged = join(root, "ubo-packaged");
+    for (const dir of [raw, packaged]) {
+      await mkdir(dir, { recursive: true });
+      await writeFile(join(dir, "manifest.json"), "{}");
+    }
+    await writeFile(join(packaged, LINUX_BRIDGE), "");
+    assert.equal(contentBlockerProblem(packaged), null);
+    assert.match(contentBlockerProblem(raw), /has no ardia-linux-bridge\.js.*never starts on the Linux engine/);
+    assert.match(contentBlockerProblem(join(root, "nowhere")), /no uBlock Origin manifest/);
+  });
+
+  it("checks --cpus against the host's online CPUs", () => {
+    assert.equal(cpusProblem("10-15", "0-15"), null);
+    assert.equal(cpusProblem("0,2-3", "0-3"), null);
+    assert.match(cpusProblem("10-15", "0-9"), /names CPUs 10,11,12,13,14,15 that aren't online here \(online: 0-9\); the default 10-15 is for a 16-vCPU host/);
+    assert.match(cpusProblem("ten", "0-15"), /not a CPU list/);
+  });
 });
 
 describe("launch arguments", () => {
@@ -101,6 +122,43 @@ describe("launch arguments", () => {
     assert.equal(await portFree(port), false);
     await new Promise((resolve) => taken.close(resolve));
     assert.equal(await portFree(port), true);
+  });
+
+  it("reads the DevTools endpoint from DevToolsActivePort, or from /json/version for a fixed port", async () => {
+    const data = join(root, "devtools");
+    await mkdir(data, { recursive: true });
+    await writeFile(join(data, "DevToolsActivePort"), "41234\n/devtools/browser/abc\n");
+    assert.deepEqual(await devtoolsEndpoint(data, 0), { port: 41234, url: "ws://127.0.0.1:41234/devtools/browser/abc" });
+    await writeFile(join(data, "DevToolsActivePort"), "41234");
+    assert.equal(await devtoolsEndpoint(data, 0), null, "a half-written file is not an endpoint yet");
+    await assert.rejects(devtoolsEndpoint(join(root, "no-profile"), 0), /ENOENT/);
+    const server = createHttpServer((req, res) => {
+      res.writeHead(req.url === "/json/version" ? 200 : 404, { "content-type": "application/json" });
+      res.end(JSON.stringify({ webSocketDebuggerUrl: "ws://127.0.0.1/devtools/browser/fixed" }));
+    });
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    try {
+      const { port } = server.address();
+      assert.deepEqual(await devtoolsEndpoint(join(root, "no-profile"), port), { port, url: "ws://127.0.0.1/devtools/browser/fixed" });
+    } finally {
+      await new Promise((resolve) => server.close(resolve));
+    }
+  });
+
+  it("attaches to a fixed DevTools port only when the browser behind it is this launch's", async () => {
+    const browser = (pid) => {
+      const calls = [];
+      return { calls, closed: false, send: async (method) => { calls.push(method); return { processInfo: [{ type: "renderer", id: 7 }, { type: "browser", id: pid }] }; }, close() { this.closed = true; } };
+    };
+    const own = { pid: process.pid, cgroup: null, port: 9460, browser: browser(process.pid) };
+    await requireOwnBrowser(own);
+    assert.equal(own.browser.closed, false);
+    const stranger = browser(1);
+    const other = { pid: process.pid, cgroup: null, port: 9460, browser: stranger };
+    await assert.rejects(requireOwnBrowser(other), /belongs to another browser \(pid 1\)/);
+    assert.equal(other.browser, undefined, "quit() then has no socket to send Browser.close on");
+    assert.equal(stranger.closed, true);
+    assert.deepEqual(stranger.calls, ["SystemInfo.getProcessInfo"]);
   });
 
   it("classifies processes by command line", () => {

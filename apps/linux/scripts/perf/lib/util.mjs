@@ -8,9 +8,12 @@ export const ENGINE_STORE = join(REPO_ROOT, "apps/browser/build-ardiacore/prebui
 export const DEFAULT_OUT = join(REPO_ROOT, "output/linux-bench");
 export const DEFAULT_LOCK = "/tmp/ardia-perflab.lock";
 
-export function defaultContentBlocker() {
-  const vendored = join(REPO_ROOT, "packages/ardiacore/vendor/ubo/ext");
-  return existsSync(join(vendored, "manifest.json")) ? vendored : null;
+export const LINUX_BRIDGE = "ardia-linux-bridge.js";
+
+export function contentBlockerProblem(dir) {
+  if (!existsSync(join(dir, "manifest.json"))) return `no uBlock Origin manifest in ${dir}`;
+  if (!existsSync(join(dir, LINUX_BRIDGE))) return `${dir} has no ${LINUX_BRIDGE}: it is not the content blocker scripts/linux/package.py ships (uBlock Origin plus the Linux bridge and the seeded engine). The raw tree from scripts/linux/fetch-ubo.sh never starts on the Linux engine. Package a build and pass its lib/ardia/extensions/ublock (docs/perf/linux-bench.md, "Engine and content blocker"), or pass none`;
+  return null;
 }
 
 export const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

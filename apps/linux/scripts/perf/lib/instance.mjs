@@ -281,6 +281,13 @@ function parseCpuSet(text) {
   return out;
 }
 
+export function cpusProblem(list, online = readFileSync("/sys/devices/system/cpu/online", "utf8")) {
+  if (!/^\d+(-\d+)?(,\d+(-\d+)?)*$/.test(String(list).trim())) return `--cpus ${list} is not a CPU list like 10-15 or 0,2,4`;
+  const have = parseCpuSet(online.trim());
+  const missing = [...parseCpuSet(list)].filter((c) => !have.has(c));
+  return missing.length ? `--cpus ${list} names CPUs ${missing.join(",")} that aren't online here (online: ${online.trim()}); the default 10-15 is for a 16-vCPU host, so pass --cpus for this one` : null;
+}
+
 function missingCpus(cgroupDir, cpus) {
   const allowed = cpusetOf(cgroupDir);
   if (!allowed) return [];
@@ -314,7 +321,7 @@ function configureDelegated(own, cpus) {
     accessSync(join(own, "cgroup.subtree_control"), fsConstants.W_OK);
     accessSync(own, fsConstants.W_OK);
   } catch {
-    throw new Error(`--scope delegated: ${own} is not writable; run under partition.sh (a Delegate=yes unit)`);
+    throw new Error(`--scope delegated: ${own} is not writable; run inside a Delegate=yes unit, as an external CPU partition sets up`);
   }
   if (!readFileSync(join(own, "cgroup.controllers"), "utf8").split(/\s+/).includes("cpuset")) throw new Error(`--scope delegated: no cpuset controller in ${own}`);
   const partition = process.env.ARDIA_PARTITION;
@@ -355,7 +362,7 @@ export function configureScopes(mode, cpus) {
   const checks = mode === "user" ? [userManager] : mode === "delegated" ? [auxCgroup] : [own];
   for (const dir of checks) {
     const missing = dir ? missingCpus(dir, cpus) : [];
-    if (missing.length) throw new Error(`CPUs ${missing.join(",")} of --cpus ${cpus} are outside ${dir}'s cpuset${mode === "user" ? " (is the partition on? run the benchmark through partition.sh, which uses --scope delegated)" : ""}`);
+    if (missing.length) throw new Error(`CPUs ${missing.join(",")} of --cpus ${cpus} are outside ${dir}'s cpuset${mode === "user" ? " (is a CPU partition confining user.slice? run inside its Delegate=yes unit with --scope delegated)" : ""}`);
   }
   return { mode, parent: mode === "delegated" ? delegatedParent : mode === "user" ? userManager : own, partition: process.env.ARDIA_PARTITION ?? null, ...(delegated ?? {}) };
 }
@@ -398,7 +405,7 @@ export function portFree(port) {
   });
 }
 
-async function devtoolsEndpoint(data, debugPort) {
+export async function devtoolsEndpoint(data, debugPort) {
   if (!debugPort) {
     const text = await readFile(join(data, "DevToolsActivePort"), "utf8");
     if (!text.includes("\n")) return null;
@@ -456,6 +463,7 @@ export async function launch({ chrome, data, uiDir, contentBlocker, extraArgs, d
     });
     app.port = endpoint.port;
     app.browser = await connectCdp(endpoint.url, { callTimeout: 30000 });
+    if (debugPort) await requireOwnBrowser(app);
   } catch (error) {
     const down = await quit(app, { graceful: false });
     error.teardown = down;
@@ -479,6 +487,29 @@ export async function shellSession(app, { timeout = 45000 } = {}) {
     abort: () => (app.exited ? `chrome exited (${app.exitCode})` : null),
   });
   return session;
+}
+
+function processGroup(pid) {
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    return Number(stat.slice(stat.lastIndexOf(")") + 2).split(" ")[2]);
+  } catch {
+    return null;
+  }
+}
+
+export function ownsProcess(app, pid) {
+  return Number.isInteger(pid) && pid > 0 && (pid === app.pid || cgroupPids(app.cgroup).includes(pid) || processGroup(pid) === app.pid);
+}
+
+export async function requireOwnBrowser(app) {
+  const { processInfo } = await app.browser.send("SystemInfo.getProcessInfo", {}, { timeout: 10000 });
+  const browser = (processInfo ?? []).find((p) => p.type === "browser");
+  if (ownsProcess(app, browser?.id)) return;
+  const stranger = app.browser;
+  app.browser = undefined;
+  stranger.close();
+  throw new Error(`DevTools on port ${app.port} belongs to another browser (pid ${browser?.id ?? "unknown"}), not this launch (pid ${app.pid}); left it alone`);
 }
 
 const appAlive = (app) => groupAlive(app.pid) || cgroupPids(app.cgroup).length > 0;

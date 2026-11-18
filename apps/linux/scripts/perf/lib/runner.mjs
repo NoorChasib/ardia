@@ -362,36 +362,72 @@ export class Launch {
       }
       await this.sleep(1000);
       const frames = this.full ? await this.shellEval("__benchProbe.stopFrames()") : null;
-      return { extra: (probe, pagesAfter) => ({ frames: framesSummary(frames), switches: switchLatency(presses, probe, pagesAfter, this.tabInfo, byKey) }) };
+      const recoveries = presses.filter((p) => p.recovered).length;
+      const workload = { expected: this.switches, presses: presses.length, recoveries, matched: recoveries === 0 && presses.length === this.switches };
+      return { extra: (probe, pagesAfter) => ({ workload, frames: framesSummary(frames), switches: switchLatency(presses, probe, pagesAfter, this.tabInfo, byKey) }) };
     });
     await this.state(`s.activate(${js(this.tabInfo[0].id)}); return true;`);
     await this.sleep(1500);
   }
 
-  async s4() {
+  async withSettings(name, patch, body) {
+    const keys = Object.keys(patch);
+    if (!keys.length) return body();
+    const read = () => this.state(`return Object.fromEntries(${js(keys)}.map((k) => [k, s.settings[k] ?? null]));`);
+    const differ = (got, want) => keys.filter((k) => JSON.stringify(got[k]) !== JSON.stringify(want[k]));
+    const previous = await read();
+    try {
+      await this.state(`s.updateSettings(${js(patch)}); return true;`);
+      const applied = await read();
+      this.result.settingsApplied = { ...this.result.settingsApplied, [name]: applied };
+      const wrong = differ(applied, patch);
+      if (wrong.length) throw new Error(`${name} settings did not apply: ${wrong.join(", ")}`);
+      return await body();
+    } finally {
+      await this.state(`s.updateSettings(${js(previous)}); return true;`);
+      await this.sleep(1000);
+      const wrong = differ(await read(), previous);
+      if (wrong.length) throw new Error(`${name} settings were not restored: ${wrong.join(", ")}`);
+    }
+  }
+
+  s4() {
+    const { autoHideTabs, ...patch } = this.settings;
+    return this.withSettings("S4", patch, () => this.edgeScenario());
+  }
+
+  async edgeScenario() {
     await this.state(`s.updateSettings({ autoHideTabs: true }); return true;`);
     await this.move(SCREEN.width / 2, SCREEN.height / 2);
     await this.sleep(2000);
     const y = Math.round(SCREEN.height / 2);
     const rowLeft = await this.shellEval(`__benchProbe.rowLeft(${js(this.tabInfo[0].title)})`);
     const hiddenOk = typeof rowLeft === "number" && rowLeft < -1000;
+    const rowProbe = `__benchProbe.rowLeft(${js(this.tabInfo[0].title)})`;
     await this.window(
       "S4",
       async () => {
         if (this.full) await this.shellEval(`__benchProbe.startFrames("edge", { rowTitle: ${js(this.tabInfo[0].title)} })`);
+        let revealed = 0;
+        let hidden = 0;
         for (let i = 0; i < this.edgeRepeats; i++) {
           await this.move(40, y);
           await this.move(0, y);
           await this.sleep(600);
+          const shownLeft = await this.shellEval(rowProbe);
+          if (typeof shownLeft === "number" && shownLeft > -1000) revealed++;
           await this.move(SCREEN.width / 2, y);
           await this.sleep(600);
+          const hiddenLeft = await this.shellEval(rowProbe);
+          if (typeof hiddenLeft === "number" && hiddenLeft < -1000) hidden++;
         }
         const frames = this.full ? await this.shellEval("__benchProbe.stopFrames()") : null;
         const unarmed = frames ? Math.max(0, this.edgeRepeats - frames.arms) : null;
+        const workload = { expected: this.edgeRepeats, revealed, hidden, matched: revealed === this.edgeRepeats && hidden === this.edgeRepeats };
         return {
           valid: hiddenOk,
           invalidReason: hiddenOk ? null : `sidebar not hidden before S4 (row left ${rowLeft})`,
-          extra: () => ({ frames: framesSummary(frames), reveal: frames ? { ...summary(frames.reveals), arms: frames.arms, unarmed, timedOut: frames.misses, misses: frames.misses + unarmed, expected: this.edgeRepeats } : null }),
+          extra: () => ({ workload, frames: framesSummary(frames), reveal: frames ? { ...summary(frames.reveals), arms: frames.arms, unarmed, timedOut: frames.misses, misses: frames.misses + unarmed, expected: this.edgeRepeats } : null }),
         };
       },
       { pages: false },
@@ -400,29 +436,11 @@ export class Launch {
     await this.sleep(2000);
   }
 
-  async s5() {
-    const keys = Object.keys(this.settings);
-    if (!keys.length) return this.hoverScenario();
-    const previous = await this.state(`return Object.fromEntries(${js(keys)}.map((k) => [k, s.settings[k] ?? null]));`);
-    try {
-      await this.hoverScenario();
-    } finally {
-      await this.state(`s.updateSettings(${js(previous)}); return true;`);
-      await this.sleep(1000);
-      const back = await this.state(`return Object.fromEntries(${js(keys)}.map((k) => [k, s.settings[k] ?? null]));`);
-      const wrong = keys.filter((k) => JSON.stringify(back[k]) !== JSON.stringify(previous[k]));
-      if (wrong.length) throw new Error(`S5 settings were not restored: ${wrong.join(", ")}`);
-    }
+  s5() {
+    return this.withSettings("S5", this.settings, () => this.hoverScenario());
   }
 
   async hoverScenario() {
-    if (Object.keys(this.settings).length) {
-      await this.state(`s.updateSettings(${js(this.settings)}); return true;`);
-      const readBack = await this.state(`return Object.fromEntries(${js(Object.keys(this.settings))}.map((k) => [k, s.settings[k]]));`);
-      this.result.settingsApplied = readBack;
-      const wrong = Object.keys(this.settings).filter((k) => JSON.stringify(readBack[k]) !== JSON.stringify(this.settings[k]));
-      if (wrong.length) throw new Error(`settings did not apply: ${wrong.join(", ")}`);
-    }
     await this.move(SCREEN.width / 2, SCREEN.height / 2);
     await this.sleep(1500);
     const rows = [];
@@ -641,7 +659,10 @@ export class Launch {
       this.xvfb = await startXvfb({ base: this.displayBase, cpus: this.cpus, logDir: join(this.out, "logs") });
       await copyProfile(this.template, data);
       this.check();
-      this.app = await launch({ chrome: this.chrome, data, uiDir: this.build.dir, contentBlocker: this.contentBlocker, extraArgs: this.extraArgs, debugPort: this.debugPort ?? 0, display: this.xvfb.display, cpus: this.cpus, unit: `ardia-bench-${this.launchId}`, logPath });
+      this.app = await launch({ chrome: this.chrome, data, uiDir: this.build.dir, contentBlocker: this.contentBlocker, extraArgs: this.extraArgs, debugPort: this.debugPort ?? 0, display: this.xvfb.display, cpus: this.cpus, unit: `ardia-bench-${this.launchId}`, logPath }).catch((error) => {
+        this.startupTeardown = error.teardown ?? null;
+        throw error;
+      });
       Object.assign(this.result, { chrome: this.chrome, launcher: this.app.launcher, scopeMode: this.app.scopeMode, cgroup: this.app.cgroup, args: this.app.args, env: this.app.env, display: this.xvfb.display, cpus: this.cpus, log: logPath, fixturePort: this.fixtures.port, loadAtLaunch: loadAverage() });
       if (!this.app.cgroup) this.result.notes.push("no systemd scope: process membership from the session/tree walk, total CPU from sampled processes only");
       this.result.gpu = await this.app.browser.send("SystemInfo.getInfo", {}, { timeout: 15000 }).then(({ gpu }) => ({ renderer: gpu?.auxAttributes?.glRenderer ?? null, vendor: gpu?.auxAttributes?.glVendor ?? null, implementation: gpu?.auxAttributes?.glImplementationParts ?? gpu?.auxAttributes?.glImplementation ?? null, devices: (gpu?.devices ?? []).map((d) => d.deviceString || `${d.vendorId}:${d.deviceId}`) }), (error) => ({ error: error.message }));
@@ -669,16 +690,21 @@ export class Launch {
       await this.memory();
       this.result.ok = true;
     } finally {
-      this.result.finishedAt = new Date().toISOString();
-      await this.sampler?.stop().catch(() => {});
-      const app = this.app ? await quit(this.app).catch((e) => ({ clean: false, error: e.message })) : { clean: true };
-      const xvfb = await stopXvfb(this.xvfb).catch(() => false);
-      const fixtures = await stopFixtures(this.fixtures).catch(() => false);
-      this.result.teardown = { app: app.clean, leftover: app.leftover ?? [], xvfb, fixtures };
-      if (!app.clean || !xvfb || !fixtures) this.result.teardownFailed = true;
-      if (!this.keepProfiles) await rm(data, { recursive: true, force: true }).catch(() => {});
+      await this.finish(data);
     }
     return this.result;
+  }
+
+  async finish(data) {
+    this.result.finishedAt = new Date().toISOString();
+    await this.sampler?.stop().catch(() => {});
+    const app = this.app ? await quit(this.app).catch((e) => ({ clean: false, error: e.message })) : this.startupTeardown ?? { clean: true };
+    const xvfb = await stopXvfb(this.xvfb).catch(() => false);
+    const fixtures = await stopFixtures(this.fixtures).catch(() => false);
+    this.result.teardown = { app: app.clean, leftover: app.leftover ?? [], xvfb, fixtures, ...(this.startupTeardown ? { duringStartup: true } : {}) };
+    if (!app.clean || !xvfb || !fixtures) this.result.teardownFailed = true;
+    if (!app.clean) this.result.notes.push(`scratch profile kept at ${data}: chrome may still be running`);
+    else if (!this.keepProfiles) await rm(data, { recursive: true, force: true }).catch(() => {});
   }
 }
 
