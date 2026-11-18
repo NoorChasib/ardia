@@ -66,7 +66,10 @@ export const setTabProfile = (profileSyncId: string | null) => {
   tabProfile = profileSyncId;
 };
 
+const changesNothing = (change: TabsChange) => change.data === data() && !change.put.length && !change.remove.length && !change.endedPages.length && !change.clearArchived;
+
 function apply(change: TabsChange) {
+  if (changesNothing(change)) return;
   const db = tabDatabase();
   const hadPrivate = useTabs.getState().privates.length > 0;
   writeTabs(db, change.put.map(forTheDatabase), change.remove);
