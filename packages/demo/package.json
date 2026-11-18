@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:shims": "node --test scripts/web-shims.test.mjs",
-    "typecheck": "tsc -p . && node scripts/icons/check.mjs",
+    "check": "tsc -p . && node scripts/icons/check.mjs",
     "icons": "node scripts/icons/regenerate.mjs"
   },
   "dependencies": {

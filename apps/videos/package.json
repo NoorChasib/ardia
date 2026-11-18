@@ -6,6 +6,7 @@
   "scripts": {
     "render": "scripts/deliver.sh",
     "studio": "remotion studio",
+    "check": "tsc -p .",
     "test": "node --no-warnings --test scripts/beats.test.mts"
   },
   "dependencies": {

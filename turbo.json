@@ -16,9 +16,9 @@
       ],
       "cache": false
     },
-    "typecheck": {
+    "check": {
       "dependsOn": [
-        "^typecheck"
+        "^check"
       ]
     },
     "shaders:check": {

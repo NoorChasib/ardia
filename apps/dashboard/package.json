@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "start": "node server.mjs",
-    "check": "tsc --noEmit",
+    "check": "bun scripts/route-tree.mjs && tsc --noEmit",
     "test": "node --experimental-strip-types --no-warnings=ExperimentalWarning --test 'src/**/*.test.ts'"
   },
   "dependencies": {
