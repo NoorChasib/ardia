@@ -97,7 +97,7 @@ public class AppModule: Module {
     AsyncFunction("playIntroMusic") { (cues: [String: Double], muted: Bool) in IntroMusic.shared.play(cues: cues, muted: muted) }.runOnQueue(.main)
     AsyncFunction("setIntroMusicMuted") { (muted: Bool) in IntroMusic.shared.setMuted(muted) }.runOnQueue(.main)
     AsyncFunction("stopIntroMusic") { (fade: Double) in IntroMusic.shared.stop(fade: fade) }.runOnQueue(.main)
-    Function("launchConfig") { () -> [String: Any] in LaunchConfig.shared.snapshot }
+    Function("launchConfig") { () -> [String: Any] in LaunchConfig.shared.snapshot.merging(["services": ServicesConfig.forJavaScript]) { current, _ in current } }
   }
 
   private static func infoString(_ key: String) -> String? {

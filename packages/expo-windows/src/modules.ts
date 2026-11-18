@@ -30,8 +30,24 @@ const modules = new Map<string, object>();
 
 const RELEASE_NOTES_PAGE = "https://ardia.dev/release-notes";
 
+function launchServices(): unknown {
+  const constants = ((TurboModuleRegistry.get<TurboModule>("ArdiaWindowsUpdate") as NativeModule | null)?.getConstants?.() ?? {}) as Record<string, unknown>;
+  const text = constants.services;
+  if (typeof text !== "string" || !text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
 const around: Record<string, Record<string, (native: Call) => Call>> = {
   ArdiaApp: {
+    launchConfig: (native) => () => {
+      const config = native();
+      if (typeof config !== "object" || config === null) return config;
+      return { ...config, services: launchServices() };
+    },
     systemInfo: (native) => () => {
       const info = stampedSystemInfo(native());
       if (typeof info !== "object" || info === null) return info;

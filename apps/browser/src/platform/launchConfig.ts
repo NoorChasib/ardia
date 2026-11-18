@@ -1,8 +1,27 @@
 import { nativeModule, type LaunchConfig } from "@ardia/shell";
+import { replaceServices, services, type Services } from "@ardia/core/src/services.ts";
 
-let config: LaunchConfig | null = null;
+let config: (LaunchConfig & { services?: unknown }) | null = null;
 
-const current = (): LaunchConfig => (config ??= nativeModule("ArdiaApp").launchConfig());
+function adoptLaunchServices(snapshot: unknown) {
+  if (snapshot === undefined || snapshot === null) return;
+  const problems = replaceServices(snapshot as Partial<Services>, "launch");
+  if (problems.length) console.warn(`[services] launch snapshot refused: ${problems.map((p) => `${p.field || "(snapshot)"} ${p.problem}`).join(", ")}`);
+}
+
+const current = (): LaunchConfig => {
+  if (config) return config;
+  config = nativeModule("ArdiaApp").launchConfig() as LaunchConfig & { services?: unknown };
+  adoptLaunchServices(config.services);
+  return config;
+};
+
+export const appServices = (): Readonly<Services> => {
+  try {
+    current();
+  } catch {}
+  return services();
+};
 
 export const configDirectory = (): string => current().configDirectory;
 

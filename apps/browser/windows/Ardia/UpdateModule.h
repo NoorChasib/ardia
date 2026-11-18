@@ -1,11 +1,14 @@
 #pragma once
 
 #include <winhttp.h>
+#include <winrt/Windows.Data.Json.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <iterator>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -23,6 +26,100 @@
 #pragma comment(lib, "bcrypt.lib")
 
 namespace Ardia {
+
+namespace AppServices {
+
+inline constexpr uint64_t kLargestFileBytes = 64 * 1024;
+inline constexpr std::wstring_view kUrlFields[] = {L"telemetryUrl", L"feedbackUrl", L"switchesUrl", L"macFeedUrl", L"windowsFeedUrl", L"windowsTrustedPrefix", L"linuxReleasesUrl", L"releaseNotesUrl", L"siteUrl", L"issueUrl"};
+inline constexpr std::wstring_view kIngestKeyFields[] = {L"app", L"cli", L"site"};
+
+struct Snapshot {
+  std::string json;
+  std::wstring windowsFeedUrl;
+  std::wstring windowsTrustedPrefix;
+};
+
+inline bool IsHttps(std::wstring_view text) noexcept {
+  constexpr std::wstring_view kHttps = L"https://";
+  return text.size() > kHttps.size() && text.substr(0, kHttps.size()) == kHttps && text.find_first_of(L" \\") == std::wstring_view::npos;
+}
+
+inline bool IsUrlField(std::wstring_view field) noexcept {
+  return std::find(std::begin(kUrlFields), std::end(kUrlFields), field) != std::end(kUrlFields);
+}
+
+inline std::wstring Refusal(winrt::Windows::Data::Json::JsonObject const &fields) noexcept {
+  using winrt::Windows::Data::Json::JsonValueType;
+  try {
+    for (auto const &pair : fields) {
+      std::wstring field{pair.Key()};
+      auto value = pair.Value();
+      auto type = value.ValueType();
+      if (field == L"ingestKeys") {
+        if (type == JsonValueType::Null) continue;
+        if (type != JsonValueType::Object) return field + L" has the wrong type";
+        auto keys = value.GetObject();
+        if (keys.Size() != std::size(kIngestKeyFields)) return field + L" has the wrong type";
+        for (auto key : kIngestKeyFields) {
+          if (!keys.HasKey(key) || keys.GetNamedValue(key).ValueType() != JsonValueType::String || keys.GetNamedString(key).empty()) return field + L" has the wrong type";
+        }
+      } else if (field == L"sourceRepo") {
+        if (type != JsonValueType::String) return field + L" has the wrong type";
+        std::wstring repo{value.GetString()};
+        size_t slash = repo.find(L'/');
+        if (slash == std::wstring::npos || slash == 0 || slash + 1 == repo.size() || repo.find(L'/', slash + 1) != std::wstring::npos) return field + L" has the wrong type";
+      } else if (IsUrlField(field)) {
+        if (type == JsonValueType::Null && field != L"issueUrl") continue;
+        if (type != JsonValueType::String) return field + L" has the wrong type";
+        if (!IsHttps(std::wstring_view{value.GetString()})) return field + L" is not an https URL";
+      } else {
+        return field + L" is not a known field";
+      }
+    }
+    return {};
+  } catch (...) {
+    return L"the file could not be read";
+  }
+}
+
+inline std::wstring StringField(winrt::Windows::Data::Json::JsonObject const &fields, std::wstring_view field) noexcept {
+  try {
+    if (!fields.HasKey(field) || fields.GetNamedValue(field).ValueType() != winrt::Windows::Data::Json::JsonValueType::String) return {};
+    return std::wstring{fields.GetNamedString(field)};
+  } catch (...) {
+    return {};
+  }
+}
+
+inline Snapshot Read() noexcept {
+  Snapshot snapshot;
+  try {
+    std::optional<std::string> path = AppLaunch::TestValue("services");
+    if (!path || path->empty()) return snapshot;
+    auto contents = Files::ReadAll(std::filesystem::path(Paths::Wide(*path)));
+    winrt::Windows::Data::Json::JsonObject fields{nullptr};
+    std::wstring refusal;
+    if (!contents || contents->size() > kLargestFileBytes || !Files::IsValidUtf8(*contents) || !winrt::Windows::Data::Json::JsonObject::TryParse(winrt::to_hstring(*contents), fields)) refusal = L"the file could not be read";
+    else refusal = Refusal(fields);
+    if (!refusal.empty()) {
+      AppLaunch::Note(L"services: " + Paths::Wide(*path) + L" refused (" + refusal + L"); every service stays off");
+      return snapshot;
+    }
+    snapshot.json = *contents;
+    snapshot.windowsFeedUrl = StringField(fields, L"windowsFeedUrl");
+    snapshot.windowsTrustedPrefix = StringField(fields, L"windowsTrustedPrefix");
+  } catch (...) {
+    snapshot = {};
+  }
+  return snapshot;
+}
+
+inline Snapshot const &Shared() noexcept {
+  static const Snapshot snapshot = Read();
+  return snapshot;
+}
+
+}
 
 namespace AppUpdate {
 
@@ -371,6 +468,9 @@ struct UpdateModule {
 
   REACT_CONSTANT(feedOverride)
   const std::string feedOverride = Paths::Utf8(AppUpdate::FeedOverride());
+
+  REACT_CONSTANT(services)
+  const std::string services = AppServices::Shared().json;
 
   REACT_METHOD(fetchText)
   void fetchText(std::string url, winrt::Microsoft::ReactNative::ReactPromise<std::string> promise) noexcept {
