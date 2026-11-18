@@ -633,7 +633,9 @@ bun run --cwd apps/linux build
 python3 -m unittest discover -s engine/patches/build/tests
 python3 -m unittest discover -s engine/chromium/src/chrome/browser/ardia/tests
 python3 -m unittest discover -s engine/ardiacore-linux/tests
-node --test engine/ardiacore-linux/tests/bootstrap.test.mjs
+bun run test:engine-linux
+bun run test:linux-smoke
+bun run test:linux-ubo-seed
 ```
 
 - **Patch tooling tests.** These cover platform selection, separate bases, repeat application, materialization,
