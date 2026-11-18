@@ -727,7 +727,7 @@ async function waitFor(check, deadline) {
   return check();
 }
 
-async function persistedTabs({ count = 4, holdWrites = false } = {}) {
+async function persistedTabs({ count = 4, holdWrites = false, eventFirst = false } = {}) {
   const previous = { window: globalThis.window, document: globalThis.document };
   globalThis.window = new EventTarget();
   globalThis.document = Object.assign(new EventTarget(), { hidden: false });
@@ -737,17 +737,23 @@ async function persistedTabs({ count = 4, holdWrites = false } = {}) {
   const ids = [Object.keys(initial.tabs)[0]];
   for (let index = 1; index < count; index++) ids.push(useBrowser.getState().newTab("main", { url: `https://example.test/${index}`, background: true }));
   const listeners = new Set();
-  const state = { disk: cloneSessionValue(initial), writes: [], reads: 0, held: [], final: undefined };
+  const state = { disk: cloneSessionValue(initial), writes: [], reads: 0, held: [], final: undefined, failures: 0 };
   const native = {
     ...host(),
     invoke(method, pair) {
       assert.equal(method, "session.write");
       state.writes.push(cloneSessionValue(pair));
       state.readsAtWrite = state.reads;
+      if (state.failures > 0) {
+        state.failures--;
+        return Promise.reject(new Error("disk write rejected"));
+      }
       const answer = () => {
         state.disk = mergeSession(pair.base, pair.session, state.disk);
         const session = cloneSessionValue(state.disk);
-        setTimeout(() => { for (const listener of listeners) listener("ArdiaHost", "session", { base: cloneSessionValue(pair.session), session: cloneSessionValue(session), sourceWindowId: "main" }); }, 0);
+        const broadcast = () => { for (const listener of listeners) listener("ArdiaHost", "session", { base: cloneSessionValue(pair.session), session: cloneSessionValue(session), sourceWindowId: "main" }); };
+        if (eventFirst) broadcast();
+        else setTimeout(broadcast, 0);
         return session;
       };
       if (state.hold) return new Promise((resolve) => state.held.push(() => resolve(answer())));
@@ -953,3 +959,70 @@ test("closing the window saves a switch still waiting in the volatile delay befo
     fixture.restore();
   }
 });
+
+for (const eventFirst of [false, true]) {
+  test(`a switch made while a structural save is in flight keeps its volatile wait and label through that save's ${eventFirst ? "event and then its reply" : "reply and then its event"}`, async () => {
+    const fixture = await persistedTabs({ holdWrites: true, eventFirst });
+    try {
+      takeSessionWrites();
+      fixture.S().updateTab(fixture.ids[3], { url: "https://example.test/moved" });
+      await fixture.hide();
+      assert.equal(fixture.state.held.length, 1);
+      fixture.state.hold = false;
+      const switched = Date.now();
+      fixture.S().activate(fixture.ids[1]);
+      fixture.state.held.shift()();
+      await wait(500);
+      assert.equal(fixture.state.writes.length, 1, "the switch still waits after the structural save settles");
+      fixture.S().activate(fixture.ids[2]);
+      assert.ok(await waitFor(() => fixture.state.writes.length > 1, VOLATILE_SAVE_MS));
+      const elapsed = Date.now() - switched;
+      assert.ok(elapsed >= VOLATILE_SAVE_MS - 100 && elapsed < VOLATILE_SAVE_MS + 300, `the switches were written ${elapsed} ms after the first`);
+      await wait(STRUCTURAL_SAVE_MS + 100);
+      assert.equal(fixture.state.writes.length, 2, "both switches share one write");
+      assert.equal(fixture.state.disk.windows.main.activeTabIds.default, fixture.ids[2]);
+      assert.equal(fixture.state.disk.tabs[fixture.ids[3]].url, "https://example.test/moved");
+      const counted = takeSessionWrites();
+      assert.deepEqual([counted.session_writes, counted.session_cosmetic_writes], [2, 1]);
+    } finally {
+      fixture.restore();
+    }
+  });
+}
+
+test("a rejected save counts as no write, and its successful retry counts once", async () => {
+  const fixture = await persistedTabs();
+  try {
+    takeSessionWrites();
+    fixture.state.failures = 1;
+    fixture.S().updateTab(fixture.ids[2], { url: "https://example.test/retried" });
+    await assert.rejects(fixture.persistence.flush(), /disk write rejected/);
+    assert.deepEqual(takeSessionWrites(), { session_writes: 0, session_cosmetic_writes: 0, session_kb_written: 0 });
+    await fixture.persistence.flush();
+    assert.equal(fixture.state.writes.length, 2);
+    assert.equal(fixture.state.disk.tabs[fixture.ids[2]].url, "https://example.test/retried");
+    const counted = takeSessionWrites();
+    assert.deepEqual([counted.session_writes, counted.session_cosmetic_writes], [1, 0]);
+    assert.ok(counted.session_kb_written >= 1);
+  } finally {
+    fixture.restore();
+  }
+});
+
+for (const rejected of [false, true]) {
+  test(`the final save at quit counts ${rejected ? "nothing when it is rejected" : "once when it is acknowledged"}`, async () => {
+    const fixture = await persistedTabs();
+    try {
+      takeSessionWrites();
+      fixture.state.failures = rejected ? 1 : 0;
+      fixture.S().activate(fixture.ids[2]);
+      fixture.state.final();
+      await wait(20);
+      assert.equal(fixture.state.writes.length, 1);
+      const counted = takeSessionWrites();
+      assert.deepEqual([counted.session_writes, counted.session_cosmetic_writes], rejected ? [0, 0] : [1, 1]);
+    } finally {
+      fixture.restore();
+    }
+  });
+}

@@ -281,9 +281,10 @@ export function snapshotHostSession(s: BrowserState): HydrateData {
 }
 
 type SessionPair = { base: HydrateData; session: HydrateData };
+export type SessionWriteNote = { length: number; cosmetic: boolean };
 const sessionObject = (value: unknown): value is HydrateData => value !== null && typeof value === "object" && !Array.isArray(value);
 
-export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, onCanonical?: (base: HydrateData, session: HydrateData) => void, onWrite?: () => void) {
+export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, onCanonical?: (base: HydrateData, session: HydrateData) => void, onWrite?: (note: SessionWriteNote) => void) {
   let writes = Promise.resolve();
   let canonical = cloneSessionValue(initial);
   let observation = 0;
@@ -297,14 +298,20 @@ export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, 
   let dirty = false;
   let finalized = false;
   let finalWrite = Promise.resolve();
+  const notes = new WeakMap<HydrateData, SessionWriteNote>();
+  const written = (session: HydrateData) => {
+    const note = notes.get(session);
+    if (note) onWrite?.(note);
+  };
   const acceptCanonical = (session: HydrateData) => {
     canonical = cloneSessionValue(session);
     observation++;
   };
-  const reconcile = (session: HydrateData, needsWrite: boolean) => {
+  const reconcile = (session: HydrateData, needsWrite: boolean, note?: SessionWriteNote) => {
     if (finalized) return;
     generation++;
     latest = { base: cloneSessionValue(canonical), session: cloneSessionValue(session) };
+    if (needsWrite && note) notes.set(latest.session, note);
     pending = needsWrite ? latest : undefined;
     dirty = needsWrite;
   };
@@ -322,8 +329,8 @@ export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, 
       const observed = observation;
       inFlight = pair;
       try {
-        onWrite?.();
         const reply = await host.invoke("session.write", pair);
+        written(pair.session);
         if (finalized) return;
         const reconciled = generation;
         if (observed === observation && sessionObject(reply)) {
@@ -380,14 +387,14 @@ export function createSessionWriter(host: ArdiaHost, initial: HydrateData = {}, 
     const final = inFlight ? { base: mergeSession(inFlight.base, inFlight.session, latest.base), session: latest.session } : latest;
     issued = latest;
     try {
-      onWrite?.();
-      finalWrite = Promise.resolve(host.invoke("session.write", final)).then(() => {});
+      finalWrite = Promise.resolve(host.invoke("session.write", final)).then(() => written(final.session));
     } catch (error) {
       finalWrite = Promise.reject(error);
     }
     return finalWrite;
   };
-  return { queue: (session: HydrateData) => reconcile(session, true), reconcile, acceptCanonical, flush, drain, flushFinal };
+  const pendingNote = () => pending && notes.get(pending.session);
+  return { queue: (session: HydrateData, note?: SessionWriteNote) => reconcile(session, true, note), reconcile, acceptCanonical, flush, drain, flushFinal, pendingNote };
 }
 
 type SessionStore = {
@@ -412,12 +419,21 @@ const volatileWindowsChange = (before: Record<string, BrowserWindow>, after: Rec
   return was.length === now.length && now.every((id, index) => was[index] === id && (before[id] === after[id] || volatileWindowChange(before[id]!, after[id]!)));
 };
 
-export function volatileSessionChange(before: BrowserState, after: BrowserState): boolean {
-  if (before.tabs !== after.tabs && !cosmeticTabsChange(before.tabs, after.tabs)) return false;
-  if (before.windows !== after.windows && !volatileWindowsChange(before.windows, after.windows)) return false;
-  const was = sessionSources(before);
-  return sessionSources(after).every((source, index) => index < 2 || source === was[index]);
-}
+const volatileSourcesChange = (was: unknown[], now: unknown[]) => {
+  const [tabsWere, windowsWere] = was as [BrowserState["tabs"], BrowserState["windows"]];
+  const [tabs, windows] = now as [BrowserState["tabs"], BrowserState["windows"]];
+  if (tabsWere !== tabs && !cosmeticTabsChange(tabsWere, tabs)) return false;
+  if (windowsWere !== windows && !volatileWindowsChange(windowsWere, windows)) return false;
+  return now.every((source, index) => index < 2 || source === was[index]);
+};
+
+export const volatileSessionChange = (before: BrowserState, after: BrowserState): boolean =>
+  volatileSourcesChange(sessionSources(before), sessionSources(after));
+
+type SaveKind = "volatile" | "structural";
+const heavier = (a: SaveKind | undefined, b: SaveKind | undefined): SaveKind | undefined =>
+  a === "structural" || b === "structural" ? "structural" : a ?? b;
+const noteKind = (note: SessionWriteNote | undefined): SaveKind | undefined => note && (note.cosmetic ? "volatile" : "structural");
 
 type StandIn = { windowId: string; profileId?: string };
 
@@ -448,14 +464,12 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
   const plainSnapshot = snapshot === snapshotHostSession;
   const snapshotOf = (state: BrowserState) => snapshot(withoutStandIn(state, standIn), canonical);
   const written = linuxSessionVersion(stored) === linuxSessionVersion(initial) ? initial : unmigratedSessionShape(stored);
-  const writer = createSessionWriter(host, written, (base, session) => receive(base, session), () => noteSessionWrite(last.length, cosmeticWrite));
+  const writer = createSessionWriter(host, written, (base, session) => receive(base, session), (note) => noteSessionWrite(note.length, note.cosmetic));
   let timer: ReturnType<typeof setTimeout> | undefined;
   let due = 0;
   let last = canonicalSessionValue(equalSessionValue({ ...initial, version: undefined }, { ...written, version: undefined }) ? initial : written)!;
   let lastSources: unknown[] = [];
-  let lastState: BrowserState | undefined;
-  let unsaved: "volatile" | "structural" | undefined;
-  let cosmeticWrite = false;
+  let unsaved: SaveKind | undefined;
   let settled: { sources: unknown[]; json: string; snapshot: HydrateData } | undefined;
   let closing = false;
   const closeTokens = new Set<string>();
@@ -474,7 +488,7 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
   };
   const commit = () => {
     if (!unsaved) return;
-    const volatileOnly = unsaved === "volatile";
+    const kind = heavier(unsaved, noteKind(writer.pendingNote()));
     unsaved = undefined;
     const state = store.getState();
     const session = snapshotOf(state);
@@ -482,8 +496,7 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
     settled = { sources: sessionSources(state), json, snapshot: session };
     if (json === last) return;
     last = json;
-    cosmeticWrite = volatileOnly;
-    writer.queue(session);
+    writer.queue(session, { length: json.length, cosmetic: kind === "volatile" });
   };
   const flush = () => {
     cancel();
@@ -494,9 +507,8 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
     if (closing || applying || closeTokens.size) return;
     const sources = sessionSources(s);
     if (sameSources(sources, lastSources)) return;
-    const volatile = !!lastState && unsaved !== "structural" && volatileSessionChange(lastState, s);
+    const volatile = lastSources.length > 0 && unsaved !== "structural" && volatileSourcesChange(lastSources, sources);
     lastSources = sources;
-    lastState = s;
     unsaved = volatile ? "volatile" : "structural";
     schedule(volatile ? VOLATILE_SAVE_MS : STRUCTURAL_SAVE_MS);
   };
@@ -527,17 +539,14 @@ export function startHostPersistence(host: ArdiaHost, store: SessionStore, store
     const snapshot = snapshotOf(current);
     if (closeTokens.size) frozen = snapshot;
     const outstanding = !equalSessionValue(withoutFocus(snapshot), withoutFocus(session));
-    const volatileOnly = unsaved === "volatile";
+    const kind = heavier(unsaved, noteKind(writer.pendingNote())) ?? "structural";
     unsaved = undefined;
     lastSources = sessionSources(current);
-    lastState = current;
     last = canonicalSessionValue(snapshot)!;
     settled = { sources: lastSources, json: last, snapshot };
-    writer.reconcile(snapshot, outstanding);
-    if (outstanding && !closeTokens.size) {
-      cosmeticWrite = volatileOnly;
-      schedule(volatileOnly ? VOLATILE_SAVE_MS : STRUCTURAL_SAVE_MS);
-    } else cancel();
+    writer.reconcile(snapshot, outstanding, { length: last.length, cosmetic: kind === "volatile" });
+    if (outstanding && !closeTokens.size) schedule(kind === "volatile" ? VOLATILE_SAVE_MS : STRUCTURAL_SAVE_MS);
+    else cancel();
   };
   const receive = (base: HydrateData, session: HydrateData) => {
     if (closing || echoed(session)) return;
