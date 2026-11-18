@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# usage: scripts/linux/nilla-dev-run <extracted build folder> [browser arguments...]
+#
+# Starts an extracted Linux build of Nilla with ARDIA_DATA_DIR and ARDIA_CONFIG_HOME, which must both be set to a
+# scratch or Nilla-only folder, and with --password-store=basic, so today's engine never reaches an installed
+# Ardia's profile, data or secret-store items. It never installs anything.
+set -euo pipefail
+
+usage() { sed -n '2,6s/^# \{0,1\}//p' "$0"; }
+die() { echo "nilla-dev-run: $*" >&2; exit 2; }
+
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+  "") usage >&2; exit 2 ;;
+esac
+build="$1"
+shift
+launcher="$build/bin/ardia"
+[ -x "$launcher" ] || die "$build has no bin/ardia; pass the folder the build's tarball extracted to"
+
+config_root="${XDG_CONFIG_HOME:-$HOME/.config}"
+ardia_folders=("$config_root/ardia" "${XDG_DATA_HOME:-$HOME/.local/share}/ardia" "${XDG_CACHE_HOME:-$HOME/.cache}/ardia")
+
+resolved() { realpath -m -- "$1"; }
+
+touches_ardia() {
+  local path folder
+  path="$(resolved "$1")"
+  for folder in "${ardia_folders[@]}"; do
+    folder="$(resolved "$folder")"
+    [[ "$path" == "$folder" || "$path" == "$folder"/* ]] && return 0
+  done
+  return 1
+}
+
+for variable in ARDIA_DATA_DIR ARDIA_CONFIG_HOME; do
+  value="${!variable:-}"
+  [ -n "$value" ] || die "set $variable to a scratch or Nilla-only folder; this development build never uses Ardia's"
+  [[ "$value" == /* ]] || die "$variable must be an absolute path, not $value"
+  [ "$(resolved "$value")" != "$(resolved "$HOME")" ] || die "$variable can't be your home folder"
+  touches_ardia "$value" && die "$variable=$value is inside Ardia's folders"
+done
+touches_ardia "$ARDIA_CONFIG_HOME/ardia" && die "ARDIA_CONFIG_HOME=$ARDIA_CONFIG_HOME would put the profile in Ardia's folder $ARDIA_CONFIG_HOME/ardia"
+
+mkdir -p -- "$ARDIA_DATA_DIR" "$ARDIA_CONFIG_HOME"
+export ARDIA_DATA_DIR ARDIA_CONFIG_HOME
+exec "$launcher" --password-store=basic "$@"
