@@ -101,6 +101,7 @@ const SETTLED: Phase = { kind: "settled", id: null };
 type LeavingCard = { id: string; tab: BrowserTab; at: number };
 
 const NO_LEAVING_CARDS: LeavingCard[] = [];
+const NO_TABS: BrowserTab[] = [];
 const NO_LEAVING: DeckLeaving = {};
 
 export function deckShownIds(order: readonly string[], leaving: readonly LeavingCard[]): string[] {
@@ -900,10 +901,17 @@ export const TabDeck = memo(function TabDeck() {
     [],
   );
   const crossfade = reduceMotion ? tabGridMotion.crossfadeReduced : tabGridMotion.crossfade;
-  const gridTabs = gridAvailable && (grid || gridLayer) ? order.flatMap((id) => {
-    const tab = tabs.get(id);
-    return tab && !hidden.current.has(id) ? [tab] : [];
-  }) : [];
+  const gridListed = gridAvailable && (grid || gridLayer);
+  const gridTabs = useMemo(
+    () =>
+      gridListed
+        ? order.flatMap((id) => {
+            const tab = tabs.get(id);
+            return tab && !hidden.current.has(id) ? [tab] : [];
+          })
+        : NO_TABS,
+    [gridListed, order, tabs],
+  );
   const plusItems: MenuItem[] = incognito
     ? [
         { label: "New Tab", icon: "plus", onPress: newRegularTab },

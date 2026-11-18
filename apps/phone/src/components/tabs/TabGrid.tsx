@@ -1,7 +1,8 @@
-import { memo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { haptics } from "../../state/app/haptics";
-import { Pressable, ScrollView, type ScrollViewInstance, StyleSheet, Text, View } from "react-native";
-import Animated, { FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { countRender } from "../../state/app/interactionPerf";
+import { type LayoutChangeEvent, Pressable, ScrollView, type ScrollViewInstance, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withSpring, type BaseAnimationBuilder, type LayoutAnimationFunction } from "react-native-reanimated";
 import type { DeckGeometry } from "../../lib/deckGeometry";
 import { shownTone } from "../../lib/pageTone";
 import { useHeldPageTone } from "../../state/browse/deckHold";
@@ -23,7 +24,8 @@ type Props = {
   onClose: (id: string) => void;
 };
 
-export function TabGrid({ tabs, selectedId, geometry: g, reduceMotion, onOpen, onClose }: Props) {
+export const TabGrid = memo(function TabGrid({ tabs, selectedId, geometry: g, reduceMotion, onOpen, onClose }: Props) {
+  countRender("TabGrid");
   const insets = tabGridInsets(g.safeTop, deckHeaderBottom(), g.height, g.barCenterY, deckChromeLayout.barCircle, g.safeSide + deckChromeLayout.headerSide);
   const columns = tabGridColumns(g.width - insets.side * 2);
   const aspect = g.width / Math.max(g.height, 1);
@@ -35,14 +37,20 @@ export function TabGrid({ tabs, selectedId, geometry: g, reduceMotion, onOpen, o
   });
   const scroll = useRef<ScrollViewInstance>(null);
   const measured = useRef<{ viewport?: number; content?: number; cell?: { y: number; height: number }; centred?: boolean }>({});
-  const centre = () => {
+  const centre = useCallback(() => {
     const m = measured.current;
     if (m.centred || m.viewport === undefined || m.content === undefined || !m.cell) return;
     m.centred = true;
     scroll.current?.scrollTo({ x: 0, y: centredGridOffset(m.cell.y, m.cell.height, m.viewport, m.content), animated: false });
-  };
-  const reflow = reduceMotion ? LinearTransition.duration(tabsMotion.fade) : LinearTransition.springify().stiffness(tabGridMotion.reflow.stiffness).damping(tabGridMotion.reflow.damping).mass(tabGridMotion.reflow.mass);
-  const leave = FadeOut.duration(tabsMotion.fade);
+  }, []);
+  const focusLaidOut = useCallback(
+    (event: LayoutChangeEvent) => {
+      measured.current.cell = { y: event.nativeEvent.layout.y, height: event.nativeEvent.layout.height };
+      centre();
+    },
+    [centre],
+  );
+  const reflow = useMemo(() => (reduceMotion ? LinearTransition.duration(tabsMotion.fade) : LinearTransition.springify().stiffness(tabGridMotion.reflow.stiffness).damping(tabGridMotion.reflow.damping).mass(tabGridMotion.reflow.mass)), [reduceMotion]);
   return (
     <FadeView testID="tabGrid" top={{ length: tabGridLayout.topFade }} style={[styles.viewport, { top: viewportTop }]}>
       <ScrollView
@@ -62,32 +70,28 @@ export function TabGrid({ tabs, selectedId, geometry: g, reduceMotion, onOpen, o
         contentContainerStyle={[styles.content, { paddingTop: tabGridLayout.topFade, paddingBottom: insets.bottom, paddingHorizontal: insets.side }]}
       >
         {tabs.map((tab) => (
-          <Animated.View
-            key={tab.id}
-            testID="tabGridCell"
-            layout={reflow}
-            exiting={leave}
-            style={{ width: columns.width }}
-            onLayout={
-              tab.id === focusId
-                ? (event) => {
-                    measured.current.cell = { y: event.nativeEvent.layout.y, height: event.nativeEvent.layout.height };
-                    centre();
-                  }
-                : undefined
-            }
-          >
-            <TabGridCell tab={tab} selected={tab.id === selectedId} width={columns.width} aspect={aspect} onOpen={onOpen} onClose={onClose} />
-          </Animated.View>
+          <TabGridCell key={tab.id} tab={tab} selected={tab.id === selectedId} width={columns.width} aspect={aspect} reflow={reflow} onLaidOut={tab.id === focusId ? focusLaidOut : undefined} onOpen={onOpen} onClose={onClose} />
         ))}
       </ScrollView>
     </FadeView>
   );
-}
+});
 
-type CellProps = { tab: BrowserTab; selected: boolean; width: number; aspect: number; onOpen: (id: string) => void; onClose: (id: string) => void };
+const GRID_CELL_LEAVE = FadeOut.duration(tabsMotion.fade);
 
-const TabGridCell = memo(function TabGridCell({ tab, selected, width, aspect, onOpen, onClose }: CellProps) {
+type CellProps = {
+  tab: BrowserTab;
+  selected: boolean;
+  width: number;
+  aspect: number;
+  reflow: BaseAnimationBuilder | LayoutAnimationFunction;
+  onLaidOut: ((event: LayoutChangeEvent) => void) | undefined;
+  onOpen: (id: string) => void;
+  onClose: (id: string) => void;
+};
+
+const TabGridCell = memo(function TabGridCell({ tab, selected, width, aspect, reflow, onLaidOut, onOpen, onClose }: CellProps) {
+  countRender("TabGridCell");
   const theme = useTheme();
   const tone = shownTone(useHeldPageTone(tab.id), tab.themeColorHex);
   const host = display(tab.url).host;
@@ -101,6 +105,7 @@ const TabGridCell = memo(function TabGridCell({ tab, selected, width, aspect, on
   };
   const fill = tone.top ?? theme.surface;
   return (
+    <Animated.View testID="tabGridCell" layout={reflow} exiting={GRID_CELL_LEAVE} style={{ width }} onLayout={onLaidOut}>
     <View style={styles.cell}>
       <View testID="tabGridHeader" style={styles.header}>
         <CardIcon tab={tab} />
@@ -146,6 +151,7 @@ const TabGridCell = memo(function TabGridCell({ tab, selected, width, aspect, on
         )}
       </CardMenu>
     </View>
+    </Animated.View>
   );
 });
 
