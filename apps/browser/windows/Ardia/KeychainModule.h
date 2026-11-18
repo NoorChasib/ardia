@@ -92,7 +92,7 @@ class CredentialStore {
 
   static std::wstring const &Prefix() noexcept {
     static const std::wstring prefix = [] {
-      std::wstring service = L"Ardia Connected Accounts";
+      std::wstring service = L"Nilla Connected Accounts";
       if (!Paths::HasCustomDataDirectory()) return service + L"/";
       std::wstring directory = Paths::DataDirectory().wstring();
       for (auto &c : directory) {

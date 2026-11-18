@@ -153,7 +153,7 @@ public final class SyncService {
 
   public init(
     directory: URL = SyncService.defaultDirectory,
-    keyStore: any SyncKeyStore = KeychainKeyStore(service: "Ardia Sync Key"),
+    keyStore: any SyncKeyStore = KeychainKeyStore(service: "Nilla Sync Key"),
     coordinationTimeout: TimeInterval = SyncFolderAccess.defaultTimeout,
     now: @escaping @Sendable () -> Date = Date.init
   ) {
