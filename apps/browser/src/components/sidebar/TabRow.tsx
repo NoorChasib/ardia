@@ -129,9 +129,8 @@ export const TabRow = memo(function TabRow({
               textOnly ? (
                 <HoverSlot hovered={ends.lead === "close"} reserve="hover" align="start" hover={closeButton} />
               ) : (
-                <LeadingClose iconBox={sidebarTabIconSize(quiet)} close={ends.lead === "close" ? closeButton : null}>
+                <LeadingClose iconBox={sidebarTabIconSize(quiet)} close={ends.lead === "close" ? closeButton : null} badges={<TabBadges tabId={tab.id} />}>
                   <TabIcon tabId={tab.id} url={tab.url} favicon={tab.favicon} icon={tab.customIcon} profileId={tab.profileId} marks={flags & ICON_MARKS} compact={quiet} />
-                  <TabBadges tabId={tab.id} />
                 </LeadingClose>
               )
             ) : (

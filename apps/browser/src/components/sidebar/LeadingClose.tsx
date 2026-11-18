@@ -7,7 +7,7 @@ const CLOSE_BOX = iconButton.s.box;
 const COVERED = { opacity: 0 } as const;
 const OVER_ICON = { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" } as const;
 
-export function LeadingClose({ iconBox, close, children }: { iconBox: number; close: ReactNode; children: ReactNode }) {
+export function LeadingClose({ iconBox, close, badges, children }: { iconBox: number; close: ReactNode; badges?: ReactNode; children: ReactNode }) {
   const bleed = Math.max(0, (CLOSE_BOX - iconBox) / 2);
   const shown = close != null && close !== false;
   return (
@@ -16,6 +16,11 @@ export function LeadingClose({ iconBox, close, children }: { iconBox: number; cl
         {children}
       </View>
       {shown ? <View style={OVER_ICON}>{close}</View> : null}
+      {badges ? (
+        <View pointerEvents="none" style={{ position: "absolute", top: bleed, left: bleed, right: bleed, bottom: bleed }}>
+          {badges}
+        </View>
+      ) : null}
     </View>
   );
 }
