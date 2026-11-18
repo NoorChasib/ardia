@@ -45,7 +45,7 @@ test("the CLI's bundle id is the prefix plus nilla", () => {
   assert.match(read("apps/cli/ardia_cli/endpoint.py"), /^BUNDLE_ID = f"\{ID_PREFIX\}\.nilla"$/m);
 });
 
-test("the Mac project takes its bundle id and team from Nilla.xcconfig and signs no Netnyahoo keychain group", () => {
+test("the Mac project takes its bundle id and team from Nilla.xcconfig and signs only its own keychain groups", () => {
   const project = read("apps/browser/macos/Ardia.xcodeproj/project.pbxproj");
   assert.doesNotMatch(project, /PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|DevelopmentTeam|U5L5T3NGVV/);
   assert.equal([...project.matchAll(/baseConfigurationReference = (\w+) \/\* Nilla\.xcconfig \*\/;/g)].length, 2, "both project configurations are based on Nilla.xcconfig");
@@ -53,10 +53,12 @@ test("the Mac project takes its bundle id and team from Nilla.xcconfig and signs
   assert.deepEqual([...new Set([...project.matchAll(/MARKETING_VERSION = "?([^";]*)"?;/g)].map((m) => m[1]))], ["0.1.0"]);
   for (const file of ["Ardia.entitlements", "Ardia-ICloudPasskeys.entitlements"]) {
     const entitlements = read(`apps/browser/macos/Ardia-macOS/${file}`);
-    assert.doesNotMatch(entitlements, /netnyahoo/i, file);
-    for (const group of ["webauthn", "unexportable-keys", "secure-payment-confirmation"]) {
-      assert.ok(entitlements.includes(`<string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER).${group}</string>`), `${file} keeps ${group}`);
-    }
+    const groups = entitlements.match(/<key>keychain-access-groups<\/key>\s*<array>([\s\S]*?)<\/array>/)?.[1] ?? "";
+    assert.deepEqual(
+      [...groups.matchAll(/<string>([^<]+)<\/string>/g)].map((m) => m[1]),
+      ["webauthn", "unexportable-keys", "secure-payment-confirmation"].map((group) => `$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER).${group}`),
+      `${file} signs only its own keychain groups`,
+    );
   }
   assert.doesNotMatch(read("apps/browser/macos/ExportOptions-DeveloperID.plist"), /teamID/);
 });
