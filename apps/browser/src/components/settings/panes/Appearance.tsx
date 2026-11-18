@@ -1,6 +1,6 @@
 import type { AppIcon } from "../../../state/app/appSettings";
-import { Box, GlassFill, PopUp, radius, space, Toggle, type Option } from "../../ui";
-import { Image, View } from "react-native";
+import { Box, GlassFill, PopUp, radius, space, Text, Toggle, useHover, type Option } from "../../ui";
+import { Animated, Image, Pressable, View } from "react-native";
 import { useTheme } from "../../ui/theme";
 import { useSettings } from "../../../state/browser/hooks";
 import { updateSettings } from "../../../state/settings/actions";
@@ -8,12 +8,14 @@ import type { Settings } from "../../../state/settings/settings";
 import { Anchor, FormField, Group, Row, SectionHeader, SettingToggle } from "../Form";
 import { MiniWindow } from "../MiniWindow";
 import { PictureChoice } from "../PictureChoice";
+import { SelectableCard } from "../SelectableCard";
 import { setting, type SettingId } from "../settingsIndex";
 import { PAGE_FRAME } from "../../../lib/windowLayout";
 import { FrameSlider, TabCornersSlider } from "./FrameSlider";
 import { BookmarksBarRow } from "./BookmarksBarSection";
 import { InterfaceSizeControl } from "./InterfaceSize";
-import { modePreview, stylePreview } from "../tokens";
+import { modePreview, pictureChoice, stylePreview } from "../tokens";
+import { buttonMotion, usePressScaleMotion } from "../../ui/motion";
 import { APP_ICON_SIZE, appIconChoices, chooseAppIcon } from "../../../state/settings/paneData";
 import { useResource } from "../../../state/settings/resources";
 import { useSidebarHighContrast } from "../../../state/sidebar/textLook";
@@ -267,27 +269,53 @@ function AppIconPicker() {
   const icons = choices?.icons ?? [];
   const current = choices?.current ?? null;
   if (icons.length < 2) return null;
+  const title = setting("appearance.appIcon").title;
+  const currentName = icons.find((icon) => icon.id === current)?.name;
   return (
     <Anchor id="appearance.appIcon" shape="card">
-      <FormField label={setting("appearance.appIcon").title}>
-        <View style={ICON_GRID}>
+      <FormField label={title}>
+        <View style={ICON_GRID} accessibilityRole="radiogroup" accessibilityLabel={title}>
           {icons.map((icon) => (
             <IconChoice key={icon.id} icon={icon} selected={icon.id === current} onPress={() => chooseAppIcon(icon.id)} />
           ))}
         </View>
+        {currentName ? (
+          <Text size="small" tone="textSecondary" style={ICON_NAME}>
+            {currentName}
+          </Text>
+        ) : null}
       </FormField>
     </Anchor>
   );
 }
 
-const ICON_GRID = { flexDirection: "row", flexWrap: "wrap", columnGap: space.s, rowGap: space.ml } as const;
+const ICON_GRID = { flexDirection: "row", flexWrap: "wrap", gap: space.s } as const;
+const ICON_CARD = { width: pictureChoice.icon, height: pictureChoice.icon, alignItems: "center", justifyContent: "center" } as const;
 const ICON_IMAGE = { width: APP_ICON_SIZE, height: APP_ICON_SIZE } as const;
+const ICON_NAME = { marginTop: space.s } as const;
 
 function IconChoice({ icon, selected, onPress }: { icon: AppIcon; selected: boolean; onPress: () => void }) {
+  const { hovered, hoverProps } = useHover();
+  const pressMotion = usePressScaleMotion(true, buttonMotion.controlPressScale);
+  const scaleStyle = pressMotion.scale ? { transform: [{ scale: pressMotion.scale }] } : undefined;
   return (
-    <PictureChoice title={icon.name} selected={selected} onPress={onPress} tooltip={icon.name} size="icon">
-      {icon.preview ? <Image source={{ uri: icon.preview }} style={ICON_IMAGE} /> : null}
-    </PictureChoice>
+    <View {...hoverProps}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={pressMotion.onPressIn}
+        onPressOut={pressMotion.onPressOut}
+        tooltip={icon.name}
+        accessibilityRole="radio"
+        accessibilityState={{ selected }}
+        accessibilityLabel={icon.name}
+      >
+        <Animated.View style={scaleStyle}>
+          <SelectableCard selected={selected} hovered={hovered} fill={false} radius="sheet" style={ICON_CARD}>
+            {icon.preview ? <Image source={{ uri: icon.preview }} style={ICON_IMAGE} /> : null}
+          </SelectableCard>
+        </Animated.View>
+      </Pressable>
+    </View>
   );
 }
 
