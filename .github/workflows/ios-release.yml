@@ -355,10 +355,10 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: ios-release-logs
+          name: nilla-dev-${{ github.sha }}-ios-release-logs
           path: |
             ${{ github.workspace }}/.ci/ios-release/*.log
             ${{ github.workspace }}/.ci/ios-release/export/*.plist
             ${{ github.workspace }}/.ci/ios-release/bundle/stamp.plist
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3

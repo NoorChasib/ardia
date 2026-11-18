@@ -77,9 +77,10 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: android-unit-test-reports
+          name: nilla-dev-${{ github.sha }}-android-unit-test-logs
           path: |
             packages/phone/android/build/reports/tests
             apps/phone/android/app/build/reports/tests
             apps/phone/android/ardia-design/build/reports/tests
           if-no-files-found: ignore
+          retention-days: 3

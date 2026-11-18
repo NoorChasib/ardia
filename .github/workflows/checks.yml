@@ -18,7 +18,7 @@ on:
       - "tsconfig.base.json"
       - ".nvmrc"
       - "patches/**"
-      - ".github/workflows/checks.yml"
+      - ".github/workflows/**"
       - ".github/actions/bun-install/**"
   push:
     branches: [main]
@@ -65,6 +65,46 @@ jobs:
       - name: Repository tests
         if: ${{ !cancelled() && matrix.part == 'rest' }}
         run: bun run test:root
+      - name: CI uploads logs and smoke results only
+        if: ${{ !cancelled() && matrix.part == 'rest' }}
+        run: |
+          cat > "$RUNNER_TEMP/artifacts.mjs" <<'JS'
+          import { readdirSync, readFileSync } from "node:fs";
+          const dir = ".github/workflows";
+          const installable = /\.(dmg|zip|app|xcarchive|ipa|apk|aab|exe|msi|msix|appx|dll|deb|rpm|appimage|tar|tar\.xz|tar\.gz|tgz|tar\.zst)(\/|$)|env\.APP\b|\/(installer|dist|release|export)(\/|$)/i;
+          const gate = /vars\.NILLA_RELEASES_ENABLED/;
+          const prefix = `nilla-dev-$${"{{"} github.sha }}-`;
+          const problems = [];
+          for (const file of readdirSync(dir).filter((name) => name.endsWith(".yml"))) {
+            const jobs = Bun.YAML.parse(readFileSync(`${dir}/${file}`, "utf8")).jobs ?? {};
+            const needsOf = (job) => [jobs[job]?.needs ?? []].flat();
+            const isGated = (job, seen = new Set()) => {
+              if (seen.has(job)) return false;
+              seen.add(job);
+              if (job === "releases-enabled" || gate.test(String(jobs[job]?.if ?? ""))) return true;
+              return needsOf(job).some((need) => isGated(need, seen));
+            };
+            for (const [job, spec] of Object.entries(jobs)) {
+              if (isGated(job)) continue;
+              for (const step of spec.steps ?? []) {
+                if (!String(step.uses ?? "").startsWith("actions/upload-artifact@") || gate.test(String(step.if ?? ""))) continue;
+                const name = String(step.with?.name ?? "");
+                const where = `${file} › ${job} › ${name || "(no name)"}`;
+                if (!name.startsWith(prefix) || !name.endsWith("-logs")) problems.push(`${where}: name it ${prefix}<what>-logs`);
+                if (Number(step.with?.["retention-days"]) !== 3) problems.push(`${where}: retention-days must be 3`);
+                for (const line of String(step.with?.path ?? "").split("\n").map((l) => l.trim().replace(/^!/, "")).filter(Boolean)) {
+                  if (installable.test(line)) problems.push(`${where}: ${line} looks installable; CI uploads logs and smoke results only`);
+                }
+              }
+            }
+          }
+          if (problems.length) {
+            for (const problem of problems) console.log(`::error::${problem}`);
+            process.exit(1);
+          }
+          console.log("every CI upload is logs or smoke results");
+          JS
+          bun "$RUNNER_TEMP/artifacts.mjs"
       - name: This share of the browser's tests
         if: matrix.part == 'browser'
         env:

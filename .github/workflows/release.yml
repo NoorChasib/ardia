@@ -207,10 +207,10 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: build-logs
+          name: nilla-dev-${{ github.sha }}-release-build-logs
           path: ${{ steps.paths.outputs.dist }}/*.log
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   sign:
     needs: [preflight, build]
@@ -310,10 +310,10 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: sign-logs
+          name: nilla-dev-${{ github.sha }}-release-sign-logs
           path: ${{ steps.paths.outputs.dist }}/*.log
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   linux:
     needs: preflight
@@ -373,14 +373,14 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: linux-logs
+          name: nilla-dev-${{ github.sha }}-release-linux-logs
           path: |
             ${{ runner.temp }}/linux/*.log
             ${{ runner.temp }}/linux/smoke
             ${{ runner.temp }}/linux/smoke-deb
             ${{ runner.temp }}/linux/smoke-appimage
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   windows:
     needs: preflight
