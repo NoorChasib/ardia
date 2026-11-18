@@ -88,6 +88,9 @@
     "smoke-drift-path",
     "smoke-drift-lower",
     "smoke-drift-title"
+   ],
+   "apps/linux/src/hostPageScripts.ts": [
+    "webstore-adapter-label"
    ]
   }
  },
@@ -605,7 +608,12 @@
    "class": "G",
    "mechanism": "class",
    "regex": "(?:Add to|Remove from) Ardia\\b",
-   "why": "Chrome Web Store labels the engines draw."
+   "scope": [
+    "apps/linux/scripts/acceptance/*",
+    "docs/windows.md",
+    "docs/dia-feature-parity.md"
+   ],
+   "why": "The Web Store button label all three engines draw (chromium-helium-branding.patch's extstore fixup on the Mac and Windows, ac_linux_web_store.cc on Linux), only where a check or acceptance step asserts what the engine shows; the app's own relabel script (webStore.ts and its Linux copy in hostPageScripts.ts) and its settings copy are app-owned and rename together."
   },
   {
    "id": "H-linux-modules",
@@ -716,6 +724,13 @@
    "why": "Profile files the engines read and write by name."
   },
   {
+   "id": "J-ac-keys",
+   "class": "J",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])AC(?!FeedbackURL(?![A-Za-z0-9_])|ReleaseNotesURL(?![A-Za-z0-9_]))[A-Z][a-z][A-Za-z0-9]*(?![A-Za-z0-9_])",
+   "why": "Every AC<Word> Info.plist key the Mac engine and shell read, and the AC<Word> engine class names (plan 0.4 class J and R), except ACFeedbackURL and ACReleaseNotesURL, which their owner renames to NL* (R41)."
+  },
+  {
    "id": "J-plist",
    "class": "J",
    "mechanism": "literal",
@@ -767,11 +782,21 @@
    "why": "The Windows app folder apps/browser/windows/Ardia and its icon (series_win.py, ardia_resources_win.txt)."
   },
   {
+   "id": "P-windows-folder-sibling",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?<=\\.\\.[/\\\\])Ardia(?=[/\\\\;\\\"'`<>\\s,)\\]]|$)",
+   "scope": [
+    "apps/browser/windows/*"
+   ],
+   "why": "The Windows app folder named from a sibling project as ..\\Ardia, also as the last entry of a path list (MSBuild include directories end it with ; or <)."
+  },
+  {
    "id": "P-windows-folder-refs",
    "class": "P",
    "mechanism": "class",
-   "regex": "(?<=windows/)Ardia(?=/)|(?<=windows\\\\)Ardia(?=\\\\)",
-   "why": "Paths to apps/browser/windows/Ardia from anywhere in the repo (relative or from the root)."
+   "regex": "(?<=windows/)Ardia(?=[/\\\\;\\\"'`<>\\s,)\\]]|$)|(?<=windows\\\\)Ardia(?=[/\\\\;\\\"'`<>\\s,)\\]]|$)|(?<=windows\\\\\\\\)Ardia(?=\\\\\\\\|[\\\"'`])",
+   "why": "Paths to apps/browser/windows/Ardia from anywhere in the repo (relative or from the root), also when the folder ends the path (sparse checkouts, path lists, quoted or backticked names)."
   },
   {
    "id": "P-windows-engine-files",
@@ -805,8 +830,31 @@
    "id": "U-hosts",
    "class": "U",
    "mechanism": "class",
-   "regex": "(?<![a-z0-9])(?i:(?:[a-z0-9-]+\\.)*ardia\\.(?:dev|app))(?![A-Za-z0-9_-])|(?i:netnyahoo\\.com)",
-   "why": "ardia.dev, its hosts and netnyahoo.com: never mechanical; S routes them and R reports leftovers."
+   "regex": "(?<![a-z0-9])(?i:(?:[a-z0-9-]+\\.)*ardia\\.dev)(?![A-Za-z0-9_-])|(?i:netnyahoo\\.com)",
+   "why": "ardia.dev, its hosts and netnyahoo.com: never mechanical; S routes them and R reports leftovers. Bundle file names such as Ardia.app are not hosts: they follow the product rename."
+  },
+  {
+   "id": "U-logs-scope",
+   "class": "U",
+   "mechanism": "literal",
+   "text": "ardia.app",
+   "boundary": "none",
+   "quoted": true,
+   "scope": [
+    "packages/core/src/telemetryWire.ts"
+   ],
+   "why": "The OTLP logs scope name ardia.app that telemetry rows carry (ClickHouse ScopeName): S routes it with the hosts."
+  },
+  {
+   "id": "X-owner-installed-app",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "/Applications/(?:Ardia|Netnyahoo)\\.app",
+   "scope": [
+    "scripts/agent/*"
+   ],
+   "keepsBundleName": true,
+   "why": "The owner's installed upstream app in the agent safety scripts (cpu-cap's never list, unregister-builds' keep list): a real application on the owner's Mac, not this build's product."
   },
   {
    "id": "O-offline-game",
@@ -1267,6 +1315,15 @@
    ]
   },
   {
+   "id": "webstore-adapter-label",
+   "plan": "D.6 hand edit (Codex wave 0 finding 6: the Linux adapter routes the shared Web Store script by exact text, so its copy of the app-owned label renames with webStore.ts)",
+   "find": "(?<=el\\.textContent = \\\")(Add to|Remove from) Ardia(?=\\\";)",
+   "replace": "\\1 Nilla",
+   "scope": [
+    "apps/linux/src/hostPageScripts.ts"
+   ]
+  },
+  {
    "id": "cli-script",
    "plan": "D.3 (E11)",
    "find": "^ardia = \\\"ardia_cli\\.cli:main\\\"$",
@@ -1359,8 +1416,8 @@
   },
   {
    "id": "upstream-hosts",
-   "what": "ardia.dev and netnyahoo.com leftovers (never mechanical; S routes them)",
-   "regex": "(?i)ardia\\.dev|ardia\\.app|netnyahoo\\.com"
+   "what": "ardia.dev and netnyahoo.com leftovers and the ardia.app telemetry scope (never mechanical; S routes them)",
+   "regex": "(?i:ardia\\.dev|netnyahoo\\.com)|(?<![A-Za-z0-9_-])ardia\\.app(?![A-Za-z0-9_-])"
   },
   {
    "id": "nilla-word",
@@ -2191,13 +2248,14 @@
    "files": 7,
    "occurrences": 8,
    "decision": "protect",
-   "protectedOccurrences": 8,
-   "renamedOccurrences": 0,
+   "protectedOccurrences": 3,
+   "renamedOccurrences": 5,
    "notRsFiles": 3,
    "coveredBy": [
-    "G-webstore"
+    "G-webstore",
+    "R-engine-branding-row"
    ],
-   "why": "Same artifact on both sides (G-webstore)"
+   "why": "Same artifact on both sides (G-webstore, R-engine-branding-row)"
   },
   {
    "text": "ArdiaControl.sock",
@@ -3578,8 +3636,8 @@
    "files": 3,
    "occurrences": 4,
    "decision": "protect",
-   "protectedOccurrences": 4,
-   "renamedOccurrences": 0,
+   "protectedOccurrences": 2,
+   "renamedOccurrences": 2,
    "notRsFiles": 1,
    "coveredBy": [
     "G-webstore"
