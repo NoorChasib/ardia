@@ -139,6 +139,7 @@ export function save(patch: Partial<Session> | (Partial<Session> & Sharing)) {
 }
 
 export const isSharing = () => saved.sharing;
+export const sharingAgreed = () => saved.sharing && useTelemetry.getState().sharing;
 
 let currentSession: string | null = null;
 export const sessionId = () => (currentSession ??= uuidv7());

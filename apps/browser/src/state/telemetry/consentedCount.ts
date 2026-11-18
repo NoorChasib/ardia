@@ -1,6 +1,4 @@
-import { isSharing, useTelemetry } from "./choice";
-
-export const sharingAgreed = () => isSharing() && useTelemetry.getState().sharing;
+import { sharingAgreed, useTelemetry } from "./choice";
 
 export function consentedCount() {
   let count = 0;
@@ -8,8 +6,8 @@ export function consentedCount() {
     if (s.sharing !== prev.sharing) count = 0;
   });
   return {
-    note: () => void (isSharing() && count++),
-    add: (amount: number) => void (isSharing() && (count += amount)),
+    note: () => void (sharingAgreed() && count++),
+    add: (amount: number) => void (sharingAgreed() && (count += amount)),
     take: () => {
       const taken = count;
       count = 0;

@@ -1,4 +1,5 @@
-import { consentedCount, sharingAgreed } from "./consentedCount";
+import { sharingAgreed } from "./choice";
+import { consentedCount } from "./consentedCount";
 
 export type TabReleaseOutcome = "released" | "alreadyClosed" | "failed";
 
