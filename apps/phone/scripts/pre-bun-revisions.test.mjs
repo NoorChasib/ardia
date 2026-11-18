@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { createExport, toolBunfig } from "./bundle-export.ts";
+import { ARCHIVED_METRO_CONFIG, NESTED_MODULES, createExport, toolBunfig, toolNestedModules } from "./bundle-export.ts";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const corexBun = path.join(here, "corex-bun");
@@ -95,7 +95,7 @@ test("a Bun that reports another version is reinstalled, and refused if it still
   assert.equal(broken.calls().filter((line) => line.includes(" install --frozen-lockfile")).length, 0);
 });
 
-test("a bundle export of a commit from before Bun installs with this checkout's bunfig", () => {
+test("a bundle export of a commit from before Bun installs with this checkout's bunfig and wraps its Metro config", () => {
   const root = scratch("pre-bun-export-repo-");
   const parent = scratch("pre-bun-export-out-");
   const fakes = scratch("pre-bun-export-path-");
@@ -107,11 +107,14 @@ test("a bundle export of a commit from before Bun installs with this checkout's 
   git("config", "user.name", "export");
   tree(root, "pnpm@11.1.3");
   write(path.join(root, "apps/phone/pnpm-lock.yaml"), "lockfileVersion: 9\n");
+  write(path.join(root, "apps/phone/metro.config.js"), "module.exports = { before: true };\n");
   for (const file of ["patches/a.patch", "packages/phone/src/index.ts", "packages/core/src/index.ts"]) write(path.join(root, file), "x\n");
   git("add", "-A");
   git("commit", "-qm", "before Bun");
   const before = git("rev-parse", "HEAD").trim();
   tree(root, "bun@1.4.4", { bunfig: true });
+  write(path.join(root, "apps/phone", NESTED_MODULES), "module.exports = {};\n");
+  write(path.join(root, "apps/phone/metro.config.js"), "module.exports = { current: true };\n");
   git("add", "-A");
   git("commit", "-qm", "Bun");
   const previous = process.env.PATH;
@@ -123,6 +126,13 @@ test("a bundle export of a commit from before Bun installs with this checkout's 
       `${path.join(old.dir, "apps/phone")} install --offline --frozen-lockfile --config=${toolBunfig} --silent`,
       `${path.join(current.dir, "apps/phone")} install --offline --frozen-lockfile --silent`,
     ]);
+    const oldPhone = path.join(old.dir, "apps/phone");
+    assert.equal(fs.readFileSync(path.join(oldPhone, ARCHIVED_METRO_CONFIG), "utf8"), "module.exports = { before: true };\n");
+    assert.equal(fs.readFileSync(path.join(oldPhone, NESTED_MODULES), "utf8"), fs.readFileSync(toolNestedModules, "utf8"));
+    assert.match(fs.readFileSync(path.join(oldPhone, "metro.config.js"), "utf8"), /withNestedPhoneModules\(require\("\.\/metro\.config\.archived\.js"\), __dirname\)/);
+    const currentPhone = path.join(current.dir, "apps/phone");
+    assert.equal(fs.readFileSync(path.join(currentPhone, "metro.config.js"), "utf8"), "module.exports = { current: true };\n");
+    assert.equal(fs.existsSync(path.join(currentPhone, ARCHIVED_METRO_CONFIG)), false);
   } finally {
     process.env.PATH = previous;
   }

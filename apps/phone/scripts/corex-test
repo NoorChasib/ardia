@@ -151,7 +151,7 @@ fi
 
 rm -rf "$tools"
 mkdir -p "$tools"
-git -C "$src" archive "$head" apps/phone/scripts apps/phone/test/r8 apps/phone/package.json apps/phone/bunfig.toml | tar -x -C "$tools"
+git -C "$src" archive "$head" apps/phone/scripts apps/phone/test/r8 apps/phone/package.json apps/phone/bunfig.toml apps/phone/metro-nested-modules.js | tar -x -C "$tools"
 bunBin="$(bash "$tools/apps/phone/scripts/corex-bun" path "$base" "$src" "$tools")"
 export PATH="$bunBin:$PATH"
 export BUN_INSTALL_CACHE_DIR="$base/bun-cache"

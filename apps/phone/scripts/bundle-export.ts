@@ -7,7 +7,8 @@
 // create resolves REV (default HEAD), extracts the phone app with its own workspace file and lockfile, its
 // packages and the patches from that commit with git archive into a new folder under the system temp folder,
 // runs bun install --offline --frozen-lockfile in the phone's workspace there (with this checkout's
-// apps/phone/bunfig.toml for a commit from before Bun, which has none),
+// apps/phone/bunfig.toml for a commit from before Bun, which has none), wraps the Metro config of a commit without
+// metro-nested-modules.js with this checkout's, so Metro finds the packages Bun nests inside the phone's install,
 // and prints {"dir": …, "commit": …}. Pass the dir to Gradle as -PardiaBundleExport=DIR. remove deletes a folder
 // that create made, and refuses anything else.
 import { execFileSync } from "node:child_process";
@@ -33,6 +34,21 @@ export const EXPORT_RECORD = ".ardia-bundle.json";
 export type BundleExport = { dir: string; commit: string };
 
 export const toolBunfig = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "bunfig.toml");
+export const NESTED_MODULES = "metro-nested-modules.js";
+export const ARCHIVED_METRO_CONFIG = "metro.config.archived.js";
+export const toolNestedModules = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", NESTED_MODULES);
+
+export function wrapMetroConfig(phone: string): boolean {
+  const config = path.join(phone, "metro.config.js");
+  if (fs.existsSync(path.join(phone, NESTED_MODULES)) || !fs.existsSync(config)) return false;
+  fs.copyFileSync(toolNestedModules, path.join(phone, NESTED_MODULES));
+  fs.renameSync(config, path.join(phone, ARCHIVED_METRO_CONFIG));
+  fs.writeFileSync(
+    config,
+    `const { withNestedPhoneModules } = require("./${NESTED_MODULES}");\n\nmodule.exports = withNestedPhoneModules(require("./${ARCHIVED_METRO_CONFIG}"), __dirname);\n`,
+  );
+  return true;
+}
 
 export function installArgs(phone: string): string[] {
   const config = fs.existsSync(path.join(phone, "bunfig.toml")) ? [] : [`--config=${toolBunfig}`];
@@ -51,6 +67,7 @@ export function createExport(root: string, rev = "HEAD", options: { install?: bo
     const archive = execFileSync("git", ["archive", "--format=tar", commit, "--", ...exportPaths], { cwd: root, maxBuffer: 1024 * 1024 * 1024 });
     execFileSync("tar", ["-x", "-f", "-", "-C", dir], { input: archive });
     fs.writeFileSync(path.join(dir, EXPORT_RECORD), JSON.stringify({ commit }));
+    wrapMetroConfig(path.join(dir, "apps/phone"));
     if (options.install !== false) {
       const phone = path.join(dir, "apps/phone");
       execFileSync("bun", installArgs(phone), { cwd: phone, stdio: ["ignore", 2, 2] });

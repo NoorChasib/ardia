@@ -75,7 +75,7 @@ cat > "$base/README.md" <<'README'
 Every build fetches, detaches it at the requested commit and resets it there; untracked files are removed, and only
 the build outputs Git ignores stay. Never edit, commit or push from here: all work happens in the main checkout on
 the Mac. `apps/phone/scripts/corex-test` runs the Kotlin unit tests here too: it may apply a diff from the main
-checkout for one run and resets the clone when it ends. Both hold `clone.lock`. `tools/` holds the branch head's `apps/phone/scripts`, `apps/phone/test/r8`, `package.json` and `bunfig.toml`, rewritten by every build and test.
+checkout for one run and resets the clone when it ends. Both hold `clone.lock`. `tools/` holds the branch head's `apps/phone/scripts`, `apps/phone/test/r8`, `package.json`, `bunfig.toml` and `metro-nested-modules.js`, rewritten by every build and test.
 `bun-<version>/` is the pinned Bun, `bun-cache/` its install cache, `sdk-view/` the pinned apkanalyzer in an SDK layout that links the shared
 SDK's parts, and `tmp/` holds the bundle exports.
 APKs go to `~/Developer/ardia-phone-apks/`.
@@ -94,7 +94,7 @@ git -C "$src" clean -ffdq
 [ -z "$(git -C "$src" status --porcelain)" ] || { echo "the build clone isn't clean at $commit" >&2; exit 1; }
 rm -rf "$tools"
 mkdir -p "$tools"
-git -C "$src" archive "$head" apps/phone/scripts apps/phone/test/r8 apps/phone/package.json apps/phone/bunfig.toml | tar -x -C "$tools"
+git -C "$src" archive "$head" apps/phone/scripts apps/phone/test/r8 apps/phone/package.json apps/phone/bunfig.toml apps/phone/metro-nested-modules.js | tar -x -C "$tools"
 sdkView="$base/sdk-view"
 mkdir -p "$sdkView/cmdline-tools"
 for part in build-tools platform-tools platforms; do
