@@ -108,17 +108,26 @@ function measure(scenario: string, size: number, work: () => Record<string, numb
   return record(scenario, size, stopTally(), (used.user + used.system) / 1000, wallMs, extra);
 }
 
-async function measureAsync(scenario: string, size: number, work: () => Promise<void>) {
+async function measureAsync(scenario: string, size: number, work: () => Promise<Record<string, number> | void>) {
   timerCalls.count = 0;
   timerCalls.frames = 0;
   timerCalls.sites = new Map();
   startTally();
   const cpu = process.cpuUsage();
   const began = process.hrtime.bigint();
-  await work();
+  const extra = (await work()) ?? undefined;
   const wallMs = Number(process.hrtime.bigint() - began) / 1e6;
   const used = process.cpuUsage(cpu);
-  return record(scenario, size, stopTally(), (used.user + used.system) / 1000, wallMs);
+  return record(scenario, size, stopTally(), (used.user + used.system) / 1000, wallMs, extra);
+}
+
+async function idleSeconds(seconds: number) {
+  for (let second = 0; second < seconds; second++) {
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+      for (let tick = 0; tick < 10; tick++) await Promise.resolve();
+    });
+  }
 }
 
 const T = 1_790_000_000_000;
@@ -178,7 +187,9 @@ function statusEvent(phase: string, syncedAt: number, pending = 0) {
 
 const emit = (event: Record<string, unknown>) => act(() => mockSync.listeners.forEach((listener) => listener(event)));
 
-const run = (name: string) => (ONLY && !ONLY.has(name) ? test.skip : test);
+const EMITS: Record<string, string[]> = { syncRound: ["syncRoundUnchanged"], idle: ["idlePage", "idleDeck"], idleStarted: ["idleStartedPage", "idleStartedDeck"] };
+
+const run = (name: string) => (ONLY && !ONLY.has(name) && !(EMITS[name] ?? []).some((emitted) => ONLY.has(emitted)) ? test.skip : test);
 
 jest.setTimeout(900_000);
 
@@ -346,8 +357,8 @@ describe.each(SIZES)("%i items", (size) => {
     const root = renderSurface(<Surfaces />);
     landOpeningPage(root);
     act(() => jest.advanceTimersByTime(5000));
-    measure("idlePage", size, () => {
-      for (let second = 0; second < 60; second++) act(() => jest.advanceTimersByTime(1000));
+    await measureAsync("idlePage", size, async () => {
+      await idleSeconds(60);
       return { pending: jest.getTimerCount() };
     });
     await act(async () => {
@@ -355,8 +366,8 @@ describe.each(SIZES)("%i items", (size) => {
     });
     framesUntil(() => useBrowse.getState().surface === "deck" && useBrowse.getState().deckEntrance === null, 400);
     act(() => jest.advanceTimersByTime(5000));
-    measure("idleDeck", size, () => {
-      for (let second = 0; second < 60; second++) act(() => jest.advanceTimersByTime(1000));
+    await measureAsync("idleDeck", size, async () => {
+      await idleSeconds(60);
       return { pending: jest.getTimerCount() };
     });
     unmount(root);
@@ -374,8 +385,8 @@ describe("the started app", () => {
     landOpeningPage(root);
     await act(async () => void jest.advanceTimersByTime(5000));
     mockSync.nativeCalls = 0;
-    measure("idleStartedPage", 50, () => {
-      for (let second = 0; second < 60; second++) act(() => jest.advanceTimersByTime(1000));
+    await measureAsync("idleStartedPage", 50, async () => {
+      await idleSeconds(60);
       return { nativeCalls: mockSync.nativeCalls };
     });
     await act(async () => {
@@ -384,8 +395,8 @@ describe("the started app", () => {
     framesUntil(() => useBrowse.getState().surface === "deck" && useBrowse.getState().deckEntrance === null, 400);
     act(() => jest.advanceTimersByTime(5000));
     mockSync.nativeCalls = 0;
-    measure("idleStartedDeck", 50, () => {
-      for (let second = 0; second < 60; second++) act(() => jest.advanceTimersByTime(1000));
+    await measureAsync("idleStartedDeck", 50, async () => {
+      await idleSeconds(60);
       return { nativeCalls: mockSync.nativeCalls };
     });
     unmount(root);

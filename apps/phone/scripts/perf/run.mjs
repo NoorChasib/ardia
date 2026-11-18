@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -49,7 +49,12 @@ for (let repeat = 0; repeat < repeats; repeat++) {
   }
 }
 
-const rows = readFileSync(out, "utf8").trim().split("\n").map((line) => JSON.parse(line));
+if (!existsSync(out)) {
+  console.error(`no scenario matched --only ${only}; the names are those the table prints (and their tests' names)`);
+  process.exit(1);
+}
+const wanted = only ? new Set(only.split(",")) : null;
+const rows = readFileSync(out, "utf8").trim().split("\n").map((line) => JSON.parse(line)).filter((row) => !wanted || wanted.has(row.scenario) || [...wanted].some((name) => row.scenario.startsWith(name)));
 const groups = new Map();
 for (const row of rows) {
   const key = `${row.platform} ${row.scenario} ${row.size}`;
