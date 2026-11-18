@@ -21,9 +21,12 @@ thin native layer, the engine. It has a vertical sidebar, split view, profiles, 
 other browsers and end-to-end encrypted sync through a folder you choose. Nothing in it needs an account or a server
 of ours.
 
-Nilla sends nothing anywhere on its own. Telemetry, crash and feedback reports, update checks and remote kill switches
-are **off**: every service endpoint ships empty, and each has one setting to point it at a server later
-([docs/services.md](docs/services.md)).
+Telemetry, crash and feedback reports, update checks and remote kill switches are **off**: every service endpoint ships
+empty ([docs/services.md](docs/services.md)). On macOS and Windows each has one setting to point it at a server later.
+On Linux, today's engine fixes those destinations itself, so they stay off whatever the settings say until Nilla's own
+engine exists. One outside fetch remains: once you type a `!bang` in the address bar, Nilla refreshes
+[Helium](https://github.com/imputnet/helium)'s bang list from `services.helium.imput.net`, at most once a day. Building
+from source also downloads the prebuilt engine from Ardia's releases ("The engine" below).
 
 | Platform | App | Engine |
 | --- | --- | --- |
@@ -111,35 +114,54 @@ sync folder, and a test instance never touches a real profile.
 
 Needs Xcode 26+ and CocoaPods.
 
+Start Metro in a terminal of its own and leave it running:
+
+```bash
+bun run dev
+```
+
+Then, in another terminal, fetch the engine, build the Debug app ad hoc signed and start it:
+
 ```bash
 bun run pods
-bun run dev        # Metro; leave it running
-xcodebuild -workspace apps/browser/macos/Nilla.xcworkspace -scheme Nilla-macOS -derivedDataPath apps/browser/build \
-  -destination 'platform=macOS,arch=arm64' -configuration Debug -quiet
+engine="$(packages/ardiacore/scripts/fetch-engine.sh --nearest)" || exit 1
+ARDIACORE_FRAMEWORK="$engine" xcodebuild -workspace apps/browser/macos/Nilla.xcworkspace -scheme Nilla-macOS \
+  -derivedDataPath apps/browser/build -destination 'platform=macOS,arch=arm64' -configuration Debug \
+  -xcconfig apps/browser/macos/AdHoc.xcconfig -quiet
 open -g -n --env ARDIA_BACKGROUND=1 --env ARDIA_DATA_DIR="$(mktemp -d)" --env ARDIA_REMOTE_DEBUGGING_PORT=9333 \
   apps/browser/build/Build/Products/Debug/Nilla.app
 ```
 
-That runs the Debug app hidden, on a scratch data folder, without taking focus; drop `-g` and `ARDIA_BACKGROUND` to
-see it in front. A Debug build refuses to start without `ARDIA_DATA_DIR`. With no Chromium tree of your own, the build
-fetches the prebuilt engine first (about 110 MB, once). Passkeys and saved cards need entitlements tied to an Apple
-team and don't work in an ad hoc build.
+`fetch-engine.sh` downloads the prebuilt engine (about 110 MB, once) and prints its path; `ARDIACORE_FRAMEWORK` hands
+it to the build, which otherwise fetches only an exact match for your `engine/`. Leave it out when you have a Chromium
+tree of your own. `AdHoc.xcconfig` signs without an Apple team. The last line runs the Debug app hidden, on a scratch
+data folder, without taking focus; drop `-g` and `ARDIA_BACKGROUND` to see it in front. A Debug build refuses to start
+without `ARDIA_DATA_DIR`. Passkeys and saved cards need entitlements tied to an Apple team and don't work in an ad hoc
+build.
 
 ### Linux
 
 Run Linux builds only inside a disposable VM or a user and mount namespace with a scratch `$HOME`, never on an account
 that has, or could later get, an Ardia profile: today's Linux engine picks Ardia's default folder before any app code
-runs. `scripts/linux/nilla-dev-run` refuses to start without a scratch `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME`:
+runs. Inside that VM or namespace, build the UI, package it with the prebuilt engine and uBlock Origin into a
+development tarball, extract it, and start it with `scripts/linux/nilla-dev-run`, which refuses to start without a
+scratch `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME`:
 
 ```bash
-scripts/linux/fetch-engine.sh --nearest
 bun run --cwd apps/linux build
+umask 022
+engine="$(scripts/linux/fetch-engine.sh --nearest)" || exit 1
+blocker="$(scripts/linux/fetch-ubo.sh)" || exit 1
 scratch="$(mktemp -d)"
-ARDIA_DATA_DIR="$scratch/data" ARDIA_CONFIG_HOME="$scratch/config" scripts/linux/nilla-dev-run
+python3 scripts/linux/package.py --out "$engine" --ui apps/linux/dist --content-blocker "$blocker" \
+  --destination "$scratch/nilla-linux-x64.tar.xz"
+tar -xJf "$scratch/nilla-linux-x64.tar.xz" -C "$scratch"
+ARDIA_DATA_DIR="$scratch/data" ARDIA_CONFIG_HOME="$scratch/config" scripts/linux/nilla-dev-run "$scratch/ardia"
 ```
 
-Don't install the tarball, `.deb` or AppImage on a host; system packages, AppArmor and packaging are in
-[docs/linux-port.md](docs/linux-port.md).
+The engine refuses a group-writable data folder, hence `umask 022`. The tarball extracts to `ardia/` (its launcher is
+`bin/ardia` until Nilla's own engine). Don't install the tarball, `.deb` or AppImage on a host; system packages,
+AppArmor and packaging are in [docs/linux-port.md](docs/linux-port.md).
 
 | Task | Command |
 | --- | --- |
@@ -166,7 +188,13 @@ scripts/windows/assemble.ps1 -App apps/browser/windows/x64/Release -Engine $env:
 ```
 
 Start the assembled app through `scripts/windows/nilla-dev-run.ps1`, which sets `ARDIA_DATA_DIR` to a Nilla-only or
-scratch folder first; a development build started without it shows a message and quits.
+scratch folder first; a development build started without it shows a message and quits. Pass it the app you just
+assembled (its launcher is `Ardia.exe` until Nilla's own engine):
+
+```powershell
+scripts/windows/nilla-dev-run.ps1 -App $env:TEMP\Nilla\Ardia.exe -DataDir $env:TEMP\nilla-data
+```
+
 [docs/windows.md](docs/windows.md) › Test instances has the details. The Windows workflow builds, launches, tours and
 installs both CPUs on every pull request that touches shared code.
 
