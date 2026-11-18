@@ -7,6 +7,7 @@ import { hermesHeapMegabytes } from "../../lib/hermesHeap";
 import { activeTab } from "../browser/model";
 import { useBrowser } from "../browser/store";
 import { capture, isSharing, saveContext, useTelemetry } from "./client";
+import { consentCrossed } from "./choice";
 import { formatRecentPages, readRecentPages, type RecentPage, type SavedContext } from "./savedContext";
 import { noteDragsEnded } from "./stuckDrags";
 import { noteWindowlessPages } from "./cliCounts";
@@ -148,7 +149,7 @@ function forgetContext() {
   pageProcessesGone = 0;
 }
 
-useTelemetry.subscribe((s, prev) => prev.sharing !== s.sharing && forgetContext());
+useTelemetry.subscribe((s, prev) => consentCrossed(s, prev) && forgetContext());
 
 useBrowser.subscribe((s, prev) => {
   if (s.profiles === prev.profiles || size(s.profiles) >= size(prev.profiles)) return;

@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 globalThis.__DEV__ = false;
-await import("../../test-native/index.ts");
-const { save, isSharing, sharingAgreed, useTelemetry } = await import("./choice.ts");
+const { docs } = await import("../../test-native/index.ts");
+const { reloadChoice, save, isSharing, sharingAgreed, useTelemetry } = await import("./choice.ts");
 await import("./consentBoundary.ts");
 const { setTelemetryRelay } = await import("./relay.ts");
 const { USAGE_COUNTS_EVENT, takeHourlyExtras, withHourlyExtras } = await import("./hourlyExtras.ts");
@@ -108,13 +108,27 @@ test("after an optimistic opt-out a follower relays no hourly extras, though its
     assert.deepEqual(leader.extras().filter((extras) => Object.keys(extras).length), []);
   }));
 
-test("hourly extras are drained even when nothing is returned, so the saved choice catching up starts from zero", () => {
+test("a follower's hourly extras counted while its opt-in showed but wasn't saved are dropped when the saved choice catches up", () => {
   try {
     save({ sharing: false, installId: null });
     useTelemetry.setState({ sharing: true });
     noteFind("opened");
-    assert.deepEqual(takeHourlyExtras(), {});
     save({ sharing: true, installId: "id" });
+    assert.equal(takeHourlyExtras().find_opens, 0);
+  } finally {
+    save({ sharing: false, installId: null });
+  }
+});
+
+test("a follower that reloads a choice which went off and on again while it was away drops the hourly extras from before", () => {
+  try {
+    save({ sharing: true, installId: "id" });
+    takeHourlyExtras();
+    noteFind("opened");
+    const saved = JSON.parse(docs.get("telemetry.json"));
+    docs.set("telemetry.json", JSON.stringify({ ...saved, consentEpoch: saved.consentEpoch + 2 }));
+    reloadChoice();
+    assert.deepEqual([isSharing(), useTelemetry.getState().sharing], [true, true]);
     assert.equal(takeHourlyExtras().find_opens, 0);
   } finally {
     save({ sharing: false, installId: null });

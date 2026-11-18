@@ -4,8 +4,8 @@ const MAX_HELD = 500;
 const MAX_ANSWERS = 100;
 
 export type Relayed =
-  | { kind: "capture"; event: string; props: Record<string, unknown>; options: Record<string, unknown> }
-  | { kind: "log"; level: "warn" | "error"; message: string; attributes: Record<string, string | number | boolean> };
+  | { kind: "capture"; event: string; props: Record<string, unknown>; options: Record<string, unknown>; consentEpoch: number }
+  | { kind: "log"; level: "warn" | "error"; message: string; attributes: Record<string, string | number | boolean>; consentEpoch: number };
 
 export type TelemetryOp = "reset" | "end" | "reopen" | "choice";
 
@@ -43,7 +43,7 @@ const isFields = (value: unknown): value is Record<string, unknown> => typeof va
 const OPS: readonly string[] = ["reset", "end", "reopen", "choice"];
 
 export function isRelayed(value: unknown): value is Relayed {
-  if (!isFields(value)) return false;
+  if (!isFields(value) || !Number.isSafeInteger(value.consentEpoch)) return false;
   if (value.kind === "capture") return typeof value.event === "string" && isFields(value.props) && isFields(value.options);
   if (value.kind === "log") return (value.level === "warn" || value.level === "error") && typeof value.message === "string" && isFields(value.attributes);
   return false;

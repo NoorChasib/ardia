@@ -1,5 +1,5 @@
 import { onPopupProtectedMedia, type PopupProtectedMedia } from "../../platform/performance";
-import { isSharing, useTelemetry } from "./choice";
+import { consentCrossed, isSharing, useTelemetry } from "./choice";
 
 const REFUSED = ["widevine", "playready", "fairplay", "other"] as const;
 type Outcome = `${(typeof REFUSED)[number]}` | "stalled";
@@ -10,7 +10,7 @@ const none = () => Object.fromEntries(OUTCOMES.flatMap((outcome) => [[`${outcome
 let pending = none();
 
 useTelemetry.subscribe((current, previous) => {
-  if (current.sharing !== previous.sharing) pending = none();
+  if (consentCrossed(current, previous)) pending = none();
 });
 
 export function notePopupProtectedMedia(media: PopupProtectedMedia | undefined) {

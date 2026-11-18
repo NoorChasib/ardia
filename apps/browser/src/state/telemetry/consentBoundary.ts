@@ -1,4 +1,4 @@
-import { useTelemetry } from "./choice";
+import { consentCrossed, useTelemetry } from "./choice";
 import { takeColdTabHoldCounts, takeContentDriftCounts, takeMainProcessWork } from "./diagnostics";
 import { takeHourlyExtras } from "./hourlyExtras";
 import { takeOmniboxLatency, takeSearchSuggests } from "./track";
@@ -6,7 +6,7 @@ import { takeOmniboxLatency, takeSearchSuggests } from "./track";
 let dropUsageCounts = () => {};
 
 useTelemetry.subscribe((current, previous) => {
-  if (current.sharing === previous.sharing) return;
+  if (!consentCrossed(current, previous)) return;
   dropUsageCounts();
   takeHourlyExtras();
   takeOmniboxLatency();

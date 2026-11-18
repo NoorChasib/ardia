@@ -1,5 +1,5 @@
 import type { NotificationPostResult } from "../../platform/notifications";
-import { isSharing, useTelemetry } from "./choice";
+import { consentCrossed, isSharing, useTelemetry } from "./choice";
 import { capture } from "./client";
 import { errorType } from "./sanitize";
 
@@ -31,7 +31,7 @@ export function webNotificationFailureProperties(sent: SentWebNotification, resu
 let consentGeneration = 0;
 
 useTelemetry.subscribe((current, previous) => {
-  if (current.sharing !== previous.sharing) consentGeneration++;
+  if (consentCrossed(current, previous)) consentGeneration++;
 });
 
 export function recordWebNotificationPost(posted: Promise<NotificationPostResult | string | null | undefined>, sent: SentWebNotification): Promise<void> {

@@ -4,6 +4,8 @@ import { test } from "node:test";
 globalThis.__DEV__ = false;
 await import("../../test-native/index.ts");
 const { setTelemetryRelay } = await import("./relay.ts");
+const { save } = await import("./choice.ts");
+save({ sharing: true, installId: "id" });
 const { noteTopAppsSharing } = await import("./topAppsSharing.ts");
 
 const relayed = [];

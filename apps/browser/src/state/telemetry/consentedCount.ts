@@ -1,9 +1,9 @@
-import { sharingAgreed, useTelemetry } from "./choice";
+import { consentCrossed, sharingAgreed, useTelemetry } from "./choice";
 
 export function consentedCount() {
   let count = 0;
   useTelemetry.subscribe((s, prev) => {
-    if (s.sharing !== prev.sharing) count = 0;
+    if (consentCrossed(s, prev)) count = 0;
   });
   return {
     note: () => void (sharingAgreed() && count++),

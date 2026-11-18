@@ -63,13 +63,15 @@ test("turning sharing off and on again drops what was counted before", async () 
   assert.ok((await sent("usage_counts")).every((p) => p.imported_pinned_rows !== 7 && !p.focus_handoffs_delivered));
 });
 
-test("in a single-context app the hourly extras reach the queue while sharing is on, and nothing while it is off", async () => {
+test("in a single-context app the hourly extras reach the queue while sharing is on, and only the local copy while it is off", async () => {
   client.loadChoice();
   client.setSharing(false, "settings");
   noteFind("opened");
   noteSessionWrite(2048, false);
   usage.sessionEnding();
   assert.deepEqual(await sent("usage_counts"), []);
+  const local = stub.telemetryLocal.records().filter((item) => item.event === "usage_counts").at(-1);
+  assert.deepEqual([local.sent, local.properties.find_opens, local.properties.session_writes], [false, 1, 0]);
 
   client.setSharing(true, "settings");
   noteFind("opened");

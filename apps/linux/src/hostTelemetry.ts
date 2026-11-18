@@ -16,7 +16,7 @@ import { documentSaved } from "../../browser/src/platform/documents";
 import { withDeadline } from "../../browser/src/lib/deadline";
 import { refreshDocument } from "./shims/shellBase";
 import { hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
-import { startTelemetryLeadership, TELEMETRY_CHANNEL, type LeaderChannel, type LeaderLocks, type TelemetryLeadership, type TelemetryOp } from "./telemetryLeader.ts";
+import { startTelemetryLeadership, TELEMETRY_CHANNEL, type LeaderChannel, type LeaderLocks, type Relayed, type TelemetryLeadership, type TelemetryOp } from "./telemetryLeader.ts";
 import { createEndLedger, setTelemetrySettle } from "./telemetrySettle.ts";
 import { parseChoiceChange, shownAfter } from "./telemetryChoice.ts";
 
@@ -113,6 +113,12 @@ export async function handleTelemetryOp(op: TelemetryOp, arg?: string): Promise<
 let leadership: TelemetryLeadership | null = null;
 let offeredInstallId: string | null = null;
 
+function deliverRelayed(message: Relayed) {
+  if (message.consentEpoch !== savedChoice().consentEpoch) return;
+  if (message.kind === "capture") capture(message.event, message.props, message.options);
+  else queueLog(message.level, message.message, message.attributes);
+}
+
 const shownChoice = () => JSON.stringify(useTelemetry.getState());
 
 async function refreshState() {
@@ -134,8 +140,8 @@ export function startHostTelemetry(options: { host: ArdiaHost; candidate: boolea
     locks: options.locks,
     channel,
     relay: (forward) => setTelemetryRelay(forward && {
-      capture: (event, props, captureOptions) => forward({ kind: "capture", event, props, options: { ...captureOptions } }),
-      log: (level, message, attributes) => forward({ kind: "log", level, message, attributes }),
+      capture: (event, props, captureOptions) => forward({ kind: "capture", event, props, options: { ...captureOptions }, consentEpoch: savedChoice().consentEpoch }),
+      log: (level, message, attributes) => forward({ kind: "log", level, message, attributes, consentEpoch: savedChoice().consentEpoch }),
       resetId: async () => {
         const installId = await current.request("reset", RESET_TIMEOUT_MS);
         await refreshState();
@@ -155,7 +161,7 @@ export function startHostTelemetry(options: { host: ArdiaHost; candidate: boolea
         return id;
       },
     }),
-    deliver: (message) => message.kind === "capture" ? capture(message.event, message.props, message.options) : queueLog(message.level, message.message, message.attributes),
+    deliver: deliverRelayed,
     handle: handleTelemetryOp,
     lead: async () => {
       await Promise.all(TELEMETRY_DOCUMENTS.map((name) => refreshDocument(name).catch(report)));

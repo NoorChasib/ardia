@@ -1,8 +1,8 @@
 import { takeInputSourceKeys } from "../../platform/focus";
-import { isSharing, useTelemetry } from "./choice";
+import { consentCrossed, isSharing, useTelemetry } from "./choice";
 
 useTelemetry.subscribe((current, previous) => {
-  if (current.sharing !== previous.sharing) takeInputSourceKeys();
+  if (consentCrossed(current, previous)) takeInputSourceKeys();
 });
 
 export function takeInputSourceKeyCounts(): { input_source_keys_webkit?: number } {

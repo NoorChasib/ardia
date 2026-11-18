@@ -1,5 +1,6 @@
 import { pressesWithoutRelease, pressRepeated } from "../../platform/focus";
 import { capture, useTelemetry } from "./client";
+import { consentCrossed } from "./choice";
 import { takeHoverCardCounts } from "./hoverCardCounts";
 import { percentile } from "./transport";
 
@@ -94,7 +95,7 @@ export function noteRowPress(shownTabEmpty: boolean): Promise<void> {
   });
 }
 
-useTelemetry.subscribe((s, prev) => prev.sharing !== s.sharing && forgetPresses());
+useTelemetry.subscribe((s, prev) => consentCrossed(s, prev) && forgetPresses());
 
 export function notePressStarted(switchedOnPress = false, windowKey = true) {
   if (pending) tally.unanswered++;
