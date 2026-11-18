@@ -206,8 +206,9 @@ Using one is fine. Point it at `AGENTS.md` and `docs/agent-brief.md` first. Thos
 (hidden test instances, no focus stealing, isolated builds, the no-comments rule), and they're why a change goes in
 without a long back-and-forth. For risky logic (races, object lifetimes, security, migrations, sync), get a second
 model to review the change before and after, and reproduce each finding before acting on it. Check the agent's diff
-yourself before you open the pull request. You're the one answering for it. End the description with the model and
-harness that did the work.
+yourself before you open the pull request, and verify the change the way "Show that it works" asks. You're the one
+answering for it. Commit messages and pull request descriptions carry no attribution lines for the agent or its
+harness.
 
 ## Upstream
 
