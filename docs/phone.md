@@ -1859,7 +1859,9 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
 - **Where it runs.** In the `bots` container (14 GB); it refuses `dev`, which holds the owner's T3. It waits while
   another Gradle build runs there or less than 8 GB is free, and never moves to `dev`. One Android build at a time:
   the Gradle lock, as on the Mac.
-- **What it builds.** A pushed commit on `t3/unify-expo-architecture`. `~/Developer/ardia-android-build/src` is a
+- **What it builds.** A pushed commit on `t3/unify-expo-architecture`, or on the branch `ARDIA_BUILD_BRANCH` names
+  (`corex-test` reads it too). The branch's head must hold the Bun files (`apps/phone/bunfig.toml`): both scripts refuse
+  one from before Bun. `~/Developer/ardia-android-build/src` is a
   build-only clone: every build fetches, detaches it at the commit, resets and cleans it (only the build outputs Git
   ignores stay).
   - **Never edit, commit or push there.** All work happens in the main checkout; the folder's README says so.
