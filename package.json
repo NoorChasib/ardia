@@ -28,6 +28,7 @@
     "test:linux-smoke": "bun test --timeout=0 ./scripts/linux/smoke.test.mjs",
     "test:linux-ubo-seed": "bun test --timeout=0 ./scripts/linux/ubo-seed.test.mjs",
     "test:engine-linux": "node --test engine/ardiacore-linux/tests/bootstrap.test.mjs",
+    "acceptance:linux": "node apps/linux/scripts/acceptance/run.mjs",
     "test:portable": "bun run test:portable:packages && bun run test:portable:mac && bun run test:root",
     "test:portable:mac": "turbo run test:portable",
     "test:portable:packages": "turbo run test --filter=!@ardia/ardiacore --filter=!@ardia/import --filter=!@ardia/shell --filter=!@ardia/sync"
