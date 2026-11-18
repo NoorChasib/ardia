@@ -3,12 +3,13 @@ import { rm, writeFile, mkdir } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { attach } from "./cdp.mjs";
 import { tabSet } from "./fixtures.mjs";
-import { SHELL_PROBE, PAGE_READ } from "./probes.mjs";
+import { SHELL_PROBE, PAGE_READ, ROW_EDGE, rowParked, rowShown } from "./probes.mjs";
 import { ProcSampler, memoryByKind } from "./procs.mjs";
 import { copyProfile, launch, quit, shellSession, startFixtures, startXvfb, stopFixtures, stopXvfb, SCREEN } from "./instance.mjs";
 import { js, loadAverage, log, pause, until } from "./util.mjs";
 
 export const SCENARIOS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7"];
+export const PROTOCOL = 2;
 const PERF_DELTAS = ["TaskDuration", "ScriptDuration", "LayoutDuration", "RecalcStyleDuration", "LayoutCount", "RecalcStyleCount"];
 const PERF_LEVELS = ["JSHeapUsedSize", "JSHeapTotalSize", "Nodes", "JSEventListeners", "Documents", "Frames"];
 
@@ -66,6 +67,7 @@ export class Launch {
       buildInfo: this.build.info,
       fingerprint: this.fingerprint,
       config: this.configFingerprint,
+      protocol: PROTOCOL,
       launchIndex: this.launchIndex,
       blockIndex: this.blockIndex,
       run: this.runIndex,
@@ -363,7 +365,7 @@ export class Launch {
       await this.sleep(1000);
       const frames = this.full ? await this.shellEval("__benchProbe.stopFrames()") : null;
       const recoveries = presses.filter((p) => p.recovered).length;
-      const workload = { expected: this.switches, presses: presses.length, recoveries, matched: recoveries === 0 && presses.length === this.switches };
+      const workload = { expected: this.switches, presses: presses.length, recoveries, matched: presses.length === this.switches };
       return { extra: (probe, pagesAfter) => ({ workload, frames: framesSummary(frames), switches: switchLatency(presses, probe, pagesAfter, this.tabInfo, byKey) }) };
     });
     await this.state(`s.activate(${js(this.tabInfo[0].id)}); return true;`);
@@ -402,28 +404,40 @@ export class Launch {
     await this.sleep(2000);
     const y = Math.round(SCREEN.height / 2);
     const rowLeft = await this.shellEval(`__benchProbe.rowLeft(${js(this.tabInfo[0].title)})`);
-    const hiddenOk = typeof rowLeft === "number" && rowLeft < -1000;
+    const hiddenOk = rowParked(rowLeft);
     const rowProbe = `__benchProbe.rowLeft(${js(this.tabInfo[0].title)})`;
+    const holdUntil = async (reached) => {
+      await this.sleep(600);
+      let waited = 600;
+      let left = await this.shellEval(rowProbe);
+      while (!reached(left) && waited < ROW_EDGE.deadlineMs) {
+        await this.sleep(100);
+        waited += 100;
+        left = await this.shellEval(rowProbe);
+      }
+      return { reached: reached(left), late: waited > 600 };
+    };
     await this.window(
       "S4",
       async () => {
-        if (this.full) await this.shellEval(`__benchProbe.startFrames("edge", { rowTitle: ${js(this.tabInfo[0].title)} })`);
+        if (this.full) await this.shellEval(`__benchProbe.startFrames("edge", ${js({ rowTitle: this.tabInfo[0].title, ...ROW_EDGE })})`);
         let revealed = 0;
         let hidden = 0;
+        let late = 0;
         for (let i = 0; i < this.edgeRepeats; i++) {
           await this.move(40, y);
           await this.move(0, y);
-          await this.sleep(600);
-          const shownLeft = await this.shellEval(rowProbe);
-          if (typeof shownLeft === "number" && shownLeft > -1000) revealed++;
+          const shown = await holdUntil(rowShown);
+          if (shown.reached) revealed++;
+          if (shown.late) late++;
           await this.move(SCREEN.width / 2, y);
-          await this.sleep(600);
-          const hiddenLeft = await this.shellEval(rowProbe);
-          if (typeof hiddenLeft === "number" && hiddenLeft < -1000) hidden++;
+          const parked = await holdUntil(rowParked);
+          if (parked.reached) hidden++;
+          if (parked.late) late++;
         }
         const frames = this.full ? await this.shellEval("__benchProbe.stopFrames()") : null;
         const unarmed = frames ? Math.max(0, this.edgeRepeats - frames.arms) : null;
-        const workload = { expected: this.edgeRepeats, revealed, hidden, matched: revealed === this.edgeRepeats && hidden === this.edgeRepeats };
+        const workload = { expected: this.edgeRepeats, revealed, hidden, late, matched: revealed === this.edgeRepeats && hidden === this.edgeRepeats };
         return {
           valid: hiddenOk,
           invalidReason: hiddenOk ? null : `sidebar not hidden before S4 (row left ${rowLeft})`,
@@ -516,8 +530,8 @@ export class Launch {
   async loadingCheck(tab, rowTitle, token, { pill, layout }) {
     const st = await this.layoutState(tab, rowTitle);
     st.pending = await this.pendingSlow(token);
-    const sidebarShown = typeof st.rowLeft === "number" && st.rowLeft >= 0;
-    const sidebarHidden = typeof st.rowLeft === "number" && st.rowLeft < -1000;
+    const sidebarShown = rowShown(st.rowLeft);
+    const sidebarHidden = rowParked(st.rowLeft);
     const problems = [];
     if (st.active !== tab.id) problems.push(`tab 1 is not the active tab (active ${st.active})`);
     if (!st.loading) problems.push("the active tab is not loading");
@@ -546,7 +560,7 @@ export class Launch {
     await this.sleep(1500);
     const before = await this.layoutState(tab, rowTitle);
     const layoutProblems = [];
-    if (!(typeof before.rowLeft === "number" && before.rowLeft >= 0)) layoutProblems.push(`sidebar not shown (row left ${before.rowLeft})`);
+    if (!rowShown(before.rowLeft)) layoutProblems.push(`sidebar not shown (row left ${before.rowLeft})`);
     if (before.addressBar === "sidebar") layoutProblems.push("addressBar is already sidebar");
     if (before.active !== tab.id) layoutProblems.push(`tab 1 is not active (${before.active})`);
     if (before.loading) layoutProblems.push("tab 1 is still loading");
@@ -606,7 +620,7 @@ export class Launch {
     const after = await this.layoutState(tab, rowTitle);
     const problems = [];
     if (after.addressBar !== before.addressBar) problems.push(`addressBar ${after.addressBar}, was ${before.addressBar}`);
-    if (!(typeof after.rowLeft === "number" && after.rowLeft >= 0)) problems.push(`sidebar not shown (row left ${after.rowLeft})`);
+    if (!rowShown(after.rowLeft)) problems.push(`sidebar not shown (row left ${after.rowLeft})`);
     if (after.active !== tab.id) problems.push(`tab 1 not active (${after.active})`);
     if (after.loading) problems.push("tab 1 still loading");
     if (after.pill?.visible) problems.push("the loading pill is still visible");

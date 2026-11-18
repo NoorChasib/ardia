@@ -59,6 +59,9 @@ function fakeLaunch(overrides = {}) {
     stuckSettings: false,
     rowLeft: -1200,
     revealOnEdge: true,
+    revealLeft: 0,
+    revealAfterReads: 1,
+    edgeReads: 0,
     pointerX: 0,
     loading: false,
     pending: false,
@@ -133,7 +136,14 @@ function fakeLaunch(overrides = {}) {
     if (expression.startsWith("__benchProbe.snapshot")) return { mode: launch.instrument, counts: { rafCallbacks: world.presses * 10, getAnimations: 0 }, chromeSend: { "invoke:tab.command:capturePicture": world.presses }, hostEvents: {}, loaf: { count: 0, blockingMs: 0, durationMs: 0, maxMs: 0 }, events: {}, commands: world.commands, activations: world.activations, keys: [] };
     if (expression.startsWith("__benchProbe.startFrames")) return { rowsFound: launch.hoverRows };
     if (expression.startsWith("__benchProbe.stopFrames")) return world.stopFrames();
-    if (expression.startsWith("__benchProbe.rowLeft")) return world.settings.autoHideTabs && world.revealOnEdge && world.pointerX <= 2 ? 0 : world.rowLeft;
+    if (expression.startsWith("__benchProbe.rowLeft")) {
+      if (!(world.settings.autoHideTabs && world.revealOnEdge && world.pointerX <= 2)) {
+        world.edgeReads = 0;
+        return world.rowLeft;
+      }
+      world.edgeReads++;
+      return world.edgeReads >= world.revealAfterReads ? world.revealLeft : -10000;
+    }
     if (expression.startsWith("__benchProbe.findRow")) {
       const index = tabs.findIndex((t) => t.title === quoted(expression, /findRow\(("[^"]+")\)/));
       return { clientLeft: 8, clientRight: 248, clientTop: 100 + index * 40, clientBottom: 136 + index * 40, hittable: true };
@@ -216,13 +226,27 @@ describe("scenarios in memory", () => {
     assert.equal(s3.switches.keyToStore.median, 1);
     assert.equal(s3.switches.keyToShown.median, 8);
     assert.equal(s3.switches.raw[2].outcome, "recovered:wrong-tab");
-    assert.deepEqual(s3.workload, { expected: 6, presses: 6, recoveries: 1, matched: false });
+    assert.deepEqual(s3.workload, { expected: 6, presses: 6, recoveries: 1, matched: true });
     const rows = flattenScenario(s3);
     assert.ok(rows.some(([metric]) => metric === "switch recovered"), "latency rows stay");
-    assert.ok(rows.some(([metric, kind]) => metric === "workload recoveries" && kind === "workload"));
-    assert.ok(!rows.some(([metric]) => metric === "CPU %"), "a window with a put-back press did extra work, so its CPU rows go");
+    assert.ok(rows.some(([metric, kind, value]) => metric === "workload recoveries" && kind === "workload" && value === 1), "the put-backs sit beside the CPU");
+    assert.ok(rows.some(([metric, kind]) => metric === "CPU %" && kind === "total"), "a window with a put-back keeps its CPU rows");
     assert.deepEqual(s3.frames, { frames: 30, gapsOver25: 2, maxGapMs: 41.3, gaps: { "25-33": 1, "33-50": 1 } });
     assert.equal(world.active, tabs[0].id);
+  });
+
+  it("S3 keeps CPU for windows with a couple of put-backs, and older results show theirs from the switch tally", async () => {
+    const { launch, world } = fakeLaunch();
+    world.wrongOnPress.add(2);
+    world.wrongOnPress.add(5);
+    await launch.scenario("S3");
+    const s3 = launch.result.scenarios.S3;
+    assert.equal(s3.workload.recoveries, 2);
+    assert.ok(flattenScenario(s3).some(([metric, kind]) => metric === "CPU %" && kind === "total"));
+    const { workload, ...legacy } = s3;
+    const legacyRows = flattenScenario(legacy);
+    assert.ok(legacyRows.some(([metric, , value]) => metric === "workload recoveries" && value === 2));
+    assert.ok(legacyRows.some(([metric, kind]) => metric === "CPU %" && kind === "total"));
   });
 
   it("S4 is comparable only when the sidebar was hidden, and counts unarmed pointer arrivals as misses", async () => {
@@ -234,7 +258,7 @@ describe("scenarios in memory", () => {
     assert.deepEqual({ median: s4.reveal.median, arms: s4.reveal.arms, unarmed: s4.reveal.unarmed, misses: s4.reveal.misses }, { median: 130, arms: 3, unarmed: 1, misses: 1 });
     assert.equal(hidden.world.moves.filter(([x]) => x === 0).length, 4);
     assert.equal(hidden.world.settings.autoHideTabs, false);
-    assert.deepEqual(s4.workload, { expected: 4, revealed: 4, hidden: 4, matched: true });
+    assert.deepEqual(s4.workload, { expected: 4, revealed: 4, hidden: 4, late: 0, matched: true });
     assert.ok(flattenScenario(s4).some(([metric, kind]) => metric === "CPU %" && kind === "total"));
     const shown = fakeLaunch();
     shown.world.rowLeft = 0;
@@ -250,8 +274,27 @@ describe("scenarios in memory", () => {
     await launch.scenario("S4");
     const s4 = launch.result.scenarios.S4;
     assert.equal(s4.valid, true);
-    assert.deepEqual(s4.workload, { expected: 4, revealed: 0, hidden: 4, matched: false });
+    assert.deepEqual(s4.workload, { expected: 4, revealed: 0, hidden: 4, late: 4, matched: false });
     assert.ok(!flattenScenario(s4).some(([metric]) => metric === "CPU %"));
+  });
+
+  it("S4 counts a reveal only when the row reaches the screen, the probe's own test", async () => {
+    const { launch, world } = fakeLaunch({ instrument: "light" });
+    world.revealLeft = -300;
+    await launch.scenario("S4");
+    const s4 = launch.result.scenarios.S4;
+    assert.equal(s4.valid, true);
+    assert.equal(s4.workload.revealed, 0, "a sidebar that left its parked offset but kept the row off screen didn't reveal");
+    assert.equal(s4.workload.matched, false);
+    assert.ok(!flattenScenario(s4).some(([metric]) => metric === "CPU %"));
+  });
+
+  it("S4 waits up to its deadline for a slow reveal and counts it as late", async () => {
+    const { launch, world } = fakeLaunch({ instrument: "light" });
+    world.revealAfterReads = 3;
+    await launch.scenario("S4");
+    const s4 = launch.result.scenarios.S4;
+    assert.deepEqual(s4.workload, { expected: 4, revealed: 4, hidden: 4, late: 4, matched: true });
   });
 
   it("S4 runs with --settings applied (except autoHideTabs, which it sets itself) and puts them back", async () => {

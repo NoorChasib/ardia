@@ -233,8 +233,9 @@ const record = ({ cpu, capture, foreign = 0 }) => ({
   chromeSend: capture === undefined ? {} : { "invoke:tab.command:capturePicture": capture },
 });
 
-const launchResult = (label, index, block, { runId = "R1", ui = `ui-${label}`, config = "c1", instrument = "full", cpu, capture, pss = 1000, valid = true, foreign } = {}) => ({
+const launchResult = (label, index, block, { runId = "R1", ui = `ui-${label}`, config = "c1", protocol, instrument = "full", cpu, capture, pss = 1000, valid = true, foreign } = {}) => ({
   runId,
+  ...(protocol === undefined ? {} : { protocol }),
   launchId: `${runId}-${String(index).padStart(3, "0")}-${label}-a1`,
   label,
   build: `/builds/${label}`,
@@ -301,6 +302,13 @@ describe("report", () => {
     assert.throws(() => buildReport(config, { all: true }), /differ in measurement settings/);
     const ui = await writeRun(join(root, "pool-ui"), [launchResult("a", 1, 1, { cpu: 1 }), launchResult("a", 1, 1, { cpu: 2, runId: "R2", ui: "other" })]);
     assert.throws(() => buildReport(ui, { all: true }), /names different UI builds/);
+  });
+
+  it("refuses to pool a legacy run with one whose windows did different work, even under the same config", async () => {
+    const mixed = await writeRun(join(root, "pool-protocol"), [launchResult("a", 1, 1, { cpu: 1 }), launchResult("a", 1, 1, { cpu: 2, runId: "R2", protocol: 2 })]);
+    assert.throws(() => buildReport(mixed, { all: true }), /different measurement protocols \(1 \/ 2\)/);
+    assert.match(buildReport(mixed, { run: "R1" }), /Harness protocol: 1\. Protocol 1 .* S4 CPU rows are unchecked/);
+    assert.match(buildReport(mixed, { run: "R2" }), /Harness protocol: 2\.\n/);
   });
 
   it("pairs every build against the control and marks what the A/A spread can't separate", async () => {

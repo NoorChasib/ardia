@@ -193,11 +193,11 @@ function shellProbe(mode) {
         if (!row || !row.isConnected) row = findRow(plan.rowTitle);
         if (row) {
           const left = original.gbcr.call(row).left;
-          if (left < -1000) edge.hiddenSeen = true;
-          if (edge.armed && left >= 0) {
+          if (left < plan.parkedBelow) edge.hiddenSeen = true;
+          if (edge.armed && left >= plan.shownFrom) {
             state.reveals.push(Math.round((now - edge.arrive) * 10) / 10);
             edge.armed = false;
-          } else if (edge.armed && now - edge.arrive > 1500) {
+          } else if (edge.armed && now - edge.arrive > plan.deadlineMs) {
             state.misses++;
             edge.armed = false;
           }
@@ -298,6 +298,10 @@ function shellProbe(mode) {
   };
   return { state: "installed", mode: full ? "full" : "light" };
 }
+
+export const ROW_EDGE = { shownFrom: 0, parkedBelow: -1000, deadlineMs: 1500 };
+export const rowShown = (left) => typeof left === "number" && left >= ROW_EDGE.shownFrom;
+export const rowParked = (left) => typeof left === "number" && left < ROW_EDGE.parkedBelow;
 
 export const SHELL_PROBE = (mode = "full") => `(${shellProbe.toString()})(${JSON.stringify(mode)})`;
 

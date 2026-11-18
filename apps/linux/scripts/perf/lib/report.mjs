@@ -105,6 +105,8 @@ export function loadResults(out, { run, all = false } = {}) {
   if (!all && run && !runIds.includes(run)) throw new Error(`no results for run ${run} in ${dir} (runs: ${runIds.join(", ")})`);
   const results = every.filter((r) => chosen.includes(r.runId)).sort((a, b) => a.runId.localeCompare(b.runId) || (a.launchIndex ?? 0) - (b.launchIndex ?? 0));
   if (all && chosen.length > 1) {
+    const protocols = new Set(results.map(protocolOf));
+    if (protocols.size > 1) throw new Error(`--all: runs used different measurement protocols (${[...protocols].sort().join(" / ")}); the harness changed what a window does, so report them one at a time`);
     const configs = new Set(results.map((r) => r.config ?? "unknown"));
     if (configs.size > 1) throw new Error(`--all: runs differ in measurement settings, engine or blocker (config ${[...configs].join(" / ")}); report them one at a time`);
     for (const label of new Set(results.map((r) => r.label))) {
@@ -138,11 +140,16 @@ export const PRIMARY = new Set([
   "PSS MiB\u0000shell",
 ]);
 
+export const protocolOf = (result) => result?.protocol ?? 1;
+
 export const workloadMatched = (record) => record?.workload?.matched !== false;
+
+const workloadOf = (record) => record.workload ?? (record.switches ? { recoveries: record.switches.recovered } : null);
 
 export function flattenScenario(record) {
   const rows = flattenWindow(record);
-  if (record.workload) for (const [name, v] of Object.entries(record.workload)) put(rows, `workload ${name}`, "workload", typeof v === "boolean" ? Number(v) : v);
+  const workload = workloadOf(record);
+  if (workload) for (const [name, v] of Object.entries(workload)) put(rows, `workload ${name}`, "workload", typeof v === "boolean" ? Number(v) : v);
   return workloadMatched(record) ? rows : rows.filter(([, kind]) => kind === "latency" || kind === "workload");
 }
 
@@ -415,6 +422,8 @@ export function buildReport(out, options = {}) {
   }
   const gpus = [...new Set(ok.map((r) => r.gpu?.renderer ?? r.gpu?.error ?? "unknown"))];
   const engines = [...new Set(ok.map((r) => r.fingerprint?.engine?.slice(0, 12) ?? "unknown"))];
+  const protocols = [...new Set(ok.map(protocolOf))].sort();
+  lines.push("", `Harness protocol: ${protocols.join(", ")}.${protocols.includes(1) ? " Protocol 1 (before the harness checked its interaction work) never confirmed that S4's reveals happened, so its S4 CPU rows are unchecked; S3's put-backs come from the switch tally." : ""}`);
   lines.push("", `GPU (GL renderer): ${gpus.join("; ")}. Engine chrome sha256: ${engines.join(", ")}. CPUs for the app: ${[...new Set(ok.map((r) => r.cpus))].join(", ")}. Scope: ${[...new Set(ok.map((r) => r.scopeMode ?? "-"))].join(", ")}. Partition (rest|bench): ${[...new Set(ok.map((r) => r.partition ?? "none"))].join(", ")}. Instrumentation: ${[...new Set(ok.map((r) => r.instrument ?? "full"))].join(", ")}.`);
   lines.push(
     "",
@@ -437,7 +446,7 @@ export function buildReport(out, options = {}) {
   const memory = collect(ok.filter((r) => r.memory), (r) => flattenMemory(r.memory));
   lines.push(table("Memory at the end of the run (after shell GC + 10 s; depends on which scenarios ran and repeated), MiB", memory, labels), "");
   if (invalid.length) lines.push("### Windows left out (not comparable)", "", ...invalid.map((n) => `- ${n}`), "");
-  if (unmatched.length) lines.push("### Windows left out of the CPU and counter rows (their interaction work differed: recoveries in S3, reveals or hides that didn't happen in S4); their latency and workload rows stay", "", ...unmatched.map((n) => `- ${n}`), "");
+  if (unmatched.length) lines.push("### Windows left out of the CPU and counter rows (their interaction work didn't happen: S3 presses that weren't sent, S4 reveals or hides that never showed); their latency and workload rows stay", "", ...unmatched.map((n) => `- ${n}`), "");
   if (failed.length) {
     lines.push("### Failed launches", "");
     for (const r of failed) lines.push(`- ${r.launchId} (${r.label}, attempt ${r.attempt}): ${r.error}`);

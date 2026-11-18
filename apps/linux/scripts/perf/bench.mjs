@@ -58,10 +58,14 @@ run options:
   --switch-via V          key (default: real xdotool keys) or store (the store's activate); both alternate the first two
                           static tabs, and a press that leaves the switcher open or lands elsewhere is put back
                           (Escape, then the store) and counted as a miss. Latency starts when the shell receives the
-                          engine's ArdiaShell:onCommand for the key. A window with any put-back press did extra work:
-                          its CPU and counter rows are left out of the report, its latency rows stay
-  --edge-repeats N        S4 reveals (default 20); after each hold the harness reads tab 1's row once, and a window
-                          where any reveal or hide didn't happen keeps only its latency rows
+                          engine's ArdiaShell:onCommand for the key. Put-back steps run inside the window, so the
+                          report shows each window's put-backs (workload recoveries) beside its CPU; rank S3 CPU
+                          with --switch-via store, which needs none, and keep the key run for latency
+  --edge-repeats N        S4 reveals (default 20); after each 600 ms hold the harness reads tab 1's row, and polls
+                          every 100 ms up to 1.5 s from the move when it isn't there yet (counted as late). A reveal
+                          means the row's left edge is on screen, a hide that it is parked again, the same tests the
+                          latency probe uses. A window where any reveal or hide didn't happen keeps only its latency
+                          and workload rows
   --loading-seconds S     S6 and S7 window (default 45): the active tab (tab 1) loads the fixture server's /slow/<ms>
                           and stays loading for the whole window; S6 keeps the default layout (address field in the
                           toolbar, reload button breathing), S7 puts the address field in the sidebar and hides the
@@ -105,7 +109,7 @@ import { createHash } from "node:crypto";
 import { join, resolve } from "node:path";
 import { acquireLock, cleanupActive, configureScopes, cpusProblem, hashFile, hashTree, makeTemplate, newestEngine } from "./lib/instance.mjs";
 import { launchOrder, parse, parseBuilds, parseSettings } from "./lib/options.mjs";
-import { SCENARIOS, abortCurrent, runLaunch, writeResult } from "./lib/runner.mjs";
+import { PROTOCOL, SCENARIOS, abortCurrent, runLaunch, writeResult } from "./lib/runner.mjs";
 import { buildReport, buildNoise } from "./lib/report.mjs";
 import { DEFAULT_LOCK, DEFAULT_OUT, ENGINE_STORE, contentBlockerProblem, log } from "./lib/util.mjs";
 
@@ -150,6 +154,7 @@ async function runCommand(args) {
   const retries = Number(args.retries ?? 1);
   const idleSeconds = Number(args["idle-seconds"] ?? 60);
   const measure = {
+    protocol: PROTOCOL,
     tabs,
     scenarios,
     settings,
