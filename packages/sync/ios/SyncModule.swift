@@ -345,10 +345,7 @@ public class SyncModule: Module {
   static var defaultFolder: URL {
     if let testFolder { return testFolder }
     if let dataDirectory { return dataDirectory.appendingPathComponent("Ardia Sync", isDirectory: true) }
-    let folder = SyncFolder.iCloudDrive.appendingPathComponent("Ardia Sync", isDirectory: true)
-    let legacy = SyncFolder.iCloudDrive.appendingPathComponent(LegacyName.syncFolderName, isDirectory: true)
-    if !FileManager.default.fileExists(atPath: folder.path), SyncFolder.hasSyncData(legacy) { return legacy }
-    return folder
+    return SyncFolder.iCloudDrive.appendingPathComponent("Ardia Sync", isDirectory: true)
   }
 
   static let keyStore: SyncKeyStore = dataDirectory.map { FileKeyStore(directory: $0) } ?? KeychainKeyStore()

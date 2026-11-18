@@ -92,6 +92,11 @@ struct SecretFile: SecretStore {
   }
 }
 
+enum SecretServices {
+  static let connectedAccounts = "Nilla Connected Accounts"
+  static let syncKey = "Nilla Sync Key"
+}
+
 struct IsolatedSecretStores: SecretStore {
   let dataDirectory: URL
   private var accountsFile: URL { dataDirectory.appendingPathComponent("Connected Accounts.json") }
@@ -104,8 +109,8 @@ struct IsolatedSecretStores: SecretStore {
 
   func accounts(service: String) -> [String]? {
     switch service {
-    case Renamed.connectedAccounts.newService: return connectedAccounts().keys.sorted()
-    case Renamed.syncKey.newService:
+    case SecretServices.connectedAccounts: return connectedAccounts().keys.sorted()
+    case SecretServices.syncKey:
       let names = (try? FileManager.default.contentsOfDirectory(atPath: dataDirectory.path)) ?? []
       return names.filter { $0.hasPrefix("sync-key-") }.map { String($0.dropFirst("sync-key-".count)) }.sorted()
     default: return others.accounts(service: service)
@@ -114,9 +119,9 @@ struct IsolatedSecretStores: SecretStore {
 
   func read(service: String, account: String) -> SecretRead {
     switch service {
-    case Renamed.connectedAccounts.newService:
+    case SecretServices.connectedAccounts:
       return connectedAccounts()[account].map { .found(Data($0.utf8)) } ?? .missing
-    case Renamed.syncKey.newService:
+    case SecretServices.syncKey:
       return FileKeyStore(directory: dataDirectory).load(account: account).map(SecretRead.found) ?? .missing
     default: return others.read(service: service, account: account)
     }
@@ -124,12 +129,12 @@ struct IsolatedSecretStores: SecretStore {
 
   func write(service: String, account: String, label: String, accessible: CFString?, data: Data) -> Bool {
     switch service {
-    case Renamed.connectedAccounts.newService:
+    case SecretServices.connectedAccounts:
       guard let secret = String(data: data, encoding: .utf8) else { return false }
       var all = connectedAccounts()
       all[account] = secret
       return MigrationFiles.writeDurably(try? JSONEncoder().encode(all), to: accountsFile, mode: 0o600)
-    case Renamed.syncKey.newService:
+    case SecretServices.syncKey:
       return FileKeyStore(directory: dataDirectory).save(data, account: account)
     default:
       return others.write(service: service, account: account, label: label, accessible: accessible, data: data)
