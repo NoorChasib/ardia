@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { APP_INGEST_KEY, CLI_INGEST_KEY, SITE_INGEST_KEY } from "../lib/core.mjs";
+import { LOCAL_KEYS, acceptedKeys, isLoopbackHost, surfaceByKey } from "../lib/keys.mjs";
 import { rateLimiter } from "../lib/http.mjs";
 import { ID_ALPHABET, ID_PATTERN, newId, normalizeId, randomId } from "../lib/ids.mjs";
 import { quietMentions, scrubForIssue, scrubText } from "../lib/scrub.mjs";
@@ -266,7 +265,15 @@ test("rateLimiter allows a burst per key, then refills over the window", () => {
   assert.equal(allow("a"), true);
 });
 
-test("nginx knows every ingest key", () => {
-  const nginx = readFileSync(new URL("../../site/nginx.conf", import.meta.url), "utf8");
-  for (const key of [APP_INGEST_KEY, CLI_INGEST_KEY, SITE_INGEST_KEY]) assert.ok(nginx.includes(`"${key}"`), key);
+test("production keys come only from the environment, never the local test keys, and --local uses only the test keys", () => {
+  assert.deepEqual(acceptedKeys("local", { FEEDBACK_APP_KEY: "real-app", FEEDBACK_CLI_KEY: "real-cli" }), LOCAL_KEYS);
+  assert.deepEqual(acceptedKeys("production", { FEEDBACK_APP_KEY: "real-app", FEEDBACK_CLI_KEY: "real-cli" }), { app: "real-app", cli: "real-cli" });
+  assert.throws(() => acceptedKeys("production", {}), /required/);
+  assert.throws(() => acceptedKeys("production", { FEEDBACK_APP_KEY: "real-app" }), /required/);
+  assert.throws(() => acceptedKeys("production", { FEEDBACK_APP_KEY: LOCAL_KEYS.app, FEEDBACK_CLI_KEY: "real-cli" }), /refused outside --local/);
+  assert.throws(() => acceptedKeys("production", { FEEDBACK_APP_KEY: "same", FEEDBACK_CLI_KEY: "same" }), /must differ/);
+  assert.deepEqual([...surfaceByKey(LOCAL_KEYS)], [[LOCAL_KEYS.app, "app"], [LOCAL_KEYS.cli, "cli"]]);
+  assert.throws(() => surfaceByKey(undefined), /needs an app key/);
+  for (const host of ["127.0.0.1", "::1", "[::1]", "localhost"]) assert.equal(isLoopbackHost(host), true, host);
+  for (const host of ["0.0.0.0", "192.168.1.2", "example.com", ""]) assert.equal(isLoopbackHost(host), false, host);
 });

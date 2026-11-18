@@ -5,6 +5,7 @@ import { createServer } from "node:http";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { githubIssues, localEvents, localIssues, localStore, otlpEvents, seaweedStore } from "./lib/backends.mjs";
+import { acceptedKeys, isLoopbackHost } from "./lib/keys.mjs";
 import { createService } from "./lib/service.mjs";
 
 const USAGE = `ardia feedback service
@@ -14,7 +15,8 @@ usage:
   node infra/feedback/server.mjs --local <dir>   local: writes reports, events and would-be issues to <dir>
 
 options:
-  --local <dir>   no ClickHouse, SeaweedFS or GitHub; everything lands in <dir>
+  --local <dir>   no ClickHouse, SeaweedFS or GitHub; everything lands in <dir>; loopback only, and it accepts
+                  only the test keys local-app-key and local-cli-key
   --port <n>      listen port (default $PORT or 4319)
   --host <addr>   listen address (default 127.0.0.1 with --local, else 0.0.0.0)
   --rate-limits   keep the per-address rate limits in local mode (off by default there)
@@ -23,10 +25,12 @@ production env:
   FEEDBACK_UPLOAD_SECRET  HMAC key for upload tokens, at least 32 characters (required)
   OBJECTS_HOST            SeaweedFS filer host, port 8888 (required)
   COLLECTOR_HOST          OpenTelemetry collector host, port 4318 (required)
+  FEEDBACK_APP_KEY        the X-Ardia-Key the app sends (required)
+  FEEDBACK_CLI_KEY        the X-Ardia-Key the command sends (required)
   GITHUB_ISSUES_TOKEN     token that can open issues; without it no issue is opened
-  GITHUB_REPO             default ardia-browser/ardia
-  DASHBOARD_URL           default https://dash.ardia.dev
-  PUBLIC_URL              origin used in upload_urls, default https://ardia.dev
+  GITHUB_REPO             owner/repo the issues open in (required)
+  DASHBOARD_URL           origin of the triage dashboard linked from each issue (required)
+  PUBLIC_URL              origin used in upload_urls (required)
 `;
 
 const { values } = parseArgs({
@@ -50,7 +54,6 @@ const fail = (message) => {
 };
 const port = Number(values.port ?? env.PORT ?? 4319);
 if (!Number.isInteger(port) || port < 0 || port > 65535) fail(`bad port ${values.port ?? env.PORT}`);
-const dashboardUrl = (env.DASHBOARD_URL || "https://dash.ardia.dev").replace(/\/+$/, "");
 
 async function localSecret(dir) {
   if (env.FEEDBACK_UPLOAD_SECRET) return env.FEEDBACK_UPLOAD_SECRET;
@@ -65,10 +68,14 @@ async function localSecret(dir) {
 let config;
 if (values.local !== undefined) {
   const dir = resolve(values.local);
+  const host = values.host ?? "127.0.0.1";
+  if (!isLoopbackHost(host)) fail(`--local listens on loopback only, not ${host}`);
   await mkdir(dir, { recursive: true });
   config = {
     mode: "local",
-    host: values.host ?? "127.0.0.1",
+    host,
+    keys: acceptedKeys("local", env),
+    dashboardUrl: (env.DASHBOARD_URL || `http://127.0.0.1:${port}/dashboard`).replace(/\/+$/, ""),
     store: localStore(dir),
     events: localEvents(dir),
     issues: localIssues(dir),
@@ -81,20 +88,29 @@ if (values.local !== undefined) {
   if (secret.length < 32) fail("FEEDBACK_UPLOAD_SECRET must be set to at least 32 characters");
   if (!env.OBJECTS_HOST) fail("OBJECTS_HOST is required");
   if (!env.COLLECTOR_HOST) fail("COLLECTOR_HOST is required");
-  const publicUrl = (env.PUBLIC_URL || "https://ardia.dev").replace(/\/+$/, "");
+  for (const name of ["GITHUB_REPO", "DASHBOARD_URL", "PUBLIC_URL"]) if (!env[name]) fail(`${name} is required`);
+  let keys;
+  try {
+    keys = acceptedKeys("production", env);
+  } catch (error) {
+    fail(error.message);
+  }
+  const publicUrl = env.PUBLIC_URL.replace(/\/+$/, "");
   config = {
     mode: "production",
     host: values.host ?? "0.0.0.0",
+    keys,
+    dashboardUrl: env.DASHBOARD_URL.replace(/\/+$/, ""),
     store: seaweedStore(env.OBJECTS_HOST),
     events: otlpEvents(env.COLLECTOR_HOST),
-    issues: env.GITHUB_ISSUES_TOKEN ? githubIssues(env.GITHUB_ISSUES_TOKEN, env.GITHUB_REPO || "ardia-browser/ardia") : null,
+    issues: env.GITHUB_ISSUES_TOKEN ? githubIssues(env.GITHUB_ISSUES_TOKEN, env.GITHUB_REPO) : null,
     secret,
     publicUrl: () => publicUrl,
     rateLimits: true,
   };
 }
 
-const handle = createService({ ...config, dashboardUrl });
+const handle = createService(config);
 const server = createServer(handle);
 server.requestTimeout = 30 * 60 * 1000;
 server.headersTimeout = 60 * 1000;

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { UploadSizeError } from "./backends.mjs";
-import { APP_INGEST_KEY, CLI_INGEST_KEY, anonymousIdentity } from "./core.mjs";
+import { anonymousIdentity } from "./core.mjs";
+import { surfaceByKey } from "./keys.mjs";
 import { HttpError, rateLimiter, readBody, readJson, sendJson } from "./http.mjs";
 import { newId, normalizeId } from "./ids.mjs";
 import { scrubForIssue } from "./scrub.mjs";
@@ -8,7 +9,6 @@ import { UPLOAD_TOKEN_TTL_MS, bearerToken, issueUploadToken, uploadTokenProblem 
 import { MAX_JSON_BYTES, attachmentRule, validateReport } from "./validate.mjs";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const SURFACE_BY_KEY = new Map([[APP_INGEST_KEY, "app"], [CLI_INGEST_KEY, "cli"]]);
 const FILE_ROUTE = /^\/api\/feedback\/([^/]+)\/files\/([^/]+)$/;
 const COMPLETE_ROUTE = /^\/api\/feedback\/([^/]+)\/complete$/;
 const SERVICE_NAME = "ardia-feedback";
@@ -126,7 +126,8 @@ export function feedbackEvent(report, { attachments, issue, completedAtMs }) {
 
 const laterTimer = (fn, ms) => setTimeout(fn, ms).unref();
 
-export function createService({ store: rawStore, events: rawEvents, issues: rawIssues, secret, publicUrl, dashboardUrl, rateLimits = true, now = Date.now, log = console.log, later = laterTimer }) {
+export function createService({ store: rawStore, events: rawEvents, issues: rawIssues, keys, secret, publicUrl, dashboardUrl, rateLimits = true, now = Date.now, log = console.log, later = laterTimer }) {
+  const surfaces = surfaceByKey(keys);
   const store = blame("storage", rawStore);
   const events = blame("collector", rawEvents);
   const issues = blame("issues", rawIssues);
@@ -146,7 +147,7 @@ export function createService({ store: rawStore, events: rawEvents, issues: rawI
   };
 
   const surfaceOf = (req) => {
-    const surface = SURFACE_BY_KEY.get(req.headers["x-ardia-key"]);
+    const surface = surfaces.get(req.headers["x-ardia-key"]);
     if (!surface) throw new HttpError(403, "bad_key", "X-Ardia-Key is missing or unknown");
     return surface;
   };

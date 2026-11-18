@@ -5,7 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
 import { githubIssues, localEvents, localIssues, localStore, otlpEvents, seaweedStore } from "../lib/backends.mjs";
-import { APP_INGEST_KEY, CLI_INGEST_KEY, SITE_INGEST_KEY, anonymousIdentity } from "../lib/core.mjs";
+import { anonymousIdentity } from "../lib/core.mjs";
+import { LOCAL_APP_KEY as APP_INGEST_KEY, LOCAL_CLI_KEY as CLI_INGEST_KEY, LOCAL_KEYS } from "../lib/keys.mjs";
+
+const SITE_INGEST_KEY = "a-key-the-service-does-not-know";
 import { createService } from "../lib/service.mjs";
 
 const INSTALL = "3f1c2a9e-8b7d-4c6e-9f0a-1b2c3d4e5f60";
@@ -30,7 +33,7 @@ async function localService(options = {}) {
   dirs.push(dir);
   const logs = [];
   const handle = createService({
-    store: localStore(dir), events: localEvents(dir), issues: localIssues(dir), secret: SECRET,
+    store: localStore(dir), events: localEvents(dir), issues: localIssues(dir), keys: LOCAL_KEYS, secret: SECRET,
     publicUrl: (req) => `http://${req.headers.host}`, dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l), ...options,
   });
   const { url } = await listen(handle);
@@ -198,7 +201,7 @@ test("production backends: SeaweedFS, the collector and GitHub", async () => {
   });
   const timers = [];
   const logs = [];
-  const handle = createService({
+  const handle = createService({ keys: LOCAL_KEYS,
     store: seaweedStore("127.0.0.1", filer.port), events: otlpEvents("127.0.0.1", collector.port),
     issues: githubIssues("tok", "o/r", github.url), secret: SECRET, publicUrl: () => "https://ardia.example",
     dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l), later: (fn, ms) => timers.push({ fn, ms }),
@@ -269,7 +272,7 @@ test("a report completed while the collector was down sends its event on the nex
   let up = false;
   const sent = [];
   const flaky = { describe: () => "flaky", send: async (id, ingest, body) => { if (!up) throw new Error("collector 503"); sent.push(body); } };
-  const make = () => createService({
+  const make = () => createService({ keys: LOCAL_KEYS,
     store: localStore(dir), events: flaky, issues: null, secret: SECRET, publicUrl: (req) => `http://${req.headers.host}`,
     dashboardUrl: "https://dash.example", rateLimits: false, log: () => {}, later: () => {},
   });
@@ -291,7 +294,7 @@ test("storage that refuses writes answers 502 upstream:storage, retryable, and l
     res.writeHead(500, { "Content-Type": "application/json" }).end(JSON.stringify({ error: "failed to find writable volumes for collection:feedback: No writable volumes and no free volumes left" }));
   });
   const logs = [];
-  const handle = createService({
+  const handle = createService({ keys: LOCAL_KEYS,
     store: seaweedStore("127.0.0.1", filer.port), events: { describe: () => "none", send: async () => {} }, issues: null, secret: SECRET,
     publicUrl: () => "https://ardia.example", dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l),
   });
@@ -308,7 +311,7 @@ test("unreachable storage is blamed on storage, and a bug in the service answers
   const port = closed.port;
   closed.server.close();
   const logs = [];
-  const { url } = await listen(createService({
+  const { url } = await listen(createService({ keys: LOCAL_KEYS,
     store: seaweedStore("127.0.0.1", port), events: { describe: () => "none", send: async () => {} }, issues: null, secret: SECRET,
     publicUrl: () => "https://ardia.example", dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l),
   }));
