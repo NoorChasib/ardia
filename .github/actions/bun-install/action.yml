@@ -53,7 +53,7 @@ runs:
         if [ "$IGNORE_SCRIPTS" = true ]; then flags+=(--ignore-scripts); fi
         for project in "${projects[@]}"; do
           echo "::group::bun install ${flags[*]} in $project"
-          (cd "$project" && bun install "${flags[@]}")
+          bun install --cwd "$project" "${flags[@]}"
           echo "::endgroup::"
         done
     - name: Lockfiles match their manifests
@@ -61,15 +61,17 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        mapfile -t locks < <(git ls-files -- ':(glob)**/bun.lock')
-        [ "${#locks[@]}" -gt 0 ] || { echo "::error::no bun.lock is committed"; exit 1; }
-        for lock in "${locks[@]}"; do
+        locks=$(git ls-files -- ':(glob)**/bun.lock')
+        [ -n "$locks" ] || { echo "::error::no bun.lock is committed"; exit 1; }
+        count=0
+        while IFS= read -r lock; do
           dir=$(dirname "$lock")
           echo "bun install --lockfile-only in $dir"
-          (cd "$dir" && bun install --lockfile-only --silent)
-        done
+          bun install --cwd "$dir" --lockfile-only --silent </dev/null
+          count=$((count + 1))
+        done <<<"$locks"
         if ! git diff --exit-code --stat -- ':(glob)**/bun.lock'; then
           echo "::error::a bun.lock is out of date with its package.json (diff above): run bun install in that directory and commit the lockfile"
           exit 1
         fi
-        echo "all ${#locks[@]} lockfiles match their manifests"
+        echo "all $count lockfiles match their manifests"
