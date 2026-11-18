@@ -3,10 +3,11 @@
 #
 # Starts an extracted Linux build of Nilla with ARDIA_DATA_DIR and ARDIA_CONFIG_HOME, which must both be set to a
 # scratch or Nilla-only folder, and with --password-store=basic, so today's engine never reaches an installed
-# Ardia's profile, data or secret-store items. It never installs anything.
+# Ardia's profile, data or secret-store items. It refuses --user-data-dir and --password-store among the browser
+# arguments, so they can't undo that. It never installs anything.
 set -euo pipefail
 
-usage() { sed -n '2,6s/^# \{0,1\}//p' "$0"; }
+usage() { sed -n '2,7s/^# \{0,1\}//p' "$0"; }
 die() { echo "nilla-dev-run: $*" >&2; exit 2; }
 
 case "${1:-}" in
@@ -41,6 +42,10 @@ for variable in ARDIA_DATA_DIR ARDIA_CONFIG_HOME; do
   touches_ardia "$value" && die "$variable=$value is inside Ardia's folders"
 done
 touches_ardia "$ARDIA_CONFIG_HOME/ardia" && die "ARDIA_CONFIG_HOME=$ARDIA_CONFIG_HOME would put the profile in Ardia's folder $ARDIA_CONFIG_HOME/ardia"
+
+for argument in "$@"; do
+  [[ "$argument" =~ ^--?(user-data-dir|password-store)(=|$) ]] && die "$argument isn't allowed: the profile comes from ARDIA_CONFIG_HOME and the password store is always basic"
+done
 
 mkdir -p -- "$ARDIA_DATA_DIR" "$ARDIA_CONFIG_HOME"
 export ARDIA_DATA_DIR ARDIA_CONFIG_HOME
