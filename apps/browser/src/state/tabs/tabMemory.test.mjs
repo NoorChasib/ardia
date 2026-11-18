@@ -311,3 +311,43 @@ test("the memory line, and the hover card's room for it, are on only where the s
   setTabMemoryAttributed(false);
   assert.equal(memoryLineOn({ showMemoryInTabHoverMenu: true }), false, "a synced-on setting where nothing can be attributed draws no line and keeps the card where it was");
 });
+
+test("a tab that sleeps and wakes within the snapshot's 20 s reads again instead of showing its old renderer's memory", async (t) => {
+  let tasks = [task("renderer", 10, 100 * MB, ["a"])];
+  fresh(t, () => tasks);
+  await coldRead("a");
+  mock.timers.tick(5000);
+  const before = reads();
+  useLifecycle.setState({ discarded: { a: true } });
+  assert.equal(tabMemoryReading(useTabMemorySnapshot.getState(), true, "a", Date.now()).memory.kind, "asleep");
+  tasks = [task("renderer", 20, 70 * MB, ["a"])];
+  useLifecycle.setState({ discarded: {} });
+  assert.deepEqual(tabMemoryReading(useTabMemorySnapshot.getState(), false, "a", Date.now()), { memory: { kind: "measuring" }, settled: false });
+  const line = mount((props) => useTabMemoryLine(props.tabId), { props: { tabId: "a" } });
+  assert.deepEqual(line.value, { kind: "measuring" });
+  await settle();
+  assert.equal(reads(), before + 1, "one fresh read for the woken renderer");
+  assert.deepEqual(line.value, { kind: "exact", bytes: 70 * MB });
+  mock.timers.tick(5000);
+  measureTabMemory("a");
+  await settle();
+  assert.equal(reads(), before + 1, "and then the kept snapshot serves it again");
+});
+
+test("a read already running when a tab wakes doesn't count as the woken renderer's", async (t) => {
+  let tasks = [task("renderer", 10, 100 * MB, ["a"])];
+  fresh(t, () => tasks);
+  await coldRead("a");
+  mock.timers.tick(3000);
+  useLifecycle.setState({ discarded: { a: true } });
+  measureTabMemory("b");
+  useLifecycle.setState({ discarded: {} });
+  await settle();
+  const snapshot = useTabMemorySnapshot.getState();
+  assert.equal(snapshot.reading, false);
+  assert.equal(tabMemoryReading(snapshot, false, "a", Date.now()).memory.kind, "measuring");
+  tasks = [task("renderer", 20, 70 * MB, ["a"])];
+  measureTabMemory("a");
+  await settle();
+  assert.deepEqual(tabMemoryReading(useTabMemorySnapshot.getState(), false, "a", Date.now()).memory, { kind: "exact", bytes: 70 * MB });
+});

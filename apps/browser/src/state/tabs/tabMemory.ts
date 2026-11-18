@@ -5,7 +5,7 @@ import type { EngineTask } from "../../platform/performance";
 import type { Settings } from "../settings/settings";
 import { sameSharingPeriod } from "../telemetry/sharingPeriod";
 import { noteTabMemorySample, noteTabMemoryShown } from "../telemetry/hoverCardCounts";
-import { isSleeping, useIsSleeping } from "./sleepingTabs";
+import { isSleeping, useIsSleeping, useLifecycle } from "./sleepingTabs";
 import { sampleTasks } from "./taskSampler";
 
 export type TabMemory =
@@ -16,7 +16,7 @@ export type TabMemory =
   | { kind: "unavailable" }
   | { kind: "asleep" };
 
-export type TabMemorySnapshot = { at: number; tasks: EngineTask[] | null; reading: boolean; failed: boolean };
+export type TabMemorySnapshot = { at: number; tasks: EngineTask[] | null; reading: boolean; failed: boolean; read?: number };
 
 export const SNAPSHOT_KEPT_MS = 20_000;
 export const SNAPSHOT_REREAD_MS = 2_000;
@@ -28,6 +28,19 @@ const PAGE_TASKS = new Set<EngineTask["type"]>(["renderer", "guest"]);
 const NAMELESS_TASKS = new Set<EngineTask["type"]>(["renderer", "guest", "extension"]);
 
 let attributed = PLATFORM_FEATURES.attributesTabMemory;
+let readsStarted = 0;
+const lastReadBeforeRendererChange = new Map<string, number>();
+
+useLifecycle.subscribe((l, prev) => {
+  if (l.discarded === prev.discarded) return;
+  for (const id of new Set([...Object.keys(l.discarded), ...Object.keys(prev.discarded)]))
+    if (!!l.discarded[id] !== !!prev.discarded[id]) lastReadBeforeRendererChange.set(id, readsStarted);
+});
+
+const predatesRenderer = (snapshot: TabMemorySnapshot, tabId: string) => {
+  const changed = lastReadBeforeRendererChange.get(tabId);
+  return changed !== undefined && !((snapshot.read ?? 0) > changed);
+};
 
 export const attributesTabMemory = () => attributed;
 
@@ -83,7 +96,7 @@ const measured = (tasks: EngineTask[], tabId: string) => {
 };
 
 function refreshDue(snapshot: TabMemorySnapshot, tabId: string, now: number) {
-  if (!snapshot.tasks) return true;
+  if (!snapshot.tasks || predatesRenderer(snapshot, tabId)) return true;
   const age = now - snapshot.at;
   return age >= SNAPSHOT_REREAD_MS && !(age < SNAPSHOT_KEPT_MS && measured(snapshot.tasks, tabId));
 }
@@ -93,9 +106,11 @@ export function measureTabMemory(tabId: string) {
   const snapshot = useTabMemorySnapshot.getState();
   if (snapshot.reading || !refreshDue(snapshot, tabId, Date.now())) return;
   useTabMemorySnapshot.setState({ reading: true });
+  const read = ++readsStarted;
   const consented = sameSharingPeriod();
   const settle = (tasks: EngineTask[], waited: boolean, failed: boolean) => {
-    useTabMemorySnapshot.setState({ at: Date.now(), tasks, reading: false, failed });
+    for (const [id, changed] of lastReadBeforeRendererChange) if (read > changed) lastReadBeforeRendererChange.delete(id);
+    useTabMemorySnapshot.setState({ at: Date.now(), tasks, reading: false, failed, read });
     if (consented()) noteTabMemorySample(waited, failed);
   };
   sampleTasks().then(
@@ -110,7 +125,7 @@ export function tabMemoryReading(snapshot: TabMemorySnapshot, asleep: boolean, t
   if (asleep) return { memory: ASLEEP, settled: true };
   if (!snapshot.tasks) return { memory: snapshot.failed ? UNAVAILABLE : MEASURING, settled: snapshot.failed && !snapshot.reading };
   const memory = attributeTabMemory(snapshot.tasks, tabId);
-  const unmeasured = memory.kind === "measuring" || memory.kind === "unavailable";
+  const unmeasured = memory.kind === "measuring" || memory.kind === "unavailable" || predatesRenderer(snapshot, tabId);
   if (snapshot.reading) return { memory: unmeasured || now - snapshot.at >= SNAPSHOT_KEPT_MS ? MEASURING : memory, settled: false };
   if (refreshDue(snapshot, tabId, now)) return { memory: MEASURING, settled: false };
   return { memory: memory.kind === "measuring" ? UNAVAILABLE : memory, settled: true };
