@@ -11,9 +11,16 @@ case "${3:-}" in
   --back) back=1 ;;
   *) echo "$usage" >&2; exit 64 ;;
 esac
+for input in "$old" "$new"; do
+  input_id="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$input/Contents/Info.plist" 2>/dev/null || true)"
+  case "$input_id" in
+    com.nilladigital.*) ;;
+    *) echo "carryover tests Nilla builds: $input is ${input_id:-not an app}" >&2; exit 64 ;;
+  esac
+done
 here="$(cd "$(dirname "$0")" && pwd)"
 . "$here/lib/harness.sh"
-if [ "$back" = 1 ]; then test_id="com.ardia.browser.rollback"; else test_id="com.ardia.browser.carryover"; fi
+if [ "$back" = 1 ]; then test_id="com.nilladigital.nilla.test.rollback"; else test_id="com.nilladigital.nilla.test.carryover"; fi
 work="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/ac-carryover.XXXXXX")" && pwd -P)"
 server=""
 cleanup() {

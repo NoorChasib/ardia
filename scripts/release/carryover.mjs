@@ -51,7 +51,8 @@ function openFilesOf(pid) {
   const files = execSync(`lsof -p ${tree.join(",")} -Fn`).toString().split("\n").filter((l) => l.startsWith("n/")).map((l) => withoutPrivate(l.slice(1)));
   return { files, processes: tree.length };
 }
-const inRealHome = (files) => files.filter((f) => f.startsWith(`${realLibrary}/Application Support/com.ardia`) || f.startsWith(`${realLibrary}/Caches/com.ardia`));
+const appFolderPrefixes = ["com.nilladigital", "com.ardia"].flatMap((id) => [`${realLibrary}/Application Support/${id}`, `${realLibrary}/Caches/${id}`]);
+const inRealHome = (files) => files.filter((f) => appFolderPrefixes.some((prefix) => f.startsWith(prefix)));
 async function openInstalledCopy() {
   const installedPid = await start(false, `${phase}.installed.app.log`);
   const profileFolder = `${withoutPrivate(path.join(docs, "Chromium"))}/`;
@@ -70,11 +71,9 @@ const installed = previousBuild ? null : await openInstalledCopy();
 const pid = await start(true, `${phase}.app.log`);
 
 const step = (what) => { if (process.env.CARRYOVER_VERBOSE) console.error(`carryover ${phase}: ${what}`); };
-const legacy = path.basename(execFileSync("/usr/libexec/PlistBuddy", ["-c", "Print :CFBundleExecutable", `${app}/Contents/Info.plist`]).toString().trim()) === "Netnyahoo";
-const inLegacyNames = (body) => `const ac = nn;\n${body.replace(/expo\.modules\.Ardia(\w+)/g, "expo.modules.Netnyahoo$1").replace(/"ac_(\w+)"/g, '"nn_$1"')}`;
 async function inApp(body, timeoutMs = 30_000) {
   step(body.trim().split("\n")[0].slice(0, 100));
-  return instance.eval(legacy ? inLegacyNames(body) : body, { timeout: timeoutMs });
+  return instance.eval(body, { timeout: timeoutMs });
 }
 async function inPage(urlPart, expression) {
   for (let i = 0; i < 40; i++) {
