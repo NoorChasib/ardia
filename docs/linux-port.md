@@ -149,7 +149,8 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
     lingering or prewarmed gets `display: none` (`state/windows/paneHiding.ts`; macOS and Windows never opt in). Its
     web view stays mounted and its page stays bound, but the pane costs no layout or hit testing
     (`elementFromPoint` through 99 hidden panes was most of the per-frame cost left at 100 tabs). Its slot measures
-    0×0 and reports `visible: false`; the engine already unbinds a hidden pane's page, so the rect is never used.
+    0×0 and reports `visible: false`; the engine already unbinds a hidden pane's page and reads a pane's bounds only
+    while it is visible, so `HostTab.viewport` sends no rect change between two hidden reports.
     Nothing inside a hidden pane may depend on its own layout (`onLayout` reads 0×0 there).
 - **Switching ahead.** A tab switch shows the next page in the shown page's place from the store subscription, before
   React commits (`tabSwitchAhead.ts`, `showInPlaceOf`). The next pane is still out of layout then, so the shown page
