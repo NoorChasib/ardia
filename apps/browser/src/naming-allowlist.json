@@ -463,6 +463,13 @@
    "why": "Symbol.for key the Linux engine's page evaluation reads."
   },
   {
+   "id": "F-page-operations",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "ardia\\.(?:reader|elementPicker)\\b|(?<![A-Za-z0-9_-])ardia-(?:reader|element-picker|box|tag|hint)(?![A-Za-z0-9_-])",
+   "why": "Page-script names inside the evaluations ac_linux_page_operations.h pins by length and SHA-256 (apps/linux/scripts/page-operations.mjs --check): changing them makes the prebuilt Linux engine refuse the reader and element-picker operations."
+  },
+  {
    "id": "D-dom-hooks",
    "class": "D",
    "mechanism": "class",
@@ -1251,8 +1258,8 @@
    "files": 508,
    "occurrences": 1889,
    "decision": "class",
-   "protectedOccurrences": 298,
-   "renamedOccurrences": 1591,
+   "protectedOccurrences": 307,
+   "renamedOccurrences": 1582,
    "notRsFiles": 680,
    "coveredBy": [
     "N-cli-artifacts",
@@ -1260,6 +1267,7 @@
     "D-dom-hooks",
     "S-switch-names",
     "N-linux-layout",
+    "F-page-operations",
     "P-windows-engine-files",
     "R-engine-paths",
     "V-engine-fetch-lines",
