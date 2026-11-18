@@ -38,7 +38,7 @@ NSArray<NSString *> *EngineTestKeys() {
 NSArray<NSString *> *AppTestKeys() {
   return @[
     @"pipSelfTest", @"pipHover", @"fakeFullScreenMs", @"shadersKeyWindow", @"peekStrict", @"importSecret", @"importDiaBundleId", @"importDiaWindows",
-    @"cliInstallScript", @"legacySource", @"legacyCrashAfter", @"bangsUrl", @"onboarding", @"whatsNew", @"telemetry",
+    @"cliInstallScript", @"services", @"bangsUrl", @"onboarding", @"whatsNew", @"telemetry",
     @"liveMock", @"calendarFixture", @"appMenu", @"appDialog", @"loginsTimeout", @"screenRecording", @"systemLocationPermission",
   ];
 }
@@ -46,7 +46,7 @@ NSArray<NSString *> *AppTestKeys() {
 NSArray<NSString *> *KeysWhoseValuesHoldCommas() {
   return @[
     @"chromiumSwitches", @"downloadsDir", @"updateFeed", @"cliHome", @"cliBinDir", @"cliUrl", @"syncFolder", @"sharedFolders", @"importSourceDir",
-    @"importSafariHome", @"importSecret", @"cliInstallScript", @"legacySource", @"bangsUrl", @"liveMock",
+    @"importSafariHome", @"importSecret", @"cliInstallScript", @"services", @"bangsUrl", @"liveMock",
   ];
 }
 
@@ -304,7 +304,7 @@ BOOL SignedForDistribution() {
 }
 
 - (NSArray<NSString *> *)engineSwitches {
-  NSMutableArray<NSString *> *switches = [NSMutableArray array];
+  NSMutableArray<NSString *> *switches = [NSMutableArray arrayWithObject:@"--use-mock-keychain"];
   if (_background) [switches addObject:@"--ardia-background"];
   if (_dataDirectory) [switches addObject:[@"--ardia-data-dir=" stringByAppendingString:_dataDirectory]];
   for (NSString *key in EngineInstanceKeys())

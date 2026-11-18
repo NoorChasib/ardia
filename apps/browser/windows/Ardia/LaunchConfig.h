@@ -68,7 +68,7 @@ inline std::vector<std::string_view> const &TestKeys() noexcept {
       "externalProtocolNoLaunch", "externalProtocolApp", "mediaRouteProvider", "systemMediaPermission", "applyProfileGate", "contextMenu",
       "loginsDelay", "loginsReleaseAfter", "cdpTabsVisible",
       "pipSelfTest", "pipHover", "selfCheckOnly", "meadowWebGL", "meadowReadyMs", "introStartDelayMs", "fakeFullScreenMs", "shadersKeyWindow", "peekStrict", "importSecret", "importDiaBundleId", "importDiaWindows",
-      "cliInstallScript", "legacySource", "legacyCrashAfter", "bangsUrl", "onboarding", "whatsNew", "telemetry",
+      "cliInstallScript", "services", "bangsUrl", "onboarding", "whatsNew", "telemetry",
       "liveMock", "calendarFixture", "appMenu", "appDialog", "loginsTimeout", "externalAppLaunch", "nativeDragRefused", "httpPages", "selfCheckStage",
       "keyHold", "keyHoldReadyMs",
   };
@@ -78,7 +78,7 @@ inline std::vector<std::string_view> const &TestKeys() noexcept {
 inline std::vector<std::string_view> const &KeysWhoseValuesHoldCommas() noexcept {
   static const std::vector<std::string_view> keys{
       "chromiumSwitches", "downloadsDir", "updateFeed", "cliHome", "cliBinDir", "cliUrl", "syncFolder", "sharedFolders", "importSourceDir",
-      "importSafariHome", "importSecret", "cliInstallScript", "legacySource", "bangsUrl", "liveMock",
+      "importSafariHome", "importSecret", "cliInstallScript", "services", "bangsUrl", "liveMock",
   };
   return keys;
 }

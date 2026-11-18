@@ -29,7 +29,7 @@ const OLD_TEST = {
   safeStorageAnswer: "ARDIA_TEST_SAFE_STORAGE_ANSWER", reauth: "ARDIA_TEST_REAUTH", pipSelfTest: "ARDIA_PIP_SELFTEST",
   pipHover: "ARDIA_PIP_HOVER", fakeFullScreenMs: "ARDIA_FAKE_FULLSCREEN_MS", shadersKeyWindow: "ARDIA_SHADERS_FORCE_KEY",
   peekStrict: "ARDIA_PEEK_STRICT", importSecret: "ARDIA_IMPORT_TEST_SECRET", importDiaBundleId: "ARDIA_IMPORT_DIA_BUNDLE_ID",
-  cliInstallScript: "ARDIA_CLI_INSTALL_SCRIPT", legacySource: "ARDIA_LEGACY_SOURCE", legacyCrashAfter: "ARDIA_LEGACY_CRASH_AFTER",
+  cliInstallScript: "ARDIA_CLI_INSTALL_SCRIPT",
   bangsUrl: "ARDIA_BANGS_URL", onboarding: "ARDIA_ONBOARDING", whatsNew: "ARDIA_WHATS_NEW", telemetry: "ARDIA_TELEMETRY",
   liveMock: "ARDIA_LIVE_MOCK", calendarFixture: "ARDIA_CALENDAR_FIXTURE",
 };
@@ -49,12 +49,12 @@ export const TEST_KEYS = [
   "externalProtocolNoLaunch", "externalProtocolApp", "mediaRouteProvider", "systemMediaPermission", "applyProfileGate", "contextMenu",
   "loginsDelay", "loginsReleaseAfter", "cdpTabsVisible", "nativeDragRefused",
   "pipSelfTest", "pipHover", "fakeFullScreenMs", "shadersKeyWindow", "peekStrict", "importSecret", "importDiaBundleId", "importDiaWindows",
-  "cliInstallScript", "legacySource", "legacyCrashAfter", "bangsUrl", "onboarding", "whatsNew", "telemetry",
+  "cliInstallScript", "services", "bangsUrl", "onboarding", "whatsNew", "telemetry",
   "liveMock", "calendarFixture", "appMenu", "appDialog", "loginsTimeout", "screenRecording", "systemLocationPermission",
 ];
 export const COMMA_KEYS = [
   "chromiumSwitches", "downloadsDir", "updateFeed", "cliHome", "cliBinDir", "cliUrl", "syncFolder", "sharedFolders", "importSourceDir",
-  "importSafariHome", "importSecret", "cliInstallScript", "legacySource", "bangsUrl", "liveMock",
+  "importSafariHome", "importSecret", "cliInstallScript", "services", "bangsUrl", "liveMock",
 ];
 
 const knownKeys = { instance: INSTANCE_KEYS, test: TEST_KEYS };

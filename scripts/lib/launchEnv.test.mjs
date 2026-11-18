@@ -47,3 +47,26 @@ test("the key tables match the ones ArdiaLaunchConfig.mm reads", () => {
   assert.deepEqual(new Set(TEST_KEYS), new Set([...keysOf("EngineTestKeys"), ...keysOf("AppTestKeys")]));
   assert.deepEqual(new Set(COMMA_KEYS), new Set(keysOf("KeysWhoseValuesHoldCommas")));
 });
+
+test("the Mac and Windows launch configs both read the services test key, hold commas in it, and no longer know the legacy migration keys", () => {
+  const mac = readFileSync(new URL("../../packages/ardiacore/ios/ArdiaLaunchConfig.mm", import.meta.url), "utf8");
+  const windows = readFileSync(new URL("../../apps/browser/windows/Ardia/LaunchConfig.h", import.meta.url), "utf8");
+  const macKeys = (fn) => [...(mac.match(new RegExp(`\\*${fn}\\(\\) \\{\\n  return @\\[([^\\]]*)\\]`))?.[1] ?? "").matchAll(/@"(\w+)"/g)].map((m) => m[1]);
+  const windowsKeys = (fn) => [...(windows.match(new RegExp(`&${fn}\\(\\) noexcept \\{\\n  static const std::vector<std::string_view> keys\\{([^}]*)\\}`))?.[1] ?? "").matchAll(/"(\w+)"/g)].map((m) => m[1]);
+  for (const [name, keys, commas] of [
+    ["launchEnv.mjs", TEST_KEYS, COMMA_KEYS],
+    ["ArdiaLaunchConfig.mm", macKeys("AppTestKeys"), macKeys("KeysWhoseValuesHoldCommas")],
+    ["LaunchConfig.h", windowsKeys("TestKeys"), windowsKeys("KeysWhoseValuesHoldCommas")],
+  ]) {
+    assert.ok(keys.includes("services"), `${name} reads services`);
+    assert.ok(commas.includes("services"), `${name} keeps commas in services`);
+    for (const gone of ["legacySource", "legacyCrashAfter"]) assert.ok(!keys.includes(gone) && !commas.includes(gone), `${name} still knows ${gone}`);
+  }
+  assert.doesNotMatch(readFileSync(new URL("./launchEnv.mjs", import.meta.url), "utf8"), /ARDIA_LEGACY_/);
+});
+
+test("every Mac launch hands the engine --use-mock-keychain, so Chromium never opens a keychain item of its own", () => {
+  const mac = readFileSync(new URL("../../packages/ardiacore/ios/ArdiaLaunchConfig.mm", import.meta.url), "utf8");
+  const body = mac.slice(mac.indexOf("- (NSArray<NSString *> *)engineSwitches {"), mac.indexOf("- (NSDictionary<NSString *, id> *)snapshot {"));
+  assert.match(body, /^  NSMutableArray<NSString \*> \*switches = \[NSMutableArray arrayWithObject:@"--use-mock-keychain"\];$/m);
+});
