@@ -1,6 +1,5 @@
 import { visible } from "../scope.ts";
 import type { ScopeState } from "../scopeState.ts";
-import { fromLegacy } from "./legacy.ts";
 import { lastVisitOf, type BookmarkValue, type DeviceTabs, type DeviceValue, type HistoryValue } from "./adapters.ts";
 
 export const MAX_HISTORY_ITEMS = 2_000;
@@ -102,7 +101,7 @@ function deviceTabs(scope: ScopeState | undefined, me: string, devices: Map<stri
     const seen = new Set<string>();
     const tabs: { url: string; title: string }[] = [];
     for (const t of value.tabs) {
-      const url = fromLegacy(str(t?.u));
+      const url = str(t?.u);
       const title = str(t?.t);
       if (!url || seen.has(`${url}\n${title}`)) continue;
       seen.add(`${url}\n${title}`);
@@ -129,7 +128,7 @@ export function pinnedArea(scope: ScopeState | undefined): ViewProfile["pinned"]
   if (!scope) return { tiles: [], sections: [] };
   const records = (prefix: string) => visible(scope, prefix);
   const pins = new Map<string, PinValue>();
-  for (const [k, v] of records("pin:t:")) if (v && typeof v === "object") pins.set(k.slice(6), fromLegacy(v as PinValue));
+  for (const [k, v] of records("pin:t:")) if (v && typeof v === "object") pins.set(k.slice(6), v as PinValue);
   const groupValues = new Map<string, GroupLook>();
   for (const [k, v] of records("pin:g:")) if (v && typeof v === "object") groupValues.set(k.slice(6), v as GroupLook);
   const nestValues = new Map<string, GroupLook>();
@@ -258,7 +257,7 @@ export function bookmarkTree(scope: ScopeState | undefined): ViewBookmark[] {
   const values = new Map<string, BookmarkValue>();
   for (const [k, v] of visible(scope, "bm:")) {
     const b = v as BookmarkValue;
-    if (b && typeof b === "object" && (b.k === "u" || b.k === "f")) values.set(k.slice(3), fromLegacy(b));
+    if (b && typeof b === "object" && (b.k === "u" || b.k === "f")) values.set(k.slice(3), b);
   }
   const parentOf = new Map<string, string>();
   for (const [key, v] of values) {
@@ -300,14 +299,14 @@ export function historyList(scope: ScopeState | undefined): ViewHistory[] {
   for (const [k, v] of visible(scope, "h:")) {
     const h = v as HistoryValue;
     if (!h || typeof h !== "object" || !Array.isArray(h.vt) || !h.vt.length) continue;
-    out.push({ url: fromLegacy(k.slice(2)), title: str(h.t), visits: typeof h.n === "number" ? h.n : h.vt.length, lastVisit: lastVisitOf(h) });
+    out.push({ url: k.slice(2), title: str(h.t), visits: typeof h.n === "number" ? h.n : h.vt.length, lastVisit: lastVisitOf(h) });
   }
   return out.sort((a, z) => z.lastVisit - a.lastVisit || (a.url < z.url ? -1 : 1)).slice(0, MAX_HISTORY_ITEMS);
 }
 
 function settingOf(app: ScopeState, name: string): unknown {
   const record = app.records[`set:${name}`]?.v as { v?: unknown } | null | undefined;
-  return record && typeof record === "object" ? fromLegacy(record.v) : undefined;
+  return record && typeof record === "object" ? record.v : undefined;
 }
 
 function oneOf<T extends string>(value: unknown, choices: readonly T[]): T | null {

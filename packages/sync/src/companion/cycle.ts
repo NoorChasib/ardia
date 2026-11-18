@@ -17,7 +17,6 @@ import {
   type LocalVisit,
   type SendRecord,
 } from "./adapters.ts";
-import { fromLegacyUrl } from "./legacy.ts";
 import { buildView, dataOwner, defaultProfileId, liveProfiles, type View } from "./view.ts";
 import { host, loaded, save, viewIsNew, type CompanionState } from "./state.ts";
 
@@ -295,7 +294,7 @@ function hasBookmarkFor(c: CompanionState, scope: string, url: string) {
   if (!state) return false;
   for (const [key, value] of visible(state, "bm:")) {
     const bookmark = value as BookmarkValue | null;
-    if (!removing.has(key) && bookmark?.k === "u" && typeof bookmark.u === "string" && fromLegacyUrl(bookmark.u) === url) return true;
+    if (!removing.has(key) && bookmark?.k === "u" && bookmark.u === url) return true;
   }
   return false;
 }
