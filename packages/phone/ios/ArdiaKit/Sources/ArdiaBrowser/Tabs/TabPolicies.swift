@@ -61,6 +61,7 @@ public struct ArchivedDay: Identifiable {
 
 public enum BrowserURL {
   public static let browseScheme = "ardia"
+  public static let systemLinkScheme = "nilla"
 
   public static func isSyncable(_ url: String) -> Bool {
     let lower = url.lowercased()

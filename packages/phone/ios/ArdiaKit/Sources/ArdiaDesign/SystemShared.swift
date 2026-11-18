@@ -13,7 +13,7 @@ public enum SystemLink: Equatable, Sendable {
 
   public var url: URL {
     var components = URLComponents()
-    components.scheme = BrowserURL.browseScheme
+    components.scheme = BrowserURL.systemLinkScheme
     switch self {
     case .search(let query):
       components.host = "search"
@@ -33,11 +33,11 @@ public enum SystemLink: Equatable, Sendable {
     case .inbox:
       components.host = "inbox"
     }
-    return components.url ?? URL(string: "\(BrowserURL.browseScheme)://search")!
+    return components.url ?? URL(string: "\(BrowserURL.systemLinkScheme)://search")!
   }
 
   public init?(_ url: URL) {
-    guard url.scheme?.lowercased() == BrowserURL.browseScheme,
+    guard url.scheme?.lowercased() == BrowserURL.systemLinkScheme,
       let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
       let host = components.host?.lowercased()
     else { return nil }

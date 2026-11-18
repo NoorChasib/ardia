@@ -10,7 +10,7 @@
 	<string>$(ARDIA_TEST_BUILD)</string>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
-		<string>com.ardia.browser.ios.sync</string>
+		<string>com.nilladigital.nilla.ios.sync</string>
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
@@ -34,17 +34,17 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.ardia.browser.ios</string>
+			<string>com.nilladigital.nilla.ios</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>ardia</string>
+				<string>nilla</string>
 			</array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>CFBundleURLName</key>
-			<string>com.ardia.browser.ios.web</string>
+			<string>com.nilladigital.nilla.ios.web</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>http</string>

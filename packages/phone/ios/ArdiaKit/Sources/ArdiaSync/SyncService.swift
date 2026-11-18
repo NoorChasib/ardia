@@ -47,7 +47,7 @@ public enum ConnectResult: Equatable, Sendable {
 @MainActor
 @Observable
 public final class SyncService {
-  public static let backgroundTaskIdentifier = "com.ardia.browser.ios.sync"
+  public static let backgroundTaskIdentifier = "com.nilladigital.nilla.ios.sync"
   nonisolated public static let wordCount = RecoveryPhrase.wordCount
 
   public private(set) var phase: SyncPhase = .off

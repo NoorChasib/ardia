@@ -2,6 +2,7 @@ package com.ardia.browser
 
 object BrowserUrl {
     const val BROWSE_SCHEME = "ardia"
+    const val SYSTEM_LINK_SCHEME = "nilla"
 
     fun scheme(url: String): String? {
         val end = url.indexOf(':')

@@ -87,3 +87,27 @@ test("the phone apps take their ids from the prefix: the iOS targets, app group,
   assert.match(read("apps/phone/android/app/build.gradle"), /^ {8}applicationId "\$\{nillaIdPrefix\}\.nilla\.android"$/m);
   assert.doesNotMatch(read("apps/phone/ios/Config/ExportOptions-TestFlight.plist"), /teamID/);
 });
+
+test("the phone registers nilla:// with the OS, and its builders of OS links use it while app URLs stay ardia://", () => {
+  assert.match(read("apps/phone/android/app/src/main/AndroidManifest.xml"), /<data android:scheme="nilla" \/>/);
+  assert.doesNotMatch(read("apps/phone/android/app/src/main/AndroidManifest.xml"), /android:scheme="ardia"/);
+  for (const path of ["apps/phone/android/app/src/main/res-system/xml/shortcuts.xml", "apps/phone/android/app/src/main/res/xml/phone_shortcuts.xml"]) {
+    const shortcuts = read(path);
+    assert.doesNotMatch(shortcuts, /android:data="ardia:/, path);
+    assert.ok([...shortcuts.matchAll(/android:targetPackage="([^"]+)"/g)].every((m) => m[1] === `${PREFIX}.nilla.android`), path);
+  }
+  const plist = read("apps/phone/ios/Ardia/Info.plist");
+  const bgTask = `${PREFIX}.nilla.ios.sync`;
+  assert.match(plist, new RegExp(`<key>BGTaskSchedulerPermittedIdentifiers</key>\\s*<array>\\s*<string>${bgTask.replace(/\./g, "\\.")}</string>`));
+  assert.match(plist, /<key>CFBundleURLSchemes<\/key>\s*<array>\s*<string>nilla<\/string>/);
+  assert.doesNotMatch(plist, /<string>ardia<\/string>|com\.ardia\.browser/);
+  assert.ok(read("packages/phone/ios/ArdiaKit/Sources/ArdiaSync/SyncService.swift").includes(`backgroundTaskIdentifier = "${bgTask}"`));
+  const tabPolicies = read("packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Tabs/TabPolicies.swift");
+  assert.match(tabPolicies, /browseScheme = "ardia"/);
+  assert.match(tabPolicies, /systemLinkScheme = "nilla"/);
+  assert.doesNotMatch(read("packages/phone/ios/ArdiaKit/Sources/ArdiaDesign/SystemShared.swift"), /browseScheme/);
+  const browserUrl = read("packages/phone/android/src/main/java/com/ardia/browser/BrowserUrl.kt");
+  assert.match(browserUrl, /BROWSE_SCHEME = "ardia"/);
+  assert.match(browserUrl, /SYSTEM_LINK_SCHEME = "nilla"/);
+  assert.match(read("packages/phone/android/src/main/java/com/ardia/appmodel/SystemLink.kt"), /const val SCHEME = BrowserUrl\.SYSTEM_LINK_SCHEME/);
+});

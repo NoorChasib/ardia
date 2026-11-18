@@ -27,7 +27,7 @@ sealed interface SystemLink {
         }
 
     companion object {
-        const val SCHEME = BrowserUrl.BROWSE_SCHEME
+        const val SCHEME = BrowserUrl.SYSTEM_LINK_SCHEME
 
         fun parse(uri: String): SystemLink? {
             val parsed = runCatching { Uri.parse(uri) }.getOrNull() ?: return null
