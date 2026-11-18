@@ -1,5 +1,6 @@
 import { offersDefaultBrowser } from "../settings/settingsRules";
-import { usePages } from "../pages/store";
+import { useShallow } from "zustand/react/shallow";
+import { usePages, type PageState } from "../pages/store";
 import { useDarkScheme } from "../settings/appearance";
 import { usePreferences } from "../settings/store";
 import { useTabs } from "../tabs/store";
@@ -25,9 +26,12 @@ export const useFindResult = (id: string | null) => usePages((s) => (id ? s.find
 
 export const usePageRequest = (id: string | null) => usePages((s) => (id ? (s.requests[id] as Request | null | undefined) ?? null : null));
 
+const menuFields = (state: PageState | undefined) =>
+  state ? { url: state.url, canGoBack: state.canGoBack, canGoForward: state.canGoForward, isLoading: state.isLoading, pageZoom: state.pageZoom, isDesktopSite: state.isDesktopSite, blockedRequests: state.blockedRequests } : null;
+
 export function useMenuModel(id: string): MenuModel {
   const dark = useDarkScheme();
-  const state = usePages((s) => s.navigation[id] ?? null);
+  const state = usePages(useShallow((s) => menuFields(s.navigation[id])));
   const tabUrl = useTabs((s) => s.open.find((t) => t.id === id)?.url ?? s.privates.find((t) => t.id === id)?.url ?? "");
   const site = usePageUi((s) => s.menuSite);
   const levels = usePageUi((s) => s.zoomLevels);
@@ -54,9 +58,12 @@ export function useMenuModel(id: string): MenuModel {
 }
 
 export function useMenuTitle(id: string): string {
-  const tab = useTabs((s) => s.open.find((t) => t.id === id) ?? s.privates.find((t) => t.id === id) ?? null);
-  if (!tab) return "";
-  return menuTitle(tab.title, tab.url, display(tab.url).host || null, searchQuery(tab.url));
+  const [title, url] = useTabs(useShallow((s) => {
+    const tab = s.open.find((t) => t.id === id) ?? s.privates.find((t) => t.id === id);
+    return tab ? [tab.title, tab.url] : [null, null];
+  }));
+  if (url === null) return "";
+  return menuTitle(title ?? "", url, display(url).host || null, searchQuery(url));
 }
 
 export const useReaderSettings = () => ({

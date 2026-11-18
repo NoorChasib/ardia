@@ -4,6 +4,7 @@ import { DesignProvider } from "../components/ui";
 import type { Design } from "../lib/design";
 import * as perf from "../state/app/interactionPerf";
 import { useBrowse } from "../state/browse/store";
+import { openPageMenu } from "../state/page/actions";
 import { usePageUi } from "../state/page/store";
 import { storeNavigation, storeTone, usePages, type PageState } from "../state/pages/store";
 import { rememberPageTones } from "../state/pages/toneMemory";
@@ -109,5 +110,19 @@ test("a background tab's title change sorts the deck order once for the page chr
   expect(sorts).toHaveBeenCalledTimes(1);
   expect(after).toEqual(before);
   expect(currentTabs().open.find((tab) => tab.id === "t3")!.title).toBe("Renamed");
+  unmount(root);
+});
+
+test("with the page menu open, a page's progress ticks and scroll flips render no menu, and a change the menu shows renders it", async () => {
+  const root = await page();
+  await act(async () => void (await openPageMenu()));
+  settle();
+  const menuRenders = () => renders.filter((component) => component === "PageMenu" || component === "NavigationCapsule").length;
+  expect(root.root.findAll((node) => (node.type as { name?: string })?.name === "PageMenu").length).toBe(1);
+  renders = [];
+  for (let tick = 1; tick <= 10; tick++) act(() => storeNavigation(front().id, { ...state(tick % 2 ? "down" : "up"), progress: tick / 10, isScrolledToTop: tick % 3 === 0 }));
+  expect(menuRenders()).toBe(0);
+  act(() => storeNavigation(front().id, { ...state("up"), canGoBack: true }));
+  expect(menuRenders()).toBeGreaterThan(0);
   unmount(root);
 });
