@@ -4,4 +4,7 @@ export function setShellFrameCountSource(take: (() => Record<string, number>) | 
   source = take;
 }
 
-export const takeShellFrameCounts = (): Record<string, number> => source?.() ?? {};
+export function takeShellFrameCounts(sharing: boolean): Record<string, number> {
+  const counts = source?.() ?? {};
+  return sharing ? counts : {};
+}
