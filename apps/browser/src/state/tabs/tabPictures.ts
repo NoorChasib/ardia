@@ -167,13 +167,11 @@ export function startTabPictures() {
   if (started) return;
   started = true;
   useBrowser.subscribe((s, prev) => {
-    const loads = s.live !== prev.live && previewCaptures(s);
+    const loads = s.live !== prev.live;
     if (s.windows === prev.windows && s.tabs === prev.tabs && !loads) return;
     if (s.windows !== prev.windows || s.tabs !== prev.tabs) followActiveTabs(s, prev);
-    if (loads) {
-      followLoadStarts(s, prev);
-      followFinishedLoads(s, prev);
-    }
+    if (loads) followLoadStarts(s, prev);
+    if (loads && previewCaptures(s)) followFinishedLoads(s, prev);
     if (s.tabs !== prev.tabs) {
       for (const id of loadStarts.keys()) if (!s.tabs[id]) loadStarts.delete(id);
       const before = pictures.size;

@@ -390,3 +390,29 @@ test("a load capture that started before sharing turned on counts neither its at
   const after = takeHoverCardCounts();
   assert.deepEqual([after.tab_hover_preview_captures, after.tab_hover_preview_capture_misses], [1, 1], "the next capture, started while sharing, counts");
 });
+
+test("a background reload while the preview is off leaves the old document's picture unshown once the preview is back on", async () => {
+  const { w, a } = await setup({ preview: true });
+  const b = S().newTab(w, { url: "https://blue.example/" });
+  fake(b, () => Promise.resolve({ data: "BLUE-A", frame: FRAME }));
+  mock.timers.tick(SETTLE_MS);
+  await flush();
+  S().activate(a);
+  mock.timers.tick(SETTLE_MS);
+  await flush();
+  assert.equal(hoverState(b), "shown");
+  S().updateSettings({ showPagePreviewInTabHoverMenu: false });
+  finishLoad(b);
+  S().updateTab(b, { title: "Blue, reloaded" });
+  mock.timers.tick(10 * SETTLE_MS);
+  await flush();
+  S().updateSettings({ showPagePreviewInTabHoverMenu: true });
+  assert.equal(lastPicture(b).data, "BLUE-A", "the switcher keeps the picture");
+  assert.equal(hoverState(b), "stale", "but the hover card doesn't show it under the reloaded document");
+  fake(b, () => Promise.resolve({ data: "BLUE-B", frame: FRAME }));
+  S().activate(b);
+  mock.timers.tick(SETTLE_MS);
+  await flush();
+  S().activate(a);
+  assert.deepEqual([lastPicture(b).data, hoverState(b)], ["BLUE-B", "shown"], "a settled capture of the new document is shown again");
+});
