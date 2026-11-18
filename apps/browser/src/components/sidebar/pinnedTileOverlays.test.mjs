@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { test } from "node:test";
-const ts = createRequire(import.meta.url)("typescript");
+const ts = createRequire(import.meta.url)("@typescript/typescript6");
 
 const text = readFileSync(new URL("./PinnedGrid.tsx", import.meta.url), "utf8");
 const file = ts.createSourceFile("PinnedGrid.tsx", text, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);

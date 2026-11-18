@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import test from "node:test";
 
-const ts = createRequire(import.meta.url)("typescript");
+const ts = createRequire(import.meta.url)("@typescript/typescript6");
 const MARKER = "TabContentArea";
 
 function elements(file) {
