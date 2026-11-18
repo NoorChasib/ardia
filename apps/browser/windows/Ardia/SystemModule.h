@@ -305,9 +305,7 @@ struct SystemModule {
       AppLaunch::Note(L"ArdiaSystem: background instance, not setting the default browser");
       return promise.Resolve(false);
     }
-    std::wstring page = SystemShell::DefaultAppsPage();
-    AppLaunch::Note(L"ArdiaSystem: opening " + page);
-    AppShell::RunOnShellThread([page]() noexcept { AppShell::Execute(page); });
+    AppLaunch::Note(L"ArdiaSystem: setting the default browser isn't supported in this development build of Nilla");
     promise.Resolve(false);
   }
 
@@ -329,22 +327,17 @@ struct SystemModule {
 
   REACT_METHOD(launchAtLoginStatus)
   void launchAtLoginStatus(winrt::Microsoft::ReactNative::ReactPromise<std::string> promise) noexcept {
-    promise.Resolve(SystemShell::LaunchAtLoginStatus());
+    promise.Resolve("notFound");
   }
 
   REACT_METHOD(setLaunchAtLogin)
-  void setLaunchAtLogin(bool enabled, winrt::Microsoft::ReactNative::ReactPromise<void> promise) noexcept {
+  void setLaunchAtLogin(bool, winrt::Microsoft::ReactNative::ReactPromise<void> promise) noexcept {
     if (AppLaunch::Background()) {
       AppLaunch::Note(L"ArdiaSystem: background instance, not changing launch at login");
       return promise.Resolve();
     }
-    if (Paths::HasCustomDataDirectory()) {
-      AppLaunch::Note(L"ArdiaSystem: custom data directory, not changing launch at login");
-      return promise.Resolve();
-    }
-    LSTATUS status = SystemShell::SetLaunchAtLogin(enabled);
-    if (status != ERROR_SUCCESS) return promise.Reject((std::string{"Couldn't change launch at login (error "} + std::to_string(status) + ")").c_str());
-    promise.Resolve();
+    AppLaunch::Note(L"ArdiaSystem: launch at login isn't supported in this development build of Nilla");
+    promise.Reject("Launch at login isn't supported in this development build of Nilla");
   }
 
   REACT_SYNC_METHOD(fileExists)

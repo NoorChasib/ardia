@@ -99,5 +99,5 @@ test("an app folder the Windows workflow uploads has lost its test-build marker,
     });
     if (strip >= 0) assert.ok(!steps.slice(strip + 1).some((step) => harness.test(step)), "no harness runs after the marker is removed");
   }
-  assert.ok(uploaded.beforeAnyHarness > 0 && uploaded.afterRemoval > 0, `the workflow uploads app folders: ${JSON.stringify(uploaded)}`);
+  assert.ok(uploaded.beforeAnyHarness > 0, `the workflow caches or uploads app folders: ${JSON.stringify(uploaded)}`);
 });

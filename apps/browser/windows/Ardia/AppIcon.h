@@ -19,7 +19,7 @@
 namespace Ardia {
 
 struct AppIcon {
-  static constexpr wchar_t kAppUserModelId[] = L"Ardia.Browser";
+  static constexpr wchar_t kAppUserModelId[] = L"NillaDigital.Nilla";
   static constexpr wchar_t kDisplayName[] = L"Ardia";
 
   static void ClaimAppUserModelId() noexcept {

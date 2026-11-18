@@ -131,7 +131,7 @@ inline bool Gone(std::filesystem::path const &path) noexcept {
 inline std::filesystem::path ProfileDataRoot() noexcept {
   try {
     if (Paths::HasCustomDataDirectory()) return Paths::DataDirectory() / L"Chromium";
-    return Paths::UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Ardia" / L"User Data";
+    return Paths::UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Nilla" / L"User Data";
   } catch (...) {
     return {};
   }

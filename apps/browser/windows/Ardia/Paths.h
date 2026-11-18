@@ -77,7 +77,7 @@ inline bool HasCustomDataDirectory() noexcept {
 inline const std::filesystem::path &DataDirectory() noexcept {
   static const std::filesystem::path directory = [] {
     std::wstring const &chosen = RequestedDataDirectory();
-    return Ensured(chosen.empty() ? UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Ardia" : std::filesystem::path(chosen));
+    return Ensured(chosen.empty() ? UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Nilla" : std::filesystem::path(chosen));
   }();
   return directory;
 }

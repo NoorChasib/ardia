@@ -49,6 +49,8 @@ static constexpr int kNoApartment = 10;
 static constexpr int kEngineMismatch = 11;
 static constexpr int kAlreadyStarted = 12;
 static constexpr int kSetupFailed = 13;
+static constexpr int kNoDataDirectory = 14;
+static constexpr wchar_t kNeedsDataDirectory[] = L"This development build of Nilla runs only with ARDIA_DATA_DIR set. Start it with scripts\\windows\\nilla-dev-run.ps1.";
 
 using PreTranslateMessage = BOOL(__stdcall *)(const MSG *);
 
@@ -95,6 +97,15 @@ static int Refuse(int code, std::wstring const &why) noexcept {
   Ardia::LaunchLog::Write(L"error", why);
   OutputDebugStringW(std::wstring(L"Ardia: ").append(why).append(L"\n").c_str());
   return code;
+}
+
+static int RefuseWithoutDataDirectory() noexcept {
+  try {
+    StartFailure() = kNeedsDataDirectory;
+  } catch (...) {
+  }
+  OutputDebugStringW(std::wstring(L"Nilla: ").append(kNeedsDataDirectory).append(L"\n").c_str());
+  return kNoDataDirectory;
 }
 
 static int Prepare(const ArdiaEngineApi *engine) {
@@ -168,6 +179,7 @@ static void ShutDown(Ardia::Host &host) {
 extern "C" {
 
 __declspec(dllexport) int ArdiaAppRun(void) {
+  if (!Ardia::Paths::HasCustomDataDirectory()) return RefuseWithoutDataDirectory();
   if (Ardia::Host::Current()) return Refuse(kAlreadyStarted, L"the app is already running in this process");
   const int prepared = Prepare(nullptr);
   if (prepared != 0) return prepared;
@@ -180,6 +192,7 @@ __declspec(dllexport) int ArdiaAppRun(void) {
 }
 
 __declspec(dllexport) int ArdiaAppStart(const ArdiaEngineApi *engine) {
+  if (!Ardia::Paths::HasCustomDataDirectory()) return RefuseWithoutDataDirectory();
   if (Ardia::Host::Current()) return Refuse(kAlreadyStarted, L"the app is already running in this process");
   if (!engine) return Refuse(kEngineMismatch, L"the engine gave no API table");
   if (engine->version != ARDIA_ENGINE_API_VERSION || engine->size < sizeof(ArdiaEngineApi)) {
