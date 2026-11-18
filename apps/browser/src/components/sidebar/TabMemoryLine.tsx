@@ -1,12 +1,12 @@
 import { useSettings } from "../../state/browser/hooks";
-import { attributesTabMemory, useTabMemoryLine } from "../../state/tabs/tabMemory";
+import { memoryLineOn, useTabMemoryLine } from "../../state/tabs/tabMemory";
 import { space, Text } from "../ui";
 import { tabMemoryLabel } from "./tabMemoryLabel";
 
 const LINE = { marginTop: space.xs } as const;
 
 export function TabMemoryLine({ tabId }: { tabId: string }) {
-  const on = useSettings((s) => s.showMemoryInTabHoverMenu) && attributesTabMemory();
+  const on = useSettings(memoryLineOn);
   return on ? <MemoryLine tabId={tabId} /> : null;
 }
 

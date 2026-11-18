@@ -6,7 +6,7 @@ globalThis.__DEV__ = false;
 
 globalThis.fetch = async () => ({ status: 200 });
 
-const { attributeTabMemory, attributesTabMemory, measureTabMemory, setTabMemoryAttributed, tabMemoryReading, useTabMemoryLine, useTabMemorySnapshot, SNAPSHOT_KEPT_MS } = await import("./tabMemory.ts");
+const { attributeTabMemory, attributesTabMemory, measureTabMemory, memoryLineOn, setTabMemoryAttributed, tabMemoryReading, useTabMemoryLine, useTabMemorySnapshot, SNAPSHOT_KEPT_MS } = await import("./tabMemory.ts");
 const { useLifecycle } = await import("./sleepingTabs.ts");
 const { takeHoverCardCounts } = await import("../telemetry/hoverCardCounts.ts");
 const stub = await import("../../test-native/index.ts");
@@ -302,4 +302,12 @@ test("with no engine.tasks at run time the line's gate is off and even a mounted
   assert.equal(reads(), 0);
   setTabMemoryAttributed(true);
   assert.equal(attributesTabMemory(), true);
+});
+
+test("the memory line, and the hover card's room for it, are on only where the setting is on and the runtime attributes memory", (t) => {
+  t.after(() => setTabMemoryAttributed(true));
+  setTabMemoryAttributed(true);
+  assert.deepEqual([memoryLineOn({ showMemoryInTabHoverMenu: true }), memoryLineOn({ showMemoryInTabHoverMenu: false })], [true, false]);
+  setTabMemoryAttributed(false);
+  assert.equal(memoryLineOn({ showMemoryInTabHoverMenu: true }), false, "a synced-on setting where nothing can be attributed draws no line and keeps the card where it was");
 });

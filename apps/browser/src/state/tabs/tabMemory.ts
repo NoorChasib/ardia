@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { create } from "zustand";
 import { PLATFORM_FEATURES } from "../../lib/platformFeatures";
 import type { EngineTask } from "../../platform/performance";
+import type { Settings } from "../settings/settings";
 import { sameSharingPeriod } from "../telemetry/sharingPeriod";
 import { noteTabMemorySample, noteTabMemoryShown } from "../telemetry/hoverCardCounts";
 import { isSleeping, useIsSleeping } from "./sleepingTabs";
@@ -29,6 +30,8 @@ const NAMELESS_TASKS = new Set<EngineTask["type"]>(["renderer", "guest", "extens
 let attributed = PLATFORM_FEATURES.attributesTabMemory;
 
 export const attributesTabMemory = () => attributed;
+
+export const memoryLineOn = (settings: Pick<Settings, "showMemoryInTabHoverMenu">) => settings.showMemoryInTabHoverMenu && attributed;
 
 export function setTabMemoryAttributed(on: boolean) {
   attributed = on && PLATFORM_FEATURES.attributesTabMemory;
