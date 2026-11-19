@@ -1688,7 +1688,7 @@ function Test-RefusedByTheApp([string]$DataDirectory, [string]$Case) {
     $engine = Wait-GateLine $run $caseLog "^engine 0 test gate: "
     if (-not $engine) { Write-Host "engine test gate, $Case`: no line"; return }
     Write-Host "engine test gate, $Case`: $($engine.Line)"
-    if ($engine.Line -notmatch "not a test instance \(") { Write-Host "test gate, $Case`: the prebuilt engine refuses only Ardia's folders, so it still counts this one (a Layer 2 limit); the app refused it" }
+    if ($engine.Line -notmatch "not a test instance \(") { Write-Host "test gate, $Case`: the prebuilt engine refuses only the upstream folders, so it still counts this one (a Layer 2 limit); the app refused it" }
   } finally { Stop-GateLaunch $run }
 }
 
@@ -1711,7 +1711,7 @@ function Test-ATestInstance([string]$DataDirectory, [string]$Case) {
 if ($Part -ne "launch") {
 try {
   & (Join-Path $PSScriptRoot "nilla-dev-run.test.ps1")
-  if ($LASTEXITCODE -ne 0) { $failures += "nilla-dev-run.ps1 let a path into Ardia's folders through, or refused a folder of its own (nilla-dev-run.test.ps1)" }
+  if ($LASTEXITCODE -ne 0) { $failures += "nilla-dev-run.ps1 let a path into the upstream folders through, or refused a folder of its own (nilla-dev-run.test.ps1)" }
 } catch { $failures += "nilla-dev-run.test.ps1 stopped: $($_.Exception.Message)" }
 $gateData = New-DataDirectory "gate-scratch"
 $marker = Join-Path (Split-Path -Parent $gateApp) "Ardia.test-build"

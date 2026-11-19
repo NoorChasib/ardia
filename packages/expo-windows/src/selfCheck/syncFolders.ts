@@ -1,11 +1,13 @@
 import { TurboModuleRegistry } from "react-native";
-import { UPSTREAM_SYNC_REFUSAL } from "@nilla/sync/src/upstreamSyncFolder.ts";
+import { UPSTREAM_SYNC_FOLDER, UPSTREAM_SYNC_REFUSAL } from "@nilla/sync/src/upstreamSyncFolder.ts";
 import { requireNativeModule } from "../modules";
 import type { AppModule, SystemModule, WindowsSyncModule } from "../nativeModuleTypes";
 import { NATIVE_SYNC } from "../sync";
 import { expectTrue, type Check } from "./check";
 
 const SYNC_ALIAS_FIXTURES = "sync-aliases";
+const UPSTREAM = UPSTREAM_SYNC_FOLDER;
+const UPSTREAM_SHORT_NAME = `${UPSTREAM.replace(/\s/g, "").slice(0, 6).toUpperCase()}~1`;
 
 const sync = () => {
   const module = TurboModuleRegistry.get<WindowsSyncModule>(NATIVE_SYNC);
@@ -18,7 +20,7 @@ const fixtures = async () => {
   const directory = requireNativeModule<AppModule>("NillaApp").launchConfig().dataDirectory;
   expectTrue(typeof directory === "string" && directory.length > 0, "the launch config names no data directory");
   const base = `${directory.replace(/[\\/]+$/, "")}\\${SYNC_ALIAS_FIXTURES}`;
-  expectTrue(await system().fileExists(`${base}\\Ardia Sync`), `${base}\\Ardia Sync is missing: launch-smoke.ps1 makes the sync folder aliases before the self-check`);
+  expectTrue(await system().fileExists(`${base}\\${UPSTREAM}`), `${base}\\${UPSTREAM} is missing: launch-smoke.ps1 makes the sync folder aliases before the self-check`);
   return base;
 };
 
@@ -46,21 +48,21 @@ async function expectRefusedIfThere(path: string, what: string) {
 
 export const checks: Check[] = [
   {
-    name: "NillaWindowsSync refuses every alias of Ardia's Sync folder before it probes",
+    name: "NillaWindowsSync refuses every alias of the upstream Sync folder before it probes",
     async run() {
       const base = await fixtures();
       const own = await answer(`${base}\\Nilla Sync`);
       expectTrue(!own.refused && own.exists, `Nilla's own sync folder answered ${JSON.stringify(own)}`);
-      await expectRefused(`${base}\\Ardia Sync`, "Ardia's Sync folder by its name");
-      await expectRefused(`${base}\\ARDIA SYNC`, "Ardia's Sync folder in other case");
-      await expectRefused(`${base}\\Ardia Sync.`, "Ardia's Sync folder with a trailing dot");
-      await expectRefused(`${base}\\Ardia Sync \\inner`, "a folder inside Ardia's Sync folder with a trailing space");
-      await expectRefused(`\\\\?\\${base}\\Ardia Sync`, "Ardia's Sync folder as an extended path");
-      await expectRefused(`${base}\\Nilla Sync\\..\\Ardia Sync`, "Ardia's Sync folder reached through ..");
-      await expectRefused(`${base}\\junction`, "a junction to Ardia's Sync folder");
-      await expectRefused(`${base}\\junction\\inner`, "a folder inside a junction to Ardia's Sync folder");
-      await expectRefusedIfThere(`${base}\\symlink`, "a symbolic link to Ardia's Sync folder");
-      await expectRefusedIfThere(`${base}\\ARDIAS~1`, "the 8.3 short name of Ardia's Sync folder");
+      await expectRefused(`${base}\\${UPSTREAM}`, "the upstream Sync folder by its name");
+      await expectRefused(`${base}\\${UPSTREAM.toUpperCase()}`, "the upstream Sync folder in other case");
+      await expectRefused(`${base}\\${UPSTREAM}.`, "the upstream Sync folder with a trailing dot");
+      await expectRefused(`${base}\\${UPSTREAM} \\inner`, "a folder inside the upstream Sync folder with a trailing space");
+      await expectRefused(`\\\\?\\${base}\\${UPSTREAM}`, "the upstream Sync folder as an extended path");
+      await expectRefused(`${base}\\Nilla Sync\\..\\${UPSTREAM}`, "the upstream Sync folder reached through ..");
+      await expectRefused(`${base}\\junction`, "a junction to the upstream Sync folder");
+      await expectRefused(`${base}\\junction\\inner`, "a folder inside a junction to the upstream Sync folder");
+      await expectRefusedIfThere(`${base}\\symlink`, "a symbolic link to the upstream Sync folder");
+      await expectRefusedIfThere(`${base}\\${UPSTREAM_SHORT_NAME}`, "the 8.3 short name of the upstream Sync folder");
     },
   },
 ];

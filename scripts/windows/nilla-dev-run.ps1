@@ -93,7 +93,7 @@ function Get-UpstreamFolders {
   return @($upstream | ForEach-Object { Resolve-Canonical $_ "Ardia's folder" })
 }
 
-function Assert-ApartFromArdia([string]$Data, [string[]]$Upstream) {
+function Assert-ApartFromUpstream([string]$Data, [string[]]$Upstream) {
   foreach ($used in @($Data, [System.IO.Path]::Combine($Data, "Chromium"), [System.IO.Path]::Combine($Data, "Sync"))) {
     $canonical = Resolve-Canonical $used "the data folder"
     foreach ($ardia in $Upstream) {
@@ -110,13 +110,13 @@ foreach ($argument in $Arguments) {
 }
 try { $data = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($DataDir) } catch { throw "nilla-dev-run: can't read $DataDir as a folder path: $($_.Exception.Message)" }
 $upstream = Get-UpstreamFolders
-Assert-ApartFromArdia $data $upstream
+Assert-ApartFromUpstream $data $upstream
 if ($Check) {
   Write-Host "nilla-dev-run: would start $App with ARDIA_DATA_DIR=$data, apart from Ardia's folders"
   return
 }
 New-Item -ItemType Directory -Force -Path $data | Out-Null
-Assert-ApartFromArdia $data $upstream
+Assert-ApartFromUpstream $data $upstream
 $final = [NillaDevRunPaths]::Resolve($data, [NillaDevRunPaths]::VolumeDos)
 if (-not $final) { throw "nilla-dev-run: can't tell where $data leads now that it exists" }
 $data = $final -replace '^\\\\\?\\UNC\\', '\\' -replace '^\\\\\?\\', ''

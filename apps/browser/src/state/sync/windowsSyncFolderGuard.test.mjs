@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { turboModules } from "../../test-native/reactNative.ts";
 
 const { NATIVE_SYNC, windowsSync } = await import("../../../../../packages/expo-windows/src/sync/index.ts");
-const { UPSTREAM_SYNC_REFUSAL, UpstreamSyncFolderError } = await import("../../../../../packages/sync/src/upstreamSyncFolder.ts");
+const { UPSTREAM_SYNC_FOLDER, UPSTREAM_SYNC_REFUSAL, UpstreamSyncFolderError } = await import("../../../../../packages/sync/src/upstreamSyncFolder.ts");
 
 const native = (name) => readFileSync(new URL(`../../../windows/Ardia/${name}`, import.meta.url), "utf8");
 const LINKED = "C:\\Users\\me\\Documents\\Nilla Sync";
@@ -28,14 +28,14 @@ function fakeWindows(pickedFolder) {
   return { probed, seeded };
 }
 
-test("the folder picker never starts in a folder the native side says leads to Ardia's Sync folder", async () => {
+test("the folder picker never starts in a folder the native side says leads to the upstream Sync folder", async () => {
   const { probed, seeded } = fakeWindows("D:\\Elsewhere\\Mine");
   assert.equal(await windowsSync().chooseFolder(LINKED), "D:\\Elsewhere\\Mine");
   assert.deepEqual(seeded, [null]);
   assert.deepEqual(probed, [LINKED, "D:\\Elsewhere\\Mine"]);
 });
 
-test("a picked folder the native side says leads to Ardia's Sync folder is refused", async () => {
+test("a picked folder the native side says leads to the upstream Sync folder is refused", async () => {
   const { seeded } = fakeWindows(LINKED);
   await assert.rejects(windowsSync().chooseFolder("D:\\Elsewhere\\Mine"), UpstreamSyncFolderError);
   assert.deepEqual(seeded, ["D:\\Elsewhere\\Mine"]);
@@ -46,7 +46,7 @@ test("the Windows sync module resolves a folder through handles before it probes
   const refusal = handles.match(/constexpr char UpstreamRefusal\[\] = "([^"]+)";/);
   assert.ok(refusal);
   assert.equal(refusal[1], UPSTREAM_SYNC_REFUSAL);
-  assert.match(handles, /constexpr std::wstring_view UpstreamFolderName = L"Ardia Sync";/);
+  assert.equal(handles.match(/constexpr std::wstring_view UpstreamFolderName = L"([^"]+)";/)?.[1], UPSTREAM_SYNC_FOLDER);
   assert.match(handles, /std::optional<std::wstring> resolved = Paths::Resolved\(std::filesystem::path\{folder\}, VOLUME_NAME_DOS\);\n  if \(!resolved\) return Owner::Unresolved;/);
   assert.match(handles, /std::optional<std::wstring> final = Paths::FinalPathOf\(folder, VOLUME_NAME_DOS\);/);
   assert.match(handles, /while \(!part\.empty\(\) && \(part\.back\(\) == L' ' \|\| part\.back\(\) == L'\.'\)\) part\.remove_suffix\(1\);/);
@@ -66,7 +66,7 @@ test("the Windows sync module resolves a folder through handles before it probes
   assert.match(probe, /if \(owner == SyncHandles::Owner::Upstream\) return promise\.Reject\(SyncHandles::UpstreamRefusal\);/);
 });
 
-test("the self-check asks the native side about every alias of Ardia's Sync folder the launch smoke makes", () => {
+test("the self-check asks the native side about every alias of the upstream Sync folder the launch smoke makes", () => {
   const check = readFileSync(new URL("../../../../../packages/expo-windows/src/selfCheck/syncFolders.ts", import.meta.url), "utf8");
   const smoke = readFileSync(new URL("../../../../../scripts/windows/launch-smoke.ps1", import.meta.url), "utf8");
   for (const alias of ["junction", "symlink"]) {
@@ -74,6 +74,6 @@ test("the self-check asks the native side about every alias of Ardia's Sync fold
     assert.ok(smoke.includes(`(Join-Path $syncAliases "${alias}")`), alias);
   }
   assert.match(smoke, /New-Item -ItemType Junction -Path \(Join-Path \$syncAliases "junction"\) -Target \$upstreamSync/);
-  assert.match(check, /ARDIAS~1/);
+  assert.match(check, /\$\{UPSTREAM_SHORT_NAME\}/);
   assert.match(readFileSync(new URL("../../../../../packages/expo-windows/src/selfCheck/index.ts", import.meta.url), "utf8"), /syncChecks, syncFolderChecks,/);
 });

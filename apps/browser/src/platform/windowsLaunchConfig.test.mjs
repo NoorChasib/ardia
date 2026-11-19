@@ -132,7 +132,7 @@ test("the app folder and the installer carry the same licence texts, and the ins
   assert.match(script("installer-check.ps1"), /\$shipped = @\([^)]*"Nilla\.ico"/);
 });
 
-test("the install check finds no shortcut, registration, start or Ardia folder, and the installer has nothing that makes them", () => {
+test("the install check finds no shortcut, registration, start or upstream folder, and the installer has nothing that makes them", () => {
   const check = readFileSync(new URL("installer-check.ps1", scripts), "utf8");
   const asked = (name) => check.split(`Assert-Nothing (${name})`).length - 1;
   for (const leftover of ["Get-Registrations", "Get-Shortcuts", "Get-UpstreamFolders"]) assert.equal(asked(leftover), 3, `${leftover} before the install, after it and after the uninstall`);
@@ -142,7 +142,7 @@ test("the install check finds no shortcut, registration, start or Ardia folder, 
   assert.doesNotMatch(check, /System\.AppUserModel\.ID|CreateShortcut\(\$shortcut\)/);
 });
 
-test("nilla-dev-run.ps1 resolves the data folder through handles before it compares it with Ardia's folders, and the gate smoke runs its alias cases", () => {
+test("nilla-dev-run.ps1 resolves the data folder through handles before it compares it with the upstream folders, and the gate smoke runs its alias cases", () => {
   const script = (name) => readFileSync(new URL(name, scripts), "utf8");
   const run = script("nilla-dev-run.ps1");
   assert.match(run, /CreateFileW\(path, 0, ShareAll, IntPtr\.Zero, OpenExisting, BackupSemantics \| extra, IntPtr\.Zero\)/);
@@ -150,7 +150,7 @@ test("nilla-dev-run.ps1 resolves the data folder through handles before it compa
   assert.match(run, /if \(FinalPath\(at, volume, OpenReparsePoint, out ignored\) != null\) return null;/);
   assert.match(run, /\$data = \$PSCmdlet\.GetUnresolvedProviderPathFromPSPath\(\$DataDir\)/);
   assert.match(run, /foreach \(\$used in @\(\$Data, \[System\.IO\.Path\]::Combine\(\$Data, "Chromium"\), \[System\.IO\.Path\]::Combine\(\$Data, "Sync"\)\)\)/);
-  assert.match(run, /New-Item -ItemType Directory -Force -Path \$data \| Out-Null\nAssert-ApartFromArdia \$data \$upstream\n/);
+  assert.match(run, /New-Item -ItemType Directory -Force -Path \$data \| Out-Null\nAssert-ApartFromUpstream \$data \$upstream\n/);
   assert.match(run, /\$data = \$final -replace [^\n]+\n\$env:ARDIA_DATA_DIR = \$data\n/);
   assert.doesNotMatch(run, /GetFullPath|StartsWith\(/);
   const cases = script("nilla-dev-run.test.ps1");
