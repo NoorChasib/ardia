@@ -194,8 +194,10 @@ def _reason(error: Exception) -> str:
 
 
 def from_control_file(path: Path) -> Endpoint:
+    path = Path(path)
+    opened = real_folder(path.parent, "the control file's folder") / path.name
     try:
-        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        fd = os.open(opened, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     except FileNotFoundError:
         raise EndpointError(NOT_REACHABLE) from None
     except OSError as error:

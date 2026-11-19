@@ -199,6 +199,58 @@ class ConfigTargets(Guarded):
         self.assert_untouched()
 
 
+class ControlFile(Guarded):
+    def upstream_chromium(self) -> Path:
+        chromium = self.home / "Library" / "Application Support" / "Ardia" / "Chromium"
+        chromium.mkdir(parents=True)
+        control = chromium / endpoint.CONTROL_FILE
+        control.write_text(json.dumps({"port": 9, "browser": "/devtools/browser/upstream", "token": "upstream-token-0123456789", "pid": os.getpid(), "generation": 1}))
+        control.chmod(0o600)
+        return chromium
+
+    def test_a_chromium_child_linked_to_the_upstream_profile_is_never_read(self):
+        chromium = self.upstream_chromium()
+        data = self.temp / "data"
+        data.mkdir()
+        (data / "Chromium").symlink_to(chromium)
+        with mock.patch.object(endpoint, "LINUX", False):
+            with self.assertRaises(endpoint.UpstreamFolder) as refused:
+                endpoint.resolve(data_dir=str(data))
+            self.assertIn("never reads or writes", str(refused.exception))
+            with self.assertRaises(endpoint.UpstreamFolder):
+                endpoint.require_control(data)
+        self.assertNotIn("upstream-token", str(refused.exception))
+
+    def test_a_chromium_child_linked_to_an_upstream_folder_not_made_yet_is_refused(self):
+        data = self.temp / "data"
+        data.mkdir()
+        (data / "Chromium").symlink_to(self.home / "Library" / "Application Support" / "com.ardia.browser" / "Chromium")
+        with mock.patch.object(endpoint, "LINUX", False), self.assertRaises(endpoint.UpstreamFolder):
+            endpoint.resolve(data_dir=str(data))
+
+    def test_a_chromium_child_linked_to_a_folder_of_nillas_own_still_resolves(self):
+        data, elsewhere = self.temp / "data", self.temp / "elsewhere"
+        data.mkdir()
+        elsewhere.mkdir()
+        (data / "Chromium").symlink_to(elsewhere)
+        (elsewhere / endpoint.CONTROL_FILE).write_text(json.dumps({"port": 9, "browser": "/devtools/browser/own", "token": "own-token-0123456789ab", "pid": os.getpid(), "generation": 1}))
+        (elsewhere / endpoint.CONTROL_FILE).chmod(0o600)
+        with mock.patch.object(endpoint, "LINUX", False):
+            found = endpoint.resolve(data_dir=str(data))
+        self.assertEqual(found.source, str(data / "Chromium" / endpoint.CONTROL_FILE))
+
+    def test_nillas_own_control_file_still_resolves(self):
+        data = self.temp / "data"
+        (data / "Chromium").mkdir(parents=True)
+        control = data / "Chromium" / endpoint.CONTROL_FILE
+        control.write_text(json.dumps({"port": 9, "browser": "/devtools/browser/own", "token": "own-token-0123456789ab", "pid": os.getpid(), "generation": 1}))
+        control.chmod(0o600)
+        with mock.patch.object(endpoint, "LINUX", False):
+            found = endpoint.resolve(data_dir=str(data))
+        self.assertEqual(found.ws, "ws://127.0.0.1:9/devtools/browser/own?token=own-token-0123456789ab")
+        self.assertEqual(found.source, str(control))
+
+
 class CliHomes(Guarded):
     def plant(self, home: Path, marked: bool, installed: bool) -> Path:
         home.mkdir(parents=True, exist_ok=True)
