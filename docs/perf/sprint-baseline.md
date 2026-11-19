@@ -1,6 +1,6 @@
 # Speed sprint baseline: 0.2.27, per journey
 
-Lab numbers for the four journeys in [sprint.md](sprint.md), on the shipped 0.2.27 build
+Lab numbers for the four journeys in [sprint.md](../history/ardia/perf/sprint.md), on the shipped 0.2.27 build
 (`dist/0.2.27/export/Ardia.app`, commit dfff107f, NATIVE_API 8), 2026-10-06, hidden instances, display awake
 (`caffeinate -d`), perflab lock held for every timing run (released between rounds).
 
