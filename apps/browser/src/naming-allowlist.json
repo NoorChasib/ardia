@@ -838,6 +838,29 @@
    "why": "Profile folder names the Windows engine makes and accepts: kDirectoryPrefix \"Ardia \" plus the profile id (scripts/windows/engine/src/ardia/win/profiles.cc:19), as the app's profile domain builds them (also inside a private-session id, <name>@Ardia <id>) and its self-check and tests name them."
   },
   {
+   "id": "P-windows-profile-folders-native",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?<=ProfileFolderPrefix = \")Ardia (?=\")|(?<=Chromium\\\\)Ardia (?=[a-z0-9-]+(?: \\(removing\\))?\")",
+   "scope": [
+    "apps/browser/windows/Ardia/EngineHostModule.h",
+    "scripts/windows/launch-smoke.ps1"
+   ],
+   "why": "The same \"Ardia \" profile folder prefix where the Windows app checks a folder before deleting it (EngineHostModule.h ProfileFolderPrefix, which IsProfileFolderName compares with what the engine's profiles.cc made) and in the launch smoke's held-folder fixture Chromium\\Ardia self-check-stuck (removing), the folder the self-check (engineCalls.ts) names through FOLDER_PREFIX. Renamed, the app would refuse to delete every folder the engine makes and the smoke would hold a folder the self-check never looks at."
+  },
+  {
+   "id": "P-windows-real-profile-guard",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?:(?<=L\"LOCALAPPDATA\"\\) / L\")|(?<=L\"APPDATA\"\\) / L\")|(?<=L\"LOCALAPPDATA\"\\\\\\) \\\\/ L\")|(?<=L\"APPDATA\"\\\\\\) \\\\/ L\")|(?<=\\$realProfile = Join-Path \\$env:LOCALAPPDATA \"))Ardia(?=\")",
+   "scope": [
+    "apps/browser/windows/Ardia/TestGate.h",
+    "apps/browser/src/platform/windowsLaunchConfig.test.mjs",
+    "scripts/windows/launch-smoke.ps1"
+   ],
+   "why": "The installed upstream profile folders the Windows app's test gate refuses (TestGate.h: %LOCALAPPDATA%\\Ardia and %APPDATA%\\Ardia), which are the folder the prebuilt engine's test_gate.cc RealFolderClashOf refuses; the source test that asserts them; and the launch smoke's real-profile input, which asks both the app and the engine to refuse that folder and a junction to it. Renamed, the app and the engine would guard different folders and the smoke would stop sending the upstream folder to the engine. Refusing Nilla's own %LOCALAPPDATA%\\Nilla is a separate, added check (C-windows, wave 3)."
+  },
+  {
    "id": "P-windows-profile-test-folder",
    "class": "P",
    "mechanism": "class",
