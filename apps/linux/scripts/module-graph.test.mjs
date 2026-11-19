@@ -311,6 +311,8 @@ const shimmedPackages = [
   ["@nilla/shaders", "shaders.tsx"],
   ["@nilla/import", "import.tsx"],
 ];
+const engineScope = shimmedPackages[0][0].split("/")[0];
+const retiredNativePackages = shimmedPackages.slice(1).map(([spec]) => `${engineScope}/${spec.split("/")[1]}`);
 
 for (const [app, appRoot] of [["Linux", root], ["demo", `${repo}packages/demo/`]]) {
   test(`${app} resolves the engine package and the renamed native packages to its shims, and @nilla/core to the workspace package`, { timeout: 60000 }, async () => {
@@ -318,7 +320,7 @@ for (const [app, appRoot] of [["Linux", root], ["demo", `${repo}packages/demo/`]
     const resolve = config.createResolver();
     const importer = `${browser}platform/nativeApi.ts`;
     for (const [spec, shim] of shimmedPackages) assert.equal(await resolve(spec, importer), `${appRoot}src/shims/${shim}`, spec);
-    for (const spec of ["@nilla/ardiacore"]) assert.ok(!(await resolve(spec, importer))?.startsWith(`${appRoot}src/shims/`), spec);
+    for (const spec of ["@nilla/ardiacore", ...retiredNativePackages]) assert.ok(!(await resolve(spec, importer))?.startsWith(`${appRoot}src/shims/`), spec);
     const core = await resolve("@nilla/core", importer);
     assert.ok(core && realpathSync(core) === `${repo}packages/core/src/index.ts`, core);
   });

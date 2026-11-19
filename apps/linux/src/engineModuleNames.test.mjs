@@ -6,7 +6,7 @@ import { engineCallName, engineModuleName } from "./engineModuleNames.ts";
 const wire = [];
 const listeners = new Set();
 const host = {
-  bootstrap: { windowId: "main", profileId: "default", capabilities: ["ArdiaShell.quit", "passwords.list", "ArdiaSync.status"] },
+  bootstrap: { windowId: "main", profileId: "default", capabilities: ["ArdiaShell.quit", "ArdiaShell.readDocument", "passwords.list", "ArdiaSync.status"] },
   invoke: async (method) => { wire.push(method); return null; },
   call: async (name, profile) => { wire.push(`${name} ${profile}`); return JSON.stringify({ passwords: [] }); },
   onEvent: (listener) => { listeners.add(listener); return () => listeners.delete(listener); },
@@ -52,6 +52,16 @@ test("whole <Module>.<method> names reach the host as the engine's names, and th
   assert.equal(isGatedForAnyHost("NillaTelemetry.post"), true);
   await assert.rejects(invokeHost("NillaSync.status", { args: [] }, host), { code: "ERR_UNSUPPORTED" });
   assert.deepEqual(wire, ["ArdiaShell.quit", "passwords.list default"]);
+});
+
+test("the raw host helpers take the engine's own module for a method, and only the shim routes an app-facing part to it", async () => {
+  wire.length = 0;
+  assert.equal(hostSupports("ArdiaShell.readDocument", host), true);
+  assert.equal(hostSupports("NillaShell.readDocument", host), true);
+  assert.equal(hostSupports("NillaDocuments.readDocument", host), false);
+  assert.equal(hostSupports("NillaDialogs.quit", host), false);
+  await shim.requireNativeModule("NillaDocuments").readDocument("doc");
+  assert.deepEqual(wire, ["ArdiaShell.readDocument"]);
 });
 
 test("the shared engine bridge asks for Nilla${Domain} modules and the host receives the engine's names", async () => {
