@@ -57,6 +57,22 @@ public struct SharedFolderDirectory {
     UpstreamSyncFolder.names(name, [UpstreamSyncFolder.sharedName, UpstreamSyncFolder.name])
   }
 
+  static func namesUpstreamEntry(_ name: String) -> Bool {
+    if namesUpstreamFolder(name) { return true }
+    guard name.hasPrefix("."), name.hasSuffix(placeholderSuffix) else { return false }
+    return namesUpstreamFolder(String(name.dropFirst().dropLast(placeholderSuffix.count)))
+  }
+
+  static func holdsUpstreamFolder(_ path: String) -> Bool {
+    guard let names = try? FileManager.default.contentsOfDirectory(atPath: path) else { return true }
+    for name in names {
+      if namesUpstreamEntry(name) { return true }
+      let child = (path as NSString).appendingPathComponent(name)
+      if kind(of: child) == .directory, holdsUpstreamFolder(child) { return true }
+    }
+    return false
+  }
+
   public static func create(in parent: URL, named name: String) throws -> URL {
     let fileManager = FileManager.default
     let base = folderName(name)
@@ -236,6 +252,7 @@ public struct SharedFolderDirectory {
       guard from == .missing || from == .directory || (from == .file && Self.isLink(name)), Self.isLink(to.lastPathComponent) || from != .file else {
         throw Self.failure("Only links and folders are renamed.")
       }
+      guard from != .directory || !Self.holdsUpstreamFolder(url.path) else { throw Self.failure(UpstreamSyncFolder.sharedRefusal) }
       return try move(url, to: to) ? nil : toPath
     case "delete":
       guard Self.isLink(name), let expect = op["expect"] as? String else { throw Self.failure("Only links are deleted.") }
@@ -310,6 +327,7 @@ public struct SharedFolderDirectory {
     var moved = false
     try SyncCoordination.move(coordination, from, to: to) { source, destination in
       guard Self.kind(of: destination.path) == .missing else { return }
+      guard Self.kind(of: source.path) != .directory || !Self.holdsUpstreamFolder(source.path) else { throw Self.failure(UpstreamSyncFolder.sharedRefusal) }
       if renamex_np(source.path, destination.path, UInt32(RENAME_EXCL)) == 0 {
         moved = true
       } else if errno != EEXIST {

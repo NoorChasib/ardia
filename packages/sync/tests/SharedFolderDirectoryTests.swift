@@ -236,4 +236,28 @@ final class SharedFolderDirectoryTests: XCTestCase {
     XCTAssertEqual(tree(upstream), before)
     XCTAssertEqual(try SharedFolderDirectory.create(in: root, named: "Ardia Shared Notes").lastPathComponent, "Ardia Shared Notes")
   }
+
+  func testAFolderHoldingTheUpstreamSharedFolderIsNeverMoved() throws {
+    let root = try folder("Drive")
+    let upstream = try folder("Drive/Holder/Inner/Ardia Shared")
+    try webloc("https://upstream.example/").write(to: upstream.appendingPathComponent("Secret.webloc"), atomically: true, encoding: .utf8)
+    _ = try folder("Drive/Cloudy")
+    try "".write(to: root.appendingPathComponent("Cloudy/.ardia sync..icloud"), atomically: true, encoding: .utf8)
+    let plain = try folder("Drive/Plain/Inner")
+    try webloc("https://mine.example/").write(to: plain.appendingPathComponent("Ok.webloc"), atomically: true, encoding: .utf8)
+    let before = tree(root)
+    let directory = SharedFolderDirectory(root: root)
+
+    for change in [
+      ["op": "move", "path": "Holder", "to": "Moved"],
+      ["op": "move", "path": "Holder/Inner", "to": "Plain/Inner/Taken"],
+      ["op": "move", "path": "Cloudy", "to": "Plain/Cloudy"],
+    ] as [[String: Any]] {
+      XCTAssertThrowsError(try directory.apply(json: try ops([change])), "\(change)")
+    }
+    XCTAssertEqual(tree(root), before)
+
+    XCTAssertEqual(try directory.apply(json: try ops([["op": "move", "path": "Plain", "to": "Plain 2"]]))["conflicts"] as? [String], [])
+    XCTAssertTrue(fm.fileExists(atPath: root.appendingPathComponent("Plain 2/Inner/Ok.webloc").path))
+  }
 }
