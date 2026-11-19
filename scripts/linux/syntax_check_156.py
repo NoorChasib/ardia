@@ -54,7 +54,7 @@ def generate_mojom():
     run(generate + ["--typemap", "typemap"] + salt, mojo)
     run(generate + ["--generate_non_variant_code"], mojo)
     run(generate + ["--generate_non_variant_code", "--generate_message_ids"] + salt, mojo)
-    for header in (mojo / "gen/nilla").rglob("*.h"):
+    for header in (mojo / "gen/ardia").rglob("*.h"):
         target = GEN / header.relative_to(mojo / "gen")
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(header, target)
@@ -168,8 +168,8 @@ def sources():
     files = [(p, linux_flags) for p in sorted((LINUX / "ardia/linux").rglob("*.cc"))]
     files += [(p, core_flags) for p in sorted((LINUX / "ardia/core").rglob("*.cc"))]
     gn = (NILLA / "BUILD.gn").read_text()
-    common = re.search(r"nilla_sources = \[(.*?)\]", gn, re.S).group(1)
-    linux = re.search(r"if \(is_linux\) \{\s*nilla_sources \+= \[(.*?)\]", gn, re.S).group(1)
+    common = re.search(r"ardia_sources = \[(.*?)\]", gn, re.S).group(1)
+    linux = re.search(r"if \(is_linux\) \{\s*ardia_sources \+= \[(.*?)\]", gn, re.S).group(1)
     nilla = [NILLA / f for f in re.findall(r'"([^"]+\.cc)"', common + linux)]
     files += [(p, nilla_flags) for p in sorted(nilla)]
     return files, [str(p) for p in nilla]

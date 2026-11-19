@@ -189,7 +189,7 @@ adSteps.push(await adsOnPage());
 check("allowing ads on a site, then not, applies on the next load", adSteps.join(" → ") === "blocked → loaded → blocked", adSteps.join(" → "));
 
 await go("chrome://version");
-check("chrome://version", (await evaluate("document.body.innerText")).includes(`Nilla\t${chromiumVersion} (Official Build)`));
+check("chrome://version", (await evaluate("document.body.innerText")).includes(`Ardia\t${chromiumVersion} (Official Build)`));
 
 await send("Network.enable");
 await send("Network.emulateNetworkConditions", { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 });

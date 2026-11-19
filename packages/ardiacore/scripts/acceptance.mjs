@@ -1132,7 +1132,7 @@ try {
       const text = (await cdp(t, "Runtime.evaluate", { expression: "document.body?.innerText ?? ''", returnByValue: true })).result?.value ?? "";
       const product = text.split("\n").find((l) => /^\w+\t\d+\.\d+\./.test(l) && !/^CEF/.test(l));
       const credit = text.match(/Copyright \d+ The Chromium Authors/)?.[0];
-      if (!/^Nilla\t/.test(product ?? "") || !credit) throw new Error(`version page: ${product} / ${credit}`);
+      if (!/^Ardia\t/.test(product ?? "") || !credit) throw new Error(`version page: ${product} / ${credit}`);
       return { product, credit };
     } finally {
       await evalApp(`ac.store.getState().navigate("${first.id}", "${base}/a", { userInitiated: true }); return true`);

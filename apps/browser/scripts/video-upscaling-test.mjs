@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const HELP = `Video upscaling (Settings › Tabs › Video upscaling) end to end, in a hidden instance: what the GPU process upscales
-in every state the gate decides, read from its trace events (NillaVSR.* in the "gpu" category) and the engine's gate.
+in every state the gate decides, read from its trace events (ArdiaVSR.* in the "gpu" category) and the engine's gate.
 
   node apps/browser/scripts/video-upscaling-test.mjs <Debug app> [--out DIR] [--keep] [--attach] [--seconds N] [check…]
   node apps/browser/scripts/video-upscaling-test.mjs --list
@@ -212,7 +212,7 @@ const gpuPid = async () => {
 async function watch(ms = seconds * 1000, during) {
   const browser = await instance.browser();
   const events = [];
-  browser.on("Tracing.dataCollected", (p) => events.push(...p.value.filter((e) => String(e.name).startsWith("NillaVSR"))));
+  browser.on("Tracing.dataCollected", (p) => events.push(...p.value.filter((e) => String(e.name).startsWith("ArdiaVSR"))));
   const done = new Promise((r) => browser.on("Tracing.tracingComplete", r));
   await browser.send("Tracing.start", { traceConfig: { includedCategories: ["gpu"], recordMode: "recordAsMuchAsPossible" }, transferMode: "ReportEvents" });
   const extra = during ? await during() : null;
@@ -220,7 +220,7 @@ async function watch(ms = seconds * 1000, during) {
   await browser.send("Tracing.end");
   await Promise.race([done, sleep(10000)]);
   browser.close();
-  const named = (n) => events.filter((e) => e.name === `NillaVSR.${n}`);
+  const named = (n) => events.filter((e) => e.name === `ArdiaVSR.${n}`);
   const jobs = named("Job");
   const median = (xs) => (xs.length ? xs.sort((a, b) => a - b)[Math.floor(xs.length / 2)] : null);
   return {

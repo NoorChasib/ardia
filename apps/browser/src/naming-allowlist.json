@@ -1403,6 +1403,37 @@
    "why": "repo.test.mjs names the upstream engine repo the fetch defaults must equal, and passes it to the Linux publisher to prove --upload ignores it (council C1)."
   },
   {
+   "id": "C-vsr-trace",
+   "class": "C",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])ArdiaVSR(?![A-Za-z0-9_])",
+   "scope": [
+    "apps/browser/scripts/video-upscaling-test.mjs"
+   ],
+   "why": "The Mac engine's video upscaler trace events ArdiaVSR.* (ac_video_upscaler.mm), which the upscaling test filters and counts by name (council C3)."
+  },
+  {
+   "id": "C-version-product",
+   "class": "C",
+   "mechanism": "class",
+   "regex": "(?<=/\\^)Ardia(?=\\\\t/)|(?<=`)Ardia(?=\\\\t\\$\\{chromiumVersion\\})",
+   "scope": [
+    "packages/ardiacore/scripts/acceptance.mjs",
+    "scripts/release/smoke.mjs"
+   ],
+   "why": "The product name the engine's namesub puts on chrome://version (ardia_namesub.py: Helium becomes Ardia), which the acceptance and release smoke checks match before a tab (council C3)."
+  },
+  {
+   "id": "R-linux-syntax-gn",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])ardia_sources(?= (?:=|\\\\\\+=) \\\\\\[)|(?<=\\\"gen/)ardia(?=\\\")",
+   "scope": [
+    "scripts/linux/syntax_check_156.py"
+   ],
+   "why": "Names in the frozen engine tree that the Linux syntax check reads: the ardia_sources list in chrome/browser/ardia/BUILD.gn and the gen/ardia folder its mojoms generate into (council C3)."
+  },
+  {
    "id": "V-linux-ci-engine-source",
    "class": "never",
    "mechanism": "never",
