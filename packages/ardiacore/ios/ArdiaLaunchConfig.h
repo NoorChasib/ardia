@@ -19,6 +19,7 @@ NS_SWIFT_NAME(LaunchConfig)
 @property(readonly, nullable) NSString *feedbackURL;
 @property(readonly) BOOL isolated;
 @property(readonly) BOOL testInstance;
+@property(readonly) BOOL remoteSwitchesConfigured;
 
 - (nullable NSString *)instance:(NSString *)key NS_SWIFT_NAME(instance(_:));
 - (BOOL)instanceFlag:(NSString *)key NS_SWIFT_NAME(instanceFlag(_:));

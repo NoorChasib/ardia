@@ -50,6 +50,15 @@ NSArray<NSString *> *KeysWhoseValuesHoldCommas() {
   ];
 }
 
+NSArray<NSString *> *ServiceURLFields() {
+  return @[
+    @"telemetryUrl", @"feedbackUrl", @"switchesUrl", @"macFeedUrl", @"windowsFeedUrl", @"windowsTrustedPrefix",
+    @"linuxReleasesUrl", @"releaseNotesUrl", @"siteUrl", @"issueUrl",
+  ];
+}
+
+const NSUInteger kLargestServicesSnapshotBytes = 64 * 1024;
+
 NSArray<NSString *> *TraceAreas() {
   return @[ @"visibility", @"pip", @"pipZoom", @"trafficLights", @"profileGate" ];
 }
@@ -133,6 +142,51 @@ NSString *_Nullable StandardizedDirectory(NSString *_Nullable path) {
   return path.stringByStandardizingPath;
 }
 
+BOOL IsHttps(id value) {
+  if (![value isKindOfClass:NSString.class]) return NO;
+  NSURL *url = [NSURL URLWithString:value];
+  return [url.scheme isEqualToString:@"https"] && url.host.length > 0;
+}
+
+BOOL IsFolderPrefix(id value) {
+  if (!IsHttps(value)) return NO;
+  NSString *text = value;
+  NSURL *url = [NSURL URLWithString:text];
+  if (url.user || url.query || url.fragment) return NO;
+  return [text hasSuffix:@"/"] && ![text containsString:@".."] && ![text containsString:@"%"] && ![text containsString:@"@"];
+}
+
+BOOL IsIngestKeys(id value) {
+  if (![value isKindOfClass:NSDictionary.class]) return NO;
+  NSDictionary *keys = value;
+  if (![[NSSet setWithArray:keys.allKeys] isEqualToSet:[NSSet setWithArray:@[ @"app", @"cli", @"site" ]]]) return NO;
+  for (id key in keys.allValues)
+    if (![key isKindOfClass:NSString.class] || ![key length]) return NO;
+  return YES;
+}
+
+BOOL ServicesFieldAccepted(id field, id value) {
+  if (![field isKindOfClass:NSString.class]) return NO;
+  const BOOL isNull = value == NSNull.null;
+  if ([field isEqualToString:@"ingestKeys"]) return isNull || IsIngestKeys(value);
+  if ([field isEqualToString:@"sourceRepo"])
+    return [value isKindOfClass:NSString.class] &&
+           [value rangeOfString:@"^[\\w.-]+/[\\w.-]+$" options:NSRegularExpressionSearch].location != NSNotFound;
+  if ([field isEqualToString:@"windowsTrustedPrefix"]) return isNull || IsFolderPrefix(value);
+  if ([field isEqualToString:@"issueUrl"]) return IsHttps(value);
+  return [ServiceURLFields() containsObject:field] && (isNull || IsHttps(value));
+}
+
+BOOL ServicesSnapshotNamesSwitchesURL(NSData *_Nullable data) {
+  if (!data || data.length > kLargestServicesSnapshotBytes) return NO;
+  id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+  if (![object isKindOfClass:NSDictionary.class]) return NO;
+  NSDictionary *fields = object;
+  for (id field in fields)
+    if (!ServicesFieldAccepted(field, fields[field])) return NO;
+  return IsHttps(fields[@"switchesUrl"]);
+}
+
 BOOL BackgroundValue(NSString *_Nullable value) {
   return value.length && ![value isEqualToString:@"0"];
 }
@@ -180,6 +234,7 @@ BOOL SignedForDistribution() {
   NSDictionary<NSString *, NSString *> *_instance;
   NSDictionary<NSString *, NSNumber *> *_switches;
   NSDictionary<NSString *, NSNumber *> *_cachedSwitches;
+  NSNumber *_remoteSwitchesConfigured;
   NSSet<NSString *> *_requestedAreas;
   NSDictionary<NSString *, NSString *> *_requestedTest;
   BOOL (^_signedForDistribution)(void);
@@ -272,9 +327,20 @@ BOOL SignedForDistribution() {
   return [switches copy];
 }
 
+- (BOOL)remoteSwitchesConfigured {
+  @synchronized(self) {
+    if (!_remoteSwitchesConfigured) {
+      NSString *path = [self testValue:@"services"];
+      _remoteSwitchesConfigured = @(path.length && ServicesSnapshotNamesSwitchesURL([NSData dataWithContentsOfFile:path]));
+    }
+    return _remoteSwitchesConfigured.boolValue;
+  }
+}
+
 - (BOOL)switchOn:(NSString *)name {
   if (NSNumber *said = _switches[name]) return said.boolValue;
-  if (NSNumber *cached = self.cachedSwitches[name]) return cached.boolValue;
+  if (self.remoteSwitchesConfigured)
+    if (NSNumber *cached = self.cachedSwitches[name]) return cached.boolValue;
   return YES;
 }
 
