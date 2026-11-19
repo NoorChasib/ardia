@@ -260,4 +260,49 @@ final class SharedFolderDirectoryTests: XCTestCase {
     XCTAssertEqual(try directory.apply(json: try ops([["op": "move", "path": "Plain", "to": "Plain 2"]]))["conflicts"] as? [String], [])
     XCTAssertTrue(fm.fileExists(atPath: root.appendingPathComponent("Plain 2/Inner/Ok.webloc").path))
   }
+
+  func testTheHoldingCheckStopsAtTheFirstMatchFollowsNoLinksAndNeverOpensAPackage() throws {
+    let elsewhere = try folder("Elsewhere/Ardia Sync")
+    let root = try folder("Drive")
+    try fm.createSymbolicLink(at: root.appendingPathComponent("Linked"), withDestinationURL: elsewhere.deletingLastPathComponent())
+    _ = try folder("Drive/Deep/A/B/C/D")
+    let isPackage = { (path: String) in path.hasSuffix(".app") }
+    var visited: [String] = []
+    let watching = { (path: String) -> Bool in
+      visited.append(path)
+      return isPackage(path)
+    }
+
+    XCTAssertFalse(SharedFolderDirectory.holdsUpstreamFolder(root.path, isPackage: watching))
+    XCTAssertFalse(visited.contains { $0.hasPrefix(root.appendingPathComponent("Linked").path) })
+    XCTAssertTrue(visited.contains(root.appendingPathComponent("Deep/A/B/C/D").path))
+
+    _ = try folder("Drive/Deep/A/B/C/D/ardia shared.")
+    XCTAssertTrue(SharedFolderDirectory.holdsUpstreamFolder(root.path, isPackage: isPackage))
+    try fm.removeItem(at: root.appendingPathComponent("Deep/A/B/C/D/ardia shared."))
+
+    _ = try folder("Drive/Ardia Sync")
+    visited = []
+    XCTAssertTrue(SharedFolderDirectory.holdsUpstreamFolder(root.path, isPackage: watching))
+    XCTAssertFalse(visited.contains { ($0 as NSString).deletingLastPathComponent != root.path }, "\(visited)")
+    try fm.removeItem(at: root.appendingPathComponent("Ardia Sync"))
+
+    _ = try folder("Drive/Deep/Tool.app/Contents")
+    visited = []
+    XCTAssertTrue(SharedFolderDirectory.holdsUpstreamFolder(root.path, isPackage: watching))
+    XCTAssertFalse(visited.contains { $0.contains("/Tool.app/") }, "\(visited)")
+    try fm.removeItem(at: root.appendingPathComponent("Deep/Tool.app"))
+
+    let locked = try folder("Drive/Deep/Locked")
+    try fm.setAttributes([.posixPermissions: 0o000], ofItemAtPath: locked.path)
+    if access(locked.path, R_OK) != 0 {
+      XCTAssertTrue(SharedFolderDirectory.holdsUpstreamFolder(root.path, isPackage: isPackage))
+    }
+    try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: locked.path)
+
+    let directory = SharedFolderDirectory(root: root)
+    XCTAssertEqual(try directory.apply(json: try ops([["op": "move", "path": "Deep", "to": "Moved"]]))["conflicts"] as? [String], [])
+    XCTAssertTrue(fm.fileExists(atPath: root.appendingPathComponent("Moved/A/B/C/D").path))
+    XCTAssertTrue(fm.fileExists(atPath: elsewhere.path))
+  }
 }

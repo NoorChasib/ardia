@@ -25,6 +25,28 @@ public enum UpstreamSyncFolder {
   }
 
   static func names(_ component: String, _ upstream: [String]) -> Bool {
+    if let ascii = asciiFolded(component) {
+      return upstream.contains { target in ascii.elementsEqual(target.utf8.map(asciiLowercased)) }
+    }
+    return foldedNames(component, upstream)
+  }
+
+  static func asciiFolded(_ component: String) -> [UInt8]? {
+    var bytes = Array(component.utf8)
+    guard bytes.allSatisfy({ $0 < 0x80 }) else { return nil }
+    let isSpace = { (byte: UInt8) in byte == 0x20 || (0x09...0x0D).contains(byte) }
+    while let last = bytes.last, isSpace(last) { bytes.removeLast() }
+    let leading = bytes.prefix(while: isSpace).count
+    bytes.removeFirst(leading)
+    while let last = bytes.last, last == UInt8(ascii: ".") || last == UInt8(ascii: " ") { bytes.removeLast() }
+    return bytes.map(asciiLowercased)
+  }
+
+  static func asciiLowercased(_ byte: UInt8) -> UInt8 {
+    (UInt8(ascii: "A")...UInt8(ascii: "Z")).contains(byte) ? byte + 32 : byte
+  }
+
+  static func foldedNames(_ component: String, _ upstream: [String]) -> Bool {
     var folded = component.precomposedStringWithCanonicalMapping.trimmingCharacters(in: .whitespacesAndNewlines)
     while let last = folded.last, last == "." || last == " " { folded.removeLast() }
     return upstream.contains { folded.compare($0, options: [.caseInsensitive], range: nil, locale: nil) == .orderedSame }

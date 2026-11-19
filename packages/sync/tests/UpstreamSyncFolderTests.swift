@@ -48,6 +48,28 @@ final class UpstreamSyncFolderTests: XCTestCase {
     }
   }
 
+  func testTheASCIIShortcutAgreesWithTheFullFoldOnEverySpelling() {
+    let targets = [UpstreamSyncFolder.sharedName, UpstreamSyncFolder.name]
+    var spellings = ["", ".", " ", "Ardia", "Ardia Syncs", "Ardia  Sync", "Ardia_Sync", "Bookmark 1.webloc", ".ardia sync.icloud"]
+    for target in targets {
+      for body in [target, target.uppercased(), target.lowercased(), target.replacingOccurrences(of: " ", with: "\t")] {
+        for (lead, trail) in [("", ""), (" ", ""), ("\t", ""), ("\n\r", ""), ("", "."), ("", ". . "), ("", " \t"), ("", ".\t"), ("", "\t."), ("\u{0B}", "\u{0C}..")] {
+          spellings.append(lead + body + trail)
+        }
+      }
+    }
+    for spelling in spellings {
+      XCTAssertNotNil(UpstreamSyncFolder.asciiFolded(spelling), spelling)
+      XCTAssertEqual(UpstreamSyncFolder.names(spelling, targets), UpstreamSyncFolder.foldedNames(spelling, targets), spelling.debugDescription)
+    }
+    XCTAssertTrue(UpstreamSyncFolder.names("ARDIA sync. ", targets))
+    XCTAssertFalse(UpstreamSyncFolder.names("Ardia Sync\t.", targets))
+    for spelling in ["Ardia \u{017F}ync", "A\u{030A}rdia Sync", "\u{00A0}Ardia Sync", "Ardia Sync\u{3000}", "Ａrdia Sync"] {
+      XCTAssertNil(UpstreamSyncFolder.asciiFolded(spelling))
+      XCTAssertEqual(UpstreamSyncFolder.names(spelling, targets), UpstreamSyncFolder.foldedNames(spelling, targets), spelling.debugDescription)
+    }
+  }
+
   func testALinkIntoTheUpstreamFolderIsRefused() throws {
     let alias = try link("Nilla Sync alias", to: upstream)
     XCTAssertEqual(verdict(alias.path), "upstream")

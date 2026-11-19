@@ -63,14 +63,45 @@ public struct SharedFolderDirectory {
     return namesUpstreamFolder(String(name.dropFirst().dropLast(placeholderSuffix.count)))
   }
 
-  static func holdsUpstreamFolder(_ path: String) -> Bool {
-    guard let names = try? FileManager.default.contentsOfDirectory(atPath: path) else { return true }
-    for name in names {
-      if namesUpstreamEntry(name) { return true }
-      let child = (path as NSString).appendingPathComponent(name)
-      if kind(of: child) == .directory, holdsUpstreamFolder(child) { return true }
+  static func holdsUpstreamFolder(_ path: String, isPackage: (String) -> Bool = isPackage) -> Bool {
+    var pending = [path]
+    while let folder = pending.popLast() {
+      let descriptor = open(folder, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+      guard descriptor >= 0 else { return true }
+      guard let stream = fdopendir(descriptor) else {
+        close(descriptor)
+        return true
+      }
+      defer { closedir(stream) }
+      while true {
+        errno = 0
+        guard let entry = readdir(stream) else {
+          if errno != 0 { return true }
+          break
+        }
+        let name = withUnsafeBytes(of: entry.pointee.d_name) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        if name == "." || name == ".." { continue }
+        if namesUpstreamEntry(name) { return true }
+        let child = folder + "/" + name
+        let type = Int(entry.pointee.d_type)
+        let isFolder: Bool
+        if type == Int(DT_UNKNOWN) {
+          let found = kind(of: child)
+          if found == .blocked { return true }
+          isFolder = found == .directory
+        } else {
+          isFolder = type == Int(DT_DIR)
+        }
+        guard isFolder else { continue }
+        if isPackage(child) { return true }
+        pending.append(child)
+      }
     }
     return false
+  }
+
+  static func isPackage(_ path: String) -> Bool {
+    (try? URL(fileURLWithPath: path, isDirectory: true).resourceValues(forKeys: [.isPackageKey]))?.isPackage == true
   }
 
   public static func create(in parent: URL, named name: String) throws -> URL {
@@ -252,7 +283,6 @@ public struct SharedFolderDirectory {
       guard from == .missing || from == .directory || (from == .file && Self.isLink(name)), Self.isLink(to.lastPathComponent) || from != .file else {
         throw Self.failure("Only links and folders are renamed.")
       }
-      guard from != .directory || !Self.holdsUpstreamFolder(url.path) else { throw Self.failure(UpstreamSyncFolder.sharedRefusal) }
       return try move(url, to: to) ? nil : toPath
     case "delete":
       guard Self.isLink(name), let expect = op["expect"] as? String else { throw Self.failure("Only links are deleted.") }
