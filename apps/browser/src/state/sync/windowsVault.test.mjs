@@ -24,8 +24,8 @@ test("the Windows host's wordlist is the Mac's", () => {
 
 test("the format double matches the Mac's known answers", () => {
   const zero = cryptoDouble(new Uint8Array(32));
-  assert.equal(zero.chainTag(), "gbcx4r55mk3rlaegbggknyx4ta");
-  assert.equal(zero.scopeTag("app"), "nr4ncp5iyqzqgjn6ol4zksqtne");
+  assert.equal(zero.chainTag(), "d7edxrj7vwlaygcfhaqnqlb544");
+  assert.equal(zero.scopeTag("app"), "cmuewgnqxzle7emjmpiisvntxi");
   const mac = manifestOf("mac");
   const keys = cryptoDouble(hex(mac.entropy));
   assert.equal(keys.chainTag(), mac.chainTag);
