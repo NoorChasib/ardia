@@ -18,6 +18,26 @@ test("every fixed-list address is upstream and other addresses are not", () => {
   for (const url of ["https://github.com/NoorChasib/nilla", "https://notardia.dev/", "https://example.com/ardia.dev", "not a url"]) assert.equal(isUpstream(url), false, url);
 });
 
+test("raw files, source archives and release uploads under an upstream owner are upstream, the same paths under Nilla's own repo are not", () => {
+  for (const url of [
+    "https://raw.githubusercontent.com/ardia-browser/ardia/main/packages/ardiacore/prebuilt-engines.tsv",
+    "https://codeload.github.com/mantrakp04/ardia/tar.gz/refs/heads/main",
+    "https://uploads.github.com/repos/ardia-browser/ardia/releases/1/assets?name=x.zip",
+    "https://RAW.githubusercontent.com./Ardia-Browser/ardia/main/x",
+    "https://github.com/%61rdia-browser/ardia",
+    "https://ardia.dev./otel/v1/logs",
+  ])
+    assert.equal(isUpstream(url), true, url);
+  for (const url of [
+    "https://raw.githubusercontent.com/NoorChasib/nilla/main/packages/ardiacore/prebuilt-engines.tsv",
+    "https://codeload.github.com/NoorChasib/nilla/zip/refs/heads/main",
+    "https://uploads.github.com/repos/NoorChasib/nilla/releases/1/assets",
+    "https://github.com/NoorChasib/nilla/blob/main/mantrakp04-notes.md",
+    "https://gist.githubusercontent.com/ardia-browser/x",
+  ])
+    assert.equal(isUpstream(url), false, url);
+});
+
 test("the probe counts as blocked only when it was blocked exactly once", () => {
   assert.equal(probeBlocked([]), false);
   assert.equal(probeBlocked([BENCH_PROBE, BENCH_PROBE]), false);
