@@ -142,8 +142,8 @@ public struct BrowserDiscovery {
     self.iconFor = iconFor
   }
 
-  public func list() -> [BrowserSource] {
-    BrowserDefinition.all.compactMap(source)
+  public func list(only ids: Set<String>? = nil) -> [BrowserSource] {
+    BrowserDefinition.all.filter { ids?.contains($0.id) ?? true }.compactMap(source)
   }
 
   func asksAppForTabs(_ def: BrowserDefinition) -> Bool {

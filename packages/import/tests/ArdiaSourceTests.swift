@@ -70,6 +70,11 @@ final class ArdiaSourceTests: XCTestCase {
     XCTAssertEqual(try snapshot(), before)
   }
 
+  func testALookupForAnotherBrowserNeverOpensArdiasProfile() throws {
+    XCTAssertEqual(discovery().list(only: ["arc"]).filter { $0.id != "arc" }.map(\.id), [])
+    XCTAssertEqual(discovery().list(only: ["ardia"]).map(\.id), ["ardia"])
+  }
+
   func testArdiaIsListedOnlyWhenItsProfileIsThere() throws {
     try fileManager.removeItem(at: chromium)
     XCTAssertNil(discovery().list().first { $0.id == "ardia" })

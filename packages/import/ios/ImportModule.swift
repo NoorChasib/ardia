@@ -44,8 +44,8 @@ public class ImportModule: Module {
 
     OnCreate { Self.work.async { SQLiteSnapshot.removeLeftovers() } }
 
-    AsyncFunction("listBrowsers") { (promise: Promise) in
-      self.run(promise) { try Self.json(self.importer.discovery.list()) }
+    AsyncFunction("listBrowsers") { (only: [String]?, promise: Promise) in
+      self.run(promise) { try Self.json(self.importer.discovery.list(only: only.map(Set.init))) }
     }
 
     AsyncFunction("importData") { (jobId: String, browserId: String, profileId: String, kinds: [ImportKind], options: ImportRequestOptions, promise: Promise) in
