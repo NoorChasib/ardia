@@ -65,7 +65,7 @@ export async function launchNilla({ executable, uiDir, scratch, background = tru
   const [command, commandArgs] = coreDumps ? [executable, args] : ["/bin/sh", ["-c", 'ulimit -c 0; exec "$0" "$@"', executable, ...args]];
   const child = spawnImpl(command, commandArgs, { stdio: ["ignore", log, log], env: environment, detached: true });
   closeSync(log);
-  const app = new ArdiaApp({ child, scratch, logPath, label });
+  const app = new NillaApp({ child, scratch, logPath, label });
   running.add(app);
   child.once("exit", () => running.delete(app));
   try {
@@ -89,7 +89,7 @@ function groupAlive(pid) {
   }
 }
 
-export class ArdiaApp {
+export class NillaApp {
   constructor({ child, scratch, logPath, label }) {
     this.child = child;
     this.scratch = scratch;

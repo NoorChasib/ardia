@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-usage='usage: scripts/linux/publish-engine.sh --out <chromium out dir> --source <ardia checkout> [--dest DIR] [--repo OWNER/NAME] [--upload]
+usage='usage: scripts/linux/publish-engine.sh --out <chromium out dir> --source <nilla checkout> [--dest DIR] [--repo OWNER/NAME] [--upload]
 
 Packs a Linux Chromium build into the prebuilt engine archive CI fetches with
 packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64:
@@ -13,7 +13,7 @@ plain copy beside a <source>.commit file.
 
   --out DIR        the Chromium out dir, e.g. out/Release_GN_linux_x64; copied
                    under the chromium lock and never modified
-  --source DIR     the Ardia source tree the engine was built from
+  --source DIR     the Nilla source tree the engine was built from
   --dest DIR       where the archive goes (default: a new temporary dir);
                    existing archives are never overwritten
   --repo SLUG      the GitHub repo for --upload (default: $ARDIACORE_PREBUILT_REPO
