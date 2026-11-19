@@ -38,6 +38,25 @@ test("raw files, source archives and release uploads under an upstream owner are
     assert.equal(isUpstream(url), false, url);
 });
 
+test("owner pages and API owner routes with a query string are upstream, as the isolation harness classifies them", () => {
+  for (const url of [
+    "https://GitHub.com./Mantrakp04?tab=repositories",
+    "https://github.com/ardia-browser?tab=packages",
+    "https://api.github.com/orgs/ardia-browser?per_page=1",
+    "https://api.github.com/users/Mantrakp04?per_page=1",
+    "https://api.github.com/repos/mantrakp04?x=1",
+    "https://codeload.github.com/ardia-browser?x=1",
+  ])
+    assert.equal(isUpstream(url), true, url);
+  for (const url of [
+    "https://github.com/mantrakp04x?tab=repositories",
+    "https://api.github.com/orgs/ardia-browserx?per_page=1",
+    "https://api.github.com/orgs/NoorChasib?per_page=1",
+    "https://github.com/NoorChasib?tab=mantrakp04x",
+  ])
+    assert.equal(isUpstream(url), false, url);
+});
+
 test("the probe counts as blocked only when it was blocked exactly once", () => {
   assert.equal(probeBlocked([]), false);
   assert.equal(probeBlocked([BENCH_PROBE, BENCH_PROBE]), false);
