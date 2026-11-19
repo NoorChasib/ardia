@@ -93,6 +93,20 @@ class DataDir(unittest.TestCase):
         with mock.patch.object(endpoint, "LINUX", False):
             self.assertEqual(endpoint.resolve(data_dir=str(data)).source, str(data / "Chromium" / endpoint.CONTROL_FILE))
 
+    def test_a_command_without_a_data_dir_exits_2_with_instructions_and_no_traceback(self):
+        from nilla_browser_cli import cli
+
+        for argv in (("history", "--json"), ("pinned",), ("windows",), ("config", "path")):
+            with self.subTest(argv=argv), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.UNSET_DATA_DIR):
+                out, err = io.StringIO(), io.StringIO()
+                with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+                    status = cli.main(list(argv))
+                self.assertEqual(status, 2, err.getvalue())
+                self.assertIn("set ARDIA_DATA_DIR to Nilla's data folder, or ARDIA_CONFIG_HOME", err.getvalue())
+                self.assertNotIn("Traceback", err.getvalue())
+                self.assertEqual(out.getvalue(), "")
+        self.assertFalse((self.home / ".config").exists())
+
     def test_installed_data_dir_is_the_default_root(self):
         installed = self.temp / "installed"
         write_control(installed)

@@ -33,13 +33,13 @@ Targets and where they install (user level; --project uses the current directory
   opencode      ~/.config/opencode/skills   ./.opencode/skills
 
 Next to each one it installs cua-driver's own skill (cua-driver, for computer use in native apps through
-nilla-browser computer), pinned to the bundled driver; --no-cua skips it. A cua-driver skill that nilla-browser didn't install, from
-cua's own installer for one, is left alone.
+nilla-browser computer), pinned to the bundled driver; --no-cua skips it. A cua-driver skill that nilla-browser
+didn't install, from cua's own installer for one, is left alone.
 
-Installing or updating the CLI runs `nilla-browser skills install --auto`: the skill goes to every coding agent found here
-(Claude Code, Codex, Cursor, opencode; general when none is), never over a folder nilla-browser didn't write, and not again where
-the user removed it.
-Nilla remembers where it installed the skill, and each CLI update rewrites those copies (nilla-browser skills refresh).
+--auto installs it for every coding agent found here (Claude Code, Codex, Cursor, opencode; general when none is),
+never over a folder nilla-browser didn't write, and not again where the user removed it. Installing or updating the
+CLI installs no skill. nilla-browser remembers where it installed the skill, and nilla-browser skills refresh
+rewrites those copies with this version.
 """
 SHARED_VALUE_FLAGS = frozenset({"--port", "--ws", "--data-dir", "--timeout"})
 SHARED_BOOL_FLAGS = frozenset({"--json"})
@@ -254,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def run_to_closed_pipe(argv: list[str]) -> int:
-    from nilla_browser_cli import printable, telemetry
+    from nilla_browser_cli import endpoint, printable, telemetry
 
     try:
         status = run(argv)
@@ -264,6 +264,10 @@ def run_to_closed_pipe(argv: list[str]) -> int:
         printable.quiet_stdout()
         telemetry.note_error_code("stdout_closed")
         return 141
+    except endpoint.DataDirUnset as error:
+        telemetry.note_error_code("upstream_folder" if isinstance(error, endpoint.UpstreamFolder) else "data_dir_unset")
+        sys.stderr.write(f"nilla-browser: {error}\n")
+        return 2
 
 
 def run(argv: list[str]) -> int:
