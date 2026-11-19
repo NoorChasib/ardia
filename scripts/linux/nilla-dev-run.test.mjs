@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -31,10 +31,30 @@ function run(args, env = {}) {
   return { status: result.status, stderr: result.stderr, launched };
 }
 
-test("starts the build with the basic password store and the forwarded arguments", () => {
+test("starts the build on its own profile with the basic password store and the forwarded arguments", () => {
   const { status, launched } = run(["https://example.com"]);
   assert.equal(status, 0);
-  assert.deepEqual(launched, ["--password-store=basic", "https://example.com"]);
+  assert.deepEqual(launched, [`--user-data-dir=${join(scratch, "config", "ardia")}`, "--password-store=basic", "https://example.com"]);
+});
+
+test("passes the resolved profile, so the engine reports the instance as isolated", () => {
+  const real = join(scratch, "real-config");
+  const linked = join(scratch, "linked-config");
+  mkdirSync(real, { recursive: true });
+  symlinkSync(real, linked);
+  const { status, launched } = run([], { ARDIA_CONFIG_HOME: linked });
+  assert.equal(status, 0);
+  assert.equal(launched[0], `--user-data-dir=${join(real, "ardia")}`);
+});
+
+test("refuses a profile folder that is a link out of the config home", () => {
+  const config = join(scratch, "config-with-link");
+  mkdirSync(config, { recursive: true });
+  symlinkSync(join(scratch, "elsewhere-profile"), join(config, "ardia"));
+  const { status, stderr, launched } = run([], { ARDIA_CONFIG_HOME: config });
+  assert.equal(status, 2);
+  assert.match(stderr, /isn't inside ARDIA_CONFIG_HOME|is a link/);
+  assert.equal(launched, null);
 });
 
 for (const argument of [

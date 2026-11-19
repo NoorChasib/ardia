@@ -2,12 +2,13 @@
 # usage: scripts/linux/nilla-dev-run <extracted build folder> [browser arguments...]
 #
 # Starts an extracted Linux build of Nilla with ARDIA_DATA_DIR and ARDIA_CONFIG_HOME, which must both be set to a
-# scratch or Nilla-only folder, and with --password-store=basic, so today's engine never reaches an installed
-# Ardia's profile, data or secret-store items. It refuses --user-data-dir and --password-store among the browser
-# arguments, so they can't undo that. It never installs anything.
+# scratch or Nilla-only folder, with --user-data-dir=$ARDIA_CONFIG_HOME/ardia (so the UI knows the profile is its own)
+# and --password-store=basic, so today's engine never reaches an installed Ardia's profile, data or secret-store items.
+# It refuses --user-data-dir and --password-store among the browser arguments, so they can't undo that. It never
+# installs anything. It is not a sandbox: run it only inside a disposable VM, container or namespace.
 set -euo pipefail
 
-usage() { sed -n '2,7s/^# \{0,1\}//p' "$0"; }
+usage() { sed -n '2,8s/^# \{0,1\}//p' "$0"; }
 die() { echo "nilla-dev-run: $*" >&2; exit 2; }
 
 case "${1:-}" in
@@ -42,6 +43,9 @@ for variable in ARDIA_DATA_DIR ARDIA_CONFIG_HOME; do
   touches_ardia "$value" && die "$variable=$value is inside Ardia's folders"
 done
 touches_ardia "$ARDIA_CONFIG_HOME/ardia" && die "ARDIA_CONFIG_HOME=$ARDIA_CONFIG_HOME would put the profile in Ardia's folder $ARDIA_CONFIG_HOME/ardia"
+profile="$(resolved "$ARDIA_CONFIG_HOME/ardia")"
+[[ "$profile" == "$(resolved "$ARDIA_CONFIG_HOME")"/* ]] || die "the profile $profile isn't inside ARDIA_CONFIG_HOME=$ARDIA_CONFIG_HOME"
+[ ! -L "$ARDIA_CONFIG_HOME/ardia" ] || die "$ARDIA_CONFIG_HOME/ardia is a link; the profile must be a real folder of its own"
 
 for argument in "$@"; do
   [[ "$argument" =~ ^--?(user-data-dir|password-store)(=|$) ]] && die "$argument isn't allowed: the profile comes from ARDIA_CONFIG_HOME and the password store is always basic"
@@ -49,4 +53,4 @@ done
 
 mkdir -p -- "$ARDIA_DATA_DIR" "$ARDIA_CONFIG_HOME"
 export ARDIA_DATA_DIR ARDIA_CONFIG_HOME
-exec "$launcher" --password-store=basic "$@"
+exec "$launcher" "--user-data-dir=$profile" --password-store=basic "$@"

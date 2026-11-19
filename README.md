@@ -160,8 +160,10 @@ ARDIA_DATA_DIR="$scratch/data" ARDIA_CONFIG_HOME="$scratch/config" scripts/linux
 ```
 
 The engine refuses a group-writable data folder, hence `umask 022`. The tarball extracts to `ardia/` (its launcher is
-`bin/ardia` until Nilla's own engine). Don't install the tarball, `.deb` or AppImage on a host; system packages,
-AppArmor and packaging are in [docs/linux-port.md](docs/linux-port.md).
+`bin/ardia` until Nilla's own engine). `nilla-dev-run` also passes `--user-data-dir=$ARDIA_CONFIG_HOME/ardia`, and a
+window started any other way shows a blocking page and reads and writes nothing. Neither replaces the disposable VM or
+namespace: the engine creates its default profile before any app code runs. Don't install the tarball, `.deb` or
+AppImage on a host; system packages, AppArmor and packaging are in [docs/linux-port.md](docs/linux-port.md).
 
 | Task | Command |
 | --- | --- |
