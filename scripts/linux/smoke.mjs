@@ -108,6 +108,12 @@ export const CLI_INSTALLER = "ardia-cli-install.sh";
 export const CLI_DIGEST = "ardia-cli.sha256";
 export const CLI_COMMAND = "nilla-browser";
 export const cliTarball = (version) => `ardia-cli-${version}-linux-x64.tar.gz`;
+
+export function cliEnvironment(work) {
+  const home = join(work, "cli-home");
+  const data = join(home, ".local", "share");
+  return { PATH: process.env.PATH ?? "/usr/bin:/bin", LANG: "C.UTF-8", SHELL: "/bin/sh", HOME: home, XDG_DATA_HOME: data, XDG_CONFIG_HOME: join(home, ".config"), XDG_CACHE_HOME: join(home, ".cache"), XDG_STATE_HOME: join(home, ".local", "state"), TMPDIR: work, ARDIA_CLI_HOME: join(data, "nilla", "cli"), ARDIA_CLI_BIN_DIR: join(home, ".local", "bin") };
+}
 const BRIDGE_DIR = new URL("../../engine/ardiacore-linux/content-blocker/", import.meta.url);
 const DEFAULT_TIMEOUT_MS = 300000;
 
@@ -801,15 +807,9 @@ class Smoke {
     throw outcome(verdict.status === "old" ? "old" : "fail", verdict.message, { version: this.version, appVersion });
   }
 
-  cliEnvironment() {
-    const home = join(this.work, "cli-home");
-    const data = join(home, ".local", "share");
-    return { PATH: process.env.PATH ?? "/usr/bin:/bin", LANG: "C.UTF-8", SHELL: "/bin/sh", HOME: home, XDG_DATA_HOME: data, XDG_CONFIG_HOME: join(home, ".config"), XDG_CACHE_HOME: join(home, ".cache"), XDG_STATE_HOME: join(home, ".local", "state"), TMPDIR: this.work, ARDIA_CLI_HOME: join(data, "ardia", "cli"), ARDIA_CLI_BIN_DIR: join(home, ".local", "bin") };
-  }
-
   async ardia(args, { timeout = 60000 } = {}) {
     const result = await run(this.cliBin, args, { timeout, env: this.cliEnv, cwd: this.work });
-    this.cliLog.push(`$ ardia ${args.join(" ")}\n[exit ${result.code}]\n${result.stdout}${result.stderr}`);
+    this.cliLog.push(`$ ${CLI_COMMAND} ${args.join(" ")}\n[exit ${result.code}]\n${result.stdout}${result.stderr}`);
     return result;
   }
 
@@ -828,7 +828,7 @@ class Smoke {
     const digest = (await readFile(join(this.cliDir, CLI_DIGEST), "utf8")).trim().split(/\s+/)[0];
     const actual = sha256(await readFile(tarball));
     if (digest !== actual) throw new Error(`${CLI_DIGEST} says ${digest}, but ${name} hashes to ${actual}`);
-    this.cliEnv = this.cliEnvironment();
+    this.cliEnv = cliEnvironment(this.work);
     this.cliLog = [];
     await mkdir(this.cliEnv.HOME, { recursive: true });
     const install = async () => {
