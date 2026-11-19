@@ -830,12 +830,12 @@
    "id": "P-windows-profile-folders",
    "class": "P",
    "mechanism": "class",
-   "regex": "(?<=FOLDER_PREFIX = \\\")Ardia (?=\\\")|(?<=([\\\"']))Ardia (?=(?:[a-z0-9-]+(?: \\(removing\\))?|Work)\\1)",
+   "regex": "(?<=FOLDER_PREFIX = \\\")Ardia (?=\\\")|(?<=([\\\"']))Ardia (?=(?:[a-z0-9-]+(?: \\(removing\\))?|Work)\\1)|(?<=@)Ardia (?=[a-z0-9-]+[\\\"'])|(?<=`)Ardia (?=\\$\\{)",
    "scope": [
     "packages/expo-windows/src/*",
     "apps/browser/src/platform/windows*"
    ],
-   "why": "Profile folder names the Windows engine makes and accepts: kDirectoryPrefix \"Ardia \" plus the profile id (scripts/windows/engine/src/ardia/win/profiles.cc:19), as the app's profile domain builds them and its self-check and tests name them."
+   "why": "Profile folder names the Windows engine makes and accepts: kDirectoryPrefix \"Ardia \" plus the profile id (scripts/windows/engine/src/ardia/win/profiles.cc:19), as the app's profile domain builds them (also inside a private-session id, <name>@Ardia <id>) and its self-check and tests name them."
   },
   {
    "id": "P-windows-profile-test-folder",
