@@ -6,14 +6,15 @@
 # and --password-store=basic, so today's engine never reaches an installed Ardia's profile, data or secret-store items.
 # The engine writes the nilla-browser rendezvous file (ArdiaControl.json) into that profile, where nilla-browser looks
 # when ARDIA_CONFIG_HOME is set. It refuses --user-data-dir and --password-store among the browser arguments. It never
-# installs anything. It is not a sandbox: it runs only where the filesystem is verified to be isolated (a user and mount
-# namespace with a scratch HOME, in which no account's home folder, nor the folder that would hold Ardia's config,
-# data, cache or state folders in it, is writable, as tools/isolate gives), or with NILLA_DISPOSABLE_HOST=1 on a
-# throwaway VM, container or CI runner. Either way it refuses a machine where Ardia's folders exist in HOME or in any
-# account's home.
+# installs anything. It is not a sandbox: it runs only where the filesystem is verified to be isolated, as tools/isolate
+# gives: a user namespace whose shell holds no capabilities (so it can't undo a mount), a scratch HOME, and no account's
+# home folder, nor the folder that would hold Ardia's config, data, cache or state folders in it, writable or, when it
+# is the user's own, anywhere but on a read-only mount (so a chmod can't open it either). Or it runs with
+# NILLA_DISPOSABLE_HOST=1 on a throwaway VM, container or CI runner. Either way it refuses a machine where Ardia's
+# folders exist in HOME or in any account's home.
 set -euo pipefail
 
-usage() { sed -n '2,13s/^# \{0,1\}//p' "$0"; }
+usage() { sed -n '2,14s/^# \{0,1\}//p' "$0"; }
 die() { echo "nilla-dev-run: $*" >&2; exit 2; }
 
 case "${1:-}" in
@@ -57,10 +58,25 @@ nearest_existing() {
   printf '%s\n' "$path"
 }
 
+effective_capabilities() {
+  local key value
+  while read -r key value; do
+    [ "$key" = CapEff: ] && { printf '%s\n' "$value"; return 0; }
+  done < /proc/self/status
+  return 1
+}
+
+on_read_only_mount() {
+  python3 -I -c 'import os, sys; sys.exit(0 if os.statvfs(sys.argv[1]).f_flag & os.ST_RDONLY else 1)' "$1" 2>/dev/null
+}
+
 not_isolated=""
 filesystem_isolated() {
   in_user_namespace || { not_isolated="this isn't a user namespace"; return 1; }
-  local scratch_home home target subfolder
+  local capabilities scratch_home home target subfolder me
+  capabilities="$(effective_capabilities)" || { not_isolated="this shell's capabilities can't be read"; return 1; }
+  [[ "$capabilities" =~ ^0+$ ]] || { not_isolated="this shell holds capabilities ($capabilities), so the build could undo the read-only mounts"; return 1; }
+  me="$(id -u)"
   scratch_home="$(resolved "$HOME")"
   for home in "${homes[@]}"; do
     [ -d "$home" ] || continue
@@ -68,12 +84,16 @@ filesystem_isolated() {
     for subfolder in "" "${ardia_subfolders[@]}"; do
       target="$(nearest_existing "${home}${subfolder:+/$subfolder}")"
       if [ -w "$target" ]; then not_isolated="$target is writable here, so the build could reach $home"; return 1; fi
+      if [ "$(stat -c %u -- "$target")" = "$me" ] && ! on_read_only_mount "$target"; then
+        not_isolated="$target is yours and not on a read-only mount, so the build could chmod it and reach $home"
+        return 1
+      fi
     done
   done
 }
 
 if [ "${NILLA_DISPOSABLE_HOST:-}" != 1 ] && ! filesystem_isolated; then
-  die "the filesystem isn't verified to be isolated ($not_isolated). Run it inside tools/isolate, or a user and mount namespace that gives a scratch HOME and covers every account's home read-only, or set NILLA_DISPOSABLE_HOST=1 on a throwaway VM, container or CI runner; never on an account that has or may get Ardia"
+  die "the filesystem isn't verified to be isolated ($not_isolated). Run it inside tools/isolate, or a user and mount namespace that covers every account's home with a read-only mount and gives a scratch HOME, entered through a nested user namespace that holds no capabilities, or set NILLA_DISPOSABLE_HOST=1 on a throwaway VM, container or CI runner; never on an account that has or may get Ardia"
 fi
 for folder in "${ardia_folders[@]}"; do
   if [ -e "$folder" ] || [ -L "$folder" ]; then

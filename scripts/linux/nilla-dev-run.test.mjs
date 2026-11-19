@@ -43,8 +43,16 @@ const realHome = spawnSync("getent", ["passwd", String(process.getuid())], { enc
 const coverOtherHomes = `getent passwd | cut -d: -f6 | sort -u | while read -r other; do if [ "$other" != / ] && [ "$other" != '${realHome}' ] && [ -d "$other" ] && [ -w "$other" ]; then mount -t tmpfs tmpfs "$other" && mount -o remount,ro,bind "$other"; fi; done`;
 const canUnshare = spawnSync("unshare", ["--user", "--map-root-user", "--mount", "true"]).status === 0;
 
+const [uid, gid] = [process.getuid(), process.getgid()];
+const withoutCapabilities = ["unshare", "--user", `--map-user=${uid}`, `--map-group=${gid}`, "--"];
+
 function inMountNamespace(setup, args, env) {
   const prepare = `set -e; ${setup}; exec "$@"`;
+  return run(args, env, ["unshare", "--user", "--map-root-user", "--mount", "--", "bash", "-c", prepare, "prepare"]);
+}
+
+function inMaskedNamespace(setup, args, env) {
+  const prepare = `set -e; ${setup}; exec ${withoutCapabilities.join(" ")} "$@"`;
   return run(args, env, ["unshare", "--user", "--map-root-user", "--mount", "--", "bash", "-c", prepare, "prepare"]);
 }
 
@@ -109,7 +117,7 @@ for (const variable of ["ARDIA_DATA_DIR", "ARDIA_CONFIG_HOME"]) {
 
 const onTheHost = readFileSync("/proc/self/uid_map", "utf8").trim().split(/\s+/).join(" ") === "0 0 4294967295";
 
-test("without NILLA_DISPOSABLE_HOST it refuses where the account's real home is writable: on the host, and in a user namespace that shares the host's view", () => {
+test("without NILLA_DISPOSABLE_HOST it refuses where the account's real home is writable: on the host, in a user namespace on the host's own mounts, and in a namespace that masks it writable", () => {
   assert.ok(onTheHost || canUnshare, "the refusal must be exercised: run on the host, or where unprivileged user namespaces are allowed");
   if (onTheHost) {
     const direct = run([], { NILLA_DISPOSABLE_HOST: "" });
@@ -117,26 +125,53 @@ test("without NILLA_DISPOSABLE_HOST it refuses where the account's real home is 
     assert.match(direct.stderr, /isn't verified to be isolated \(this isn't a user namespace\)/);
     assert.equal(direct.launched, null);
   }
+  if (onTheHost && canUnshare) {
+    const inherited = run([], { NILLA_DISPOSABLE_HOST: "" }, withoutCapabilities);
+    assert.equal(inherited.status, 2, inherited.stderr);
+    assert.match(inherited.stderr, /isn't verified to be isolated \(.*so the build could (reach|chmod)/);
+    assert.equal(inherited.launched, null);
+  }
   if (canUnshare) {
-    const shared = inMountNamespace(`mount -t tmpfs tmpfs '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
+    const shared = inMaskedNamespace(`mount -t tmpfs tmpfs '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
     assert.equal(shared.status, 2, shared.stderr);
     assert.match(shared.stderr, /isn't verified to be isolated \(.*is writable here, so the build could reach/);
     assert.equal(shared.launched, null);
   }
 });
 
-test("without NILLA_DISPOSABLE_HOST it starts in a user and mount namespace that covers the real home read-only and gives a scratch HOME", { skip: !canUnshare && "unprivileged user namespaces are unavailable here" }, () => {
+test("an unwritable home of the user's own on a writable mount is not isolation, since the build could chmod it", { skip: !canUnshare && "unprivileged user namespaces are unavailable here" }, () => {
+  const unwritable = inMaskedNamespace(`${coverOtherHomes}; mount -t tmpfs -o mode=0555 tmpfs '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
+  assert.equal(unwritable.status, 2, unwritable.stderr);
+  assert.match(unwritable.stderr, new RegExp(`\\(${realHome} is yours and not on a read-only mount, so the build could chmod it`));
+  assert.equal(unwritable.launched, null);
+  const stacked = inMaskedNamespace(`${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mount -o remount,ro,bind '${realHome}'; mount -t tmpfs -o mode=0555 tmpfs '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
+  assert.equal(stacked.status, 2, stacked.stderr);
+  assert.match(stacked.stderr, /is yours and not on a read-only mount/);
+  assert.equal(stacked.launched, null);
+  const chmodded = run([], {}, ["unshare", "--user", "--map-root-user", "--mount", "--", "bash", "-c", `set -e; mount -t tmpfs -o mode=0555 tmpfs '${realHome}'; exec ${withoutCapabilities.join(" ")} bash -c 'chmod u+w "$1" && : > "$1/written" && echo written' chmod '${realHome}'`]);
+  assert.equal(chmodded.status, 0, chmodded.stderr);
+});
+
+test("a shell that holds capabilities in its namespace is not isolation, since the build could remount the cover writable", { skip: !canUnshare && "unprivileged user namespaces are unavailable here" }, () => {
   const cover = `${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mount -o remount,ro,bind '${realHome}'`;
-  const isolated = inMountNamespace(cover, [], { NILLA_DISPOSABLE_HOST: "" });
+  const privileged = inMountNamespace(cover, [], { NILLA_DISPOSABLE_HOST: "" });
+  assert.equal(privileged.status, 2, privileged.stderr);
+  assert.match(privileged.stderr, /this shell holds capabilities \([0-9a-f]+\), so the build could undo the read-only mounts/);
+  assert.equal(privileged.launched, null);
+});
+
+test("without NILLA_DISPOSABLE_HOST it starts where a mount namespace covers every account's home read-only, a nested user namespace drops the capabilities and HOME is scratch", { skip: !canUnshare && "unprivileged user namespaces are unavailable here" }, () => {
+  const cover = `${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mount -o remount,ro,bind '${realHome}'`;
+  const isolated = inMaskedNamespace(cover, [], { NILLA_DISPOSABLE_HOST: "" });
   assert.equal(isolated.status, 0, isolated.stderr);
   assert.equal(isolated.launched[0], `--user-data-dir=${profile}`);
-  const homeIsReal = inMountNamespace(cover, [], { NILLA_DISPOSABLE_HOST: "", HOME: realHome });
+  const homeIsReal = inMaskedNamespace(cover, [], { NILLA_DISPOSABLE_HOST: "", HOME: realHome });
   assert.equal(homeIsReal.status, 2);
   assert.match(homeIsReal.stderr, /is the account folder/);
-  const writableConfig = inMountNamespace(`${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mkdir '${realHome}/.config'; mount -o remount,ro,bind '${realHome}'; mount -t tmpfs tmpfs '${realHome}/.config'`, [], { NILLA_DISPOSABLE_HOST: "" });
+  const writableConfig = inMaskedNamespace(`${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mkdir '${realHome}/.config'; mount -o remount,ro,bind '${realHome}'; mount -t tmpfs tmpfs '${realHome}/.config'`, [], { NILLA_DISPOSABLE_HOST: "" });
   assert.equal(writableConfig.status, 2);
   assert.match(writableConfig.stderr, /\.config is writable here/);
-  const planted = inMountNamespace(`${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mkdir -p '${realHome}/.config/ardia'; mount -o remount,ro,bind '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
+  const planted = inMaskedNamespace(`${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mkdir -p '${realHome}/.config/ardia'; mount -o remount,ro,bind '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
   assert.equal(planted.status, 2);
   assert.match(planted.stderr, /this machine has Ardia's .*\.config\/ardia/);
 });
