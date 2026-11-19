@@ -171,7 +171,7 @@ function CommandLineSection() {
         >
           {on && failed ? <Button title="Try Again" onPress={() => void installCliInBackground("settings")} /> : null}
           {on && !failed && cli.installedVersion && !cli.installing ? <Button title="Reinstall" onPress={() => void installCliInBackground("settings")} /> : null}
-          <Toggle value={on} accessibilityLabel="nilla command" onChange={setOn} />
+          <Toggle value={on} accessibilityLabel="nilla-browser command" onChange={setOn} />
         </Row>
         <SettingToggle anchor="advanced.compactCliPill" />
         {ruleRows}

@@ -145,7 +145,7 @@ const schedule = singleFlight(async (flight) => {
   try {
     await reconcile(flight);
   } catch (error) {
-    console.warn("[scripts] couldn't apply the nilla scripts", error);
+    console.warn("[scripts] couldn't apply the user scripts", error);
   }
 }, enabled);
 

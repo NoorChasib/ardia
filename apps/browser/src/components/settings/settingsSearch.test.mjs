@@ -15,6 +15,7 @@ const TOP = [
   ["command line", ["advanced.nillaCommand"]],
   ["terminal", ["advanced.nillaCommand"]],
   ["nilla command", ["advanced.nillaCommand"]],
+  ["nilla-browser", ["advanced.nillaCommand"]],
   ["dark", ["appearance.theme"]],
   ["dark mode", ["appearance.theme"]],
   ["theme", ["appearance.theme"]],

@@ -187,7 +187,7 @@ test("problems found before any window opens show in the first window that does"
 test("the problem toast names the file once and sums up the rest", () => {
   assert.deepEqual(problemsToast(["themes/demo.json: type.family must be a font name", "themes/demo.json: metrics.rowHeight must be a number from 24 to 56", "themes/demo.json: icons.plus has \"Plus\", which isn't an SF Symbol name"]), {
     title: "themes/demo.json has 3 problems",
-    message: "type.family must be a font name; metrics.rowHeight must be a number from 24 to 56; and 1 more (nilla config check lists them all)",
+    message: "type.family must be a font name; metrics.rowHeight must be a number from 24 to 56; and 1 more (nilla-browser config check lists them all)",
   });
   assert.deepEqual(problemsToast(["themes/demo.json: type.famly isn't a type key (family, mono, scale, sizes, weights)", "themes/demo.json: type.font isn't a type key (family, mono, scale, sizes, weights)", "themes/demo.json: icons isn't a theme key (dark, light)"]).message, "type.famly and type.font aren't type keys (family, mono, scale, sizes, weights); icons isn't a theme key (dark, light)");
   assert.deepEqual(problemsToast(["config.json: tabLayout must be sidebar or top", "themes/demo.json: dark.accent isn't a colour"]), {

@@ -67,8 +67,8 @@ export const advancedRows = {
       section: "Command line and automation",
       rows: {
         nillaCommand: {
-          title: "nilla command",
-          keywords: ["cli", "command line", "terminal", "shell", "install", "the nilla-browser command", "devtools", "automation", "remote debugging", "let the nilla-browser command control nilla"],
+          title: "nilla-browser command",
+          keywords: ["cli", "command line", "terminal", "shell", "install", "the nilla-browser command", "nilla command", "devtools", "automation", "remote debugging", "let the nilla-browser command control nilla"],
           shown: () => PLATFORM_FEATURES.nillaCommand,
         },
         compactCliPill: {

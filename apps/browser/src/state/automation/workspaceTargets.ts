@@ -59,7 +59,7 @@ function groupNamed(name: string, scope: NameScope): TabGroup {
   let found = pool.filter((g) => folded(g.name) === want);
   if (!found.length) found = pool.filter((g) => !g.name.trim() && folded(groupLabel(s, g)) === want);
   const where = `window ${scope.windowId}${scope.profileId ? `, profile ${scope.profileId}` : ""}`;
-  if (!found.length) throw new OpError("no_window", `There's no group named ${JSON.stringify(name)} in ${where} (nilla groups lists them; --window picks another window).`);
+  if (!found.length) throw new OpError("no_window", `There's no group named ${JSON.stringify(name)} in ${where} (nilla-browser groups lists them; --window picks another window).`);
   if (found.length > 1) {
     const list = found.map((g) => `${g.id} (${JSON.stringify(groupLabel(s, g))}${g.parentId ? `, inside ${g.parentId}` : ""}, profile ${g.profileId})`).join(", ");
     throw new OpError("bad_request", `${JSON.stringify(name)} names ${found.length} groups in ${where}: ${list}. Give one id.`);
