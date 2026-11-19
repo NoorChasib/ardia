@@ -159,6 +159,15 @@ jobs:
           bun x --no-install @react-native-community/cli bundle --platform windows --entry-file "$entry" --bundle-output "$out/Bundle/index.windows.bundle" --assets-dest "$out/Bundle" --dev false --reset-cache --sourcemap-output "$RUNNER_TEMP/index.windows.bundle.packager.map" --minify false
           echo "bundled $entry: $(find "$out/Bundle" -type f | wc -l) files, index.windows.bundle is $(sha256sum "$out/Bundle/index.windows.bundle" | cut -d' ' -f1) before Hermes"
           echo "it holds $(grep -c $'\r' "$out/Bundle/index.windows.bundle" || true) lines with a carriage return"
+      - name: Hand React Native for Windows' licence to the jobs that ship it
+        run: |
+          set -euo pipefail
+          from=apps/browser/node_modules/react-native-windows
+          [ -f "$from/package.json" ] || from=node_modules/react-native-windows
+          to="$GITHUB_WORKSPACE/.ci/windows-javascript/node_modules/react-native-windows"
+          mkdir -p "$to"
+          cp "$from/LICENSE" "$from/package.json" "$to/"
+          echo "handed over the LICENSE of react-native-windows $(node -p "require(process.argv[1]).version" "$to/package.json")"
       - name: Hand the bundle to the jobs that launch it
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
@@ -359,6 +368,10 @@ jobs:
           key: windows-run-javascript-${{ github.run_id }}
           enableCrossOsArchive: true
           fail-on-cache-miss: true
+      - name: Check the pinned package licences the package ships
+        if: env.PART == 'launch'
+        shell: pwsh
+        run: scripts/windows/package-licenses.test.ps1
       - name: Put this change's JavaScript in the built app
         if: env.COMPILED != 'true'
         shell: pwsh

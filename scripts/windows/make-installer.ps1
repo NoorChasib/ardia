@@ -55,6 +55,14 @@ foreach ($name in $licenses.Keys) {
   if (-not (Test-Path -LiteralPath $packaged -PathType Leaf)) { throw "'$Source' has no Licenses\${name}: assemble.ps1 ships every licence text with the app" }
   if ((Get-FileHash -LiteralPath $packaged -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath (Join-Path $repository $licenses[$name]) -Algorithm SHA256).Hash) { throw "'$Source' has a Licenses\$name that is not the repository's $($licenses[$name])" }
 }
+. (Join-Path $PSScriptRoot "package-licenses.ps1")
+$packageLicenses = Get-PinnedPackageLicenses $repository
+foreach ($name in $packageLicenses.Keys) {
+  $packaged = Join-Path $sourceRoot "Licenses\$name"
+  $pinned = $packageLicenses[$name]
+  if (-not (Test-Path -LiteralPath $packaged -PathType Leaf)) { throw "'$Source' has no Licenses\${name}: assemble.ps1 ships $($pinned.package) $($pinned.version)'s $($pinned.license) notice with the app" }
+  if ((Get-FileHash -LiteralPath $packaged -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $pinned.source -Algorithm SHA256).Hash) { throw "'$Source' has a Licenses\$name that is not $($pinned.package) $($pinned.version)'s $($pinned.source)" }
+}
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $outRoot = (Resolve-Path -LiteralPath $Out).Path
 if (-not $Version) { $Version = & (Join-Path $PSScriptRoot "project-version.ps1") }

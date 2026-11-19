@@ -9,6 +9,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "vc-runtime.ps1")
+. (Join-Path $PSScriptRoot "package-licenses.ps1")
 
 $notShipped = @(".pdb", ".lib", ".exp", ".ilk", ".iobj", ".ipdb", ".winmd")
 $launcher = "Nilla.exe"
@@ -42,6 +43,7 @@ function Test-SameFile([string]$one, [string]$other) {
   return (Get-FileHash -LiteralPath $one -Algorithm SHA256).Hash -eq (Get-FileHash -LiteralPath $other -Algorithm SHA256).Hash
 }
 
+$packageLicenses = Get-PinnedPackageLicenses $repository
 $appRoot = Resolve-Folder $App "The app's build output" $library
 $engineRoot = Resolve-Folder $Engine "The engine" $engineLauncher
 if (Test-Path -LiteralPath (Join-Path $engineRoot $library)) { throw "The engine '$Engine' already holds a $library" }
@@ -78,6 +80,11 @@ foreach ($relative in (Get-RelativeFiles $appRoot)) {
 
 $licenseFolder = Join-Path $outRoot "Licenses"
 New-Item -ItemType Directory -Path $licenseFolder -Force | Out-Null
+foreach ($name in $packageLicenses.Keys) {
+  $target = Join-Path $licenseFolder $name
+  if (Test-Path -LiteralPath $target) { throw "the engine or the app already ships a Licenses\$name" }
+  Copy-Item -LiteralPath $packageLicenses[$name].source -Destination $target
+}
 foreach ($name in $licenses.Keys) {
   $source = Join-Path $repository $licenses[$name]
   $target = Join-Path $licenseFolder $name
@@ -103,5 +110,6 @@ if ($Build -gt 0) {
   Write-Host "assemble: this is Nilla $Version, build $Build"
 }
 
-Write-Host "assemble: $($engineFiles.Count) engine files, $appCount app files and $($licenses.Count) licence texts in $outRoot"
+Write-Host "assemble: $($engineFiles.Count) engine files, $appCount app files and $($licenses.Count + $packageLicenses.Count) licence texts in $outRoot"
+foreach ($name in $packageLicenses.Keys) { Write-Host "assemble: Licenses\$name is $($packageLicenses[$name].package) $($packageLicenses[$name].version)'s $($packageLicenses[$name].license) notice from $($packageLicenses[$name].source)" }
 foreach ($relative in $clashes) { Write-Host "assemble: kept the engine's $relative; the app's differs" }

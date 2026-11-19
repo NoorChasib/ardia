@@ -3,6 +3,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot "package-licenses.ps1")
 
 $repository = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $uninstallKeys = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall"
@@ -124,7 +125,16 @@ foreach ($name in $licenses.Keys) {
   $got = (Get-FileHash -LiteralPath $installedText -Algorithm SHA256).Hash
   if ($got -ne $want) { throw "Licenses\$name in $folder is not the repository's $($licenses[$name]) (SHA-256 $got, not $want)" }
 }
-Write-Host "installer-check: the install carries $($licenses.Count) licence texts, byte for byte the repository's"
+$packageLicenses = Get-PinnedPackageLicenses $repository
+foreach ($name in $packageLicenses.Keys) {
+  $pinned = $packageLicenses[$name]
+  $installedText = Join-Path $folder "Licenses\$name"
+  if (-not (Test-Path -LiteralPath $installedText -PathType Leaf)) { throw "the install in $folder lacks Licenses\$name, $($pinned.package) $($pinned.version)'s $($pinned.license) notice" }
+  $want = (Get-FileHash -LiteralPath $pinned.source -Algorithm SHA256).Hash
+  $got = (Get-FileHash -LiteralPath $installedText -Algorithm SHA256).Hash
+  if ($got -ne $want) { throw "Licenses\$name in $folder is not $($pinned.package) $($pinned.version)'s $($pinned.source) (SHA-256 $got, not $want)" }
+}
+Write-Host "installer-check: the install carries $($licenses.Count) licence texts, byte for byte the repository's, and $($packageLicenses.Count) pinned package notices ($(@($packageLicenses.Values | ForEach-Object { "$($_.package) $($_.version)" }) -join ', ')), byte for byte the package's"
 $installed = Get-ItemProperty -LiteralPath $entry
 if ($installed.DisplayName -ne "Nilla") { throw "the uninstall entry is named '$($installed.DisplayName)'" }
 $displayIcon = ($installed.DisplayIcon -split ",")[0].Trim('"')
