@@ -1,4 +1,5 @@
 #import "ArdiaLaunchConfig.h"
+#import "NillaUpstreamFolders.h"
 
 #import <Security/Security.h>
 #import <os/log.h>
@@ -316,6 +317,7 @@ BOOL SignedForDistribution() {
     NSString *support = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES).firstObject;
     directory = [support stringByAppendingPathComponent:NSBundle.mainBundle.bundleIdentifier ?: @"com.nilladigital.nilla"];
   }
+  if (!nilla_upstream::IsOwnFolder(directory)) return @{};
   NSData *data = [NSData dataWithContentsOfFile:[directory stringByAppendingPathComponent:kSwitchesCacheDocument]];
   NSDictionary *cache = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;
   NSDictionary *saved = [cache isKindOfClass:NSDictionary.class] && [cache[@"switches"] isKindOfClass:NSDictionary.class] ? cache[@"switches"] : @{};

@@ -5,9 +5,9 @@
 #import "ArdiaNavigationDownloads.h"
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
+#import "NillaTeamSigning.h"
 #import "ArdiaWebViewInternal.h"
 
-#import <Security/Security.h>
 #import <objc/runtime.h>
 
 #include <cctype>
@@ -52,15 +52,7 @@ void WatchReservedShortcuts() {
 }
 
 bool IsTeamSigned() {
-  SecCodeRef code = nullptr;
-  if (SecCodeCopySelf(kSecCSDefaultFlags, &code) != errSecSuccess) return false;
-  CFDictionaryRef info = nullptr;
-  OSStatus status = SecCodeCopySigningInformation((SecStaticCodeRef)code, kSecCSSigningInformation, &info);
-  CFRelease(code);
-  if (status != errSecSuccess || !info) return false;
-  bool team = CFDictionaryGetValue(info, kSecCodeInfoTeamIdentifier) != nullptr;
-  CFRelease(info);
-  return team;
+  return nilla_signing::RefusesToStart(nilla_signing::ReadTeam());
 }
 
 NillaBootstrapDelegate *gBootstrap;

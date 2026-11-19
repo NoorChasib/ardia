@@ -9,6 +9,7 @@
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
 #import "ArdiaWebViewInternal.h"
+#import "NillaUpstreamFolders.h"
 
 #import <Security/Security.h>
 #import <objc/runtime.h>
@@ -402,13 +403,19 @@ void StartEarlyWindow() {
   }
 #endif
   if (IsTeamSigned()) {
-    fprintf(stderr, "[ardiacore] a team-signed Nilla build waits for Nilla's own engines: every launch passes today's "
-                    "engine the mock keychain, which turns off its real-profile gate\n");
+    fprintf(stderr, "[ardiacore] a team-signed Nilla build, or one whose signature can't be read, waits for Nilla's own "
+                    "engines: every launch passes today's engine the mock keychain, which turns off its real-profile gate\n");
+    return 1;
+  }
+  NSString *scratch = config.dataDirectory;
+  NSString *dataDirectory = scratch ? [scratch stringByAppendingPathComponent:@"Chromium"] : InstalledDataDirectory();
+  if (!nilla_upstream::IsOwnFolder(dataDirectory.stringByDeletingLastPathComponent) || !nilla_upstream::IsOwnFolder(dataDirectory)) {
+    fprintf(stderr, "[ardiacore] the data dir %s leads into an installed Ardia's folders, or where it leads can't be told, so "
+                    "Nilla won't read or write it\n", dataDirectory.fileSystemRepresentation);
     return 1;
   }
   gMakeDelegate = [makeDelegate copy];
-  NSString *scratch = config.dataDirectory;
-  gDataDirectory = scratch ? [scratch stringByAppendingPathComponent:@"Chromium"] : InstalledDataDirectory();
+  gDataDirectory = dataDirectory;
   NSError *dirError;
   if (![NSFileManager.defaultManager createDirectoryAtPath:gDataDirectory withIntermediateDirectories:YES attributes:nil error:&dirError]) {
     fprintf(stderr, "[ardiacore] can't use the data dir %s: %s\n", gDataDirectory.fileSystemRepresentation,

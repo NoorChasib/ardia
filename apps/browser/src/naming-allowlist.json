@@ -1186,6 +1186,28 @@
    "why": "The Mac app's list of an installed Ardia's folders (UpstreamAppFolders.swift, the same list as the CLI's upstream.py), its tests and the wiring test: ConfigFolder never reads or writes a config path that resolves into them (council C8). Renamed, the guard would refuse Nilla's own folders."
   },
   {
+   "id": "X-ardia-app-folders-guard-native",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)(?<![A-Za-z0-9_])ardia(?![A-Za-z0-9_])",
+   "scope": [
+    "packages/ardiacore/ios/NillaUpstreamFolders.h",
+    "packages/ardiacore/tests/upstream-folders.test.cc"
+   ],
+   "why": "The Mac app's native copy of the installed-Ardia folder list (NillaUpstreamFolders.h, which launch-config-switches.test.mjs asserts equal to UpstreamAppFolders.swift), its C++ test that plants a linked Application Support/com.nilladigital.nilla and Chromium folder into Ardia's, and the launch refusal and wiring-test names that say so: the data dir is refused before anything reads or writes it when it resolves into those folders (reconcile.md Deferred, owner's full hardening). Renamed, the guard would refuse Nilla's own data dir."
+  },
+  {
+   "id": "X-ardia-app-folders-guard-native-copy",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=installed )Ardia(?='s folders| folders)",
+   "scope": [
+    "packages/ardiacore/ios/ArdiaHost+Launch.mm",
+    "packages/ardiacore/tests/launch-config-switches.test.mjs"
+   ],
+   "why": "The data dir refusal in runWithArgc and the wiring tests' names say the folders belong to an installed Ardia."
+  },
+  {
    "id": "X-ardia-sync-folder-guard-windows",
    "class": "never",
    "mechanism": "never",
