@@ -56,16 +56,15 @@ const BACK = "M100 700C320 640 560 610 924 560V924H100Z";
 const FRONT = "M100 812C380 760 650 600 924 338V924H100Z";
 
 const entries = [];
-const rename = (p) => p && p.replace(/Nilla/g, "Nilla").replace(/nilla/g, "nilla").replace(/NILLA/g, "NILLA");
 const layerOf = (p) => (p && /^engine\//.test(p) ? 2 : 1);
 function add(file, data, { current = null, target, action = current ? "replace" : "add", note = "" } = {}) {
   const path = join(OUT, file);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, data);
-  const t = target === undefined ? rename(current) : target;
+  const t = target === undefined ? current : target;
   entries.push({ file, action, layer: layerOf(t || current), current, target: t, note });
 }
-const mark = (action, current, note) => entries.push({ file: null, action, layer: layerOf(current), current, target: action === "remove" ? null : rename(current), note });
+const mark = (action, current, note) => entries.push({ file: null, action, layer: layerOf(current), current, target: action === "remove" ? null : current, note });
 const png = (svg, size) => new resvg.Resvg(svg, { fitTo: { mode: "width", value: size }, font: { loadSystemFonts: false } }).render().asPng();
 const lum = (x) => {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(x.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
@@ -196,8 +195,8 @@ for (const s of [16, 32, 128, 256, 512])
 add("icons/macos/AppIcon.appiconset/Contents.json", json({ images: appiconset, info: { author: "xcode", version: 1 } }), { current: `${MAC}/Assets.xcassets/AppIcon.appiconset/Contents.json`, note: "same slots as today" });
 for (const a of ALTS) {
   const dir = `${MAC}/Assets.xcassets/AppIconVariant-${a.id}.imageset`;
-  add(`icons/macos/variants/AppIconVariant-${a.id}.imageset/icon.png`, png(scene(a.c, { id: `v${a.id}-`, shadow: true }), 1024), { target: rename(`${dir}/icon.png`), note: `AppIcons.swift alternate "${a.id}" (${a.name}), drawn whole` });
-  add(`icons/macos/variants/AppIconVariant-${a.id}.imageset/Contents.json`, json({ images: [{ filename: "icon.png", idiom: "universal" }], info: { author: "xcode", version: 1 } }), { target: rename(`${dir}/Contents.json`) });
+  add(`icons/macos/variants/AppIconVariant-${a.id}.imageset/icon.png`, png(scene(a.c, { id: `v${a.id}-`, shadow: true }), 1024), { target: `${dir}/icon.png`, note: `AppIcons.swift alternate "${a.id}" (${a.name}), drawn whole` });
+  add(`icons/macos/variants/AppIconVariant-${a.id}.imageset/Contents.json`, json({ images: [{ filename: "icon.png", idiom: "universal" }], info: { author: "xcode", version: 1 } }), { target: `${dir}/Contents.json` });
 }
 for (const old of ["AppIconMark", "AppIconMark-blue", "AppIconMark-neutral", "AppIconMark-plum"]) mark("remove", `${MAC}/Assets.xcassets/${old}.imageset`, "old plate-variant marks: the new variants are whole icons");
 add("icons/macos/app-icon-512.png", png(macSvg, 512), { current: "apps/browser/assets/app-icon.png", note: "the app's own UI icon (drawn at 132 pt at most)" });
@@ -314,7 +313,7 @@ const manifest = {
   generated: "docs/brand/nilla/build.mjs",
   palette: { default: DEFAULT.id, colors: DEFAULT.colors, alternates: ALTS.map((a) => a.id) },
   notes: [
-    "file: relative to the --out folder. current: the path at the repo base today (null for new files). target: the proposed path after the full rename (Nilla→Nilla, nilla→nilla in path segments); the conversion workflow owns the final paths.",
+    "file: relative to the --out folder. current: the path at the repo base today (null for new files). target: the path the output goes to in the repo (the same as current for a replaced file); the conversion workflow owns the final paths.",
     "action: replace (overwrite current, then move to target), add (new file), remove (delete the current path), edit (change a value in place), optional (owner decision pending; today's file can stay), mac-step (must be produced on a Mac), preview (not shipped).",
     "layer: 1 = works with today's prebuilt engines; 2 = engine/ (and its interface), lands with the first Nilla engine builds. Every engine/chromium asset is Layer 2.",
     "Site assets (favicons, apple-touch, og) target docs/brand/nilla/web/ because apps/site is deleted under D4. README.md's header image moves to docs/brand/nilla/app-icon-256.png.",
@@ -326,6 +325,6 @@ const manifest = {
 writeFileSync(join(OUT, "manifest.json"), json(manifest));
 const md = entries.filter((e) => e.action !== "preview").map((e) => `| ${e.action} | ${e.layer} | ${e.file ? `\`${e.file}\`` : "–"} | ${e.current ? `\`${e.current}\`` : "–"} | ${e.target ? `\`${e.target}\`` : "–"} | ${e.note} |`).join("\n");
 mkdirSync(join(OUT, "icons"), { recursive: true });
-writeFileSync(join(OUT, "icons", "INDEX.md"), `# Nilla assets → repo paths\n\nThe same data as \`../manifest.json\`, as a table. *current* is the path at the repo base today; *target* is the proposed path after the full rename.\n\n| Action | Layer | File here | Current path | Target path | Note |\n| --- | --- | --- | --- | --- | --- |\n${md}\n`);
+writeFileSync(join(OUT, "icons", "INDEX.md"), `# Nilla assets → repo paths\n\nThe same data as \`../manifest.json\`, as a table. *current* is the path at the repo base today; *target* is the path the output goes to.\n\n| Action | Layer | File here | Current path | Target path | Note |\n| --- | --- | --- | --- | --- | --- |\n${md}\n`);
 const count = entries.reduce((a, e) => ((a[e.action] = (a[e.action] || 0) + 1), a), {});
 console.log(`${entries.length} manifest entries: ${JSON.stringify(count)}`);
