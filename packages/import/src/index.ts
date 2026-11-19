@@ -233,7 +233,7 @@ type ImportEvent =
 
 const Native = requireNativeModule<{
   addListener(name: "onImportEvent", listener: (e: ImportEvent) => void): EventSubscription;
-  listBrowsers(): Promise<string>;
+  listBrowsers(only: string[] | null): Promise<string>;
   importData(jobId: string, browserId: string, profileId: string, kinds: ImportKind[], options: NativeImportOptions): Promise<string>;
   cancelImport(jobId: string): void;
   unlockBrowser(browserId: string, primaryPassword: string | null): Promise<null>;
@@ -281,7 +281,10 @@ async function job<T>(options: ImportOptions, start: (jobId: string) => Promise<
   }
 }
 
-export const listBrowsers = () => call<BrowserSource[]>(Native.listBrowsers());
+export async function listBrowsers(only?: readonly string[]): Promise<BrowserSource[]> {
+  const list = await call<BrowserSource[]>(Native.listBrowsers(only ? [...only] : null));
+  return only ? list.filter((source) => only.includes(source.id)) : list;
+}
 
 export function importData(browserId: string, profileId: string, kinds: ImportKind[], options: ImportOptions = {}) {
   const native: NativeImportOptions = {
