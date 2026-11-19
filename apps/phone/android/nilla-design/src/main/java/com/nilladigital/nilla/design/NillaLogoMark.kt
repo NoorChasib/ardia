@@ -15,14 +15,15 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -45,57 +46,73 @@ import kotlin.math.atan2
 import kotlin.math.min
 
 object LogoGeometry {
-    val canvas = Rect(26f, 186f, 26f + 972f, 186f + 772f)
+    val canvas = Rect(100f, 260f, 924f, 924f)
     val aspectRatio: Float get() = canvas.width / canvas.height
+    private const val FRAME_CENTER = 512f
 
-    class LogoShape(val path: Path, val top: Color, val bottom: Color) {
-        val bounds: Rect = path.getBounds()
-        val brush: Brush = Brush.verticalGradient(listOf(top, bottom), startY = bounds.top, endY = bounds.bottom)
-    }
+    class LogoShape(val path: Path, val color: Color)
 
-    val sun: Path by lazy { Path().apply { addOval(Rect(432f, 192f, 432f + 248f, 192f + 248f)) } }
+    val sunColor: Color = nillaColor(0xF2C14E)
+
+    val sun: Path by lazy { Path().apply { addOval(Rect(222f, 260f, 446f, 484f)) } }
 
     val backHill: Path by lazy {
         Path().apply {
-            moveTo(66f, 828f)
-            cubicTo(22f, 700f, 40f, 520f, 150f, 430f)
-            cubicTo(210f, 375f, 300f, 352f, 372f, 388f)
-            cubicTo(460f, 425f, 530f, 486f, 610f, 548f)
-            lineTo(640f, 780f)
-            lineTo(300f, 820f)
+            moveTo(100f, 700f)
+            cubicTo(320f, 640f, 560f, 610f, 924f, 560f)
+            lineTo(924f, 924f)
+            lineTo(100f, 924f)
             close()
         }
     }
 
     val frontHill: Path by lazy {
         Path().apply {
-            moveTo(68f, 834f)
-            cubicTo(250f, 700f, 500f, 556f, 690f, 466f)
-            cubicTo(770f, 432f, 868f, 424f, 935f, 482f)
-            cubicTo(1004f, 545f, 1000f, 705f, 978f, 820f)
-            cubicTo(962f, 902f, 922f, 952f, 842f, 952f)
-            lineTo(204f, 952f)
-            cubicTo(124f, 950f, 70f, 904f, 68f, 834f)
+            moveTo(100f, 812f)
+            cubicTo(380f, 760f, 650f, 600f, 924f, 338f)
+            lineTo(924f, 924f)
+            lineTo(100f, 924f)
             close()
         }
     }
 
-    val shapes: List<LogoShape> by lazy {
+    val hills: List<LogoShape> by lazy {
         listOf(
-            LogoShape(sun, nillaColor(0xFFCB45), nillaColor(0xF5A812)),
-            LogoShape(backHill, nillaColor(0x8DAF63), nillaColor(0x5E7D3E)),
-            LogoShape(frontHill, nillaColor(0x17604B), nillaColor(0x063528)),
+            LogoShape(backHill, nillaColor(0x8A9F6A)),
+            LogoShape(frontHill, nillaColor(0x43506E)),
         )
     }
+
+    fun frame(scale: Float = 1f): Path {
+        fun at(value: Float) = FRAME_CENTER + (value - FRAME_CENTER) * scale
+        return Path().apply {
+            moveTo(at(360f), at(100f))
+            lineTo(at(664f), at(100f))
+            cubicTo(at(861.3f), at(100f), at(924f), at(162.7f), at(924f), at(360f))
+            lineTo(at(924f), at(664f))
+            cubicTo(at(924f), at(861.3f), at(861.3f), at(924f), at(664f), at(924f))
+            lineTo(at(360f), at(924f))
+            cubicTo(at(162.7f), at(924f), at(100f), at(861.3f), at(100f), at(664f))
+            lineTo(at(100f), at(360f))
+            cubicTo(at(100f), at(162.7f), at(162.7f), at(100f), at(360f), at(100f))
+            close()
+        }
+    }
+
+    val hillFrame: Path by lazy { frame() }
 
     internal fun fit(size: Size, inset: Float): Pair<Float, Offset> {
         val scale = min((size.width - inset * 2) / canvas.width, (size.height - inset * 2) / canvas.height)
         return scale to Offset(inset - canvas.left * scale, inset - canvas.top * scale)
     }
 
+    private val silhouettePaths: List<Path> by lazy {
+        listOf(sun) + hills.map { Path.combine(PathOperation.Intersect, it.path, hillFrame) }
+    }
+
     internal val silhouette = GenericShape { size, _ ->
         val (scale, origin) = fit(size, 1f)
-        for (shape in listOf(sun, backHill, frontHill)) {
+        for (shape in silhouettePaths) {
             val copy = Path().apply { addPath(shape) }
             copy.asAndroidPath().transform(android.graphics.Matrix().apply {
                 setScale(scale, scale)
@@ -118,13 +135,21 @@ internal fun DrawScope.drawLogo(outline: Boolean, outlineWeight: Float) {
     translate(origin.x, origin.y) {
         scale(scale, scale, pivot = Offset.Zero) {
             if (outline) {
-                val stroke = Stroke(width = strokeWidth / scale, cap = StrokeCap.Round, join = StrokeJoin.Round)
-                for (shape in LogoGeometry.shapes) {
-                    drawPath(shape.path, Color.White, style = stroke)
-                    drawPath(shape.path, Color.White)
+                val width = strokeWidth / scale
+                val stroke = Stroke(width = width, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                drawPath(LogoGeometry.sun, Color.White, style = stroke)
+                drawPath(LogoGeometry.sun, Color.White)
+                clipPath(LogoGeometry.frame(1f + width / LogoGeometry.canvas.width)) {
+                    for (hill in LogoGeometry.hills) {
+                        drawPath(hill.path, Color.White, style = stroke)
+                        drawPath(hill.path, Color.White)
+                    }
                 }
             }
-            for (shape in LogoGeometry.shapes) drawPath(shape.path, shape.brush)
+            drawPath(LogoGeometry.sun, LogoGeometry.sunColor)
+            clipPath(LogoGeometry.hillFrame) {
+                for (hill in LogoGeometry.hills) drawPath(hill.path, hill.color)
+            }
         }
     }
 }

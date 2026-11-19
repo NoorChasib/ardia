@@ -12,20 +12,23 @@ public struct NillaLogoMark: View {
   public var body: some View {
     Canvas { context, size in
       let width = outline ? size.width * outlineWeight : 0
-      let shapes = LogoGeometry.shapes(in: CGRect(origin: .zero, size: size).insetBy(dx: width / 2 + 1, dy: width / 2 + 1))
+      let mark = LogoGeometry.Mark(in: CGRect(origin: .zero, size: size).insetBy(dx: width / 2 + 1, dy: width / 2 + 1))
       if outline {
         let style = StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round)
-        for shape in shapes {
-          context.stroke(shape.path, with: .color(.white), style: style)
-          context.fill(shape.path, with: .color(.white))
+        context.stroke(mark.sun, with: .color(.white), style: style)
+        context.fill(mark.sun, with: .color(.white))
+        var halo = context
+        halo.clip(to: mark.frame(outset: width))
+        for hill in mark.hills {
+          halo.stroke(hill.path, with: .color(.white), style: style)
+          halo.fill(hill.path, with: .color(.white))
         }
       }
-      for shape in shapes {
-        context.fill(shape.path, with: .linearGradient(
-          Gradient(colors: [shape.top, shape.bottom]),
-          startPoint: CGPoint(x: shape.path.boundingRect.midX, y: shape.path.boundingRect.minY),
-          endPoint: CGPoint(x: shape.path.boundingRect.midX, y: shape.path.boundingRect.maxY)
-        ))
+      context.fill(mark.sun, with: .color(LogoGeometry.sunColor))
+      var hills = context
+      hills.clip(to: mark.frame(outset: 0))
+      for hill in mark.hills {
+        hills.fill(hill.path, with: .color(hill.color))
       }
     }
     .aspectRatio(LogoGeometry.aspectRatio, contentMode: .fit)
@@ -34,53 +37,81 @@ public struct NillaLogoMark: View {
 }
 
 enum LogoGeometry {
-  struct Shape {
+  struct Hill {
     var path: Path
-    var top: Color
-    var bottom: Color
+    var color: Color
   }
 
-  static let canvas = CGRect(x: 26, y: 186, width: 972, height: 772)
+  struct Mark {
+    var sun: Path
+    var hills: [Hill]
+    var scale: CGFloat
+    var transform: CGAffineTransform
+
+    init(in rect: CGRect) {
+      let canvas = LogoGeometry.canvas
+      let scale = min(rect.width / canvas.width, rect.height / canvas.height)
+      let transform = CGAffineTransform(translationX: rect.minX, y: rect.minY)
+        .scaledBy(x: scale, y: scale)
+        .translatedBy(x: -canvas.minX, y: -canvas.minY)
+      self.scale = scale
+      self.transform = transform
+      sun = LogoGeometry.sun.applying(transform)
+      hills = [
+        Hill(path: LogoGeometry.backHill.applying(transform), color: Color(hex: 0x8A9F6A)),
+        Hill(path: LogoGeometry.frontHill.applying(transform), color: Color(hex: 0x43506E)),
+      ]
+    }
+
+    func frame(outset: CGFloat) -> Path {
+      LogoGeometry.frame(scale: 1 + outset / (LogoGeometry.canvas.width * scale)).applying(transform)
+    }
+  }
+
+  static let canvas = CGRect(x: 100, y: 260, width: 824, height: 664)
   static var aspectRatio: CGFloat { canvas.width / canvas.height }
+  static let sunColor = Color(hex: 0xF2C14E)
+  static let frameCenter: CGFloat = 512
 
-  static func shapes(in rect: CGRect) -> [Shape] {
-    let scale = min(rect.width / canvas.width, rect.height / canvas.height)
-    let transform = CGAffineTransform(translationX: rect.minX, y: rect.minY)
-      .scaledBy(x: scale, y: scale)
-      .translatedBy(x: -canvas.minX, y: -canvas.minY)
-    return [
-      Shape(path: sun.applying(transform), top: Color(hex: 0xFFCB45), bottom: Color(hex: 0xF5A812)),
-      Shape(path: backHill.applying(transform), top: Color(hex: 0x8DAF63), bottom: Color(hex: 0x5E7D3E)),
-      Shape(path: frontHill.applying(transform), top: Color(hex: 0x17604B), bottom: Color(hex: 0x063528)),
-    ]
-  }
-
-  static let sun = Path(ellipseIn: CGRect(x: 432, y: 192, width: 248, height: 248))
+  static let sun = Path(ellipseIn: CGRect(x: 222, y: 260, width: 224, height: 224))
 
   static let backHill: Path = {
     var path = Path()
-    path.move(to: CGPoint(x: 66, y: 828))
-    path.addCurve(to: CGPoint(x: 150, y: 430), control1: CGPoint(x: 22, y: 700), control2: CGPoint(x: 40, y: 520))
-    path.addCurve(to: CGPoint(x: 372, y: 388), control1: CGPoint(x: 210, y: 375), control2: CGPoint(x: 300, y: 352))
-    path.addCurve(to: CGPoint(x: 610, y: 548), control1: CGPoint(x: 460, y: 425), control2: CGPoint(x: 530, y: 486))
-    path.addLine(to: CGPoint(x: 640, y: 780))
-    path.addLine(to: CGPoint(x: 300, y: 820))
+    path.move(to: CGPoint(x: 100, y: 700))
+    path.addCurve(to: CGPoint(x: 924, y: 560), control1: CGPoint(x: 320, y: 640), control2: CGPoint(x: 560, y: 610))
+    path.addLine(to: CGPoint(x: 924, y: 924))
+    path.addLine(to: CGPoint(x: 100, y: 924))
     path.closeSubpath()
     return path
   }()
 
   static let frontHill: Path = {
     var path = Path()
-    path.move(to: CGPoint(x: 68, y: 834))
-    path.addCurve(to: CGPoint(x: 690, y: 466), control1: CGPoint(x: 250, y: 700), control2: CGPoint(x: 500, y: 556))
-    path.addCurve(to: CGPoint(x: 935, y: 482), control1: CGPoint(x: 770, y: 432), control2: CGPoint(x: 868, y: 424))
-    path.addCurve(to: CGPoint(x: 978, y: 820), control1: CGPoint(x: 1004, y: 545), control2: CGPoint(x: 1000, y: 705))
-    path.addCurve(to: CGPoint(x: 842, y: 952), control1: CGPoint(x: 962, y: 902), control2: CGPoint(x: 922, y: 952))
-    path.addLine(to: CGPoint(x: 204, y: 952))
-    path.addCurve(to: CGPoint(x: 68, y: 834), control1: CGPoint(x: 124, y: 950), control2: CGPoint(x: 70, y: 904))
+    path.move(to: CGPoint(x: 100, y: 812))
+    path.addCurve(to: CGPoint(x: 924, y: 338), control1: CGPoint(x: 380, y: 760), control2: CGPoint(x: 650, y: 600))
+    path.addLine(to: CGPoint(x: 924, y: 924))
+    path.addLine(to: CGPoint(x: 100, y: 924))
     path.closeSubpath()
     return path
   }()
+
+  static func frame(scale: CGFloat) -> Path {
+    let at = { (x: CGFloat, y: CGFloat) in
+      CGPoint(x: frameCenter + (x - frameCenter) * scale, y: frameCenter + (y - frameCenter) * scale)
+    }
+    var path = Path()
+    path.move(to: at(360, 100))
+    path.addLine(to: at(664, 100))
+    path.addCurve(to: at(924, 360), control1: at(861.3, 100), control2: at(924, 162.7))
+    path.addLine(to: at(924, 664))
+    path.addCurve(to: at(664, 924), control1: at(924, 861.3), control2: at(861.3, 924))
+    path.addLine(to: at(360, 924))
+    path.addCurve(to: at(100, 664), control1: at(162.7, 924), control2: at(100, 861.3))
+    path.addLine(to: at(100, 360))
+    path.addCurve(to: at(360, 100), control1: at(100, 162.7), control2: at(162.7, 100))
+    path.closeSubpath()
+    return path
+  }
 }
 
 public struct FidgetLogo: View {
