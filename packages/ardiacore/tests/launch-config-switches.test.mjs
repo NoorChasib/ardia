@@ -36,9 +36,9 @@ test("both launch filters drop the switch prefix the engine reads instance value
   assert.equal(enginePrefix, "ardia-");
   assert.match(launch, new RegExp(`static constexpr std::string_view kEngineSwitchPrefix = "${enginePrefix}";`));
   const chromiumSwitches = launch.slice(launch.indexOf('[config instance:@"chromiumSwitches"]'), launch.indexOf("std::vector<const char *> args"));
-  assert.match(chromiumSwitches, /std::optional<std::string> forwarded = ForwardedCallerArgument\(full\.c_str\(\)\);\s*if \(forwarded && !autoAccepts\(forwarded->c_str\(\)\)\) extra\.push_back\(\*forwarded\);/);
+  assert.match(chromiumSwitches, /std::optional<std::string> forwarded = ForwardedCallerArgument\(full\.c_str\(\), workingDirectory, \*protectedRoots\);\s*if \(forwarded && !autoAccepts\(forwarded->c_str\(\)\)\) extra\.push_back\(\*forwarded\);/);
   const forwardedArguments = launch.slice(launch.indexOf("for (int i = 1; mockKeychain && i < argc; i++) {"), launch.indexOf("MergeFeatureLists(args)"));
-  assert.match(forwardedArguments, /std::optional<std::string> forwarded = ForwardedCallerArgument\(arg\);\s*if \(forwarded && !autoAccepts\(forwarded->c_str\(\)\)\) extra\.push_back\(\*forwarded\);/);
+  assert.match(forwardedArguments, /std::optional<std::string> forwarded = ForwardedCallerArgument\(arg, workingDirectory, \*protectedRoots\);\s*if \(forwarded && !autoAccepts\(forwarded->c_str\(\)\)\) extra\.push_back\(\*forwarded\);/);
   assert.doesNotMatch(forwardedArguments, /args\.push_back\(arg\)/);
   assert.doesNotMatch(launch, /hasPrefix:@"[a-z]+-"|strncmp\(arg, "--[a-z]+-", \d+\)/);
   assert.match(body("- (NSArray<NSString *> *)engineSwitches {"), new RegExp(`@"--${enginePrefix}data-dir="`));
@@ -74,6 +74,25 @@ test("caller arguments are read the way Chromium 157's command line parser reads
   assert.match(forwarded, /Forwarding forwarding\{std::string\(Trimmed\(raw, syntax\)\)/);
   assert.equal((launch.match(/ForwardedCallerArgument\(/g) || []).length, 3, "one helper, used by chromiumSwitches and argv");
   assert.doesNotMatch(launch, /DropsReservedSwitch|nilla_switches::IsReserved\(/);
+});
+
+test("no caller argument that names a path leading into an installed Ardia's folders reaches Chromium", () => {
+  const switches = read("../ios/NillaChromiumSwitches.h");
+  const forwarded = switches.slice(switches.indexOf("inline Forwarding ForwardedArgument("), switches.indexOf("\n}\n", switches.indexOf("inline Forwarding ForwardedArgument(")));
+  assert.match(forwarded, /for \(std::string_view candidate : PathCandidates\(forwarding\.argument\)\)\s*if \(nilla_upstream::ReachesProtected\(std::string\(candidate\), workingDirectory, protectedRoots\)\) \{/);
+  assert.match(forwarded, /forwarding\.refusal = Refusal::protectedPath;/);
+  const helper = launch.slice(launch.indexOf("static std::optional<std::string> ForwardedCallerArgument("), launch.indexOf("\n}\n", launch.indexOf("static std::optional<std::string> ForwardedCallerArgument(")));
+  assert.match(helper, /nilla_switches::ForwardedArgument\(raw, kEngineSwitchPrefix, workingDirectory, protectedRoots\)/);
+  assert.match(helper, /if \(forwarding\.refusal == nilla_switches::Refusal::protectedPath\)\s*fprintf\(stderr,/);
+  const run = launch.slice(launch.indexOf("+ (int)runWithArgc:"));
+  const roots = run.indexOf("const std::optional<std::vector<std::string>> protectedRoots = nilla_upstream::HomeProtectedRoots();");
+  assert.ok(roots >= 0 && roots < run.indexOf('[config instance:@"chromiumSwitches"]'), "the roots are resolved before any caller argument is read");
+  assert.match(run.slice(roots), /^[^\n]*\n\s*if \(!protectedRoots\) \{[^}]*return 1;\s*\}/);
+  assert.match(run, /const std::string workingDirectory = getcwd\(cwd, sizeof cwd\) \? cwd : "";/);
+  const native = read("../ios/NillaUpstreamFolders.h");
+  const reaches = native.slice(native.indexOf("inline bool ReachesProtected("), native.indexOf("\n}\n", native.indexOf("inline bool ReachesProtected(")));
+  assert.match(reaches, /Resolve\(path\[0\] == '\/' \? path : workingDirectory \+ "\/" \+ path, true\)/);
+  assert.match(reaches, /if \(!resolved\) return true;/);
 });
 
 test("every launch passes the engine the mock keychain, and a team-signed build refuses to start before it", () => {

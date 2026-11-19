@@ -1,6 +1,10 @@
 #include "../ios/NillaChromiumSwitches.h"
 
+#include <algorithm>
+#include <chrono>
 #include <cstdio>
+#include <cstdlib>
+#include <fcntl.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -49,13 +53,27 @@ static std::string ChromiumSwitchValue(const std::vector<std::string> &argv, con
 
 static std::string Engine(const char *rest, const char *dashes = "--") { return std::string(dashes) + std::string(kEnginePrefix) + rest; }
 
+static std::vector<std::string> NoRoots() { return {}; }
+
 static std::vector<std::string> Launch(const std::vector<std::string> &callerSwitches) {
   std::vector<std::string> argv = {"Nilla", "--user-data-dir=/checked/Chromium", "--profile-directory=Default"};
   for (const std::string &arg : callerSwitches) {
-    const Forwarding forwarding = ForwardedArgument(arg, kEnginePrefix, Syntax::posix);
+    const Forwarding forwarding = ForwardedArgument(arg, kEnginePrefix, "/", NoRoots(), Syntax::posix);
     if (forwarding.refusal == Refusal::none) argv.push_back(forwarding.argument);
   }
   return argv;
+}
+
+static void Folder(const std::string &path) {
+  std::string partial;
+  for (const auto &part : nilla_upstream::Components(path)) {
+    partial += "/" + part;
+    mkdir(partial.c_str(), 0755);
+  }
+}
+
+static Forwarding Forward(const std::string &arg, const std::string &workingDirectory, const std::vector<std::string> &roots) {
+  return ForwardedArgument(arg, kEnginePrefix, workingDirectory, roots, Syntax::posix);
 }
 
 static const std::vector<std::string> kAsciiSpaces = {" ", "\t", "\n", "\v", "\f", "\r", " \t\r\n\v\f"};
@@ -148,14 +166,119 @@ int main() {
 
   for (const std::string &arg : {std::string(" --enable-features=A,B "), std::string("\t--mute-audio"), std::string("https://example.com/a b"),
                                  std::string("\x1c--user-data-dir=/x"), std::string(" -- "), std::string("--js-flags=--no-memory-reducer\n")}) {
-    const Forwarding forwarding = ForwardedArgument(arg, kEnginePrefix, Syntax::posix);
+    const Forwarding forwarding = ForwardedArgument(arg, kEnginePrefix, "/", NoRoots(), Syntax::posix);
     CHECK(forwarding.refusal == Refusal::none);
     CHECK(forwarding.argument == ChromiumTrim(arg));
     CHECK(ChromiumPosixSwitches({"Nilla", arg}) == ChromiumPosixSwitches({"Nilla", forwarding.argument}));
   }
-  CHECK(ForwardedArgument(" --user-data-dir=/x", kEnginePrefix).refusal == Refusal::userDataDir);
-  CHECK(ForwardedArgument("\t" + Engine("data-dir=/x"), kEnginePrefix).refusal == Refusal::engineSwitch);
-  CHECK(ForwardedArgument("\t--mute-audio\n", kEnginePrefix).argument == "--mute-audio");
+  CHECK(ForwardedArgument(" --user-data-dir=/x", kEnginePrefix, "/", NoRoots()).refusal == Refusal::userDataDir);
+  CHECK(ForwardedArgument("\t" + Engine("data-dir=/x"), kEnginePrefix, "/", NoRoots()).refusal == Refusal::engineSwitch);
+  CHECK(ForwardedArgument("\t--mute-audio\n", kEnginePrefix, "/", NoRoots()).argument == "--mute-audio");
+
+  char base[] = "/tmp/nilla-chromium-switches-XXXXXX";
+  if (!mkdtemp(base)) return 1;
+  const std::string scratch = *nilla_upstream::Resolve(base);
+  const std::string home = scratch + "/home";
+  const std::string config = nilla_upstream::Folders(home)[0];
+  const std::string support = nilla_upstream::Folders(home)[5];
+  const std::string configName = config.substr(home.size() + 1);
+  const std::string configLeaf = configName.substr(configName.rfind('/') + 1);
+  const std::string configParent = configName.substr(0, configName.rfind('/'));
+  Folder(config);
+  Folder(support + "/Default");
+  Folder(home + "/ok/ext");
+  Folder(home + "/sub");
+  symlink(config.c_str(), (home + "/elsewhere").c_str());
+  symlink((config + "/new.log").c_str(), (home + "/ok/dangling.log").c_str());
+  symlink((scratch + "/nowhere/new.log").c_str(), (home + "/ok/dangling-elsewhere.log").c_str());
+  const std::vector<std::string> roots = *nilla_upstream::ProtectedRoots(home);
+  const std::string own = home + "/ok";
+
+  const std::vector<std::string> pathSwitches = {
+      "disk-cache-dir", "log-file", "log-net-log", "crash-dumps-dir", "breakpad-dump-location", "trace-startup-file", "trace-to-file-name",
+      "trace-config-file", "trace-perfetto-config-file", "background-tracing-output-path", "ssl-key-log-file", "profiling-file",
+      "ozone-dump-file", "export-uma-logs-to-file", "export-ukm-logs-to-file", "load-extension", "disable-extensions-except",
+      "pack-extension", "pack-extension-key", "install-isolated-web-app-from-file", "local-sync-backend-dir", "print-to-pdf", "screenshot",
+      "use-file-for-fake-audio-capture", "use-file-for-fake-video-capture", "actor-trace-path", "variations-test-seed-path",
+      "browser-subprocess-path", "homedir", "media-cache-dir", "an-unknown-switch",
+  };
+  for (const std::string &name : pathSwitches) {
+    for (const std::string &dashes : {"--", "-"}) {
+      const Forwarding refused = Forward(dashes + name + "=" + config + "/target", "/", roots);
+      CHECK(refused.refusal == Refusal::protectedPath);
+      CHECK(refused.path == config + "/target");
+      CHECK(Forward(" " + dashes + name + "=" + support + "/Default/History\t", "/", roots).refusal == Refusal::protectedPath);
+      CHECK(Forward(dashes + name + "=" + own + "/target", "/", roots).refusal == Refusal::none);
+    }
+  }
+  for (const std::string &arg : std::vector<std::string>{
+           "--load-extension=" + own + "/ext," + config + "/ext",
+           "--load-extension=" + config + "/ext," + own + "/ext",
+           "--disable-extensions-except=" + own + "/ext;" + support,
+           "--js-flags=--logfile=" + config + "/v8.log --log",
+           "--js-flags=--no-memory-reducer --redirect-code-traces-to=" + support + "/Default/x",
+           "--log-file=" + home + "/elsewhere/linked.log",
+           "--log-file=" + home + "/ok/dangling.log",
+           "--log-file=" + own + "/../" + configName + "/up.log",
+           "--disk-cache-dir=" + own + "/missing/../../" + configName,
+           "--log-file=" + home + "/" + configParent + "/./" + configLeaf + "/x",
+           "--log-file=" + home + "//" + configParent + "//" + configLeaf + "//x",
+           support + "/Default/History",
+           "file://" + support + "/Default/History",
+           "--trace-startup-file=" + config,
+           "--load-extension=" + own + "/a b/ext," + support + "/Default/Extensions/x",
+           "--load-extension=" + support + "/Default/Extensions/x y," + own + "/ext",
+           "--js-flags=--logfile=" + support + "/Default/v8 log.txt --log",
+           "--js-flags=--logfile=\"" + config + "/v8.log\"",
+           "--js-flags=--logfile='" + config + "/v8.log'",
+           "--x=" + own + "/a:" + config + "/b",
+       })
+    CHECK(Forward(arg, "/", roots).refusal == Refusal::protectedPath);
+  for (const std::string &arg : std::vector<std::string>{"--log-file=owned.log", "owned.log", "--disk-cache-dir=.", "--log-net-log=Default/net.json"})
+    CHECK(Forward(arg, config, roots).refusal == Refusal::protectedPath);
+  CHECK(Forward("--log-file=../" + configName + "/x.log", home + "/sub", roots).refusal == Refusal::protectedPath);
+  CHECK(Forward("--log-file=../elsewhere/x.log", home + "/sub", roots).refusal == Refusal::protectedPath);
+  CHECK(Forward("--log-file=x.log", "", roots).refusal == Refusal::protectedPath);
+  CHECK(Forward("--log-file=x.log", home + "/sub", roots).refusal == Refusal::none);
+  for (const std::string &arg : std::vector<std::string>{
+           "--trace-startup=toplevel", "--trace-startup-file=" + own + "/trace.json", "--trace-startup-duration=4", "--trace-startup-format=json",
+           "--load-extension=" + own + "/ext", "--disable-features=DisableLoadExtensionCommandLineSwitch", "--log-file=" + home + "/ok/dangling-elsewhere.log",
+           "--proxy-server=http://127.0.0.1:9", "--enable-features=WebContentsDiscard,BrowserInitiatedAutomaticPictureInPicture",
+           "--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36", "--js-flags=--no-memory-reducer",
+           "--remote-debugging-port=9222", "--remote-allow-origins=*", "https://example.com/a?b=c#d", "--host-resolver-rules=MAP * 127.0.0.1",
+           "--auto-select-tab-capture-source-by-title=Capture Target", "--autoplay-policy=no-user-gesture-required", "--mute-audio",
+           "--enable-logging=stderr", "--apps-gallery-update-url=http://127.0.0.1:8080/webstore/crx", "--" + std::string(NAME_MAX + 1, 'x'),
+           "--disk-cache-dir=" + config + "-other", "--log-file=" + support + ".notes/x",
+       })
+    CHECK(Forward(arg, "/", roots).refusal == Refusal::none);
+  CHECK(Forward("--log-file=" + config + "/x", "/", roots).argument == "--log-file=" + config + "/x");
+  CHECK(PathCandidates("--a=/x,/y z").size() == 9);
+  for (std::string_view candidate : {"--a=/x", "--a=/x,/y", "--a=/x,/y z", "/x", "/x,/y", "/x,/y z", "/y", "/y z", "z"}) {
+    const auto all = PathCandidates("--a=/x,/y z");
+    CHECK(std::find(all.begin(), all.end(), candidate) != all.end());
+  }
+  CHECK(PathCandidates("").empty());
+  CHECK(PathCandidates(",,==").empty());
+#if __APPLE__
+  const auto shouted = [&](const std::string &folder) {
+    std::string spelled = folder.substr(home.size());
+    for (char &c : spelled) c = (char)std::toupper((unsigned char)c);
+    return home + spelled;
+  };
+  CHECK(Forward("--log-file=" + shouted(support) + "/x", "/", roots).refusal == Refusal::protectedPath);
+  CHECK(Forward("--log-file=" + shouted(config) + "/x", "/", roots).refusal == Refusal::protectedPath);
+#endif
+
+  std::string features = "--enable-features=";
+  for (int i = 0; i < 80; i++) features += "Feature" + std::to_string(i) + (i % 3 ? ":param/value," : ",");
+  const auto started = std::chrono::steady_clock::now();
+  CHECK(Forward(features, "/", roots).refusal == Refusal::none);
+  const auto took = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - started).count();
+  CHECK(took < 100);
+  std::printf("chromium-switches: an 80-entry feature list checked in %lld ms\n", (long long)took);
+
+  std::string clear = "rm -rf '" + scratch + "'";
+  if (std::system(clear.c_str()) != 0) std::printf("couldn't clear %s\n", scratch.c_str());
 
   if (failures) {
     std::printf("%d failure(s)\n", failures);

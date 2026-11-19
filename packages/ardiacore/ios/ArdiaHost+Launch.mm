@@ -170,11 +170,16 @@ static std::string FeatureEntryName(const std::string &entry) {
 
 static constexpr std::string_view kEngineSwitchPrefix = "ardia-";
 
-static std::optional<std::string> ForwardedCallerArgument(const char *raw) {
-  const nilla_switches::Forwarding forwarding = nilla_switches::ForwardedArgument(raw, kEngineSwitchPrefix);
+static std::optional<std::string> ForwardedCallerArgument(const char *raw, const std::string &workingDirectory,
+                                                          const std::vector<std::string> &protectedRoots) {
+  const nilla_switches::Forwarding forwarding =
+      nilla_switches::ForwardedArgument(raw, kEngineSwitchPrefix, workingDirectory, protectedRoots);
   if (forwarding.refusal == nilla_switches::Refusal::userDataDir)
     fprintf(stderr, "[ardiacore] ignoring %s: Chromium always gets the data dir Nilla checked, %s\n", forwarding.argument.c_str(),
             gDataDirectory.fileSystemRepresentation);
+  if (forwarding.refusal == nilla_switches::Refusal::protectedPath)
+    fprintf(stderr, "[ardiacore] ignoring %s: %s leads into an installed Ardia's folders, or where it leads can't be told\n",
+            forwarding.argument.c_str(), forwarding.path.c_str());
   if (forwarding.refusal != nilla_switches::Refusal::none) return std::nullopt;
   return forwarding.argument;
 }
@@ -524,6 +529,13 @@ void StartEarlyWindow() {
                           !strncmp(sw, "--auto-accept-camera-and-microphone-capture", 43));
   };
   for (NSString *sw in config.engineSwitches) extra.push_back(sw.UTF8String);
+  const std::optional<std::vector<std::string>> protectedRoots = nilla_upstream::HomeProtectedRoots();
+  if (!protectedRoots) {
+    fprintf(stderr, "[ardiacore] where an installed Ardia's folders lead can't be told, so Nilla won't start Chromium\n");
+    return 1;
+  }
+  char cwd[PATH_MAX];
+  const std::string workingDirectory = getcwd(cwd, sizeof cwd) ? cwd : "";
   if (NSNumber *port = config.remoteDebuggingPort; port && mockKeychain) {
     extra.push_back(std::string("--remote-debugging-port=") + port.stringValue.UTF8String);
     extra.push_back("--remote-allow-origins=*");
@@ -534,7 +546,7 @@ void StartEarlyWindow() {
       NSString *sw = [item stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
       if (!sw.length) continue;
       std::string full = std::string("--") + sw.UTF8String;
-      std::optional<std::string> forwarded = ForwardedCallerArgument(full.c_str());
+      std::optional<std::string> forwarded = ForwardedCallerArgument(full.c_str(), workingDirectory, *protectedRoots);
       if (forwarded && !autoAccepts(forwarded->c_str())) extra.push_back(*forwarded);
     }
   }
@@ -547,7 +559,7 @@ void StartEarlyWindow() {
       i++;
       continue;
     }
-    std::optional<std::string> forwarded = ForwardedCallerArgument(arg);
+    std::optional<std::string> forwarded = ForwardedCallerArgument(arg, workingDirectory, *protectedRoots);
     if (forwarded && !autoAccepts(forwarded->c_str())) extra.push_back(*forwarded);
   }
   std::vector<const char *> args = {argc > 0 && argv[0] ? argv[0] : "Nilla"};

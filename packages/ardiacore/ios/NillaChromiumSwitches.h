@@ -1,5 +1,8 @@
 #pragma once
 
+#include "NillaUpstreamFolders.h"
+
+#include <algorithm>
 #include <cctype>
 #include <optional>
 #include <string>
@@ -93,17 +96,44 @@ inline bool IsReserved(std::string_view arg, std::string_view enginePrefix, Synt
   return !name.empty() && (NamesUserDataDir(arg, syntax) || (!enginePrefix.empty() && StartsIgnoringCase(name, enginePrefix)));
 }
 
-enum class Refusal { none, userDataDir, engineSwitch };
+inline constexpr std::string_view kPathBoundaries = "=,;:\"'\t\v\f \n\r";
+inline constexpr std::string_view kPathListSeparators[] = {",", ";", ":", "\"'", "\t\v\f \n\r"};
+
+inline bool IsPathBoundary(char c) { return kPathBoundaries.find(c) != std::string_view::npos; }
+
+inline std::vector<std::string_view> PathCandidates(std::string_view arg) {
+  std::vector<std::string_view> candidates;
+  for (size_t start = 0; start < arg.size(); start++) {
+    if (IsPathBoundary(arg[start]) || (start > 0 && !IsPathBoundary(arg[start - 1]))) continue;
+    std::vector<size_t> ends = {arg.size()};
+    for (std::string_view separators : kPathListSeparators) ends.push_back(std::min(arg.find_first_of(separators, start), arg.size()));
+    std::sort(ends.begin(), ends.end());
+    ends.erase(std::unique(ends.begin(), ends.end()), ends.end());
+    for (size_t end : ends) candidates.push_back(arg.substr(start, end - start));
+  }
+  return candidates;
+}
+
+enum class Refusal { none, userDataDir, engineSwitch, protectedPath };
 
 struct Forwarding {
   std::string argument;
   Refusal refusal;
+  std::string path;
 };
 
-inline Forwarding ForwardedArgument(std::string_view raw, std::string_view enginePrefix, Syntax syntax = kNativeSyntax) {
-  Forwarding forwarding{std::string(Trimmed(raw, syntax)), Refusal::none};
+inline Forwarding ForwardedArgument(std::string_view raw, std::string_view enginePrefix, const std::string &workingDirectory,
+                                    const std::vector<std::string> &protectedRoots, Syntax syntax = kNativeSyntax) {
+  Forwarding forwarding{std::string(Trimmed(raw, syntax)), Refusal::none, {}};
   if (NamesUserDataDir(forwarding.argument, syntax)) forwarding.refusal = Refusal::userDataDir;
   else if (IsReserved(forwarding.argument, enginePrefix, syntax)) forwarding.refusal = Refusal::engineSwitch;
+  else
+    for (std::string_view candidate : PathCandidates(forwarding.argument))
+      if (nilla_upstream::ReachesProtected(std::string(candidate), workingDirectory, protectedRoots)) {
+        forwarding.refusal = Refusal::protectedPath;
+        forwarding.path = std::string(candidate);
+        break;
+      }
   return forwarding;
 }
 
