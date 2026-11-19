@@ -46,6 +46,9 @@ class Places:
         return self.folder / "themes"
 
     def theme(self, name: str) -> Path:
+        return owned(self.theme_shown(name), "the theme")
+
+    def theme_shown(self, name: str) -> Path:
         check_theme_name(name)
         return self.themes / f"{name}.json"
 
@@ -311,7 +314,15 @@ def theme_names(where: Places) -> list[str]:
     except (FileNotFoundError, NotADirectoryError):
         return []
     names = [e[:-5] for e in entries if e.endswith(".json") and is_theme_name(e[:-5])]
-    return sorted(n for n in names if (where.themes / f"{n}.json").is_file())
+    return sorted(n for n in names if is_own_file(where.themes / f"{n}.json"))
+
+
+def is_own_file(path: Path) -> bool:
+    try:
+        owned(path, "the theme")
+    except endpoint.UpstreamFolder:
+        return False
+    return path.is_file()
 
 
 SHORTCUT_MODIFIERS = {

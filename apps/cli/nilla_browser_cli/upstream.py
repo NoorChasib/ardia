@@ -1,3 +1,4 @@
+import errno
 import os
 import sys
 import unicodedata
@@ -29,12 +30,24 @@ def folders() -> list[Path]:
     ]
 
 
-def _comparable(path) -> str:
+def resolved(path) -> str:
     text = os.path.expanduser(os.fspath(path))
     if "\0" in text:
         raise ValueError("the path holds a NUL byte")
-    resolved = os.path.realpath(os.path.join(os.getcwd(), text))
-    return unicodedata.normalize("NFC", resolved).casefold() if sys.platform == "darwin" else resolved
+    real = os.path.realpath(os.path.join(os.getcwd(), text))
+    probe = real
+    while True:
+        if os.path.islink(probe):
+            raise OSError(errno.ELOOP, f"the link {probe} doesn't lead to a real path")
+        parent = os.path.dirname(probe)
+        if parent == probe:
+            return real
+        probe = parent
+
+
+def _comparable(path) -> str:
+    real = resolved(path)
+    return unicodedata.normalize("NFC", real).casefold() if sys.platform == "darwin" else real
 
 
 def containing_folder(path) -> Path | None:

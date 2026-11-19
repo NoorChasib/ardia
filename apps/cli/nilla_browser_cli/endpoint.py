@@ -16,11 +16,8 @@ NOT_REACHABLE = (
 )
 CONTROL_FILE = "ArdiaControl.json"
 LINUX = sys.platform.startswith("linux")
-DATA_DIR_HELP = (
-    "the Nilla data dir (default: $ARDIA_CONFIG_HOME/ardia, else $ARDIA_DATA_DIR)"
-    if LINUX
-    else "the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)"
-)
+DATA_DIR_DEFAULT = "$ARDIA_CONFIG_HOME/ardia, else $ARDIA_DATA_DIR" if LINUX else "$ARDIA_DATA_DIR, else the installed app's"
+DATA_DIR_HELP = f"the Nilla data dir (default: {DATA_DIR_DEFAULT})"
 DATA_DIR_CHOICE = "--data-dir, or $ARDIA_DATA_DIR without $ARDIA_CONFIG_HOME" if LINUX else "--data-dir or $ARDIA_DATA_DIR"
 ID_PREFIX = "com.nilladigital"
 BUNDLE_ID = f"{ID_PREFIX}.nilla"
@@ -63,6 +60,10 @@ class UpstreamFolder(DataDirUnset):
     pass
 
 
+class CliHomeUnset(DataDirUnset):
+    pass
+
+
 def own_folder(path: Path, what: str) -> Path:
     try:
         folder = upstream.containing_folder(path)
@@ -71,6 +72,14 @@ def own_folder(path: Path, what: str) -> Path:
     if folder is not None:
         raise UpstreamFolder(upstream.refusal(what, path, folder))
     return path
+
+
+def real_folder(path: Path, what: str) -> Path:
+    own_folder(path, what)
+    try:
+        return Path(upstream.resolved(path))
+    except (OSError, ValueError) as error:
+        raise UpstreamFolder(f"{what} {path} can't be resolved ({getattr(error, 'strerror', None) or error}), so nilla-browser won't use it") from None
 
 
 def known_data_dir(path: Path) -> Path:

@@ -118,9 +118,9 @@ def target(data_dir: str | None, test_endpoint: bool, env) -> Target | None:
     url = logs_url(env)
     if url is None:
         return None
-    from nilla_browser_cli.endpoint import data_root
+    from nilla_browser_cli.endpoint import data_root, real_folder
 
-    root = Path(os.path.abspath(data_root(data_dir)))
+    root = real_folder(data_root(data_dir), "the data dir")
     return Target(root, url, environment_for(root))
 
 

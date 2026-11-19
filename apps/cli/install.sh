@@ -21,7 +21,8 @@
 # It refuses a CLI home or bin dir that resolves (through links, on macOS in any letter case) into an installed
 # Ardia's folders, and a path it can't resolve. It marks the CLI home with a .nilla-cli file and refuses a CLI home
 # that holds an install without one, so it never replaces, prunes or removes another install's versions; the mark
-# never makes an Ardia folder its own.
+# never makes an Ardia folder its own. It refuses a .lock or .nilla-cli that is a link, and links nilla-browser only to a
+# launcher that resolves inside the CLI home and outside Ardia's folders.
 # Re-running it upgrades: a version that is already current is left alone; a new one is verified, staged in
 # <version>.partial, renamed, and `current` is swapped atomically (a running nilla-browser keeps its old dir). It keeps the
 # current and the previous version and prunes the rest, except versions a running nilla-browser uses (it leaves a lease in
@@ -120,47 +121,85 @@ upstream_folders() {
     "$HOME/Library/Logs/Ardia"
 }
 
+fold_case() {
+  if [ "$os" = macos ]; then
+    printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
+  else
+    printf '%s' "$1"
+  fi
+}
+
 real_path() {
-  path=$1
-  while [ "$path" != / ] && [ "${path%/}" != "$path" ]; do
-    path=${path%/}
-  done
-  case $path in
+  case $1 in
     /*) ;;
     *) return 1 ;;
   esac
-  case $path/ in
-    */./*|*/../*|*//*) [ "$path" = / ] || return 1 ;;
-  esac
+  base=/
   rest=
-  while ! [ -d "$path" ]; do
-    if [ -e "$path" ] || [ -L "$path" ]; then
-      return 1
+  set -f
+  saved_ifs=$IFS
+  IFS=/
+  set -- $1
+  IFS=$saved_ifs
+  set +f
+  for part do
+    case $part in
+      ''|.) continue ;;
+    esac
+    if [ -n "$rest" ]; then
+      [ "$part" != .. ] || return 1
+      rest=$rest/$part
+      continue
     fi
-    rest=/${path##*/}$rest
-    path=${path%/*}
-    [ -n "$path" ] || path=/
+    next=${base%/}/$part
+    if [ -d "$next" ]; then
+      base=$(cd -P -- "$next" 2>/dev/null && pwd -P) || return 1
+    elif [ -e "$next" ] || [ -L "$next" ]; then
+      return 1
+    else
+      rest=/$part
+    fi
   done
-  base=$(cd -P -- "$path" 2>/dev/null && pwd -P) || return 1
-  [ "$base" = / ] && base=
-  real=$base$rest
-  if [ "$os" = macos ]; then
-    real=$(printf '%s' "$real" | tr '[:upper:]' '[:lower:]')
-  fi
-  printf '%s\n' "${real:-/}"
+  real=${base%/}$rest
+  fold_case "${real:-/}"
+  printf '\n'
 }
 
-refuse_upstream() {
-  target=$(real_path "$2") || fail "$1 $2 can't be resolved to a real folder (use an absolute path with no . or .. parts and no dangling links)"
+real_file() {
+  file=$1
+  hops=0
+  while [ -L "$file" ]; do
+    hops=$((hops + 1))
+    [ "$hops" -le 40 ] || return 1
+    hop=$(readlink "$file") || return 1
+    case $hop in
+      /*) file=$hop ;;
+      *) file=${file%/*}/$hop ;;
+    esac
+  done
+  [ -f "$file" ] || return 1
+  case ${file##*/} in
+    .|..) return 1 ;;
+  esac
+  folder=$(real_path "${file%/*}/") || return 1
+  printf '%s/%s\n' "${folder%/}" "$(fold_case "${file##*/}")"
+}
+
+refuse_upstream_real() {
   while IFS= read -r folder; do
     [ -n "$folder" ] || continue
-    root=$(real_path "$folder") || root=$folder
-    case $target/ in
-      "$root"/*) fail "$1 $2 is inside $folder, an installed Ardia's folder; nilla-browser never installs into Ardia's folders" ;;
+    root=$(real_path "$folder") || fail "$folder, an installed Ardia's folder, can't be resolved, so nilla-browser can't tell whether $2 is inside it"
+    case $3/ in
+      "${root%/}"/*) fail "$1 $2 is inside $folder, an installed Ardia's folder; nilla-browser never installs into Ardia's folders" ;;
     esac
   done <<EOF
 $(upstream_folders)
 EOF
+}
+
+refuse_upstream() {
+  target=$(real_path "$2") || fail "$1 $2 can't be resolved to a real folder (use an absolute path with no .. after a missing folder, and no files or dangling links in it)"
+  refuse_upstream_real "$1" "$2" "$target"
 }
 
 refuse_upstream "the CLI home" "$cli_home"
@@ -195,7 +234,16 @@ else
   default_shell=/bin/zsh
 fi
 
+refuse_linked_own_files() {
+  for own in .lock .nilla-cli; do
+    if [ -L "$cli_home/$own" ] || { [ -e "$cli_home/$own" ] && ! [ -f "$cli_home/$own" ]; }; then
+      fail "$cli_home/$own isn't a plain file; nilla-browser never follows a link out of its CLI home"
+    fi
+  done
+}
+
 take_lock() {
+  refuse_linked_own_files
   exec 9>>"$cli_home/.lock" || fail "couldn't open $cli_home/.lock"
   lock_fd9 || fail "another install is still running"
 }
@@ -216,7 +264,19 @@ check_bin_free() {
   fi
 }
 
+check_launcher() {
+  launcher=$cli_home/current/bin/ardia
+  launcher_real=$(real_file "$launcher") || fail "$launcher can't be resolved to a real file"
+  home_real=$(real_path "$cli_home") || fail "the CLI home $cli_home can't be resolved to a real folder"
+  case $launcher_real in
+    "${home_real%/}"/*) ;;
+    *) fail "$launcher leads outside $cli_home; nilla-browser links only a launcher this installer put there" ;;
+  esac
+  refuse_upstream_real "the launcher" "$launcher" "$launcher_real"
+}
+
 link_bin() {
+  check_launcher
   target=$cli_home/current/bin/ardia
   [ -L "$command_link" ] && [ "$(readlink "$command_link")" = "$target" ] && return 0
   printf 'step link\n'
@@ -239,6 +299,7 @@ lease_live() {
 }
 
 in_use() {
+  [ -L "$1" ] && return 1
   for lease in "$1"/.leases/*; do
     [ -f "$lease" ] || continue
     lease_live "$lease" && return 0
@@ -361,12 +422,12 @@ check_bin_free
 mkdir -p "$cli_home" || fail "couldn't create $cli_home"
 take_lock
 refuse_cli_home_of_another_install
-: > "$cli_home/.nilla-cli" || fail "couldn't mark $cli_home as nilla-browser's"
+[ -f "$cli_home/.nilla-cli" ] || (set -C; : > "$cli_home/.nilla-cli") 2>/dev/null || fail "couldn't mark $cli_home as nilla-browser's"
 work=$(mktemp -d "${TMPDIR:-/tmp}/nilla-cli-install.XXXXXX") || fail "couldn't create a temporary folder"
 chmod 700 "$work"
 
 previous=$(readlink "$cli_home/current" 2>/dev/null || true)
-if [ "$previous" = "$version" ] && [ -x "$cli_home/$version/bin/ardia" ]; then
+if [ "$previous" = "$version" ] && [ -d "$cli_home/$version" ] && ! [ -L "$cli_home/$version" ] && [ -x "$cli_home/$version/bin/ardia" ]; then
   link_bin
   reported=1
   printf 'installed %s\n' "$command_link"

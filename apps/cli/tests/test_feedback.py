@@ -382,7 +382,7 @@ class SendingTest(FeedbackCase):
                 self.assertEqual(status, 1)
                 self.assertNotIn("Sent", out)
                 self.assertIn(f"HTTP {status_code}: {step} refused", out)
-                self.assertIn("kept on this Mac", out)
+                self.assertIn("kept on this computer", out)
                 self.assertEqual(self.kept()[-1]["description"], f"{step} {status_code}")
         self.service.statuses = {"create": 201, "upload": 200, "complete": 200}
         status, out, _ = self.send("--title", "t", "--attach", str(attachment), "complete 500")
@@ -393,7 +393,7 @@ class SendingTest(FeedbackCase):
         with mock.patch.dict(os.environ, {feedback.TEST_URL_ENV: closed_port_url()}):
             status, out, _ = self.send("--title", "t", "offline now")
         self.assertEqual(status, 1)
-        self.assertRegex(out, r"^Not sent: the network failed \(.+\)\. It's kept on this Mac: .+feedback\.jsonl\n$")
+        self.assertRegex(out, r"^Not sent: the network failed \(.+\)\. It's kept on this computer: .+feedback\.jsonl\n$")
         entry = self.kept()[0]
         self.assertEqual(entry["description"], "offline now")
         self.assertIn("the network failed", entry["reason"])

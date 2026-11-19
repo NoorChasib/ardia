@@ -12,7 +12,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from nilla_browser_cli import cli, computer, config_files, endpoint, hooks, upstream, usage
+from nilla_browser_cli import cli, computer, config_files, endpoint, feedback, hooks, skills, telemetry, upstream, usage
 from test_linux import INSTALL_SH, ON_LINUX, InstallScript
 
 PLANTED = '{"settings": {"planted": true}}\n'
@@ -149,6 +149,48 @@ class ConfigTargets(Guarded):
             self.assertIsNone(upstream.containing_folder(support / "Nilla"))
         self.assertIsNone(upstream.containing_folder(support / "ARDIA"), "case-sensitive outside macOS")
 
+    def test_a_theme_linked_upstream_is_never_activated_or_listed(self):
+        data = self.temp / "data"
+        (data / "config" / "themes").mkdir(parents=True)
+        (data / "config" / "config.json").write_text("{}\n")
+        (data / "config" / "themes" / "probe.json").symlink_to(self.upstream_config / "config" / "themes" / "dusk.json")
+        before = (data / "config" / "config.json").read_bytes()
+        self.refused("theme", "use", "probe", "--data-dir", str(data))
+        self.assertEqual((data / "config" / "config.json").read_bytes(), before)
+        status, out, err = self.run_cli("theme", "list", "--json", "--data-dir", str(data))
+        self.assertEqual(status, 0, err)
+        self.assertEqual(json.loads(out)["themes"], [])
+        self.assert_untouched()
+
+    def test_a_link_loop_is_refused_and_a_new_folder_is_not(self):
+        loop = self.temp / "loop"
+        loop.symlink_to(loop)
+        self.refused("config", "path", env={"ARDIA_DATA_DIR": str(loop)})
+        self.refused("config", "path", env={"ARDIA_DATA_DIR": str(loop / "inside")})
+        fresh = self.temp / "fresh" / "data"
+        with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": str(fresh)}):
+            status, out, err = self.run_cli("config", "path")
+        self.assertEqual(status, 0, err)
+        self.assertEqual(out.strip(), str(fresh / "config"))
+
+    def test_feedback_and_telemetry_use_the_path_the_guard_resolved(self):
+        safe = self.temp / "safe"
+        (safe / "deep").mkdir(parents=True)
+        (self.upstream_config / "x").mkdir()
+        (self.upstream_config / "x" / telemetry.CONSENT_FILE).write_text('{"installId": "planted"}\n')
+        (self.upstream_config / "link").symlink_to(safe / "deep")
+        self.before = snapshot(self.upstream_config)
+        spelled = f"{self.upstream_config}/link/../x"
+        self.assertEqual(endpoint.real_folder(endpoint.data_root(spelled), "the data dir"), safe / "x")
+        read = []
+        args = mock.Mock(data_dir=spelled, text="hello", title="probe", attach=[], kind="bug", about=None)
+        with mock.patch.object(telemetry, "is_dev_build", return_value=False), mock.patch.object(telemetry, "read_consent", side_effect=lambda root: read.append(root)), contextlib.redirect_stdout(io.StringIO()):
+            feedback.run(args, env={"ARDIA_TELEMETRY": "off"})
+        self.assertEqual(read, [safe / "x"])
+        with mock.patch.object(telemetry, "logs_url", return_value="https://example.invalid"):
+            self.assertEqual(telemetry.target(spelled, False, {}).root, safe / "x")
+        self.assert_untouched()
+
     def test_nillas_own_folders_still_work(self):
         with mock.patch.object(endpoint, "LINUX", False):
             status, out, err = self.run_cli("config", "set", "tabLayout", "top")
@@ -207,6 +249,21 @@ class CliHomes(Guarded):
                 paths.owned_launcher()
             self.assertIsNone(computer.trusted_launcher({"ARDIA_CLI_HOME": str(own)}))
 
+    def test_linux_has_no_default_cli_home_and_records_nothing_without_one(self):
+        with mock.patch.object(endpoint, "LINUX", True), mock.patch.object(telemetry, "is_dev_build", return_value=False):
+            with self.assertRaises(endpoint.CliHomeUnset):
+                usage.cli_home({})
+            self.assertIsNone(usage.recording_home({}))
+            self.assertIsNone(skills.record_path())
+            self.assertEqual(skills.recorded_folders(), [])
+            skills.save_record([self.temp / "agents"])
+            with mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.UNSET_DATA_DIR):
+                status, out, err = self.run_cli("history", "--json")
+        self.assertEqual(status, 2, (out, err))
+        self.assertIn("ARDIA_CONFIG_HOME", err)
+        self.assertFalse((self.home / "Library").exists())
+        self.assert_untouched()
+
     def test_a_marked_cli_home_of_nillas_own_is_used(self):
         own = self.plant(self.temp / "nilla-cli", True, True)
         self.assertEqual(usage.cli_home({"ARDIA_CLI_HOME": str(own)}), own)
@@ -247,11 +304,67 @@ class InstallScriptRefusesUpstream(unittest.TestCase):
         (self.temp / "parent").symlink_to(self.home / ".config")
         self.refused({"ARDIA_CLI_HOME": str(alias / "cli")}, "never installs into")
         self.refused({"ARDIA_CLI_HOME": str(self.temp / "parent" / "ardia" / "cli")}, "never installs into")
-        for value in ("relative/cli", f"{self.temp}/x/../cli", f"{self.temp}/./cli", str(self.temp / "dangling" / "cli")):
+        for value in ("relative/cli", f"{self.temp}/x/../cli", f"{self.temp}/x/./../cli", str(self.temp / "dangling" / "cli")):
             with self.subTest(value=value):
                 if value.endswith("dangling/cli"):
                     (self.temp / "dangling").symlink_to(self.temp / "nowhere")
                 self.refused({"ARDIA_CLI_HOME": value}, "can't be resolved")
+
+    def test_equivalent_spellings_of_a_protected_xdg_root_are_refused(self):
+        self.login_shell("zsh")
+        xdg = self.home / "xdg"
+        (xdg / "sub").mkdir(parents=True)
+        for spelling in (str(xdg), f"{xdg}/", f"{xdg}/.", f"{self.home}//xdg", f"{xdg}/sub/..", f"{xdg}/./"):
+            with self.subTest(spelling=spelling):
+                self.refused({"ARDIA_CLI_HOME": str(xdg / "ardia" / "cli"), "XDG_DATA_HOME": spelling}, "never installs into")
+                self.assertFalse((xdg / "ardia").exists())
+
+    def test_a_linked_mark_or_lock_is_never_followed(self):
+        self.login_shell("zsh")
+        protected = self.home / ".local" / "share" / "ardia"
+        protected.mkdir(parents=True)
+        (protected / "sentinel").write_text("sentinel\n")
+        for own in (".nilla-cli", ".lock"):
+            with self.subTest(own=own):
+                home = self.temp / f"cli{own}"
+                home.mkdir()
+                (home / own).symlink_to(protected / ("sentinel" if own == ".nilla-cli" else "lock"))
+                self.refused({"ARDIA_CLI_HOME": str(home)}, "isn't a plain file")
+        self.assertEqual((protected / "sentinel").read_text(), "sentinel\n")
+        self.assertFalse(os.path.lexists(protected / "lock"))
+
+    def plant_upstream_version(self):
+        version = self.home / ".local" / "share" / "ardia" / "cli" / "0.0.1"
+        (version / "bin").mkdir(parents=True)
+        (version / "bin" / "ardia").write_text("#!/bin/sh\necho upstream\n")
+        (version / "bin" / "ardia").chmod(0o755)
+        return version
+
+    def test_a_same_version_linked_upstream_is_reinstalled_not_linked(self):
+        self.login_shell("zsh")
+        version = self.plant_upstream_version()
+        before = snapshot(version.parent)
+        self.cli_home.mkdir(parents=True)
+        (self.cli_home / upstream.CLI_HOME_MARK).write_text("")
+        (self.cli_home / "0.0.1").symlink_to(version)
+        (self.cli_home / "current").symlink_to("0.0.1")
+        status, lines, err = self.install("0.0.1")
+        self.assertEqual(status, 0, (lines, err))
+        self.assertFalse((self.cli_home / "0.0.1").is_symlink())
+        self.assertTrue(self.bin.resolve().is_relative_to(self.cli_home.resolve()))
+        self.assertEqual(snapshot(version.parent), before)
+
+    def test_a_launcher_linked_upstream_is_never_linked(self):
+        self.login_shell("zsh")
+        version = self.plant_upstream_version()
+        (self.cli_home / "0.0.1" / "bin").mkdir(parents=True)
+        (self.cli_home / upstream.CLI_HOME_MARK).write_text("")
+        (self.cli_home / "0.0.1" / "bin" / "ardia").symlink_to(version / "bin" / "ardia")
+        (self.cli_home / "current").symlink_to("0.0.1")
+        status, lines, err = self.install("0.0.1")
+        self.assertEqual(status, 1, (lines, err))
+        self.assertIn("leads outside", lines[-1])
+        self.assertFalse(os.path.lexists(self.bin))
 
     def test_a_bin_dir_upstream_is_refused(self):
         self.login_shell("zsh")
@@ -265,6 +378,17 @@ class InstallScriptRefusesUpstream(unittest.TestCase):
             listed = subprocess.run(["/bin/sh", "-c", ". /dev/stdin; upstream_folders", "sh"], input="xdg_or()" + text.split("xdg_or()", 1)[1].split("refuse_upstream()")[0], capture_output=True, text=True, env=dict(os.environ, os="linux"))
             self.assertEqual(listed.returncode, 0, listed.stderr)
             self.assertEqual(sorted(set(listed.stdout.splitlines())), sorted({str(folder) for folder in upstream.folders()}))
+
+
+class DataDirHelp(unittest.TestCase):
+    def test_every_data_dir_help_names_the_platforms_lookup_order(self):
+        top = cli.build_parser().format_help()
+        expected = "$ARDIA_CONFIG_HOME/ardia, else $ARDIA_DATA_DIR" if endpoint.LINUX else "$ARDIA_DATA_DIR, else the installed app's"
+        self.assertIn(f"--data-dir DIR  the Nilla data dir ({expected})", top)
+        status = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "scripts", "install", "--help"], capture_output=True, text=True, cwd=Path(__file__).resolve().parents[1], env=dict(os.environ, COLUMNS="200"), timeout=60)
+        self.assertEqual(status.returncode, 0, status.stderr)
+        self.assertIn(f"(default: {expected})", status.stdout)
+        self.assertNotIn("$ARDIA_DATA_DIR, else the installed app's" if endpoint.LINUX else "$ARDIA_CONFIG_HOME/ardia, else", status.stdout)
 
 
 if __name__ == "__main__":

@@ -12,9 +12,20 @@ MAX_RECENT = 5
 NOT_RECORDED = frozenset({"feedback", "star", "none"})
 
 
-def cli_home(env=None) -> Path:
+CLI_HOME_UNSET = (
+    "set ARDIA_CLI_HOME to the folder install.sh put nilla-browser in: on Linux this development build never guesses, "
+    "so it never writes into an installed Ardia's ~/.local/share/ardia/cli"
+)
+
+
+def cli_home(env=None, linux: bool | None = None) -> Path:
+    from nilla_browser_cli import endpoint
+
     env = os.environ if env is None else env
-    return owned_cli_home(Path(env.get("ARDIA_CLI_HOME") or Path.home() / "Library" / "Application Support" / "Nilla" / "CLI").expanduser())
+    chosen = env.get("ARDIA_CLI_HOME")
+    if not chosen and (endpoint.LINUX if linux is None else linux):
+        raise endpoint.CliHomeUnset(CLI_HOME_UNSET)
+    return owned_cli_home(Path(chosen or Path.home() / "Library" / "Application Support" / "Nilla" / "CLI").expanduser())
 
 
 def owned_cli_home(home: Path) -> Path:
@@ -33,7 +44,7 @@ def recording_home(env) -> Path | None:
         return None
     try:
         return cli_home(env)
-    except endpoint.UpstreamFolder:
+    except endpoint.DataDirUnset:
         return None
 
 

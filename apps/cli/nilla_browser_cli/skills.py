@@ -257,15 +257,21 @@ def companion_line(folder: Path) -> tuple[str, int]:
         return f"error {folder}: {error}", 1
 
 
-def record_path() -> Path:
-    from nilla_browser_cli import usage
+def record_path() -> Path | None:
+    from nilla_browser_cli import endpoint, usage
 
-    return usage.cli_home() / "skills.json"
+    try:
+        return usage.cli_home() / "skills.json"
+    except endpoint.CliHomeUnset:
+        return None
 
 
 def recorded_folders() -> list[Path]:
+    path = record_path()
+    if path is None:
+        return []
     try:
-        folders = json.loads(record_path().read_text(encoding="utf-8")).get("folders", [])
+        folders = json.loads(path.read_text(encoding="utf-8")).get("folders", [])
     except (OSError, ValueError, AttributeError):
         return []
     return [Path(folder) for folder in folders if isinstance(folder, str) and os.path.isabs(folder)]
@@ -273,6 +279,8 @@ def recorded_folders() -> list[Path]:
 
 def save_record(folders: list[Path]) -> None:
     path = record_path()
+    if path is None:
+        return
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         staging = path.with_name(f".skills.{os.getpid()}.json")

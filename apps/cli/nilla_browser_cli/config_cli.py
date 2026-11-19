@@ -945,7 +945,7 @@ def theme_list(args, where: Places) -> int:
     for name in names:
         say(f"{'*' if name == active else ' '} {name}")
     if missing:
-        say(f"* {active} (missing: no {where.show(where.theme(active))})")
+        say(f"* {active} (missing: no {where.show(where.theme_shown(active))})")
     if not names and not missing:
         complain(f"nilla-browser theme: no themes in {where.themes} yet (nilla-browser theme new NAME makes one)")
     return 0
@@ -959,12 +959,12 @@ def theme_check(args, where: Places) -> int:
             raise ConfigError("config.json names no theme; give a NAME or FILE")
     if files.is_theme_name(target):
         path = where.theme(target)
-        if not path.exists() and not Path(target).is_file():
+        if not path.exists() and not files.owned(Path(target), "the theme").is_file():
             raise ConfigError(f"no theme named {target}{did_you_mean(target, files.theme_names(where))}")
         if not path.exists():
             path = Path(target)
     else:
-        path = Path(target).expanduser()
+        path = files.owned(Path(target).expanduser(), "the theme")
         if not path.exists():
             raise ConfigError(f"{path} doesn't exist")
     schema = files.find_schema(where, files.THEME_SCHEMA)

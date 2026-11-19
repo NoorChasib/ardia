@@ -11,7 +11,7 @@ EPILOG = """\
 Shared options go before the command or after it, for the commands that take them:
   --port N        a plain DevTools server on 127.0.0.1:N (testing; $ARDIA_PORT)
   --ws URL        a browser WebSocket URL ($ARDIA_WS)
-  --data-dir DIR  the Nilla data dir ($ARDIA_DATA_DIR, else the installed app's)
+  --data-dir DIR  the Nilla data dir ({data_dir_default})
   --timeout S     and --json
 A flag wins over its environment variable.
 
@@ -166,7 +166,9 @@ def run_notes(hoisted: list[str], rest: list[str]) -> int:
 def build_parser():
     import argparse
 
-    parser = argparse.ArgumentParser(prog="nilla-browser", description=DESCRIPTION, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    from nilla_browser_cli.endpoint import DATA_DIR_DEFAULT
+
+    parser = argparse.ArgumentParser(prog="nilla-browser", description=DESCRIPTION, epilog=EPILOG.format(data_dir_default=DATA_DIR_DEFAULT), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--version", action="version", version=f"nilla-browser {__version__}")
     parser.add_argument("--skill", action="store_true", help="print the agent skill that ships with this nilla-browser (SKILL.md) and exit; same as nilla-browser skills get")
     commands = parser.add_subparsers(dest="command", metavar="<command>")

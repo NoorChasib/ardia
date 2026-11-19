@@ -1088,11 +1088,11 @@ def agent_paths(linux: bool | None = None) -> AgentPaths:
         cli_home = os.environ.get("ARDIA_CLI_HOME")
         return AgentPaths(
             home,
-            usage.owned_cli_home(Path(os.path.abspath(Path(cli_home).expanduser()))) if cli_home else None,
+            usage.owned_cli_home(endpoint.real_folder(Path(cli_home).expanduser(), "the CLI home")) if cli_home else None,
             True,
             endpoint.config_home(absolute=True),
             endpoint.xdg_dir("XDG_STATE_HOME", ".local", "state", absolute=True),
-            Path(os.path.abspath(endpoint.known_data_dir(endpoint.installed_data_dir(True)).parent)),
+            endpoint.real_folder(endpoint.known_data_dir(endpoint.installed_data_dir(True)), "the data dir").parent,
         )
     return AgentPaths(home, usage.cli_home())
 

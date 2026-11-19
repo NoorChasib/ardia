@@ -106,20 +106,20 @@ def add_parser(commands, formatter):
 
     install = sub.add_parser("install", help="install a script so Nilla runs it", description=INSTALL_DESCRIPTION, formatter_class=formatter)
     install.add_argument("file", metavar="FILE", help="the .ts or .js userscript")
-    install.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
+    install.add_argument("--data-dir", metavar="DIR", help=endpoint.DATA_DIR_HELP)
 
     uninstall = sub.add_parser("uninstall", help="remove an installed script", description="Remove an installed script by its @name or id. Exit status as for install.")
     uninstall.add_argument("name", metavar="NAME", help="the script's @name or id (see nilla-browser scripts list)")
-    uninstall.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
+    uninstall.add_argument("--data-dir", metavar="DIR", help=endpoint.DATA_DIR_HELP)
 
     listing = sub.add_parser("list", help="list the installed scripts", description="List the installed scripts and what Nilla last reported about them.")
     listing.add_argument("--json", action="store_true", help="print JSON")
-    listing.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
+    listing.add_argument("--data-dir", metavar="DIR", help=endpoint.DATA_DIR_HELP)
     return scripts
 
 
 def add_endpoint_arguments(parser):
-    parser.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir to find (default: $ARDIA_DATA_DIR, else the installed app's)")
+    parser.add_argument("--data-dir", metavar="DIR", help=f"the Nilla data dir to find (default: {endpoint.DATA_DIR_DEFAULT})")
     parser.add_argument("--port", type=int, metavar="N", help="a plain DevTools server on 127.0.0.1:N (testing)")
     parser.add_argument("--ws", metavar="URL", help="a browser WebSocket URL")
 

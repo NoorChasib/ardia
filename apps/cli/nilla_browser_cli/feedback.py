@@ -41,11 +41,11 @@ DESCRIPTION = """\
 Report a problem or an idea to Nilla's developer: a confusing error, a missing command, output that cost you extra
 turns, something slow. Give it a short title and say what you ran, what happened and what you expected.
 
-This build has no feedback service set up, so nothing is sent: the report is kept on this Mac and the command prints
+This build has no feedback service set up, so nothing is sent: the report is kept in the CLI home and the command prints
 the GitHub page to open an issue on instead. A build with a feedback service sends it there (even while "Share
 anonymous crash reports and usage stats" is off: sending a report is consent for that report). Before it leaves, secrets are removed by exact pattern (key=value and key: value secrets, auth
 headers, known key formats, JWTs), along with emails, URL logins and queries, card numbers and the name in
-/Users/<name>. At most 20 a day are sent. When it can't be sent, it's kept on this Mac and the reason is printed.
+/Users/<name>. At most 20 a day are sent. When it can't be sent, it's kept in the CLI home and the reason is printed.
 """
 EPILOG = """\
 Examples:
@@ -365,14 +365,14 @@ def keep(home: Path | None, entry: dict, reason: str) -> int:
     from nilla_browser_cli.browse import paths
 
     if home is None:
-        print(f"Not sent: {reason}. It wasn't saved either: a checkout build keeps notes only with ARDIA_CLI_HOME set.")
+        print(f"Not sent: {reason}. It wasn't saved either: without ARDIA_CLI_HOME this build keeps no notes.")
         return 1
     try:
         path = save_locally(home, {**entry, "reason": reason})
     except (OSError, paths.PathError) as error:
-        print(f"Not sent: {reason}. It couldn't be saved on this Mac either ({error}).")
+        print(f"Not sent: {reason}. It couldn't be saved on this computer either ({error}).")
         return 1
-    print(f"Not sent: {reason}. It's kept on this Mac: {path}")
+    print(f"Not sent: {reason}. It's kept on this computer: {path}")
     return 1
 
 
@@ -387,7 +387,7 @@ def release_slot(home: Path, digest: str) -> None:
 
 def run(args, stdin=None, env=None) -> int:
     from nilla_browser_cli import telemetry, usage
-    from nilla_browser_cli.endpoint import data_root
+    from nilla_browser_cli.endpoint import data_root, real_folder
 
     env = os.environ if env is None else env
     text = read_text(args.text, sys.stdin if stdin is None else stdin)
@@ -400,7 +400,7 @@ def run(args, stdin=None, env=None) -> int:
         return 2
     home = usage.recording_home(env)
     chosen = args.data_dir or env.get("ARDIA_DATA_DIR")
-    root = Path(os.path.abspath(data_root(args.data_dir))) if chosen or not telemetry.is_dev_build() else None
+    root = real_folder(data_root(args.data_dir), "the data dir") if chosen or not telemetry.is_dev_build() else None
     doc = telemetry.read_consent(root) if root is not None else None
     install_id, sharing = identity(doc)
     environment = telemetry.environment_for(root) if root is not None else "dev"
