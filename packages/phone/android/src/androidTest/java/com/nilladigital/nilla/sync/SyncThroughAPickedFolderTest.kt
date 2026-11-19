@@ -7,9 +7,11 @@ import com.nilladigital.nilla.sync.core.FileKeyStore
 import com.nilladigital.nilla.sync.core.RecoveryPhrase
 import com.nilladigital.nilla.sync.core.SyncKeys
 import com.nilladigital.nilla.sync.core.SyncVault
+import com.nilladigital.nilla.sync.core.UpstreamSyncFolder
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -21,6 +23,9 @@ class TrustingTreeAccess(resolver: ContentResolver, timeoutMs: Long = ResolverDo
         val documents = ResolverDocumentTree(resolver, android.net.Uri.parse(tree.treeUri), timeoutMs)
         return SyncFolderGrant(DocumentTreeStorage(documents, tree.subfolder, tree.name), tree)
     }
+
+    override fun ancestry(tree: ResolverDocumentTree): List<String>? =
+        if (tree.treeUri.authority == TestDocumentsProvider.AUTHORITY) emptyList() else super.ancestry(tree)
 
     override fun hasAccess(location: SyncFolderLocation): Boolean = true
 
@@ -234,7 +239,7 @@ class SyncThroughAPickedFolderTest {
             assertEquals(SyncPhase.NeedsFolderAccess, strict.phase)
             assertEquals("Choose your sync folder again to keep syncing.", strict.statusText)
             assertTrue(strict.isEnabled)
-            assertEquals(ConnectResult.FolderUnavailable, strict.changeFolder(pick))
+            assertEquals(ConnectResult.FolderRefused(UpstreamSyncFolder.UNPLACED), strict.changeFolder(pick))
             strict.close()
 
             val again = service(drive.sandbox, source, TrustingTreeAccess(resolver))
@@ -250,6 +255,21 @@ class SyncThroughAPickedFolderTest {
             again.stopSyncing()
         } finally {
             mac.close()
+            drive.sandbox.remove()
+        }
+    }
+
+    @Test
+    fun aProviderThatDoesntSayWhichFoldersHoldTheTreeIsNeverGranted() {
+        val drive = Drive(Sandbox())
+        try {
+            val pick = SyncFolderPick.Tree(TestDocumentsProvider.treeUri.toString())
+            assertNull(AndroidSyncFolderAccess(resolver).open(pick))
+            assertEquals(UpstreamSyncFolder.UNPLACED, AndroidSyncFolderAccess(resolver).refusal(pick))
+            assertNull(AndroidSyncFolderAccess(resolver).resolve(SyncFolderLocation.Tree(pick.treeUri, "Nilla Sync", "Nilla Sync")))
+            assertNull(TrustingTreeAccess(resolver).refusal(pick))
+            assertNotNull(TrustingTreeAccess(resolver).open(pick))
+        } finally {
             drive.sandbox.remove()
         }
     }

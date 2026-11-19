@@ -7,6 +7,13 @@ import org.junit.Test
 
 class SyncPayloadsTest {
     @Test
+    fun aRefusedFolderStaysFolderUnavailableAndCarriesItsReason() {
+        val problem = com.nilladigital.nilla.sync.core.UpstreamSyncFolder.UNPLACED
+        assertEquals(mapOf("result" to "folderUnavailable", "problem" to problem), SyncPayloads.connect(com.nilladigital.nilla.sync.ConnectResult.FolderRefused(problem)))
+        assertEquals(mapOf("result" to "folderUnavailable"), SyncPayloads.connect(com.nilladigital.nilla.sync.ConnectResult.FolderUnavailable))
+    }
+
+    @Test
     fun theViewSaysWhichProfileIsShownBeforeAnyIsPickedAndAfter() {
         val demo = SyncController.demo().apply { start() }
         try {

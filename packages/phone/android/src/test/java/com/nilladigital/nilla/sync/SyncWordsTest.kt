@@ -1,6 +1,7 @@
 package com.nilladigital.nilla.sync
 
 import com.nilladigital.nilla.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.core.UpstreamSyncFolder
 import kotlinx.serialization.encodeToString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -127,7 +128,7 @@ class SyncWordsTest {
     @Test
     fun everyConnectFailureHasWordsAndConnectedHasNone() {
         assertNull(ConnectResult.Connected.message)
-        for (result in listOf(ConnectResult.Mismatch, ConnectResult.NoSyncData, ConnectResult.FolderUnavailable, ConnectResult.KeyStoreFailed, ConnectResult.Busy)) {
+        for (result in listOf(ConnectResult.Mismatch, ConnectResult.NoSyncData, ConnectResult.FolderUnavailable, ConnectResult.FolderRefused(UpstreamSyncFolder.UNPLACED), ConnectResult.FolderRefused(UpstreamSyncFolder.REFUSAL), ConnectResult.KeyStoreFailed, ConnectResult.Busy)) {
             assertTrue(result.message!!.isNotBlank())
             assertFalse(result.message!!.contains("\u2014"))
         }

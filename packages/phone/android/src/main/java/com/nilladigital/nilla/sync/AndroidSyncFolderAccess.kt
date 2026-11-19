@@ -11,23 +11,31 @@ open class AndroidSyncFolderAccess(
 ) : LocalFolderAccess() {
     override fun open(pick: SyncFolderPick): SyncFolderGrant? {
         val tree = (pick as? SyncFolderPick.Tree)?.let { tree(it.treeUri) } ?: return super.open(pick)
+        val ancestry = ancestry(tree)
+        if (UpstreamSyncFolder.refusesAncestry(ancestry)) return null
         return try {
-            val root = UpstreamGuardedTree(tree).root()
-            val subfolder = UpstreamGuardedTree.locate(tree)
+            val root = UpstreamGuardedTree(tree, ancestry).root()
+            val subfolder = UpstreamGuardedTree.locate(tree, ancestry)
             val name = subfolder ?: root.name
             val location = SyncFolderLocation.Tree(pick.treeUri, subfolder, name)
-            SyncFolderGrant(UpstreamGuardedTree.storage(tree, subfolder, name), location)
+            SyncFolderGrant(UpstreamGuardedTree.storage(tree, ancestry, subfolder, name), location)
         } catch (error: Exception) {
             null
         }
     }
 
+    override fun refusal(pick: SyncFolderPick): String? {
+        val tree = (pick as? SyncFolderPick.Tree)?.let { tree(it.treeUri) } ?: return super.refusal(pick)
+        return UpstreamSyncFolder.ancestryRefusal(ancestry(tree))
+    }
+
     override fun resolve(location: SyncFolderLocation): SyncFolderGrant? {
         if (location !is SyncFolderLocation.Tree) return super.resolve(location)
         val tree = tree(location.treeUri) ?: return null
-        if (UpstreamSyncFolder.refusesDocument(tree.rootId) || UpstreamSyncFolder.isUpstreamName(location.name) || UpstreamSyncFolder.isUpstreamName(location.subfolder)) return null
+        val ancestry = ancestry(tree)
+        if (UpstreamSyncFolder.refusesAncestry(ancestry) || UpstreamSyncFolder.refusesDocument(tree.rootId) || UpstreamSyncFolder.isUpstreamName(location.name) || UpstreamSyncFolder.isUpstreamName(location.subfolder)) return null
         if (!tree.hasPersistedAccess()) return null
-        return SyncFolderGrant(UpstreamGuardedTree.storage(tree, location.subfolder, location.name), location)
+        return SyncFolderGrant(UpstreamGuardedTree.storage(tree, ancestry, location.subfolder, location.name), location)
     }
 
     override fun hasAccess(location: SyncFolderLocation): Boolean {
@@ -53,6 +61,8 @@ open class AndroidSyncFolderAccess(
         } catch (error: SecurityException) {
         }
     }
+
+    protected open fun ancestry(tree: ResolverDocumentTree): List<String>? = UpstreamSyncFolder.ancestry(tree.treeUri.authority, tree.rootId)
 
     private fun tree(uri: String): ResolverDocumentTree? = try {
         ResolverDocumentTree(resolver, Uri.parse(uri), timeoutMs)

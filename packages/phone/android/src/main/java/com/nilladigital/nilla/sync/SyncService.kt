@@ -169,7 +169,7 @@ class SyncService(
         } catch (failure: RecoveryPhrase.Problem) {
             return ConnectResult.InvalidPhrase(SyncJoin.message(failure))
         }
-        val grant = folders.open(pick) ?: return ConnectResult.FolderUnavailable
+        val grant = folders.open(pick) ?: return folders.refusal(pick)?.let(ConnectResult::FolderRefused) ?: ConnectResult.FolderUnavailable
         when (SyncEngine.check(entropy, grant.storage)) {
             FolderCheck.MATCHES -> Unit
             FolderCheck.MISMATCH -> return ConnectResult.Mismatch
@@ -223,7 +223,7 @@ class SyncService(
         val deviceId = meta.deviceId
         val entropy = deviceId?.let(keyStore::load)
         if (!meta.enabled || meta.outOfSync || deviceId == null || entropy == null) return ConnectResult.KeyStoreFailed
-        val grant = folders.open(pick) ?: return ConnectResult.FolderUnavailable
+        val grant = folders.open(pick) ?: return folders.refusal(pick)?.let(ConnectResult::FolderRefused) ?: ConnectResult.FolderUnavailable
         when (SyncEngine.check(entropy, grant.storage)) {
             FolderCheck.MATCHES -> Unit
             FolderCheck.MISMATCH -> return ConnectResult.Mismatch

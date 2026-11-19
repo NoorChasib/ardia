@@ -3,7 +3,7 @@ package com.nilladigital.nilla.sync
 import com.nilladigital.nilla.sync.core.UpstreamSyncFolder
 import java.io.IOException
 
-class UpstreamGuardedTree(private val inner: DocumentTree) : DocumentTree, CoordinatedStorage {
+class UpstreamGuardedTree(private val inner: DocumentTree, private val ancestry: List<String>?) : DocumentTree, CoordinatedStorage {
     private val coordination = inner as? CoordinatedStorage
 
     override val rootId: String get() = inner.rootId
@@ -61,6 +61,7 @@ class UpstreamGuardedTree(private val inner: DocumentTree) : DocumentTree, Coord
     }
 
     private fun refuseId(id: String) {
+        UpstreamSyncFolder.ancestryRefusal(ancestry)?.let { throw IOException(it) }
         if (UpstreamSyncFolder.refusesDocument(id)) throw IOException(UpstreamSyncFolder.REFUSAL)
     }
 
@@ -72,9 +73,9 @@ class UpstreamGuardedTree(private val inner: DocumentTree) : DocumentTree, Coord
         fun isUpstream(entry: DocumentEntry): Boolean =
             UpstreamSyncFolder.isUpstreamName(entry.name) || UpstreamSyncFolder.refusesDocument(entry.id)
 
-        fun storage(tree: DocumentTree, subfolder: String?, name: String): DocumentTreeStorage =
-            DocumentTreeStorage(UpstreamGuardedTree(tree), subfolder, name)
+        fun storage(tree: DocumentTree, ancestry: List<String>?, subfolder: String?, name: String): DocumentTreeStorage =
+            DocumentTreeStorage(UpstreamGuardedTree(tree, ancestry), subfolder, name)
 
-        fun locate(tree: DocumentTree): String? = DocumentTreeStorage.locate(UpstreamGuardedTree(tree))
+        fun locate(tree: DocumentTree, ancestry: List<String>?): String? = DocumentTreeStorage.locate(UpstreamGuardedTree(tree, ancestry))
     }
 }

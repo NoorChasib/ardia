@@ -69,6 +69,7 @@ object SyncPayloads {
         ConnectResult.Mismatch -> mapOf("result" to "mismatch")
         ConnectResult.NoSyncData -> mapOf("result" to "noSyncData")
         ConnectResult.FolderUnavailable -> mapOf("result" to "folderUnavailable")
+        is ConnectResult.FolderRefused -> mapOf("result" to "folderUnavailable", "problem" to result.problem)
         ConnectResult.KeyStoreFailed -> mapOf("result" to "keyStoreFailed")
         ConnectResult.Busy -> mapOf("result" to "busy")
     }

@@ -32,6 +32,8 @@ class SyncFolderGrant(val storage: SyncStorage, val location: SyncFolderLocation
 interface SyncFolderAccess {
     fun open(pick: SyncFolderPick): SyncFolderGrant?
 
+    fun refusal(pick: SyncFolderPick): String? = null
+
     fun resolve(location: SyncFolderLocation): SyncFolderGrant?
 
     fun hasAccess(location: SyncFolderLocation): Boolean
