@@ -33,9 +33,7 @@ fi
 awk '{ print $1 }' "$cli_sha" >"$app/Contents/Resources/ardia-cli.sha256"
 
 echo "==> Licenses"
-licenses="$app/Contents/Resources/Licenses"
-mkdir -p "$licenses"
-cp "$root"/LICENSE* "$root/NOTICE" "$licenses/"
+"$root/scripts/release/licenses.sh" copy "$app"
 
 echo "==> Sign Chrome's framework"
 entitlements_dir="$ardiacore/scripts/signing"

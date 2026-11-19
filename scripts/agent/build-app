@@ -64,7 +64,8 @@ native_stamp() {
       'packages/*/ios/*' 'packages/*/expo-module.config.json' packages/shell/docktile \
       packages/ardiacore/scripts/embed.sh packages/ardiacore/scripts/stage-framework.sh packages/ardiacore/scripts/ubo.sh \
       packages/ardiacore/extensions \
-      packages/ardiacore/scripts/signing engine/ardiacore/src/ardia/core/public patches bun.lock bunfig.toml
+      packages/ardiacore/scripts/signing engine/ardiacore/src/ardia/core/public patches bun.lock bunfig.toml \
+      LICENSE LICENSE.Apache-2.0 NOTICE third_party/bangs/LICENSE scripts/release/licenses.sh
     echo apps/browser/macos/Pods/Manifest.lock
   ) | python3 -c '
 import hashlib, os, sys
