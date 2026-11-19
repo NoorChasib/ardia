@@ -32,11 +32,12 @@ test("absent default-browser, login and scrollbar backends answer truthfully wit
   assert.deepEqual(invoked, []);
 });
 
-test("a host that advertises a system backend is called through instead of being masked", async () => {
+test("a host that advertises a system backend is called through instead of being masked, except the default-browser pair the Layer 1 gate keeps off", async () => {
   const { host, invoked } = fakeHost(["ArdiaSystem.isDefaultBrowser", "ArdiaSystem.setAsDefaultBrowser", "ArdiaSystem.setThinScrollBars"]);
-  await assert.rejects(resolveHostModule(host, "ArdiaSystem", "isDefaultBrowser")(), /Unknown host method/);
   await assert.rejects(resolveHostModule(host, "ArdiaSystem", "setThinScrollBars")(true), /Unknown host method/);
-  assert.deepEqual(invoked, ["ArdiaSystem.isDefaultBrowser", "ArdiaSystem.setThinScrollBars"]);
+  await assert.rejects(resolveHostModule(host, "ArdiaSystem", "isDefaultBrowser")(), { code: "ERR_UNAVAILABLE" });
+  await assert.rejects(resolveHostModule(host, "ArdiaSystem", "setAsDefaultBrowser")(), { code: "ERR_UNAVAILABLE" });
+  assert.deepEqual(invoked, ["ArdiaSystem.setThinScrollBars"]);
 });
 
 test("Linux capabilities come from the host contract, and WebKit is never offered", () => {
@@ -46,7 +47,7 @@ test("Linux capabilities come from the host contract, and WebKit is never offere
     unloadIdleProfiles: false, hiddenElements: false, blockAutoplayEverywhere: false, pagePictures: false, tabMemory: false,
   });
   const full = linuxCapabilities(fakeHost(["ArdiaSystem.isDefaultBrowser", "ArdiaSystem.setAsDefaultBrowser", "ArdiaSystem.launchAtLoginStatus", "ArdiaSystem.setLaunchAtLogin", "ArdiaSystem.setThinScrollBars", "engine.beginTracing", "engine.endTracing", "engine.isTracing", "engine.openTaskManager", "ArdiaApp.openExternalURL"]).host);
-  assert.deepEqual(full, { defaultBrowser: true, launchAtLogin: true, thinScrollBars: true, webkit: false, cliControl: false, cliInstall: false, userScripts: false, externalLinks: true, performanceRecording: true, taskManager: true, videoUpscaling: false, commandScrollZoom: false, littleNillaNewTabLinks: false, peekOtherSites: false, popupsOpenAsTabs: false, haptics: false, linksFromOtherApps: false, dictation: false, fullScreen: false, pageEdits: false, unloadIdleProfiles: false, hiddenElements: false, blockAutoplayEverywhere: false, pagePictures: false, tabMemory: false });
+  assert.deepEqual(full, { defaultBrowser: false, launchAtLogin: false, thinScrollBars: true, webkit: false, cliControl: false, cliInstall: false, userScripts: false, externalLinks: true, performanceRecording: true, taskManager: true, videoUpscaling: false, commandScrollZoom: false, littleNillaNewTabLinks: false, peekOtherSites: false, popupsOpenAsTabs: false, haptics: false, linksFromOtherApps: false, dictation: false, fullScreen: false, pageEdits: false, unloadIdleProfiles: false, hiddenElements: false, blockAutoplayEverywhere: false, pagePictures: false, tabMemory: false });
   const routed = linuxCapabilities(fakeHost(["webView.setCommandScrollZoom", "webView.setLittleArdiaOpensNewTabLinks", "webView.setPeekOtherSiteTabs", "ArdiaSystem.hapticTick", LINKS_FROM_OTHER_APPS, DICTATION_METHOD]).host);
   assert.deepEqual([routed.commandScrollZoom, routed.littleNillaNewTabLinks, routed.peekOtherSites, routed.haptics, routed.linksFromOtherApps, routed.dictation], [true, true, true, true, true, true]);
   assert.equal(linuxCapabilities(undefined).taskManager, false);
@@ -89,9 +90,9 @@ test("the hover card's memory row follows the engine's task list and its page pr
   assert.equal(linuxCapabilities(fakeHost([TAB_MEMORY_CALL]).host).tabMemory, true);
 });
 
-test("the nilla-browser command's rows follow the engine: every control and install method, or the rows stay hidden", () => {
+test("the nilla-browser command's rows follow the engine's control methods, and installing stays off in Layer 1", () => {
   assert.equal(linuxCapabilities(fakeHost([...CLI_CONTROL_METHODS]).host).cliControl, true);
-  assert.equal(linuxCapabilities(fakeHost([...CLI_INSTALL_METHODS]).host).cliInstall, true);
+  assert.equal(linuxCapabilities(fakeHost([...CLI_INSTALL_METHODS]).host).cliInstall, false, "the Layer 1 gate keeps ArdiaCli.install off");
   for (const missing of CLI_CONTROL_METHODS) {
     assert.equal(linuxCapabilities(fakeHost(CLI_CONTROL_METHODS.filter((method) => method !== missing)).host).cliControl, false, missing);
   }
@@ -121,15 +122,16 @@ function cliHost(capabilities, installedVersion) {
   };
 }
 
-test("the installed nilla version answers synchronously from the bootstrap, then from the host's refresh, installs and announcements", async () => {
+test("the installed nilla version answers synchronously from the bootstrap, then from the host's refresh and announcements, and installing never reaches the host", async () => {
   const { host, invoked, emit } = cliHost([...CLI_INSTALL_METHODS], "0.2.43");
   const installedVersion = resolveHostModule(host, "ArdiaCli", "installedVersion");
   assert.equal(installedVersion(), "0.2.43");
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.deepEqual(invoked, [["ArdiaCli.installedVersion", []]]);
   assert.equal(resolveHostModule(host, "ArdiaCli", "installedVersion")(), "0.2.44");
-  const result = await resolveHostModule(host, "ArdiaCli", "install")();
-  assert.equal(result.ok, true);
+  assert.equal((await resolveHostModule(host, "ArdiaCli", "install")().catch((error) => error)).code, "ERR_UNAVAILABLE");
+  assert.equal(invoked.some(([method]) => method === "ArdiaCli.install"), false);
+  emit("ArdiaCli", "onInstalledVersion", { version: "0.2.45" });
   assert.equal(resolveHostModule(host, "ArdiaCli", "installedVersion")(), "0.2.45");
   emit("ArdiaCli", "onInstalledVersion", { version: null });
   assert.equal(resolveHostModule(host, "ArdiaCli", "installedVersion")(), null);

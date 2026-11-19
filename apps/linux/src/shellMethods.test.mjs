@@ -213,7 +213,7 @@ test("the bootstrap parser sees capabilities the host appends from its capabilit
   for (const name of advertisedLoops) assert.ok(capabilityArrays.get(name)?.length, `${name} isn't a string array the parser can read`);
 });
 
-test("the nilla-browser command and the user-scripts folder route to the engine that advertises them", async () => {
+test("the nilla-browser command and the user-scripts folder route to the engine that advertises them, and installing the command stays off in Layer 1", async () => {
   for (const name of ["ArdiaCli.installedVersion", "ArdiaCli.install", "ArdiaAutomation.start", "ArdiaAutomation.stop", "ArdiaAutomation.reply", "ArdiaAutomation.broadcast", "ArdiaUserScripts.watch", "ArdiaUserScripts.read", "ArdiaUserScripts.readStatus", "ArdiaUserScripts.writeStatus"]) {
     assert.ok(advertised.includes(name), name);
   }
@@ -222,7 +222,11 @@ test("the nilla-browser command and the user-scripts folder route to the engine 
   assert.equal(host.bootstrap.capabilities.some((capability) => cli.includes(capability)), false);
   assert.equal(resolveHostModule(host, "ArdiaCli", "installedVersion")(), null);
   assert.equal((await resolveHostModule(host, "ArdiaCli", "install")().catch((error) => error)).code, "ERR_UNAVAILABLE");
-  await assert.rejects(resolveHostModule(linuxHost(), "ArdiaCli", "install")(), /Unsupported Linux host method: ArdiaCli.install/);
+  const advertising = linuxHost();
+  const reached = [];
+  advertising.invoke = async (method) => (reached.push(method), null);
+  assert.equal((await resolveHostModule(advertising, "ArdiaCli", "install")().catch((error) => error)).code, "ERR_UNAVAILABLE");
+  assert.equal(reached.includes("ArdiaCli.install"), false, "ArdiaCli.install never reaches an engine that advertises it");
 });
 
 test("problem reports without their engine, the local telemetry copy and hardware details answer on Linux without reaching the host, and nothing throws where the shared code doesn't catch", async () => {
@@ -258,8 +262,12 @@ test("problem reports without their engine, the local telemetry copy and hardwar
   const served = linuxHost();
   const reached = [];
   served.invoke = async (method) => (reached.push(method), null);
-  for (const method of ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText", "upload", "post", "cancelUploads"]) await resolveHostModule(served, "ArdiaReport", method)();
-  assert.deepEqual(reached, ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText", "upload", "post", "cancelUploads"].map((method) => `ArdiaReport.${method}`), "an engine that advertises report.files and report.send is asked");
+  for (const method of ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText"]) await resolveHostModule(served, "ArdiaReport", method)();
+  assert.deepEqual(reached, ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText"].map((method) => `ArdiaReport.${method}`), "an engine that advertises report.files is asked");
+  assert.equal((await resolveHostModule(served, "ArdiaReport", "upload")("f", "https://example.com", "PUT", {}, "/tmp/f")).status, 0);
+  assert.equal((await resolveHostModule(served, "ArdiaReport", "post")("https://example.com/api/feedback", "{}", {})).status, 0);
+  assert.equal(resolveHostModule(served, "ArdiaReport", "cancelUploads")(), undefined);
+  assert.equal(reached.length, 5, "sending stays off in Layer 1 even when the engine advertises report.send");
   const withoutHardware = olderEngine("ArdiaApp.hardwareInfo");
   withoutHardware.invoke = host.invoke;
   assert.deepEqual(await settle(resolveHostModule(withoutHardware, "ArdiaApp", "hardwareInfo")()), { code: "ERR_UNAVAILABLE" });

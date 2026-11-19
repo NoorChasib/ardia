@@ -91,23 +91,19 @@ function heldIo(docs = new Map(), { openFails = false } = {}) {
   };
 }
 
-test("saved passwords go only through the typed native path for the window's profile, and only once a held store exists", async () => {
+test("saved passwords never reach the engine in Layer 1: without a held store the read answers locally, and with one the gate refuses it", async () => {
   const sealedList = [{ origin: "https://bank.example", username: "alice", sealed: "AdGh", created: 1700000000000 }];
   const host = fakeHost((method) => (method === "ArdiaSync.readPasswords" ? sealedList : method === "ArdiaSync.savePassword" ? true : null));
   const read = syncModuleMethod(host, "ArdiaSync", "readPasswords");
   assert.equal(await read(""), null);
-  assert.deepEqual(host.calls, []);
   configureHeldLogins(createHeldLogins(heldIo()));
   try {
-    assert.deepEqual(await read("work"), sealedList);
-    assert.equal(await syncModuleMethod(host, "ArdiaSync", "savePassword")("", "https://bank.example", "alice", "AdGh", true), true);
+    await assert.rejects(read("work"), { code: "ERR_UNSUPPORTED", message: /off in this build of Nilla/ });
+    await assert.rejects(syncModuleMethod(host, "ArdiaSync", "savePassword")("", "https://bank.example", "alice", "AdGh", true), { code: "ERR_UNSUPPORTED" });
   } finally {
     configureHeldLogins(null);
   }
-  assert.deepEqual(host.calls, [
-    { method: "ArdiaSync.readPasswords", args: { args: ["work"] } },
-    { method: "ArdiaSync.savePassword", args: { args: ["default", "https://bank.example", "alice", "AdGh", true] } },
-  ]);
+  assert.deepEqual(host.calls, []);
   assert.equal(syncModuleMethod(host, "ArdiaPasswords", "write"), undefined);
 });
 
@@ -165,38 +161,39 @@ test("clearing the held store waits for a hold already saving, so nothing it cle
   assert.equal(held.status().held, 0);
 });
 
-test("a key reset suspends the held store while it runs and clears it only when the engine began a new document", async () => {
+test("a key reset suspends the held store while it runs and clears it only when the engine began a new document, and reads after it still never reach the engine", async () => {
   const io = heldIo();
-  const read = syncModuleMethod(fakeHost((method) => (method === "ArdiaSync.readPasswords" ? [] : null)), "ArdiaSync", "readPasswords");
+  const host = fakeHost((method) => (method === "ArdiaSync.readPasswords" ? [] : null));
+  const read = syncModuleMethod(host, "ArdiaSync", "readPasswords");
   const held = createHeldLogins(io);
   configureHeldLogins(held);
   try {
     await held.hold("", { origin: "https://long.example", username: "lee", sealed: "REMOTE", replaced: null });
     await whileResettingHeldLogins(async () => {
-      assert.equal(await read(""), null);
+      assert.equal(await held.merge("", []), null);
+      await assert.rejects(read(""), { code: "ERR_UNSUPPORTED" });
       return { error: "checksum" };
     }, (result) => "ok" in result);
-    assert.equal((await read("")).length, 1);
+    assert.equal(io.docs.has(HELD_LOGINS_DOCUMENT), true);
+    assert.equal((await held.merge("", [])).length, 1);
+    await assert.rejects(read(""), { code: "ERR_UNSUPPORTED" });
     await whileResettingHeldLogins(async () => ({ ok: true }), (result) => "ok" in result);
-    assert.deepEqual(await read(""), []);
     assert.equal(io.docs.has(HELD_LOGINS_DOCUMENT), false);
   } finally {
     configureHeldLogins(null);
   }
+  assert.deepEqual(host.calls, []);
 });
 
-test("the sync module keeps device ids local and sends every other call as a typed sync invoke", async () => {
+test("the sync module keeps device ids local, and the Layer 1 gate refuses every other call before it reaches the engine", async () => {
   const host = fakeHost(() => true);
   assert.match(syncModuleMethod(host, "ArdiaSync", "newDeviceId")(), /^[a-z2-7]{26}$/);
   assert.equal(newSyncDeviceId((bytes) => bytes.fill(0)), "aaaaaaaaaaaaaaaaaaaaaaaaaa");
   assert.equal(syncModuleMethod(host, "ArdiaSync", "nope"), undefined);
   assert.equal(resolveHostModule(host, "ArdiaSync", "takeFileCounts"), null, "the hourly sync file counts are a Windows placeholder count Linux has none of, so the optional method is absent instead of a host call that rejects");
-  await resolveHostModule(host, "ArdiaSync", "folderInfo")(undefined);
-  await resolveHostModule(host, "ArdiaSync", "enterPhrase")("aaaaaaaaaaaaaaaaaaaaaaaaaa", PHRASE, "/sync");
-  assert.deepEqual(host.calls, [
-    { method: "ArdiaSync.folderInfo", args: { args: [null] } },
-    { method: "ArdiaSync.enterPhrase", args: { args: ["aaaaaaaaaaaaaaaaaaaaaaaaaa", PHRASE, "/sync"] } },
-  ]);
+  await assert.rejects(Promise.resolve().then(() => resolveHostModule(host, "ArdiaSync", "folderInfo")?.(undefined)), { code: "ERR_UNSUPPORTED" });
+  await assert.rejects(Promise.resolve().then(() => resolveHostModule(host, "ArdiaSync", "enterPhrase")?.("aaaaaaaaaaaaaaaaaaaaaaaaaa", PHRASE, "/sync")), { code: "ERR_UNSUPPORTED" });
+  assert.deepEqual(host.calls, []);
 });
 
 test("opening a keyring that was locked at launch resumes sync once from the stored key", async () => {
