@@ -550,8 +550,8 @@
    "id": "F-scheme",
    "class": "F",
    "mechanism": "class",
-   "regex": "(?<![A-Za-z0-9_.-])ardia(?=:(?:\\\\?/|\\(|[\\\"'`\\])]))|(?<=[(|])ardia(?=[|)])|(?<=:)ardia(?=\\|)",
-   "why": "The ardia: app URL scheme in every spelling (URLs, escaped regexes, quoted scheme names, alternations)."
+   "regex": "(?<![A-Za-z0-9_.-])ardia(?=:(?:\\\\{0,2}/|\\(|[\\\"'`\\])]))|(?<=[(|])ardia(?=[|)])|(?<=:)ardia(?=\\|)",
+   "why": "The ardia: app URL scheme in every spelling (URLs, escaped and double-escaped regexes, quoted scheme names, alternations)."
   },
   {
    "id": "F-app-scheme-const",
@@ -825,6 +825,68 @@
    "mechanism": "class",
    "regex": "(?<=windows/)Ardia(?=[/\\\\;\\\"'`<>\\s,)\\]]|$)|(?<=windows\\\\)Ardia(?=[/\\\\;\\\"'`<>\\s,)\\]]|$)|(?<=windows\\\\\\\\)Ardia(?=\\\\\\\\|[\\\"'`])",
    "why": "Paths to apps/browser/windows/Ardia from anywhere in the repo (relative or from the root), also when the folder ends the path (sparse checkouts, path lists, quoted or backticked names)."
+  },
+  {
+   "id": "P-windows-profile-folders",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?<=FOLDER_PREFIX = \\\")Ardia (?=\\\")|(?<=([\\\"']))Ardia (?=(?:[a-z0-9-]+(?: \\(removing\\))?|Work)\\1)",
+   "scope": [
+    "packages/expo-windows/src/*",
+    "apps/browser/src/platform/windows*"
+   ],
+   "why": "Profile folder names the Windows engine makes and accepts: kDirectoryPrefix \"Ardia \" plus the profile id (scripts/windows/engine/src/ardia/win/profiles.cc:19), as the app's profile domain builds them and its self-check and tests name them."
+  },
+  {
+   "id": "P-windows-profile-test-folder",
+   "class": "P",
+   "mechanism": "class",
+   "regex": "(?<=nativeFolder = \\\"c:/)ardia(?=/user data/\\\")",
+   "scope": [
+    "apps/browser/src/platform/windowsEngineCalls.test.mjs"
+   ],
+   "why": "The test engine's user-data folder in windowsEngineCalls.test.mjs, which must stay the same folder as its host.info fake (C:\\Ardia\\User Data, kept by P-windows-folder)."
+  },
+  {
+   "id": "X-ardia-install-guards",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "scripts/linux/nilla-dev-run",
+    "scripts/linux/nilla-dev-run.test.mjs"
+   ],
+   "why": "Independence guards that name the upstream Ardia install on purpose (owner decision 2): the Linux dev launcher and its test refuse Ardia's config, data and cache folders and start the build's bin/ardia; the Windows dev launcher refuses %LOCALAPPDATA%\\Ardia; the carryover check watches the real home's com.ardia folders; identity.test.mjs asserts the old ids and the ardia OS scheme are gone. Renamed, each would guard Nilla's own folders or ids instead."
+  },
+  {
+   "id": "X-ardia-install-guards-windows",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=LOCALAPPDATA \\\")Ardia(?=\\\")|\\$ardia\\b|Ardia's",
+   "scope": [
+    "scripts/windows/nilla-dev-run.ps1"
+   ],
+   "why": "The Windows dev launcher's refusal of Ardia's data folder %LOCALAPPDATA%\\Ardia (owner decision 2). Its default app path follows the renamed launcher."
+  },
+  {
+   "id": "X-ardia-install-guards-carryover",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=\\\"com\\.nilladigital\\\", \\\")com\\.ardia(?=\\\")|(?<=real home's )Ardia(?= folders)",
+   "scope": [
+    "scripts/release/carryover.mjs"
+   ],
+   "why": "The carryover check's real-home folders include Ardia's com.ardia ones (G, owner decision 2)."
+  },
+  {
+   "id": "X-identity-old-names",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "com\\\\\\.ardia\\\\\\.browser|(?<=android:scheme=\\\")ardia(?=\\\")|(?<=android:data=\\\")ardia(?=:)|(?<=<string>)ardia(?=<\\\\/string>)",
+   "scope": [
+    "scripts/lib/identity.test.mjs"
+   ],
+   "why": "identity.test.mjs asserts that the old bundle id and the ardia OS scheme registrations are gone; those negative patterns keep the old names."
   },
   {
    "id": "P-windows-engine-files",
@@ -1305,6 +1367,12 @@
    "replace": "com.nilladigital.nilla"
   },
   {
+   "id": "7-bundle-escaped",
+   "plan": "D.5 rules 4-7, escaped in regexes (as 3b and 3d)",
+   "find": "com(\\\\{1,2})\\.ardia\\1\\.browser(?![A-Za-z0-9_])",
+   "replace": "com\\1.nilladigital\\1.nilla"
+  },
+  {
    "id": "8-kotlin-packages",
    "plan": "D.5 rule 8",
    "find": "(?<![A-Za-z0-9_.])com\\.ardia(?![A-Za-z0-9_])",
@@ -1538,8 +1606,8 @@
    "files": 166,
    "occurrences": 627,
    "decision": "class",
-   "protectedOccurrences": 316,
-   "renamedOccurrences": 311,
+   "protectedOccurrences": 317,
+   "renamedOccurrences": 310,
    "notRsFiles": 354,
    "coveredBy": [
     "N-linux-layout",
@@ -1548,7 +1616,8 @@
     "R-engine-gn",
     "F-chrome-host",
     "K-brand-folder",
-    "A-rendezvous"
+    "A-rendezvous",
+    "P-windows-profile-test-folder"
    ],
    "why": "Path fragment: covered by A-rendezvous (/ardia/active), F-chrome-host, N-cli-home, N-linux-layout and R-engine-gn."
   },
