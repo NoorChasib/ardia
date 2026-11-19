@@ -11,7 +11,7 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
 | [`.github/workflows/linux.yml`](../.github/workflows/linux.yml) | Runs on pull requests, pushes to `main` and by hand: a `checks` job and a `package` job on `ubuntu-24.04` |
 | [`.github/actions/linux-setup`](../.github/actions/linux-setup/action.yml) | Ubuntu packages for the fixtures (clang, dbus, NSS tools, gnome-keyring, PyGObject), Bun from `package.json`'s `packageManager` and Node 24 through [`.github/actions/bun-install`](../.github/actions/bun-install/action.yml), its cache of `~/.bun/install/cache`, and `bun install --frozen-lockfile` |
 | [`scripts/linux/ci-checks.sh`](../scripts/linux/ci-checks.sh) | The engine-free checks; the `engine/ardiacore-linux/tests` modules run in parallel because the suite takes well over five minutes serially |
-| [`scripts/linux/publish-engine.sh`](../scripts/linux/publish-engine.sh) | Builder side: stages, strips and archives an engine from a Chromium out dir; `--upload` publishes it and adds its table row |
+| [`scripts/linux/publish-engine.sh`](../scripts/linux/publish-engine.sh) | Builder side: stages, strips and archives an engine from a Chromium out dir; `--repo OWNER/NAME --upload` publishes it there and adds its table row |
 | [`packages/ardiacore/prebuilt-engines-linux.tsv`](../packages/ardiacore/prebuilt-engines-linux.tsv) | `key<TAB>tag<TAB>sha256` for each Linux engine Nilla uses; in Layer 1 they are Ardia's, published in ardia-browser/ardia |
 | `packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64` | Dispatches to [`scripts/linux/fetch-engine.sh`](../scripts/linux/fetch-engine.sh); the Mac path is unchanged |
 | [`scripts/linux/runtime_files.py`](../scripts/linux/runtime_files.py) | The one runtime allowlist used by publishing, fetching and packaging, and the safe archive unpacker |
@@ -52,13 +52,14 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
   commit's key matches.
 - **Out dir.** The publisher copies from the out dir while holding the chromium lock and never writes there.
 
-Publishing an engine for the current build:
+Publishing an engine for the current build (Layer 2, once Nilla has a repo of its own for engines; in Layer 1 a
+missing engine means `--nearest`, or `scripts/linux/release.sh --engine DIR` with an engine you built):
 
 ```bash
 source engine/patches/build/env.sh
 scripts/linux/publish-engine.sh \
   --out "$CB/chromium_git/chromium/src/out/$GN_OUT_CONFIGS" \
-  --source <the Nilla checkout the engine was built from> --upload
+  --source <the Nilla checkout the engine was built from> --repo <OWNER/NAME> --upload
 git add packages/ardiacore/prebuilt-engines-linux.tsv
 ```
 

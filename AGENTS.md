@@ -136,7 +136,7 @@ yours: the hidden-instance and focus rules are for the owner's machine.
   and ARM64 on Windows runners, launches the app, tours pages with real input and installs the installer. To use it
   yourself, run Windows 11 in QEMU on a disposable VM (nested KVM, `dockurr/windows`).
 - **Engines.** Nilla publishes no engines yet: the pins point at Ardia's releases, and app builds use the exact one
-  or `--nearest`. Publishing an engine (`scripts/publish-engine.sh`, `scripts/linux/publish-engine.sh --upload`)
+  or `--nearest`. Publishing an engine (`scripts/publish-engine.sh`, `scripts/linux/publish-engine.sh --repo OWNER/NAME --upload`)
   needs the owner's OK.
 
 ## Building features

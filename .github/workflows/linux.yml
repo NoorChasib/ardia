@@ -155,7 +155,7 @@ jobs:
           args=(--arch linux-x86_64)
           [ "$ENGINE_MODE" = exact ] || args+=(--nearest)
           if ! engine=$(packages/ardiacore/scripts/fetch-engine.sh "${args[@]}"); then
-            echo "::error::no Linux engine for engine key ${ENGINE_KEY:0:12}: build it on the Linux builder, publish it with scripts/linux/publish-engine.sh --upload and commit prebuilt-engines-linux.tsv"
+            echo "::error::no Linux engine for engine key ${ENGINE_KEY:0:12} in $ARDIACORE_PREBUILT_REPO: Layer 1 fetches the engines published upstream and Nilla publishes none, so run with engine nearest or set the ARDIACORE_PREBUILT_REPO variable to a repo that has this key (docs/linux-ci.md)"
             exit 1
           fi
           selected=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["engine_key"])' "$engine/manifest.json")

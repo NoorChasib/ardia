@@ -105,7 +105,7 @@ cli_name="ardia-cli-$version-linux-x64.tar.gz"
 
 echo "==> Engine ($engine_mode)"
 case "$engine_mode" in
-  exact) engine=$(packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64) || die "no published Linux engine for this commit's engine key: publish it with scripts/linux/publish-engine.sh --upload (docs/linux-ci.md)" ;;
+  exact) engine=$(packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64) || die "no published Linux engine for this commit's engine key: Layer 1 fetches the engines published upstream and Nilla publishes none, so pass --engine nearest, or --engine DIR with an engine built by scripts/linux/build.sh --apply (docs/linux-ci.md)" ;;
   nearest) engine=$(packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64 --nearest) || die "no published Linux engine near this commit's engine key" ;;
   "") die "--engine needs exact, nearest or a directory" ;;
   *) [ -d "$engine_mode" ] || die "--engine $engine_mode is neither exact, nearest nor a directory"; engine=$(cd "$engine_mode" && pwd -P) ;;

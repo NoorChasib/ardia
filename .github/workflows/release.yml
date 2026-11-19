@@ -351,7 +351,7 @@ jobs:
       - name: Build, package, smoke
         run: |
           if ! scripts/linux/release.sh "$VERSION" --engine exact --out "$RUNNER_TEMP/linux"; then
-            echo "::error::no Linux build for $VERSION (above). A missing engine for ${TREE:0:12} means: build it on the Linux builder, publish it with scripts/linux/publish-engine.sh --upload and commit prebuilt-engines-linux.tsv"
+            echo "::error::no Linux build for $VERSION (above). A missing engine for ${TREE:0:12} means $ARDIACORE_PREBUILT_REPO has none for this key: Layer 1 fetches the engines published upstream and Nilla publishes none (docs/linux-ci.md)"
             exit 1
           fi
       - name: Licence texts in every package

@@ -38,6 +38,19 @@ test("the Linux engine publisher never uploads without a repo named on the comma
   assert.match(publisher.stderr, /--upload needs --repo/);
 });
 
+test("no script, workflow or doc tells anyone to upload an engine without naming a repo", () => {
+  const listed = spawnSync("git", ["ls-files", "-z", "scripts", ".github", "docs", "packages/ardiacore/scripts", "README.md", "CONTRIBUTING.md", "AGENTS.md"], { cwd: checkout, encoding: "utf8" });
+  assert.equal(listed.status, 0, listed.stderr);
+  const prescriptions = [];
+  for (const path of listed.stdout.split("\0").filter((path) => path && !/^docs\/(?:history|audit)\//.test(path))) {
+    const joined = read(path).replace(/\\\n\s*/g, " ");
+    const commands = path.endsWith(".md") ? joined.split(/\n\s*\n|\n(?=\s*(?:[-*|#]|```|\d+\.)\s)/) : joined.split("\n");
+    for (const command of commands) if (/publish-engine\.sh\b[\s\S]*--upload\b/.test(command) && !/--repo\b/.test(command)) prescriptions.push(`${path}: ${command.trim().replace(/\s+/g, " ").slice(0, 160)}`);
+  }
+  assert.ok(read("scripts/linux/fetch-engine.sh").includes("scripts/linux/release.sh --engine DIR"), "the fetcher points at a local engine instead");
+  assert.deepEqual(prescriptions, []);
+});
+
 test("the workflows cache the CLI toolchain in the folder build.sh writes", () => {
   const build = read("apps/cli/scripts/build.sh");
   const linux = /cache=\$HOME\/\.cache\/([\w-]+) ;;/.exec(build)?.[1];
