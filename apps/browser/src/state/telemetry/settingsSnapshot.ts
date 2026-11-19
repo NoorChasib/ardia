@@ -54,8 +54,11 @@ export function settingsSnapshot(settings: Settings): Record<string, string> {
   };
 }
 
+const APP_ICON_ID = /^[a-z]+(?:-[a-z]+)*$/;
+const MAX_APP_ICON_ID = 16;
+
 export const appIconSetting = (icon: string | null): Record<string, string> =>
-  icon && /^[a-z]{1,16}$/.test(icon) ? { setting_app_icon: icon, default_app_icon: "default" } : {};
+  icon && icon.length <= MAX_APP_ICON_ID && APP_ICON_ID.test(icon) ? { setting_app_icon: icon, default_app_icon: "default" } : {};
 
 export const customColorProfiles = (profiles: Record<string, { theme?: unknown }>): Record<string, string> => ({
   custom_color_profiles: String(Object.values(profiles).filter((profile) => !!profile.theme).length),
