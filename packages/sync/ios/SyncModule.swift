@@ -304,7 +304,10 @@ public class SyncModule: Module {
       : RecoveryKit.pdf(words: words, created: Date(), device: device)
   }
 
-  private static let temporaryKitFolder = FileManager.default.temporaryDirectory.appendingPathComponent("Ardia Recovery Kit", isDirectory: true)
+  private static let temporaryKitFolder = (dataDirectory
+    ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent(Bundle.main.bundleIdentifier ?? "Nilla", isDirectory: true))
+    .appendingPathComponent("Recovery Kit", isDirectory: true)
 
   private static func removeTemporaryKits() {
     try? FileManager.default.removeItem(at: temporaryKitFolder)
