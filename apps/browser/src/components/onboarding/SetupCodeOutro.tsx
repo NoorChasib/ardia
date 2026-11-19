@@ -32,11 +32,11 @@ export function SetupCodeOutro() {
   return (
     <StepLayout
       title="Your setup code"
-      subtitle="Paste it into Nilla after you download it, on its first screen or in Settings › General. Nilla sets itself up just like this."
+      subtitle="Paste it into Nilla on its first screen or in Settings › General, and Nilla sets itself up just like this."
       actions={
         <>
           <StepActions icon="arrow.right" continueTitle="Done" onContinue={() => finishOnboarding()} />
-          <SecondaryButton title={copied ? "Copied, downloading" : "Download & Copy"} filled onPress={downloadAndCopy} />
+          <SecondaryButton title={copied ? "Copied" : "Get Nilla & Copy"} filled onPress={downloadAndCopy} />
         </>
       }
       preview={<SetupLines heading="You picked:" lines={lines} />}
