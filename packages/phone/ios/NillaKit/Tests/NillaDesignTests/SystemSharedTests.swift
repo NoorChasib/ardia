@@ -19,19 +19,20 @@ struct SystemLinkTests {
   }
 
   @Test(arguments: [
-    "ardia://open?url=javascript:alert(1)",
-    "ardia://open?url=file:///etc/passwd",
-    "ardia://open",
-    "ardia://tab/not-a-uuid",
-    "ardia://browse/6F9619FF-8B86-D011-B42D-00C04FC964FF",
-    "https://ardia.dev/search",
+    "nilla://open?url=javascript:alert(1)",
+    "nilla://open?url=file:///etc/passwd",
+    "nilla://open",
+    "nilla://tab/not-a-uuid",
+    "nilla://browse/6F9619FF-8B86-D011-B42D-00C04FC964FF",
+    "ardia://search",
+    "https://example.com/search",
   ])
   func `links that aren't ours or open non-web pages are refused`(text: String) {
     #expect(SystemLink(URL(string: text)!) == nil)
   }
 
   @Test func `a blank query opens an empty search`() {
-    #expect(SystemLink(URL(string: "ardia://search?q=%20%20")!) == .search(query: nil))
+    #expect(SystemLink(URL(string: "nilla://search?q=%20%20")!) == .search(query: nil))
   }
 }
 
