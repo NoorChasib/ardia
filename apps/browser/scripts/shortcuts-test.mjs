@@ -8,7 +8,7 @@ import { isAlive, launch, reporter, session, sleep } from "../../../scripts/lib/
 const [appArg, port] = process.argv.slice(2);
 const appPath = appArg && resolve(appArg);
 if (!appPath) {
-  console.error("usage: node shortcuts-test.mjs <Debug Ardia.app> [cdpPort]");
+  console.error("usage: node shortcuts-test.mjs <Debug Nilla.app> [cdpPort]");
   process.exit(2);
 }
 const startedAt = Date.now();
@@ -69,9 +69,9 @@ async function diagnoseHang() {
   const js = await app.eval("return Math.round(performance.now() / 1000)", { timeout: 3000 })
     .then((up) => `the JS thread answers (JS context up ${up} s, test up ${Math.round((Date.now() - startedAt) / 1000)} s)`, () => "the JS thread doesn't answer either");
   try { copyFileSync(join(data, "app.out.log"), join(scratch, "app.out.log")); } catch {}
-  const main = await app.eval("return globalThis.expo.modules.ArdiaDev.devFocusHandoffTrace().then(() => 1)", { timeout: 3000 })
+  const main = await app.eval("return globalThis.expo.modules.NillaDev.devFocusHandoffTrace().then(() => 1)", { timeout: 3000 })
     .then(() => "the main thread answers", () => "the main thread doesn't answer");
-  const presses = await app.eval("return globalThis.expo.modules.ArdiaDev.devKeyEquivalentTrace()", { timeout: 3000 }).catch(() => []);
+  const presses = await app.eval("return globalThis.expo.modules.NillaDev.devKeyEquivalentTrace()", { timeout: 3000 }).catch(() => []);
   const seen = await app.eval("return (globalThis.__devEvalLog ?? []).join(' | ')", { timeout: 3000 }).catch(() => null);
   const proxy = app.js?.pid ? (isAlive(app.js.pid) ? `Metro proxy ${app.js.pid} alive` : `Metro proxy ${app.js.pid} gone`) : "no Metro proxy";
   return `hang: ${js}; ${main}; ${proxy}; pending eval ${pending}, result file ${landed}, JS evals: ${seen}; native presses: ${presses.slice(-6).join(" / ")}; main-thread sample in ${sampleFile} (kept: ${scratch})`;
@@ -145,7 +145,7 @@ const shortcuts = [
   ["⌘S", cmd("s", 1), { command: "toggleSidebar" }, "⌘S", "page-field"],
   ["⇧⌘L", cmd("L", 37, "shift"), { command: "toggleSidebar" }, "(Chrome's)", "page-field"],
   ["⇧⌘F", cmd("F", 3, "shift"), { command: "toggleSidebar" }, "(Chrome's)", "page-field"],
-  ["⌥⌘N", cmd("n", 45, "option"), { command: "newLittleArdia" }, "Arc's Little Arc"],
+  ["⌥⌘N", cmd("n", 45, "option"), { command: "newLittleNilla" }, "Arc's Little Arc"],
   ["⌃⇧=", K("+", 24, "control", "shift"), { command: "openSplitPane" }, "⌃⇧="],
   ["⌃⇧]", K("}", 30, "control", "shift"), { command: "focusNextPane" }, "⌃⇧]"],
   ["⌃⇧[", K("{", 33, "control", "shift"), { command: "focusPreviousPane" }, "⌃⇧["],
@@ -396,9 +396,9 @@ const devWindow = (action) =>
     return ac.engine.call("windows.list").then((ws) => ws.filter((w) => w.hasRoot).find((w) => {
       const r = w.frame.match(/[-\\d.]+/g).map(Number); return Math.abs(r[0] - f[0]) < 2 && Math.abs(r[2] - f[2]) < 2; }))
       .then((w) => ac.engine.call("windows.dev", { window: w.window, action: ${JSON.stringify(action)} }));`);
-const postKeys = (presses) => ac(`return globalThis.expo.modules.ArdiaDev.devPostKeys("w1", ${JSON.stringify(presses)});`);
+const postKeys = (presses) => ac(`return globalThis.expo.modules.NillaDev.devPostKeys("w1", ${JSON.stringify(presses)});`);
 const keyPress = (key, keyCode, after = 0, modifiers = ["command"]) => ({ key, keyCode, modifiers, after });
-const post = (key, keyCode, modifiers = ["command"]) => ac(`return globalThis.expo.modules.ArdiaDev.devPostKey("w1", ${JSON.stringify(key)}, ${keyCode}, ${JSON.stringify(modifiers)});`);
+const post = (key, keyCode, modifiers = ["command"]) => ac(`return globalThis.expo.modules.NillaDev.devPostKey("w1", ${JSON.stringify(key)}, ${keyCode}, ${JSON.stringify(modifiers)});`);
 const clipboard = {
   set: (text) => ac(`globalThis.nativeModuleProxy.Clipboard.setString(${JSON.stringify(text)}); return 1;`),
   get: () => ac(`return globalThis.nativeModuleProxy.Clipboard.getString();`),
@@ -501,7 +501,7 @@ for (const mode of ["page", "commandBar"]) {
       await sleep(busy + 1500);
       const bar = (await devWindow("ax")).split("\n").find((l) => /AXTextField/.test(l))?.trim().replace(/^AXTextField:? ?/, "") ?? "";
       const inPage = await pageField("f.value");
-      const trace = await ac(`return globalThis.expo.modules.ArdiaDev.devFocusHandoffTrace();`);
+      const trace = await ac(`return globalThis.expo.modules.NillaDev.devFocusHandoffTrace();`);
       const began = trace.findLastIndex((l) => / begin /.test(l));
       const dropped = began < 0 || trace.slice(began).some((l) => / drop /.test(l));
       check(`⌘T then typing at +${gap} ms, JS busy ${busy} ms, New tab opens ${mode}: the letters land in the box, in order, with no beep`,
@@ -526,7 +526,7 @@ await ac(`ac.store.getState().updateSettings({ newTabOpens: "page" }); return 1;
   await busyJsOnce(150);
   await postKeys([keyPress("l", 37), keyPress("\r", 36, 20, []), keyPress("v", 9, 20)]);
   await sleep(2000);
-  const trace = await ac(`return globalThis.expo.modules.ArdiaDev.devFocusHandoffTrace();`);
+  const trace = await ac(`return globalThis.expo.modules.NillaDev.devFocusHandoffTrace();`);
   const replayAt = trace.findLastIndex((l) => / replay /.test(l));
   const dropped = replayAt >= 0 && trace.slice(replayAt).some((l) => / drop /.test(l));
   const inPage = await pageField("f.value");
@@ -630,7 +630,7 @@ for (const [name, keys, busy, firstExpected] of handoffEnds) {
   await sleep(600);
   const second = await pastesIn(active);
   const responder = await devWindow("responder");
-  const trace = first === firstExpected ? "" : `; trace ${(await ac(`return globalThis.expo.modules.ArdiaDev.devFocusHandoffTrace();`)).slice(-8).join(" / ")}`;
+  const trace = first === firstExpected ? "" : `; trace ${(await ac(`return globalThis.expo.modules.NillaDev.devFocusHandoffTrace();`)).slice(-8).join(" / ")}`;
   check(`${name} then ⌘V: ${firstExpected ? "pastes once into the page that has the focus" : "dropped with a beep, nowhere else"}; the next ⌘V pastes`,
     first === firstExpected && strays === 0 && second === firstExpected + 1 && responder.startsWith("RenderWidgetHostViewCocoa"),
     `active ${active}, pastes ${first} then ${second}, elsewhere ${strays}, first responder ${responder}${trace}`);
@@ -719,7 +719,7 @@ await sleep(1000);
     const ok = reservedShortcuts.has(name) ? (fired && seen === 0) || off : !fired && seen > 0;
     if (!ok) wrong.push(`${name}: ${describe(r)}, the page saw ${seen} keydown`);
   }
-  check("a page that cancels every keydown: Ardia acts on the reserved shortcuts, the page gets every other one", !wrong.length, wrong.join("; "));
+  check("a page that cancels every keydown: Nilla acts on the reserved shortcuts, the page gets every other one", !wrong.length, wrong.join("; "));
 }
 {
   await swallowKeys();
@@ -731,11 +731,11 @@ await sleep(1000);
   const rebound = K("k", 40, "control", "option", "command");
   await ac(`ac.store.getState().updateSettings({ shortcuts: { ...ac.store.getState().settings.shortcuts, newTab: ["k", "control", "option", "command"] } }); return 1;`);
   let by = "", old = "x";
-  for (let i = 0; i < 30 && (by !== "ardia.command.newTab" || old); i++) {
+  for (let i = 0; i < 30 && (by !== "nilla.command.newTab" || old); i++) {
     await sleep(100);
     [by, old] = [await reservedBy(rebound), await reservedBy(cmd("t", 17))];
   }
-  check("New Tab rebound to ⌃⌥⌘K: the new keys are reserved and ⌘T goes to the page", by === "ardia.command.newTab" && !old, `⌃⌥⌘K ${by || "page"}, ⌘T ${old || "page"}`);
+  check("New Tab rebound to ⌃⌥⌘K: the new keys are reserved and ⌘T goes to the page", by === "nilla.command.newTab" && !old, `⌃⌥⌘K ${by || "page"}, ⌘T ${old || "page"}`);
   await ac(`const { newTab, ...rest } = ac.store.getState().settings.shortcuts; ac.store.getState().updateSettings({ shortcuts: rest }); return 1;`);
   for (let i = 0; i < 30 && !(await reservedBy(cmd("t", 17))); i++) await sleep(100);
 }
@@ -743,11 +743,11 @@ await sleep(1000);
   const optionC = K("c", 8, "option"), copyUrlKeys = cmd("C", 8, "shift");
   await ac(`ac.store.getState().updateSettings({ shortcuts: { ...ac.store.getState().settings.shortcuts, copyUrl: ["c", "option"] } }); return 1;`);
   let by = "", old = "x";
-  for (let i = 0; i < 30 && (by !== "ardia.command.copyUrl" || old); i++) {
+  for (let i = 0; i < 30 && (by !== "nilla.command.copyUrl" || old); i++) {
     await sleep(100);
     [by, old] = [await reservedBy(optionC), await reservedBy(copyUrlKeys)];
   }
-  check("Copy URL rebound to ⌥C: the Option-only keys are reserved and ⇧⌘C goes to the page", by === "ardia.command.copyUrl" && !old, `⌥C ${by || "page"}, ⇧⌘C ${old || "page"}`);
+  check("Copy URL rebound to ⌥C: the Option-only keys are reserved and ⇧⌘C goes to the page", by === "nilla.command.copyUrl" && !old, `⌥C ${by || "page"}, ⇧⌘C ${old || "page"}`);
   const url = await activeUrl();
   await clipboard.set("before ⌥C");
   await swallowKeys();
@@ -953,7 +953,7 @@ await sleep(1000);
         let by = "";
         for (let i = 0; i < 30; i++) {
           by = await reservedBy(key);
-          if ((by === "ardia.command.tabSwitcher") === want) break;
+          if ((by === "nilla.command.tabSwitcher") === want) break;
           await sleep(100);
         }
         return by;
@@ -970,7 +970,7 @@ await sleep(1000);
       const opened = (r) => (r.fired ?? []).some((f) => f.command === "tabSwitcher" && f.arg === "backward");
       const harness = notKey(viaNew, viaOld);
       check("Tab Switcher (backward) rebound from ⌃⇧Tab to ⌃⌥⇧Tab: the new keys open it backwards through AppKit and ⌃⇧Tab no longer does; binding ⌃⇧Tab again brings it back",
-        !harness && newBy === "ardia.command.tabSwitcher" && oldBy !== "ardia.command.tabSwitcher" && opened(viaNew) && !opened(viaOld) && restored === "ardia.command.tabSwitcher",
+        !harness && newBy === "nilla.command.tabSwitcher" && oldBy !== "nilla.command.tabSwitcher" && opened(viaNew) && !opened(viaOld) && restored === "nilla.command.tabSwitcher",
         `${harness}⌃⌥⇧Tab ${newBy || "not reserved"} (${describe(viaNew)}), ⌃⇧Tab ${oldBy || "not reserved"} (${describe(viaOld)}), restored ${restored || "no"}`);
     }
     await ac(`globalThis.wkSwitcherStop?.(); globalThis.wkSwitcherStop = null;
@@ -1013,7 +1013,7 @@ await sleep(1000);
         if (!ok) wrong.push(`${name} in the ${inField ? "field" : "page"}: ${describe(r)}, listener ${ready}, ${saw(counts)} (first responder ${r.firstResponder})`);
       }
     }
-    check("a WebKit page that cancels every keydown: Ardia acts on the reserved shortcuts (a disabled one is dropped, not passed to the page), the page gets every other one",
+    check("a WebKit page that cancels every keydown: Nilla acts on the reserved shortcuts (a disabled one is dropped, not passed to the page), the page gets every other one",
       !wrong.length, wrong.length ? wrong.join("; ") : disabled.length ? `disabled and kept from the page: ${disabled.join(", ")}` : "");
   }
 

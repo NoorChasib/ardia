@@ -7,9 +7,9 @@ import { appProblems, seedProfile } from "../scripts/phone-sync-mac.mjs";
 
 function world() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "phone-sync-mac-check-"));
-  const app = path.join(root, "Ardia.app");
+  const app = path.join(root, "Nilla.app");
   fs.mkdirSync(path.join(app, "Contents/MacOS"), { recursive: true });
-  const binary = path.join(app, "Contents/MacOS/Ardia.debug.dylib");
+  const binary = path.join(app, "Contents/MacOS/Nilla.debug.dylib");
   fs.writeFileSync(binary, "");
   const source = path.join(root, "AppModule.swift");
   fs.writeFileSync(source, 'Constant("apiVersion") { () -> Int in 68 }');
@@ -63,5 +63,5 @@ test("a seeded copy keeps the profile and drops every sync file, so it never res
 });
 
 test("--seed refuses a live profile path", () => {
-  assert.throws(() => seedProfile(path.join(os.homedir(), "Library/Application Support/Ardia"), "/tmp/never"), /never the live one|no profile copy/);
+  assert.throws(() => seedProfile(path.join(os.homedir(), "Library/Application Support/Nilla"), "/tmp/never"), /never the live one|no profile copy/);
 });

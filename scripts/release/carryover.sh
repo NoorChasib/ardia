@@ -37,8 +37,8 @@ copy() {
   /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $test_id" "$2/Contents/Info.plist"
   codesign --force --deep --sign - "$2" 2>/dev/null
 }
-copy "$old" "$work/old/Ardia.app"
-copy "$new" "$work/new/Ardia.app"
+copy "$old" "$work/old/Nilla.app"
+copy "$new" "$work/new/Nilla.app"
 swiftc -O "$here/quit.swift" -o "$work/quit" 2>/dev/null
 mkdir -p "$work/home" "$work/pages"
 for page in page1 page2 page3 work; do
@@ -48,7 +48,7 @@ cp -R "$harness_root/packages/ardiacore/tests/fixtures/ext" "$work/extension"
 serve_dir "$work/pages"
 origin="http://127.0.0.1:$served_port"
 export CARRYOVER_QUIT="$work/quit"
-carryover() { timeout 480 node "$here/carryover.mjs" "$1" "$work/$2/Ardia.app" "$work/home" "$(free_port)" "$origin" "${@:3}"; }
+carryover() { timeout 480 node "$here/carryover.mjs" "$1" "$work/$2/Nilla.app" "$work/home" "$(free_port)" "$origin" "${@:3}"; }
 
 if [ "$back" = 0 ]; then
   carryover create old "$work/extension" "$work/created.json"

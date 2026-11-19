@@ -6,14 +6,14 @@ import time
 import urllib.request
 from pathlib import Path
 
-import ardia_side
+import nilla_side
 import opencode_side
 import registry
 from procs import http, kill_on_failure, listener_pids, proc_info, read_json, sh, terminate, wait_until, write_json
 
-ARDIA_APP = str(Path.home() / "ardia-scratch/bench-proper/app-geom/Ardia.app")
+ARDIA_APP = str(Path.home() / "nilla-scratch/bench-proper/app-geom/Nilla.app")
 CLOUD_API = "https://api.browser-use.com/api/v4"
-CLOUD_KEY_FILE = Path(os.environ.get("BENCH_BU_KEY_FILE", Path.home() / "ardia-scratch/bu-bench/.bu_api_key"))
+CLOUD_KEY_FILE = Path(os.environ.get("BENCH_BU_KEY_FILE", Path.home() / "nilla-scratch/bu-bench/.bu_api_key"))
 CLOUD_STATE_GLOB = "cloud-*.json"
 CDP_TAB = Path(__file__).resolve().parent / "cdp_tab.mjs"
 
@@ -32,8 +32,8 @@ def launch_chrome(chrome, home, cdp_port, logs, window_size="1440,900", extra_ar
                 user_agent=version.get("User-Agent"), args=args, cdp_port=cdp_port)
 
 
-def launch_ardia(app, data, port, switches=(), ardia_test="cdpTabsVisible"):
-    app = ardia_side.app_path({"app": app or ARDIA_APP})
+def launch_nilla(app, data, port, switches=(), nilla_test="cdpTabsVisible"):
+    app = nilla_side.app_path({"app": app or ARDIA_APP})
     busy = listener_pids(port)
     if busy:
         raise SystemExit(f"port {port} is used by pid {busy}, not by this harness")
@@ -44,14 +44,14 @@ def launch_ardia(app, data, port, switches=(), ardia_test="cdpTabsVisible"):
     log = data / "app.out.log"
     env_args = ["--env", "ARDIA_BACKGROUND=1", "--env", f"ARDIA_DATA_DIR={data}",
                 "--env", f"ARDIA_REMOTE_DEBUGGING_PORT={port}"]
-    if ardia_test:
-        env_args += ["--env", f"ARDIA_TEST={ardia_test}"]
+    if nilla_test:
+        env_args += ["--env", f"ARDIA_TEST={nilla_test}"]
     if switches:
         env_args += ["--env", f"ARDIA_INSTANCE=chromiumSwitches={' '.join(switches)}"]
     t0 = time.monotonic()
     subprocess.run(["open", "-g", "-n", *env_args, "--stdout", str(log), "--stderr", str(log), str(app)],
                    check=True, timeout=30)
-    exe = str(app / "Contents/MacOS/Ardia")
+    exe = str(app / "Contents/MacOS/Nilla")
 
     def owned_listener():
         for pid in listener_pids(port):
@@ -60,12 +60,12 @@ def launch_ardia(app, data, port, switches=(), ardia_test="cdpTabsVisible"):
                 return pid, info
         return None
 
-    pid, info = wait_until(owned_listener, 90, "Ardia DevTools port")
-    rec = {"pid": pid, "lstart": info["lstart"], "command": info["command"], "kind": "ardia", "app": str(app),
+    pid, info = wait_until(owned_listener, 90, "Nilla DevTools port")
+    rec = {"pid": pid, "lstart": info["lstart"], "command": info["command"], "kind": "nilla", "app": str(app),
            "data": str(data), "cdp_port": port, "args": list(switches)}
     try:
         version = wait_until(lambda: http("GET", f"http://127.0.0.1:{port}/json/version"), 60,
-                             "Ardia /json/version", pid=pid)
+                             "Nilla /json/version", pid=pid)
     except BaseException:
         terminate(rec, grace=10)
         raise
@@ -79,7 +79,7 @@ def stop_browser(rec):
         return False
     if rec.get("kind") == "cloud":
         return bool(cloud_stop(rec))
-    return terminate(rec, grace=30 if rec.get("kind") == "ardia" else 10)
+    return terminate(rec, grace=30 if rec.get("kind") == "nilla" else 10)
 
 
 def cloud_key():

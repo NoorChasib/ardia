@@ -1,6 +1,6 @@
-# @ardia/import
+# @nilla/import
 
-Imports another browser's data into Ardia. The native code lives in `ios/`; `ios/Core/` is plain Swift with no
+Imports another browser's data into Nilla. The native code lives in `ios/`; `ios/Core/` is plain Swift with no
 Expo dependency, so `Package.swift` builds and tests it on its own. `src/index.ts` is the typed JS wrapper and the UI
 is `apps/browser/src/components/import/`. Every test reads fixtures. Never point anything at a real profile. On Windows the
 same module is TypeScript in `packages/expo-windows/src/import` (`docs/windows.md`, Import from another browser), with
@@ -47,11 +47,11 @@ Shared code: `Model.swift` (`ImportKind`, `ImportResult` and the other result ty
    above. A failed kind becomes a warning plus an entry in `failed`, and the other kinds still run. Safari, Dia tabs,
    HTML and CSV have their own module functions (`importSafariDirect`, `importSafariExport`, `readDiaTabs`,
    `importBookmarksHTML`, `importPasswordsCSV`).
-3. `ios/ImportModule.swift` (Expo module `ArdiaImport`) encodes the result as a JSON string for JS. It keeps
+3. `ios/ImportModule.swift` (Expo module `NillaImport`) encodes the result as a JSON string for JS. It keeps
    cookies, addresses and cards back in `ImportVault` (`ios/ImportWriter.swift`) and returns only their counts and
    a one-time `vaultToken`. History can stream in chunks (`onImportEvent`).
 4. `ios/ImportWriter.swift`: `writeImported(token, engineProfile, kinds)` takes the vault entry and sends it to the
-   engine with `ArdiaEngineBridge.callWithSecret` as `ac_cookies_import` and `ac_autofill_import`, in batches of 500
+   engine with `NillaEngineBridge.callWithSecret` as `ac_cookies_import` and `ac_autofill_import`, in batches of 500
    (`engine/chromium/src/chrome/browser/ardia/ac_cookies.cc`, `ac_autofill.cc`).
 5. `apps/browser/src/components/import/ImportWindow.tsx` is the wizard: choose, then profiles, then unlock, then
    progress, then done. `apps/browser/src/state/import/apply.ts` writes the JS-side kinds into the store (bookmarks, history, tabs, Arc spaces,
@@ -65,7 +65,7 @@ Shared code: `Model.swift` (`ImportKind`, `ImportResult` and the other result ty
    pin and, when it can't come from the Chrome Web Store, why (`skip`). Only an explicit internal location (a JSON
    integer 1) with `from_webstore` a JSON `true` counts as the Web Store, and a malformed id is dropped.
    `apps/browser/src/state/import/extensionListing.ts` plans the done screen's list: every Web Store extension under the
-   Ardia profile its source profile went to, by the name the source lists, its id and a store link built from the id,
+   Nilla profile its source profile went to, by the name the source lists, its id and a store link built from the id,
    leaving out what that profile already has (`listedExtensions.ts` reads `extensions.list`). Nothing is installed:
    installing from the import waits on an engine op that can create an install only if absent, own it, and cancel it for
    good. Linux's reader (`ac_linux_import_readers.cc`) sends only the id, name and store link, so Linux keeps the plain
@@ -113,7 +113,7 @@ sqlite3 CLI: it checkpoints the WAL the tests depend on.
 | Swift tests (`tests/`, against `fixtures/`) | `bun run --cwd packages/import test` (`swift test`, scratch path in `$TMPDIR`) |
 | Rebuild fixtures | `bun run --cwd packages/import fixtures` |
 | Typecheck the JS wrapper | `bun run --cwd packages/import check` |
-| End to end in a hidden Debug instance (cookies, addresses, cards) | `node packages/import/scripts/e2e.mjs <Ardia.app> <scratch dir>` (`--help`) |
+| End to end in a hidden Debug instance (cookies, addresses, cards) | `node packages/import/scripts/e2e.mjs <Nilla.app> <scratch dir>` (`--help`) |
 | Run one script in that instance (`e2e.mjs --keep`) | `scripts/agent/ac eval <scratch dir>/data '<js>'` |
 
 ## Test hooks (`ios/ImportModule.swift`)

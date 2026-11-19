@@ -7,7 +7,7 @@ import { launch, session, sleep } from "../../../scripts/lib/instance.mjs";
 const args = process.argv.slice(2);
 const appArg = args.find((a) => !a.startsWith("--"));
 if (!appArg || args.includes("--help")) {
-  console.error("usage: node drag-region-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--every-mount]\n" +
+  console.error("usage: node drag-region-test.mjs <Debug Nilla.app> [--port=<DevTools port>] [--every-mount]\n" +
     "  Title-bar drag regions rebuild lazily: after a layout change the pointer wasn't over, the window is stale,\n" +
     "  and it is rebuilt by the time a press can land (the pointer's arrival, a window move under it, or 2 s).\n" +
     "  --every-mount runs the dragRegionEveryMount experiment (the old behaviour) and prints its rebuild count.");
@@ -23,7 +23,7 @@ const fixture = session({
 });
 
 const HELPERS = `
-const dev = globalThis.expo.modules.ArdiaDev;
+const dev = globalThis.expo.modules.NillaDev;
 const st = () => ac.store.getState();
 const settle = (ms) => new Promise((r) => setTimeout(r, ms));
 const region = () => dev.devDragRegionState("w1");
@@ -134,7 +134,7 @@ try {
   }
 } finally {
   if (app) {
-    await app.eval(`return globalThis.expo.modules.ArdiaDev.devDragRegionPointer("w1", 0, 0, false);`).catch(() => {});
+    await app.eval(`return globalThis.expo.modules.NillaDev.devDragRegionPointer("w1", 0, 0, false);`).catch(() => {});
     await app.quit().catch(() => {});
   }
   rmSync(scratch, { recursive: true, force: true });

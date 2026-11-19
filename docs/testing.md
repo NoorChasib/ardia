@@ -1,7 +1,7 @@
 # Testing
 
 `bun run test` at the root runs every package's tests through Turbo, then `bun run test:root` over
-`extras/raycast-ardia/src/scripts.test.ts`, `scripts/**/*.test.mjs` and `apps/site/src/**/*.test.ts`. Turbo caches the
+`extras/raycast-nilla/src/scripts.test.ts`, `scripts/**/*.test.mjs` and `apps/site/src/**/*.test.ts`. Turbo caches the
 results; a cold run spends most of its time in `swift test`'s first build. `bun run test:portable` runs the portable workspace and root tests, the ones that need
 no Mac; the Linux host tests and native fixtures run through `scripts/linux/ci-checks.sh`. Each package also runs its own:
 
@@ -14,10 +14,10 @@ no Mac; the Linux host tests and native fixtures run through `scripts/linux/ci-c
 | `packages/shell` | `bun run --cwd packages/shell test` | `swift test` (the updater's channel switch among them) |
 | `packages/shaders` | `bun run --cwd packages/shaders test` | `scripts/meadow.mjs --check` |
 | `packages/ardiacore` | `bun run --cwd packages/ardiacore test` | The tests of the engine API table, page events and the WebKit page script, then the native programs in `tests/`, each compiled with `clang++` (the transfer ledger under ThreadSanitizer) |
-| `extras/raycast-ardia` | `bun run test:root` | The AppleScript quoting and parsing |
+| `extras/raycast-nilla` | `bun run test:root` | The AppleScript quoting and parsing |
 | `.github/vouch` | `bun run test:vouch` | The vouch bot's labels and gates |
 
-`apps/browser` runs its TypeScript with the real `@ardia/shell` and `@ardia/ardiacore` code and swaps only the native
+`apps/browser` runs its TypeScript with the real `@nilla/shell` and `@ardia/ardiacore` code and swaps only the native
 side. Under `bun test`, `src/test-preload.mjs` does it with `mock.module`; under Node, `src/test-loader.mjs` does the
 same with loader hooks. `expo-modules-core` becomes `src/test-native/expo.ts`, which hands each package the fake of
 every native module it asks for (`src/test-native/shell.ts`, `src/test-native/ardiacore.ts`), and `react-native` inert
@@ -33,7 +33,7 @@ native method is added, removed or changed and the fake isn't. Tests drive the f
 The files that need Node (a stub for one importer only, `--expose-gc`, V8's native-function printing) are listed in
 `apps/browser/node-tests.json` with the reason for each, and the same script runs them with `node --test` and the test
 loader, which transpiles `.tsx` with the TypeScript 6 API (`@typescript/typescript6`, cached in
-`node_modules/.cache/ardia-test-tsx`). The loader stays for Node's other users too: the engine's Linux tests, the perf
+`node_modules/.cache/nilla-test-tsx`). The loader stays for Node's other users too: the engine's Linux tests, the perf
 scripts and `scripts/command-tables.mjs`. The runner is `scripts/lib/bun-tests.mjs` (`--help`); it passes `--shard=N/M`
 to both runners, which is how CI splits the suite in four (`bun run --cwd apps/browser test --shard=1/4`). One file,
 on whichever runner it belongs to: `bun run --cwd apps/browser test ./src/state/tabs/tabs.test.mjs`. A new test that
@@ -58,7 +58,7 @@ holds the rest.
 | Profile swipes | `node apps/browser/scripts/profile-swipe-test.mjs <Debug app>` | The native pager's races (0.2.14–0.2.18 fixes) |
 | Tab dragging | `node apps/browser/scripts/tab-drag-test.mjs <Debug app>` | Dragging in the top tab strip moves the tab, never the window (0.2.18); the empty strip moves it over its whole height and a double-click zooms (0.2.25); the empty sidebar under the rows moves it too, and a double-click there still opens a tab; a chip click whose pointer drifts up to 9 pt still opens the tab, a split pane's too (#947); a tab's hover card shows under the strip after 0.5 s, moves to the next tab at once, takes no presses and leaves the tabs beside it untouched |
 | Title-bar drag regions | `node apps/browser/scripts/drag-region-test.mjs <Debug app>` (`--every-mount` runs the `dragRegionEveryMount` experiment and prints its rebuild count) | A window's drag region is rebuilt lazily (#1682): a change the pointer wasn't over leaves it stale, and it is rebuilt when the pointer reaches the title bar, when the window moves under a still pointer, or 2 s later; a change with the pointer in the title bar rebuilds at once. After a tab added, the sidebar resized, hidden and shown, and a title change, the region the pointer's arrival leaves equals a full rebuild's (`devDragRegionRects` against `devDragBlockedRects`), the empty title bar is the window server's to drag, and no drag region point is blocked; 40 title changes in 6 s cost at most 5 rebuilds |
-| Windowing | `node apps/browser/scripts/windowing-test.mjs <Debug app>` | Window frames and what the screen shows in passing; Settings answers `AXDialog` and Little Ardia `AXSystemFloatingWindow`, so tiling window managers (AeroSpace) float them, while the main window stays `AXStandardWindow` |
+| Windowing | `node apps/browser/scripts/windowing-test.mjs <Debug app>` | Window frames and what the screen shows in passing; Settings answers `AXDialog` and Little Nilla `AXSystemFloatingWindow`, so tiling window managers (AeroSpace) float them, while the main window stays `AXStandardWindow` |
 | ⌘-scroll | `node apps/browser/scripts/zoom-scroll-test.mjs <Debug app>` | Trackpad scrolls, mouse zooms (regressed in 0.1.4 and 0.2.12) |
 | Hidden panes | `node apps/browser/scripts/hidden-pane-test.mjs <Release app>` (a Debug app fails five `shown:` checks) | What changes while a tab is hidden (URL, title, loading, zoom, find bar, a permission prompt) is on screen the moment it is shown |
 | Layout shifts | `node apps/browser/scripts/layout-shift-test.mjs <Release app>` (reads a probe a Debug app's React dev hook replaces) | Nothing already on screen moves when late content arrives |
@@ -76,7 +76,7 @@ holds the rest.
 | Import window | `node apps/browser/scripts/import-flow-test.mjs <Debug app> <scratch dir> [flow…] [--record <file>] [--compare <file>] [--keep]` | Every flow of the import window (Chrome with unlock, skip and back, Arc, Firefox, Dia, Safari direct, export and a bad file) against `packages/import/fixtures`, with a background-only stand-in for Dia, never a real profile |
 | Sync | `node packages/sync/scripts/e2e.mjs <Debug app>` | Two and three hidden instances through one folder (`docs/sync.md`) |
 | Import | `node packages/import/scripts/e2e.mjs <Debug app> <scratch dir>` | Cookies, addresses and cards from a fake Chrome home (`packages/import/README.md`) |
-| Video upscaling | `node apps/browser/scripts/video-upscaling-test.mjs <Debug app> [--keep] [check…]` (`--list`) | What the GPU process upscales in every state the gate decides (playing, paused, native size, background tab, app inactive, occluded, Low Power, thermal, screen sharing (acted, and a real tab share through the picker), PiP, HDR, full screen, Little Ardia, setting off), from its `ArdiaVSR.*` trace events and `videoUpscalingState()` |
+| Video upscaling | `node apps/browser/scripts/video-upscaling-test.mjs <Debug app> [--keep] [check…]` (`--list`) | What the GPU process upscales in every state the gate decides (playing, paused, native size, background tab, app inactive, occluded, Low Power, thermal, screen sharing (acted, and a real tab share through the picker), PiP, HDR, full screen, Little Nilla, setting off), from its `NillaVSR.*` trace events and `videoUpscalingState()` |
 | PiP click to skip | `node apps/browser/scripts/pip-click-seek-test.mjs <Debug app> [--keep] [--expect-no-seek]` | A click on the left or right of the video Picture in Picture window skips 10 s back or ahead, and each click of a quick double or triple click skips again; the centre column, a drag (also one that only passes 3 pt at the release), a dead-band double-click and a stashed window never seek; the video in the window is the one that moves, even paused while another plays; a page with only a `seekto` handler is asked on the timeline it reported, kept current through repeated clicks and a pause though it reports once, also for a video in a closed shadow root; Chrome's close button still closes (#1735). `--expect-no-seek` runs it against a build from before, where no click moves the video |
 | Engine patches | `python3 engine/patches/series.py check` | The patch series reproduces the Chromium tree (`docs/engine-build.md`) |
 | Engine (ArdiaCore) | `node packages/ardiacore/scripts/acceptance.mjs <Debug app> <scratch dir> [--keep] [check…]` | The app on ArdiaCore, hidden (`docs/ardiacore-parity.md`). `--keep` leaves the instance up and `--attach <scratch dir> [check…]` re-runs checks on it in seconds; `--list` gives each check's section and what it needs (brought along automatically) |
@@ -95,13 +95,13 @@ The acceptance run's checks and what each proves are listed in `docs/ardiacore-p
 # App: apps/browser/macos (the only app project; pod install there after adding native files).
 scripts/agent/build-app --as <you>     # into apps/browser/build-<you>; --help
 # Acceptance, hidden (open -g -n, ARDIA_BACKGROUND=1, a scratch data dir); METRO_PORT is a Metro for this checkout.
-METRO_PORT=8081 node packages/ardiacore/scripts/acceptance.mjs apps/browser/build-<you>/Build/Products/Debug/Ardia.app <scratch dir> [check…]
+METRO_PORT=8081 node packages/ardiacore/scripts/acceptance.mjs apps/browser/build-<you>/Build/Products/Debug/Nilla.app <scratch dir> [check…]
 ```
 
-The app (bundle id `com.ardia.browser`, Apple Development signing with the hardened runtime in
+The app (bundle id `com.nilladigital.nilla`, Apple Development signing with the hardened runtime in
 Debug; `scripts/release.sh` signs releases with Developer ID). A Debug build refuses to start without
 `ARDIA_DATA_DIR` (it never falls back to a real profile). A test run hands it its Metro in `ARDIA_INSTANCE` `jsLocation`
-(that launch's argument domain, never written); never `defaults write com.ardia.browser`, the installed app's. Its build stages a copy of the engine framework
+(that launch's argument domain, never written); never `defaults write com.nilladigital.nilla`, the installed app's. Its build stages a copy of the engine framework
 (`packages/ardiacore/scripts/stage-framework.sh`, under the chromium lock, into `ARDIACORE_STAGE_DIR`), links that, and
 `embed.sh` signs the embedded copy with the build's identity.
 
@@ -114,7 +114,7 @@ Test hygiene the run keeps (each was a real failure):
 - Permissions use MIDI and notifications (no macOS prompt behind them), external apps a scheme no app handles;
   never location or `mailto:`. Camera and microphone only on a copy of the app without the device entitlements
   (ad hoc, hardened runtime: macOS refuses the devices without asking) and Chrome's fake devices: every hidden
-  instance gets `--use-fake-device-for-media-stream` (ArdiaHost), and with it the engine keeps the microphone on a
+  instance gets `--use-fake-device-for-media-stream` (NillaHost), and with it the engine keeps the microphone on a
   fake input (`ac_fake_media.mm`), since the fake list's "default" input is the Mac's real one to the audio service and
   a stream on it raised macOS's microphone dialog on the owner's screen (2026-10-01).
 - A check that needs a page on screen (permission prompts, choosers, context menus) shows it first: Chrome holds
@@ -143,7 +143,7 @@ Launch with `scripts/agent/ac launch <app> --data <dir> [--instance K=V] [--test
   both times, `--test applyProfileGate` applies the gate on the mock keychain too).
 - **`reauth=granted`** (engine `ac_reauth.cc`) grants macOS re-auth requests in background mode (otherwise refused,
   each reported as `reauth.requested`). Like every `ARDIA_TEST` key it counts only in a build that isn't signed for
-  distribution, on a scratch data dir and Chrome's mock keychain, so it can never reveal what the real "Ardia Safe
+  distribution, on a scratch data dir and Chrome's mock keychain, so it can never reveal what the real "Nilla Safe
   Storage" key encrypts; a Developer ID build refuses every request in background mode.
 - **`contextMenu`**: context menus go to the host instead of the screen; the menu is written to
   `<data dir>/context-menu.json`, the pick read from `context-menu.json.pick` runs on the model that owns it, logged as
@@ -155,7 +155,7 @@ Launch with `scripts/agent/ac launch <app> --data <dir> [--instance K=V] [--test
 - **Interface size.** `--arg=-interfaceScale --arg=1.25` starts an instance at that scale: native reads it before the
   first window, and JS keeps it as long as the data dir never chose a size (once `interfaceScale` is chosen, the saved
   value wins and is pushed to native at launch). Live: `ac.store.getState().updateSettings({ interfaceScale: 1.25 })` (the setting's own path: JS, native and
-  storage; calling `ArdiaApp.setInterfaceScale` directly changes native only and leaves JS at the old size), or
+  storage; calling `NillaApp.setInterfaceScale` directly changes native only and leaves JS at the old size), or
   through the Settings row with `--test appMenu`: write the percent (`125`) to `menu.json.pick` and
   `ac.shell.devClick("settings", { label: "Interface size" })`; `{ label: "Back to 100%" }` resets. `ac.interfaceScale`
   in the dev harness has the current scale, `pixelRatio` and `hairline`. For a real 1× backing scale (pixel checks),
@@ -170,7 +170,7 @@ Launch with `scripts/agent/ac launch <app> --data <dir> [--instance K=V] [--test
   `fakeFullScreenMs:<ms>`, `fakeOcclusion:<visible|occluded|off>` (macOS's occlusion state; a test window otherwise
   counts as seen), `fakeFullScreenOcclusionMs:<ms>` (acted transitions occlude the window, visible again `<ms>` after
   they end, as a real Space animation), `pageCover:<1|0>` (the page's picture over it through transitions,
-  `ArdiaPageCover`; 0 is 0.2.30's behaviour), `fullScreenProbe:<ms>` then `fullScreenProbe` (per display frame, what
+  `NillaPageCover`; 0 is 0.2.30's behaviour), `fullScreenProbe:<ms>` then `fullScreenProbe` (per display frame, what
   an in-process render of the window, all AppKit's transition shows, has in the page's place: an 8 × 6 colour grid,
   uniformity, covers; acceptance `fullscreen-transition-picture`).
 - **`pipSelfTest`**: on the first PiP window, `close` / `backToTab` click Chrome's buttons (`pip-button-selftest.json`:
@@ -182,9 +182,9 @@ Launch with `scripts/agent/ac launch <app> --data <dir> [--instance K=V] [--test
   seconds, point and click count, and how many there were) and `skip:<seconds>` (the click skip's own path).
 - **`allowOcclusion`**: macOS posts no occlusion change for a window a band below normal, so minimizing and
   deminiaturizing post one for it (the page goes hidden as in a user's minimized window).
-- **The `ardia` command** (`cliHome`, `cliBinDir`, `cliUrl` (`file://` works), test `cliInstallScript`): a test
+- **The `nilla-browser` command** (`cliHome`, `cliBinDir`, `cliUrl` (`file://` works), test `cliInstallScript`): a test
   instance installs or upgrades only with the first two set, so it never touches the real home. Its
-  `--remote-debugging-port` makes the "Let the ardia command control Ardia" setting stand aside; test that setting in an
+  `--remote-debugging-port` makes the "Let the nilla-browser command control Nilla" setting stand aside; test that setting in an
   instance launched without one.
 
 `ARDIA_BACKGROUND=1` changes:
@@ -218,10 +218,10 @@ Launch with `scripts/agent/ac launch <app> --data <dir> [--instance K=V] [--test
 - **Other:** macOS re-auth prompts never show; requests are refused unless `ARDIA_TEST` `reauth=granted` in a build that
   honours it (above). Nothing system-wide changes: Set as Default (onboarding, whose checkbox starts unticked, and
   Settings), Chrome's own default browser, scheme and file type setters, Add to Dock and Launch at Login are no-ops
-  that log a line (`ArdiaSystem`, `chromium-background-instance-no-default-handlers.patch`).
+  that log a line (`NillaSystem`, `chromium-background-instance-no-default-handlers.patch`).
 
 A scratch `ARDIA_DATA_DIR` holds Chrome's user data and the app's documents, its defaults, keychain items and
-Sparkle state (`packages/shell/ios/ArdiaIsolation.m`); Chrome gets `--use-mock-keychain`; update checks are off without
+Sparkle state (`packages/shell/ios/NillaIsolation.m`); Chrome gets `--use-mock-keychain`; update checks are off without
 `updateFeed`; a Release build's telemetry is tagged `test`, and the release-notes page stays closed
 unless `releaseNotes`.
 
@@ -229,7 +229,7 @@ A Release or RC build starts the dev harness (`dev-eval.js`) only when `$ARDIA_D
 test instance (`src/state/app/perfProbe.ts`): `: > "$ARDIA_DATA_DIR/perf-probe"` before launch, as
 `.claude/skills/release/scripts/smoke.sh` does.
 
-Input and capture hooks on `ac.shell`, from the `ArdiaDev` module (Debug builds only: in a Release build the module has no functions), for driving
+Input and capture hooks on `ac.shell`, from the `NillaDev` module (Debug builds only: in a Release build the module has no functions), for driving
 the app as a person would rather than writing a new helper:
 
 | Hook | What it does |
@@ -237,8 +237,8 @@ the app as a person would rather than writing a new helper:
 | `devKeyEquivalent(windowId, { key, keyCode, modifiers, focus, asKey })` | Presses one shortcut through the window's real key path |
 | `devTypeKeys(windowId, text, interval)` | Types text into the focused field, a key every `interval` ms; resolves with per-key timings |
 | `devMenuCommand(command, arg)` | Fires a menu command as if picked from the menu bar |
-| `ArdiaDev.devMenuItems(title, path?, asTitleBar?)` | A menu bar menu's items as AppKit has them, its own included (Window › Fill, Move & Resize…); `"tiling:<windowId>"` is the window's green-button menu and whether AppKit tiles it; `path` picks an item; `asTitleBar` delivers it as the green button's menu does, `NSApp.sendAction` to the item's own target (a submenu's parent sends `submenuAction:` to its menu) |
-| `ArdiaDev.devPostKey(windowId, key, keyCode, modifiers)` | Posts one key press to the app's event queue (`"menu:<key>"`: straight to the menu bar's key equivalents). System hot keys (fn-⌃ tiling) can't be posted |
+| `NillaDev.devMenuItems(title, path?, asTitleBar?)` | A menu bar menu's items as AppKit has them, its own included (Window › Fill, Move & Resize…); `"tiling:<windowId>"` is the window's green-button menu and whether AppKit tiles it; `path` picks an item; `asTitleBar` delivers it as the green button's menu does, `NSApp.sendAction` to the item's own target (a submenu's parent sends `submenuAction:` to its menu) |
+| `NillaDev.devPostKey(windowId, key, keyCode, modifiers)` | Posts one key press to the app's event queue (`"menu:<key>"`: straight to the menu bar's key equivalents). System hot keys (fn-⌃ tiling) can't be posted |
 | `devSnapshotWindow(windowId, path, transparent?)` | Writes the window's layers to a PNG in-process (works with the screen locked; `false` = failed) |
 | `devRenderIntroMusic(cues, path)` | Renders the onboarding intro music to an audio file, for a video's soundtrack |
 
@@ -271,7 +271,7 @@ lose or leak data, or when the bug is invisible by eye and has shipped before.
 | `packages/core/src/suggest.test.ts` | Inline completion never fills a long sign-in URL; free text never autocompletes; open tabs switchable; frecency ranking; a newer fetch aborts the older one | Omnibox ranking |
 | `packages/sync` | The 9 convergence cases above, and the crypto's 5 (`docs/sync.md` › Tests) | Sync correctness and encryption |
 | `packages/import/tests/ImportTests.swift` | Importing never writes to the source profile, never leaves its data folder, decrypts logins only with the right key and only after consent | Another browser's data and secrets |
-| `extras/raycast-ardia` | Tab and profile ids, and what's typed into New Tab, are quoted in the AppleScript it sends; its answer reads back into the right tabs and profiles; a profile name matches whole, then by a start only one profile has, ignoring case, and a start several share names them instead of picking one | Script injection; New Window opening the wrong profile |
+| `extras/raycast-nilla` | Tab and profile ids, and what's typed into New Tab, are quoted in the AppleScript it sends; its answer reads back into the right tabs and profiles; a profile name matches whole, then by a start only one profile has, ignoring case, and a start several share names them instead of picking one | Script injection; New Window opening the wrong profile |
 
 ## What went, and why
 
@@ -279,7 +279,7 @@ lose or leak data, or when the bug is invisible by eye and has shipped before.
 | --- | --- |
 | Spring, rubber-band, capsule and layout constants (`swipeMotion`, `stripGroups`), group naming and labels, numbered tabs, release-note postcard timing, favicon index bounds | Pin exact constants or formatting; a visual check catches these |
 | Calculator, quick-create commands, Tab-to-search, text fragments, custom engine validation, most `appUrls` cases | Small pure helpers whose failure is visible the moment you use them |
-| Live folders (GitHub, Meetings), Little Ardia, splits beyond integrity, organize beyond clean-up, OTLP encoding | Feature detail rather than data or security; covered by use |
+| Live folders (GitHub, Meetings), Little Nilla, splits beyond integrity, organize beyond clean-up, OTLP encoding | Feature detail rather than data or security; covered by use |
 | The rest of `pinnedClose`, `openers`, `idn`, `suggest`, `sanitize`, sync and import | Variations of a kept case |
 | `profile-pager-race-test.mjs` | Loaded the pager's source with its dependencies mocked; `profile-swipe-test.mjs` runs the same races against the real app |
 | `profile-motion-stall-test.mjs`, `profile-swipe-replay.mjs` (and the owner's trackpad recording) | One-off investigation harnesses for the native pager, done in 0.2.18 |

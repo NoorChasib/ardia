@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage="usage: scripts/release/verify.sh <exported Ardia.app> <archive> <version> <build number>"
+usage="usage: scripts/release/verify.sh <exported Nilla.app> <archive> <version> <build number>"
 app="${1:?$usage}"
 archive="${2:?$usage}"
 version="${3:?$usage}"
@@ -14,11 +14,11 @@ fwv="$(cd "$app/Contents/Frameworks/Chromium Framework.framework/Versions/Curren
 
 echo "==> Verify"
 codesign --verify --deep --strict "$app"
-[ -d "$archive/dSYMs/Ardia.app.dSYM" ] || die "the archive has no Ardia.app.dSYM"
+[ -d "$archive/dSYMs/Nilla.app.dSYM" ] || die "the archive has no Nilla.app.dSYM"
 entitlements() { codesign -d --entitlements - --xml "$1" 2>/dev/null; }
 info() { plutil -extract "$1" raw "$app/Contents/Info.plist" 2>/dev/null; }
 [ "$(info CFBundleIdentifier)" = "$NILLA_BUNDLE_ID" ] || die "bundle id is $(info CFBundleIdentifier)"
-[ "$(info CFBundleExecutable)" = Ardia ] || die "executable is $(info CFBundleExecutable)"
+[ "$(info CFBundleExecutable)" = Nilla ] || die "executable is $(info CFBundleExecutable)"
 [ "$(info CFBundleShortVersionString)" = "$version" ] || die "CFBundleShortVersionString is $(info CFBundleShortVersionString)"
 [ "$(info CFBundleVersion)" = "$release_build" ] || die "CFBundleVersion is $(info CFBundleVersion), not $release_build"
 [ "$(info ACUpdateChannel)" = "$channel" ] || die "ACUpdateChannel is '$(info ACUpdateChannel)', not $channel"
@@ -27,8 +27,8 @@ for key in SUFeedURL SUPublicEDKey NSDockTilePlugIn NSCameraUsageDescription NSM
   [ -n "$(info "$key")" ] || die "Info.plist has no $key"
 done
 [ -d "$app/Contents/Frameworks/Sparkle.framework" ] || die "no Sparkle.framework"
-[ -d "$app/Contents/PlugIns/ArdiaDockTile.plugin" ] || die "no dock tile plug-in"
-[ ! -e "$app/Contents/Helpers/ArdiaFairPlay.app" ] || die "the removed FairPlay helper is still in the app"
+[ -d "$app/Contents/PlugIns/NillaDockTile.plugin" ] || die "no dock tile plug-in"
+[ ! -e "$app/Contents/Helpers/NillaFairPlay.app" ] || die "the removed FairPlay helper is still in the app"
 [ -f "$app/Contents/embedded.provisionprofile" ] || die "no Developer ID provisioning profile (keychain groups need it)"
 [ -f "$app/Contents/Resources/Extensions/ublock/manifest.json" ] || die "no uBlock Origin in the app"
 [ -f "$app/Contents/Resources/ContentRules/rulesets.json" ] || die "no WebKit content rules in the app"

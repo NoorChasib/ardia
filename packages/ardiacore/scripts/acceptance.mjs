@@ -3,7 +3,7 @@
 // (ARDIA_BACKGROUND=1, its own data dir and DevTools port; scripts/lib/instance.mjs), serves fixture pages, and
 // drives the real app through its dev harness (lib/devHarness.ts) and Chrome's DevTools protocol.
 //
-//   node packages/ardiacore/scripts/acceptance.mjs <Ardia.app> <scratch dir> [--keep] [check…]
+//   node packages/ardiacore/scripts/acceptance.mjs <Nilla.app> <scratch dir> [--keep] [check…]
 //   node packages/ardiacore/scripts/acceptance.mjs --attach <scratch dir> [check…]
 //   node packages/ardiacore/scripts/acceptance.mjs --list
 //
@@ -32,7 +32,7 @@
 //   targets() · pageTarget(urlPart) · pageFor(tabId, urlPart) · cdp(target, method, params) · closeFromPage(target)
 //   engine(name, args, ms)         ac.engine.call(name, args); rejects with the engine's error
 //   engineOrError(name, args, ms)  the same, but a failure resolves { error } (the old password, autofill, extension shape)
-//   secret(module, fn, …args)      ArdiaPasswords / ArdiaAutofill calls that carry a secret; a failure resolves { error }
+//   secret(module, fn, …args)      NillaPasswords / NillaAutofill calls that carry a secret; a failure resolves { error }
 //   browserOf(tabId) (the tab's engine browser, to tell a reload apart) · eventsOf(tabId) · lastEvent(tabId, name, test) · live(tabId) · pipWindows()
 //   openTab(url, title, background) · closeTab(id) · shownAndMounted(id) · freshTab(url) · backToA() · startVideo(tabId, audio)
 //   closeDownloads()               closes the Downloads popover a new download opens (its backdrop takes the next click)
@@ -179,7 +179,7 @@ if (attaching || keep) {
 const [appArg, scratchArg, ...only] = attaching ? [kept.app, ...argv] : argv;
 const { run: selected, deps } = selection(only);
 if (!appArg || !scratchArg) {
-  console.error("usage: acceptance.mjs <Ardia.app> <scratch dir> [--keep] [check…] | --attach <scratch dir> [check…] | --list | --help");
+  console.error("usage: acceptance.mjs <Nilla.app> <scratch dir> [--keep] [check…] | --attach <scratch dir> [check…] | --list | --help");
   process.exit(64);
 }
 const app = resolve(appArg);
@@ -206,8 +206,8 @@ const stamp = () => new Date().toISOString().slice(11, 23);
 const adServed = [];
 const served = new Map();
 const referers = new Map();
-const siteDataDomain = "ardia-sitedata.com";
-const siteDataSecureHosts = [`s.${siteDataDomain}`, "embed.ardia-thirdparty.com", "top.ardia-elsewhere.com"];
+const siteDataDomain = "nilla-sitedata.com";
+const siteDataSecureHosts = [`s.${siteDataDomain}`, "embed.nilla-thirdparty.com", "top.nilla-elsewhere.com"];
 let clipBytes = null;
 const fixtureClip = () => {
   const path = join(scratch, "media", "clip.webm");
@@ -404,7 +404,7 @@ const server = createServer((req, res) => {
           if (e.key === "f") document.fullscreenElement ? document.exitFullscreen() : document.body.requestFullscreen();
         });
       if (location.search.includes("handlers")) {
-        navigator.mediaSession.metadata = new MediaMetadata({ title: "Fixture video", artist: "Ardia" });
+        navigator.mediaSession.metadata = new MediaMetadata({ title: "Fixture video", artist: "Nilla" });
         for (const action of ["play", "pause", "seekbackward", "seekforward", "previoustrack", "nexttrack", "seekto"])
           navigator.mediaSession.setActionHandler(action, () => {});
       }
@@ -1132,7 +1132,7 @@ try {
       const text = (await cdp(t, "Runtime.evaluate", { expression: "document.body?.innerText ?? ''", returnByValue: true })).result?.value ?? "";
       const product = text.split("\n").find((l) => /^\w+\t\d+\.\d+\./.test(l) && !/^CEF/.test(l));
       const credit = text.match(/Copyright \d+ The Chromium Authors/)?.[0];
-      if (!/^Ardia\t/.test(product ?? "") || !credit) throw new Error(`version page: ${product} / ${credit}`);
+      if (!/^Nilla\t/.test(product ?? "") || !credit) throw new Error(`version page: ${product} / ${credit}`);
       return { product, credit };
     } finally {
       await evalApp(`ac.store.getState().navigate("${first.id}", "${base}/a", { userInitiated: true }); return true`);
@@ -1574,7 +1574,7 @@ try {
         }, 5000);
         if (unclicked !== "InvalidStateError" || (await asks()) !== asked) throw new Error(`${kind} without a click: ${unclicked}, picker asks ${(await asks()) - asked}`);
         await cdp(t, "Runtime.evaluate", { expression: `share(${JSON.stringify(kind)})`, userGesture: true });
-        await until(`Ardia's picker for ${kind}`, async () => ((await asks()) > asked ? true : null), 10000);
+        await until(`Nilla's picker for ${kind}`, async () => ((await asks()) > asked ? true : null), 10000);
         const source = await evalApp(`return ac.webviews.get("${target.id}").mediaCaptureSourceId()`);
         if (!source) throw new Error("no capture source id for the target tab");
         await evalApp(`globalThis.acSharePicker.answerDisplayMedia("${tab.id}", ${JSON.stringify(source)}); return true`);
@@ -1692,7 +1692,7 @@ try {
   // MARK: Tab lifecycle
 
   await check("restore-after-close", async () => {
-    const shell = "globalThis.expo.modules.ArdiaDialogs";
+    const shell = "globalThis.expo.modules.NillaDialogs";
     const s = (expr) => evalApp(`const s = ac.store.getState(); return ${expr}`);
     const toB = async (tabId, tag) => {
       await until(`A?${tag} loaded`, async () => (await s(`s.tabs["${tabId}"]?.title === "Page A" && !s.live["${tabId}"]?.isLoading && !!ac.webviews.get("${tabId}")`)) || null, 15000);
@@ -2235,7 +2235,7 @@ try {
 
   await check("passwords", async () => {
     const origin = "https://example.test";
-    const saved = await secret("ArdiaPasswords", "save", "", origin, "nnuser", "s3cret");
+    const saved = await secret("NillaPasswords", "save", "", origin, "nnuser", "s3cret");
     if (saved?.error) throw new Error(saved.error);
     const list = await until("the saved login", async () => {
       const r = await engineOrError("passwords.list", { profile: "" });
@@ -3091,8 +3091,8 @@ try {
 
   await check("passwords-more", async () => {
     const origin = "https://more.test";
-    await secret("ArdiaPasswords", "save", "", origin, "olduser", "pw1");
-    const updated = await secret("ArdiaPasswords", "update", "", origin, "olduser", "newuser", "pw2");
+    await secret("NillaPasswords", "save", "", origin, "olduser", "pw1");
+    const updated = await secret("NillaPasswords", "update", "", origin, "olduser", "newuser", "pw2");
     if (updated?.error) throw new Error(`update: ${updated.error}`);
     const revealed = await until("the edited login", async () => {
       const r = await engineOrError("passwords.reveal", { profile: "", origin, username: "newuser" });
@@ -3112,11 +3112,11 @@ try {
   await check("passwords-save-again", async () => {
     const origin = `https://again-${process.pid}-${Date.now().toString(36)}.test`;
     try {
-      const first = await secret("ArdiaPasswords", "save", "", origin, "user", "pw1");
+      const first = await secret("NillaPasswords", "save", "", origin, "user", "pw1");
       if (first?.error) throw new Error(`first save: ${first.error}`);
-      const again = await secret("ArdiaPasswords", "save", "", origin, "user", "pw1");
+      const again = await secret("NillaPasswords", "save", "", origin, "user", "pw1");
       if (again?.error) throw new Error(`saving the same login again: ${again.error}`);
-      const other = await secret("ArdiaPasswords", "save", "", origin, "user", "pw2");
+      const other = await secret("NillaPasswords", "save", "", origin, "user", "pw2");
       if (other?.error !== "Could not save the password (invalid, or already saved)") throw new Error(`saving another password for it: ${JSON.stringify(other)}`);
       const revealed = await until("the first password", async () => {
         const r = await engineOrError("passwords.reveal", { profile: "", origin, username: "user" });
@@ -3129,7 +3129,7 @@ try {
   });
 
   await check("autofill-cards", async () => {
-    const saved = await secret("ArdiaAutofill", "saveCard", "", { name: "Acceptance Test", expMonth: 12, expYear: 2031 }, "4111111111111111");
+    const saved = await secret("NillaAutofill", "saveCard", "", { name: "Acceptance Test", expMonth: 12, expYear: 2031 }, "4111111111111111");
     if (saved?.error) throw new Error(`save: ${saved.error}`);
     const card = await until("the card listed", async () => {
       const r = await engineOrError("autofill.cards", { profile: "" });
@@ -3717,7 +3717,7 @@ try {
 
   await check("auto-picture-in-picture-other-window", async () => {
     const tab = await openTab(`${secureBase}/video?auto&file`, "Video");
-    const focus = (windowId) => evalApp(`return globalThis.expo.modules.ArdiaAppWindows.focusWindow(${JSON.stringify(windowId)}).then(() => true)`);
+    const focus = (windowId) => evalApp(`return globalThis.expo.modules.NillaAppWindows.focusWindow(${JSON.stringify(windowId)}).then(() => true)`);
     let other = null;
     try {
       await startVideo(tab.id, true);
@@ -4218,8 +4218,8 @@ try {
     const nums = (text) => text.match(/-?[\d.]+/g).map(Number);
     const pipAct = (action) => engine("tabs.devPictureInPictureAction", { action });
     const report = (body) => evalApp(`const r = ac.report; ${body}`);
-    const dev = (fn, ...args) => evalApp(`const m = globalThis.expo.modules.ArdiaReport; return m.${fn} ? m.${fn}(${args.map((a) => JSON.stringify(a)).join(", ")}) : null`);
-    const dragPreview = (fn, ...args) => evalApp(`return globalThis.expo.modules.ArdiaAppWindows.${fn}(${args.map((a) => JSON.stringify(a)).join(", ")})`);
+    const dev = (fn, ...args) => evalApp(`const m = globalThis.expo.modules.NillaReport; return m.${fn} ? m.${fn}(${args.map((a) => JSON.stringify(a)).join(", ")}) : null`);
+    const dragPreview = (fn, ...args) => evalApp(`return globalThis.expo.modules.NillaAppWindows.${fn}(${args.map((a) => JSON.stringify(a)).join(", ")})`);
     const styled = async () => (await pipWindows())?.find((w) => w.video && w.styled && w.visible) ?? null;
     const MARKERS = { page: [300, 180], video: [240, 60], other: [270, 30] };
     const HUE_TOLERANCE = 10, MIN_SATURATION = 0.55, MIN_VALUE = 0.3, MIN_PIXELS = 40;
@@ -4294,7 +4294,7 @@ try {
         return id;
       };
       const closeWindow = async (id) => {
-        await evalApp(`return globalThis.expo.modules.ArdiaAppWindows.closeWindow(${JSON.stringify(id)})`).catch(() => null);
+        await evalApp(`return globalThis.expo.modules.NillaAppWindows.closeWindow(${JSON.stringify(id)})`).catch(() => null);
         await until(`window ${id} closed`, () => evalApp(`return !ac.store.getState().windows["${id}"]`), 10000).catch(() => null);
       };
       const choreography = async (label) => {
@@ -4318,10 +4318,10 @@ try {
         await closeWindow(priv);
         opened.splice(opened.indexOf(priv), 1);
         await sleep(500);
-        step("Little Ardia appears over the window");
-        const small = await opens("newLittleArdia", "small", `${base}/marker?other`, [wx + 60, wy + 60, 520, 420]);
+        step("Little Nilla appears over the window");
+        const small = await opens("newLittleNilla", "small", `${base}/marker?other`, [wx + 60, wy + 60, 520, 420]);
         await sleep(900);
-        step("Little Ardia closes");
+        step("Little Nilla closes");
         await closeWindow(small);
         opened.splice(opened.indexOf(small), 1);
         await sleep(400);
@@ -4442,7 +4442,7 @@ try {
     } finally {
       await report(`r.discardRecording(); return r.closeReport().then(() => true)`).catch(() => null);
       await dragPreview("dragPreviewCancel").catch(() => null);
-      for (const id of opened) await evalApp(`return globalThis.expo.modules.ArdiaAppWindows.closeWindow(${JSON.stringify(id)})`).catch(() => null);
+      for (const id of opened) await evalApp(`return globalThis.expo.modules.NillaAppWindows.closeWindow(${JSON.stringify(id)})`).catch(() => null);
       await pipAct("alpha:0").catch(() => null);
       if (canPlace) await dev("devPlaceWindow", mainWindow, original).catch(() => null);
       await closeTab(video.id);
@@ -4501,7 +4501,7 @@ try {
       if (!spot) throw new Error("no window point over the page");
       await press(spot);
       const down = await until("the calibration press", async () => (await events()).find((e) => e[0] === "mousedown"), 4000);
-      const rootPointsPerPagePoint = 1 / (await evalApp("return globalThis.expo.modules.ArdiaApp.interfaceScale()"));
+      const rootPointsPerPagePoint = 1 / (await evalApp("return globalThis.expo.modules.NillaApp.interfaceScale()"));
       const at = (x, y) => [Math.round(spot[0] + (x - down[2]) * rootPointsPerPagePoint), Math.round(spot[1] + (y - down[3]) * rootPointsPerPagePoint)];
       const [x, y] = at(130, 70);
       await act(`mouse:down:${x},${y}`);
@@ -4726,7 +4726,7 @@ try {
       }, 6000);
       await until("the app told the window is full screen, so the sidebar's button moves to the edge", async () => ((await appFullScreen()) ? true : null), 3000);
       const own = await win("hit:20,20");
-      if (own.includes("ArdiaFullScreenLights")) throw new Error(`our own full-screen lights are back: ${own}`);
+      if (own.includes("NillaFullScreenLights")) throw new Error(`our own full-screen lights are back: ${own}`);
       await fsWindow(tab.id, "fakeFullScreen:0");
       await until("the window out of full screen", async () => {
         const w = await fsWindow(tab.id);
@@ -5045,7 +5045,7 @@ try {
       const shown = await engine("autofill.showSuggestions", { tabId: first.id, passwords: false });
       const command = await until("the dropdown from showAutofillSuggestions", async () => shownSince(count, "Springfield"), 6000)
         .catch((e) => { throw new Error(`${e.message}; showAutofillSuggestions answered ${shown}`); });
-      await secret("ArdiaPasswords", "save", "", base, "nnfill", "fill-s3cret");
+      await secret("NillaPasswords", "save", "", base, "nnfill", "fill-s3cret");
       t = await go("/login?fill", "Login");
       await evalApp(`return ac.webviews.get("${first.id}").focus()`);
       await cdp(t, "Runtime.evaluate", { expression: "document.getElementById('u').focus(); 1", userGesture: true });
@@ -5556,7 +5556,7 @@ try {
   // MARK: Window lifetime
 
   const q = JSON.stringify;
-  const windowsNative = "globalThis.expo.modules.ArdiaAppWindows";
+  const windowsNative = "globalThis.expo.modules.NillaAppWindows";
   const shellCall = (fn, ...args) => evalApp(`return ${windowsNative}.${fn}(${args.map((a) => q(a)).join(", ")})`);
   const nativeWindowIds = () => shellCall("windowIds");
   const storeWindow = (id) => evalApp(`return ac.store.getState().windows[${q(id)}] ?? null`);
@@ -5777,7 +5777,7 @@ try {
       });
       if (picked.title.length > 1024) throw new Error(`an oversized title came through: ${picked.title.length} characters`);
       await inPage(id, `const f = document.querySelector("iframe").contentWindow;
-        f.document.dispatchEvent(new f.CustomEvent("ardia:media-session", { detail: JSON.stringify({ actions: ["pause", 5, "x".repeat(200)], position: { position: "x" } }) }));`);
+        f.document.dispatchEvent(new f.CustomEvent("nilla:media-session", { detail: JSON.stringify({ actions: ["pause", 5, "x".repeat(200)], position: { position: "x" } }) }));`);
       await sleep(400);
       const forged = await session(id);
       if (!forged || forged.actions.some((a) => typeof a !== "string" || a.length > 64)) throw new Error(`forged actions came through: ${q(forged?.actions)}`);
@@ -5908,11 +5908,11 @@ try {
       const id = await until("the private WebKit tab", () => evalApp(`const s = ac.store.getState(); const id = s.windows[${q(windowId)}]?.tabIds[0];
         return id && s.tabs[id]?.title === "Page C" && !s.live[id]?.isLoading ? id : null`), 15000);
       if (await chromiumBrowser(id)) throw new Error("the private tab opened in Chromium");
-      await evalApp(`globalThis.expo.modules.ArdiaTabs.prepareTransfer(${q(id)}); return true`);
+      await evalApp(`globalThis.expo.modules.NillaTabs.prepareTransfer(${q(id)}); return true`);
       await engine("webKit.endPrivateSession", { session: "" });
       await sleep(500);
       const parked = await engine("webKit.devParkedTransfers");
-      await evalApp(`globalThis.expo.modules.ArdiaTabs.releaseTransfer(${q(id)}); return true`);
+      await evalApp(`globalThis.expo.modules.NillaTabs.releaseTransfer(${q(id)}); return true`);
       if (parked.includes(id)) throw new Error("the ended session's page stayed parked for the transfer");
       return { tab: id, parked };
     } finally {
@@ -5942,9 +5942,9 @@ try {
     const chromium = await freshTab(`${base}/a?view-calls`);
     let webkit = null;
     try {
-      const c = await exercise(chromium, "ArdiaWebView", "ChromiumTabView", `${base}/b?view-calls`);
+      const c = await exercise(chromium, "NillaWebView", "ChromiumTabView", `${base}/b?view-calls`);
       webkit = await webkitTab("/a?view-calls", "Page A");
-      const w = await exercise(webkit, "ArdiaWebKit", "WebKitTabView", `${webkitBase}/b?view-calls`);
+      const w = await exercise(webkit, "NillaWebKit", "WebKitTabView", `${webkitBase}/b?view-calls`);
       const errors = [...Object.entries(c).map(([k, v]) => ["chromium", k, v]), ...Object.entries(w).map(([k, v]) => ["webkit", k, v])].filter(([, , v]) => v && v.error);
       if (errors.length) throw new Error(`calls that didn't complete: ${q(errors)}`);
       const expect = (what, ok) => { if (!ok) throw new Error(`${what}: ${q({ chromium: c, webkit: w }).slice(0, 1500)}`); };
@@ -6002,16 +6002,16 @@ try {
     return { clicked, before: ids.length, after: after.length };
   });
 
-  await check("little-ardia", async () => {
+  await check("little-nilla", async () => {
     const before = await evalApp(`return Object.keys(ac.store.getState().windows)`);
-    await evalApp(`ac.runCommand({ command: "newLittleArdia" }); return true`);
-    const id = await until("a Little Ardia window", async () => {
+    await evalApp(`ac.runCommand({ command: "newLittleNilla" }); return true`);
+    const id = await until("a Little Nilla window", async () => {
       const w = await evalApp(`return Object.values(ac.store.getState().windows).find((w) => w.kind === "small")?.id ?? null`);
       return w;
     });
     const tabId = await until("its tab", async () => evalApp(`return ac.store.getState().windows["${id}"]?.tabIds[0] ?? null`));
     await evalApp(`ac.store.getState().navigate("${tabId}", "${base}/b?small", { userInitiated: true }); return true`);
-    await until("Page B in Little Ardia", async () => evalApp(`return ac.store.getState().tabs["${tabId}"]?.title === "Page B"`));
+    await until("Page B in Little Nilla", async () => evalApp(`return ac.store.getState().tabs["${tabId}"]?.title === "Page B"`));
     return { window: id, tab: tabId };
   });
 
@@ -6024,7 +6024,7 @@ try {
       "me.proton.pass.nm": "/Applications/Proton Pass.app/Contents/Resources/assets/proton_pass_nm_host",
     };
     const expected = Object.keys(known).filter((name) => existsSync(known[name])).sort();
-    const managed = JSON.parse(existsSync(join(dir, ".ardia-managed.json")) ? readFileSync(join(dir, ".ardia-managed.json"), "utf8") : "[]");
+    const managed = JSON.parse(existsSync(join(dir, ".nilla-managed.json")) ? readFileSync(join(dir, ".nilla-managed.json"), "utf8") : "[]");
     for (const name of expected) {
       const manifest = JSON.parse(readFileSync(join(dir, `${name}.json`), "utf8"));
       if (manifest.name !== name || manifest.type !== "stdio" || !existsSync(manifest.path)) throw new Error(`${name}: ${JSON.stringify(manifest)}`);
@@ -6040,8 +6040,8 @@ try {
     if (installed?.error) throw new Error(installed.error);
     const host = join(scratch, "echo-host.sh");
     writeFileSync(host, "#!/bin/sh\nexec cat\n", { mode: 0o755 });
-    const hostManifest = join(dir, "com.ardia.acceptance.echo.json");
-    writeFileSync(hostManifest, JSON.stringify({ name: "com.ardia.acceptance.echo", description: "echo", path: host, type: "stdio", allowed_origins: [`chrome-extension://${installed.id}/`] }));
+    const hostManifest = join(dir, "com.nilladigital.nilla.acceptance.echo.json");
+    writeFileSync(hostManifest, JSON.stringify({ name: "com.nilladigital.nilla.acceptance.echo", description: "echo", path: host, type: "stdio", allowed_origins: [`chrome-extension://${installed.id}/`] }));
     try {
       const worker = await until("the extension's worker", async () => {
         for (const t of (await targets()).filter((t) => t.type === "service_worker" && t.url.includes(installed.id))) {
@@ -6051,7 +6051,7 @@ try {
         return null;
       }, 15000);
       const reply = await cdp(worker, "Runtime.evaluate", {
-        expression: `chrome.runtime.sendNativeMessage("com.ardia.acceptance.echo", { ping: 42 }).then((r) => JSON.stringify(r), (e) => "error: " + e.message)`,
+        expression: `chrome.runtime.sendNativeMessage("com.nilladigital.nilla.acceptance.echo", { ping: 42 }).then((r) => JSON.stringify(r), (e) => "error: " + e.message)`,
         awaitPromise: true,
         returnByValue: true,
       });
@@ -6141,7 +6141,7 @@ try {
 
   await check("delete-original-profile-data", async () => {
     const origin = "https://original.test";
-    await secret("ArdiaPasswords", "save", "", origin, "nnoriginal", "s3cret");
+    await secret("NillaPasswords", "save", "", origin, "nnoriginal", "s3cret");
     await engineOrError("autofill.saveAddress", { profile: "", address: { fullName: "Original Mascot", city: "Haifa", country: "IL" } });
     await engine("sites.setZoom", { profile: "", host: "original.test", zoom: 1.5 });
     await engine("sites.setSetting", { profile: "", engine: "chromium", origin, type: "popups", value: "allow" });
@@ -6425,12 +6425,12 @@ try {
   await check("open-url-across-reload", async () => {
     await appUp("app-url-reload.out.log");
     const path = `/a?across-reload-${Date.now()}`;
-    await evalApp(`globalThis.expo.modules.ArdiaDev.devReceiveURLsWhenDetached(["${base}${path}"], 20000);
+    await evalApp(`globalThis.expo.modules.NillaDev.devReceiveURLsWhenDetached(["${base}${path}"], 20000);
       setTimeout(() => { try { globalThis.nativeModuleProxy.DevSettings.reload(); } catch {} }, 50); return true`);
     await sleep(1500);
     const delivery = await until("the URL handed over", async () => {
       try {
-        const d = await evalApp(`return globalThis.expo.modules.ArdiaDev.devURLDelivery()`, 3000);
+        const d = await evalApp(`return globalThis.expo.modules.NillaDev.devURLDelivery()`, 3000);
         return d?.state === "received" || d?.state === "neverDetached" ? d : null;
       } catch (e) {
         if (exited) throw e;
@@ -6447,7 +6447,7 @@ try {
   });
   await check("drag-preview-across-reload", async () => {
     const windowId = await appUp("app-drag-reload.out.log");
-    const preview = () => evalApp(`return globalThis.expo.modules.ArdiaDev.devDragPreviewState()`);
+    const preview = () => evalApp(`return globalThis.expo.modules.NillaDev.devDragPreviewState()`);
     const edges = async () => (await evalApp(`return ac.shell.devSidebarEdgeStats(false)`)).watched;
     const edgesBefore = await edges();
     await evalApp(`const d = ac.shell.dragPreview; d.begin(${JSON.stringify(windowId)}, [40, 40, 160, 28], [20, 14]);
@@ -6981,7 +6981,7 @@ try {
   // MARK: Crash guard (ends the run)
 
   await check("crash-guard", async () => {
-    const reports = () => readdirSync(join(process.env.HOME, "Library/Logs/DiagnosticReports")).filter((f) => f.startsWith("Ardia-"));
+    const reports = () => readdirSync(join(process.env.HOME, "Library/Logs/DiagnosticReports")).filter((f) => f.startsWith("Nilla-"));
     const before = new Set(reports());
     const front = execFileSync("lsappinfo", ["front"]).toString().trim();
     const crashed = pid;

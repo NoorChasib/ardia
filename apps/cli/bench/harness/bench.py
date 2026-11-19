@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import ardia_side
-import ardiacloud_side
+import nilla_side
+import nillacloud_side
 import betterwright_side
 import browseragent_side
 import browserharness_side
@@ -20,33 +20,33 @@ import summary
 import tunnel
 from procs import write_json
 
-HELP = f"""Browser-agent bench: Claude Code and Codex driving Ardia through `ardia browse`, against Aside's agent.
+HELP = f"""Browser-agent bench: Claude Code and Codex driving Nilla through `nilla-browser browse`, against Aside's agent.
 
 Commands:
   tasks                         list the registry ({registry.REGISTRY})
-  freeze-cli [--src DIR] [--name N]  snapshot apps/cli into a venv the runs use (BENCH_HOME/cli, linked from devbin/ardia;
+  freeze-cli [--src DIR] [--name N]  snapshot apps/cli into a venv the runs use (BENCH_HOME/cli, linked from devbin/nilla;
                                 with --name, from devbin-N for plans with "cli": "dev:N")
   servers start|stop [TASK...]  start or stop task servers (all tasks when none named); start --port-offset N binds
                                 each port + N (stop stops every offset)
-  run TASK claude|codex RUN_ID  one cold run against the hidden Ardia instance, record in --results/runs/RUN_ID.json;
+  run TASK claude|codex RUN_ID  one cold run against the hidden Nilla instance, record in --results/runs/RUN_ID.json;
                                 --port-offset N runs against the task's copy on its ports + N;
                                 --side opencode drives a fresh headless Chrome for Testing through OpenCode Browse's MCP;
                                 --side browseruse drives one through Browser Use's `browser-use` CLI and skill;
                                 --side betterwright drives a headless BetterChromium through the `betterwright` CLI and skill;
                                 --side browserharness has Codex write browser-harness code (--browser chrome|cloud|ardia);
-                                --side browseragent runs Browser Use 1.0's own agent (--browser ardia|chrome);
-                                --side ardiacloud drives a Browser Use cloud browser with `ardia browse` (ARDIA_WS);
+                                --side browseragent runs Browser Use 1.0's own agent (--browser nilla|chrome);
+                                --side nillacloud drives a Browser Use cloud browser with `nilla-browser browse` (ARDIA_WS);
                                 cloud browsers reach the task servers through temporary cloudflared tunnels
   plan PLAN.json [--max-lanes N] [--dry-run]
                                 run tasks x contenders x repeats in parallel lanes gated on memory (--max-lanes, else
                                 the plan's max_lanes, else 6; 1 is serial); lane k gets its own task servers on
                                 ports + 1000(k+1); --dry-run checks the ports and prints the simulated timeline
   summarize RESULTS_DIR         rewrite RESULTS_DIR/summary.json from its run records
-  stop                          quit the hidden Ardia instance, every side's lanes, cloud browsers and tunnels and every task
+  stop                          quit the hidden Nilla instance, every side's lanes, cloud browsers and tunnels and every task
                                 server this harness started
 
-Scratch lives in BENCH_HOME (default ~/ardia-scratch/bench-proper): app/Ardia.app (a copy of a build, never run in
-place), data-ardia, work, state, logs, results."""
+Scratch lives in BENCH_HOME (default ~/nilla-scratch/bench-proper): app/Nilla.app (a copy of a build, never run in
+place), data-nilla, work, state, logs, results."""
 
 
 def main():
@@ -74,8 +74,8 @@ def main():
     rn.add_argument("--deadline-s", type=int)
     rn.add_argument("--humanize", action="store_true", default=None)
     rn.add_argument("--keep-notes", action="store_true", default=None)
-    rn.add_argument("--side", choices=["ardia", "opencode", "browseruse", "betterwright", "browserharness",
-                                       "browseragent", "ardiacloud"], default="ardia")
+    rn.add_argument("--side", choices=["nilla", "opencode", "browseruse", "betterwright", "browserharness",
+                                       "browseragent", "nillacloud"], default="nilla")
     rn.add_argument("--browser")
     rn.add_argument("--tool", choices=["cli", "mcp"])
     rn.add_argument("--venv")
@@ -94,7 +94,7 @@ def main():
         for t in registry.load():
             print(f"{t['id']:<10} ports {','.join(map(str, t['server']['ports'])):<16} {t['deadline_s']:>4}s  {t['title']}")
     elif a.cmd == "freeze-cli":
-        print(json.dumps(ardia_side.freeze_cli(a.src, a.name or ""), indent=2))
+        print(json.dumps(nilla_side.freeze_cli(a.src, a.name or ""), indent=2))
     elif a.cmd == "servers":
         ids = registry.task_ids(a.task_ids or "all")
         if a.action == "start":
@@ -104,7 +104,7 @@ def main():
         else:
             print(f"stopped: {servers.stop(ids) or 'none'}")
     elif a.cmd == "run":
-        overrides = {"app": a.app, "port": a.port, "cli": a.cli, "ardia_test": a.ardia_test, "model": a.model,
+        overrides = {"app": a.app, "port": a.port, "cli": a.cli, "nilla_test": a.nilla_test, "model": a.model,
                      "effort": a.effort, "deadline_s": a.deadline_s, "humanize": a.humanize, "keep_notes": a.keep_notes,
                      "port_offset": a.port_offset}
         browser_overrides = {"model": a.model, "effort": a.effort, "deadline_s": a.deadline_s,
@@ -121,12 +121,12 @@ def main():
                                           dict(browser_overrides, browser=a.browser))
         elif a.side == "browseragent":
             rec = browseragent_side.run(a.task, None, a.run_id, a.results, dict(browser_overrides, browser=a.browser))
-        elif a.side == "ardiacloud":
-            rec = ardiacloud_side.run(a.task, a.agent, a.run_id, a.results, dict(browser_overrides, cli=a.cli))
+        elif a.side == "nillacloud":
+            rec = nillacloud_side.run(a.task, a.agent, a.run_id, a.results, dict(browser_overrides, cli=a.cli))
         elif a.side == "opencode" and a.browser:
             rec = opencode_side.run(a.task, a.agent, a.run_id, a.results, dict(browser_overrides, browser=a.browser))
         else:
-            rec = ardia_side.run(a.task, a.agent, a.run_id, a.results, overrides)
+            rec = nilla_side.run(a.task, a.agent, a.run_id, a.results, overrides)
         print(json.dumps({k: rec[k] for k in ("run_id", "task", "pass", "wall_s", "time_to_correct_s", "commands",
                                               "timed_out", "matched", "total")}
                          | {"tokens": (rec["tokens"] or {}).get("total")}))
@@ -138,13 +138,13 @@ def main():
         write_json(Path(a.results) / "summary.json", summary.build(a.results))
         print(Path(a.results) / "summary.json")
     elif a.cmd == "stop":
-        ardia_side.quit_instance()
+        nilla_side.quit_instance()
         print(f"opencode stopped: {opencode_side.stop_all() or 'none'}")
         print(f"browseruse stopped: {browseruse_side.stop_all() or 'none'}")
         print(f"betterwright stopped: {betterwright_side.stop_all() or 'none'}")
         print(f"browser-harness stopped: {browserharness_side.stop_all() or 'none'}")
         print(f"browser-use agent stopped: {browseragent_side.stop_all() or 'none'}")
-        print(f"ardia cloud stopped: {ardiacloud_side.stop_all() or 'none'}")
+        print(f"nilla cloud stopped: {nillacloud_side.stop_all() or 'none'}")
         print(f"cloud browsers stopped: {browsers.cloud_stop_all() or 'none'}")
         print(f"tunnels stopped: {tunnel.stop_all() or 'none'}")
         print(f"servers stopped: {servers.stop() or 'none'}")

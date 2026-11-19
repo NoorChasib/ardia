@@ -33,11 +33,11 @@ channel="$(channel_of "$version")"
 
 if [ "$rc" = 1 ]; then dist="$root/dist/$version-rc"; else dist="$root/dist/$version"; fi
 [ "$rc" = 1 ] && [ -n "${RC_DIST:-}" ] && dist="$(cd "$root" && mkdir -p "$RC_DIST" && cd "$RC_DIST" && pwd)"
-app="$dist/export/Ardia.app"
+app="$dist/export/Nilla.app"
 cli_tarball="$dist/ardia-cli-$version-macos-arm64.tar.gz"
 build_input="${RELEASE_BUILD_INPUT:-}"
-archive="$dist/Ardia.xcarchive"
-[ "$phase" = sign ] && [ -n "$build_input" ] && archive="$build_input/Ardia.xcarchive"
+archive="$dist/Nilla.xcarchive"
+[ "$phase" = sign ] && [ -n "$build_input" ] && archive="$build_input/Nilla.xcarchive"
 
 if [ "$phase" = check ]; then
   [ -d "$app" ] || die "no $app: run --phase sign first"
@@ -59,13 +59,13 @@ else
 fi
 
 framework_src="$chromium_framework"
-[ "$phase" = sign ] && framework_src="$archive/Products/Applications/Ardia.app/Contents/Frameworks/Chromium Framework.framework"
+[ "$phase" = sign ] && framework_src="$archive/Products/Applications/Nilla.app/Contents/Frameworks/Chromium Framework.framework"
 [ "$phase" = sign ] && { [ -d "$archive" ] || die "no $archive: run --phase build first"; }
 framework_engine="${ARDIACORE_FRAMEWORK_ENGINE:-}"
 provisioning_profile="${RELEASE_PROVISIONING_PROFILE:-}"
 read -r -a extra_build_settings <<<"${RELEASE_BUILD_SETTINGS:-}"
 
-pbx="$macos/Ardia.xcodeproj/project.pbxproj"
+pbx="$macos/Nilla.xcodeproj/project.pbxproj"
 project_version="$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' "$pbx" | sort -u)"
 min_macos="$(sed -n 's/.*MACOSX_DEPLOYMENT_TARGET = \([0-9]*\)\.0;/\1/p' "$pbx" | sort -u)"
 [[ "$min_macos" =~ ^[0-9]+$ ]] || die "the project's MACOSX_DEPLOYMENT_TARGET isn't one whole macOS version: '$min_macos'"
@@ -88,7 +88,7 @@ if [ -f "$notes" ]; then
   note body > "$notes_body"
 elif [ "$rc" = 1 ]; then
   headline="Release candidate $version"
-  echo "A release candidate of Ardia $version. Not published." > "$notes_body"
+  echo "A release candidate of Nilla $version. Not published." > "$notes_body"
 else
   die "no release notes: write docs/release-notes/$version.md first"
 fi
@@ -170,9 +170,9 @@ if [ "$phase" != sign ]; then
   "$stages/archive.sh" "$dist" "$framework_src" "${RELEASE_BUILD_DIR:-$root/apps/browser/build-release}" "$archive_signing" \
     ${version_settings[@]+"${version_settings[@]}"} AC_UPDATE_CHANNEL="$channel" \
     ${extra_build_settings[@]+"${extra_build_settings[@]}"}
-  echo "==> ardia CLI"
+  echo "==> nilla CLI"
   "$root/apps/cli/scripts/build.sh" "$version" "$dist" >"$dist/cli-build.log" 2>&1 \
-    || { tail -20 "$dist/cli-build.log" >&2; die "building the ardia CLI failed ($dist/cli-build.log)"; }
+    || { tail -20 "$dist/cli-build.log" >&2; die "building the nilla CLI failed ($dist/cli-build.log)"; }
 fi
 if [ "$phase" = build ]; then
   echo
@@ -197,7 +197,7 @@ if [ "$notarize" = 1 ]; then
   "$stages/notarize.sh" "$app" "$dist"
 fi
 "$stages/package.sh" "$dist" "$version" "$identity"
-[ "$notarize" = 1 ] && "$stages/notarize.sh" "$dist/Ardia-$version.dmg" "$dist"
+[ "$notarize" = 1 ] && "$stages/notarize.sh" "$dist/Nilla-$version.dmg" "$dist"
 
 echo "==> Release notes"
 notes_args=()
@@ -217,4 +217,4 @@ echo
 [ "$channel" = nightly ] && [ "$rc" = 0 ] && echo "Nightly: publish it with scripts/release/publish.sh $version (a prerelease; the feed follows)."
 [ "$phase" = sign ] && echo "Not launched yet: remove the signing keys, then run the launch check (--phase check)."
 [ -n "$phased" ] && echo "Phased rollout: $phased s between steps (the appcast item has phasedRolloutInterval; the whole release takes $((phased * 7)) s)."
-du -sh "$app" "$dist/Ardia-$version.dmg" "$dist/Ardia-$version.zip" "$cli_tarball" "$dist/appcast.xml" "$dist/release-notes.md"
+du -sh "$app" "$dist/Nilla-$version.dmg" "$dist/Nilla-$version.zip" "$cli_tarball" "$dist/appcast.xml" "$dist/release-notes.md"

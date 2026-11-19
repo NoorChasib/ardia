@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Real-world energy: Ardia against Helium and Dia on public, logged-out websites, in the window states a user's day
+// Real-world energy: Nilla against Helium and Dia on public, logged-out websites, in the window states a user's day
 // has. Every browser gets the same tabs, window size, fresh copy of a template profile and phases, one instance at a
 // time, browsers interleaved and rotated each round, holding the perflab lock for a round and giving it back after.
 //
@@ -7,14 +7,14 @@
 //   node apps/browser/scripts/perf/energy.mjs report --out <dir> [--md <file>]                medians, ranges, kinds
 //   node apps/browser/scripts/perf/energy.mjs clean  --out <dir> --browsers <a,b>             quit leftovers, delete runs
 //
-//     --browsers <a,b>     names: ardia[-tag], helium, dia (default ardia,helium,dia)
+//     --browsers <a,b>     names: nilla[-tag], helium, dia (default nilla,helium,dia)
 //     --app <name>=<path>  repeatable: the bundle of a browser (default <apps>/<base>/<Base>.app; Helium's -bg copy)
 //     --apps <dir>         default /tmp/ac-xbench/apps
 //     --base <name>=<home> repeatable: its template starts from a copy of this HOME (Dia: a throwaway signed-in home)
 //     --env <name>=K=V     repeatable: extra environment for one browser
 //     --args <name>=<sw>   repeatable: one extra switch for one browser
 //     --video-only <name>  repeatable: that browser runs only the video phase (no hidden launch)
-//     --setting <name>=K=V repeatable: an Ardia setting in each run's session.json (V is JSON: videoUpscaling=false)
+//     --setting <name>=K=V repeatable: a Nilla setting in each run's session.json (V is JSON: videoUpscaling=false)
 //     --rounds <n>         default 3
 //     --launches <a,b>     visible,hidden (default both). visible: idle in view, scroll, switch, video; hidden: minimized
 //     --idle <secs>        each idle phase (default 180)
@@ -29,7 +29,7 @@
 //     --allow-focus        record a browser making itself the frontmost app instead of stopping (only when the owner
 //                          agreed to it for this run)
 //
-// Window states: visible launches run every browser as if in view whatever covers it (Ardia's background mode with
+// Window states: visible launches run every browser as if in view whatever covers it (Nilla's background mode with
 // its forced visibility; Helium and Dia with --disable-backgrounding-occluded-windows), hidden launches let occlusion
 // act (ARDIA_INSTANCE allowOcclusion; no switch) and minimize the window through CDP. All get --mute-audio.
 // Metrics per process, summed per kind: CPU time, idle + interrupt wakeups, ri_energy_nj (macOS's per-process energy
@@ -49,7 +49,7 @@ const { values: opt, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     out: { type: "string", default: "/tmp/ac-energy/out" },
-    browsers: { type: "string", default: "ardia,helium,dia" },
+    browsers: { type: "string", default: "nilla,helium,dia" },
     apps: { type: "string", default: "/tmp/ac-xbench/apps" },
     app: { type: "string", multiple: true, default: [] },
     base: { type: "string", multiple: true, default: [] },
@@ -110,13 +110,13 @@ const IDLE_TAB = "canvas";
 const SCROLL_TAB = "verge";
 
 const BROWSERS = {
-  ardia: { name: "Ardia", bundle: "ardia/Ardia.app" },
+  nilla: { name: "Nilla", bundle: "nilla/Nilla.app" },
   helium: { name: "Helium", bundle: "helium-bg/Helium.app" },
   dia: { name: "Dia", bundle: "dia/Dia.app", guardPrefs: true },
 };
 const baseOf = (name) => name.split("-")[0];
 const spec = (name) => BROWSERS[baseOf(name)];
-const isArdia = (name) => baseOf(name) === "ardia";
+const isNilla = (name) => baseOf(name) === "nilla";
 const perName = (list, name) => list.filter((e) => e.startsWith(`${name}=`)).map((e) => e.slice(name.length + 1));
 
 const PROBE = `import AppKit
@@ -431,17 +431,17 @@ class Instance {
   }
   env() {
     const env = { HOME: this.home, CFFIXED_USER_HOME: this.home };
-    if (isArdia(this.name)) {
+    if (isNilla(this.name)) {
       const instance = { updateFeed: `http://127.0.0.1:${opt["page-port"]}/appcast.xml`, ...(this.mode === "hidden" ? { allowOcclusion: true } : {}) };
       Object.assign(env, { ARDIA_BACKGROUND: "1", ARDIA_DATA_DIR: join(this.home, "data"), ARDIA_REMOTE_DEBUGGING_PORT: String(port), ...launchVariables({ instance }) });
     }
     const extra = perName(opt.env, this.name).map((e) => ({ [e.slice(0, e.indexOf("="))]: e.slice(e.indexOf("=") + 1) }));
     const merged = mergeLaunchEnv(env, ...extra);
-    return isArdia(this.name) ? appEnv(this.app, merged) : merged;
+    return isNilla(this.name) ? appEnv(this.app, merged) : merged;
   }
   args() {
     const extra = perName(opt.args, this.name);
-    if (isArdia(this.name)) return ["--no-first-run", "--no-default-browser-check", ...extra];
+    if (isNilla(this.name)) return ["--no-first-run", "--no-default-browser-check", ...extra];
     return [`--user-data-dir=${join(this.home, "udd")}`, `--remote-debugging-port=${port}`, "--remote-allow-origins=*", "--no-first-run",
       "--no-default-browser-check", "--password-store=basic", "--use-mock-keychain", "--mute-audio", `--window-size=${WIN.w},${WIN.h}`,
       `--window-position=${WIN.x},${WIN.y}`, ...(this.mode === "visible" ? ["--disable-backgrounding-occluded-windows"] : []), ...extra];
@@ -586,7 +586,7 @@ async function makeTemplate(name) {
   const baseHome = perName(opt.base, name)[0];
   if (baseHome) execFileSync("cp", ["-Rc", resolve(baseHome), join(dir, "home")]);
   else mkdirSync(join(dir, "home"), { recursive: true });
-  if (isArdia(name)) {
+  if (isNilla(name)) {
     mkdirSync(join(dir, "home/data"), { recursive: true });
     writeFileSync(join(dir, "home/data/onboarding.json"), JSON.stringify({ version: 1, completedAt: 1 }));
   }
@@ -602,11 +602,11 @@ async function makeTemplate(name) {
   } finally {
     await app.quit();
   }
-  if (isArdia(name)) fixArdiaSession(join(dir, "home/data/session.json"));
+  if (isNilla(name)) fixNillaSession(join(dir, "home/data/session.json"));
   for (const f of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) rmSync(join(dir, "home/udd", f), { force: true });
 }
 
-function fixArdiaSession(file) {
+function fixNillaSession(file) {
   if (!existsSync(file)) return;
   const session = JSON.parse(readFileSync(file, "utf8"));
   const { h } = probe("screen");
@@ -657,7 +657,7 @@ async function mapRenderers(app, ids) {
 }
 
 async function placeWindow(app, targetId) {
-  if (isArdia(app.name)) return null;
+  if (isNilla(app.name)) return null;
   const w = await app.cdp.call("Browser.getWindowForTarget", { targetId }).catch(() => null);
   if (!w) return null;
   await app.cdp.call("Browser.setWindowBounds", { windowId: w.windowId, bounds: { windowState: "normal" } }).catch(() => null);

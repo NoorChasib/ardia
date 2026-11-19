@@ -20,7 +20,7 @@ REPO = CLI.parents[1]
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "browse"
 APP = os.environ.get("ARDIA_BROWSE_E2E_APP")
 JS_LOCATION = os.environ.get("ARDIA_BROWSE_E2E_JS")
-SCRATCH = Path(os.environ.get("ARDIA_BROWSE_E2E_DIR", str(Path.home() / "ardia-scratch" / "browse-impl" / "e2e")))
+SCRATCH = Path(os.environ.get("ARDIA_BROWSE_E2E_DIR", str(Path.home() / "nilla-scratch" / "browse-impl" / "e2e")))
 
 
 def ref_for(snapshot: str, needle: str) -> str:
@@ -57,7 +57,7 @@ def wait_for(check, seconds: float, what: str):
     raise AssertionError(f"timed out waiting for {what}")
 
 
-@unittest.skipUnless(APP, "set ARDIA_BROWSE_E2E_APP to a built Ardia.app (never /Applications) to run the end-to-end test")
+@unittest.skipUnless(APP, "set ARDIA_BROWSE_E2E_APP to a built Nilla.app (never /Applications) to run the end-to-end test")
 class BrowseEndToEnd(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -111,10 +111,10 @@ class BrowseEndToEnd(unittest.TestCase):
     def browse(cls, *args, session="e2e", check=True, timeout=120, extra_env=None, stdin=None):
         env = dict(os.environ, PYTHONPATH=str(CLI), **(extra_env or {}))
         env.pop("AGENT_BROWSER_NO_HUMANIZE", None)
-        done = subprocess.run([sys.executable, "-m", "ardia_cli", "browse", "--port", str(cls.port), "--data-dir", str(cls.data), "--session", session, *args],
+        done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(cls.port), "--data-dir", str(cls.data), "--session", session, *args],
                               capture_output=True, text=True, timeout=timeout, env=env, input=stdin)
         if check and done.returncode:
-            raise AssertionError(f"ardia browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
+            raise AssertionError(f"nilla browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
         return done
 
     def url(self, name):
@@ -162,7 +162,7 @@ class BrowseEndToEnd(unittest.TestCase):
         snap = self.browse("snapshot", "-i", session=session).stdout
         self.assertIn('button "Press me"', snap)
         self.browse("click", "#target", "--humanize", session=session)
-        text = "Hello Ardia 42"
+        text = "Hello Nilla 42"
         self.browse("fill", "#field", text, "--humanize", session=session)
         self.assertEqual(self.browse("get", "value", "#field", session=session).stdout, text + "\n")
         self.assertEqual(self.browse("get", "title", session=session).stdout, "Probe\n")
@@ -214,8 +214,8 @@ class BrowseEndToEnd(unittest.TestCase):
             self.assertEqual(clicked.returncode, 0, clicked.stderr)
         else:
             self.assertEqual(clicked.returncode, 1)
-            self.assertIn(f"use: ardia browse tab {opened['tabId']} --show (or open <url> --show)", clicked.stderr)
-            self.assertIn("use: ardia browse tab", self.browse("open", self.url("probe.html#again"), session=session + "-2").stdout)
+            self.assertIn(f"use: nilla browse tab {opened['tabId']} --show (or open <url> --show)", clicked.stderr)
+            self.assertIn("use: nilla browse tab", self.browse("open", self.url("probe.html#again"), session=session + "-2").stdout)
         self.browse("scroll", "down", "200", session=session)
 
     def drag_report(self, session):
@@ -428,7 +428,7 @@ class BrowseEndToEnd(unittest.TestCase):
         self.assertIn(f"Saved the notes for {site}", self.browse("notes", "set", "Use the Continue button", session=session).stdout)
         self.browse("notes", "append", "-", session=session, stdin="Second line\n")
         snap = self.browse("snapshot", "-i", session=session).stdout
-        self.assertTrue(snap.startswith(f"# notes for {site} (ardia notes): Use the Continue button\n# Second line\n- link"), snap)
+        self.assertTrue(snap.startswith(f"# notes for {site} (nilla notes): Use the Continue button\n# Second line\n- link"), snap)
         data = json.loads(self.browse("snapshot", "--json", session=session).stdout)["data"]
         self.assertEqual(data["notes"]["site"], site)
         folder = self.data / "Notes"
@@ -438,7 +438,7 @@ class BrowseEndToEnd(unittest.TestCase):
         refused = self.browse("notes", "set", site, "-", "--json", session=session, stdin="x" * 9000, check=False)
         self.assertEqual((refused.returncode, json.loads(refused.stdout)["code"]), (1, "notes_too_large"))
         self.assertIn(site, self.browse("notes", "list", session=session).stdout)
-        top = subprocess.run([sys.executable, "-m", "ardia_cli", "notes", "get", site, "--data-dir", str(self.data)], capture_output=True, text=True,
+        top = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "notes", "get", site, "--data-dir", str(self.data)], capture_output=True, text=True,
                              timeout=60, env=dict(os.environ, PYTHONPATH=str(CLI)))
         self.assertEqual(top.stdout, "Use the Continue button\nSecond line\n")
         self.assertIn("Removed", self.browse("notes", "rm", session=session).stdout)
@@ -480,7 +480,7 @@ class BrowseEndToEnd(unittest.TestCase):
         elsewhere = json.loads(self.browse("flow", "run", "search", "--param", "q=kettle", "--json", session="flows-other").stdout)["data"]
         self.assertEqual(elsewhere["result"]["total"], 2)
         hinted = self.browse("open", self.url("flowsearch.html"), session="flows-other").stdout
-        self.assertIn(f"# saved flows for {site} (`ardia browse flow run <name> --param k=v`, `flow show <name>`): search(q) [saved description: \"Search the fixture shop\"]",
+        self.assertIn(f"# saved flows for {site} (`nilla-browser browse flow run <name> --param k=v`, `flow show <name>`): search(q) [saved description: \"Search the fixture shop\"]",
                       hinted)
         self.assertNotIn("# saved flows", self.browse("snapshot", "-i", session="flows-other").stdout)
         self.assertIn(f'{site}  search(q) [saved description: "Search the fixture shop"]', self.browse("flow", "list", session=session).stdout)
@@ -593,7 +593,7 @@ class BrowseEndToEnd(unittest.TestCase):
         session = "typeahead"
         self.browse("open", self.url("picker.html"), "--show", session=session)
         filled = self.browse("fill", "#guest-input", "Priya R", session=session).stdout
-        self.assertIn("→ 1 suggestion showing, none picked. To pick one: ardia browse select #guest-input 'Priya R'", filled)
+        self.assertIn("→ 1 suggestion showing, none picked. To pick one: nilla browse select #guest-input 'Priya R'", filled)
         ambiguous = self.browse("select", "#guest-input", "Pri", "--json", session=session, check=False)
         self.assertEqual(json.loads(ambiguous.stdout)["code"], "ambiguous")
         picked = self.browse("select", "#guest-input", "Priya Raman", "alex.morgan@northwind.dev", "lena.vogt@kontor.io", session=session).stdout
@@ -680,7 +680,7 @@ class BrowseEndToEnd(unittest.TestCase):
         self.assertIn("[page 1 of 1]", many)
         self.assertIn("Quarterly total: 4,217 units", self.browse("read", url, "--http", session=session).stdout)
         self.browse("open", url, session=session)
-        self.assertIn("Ardia PDF fixture", self.browse("read", session=session).stdout)
+        self.assertIn("Nilla PDF fixture", self.browse("read", session=session).stdout)
 
     def test_click_dismisses_a_consent_banner_in_the_way(self):
         session = "consent"
@@ -858,7 +858,7 @@ class BrowseEndToEnd(unittest.TestCase):
         self.browse("open", self.url("many.html"), "--show", session=session)
         target = self.data / "snapshot.txt"
         with open(target, "w") as out:
-            subprocess.run([sys.executable, "-m", "ardia_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data), "--session", session,
+            subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data), "--session", session,
                             "snapshot", "-i"], stdout=out, stderr=subprocess.PIPE, timeout=120, env=dict(os.environ, PYTHONPATH=str(CLI)), check=True)
         self.assertEqual(target.read_text().count("Button number"), 400)
         last = self.browse("snapshot", "-i", session=session).stdout.splitlines()[-1]
@@ -957,7 +957,7 @@ class BrowseEndToEnd(unittest.TestCase):
         self.assertNotEqual(cut.returncode, 0)
         self.assertIn("didn't finish within 1 s", cut.stderr)
         self.assertIn("eval --timeout 5m", cut.stderr)
-        self.assertNotIn("Ardia didn't answer", cut.stderr)
+        self.assertNotIn("Nilla didn't answer", cut.stderr)
         self.assertIn("settled", self.browse("eval", slow, "--timeout", "10s", session=session).stdout)
 
     def test_a_dropped_connection_says_to_try_another_way_in(self):
@@ -1060,7 +1060,7 @@ class BrowseEndToEnd(unittest.TestCase):
         self.assertIn("the page was still loading after 2.5 s; this is the part that had arrived", done.stdout)
 
     def test_settling_sees_results_drawn_inside_shadow_roots(self):
-        from ardia_cli.browse.readpages import SETTLE_PROBE
+        from nilla_browser_cli.browse.readpages import SETTLE_PROBE
 
         session = "shadow-settle"
         self.browse("open", self.url("shadowresults.html"), "--show", session=session)
@@ -1175,7 +1175,7 @@ class BrowseEndToEnd(unittest.TestCase):
         session = "busy"
         self.browse("open", self.url("picker.html"), session=session)
         env = dict(os.environ, PYTHONPATH=str(CLI))
-        long = subprocess.Popen([sys.executable, "-m", "ardia_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data), "--session", session,
+        long = subprocess.Popen([sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data), "--session", session,
                                  "script"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
         long.stdin.write("await sleep(8000); return 'slept';")
         long.stdin.close()
@@ -1194,7 +1194,7 @@ class BrowseEndToEnd(unittest.TestCase):
         self.browse("open", self.url("picker.html"), session=session)
         self.browse("open", self.url("picker.html"), session=f"{session}-side")
         env = dict(os.environ, PYTHONPATH=str(CLI))
-        base = [sys.executable, "-m", "ardia_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data)]
+        base = [sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data)]
         sleepers = []
         for name in (session, f"{session}-side"):
             sleeper = subprocess.Popen(base + ["--session", name, "script", "--timeout", "2m"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -1252,7 +1252,7 @@ class BrowseEndToEnd(unittest.TestCase):
         session = "interrupted"
         self.browse("open", self.url("picker.html"), session=session)
         env = dict(os.environ, PYTHONPATH=str(CLI))
-        long = subprocess.Popen([sys.executable, "-m", "ardia_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data), "--session", session,
+        long = subprocess.Popen([sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(self.port), "--data-dir", str(self.data), "--session", session,
                                  "script", "--timeout", "2m"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env)
         long.stdin.write("state.rows = [1, 2, 3]; await sleep(60000); return 'slept';")
         long.stdin.close()
@@ -1260,7 +1260,7 @@ class BrowseEndToEnd(unittest.TestCase):
         long.send_signal(signal.SIGINT)
         _, err = long.communicate(timeout=30)
         self.assertEqual(long.returncode, 130)
-        self.assertIn("ardia browse script 'return state'", err)
+        self.assertIn("nilla browse script 'return state'", err)
         kept = self.browse("script", session=session, stdin="return state.rows;").stdout
         self.assertIn("[1,2,3]", kept.replace(" ", "").replace("\n", ""))
 
@@ -1413,8 +1413,8 @@ class BrowseEndToEnd(unittest.TestCase):
 
 FRONT_TAB = """
 import asyncio, sys
-from ardia_cli import endpoint
-from ardia_cli.browse.connection import Browser
+from nilla_browser_cli import endpoint
+from nilla_browser_cli.browse.connection import Browser
 
 
 async def main(data_dir, url):
@@ -1431,9 +1431,9 @@ asyncio.run(main(sys.argv[1], sys.argv[2]))
 
 REFUSALS = """
 import asyncio, json, sys
-from ardia_cli import endpoint
-from ardia_cli.browse.connection import Browser
-from ardia_cli.browse.errors import Gated
+from nilla_browser_cli import endpoint
+from nilla_browser_cli.browse.connection import Browser
+from nilla_browser_cli.browse.errors import Gated
 
 
 async def refused(browser, method, params):
@@ -1467,8 +1467,8 @@ asyncio.run(main(sys.argv[1]))
 
 CLAIM = """
 import asyncio, sys
-from ardia_cli import endpoint
-from ardia_cli.browse.connection import Browser
+from nilla_browser_cli import endpoint
+from nilla_browser_cli.browse.connection import Browser
 
 
 async def main(data_dir, target, hold):
@@ -1494,7 +1494,7 @@ SESSION_JS = (
 )
 
 
-@unittest.skipUnless(APP, "set ARDIA_BROWSE_E2E_APP to a built Ardia.app (never /Applications) to run the end-to-end test")
+@unittest.skipUnless(APP, "set ARDIA_BROWSE_E2E_APP to a built Nilla.app (never /Applications) to run the end-to-end test")
 class BrowseTokenPath(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -1517,7 +1517,7 @@ class BrowseTokenPath(unittest.TestCase):
             wait_for(control.exists, 60, "ArdiaControl.json")
             cls.pid = json.loads(control.read_text())["pid"]
             wait_for(lambda: BrowseEndToEnd.fetch_ok(f"http://127.0.0.1:{cls.http_port}/login.html"), 10, "the fixture server")
-            wait_for(lambda: subprocess.run([sys.executable, "-m", "ardia_cli", "--data-dir", str(cls.data), "tabs", "--flat"], capture_output=True,
+            wait_for(lambda: subprocess.run([sys.executable, "-m", "nilla_browser_cli", "--data-dir", str(cls.data), "tabs", "--flat"], capture_output=True,
                                             timeout=30, env=dict(os.environ, PYTHONPATH=str(CLI))).returncode == 0, 30, "the control socket")
         except BaseException:
             cls.tearDownClass()
@@ -1551,10 +1551,10 @@ class BrowseTokenPath(unittest.TestCase):
     def browse(cls, *args, session="token", check=True, timeout=120, stdin=None):
         env = dict(os.environ, PYTHONPATH=str(CLI))
         env.pop("AGENT_BROWSER_NO_HUMANIZE", None)
-        done = subprocess.run([sys.executable, "-m", "ardia_cli", "browse", "--data-dir", str(cls.data), "--session", session, *args],
+        done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--data-dir", str(cls.data), "--session", session, *args],
                               capture_output=True, text=True, timeout=timeout, env=env, input=stdin)
         if check and done.returncode:
-            raise AssertionError(f"ardia browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
+            raise AssertionError(f"nilla browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
         return done
 
     def url(self, name):
@@ -1597,7 +1597,7 @@ class BrowseTokenPath(unittest.TestCase):
         said = json.loads(done.stdout)
         self.assertTrue(said["attached"])
         self.assertEqual(said["gone"]["reason"], "to that target")
-        self.assertIn("Ardia allows for the ardia command, but not to that target", said["gone"]["message"])
+        self.assertIn("Nilla allows for the nilla-browser command, but not to that target", said["gone"]["message"])
         self.assertIn("Target.attachToTarget to that target isn't allowed for the ardia command", said["gone"]["message"])
         self.assertEqual(said["unlisted"]["reason"], "")
         self.assertIn("It works once the engine's token policy allows it", said["unlisted"]["message"])
@@ -1673,7 +1673,7 @@ class BrowseTokenPath(unittest.TestCase):
         if "takes input without being shown" in opened:
             self.assertEqual(clicked.returncode, 0, clicked.stderr)
         else:
-            self.assertIn("use: ardia browse tab", opened)
+            self.assertIn("use: nilla browse tab", opened)
             self.assertEqual(clicked.returncode, 1)
             self.assertIn("--show (or open <url> --show)", clicked.stderr)
 
@@ -1689,16 +1689,16 @@ class BrowseTokenPath(unittest.TestCase):
         self.browse("fill", "#city", "Lisbon", session="token-behind")
         self.assertEqual(self.browse("get", "value", "#city", session="token-behind").stdout, "Lisbon\n")
 
-    def test_tab_takes_the_id_ardia_windows_prints(self):
+    def test_tab_takes_the_id_nilla_windows_prints(self):
         self.browse("open", self.url("login.html#app-id"), session="token-app-opener")
-        windows = subprocess.run([sys.executable, "-m", "ardia_cli", "windows", "--json", "--data-dir", str(self.data)], capture_output=True, text=True,
+        windows = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "windows", "--json", "--data-dir", str(self.data)], capture_output=True, text=True,
                                  timeout=60, env=dict(os.environ, PYTHONPATH=str(CLI)))
         row = next(tab for window in json.loads(windows.stdout) for tab in window["tabs"] if tab["url"] == self.url("login.html#app-id"))
         app_id = row["id"]
         if "targetId" not in row:
             refused = self.browse("tab", app_id, session="token-app", check=False)
             self.assertIn("doesn't say which page belongs to", refused.stderr)
-            self.skipTest("this Ardia's `windows` doesn't report tab targets yet")
+            self.skipTest("this Nilla's `windows` doesn't report tab targets yet")
         picked = self.browse("tab", app_id, "--json", session="token-app")
         self.assertEqual(json.loads(picked.stdout)["data"]["appTabId"], app_id)
         listed = self.browse("tab", "list", session="token-app").stdout
@@ -1707,9 +1707,9 @@ class BrowseTokenPath(unittest.TestCase):
         self.assertIn("(opened by session token-app-opener)", line)
 
     def control(self, *args):
-        done = subprocess.run([sys.executable, "-m", "ardia_cli", "--data-dir", str(self.data), *args], capture_output=True, text=True, timeout=60,
+        done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "--data-dir", str(self.data), *args], capture_output=True, text=True, timeout=60,
                               env=dict(os.environ, PYTHONPATH=str(CLI)))
-        self.assertEqual(done.returncode, 0, f"ardia {' '.join(args)}: {done.stderr}")
+        self.assertEqual(done.returncode, 0, f"nilla {' '.join(args)}: {done.stderr}")
         return done.stdout
 
     def size(self, session):

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-// Captures the real Ardia app in the demo's seeded state, for compare.mjs.
+// Captures the real Nilla app in the demo's seeded state, for compare.mjs.
 //
-//   node packages/demo/scripts/reference.mjs [--app <Debug Ardia.app>] [--out DIR] [--themes light,dark]
+//   node packages/demo/scripts/reference.mjs [--app <Debug Nilla.app>] [--out DIR] [--themes light,dark]
 //                                        [--states idle,command,ntp,hover,menu,profile,field] [--favicons] [--keep]
 //                                        [--data DIR]
 //
 // The app runs hidden from a clone in the scratch dir (cp -c of the train's or the newest Debug build), on the
 // shared Metro, with the session seed.ts gives the demo. Each state is captured at 2x with `screencapture -l`
 // (20 s timeout), falling back to ac.shell.devSnapshotWindow; Metal views are also written by
-// ArdiaAreaLight.debugSnapshot. --favicons writes the favicons the app shows into packages/demo/public/favicons.
+// NillaAreaLight.debugSnapshot. --favicons writes the favicons the app shows into packages/demo/public/favicons.
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -19,7 +19,7 @@ import { referenceSession } from "./seedSession.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = resolve(here, "../../..");
-const scratch = realpathSync("/tmp") + "/ardia-demo-layout";
+const scratch = realpathSync("/tmp") + "/nilla-demo-layout";
 
 const args = process.argv.slice(2);
 if (args.includes("-h") || args.includes("--help")) {
@@ -61,18 +61,18 @@ function debugApps() {
   const out = join(builds, "build-train/out");
   const candidates = readdirSync(builds)
     .filter((d) => d.startsWith("build-"))
-    .map((d) => join(builds, d, "Build/Products/Debug/Ardia.app"))
-    .concat(existsSync(out) ? readdirSync(out).filter((d) => d.endsWith("-Debug")).map((d) => join(out, d, "Ardia.app")) : [])
-    .filter((app) => existsSync(join(app, "Contents/MacOS/Ardia")))
-    .sort((a, b) => statSync(join(b, "Contents/MacOS/Ardia")).mtimeMs - statSync(join(a, "Contents/MacOS/Ardia")).mtimeMs);
+    .map((d) => join(builds, d, "Build/Products/Debug/Nilla.app"))
+    .concat(existsSync(out) ? readdirSync(out).filter((d) => d.endsWith("-Debug")).map((d) => join(out, d, "Nilla.app")) : [])
+    .filter((app) => existsSync(join(app, "Contents/MacOS/Nilla")))
+    .sort((a, b) => statSync(join(b, "Contents/MacOS/Nilla")).mtimeMs - statSync(join(a, "Contents/MacOS/Nilla")).mtimeMs);
   if (!candidates.length) throw new Error("no Debug build under apps/browser/build-*");
   return candidates;
 }
 
 function cloneApp(source) {
-  const target = `${scratch}/Ardia.app`;
-  const stamp = `${scratch}/Ardia.app.source`;
-  const sourceTime = String(statSync(join(source, "Contents/MacOS/Ardia")).mtimeMs);
+  const target = `${scratch}/Nilla.app`;
+  const stamp = `${scratch}/Nilla.app.source`;
+  const sourceTime = String(statSync(join(source, "Contents/MacOS/Nilla")).mtimeMs);
   const current = existsSync(stamp) ? readFileSync(stamp, "utf8") : "";
   if (existsSync(target) && current === `${source}\n${sourceTime}`) return target;
   rmSync(target, { recursive: true, force: true });
@@ -181,7 +181,7 @@ for (const theme of themes) {
       report.captures.push({ theme, state, file, how, ...(typeof note === "string" ? { note } : {}) });
       console.log(`${theme} ${state}: ${how}`);
       if (state === "idle") {
-        report[`metal-${theme}`] = await evaluate(`return globalThis.expo.modules.ArdiaAreaLight.debugSnapshot(${JSON.stringify(join(out, theme, "metal"))})`).catch((e) => String(e));
+        report[`metal-${theme}`] = await evaluate(`return globalThis.expo.modules.NillaAreaLight.debugSnapshot(${JSON.stringify(join(out, theme, "metal"))})`).catch((e) => String(e));
         for (const shot of Array.isArray(report[`metal-${theme}`]) ? report[`metal-${theme}`] : []) if (shot.ok) toSrgb(shot.file);
       }
     }

@@ -9,8 +9,8 @@ import threading
 import time
 from pathlib import Path
 
-import ardia_side
-import ardiacloud_side
+import nilla_side
+import nillacloud_side
 import betterwright_side
 import browseragent_side
 import browserharness_side
@@ -26,7 +26,7 @@ from procs import kill_agents, read_json, sh, write_json
 from scheduler import LANE_PORT_STRIDE, Scheduler
 
 
-ASIDE_DRIVER = Path(os.environ.get("BENCH_ASIDE_DRIVER", Path.home() / "ardia-scratch/aside-bench/bin/aside_run.mjs"))
+ASIDE_DRIVER = Path(os.environ.get("BENCH_ASIDE_DRIVER", Path.home() / "nilla-scratch/aside-bench/bin/aside_run.mjs"))
 ASIDE_GRACE_S = 180
 DEFAULT_MAX_LANES = 6
 EPHEMERAL_PORTS_FROM = 49152
@@ -114,9 +114,9 @@ def run_aside(item, results_dir, on_start=None):
 def restore_aside_memory():
     try:
         r = subprocess.run(["node", str(ASIDE_DRIVER), "--restore-memory"], capture_output=True, text=True, timeout=180)
-        ardia_side.log(f"aside --restore-memory exited {r.returncode}")
+        nilla_side.log(f"aside --restore-memory exited {r.returncode}")
     except Exception as e:
-        ardia_side.log(f"aside --restore-memory failed: {e}")
+        nilla_side.log(f"aside --restore-memory failed: {e}")
 
 
 def memory_used_pct():
@@ -138,11 +138,11 @@ def memory_pressure_level():
 
 
 def lane_overrides(plan, contender, lane, port_offset=0):
-    keys = ("app", "port", "cli", "ardia_test", "humanize", "keep_notes", "model", "effort")
+    keys = ("app", "port", "cli", "nilla_test", "humanize", "keep_notes", "model", "effort")
     o = {k: contender.get(k, plan.get(k)) for k in keys}
     o["port_offset"] = port_offset
-    base_app = Path(o.get("app") or ardia_side.DEFAULTS["app"]).expanduser()
-    o["port"] = int(o.get("port") or ardia_side.DEFAULTS["port"]) + lane.index
+    base_app = Path(o.get("app") or nilla_side.DEFAULTS["app"]).expanduser()
+    o["port"] = int(o.get("port") or nilla_side.DEFAULTS["port"]) + lane.index
     if lane.index:
         o["lane"] = f"lane{lane.index}"
         o["app"] = str(base_app if contender.get("shared_app", plan.get("shared_app")) else lane_app(base_app, lane.index))
@@ -150,7 +150,7 @@ def lane_overrides(plan, contender, lane, port_offset=0):
 
 
 def lane_app(base_app, index):
-    dest = registry.HOME / f"app-lane{index}" / "Ardia.app"
+    dest = registry.HOME / f"app-lane{index}" / "Nilla.app"
     src_plist, dest_plist = base_app / "Contents/Info.plist", dest / "Contents/Info.plist"
     stale = not dest_plist.exists() or dest_plist.read_bytes() != src_plist.read_bytes()
     if stale:
@@ -164,7 +164,7 @@ def rate_limit_reason(rec):
     if rec.get("pass"):
         return None
     texts = [str(rec.get("harness_error") or ""), str(rec.get("error") or ""), str(rec.get("status") or "")]
-    if rec.get("side") in ("ardia", "opencode", "browseruse", "betterwright", "browserharness", "ardiacloud",
+    if rec.get("side") in ("nilla", "opencode", "browseruse", "betterwright", "browserharness", "nillacloud",
                            "browseragent"):
         failed_cli = rec.get("cli_is_error") or rec.get("errors") or rec.get("exit_code") not in (0, None) or not rec.get("tokens")
         if not failed_cli:
@@ -208,14 +208,14 @@ def browseragent_overrides(plan, contender, lane, port_offset=0):
                 port_offset=port_offset)
 
 
-def ardiacloud_overrides(plan, contender, lane, port_offset=0):
+def nillacloud_overrides(plan, contender, lane, port_offset=0):
     keys = ("cli", "model", "effort", "cloud_country", "reach_line")
     o = {k: contender.get(k, plan.get(k)) for k in keys}
     return dict(o, lane=f"lane{lane.index}", port_offset=port_offset)
 
 
 def scratch_roots():
-    return [ardia_side.WORK, opencode_side.ROOT / "lanes", browserharness_side.ROOT / "lanes",
+    return [nilla_side.WORK, opencode_side.ROOT / "lanes", browserharness_side.ROOT / "lanes",
             browseragent_side.ROOT / "lanes", browseruse_side.ROOT / "lanes", registry.HOME]
 
 
@@ -248,15 +248,15 @@ def run_item(item, lane, results_dir, plan, on_start):
         return browseragent_side.run(item["task"], None, item["run_id"], results_dir,
                                      browseragent_overrides(plan, c, lane, offset), contender=c["id"],
                                      on_agent_start=on_start)
-    if c["kind"] == "ardiacloud":
-        return ardiacloud_side.run(item["task"], c.get("agent", "codex"), item["run_id"], results_dir,
-                                   ardiacloud_overrides(plan, c, lane, offset), contender=c["id"],
+    if c["kind"] == "nillacloud":
+        return nillacloud_side.run(item["task"], c.get("agent", "codex"), item["run_id"], results_dir,
+                                   nillacloud_overrides(plan, c, lane, offset), contender=c["id"],
                                    on_agent_start=on_start)
     if c["kind"] == "betterwright":
         return betterwright_side.run(item["task"], c["agent"], item["run_id"], results_dir,
                                      betterwright_overrides(plan, c, lane, offset), contender=c["id"],
                                      on_agent_start=on_start)
-    return ardia_side.run(item["task"], c["agent"], item["run_id"], results_dir, lane_overrides(plan, c, lane, offset),
+    return nilla_side.run(item["task"], c["agent"], item["run_id"], results_dir, lane_overrides(plan, c, lane, offset),
                           contender=c["id"], on_agent_start=on_start)
 
 
@@ -303,7 +303,7 @@ class Executor:
                     f.write(json.dumps({"t": round(time.time(), 1), "session": self.session, "used_pct": used,
                                         "active": len(running), "running": running}) + "\n")
             except Exception as e:
-                ardia_side.log(f"memory sample failed: {e}")
+                nilla_side.log(f"memory sample failed: {e}")
             self.stop_sampling.wait(SAMPLE_S)
 
     def worker(self, item, lane, mode, used, lanes_active):
@@ -349,11 +349,11 @@ class Executor:
                                     "harness_error": rec.get("harness_error"), "lanes_active": lanes_active,
                                     "memory_used_pct_at_start": used, "elapsed_s": round(t1 - t0, 1)}) + "\n")
             write_json(self.results_dir / "summary.json", summary.build(self.results_dir))
-        ardia_side.log(f"{run_id} on {lane.id}: pass={rec.get('pass')} {rec.get('harness_error') or ''}")
+        nilla_side.log(f"{run_id} on {lane.id}: pass={rec.get('pass')} {rec.get('harness_error') or ''}")
 
     def quit_lane(self, lane):
         if lane.id in self.lanes_used:
-            ardia_side.quit_instance(self.lanes_used.pop(lane.id))
+            nilla_side.quit_instance(self.lanes_used.pop(lane.id))
 
     def run(self):
         sampler = threading.Thread(target=self.sample_loop, daemon=True)
@@ -368,7 +368,7 @@ class Executor:
                     for lane in quits:
                         self.sched.drop_lane(lane)
                 for lane in quits:
-                    ardia_side.log(f"quitting idle lane {lane.id}")
+                    nilla_side.log(f"quitting idle lane {lane.id}")
                     self.quit_lane(lane)
                 used = max(0.0, memory_used_pct() - float(self.plan.get("memory_headroom_pct") or 0))
                 with self.lock:
@@ -378,10 +378,10 @@ class Executor:
                         used = max(used, 100.0)
                     starts = self.sched.decide(time.time(), used)
                     for item, lane, mode in starts:
-                        if lane.kind == "ardia" and item["contender"]["kind"] == "ardia":
+                        if lane.kind == "nilla" and item["contender"]["kind"] == "nilla":
                             self.lanes_used[lane.id] = lane_overrides(self.plan, item["contender"], lane)
                         active = len(self.sched.running)
-                        ardia_side.log(f"start {item['run_id']} on {lane.id} +{item['port_offset']} "
+                        nilla_side.log(f"start {item['run_id']} on {lane.id} +{item['port_offset']} "
                                        f"({mode}, {active} active, {used}% used)")
                         t = threading.Thread(target=self.worker, args=(item, lane, mode, used, active), daemon=True)
                         self.threads.append(t)
@@ -389,7 +389,7 @@ class Executor:
                     if starts or self.sched.running:
                         last_activity = time.time()
                 if time.time() - last_activity > STALL_S:
-                    ardia_side.log(f"nothing could start for {STALL_S:.0f} s (memory {used}%); stopping, resume later")
+                    nilla_side.log(f"nothing could start for {STALL_S:.0f} s (memory {used}%); stopping, resume later")
                     break
                 time.sleep(TICK_S)
             for t in self.threads:
@@ -408,14 +408,14 @@ class Executor:
                 browserharness_side.stop_all()
             if any(c["kind"] == "browseragent" for c in self.plan["contenders"]):
                 browseragent_side.stop_all()
-            if any(c["kind"] == "ardiacloud" for c in self.plan["contenders"]):
-                ardiacloud_side.stop_all()
+            if any(c["kind"] == "nillacloud" for c in self.plan["contenders"]):
+                nillacloud_side.stop_all()
             browsers.cloud_stop_all()
             tunnel.stop_all()
             if self.plan.get("stop_after", True):
                 for lane_id in list(self.lanes_used):
-                    ardia_side.quit_instance(self.lanes_used.pop(lane_id))
-                ardia_side.quit_instance()
+                    nilla_side.quit_instance(self.lanes_used.pop(lane_id))
+                nilla_side.quit_instance()
                 servers.stop()
             write_json(self.results_dir / "summary.json", summary.build(self.results_dir))
 
@@ -437,9 +437,9 @@ def simulate(plan, results_dir, max_lanes, base_used=None):
     t, finishing, launching, lines, peak = 0.0, {}, {}, [], 0
 
     def used_now():
-        ardia = sum(1 for ln in sched.lanes if ln.kind == "ardia" and (ln.launched or ln.busy))
+        nilla = sum(1 for ln in sched.lanes if ln.kind == "nilla" and (ln.launched or ln.busy))
         aside = any(ln.kind == "aside" for ln in sched.lanes)
-        return round(base + 2.5 * ardia + 4.0 * aside + 1.0 * len(sched.running), 1)
+        return round(base + 2.5 * nilla + 4.0 * aside + 1.0 * len(sched.running), 1)
 
     while not sched.done() and t < 7 * 24 * 3600:
         for rid in [r for r, at in launching.items() if at <= t]:
@@ -465,7 +465,7 @@ def simulate(plan, results_dir, max_lanes, base_used=None):
         t += TICK_S
     lines.append(f"{len(items)} runs, simulated wall {fmt(t)}, peak {peak} lanes, serial sum "
                  f"{fmt(sum(known.get((i['task'], i['contender']['id'])) or (200.0 if i['contender']['kind'] == 'aside' else 100.0) for i in items))}"
-                 f" (memory modeled from {base}%: +2.5 per Ardia instance, +4 for Aside, +1 per running agent)")
+                 f" (memory modeled from {base}%: +2.5 per Nilla instance, +4 for Aside, +1 per running agent)")
     return lines
 
 
@@ -475,10 +475,10 @@ def fmt(seconds):
 
 
 def reserved_ports(plan, max_lanes):
-    bases = [("Ardia DevTools", int(plan.get("port") or ardia_side.DEFAULTS["port"]))]
+    bases = [("Nilla DevTools", int(plan.get("port") or nilla_side.DEFAULTS["port"]))]
     for c in plan["contenders"]:
-        if c["kind"] == "ardia" and c.get("port"):
-            bases.append(("Ardia DevTools", int(c["port"])))
+        if c["kind"] == "nilla" and c.get("port"):
+            bases.append(("Nilla DevTools", int(c["port"])))
         if c["kind"] == "opencode":
             bases += [("OpenCode CDP", int(c.get("cdp_port") or opencode_side.DEFAULTS["cdp_port"])),
                       ("OpenCode relay", int(c.get("relay_port") or opencode_side.DEFAULTS["relay_port"]))]
@@ -526,7 +526,7 @@ def pin_offsetless_tasks(plan):
     for tid in registry.task_ids(plan.get("tasks", "all")):
         ok, why = servers.supports_offset(tid, LANE_PORT_STRIDE * (lane_base(plan) + 1))
         if not ok:
-            ardia_side.log(f"{tid}: its server ignores BENCH_PORT_OFFSET, so its runs share the +0 server one at a "
+            nilla_side.log(f"{tid}: its server ignores BENCH_PORT_OFFSET, so its runs share the +0 server one at a "
                            f"time ({why})")
             pinned.append(tid)
     return pinned
@@ -543,7 +543,7 @@ def execute(plan_path, results_dir=None, dry_run=False, max_lanes=None):
         for line in simulate(plan, results_dir, max_lanes):
             print(line)
         return None
-    ardia_side.log(ports_line)
+    nilla_side.log(ports_line)
     write_json(results_dir / "plan.json", dict(plan, registry=str(registry.REGISTRY), max_lanes=max_lanes))
     pinned = pin_offsetless_tasks(plan)
     if any(c["kind"] == "aside" for c in plan["contenders"]) or pinned:

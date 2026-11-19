@@ -1,24 +1,24 @@
-# The `ardia` command
+# The `nilla-browser` command
 
-`ardia` drives a running Ardia from the terminal. `ardia browse` is how an agent drives the browser: agent-browser's
-commands on a small CDP client of its own (`ardia_cli/cdp.py` over the WebSocket client in `ardia_cli/wsclient.py`). The other commands run Ardia's own commands, stream its events,
+`nilla` drives a running Nilla from the terminal. `nilla-browser browse` is how an agent drives the browser: agent-browser's
+commands on a small CDP client of its own (`nilla_browser_cli/cdp.py` over the WebSocket client in `nilla_browser_cli/wsclient.py`). The other commands run Nilla's own commands, stream its events,
 run hooks and userscripts, edit its config and read its browsing data. It's a separate download, not part of the app
 bundle. The app ships `install.sh` and runs it on its own: about 8 s after the first window of a launch, when no CLI
 is installed and `ardia-cli.json` says none ever was (no `version`, `binPath` or `autoInstalledAt`), it installs one
 (at most 3 tries across launches, `autoInstallTries`, saved before each try; no try when it can't be saved) and, once
-that works, turns on "Let the ardia command control Ardia" unless the user turned it off themselves (`cliControl` in
+that works, turns on "Let the nilla-browser command control Nilla" unless the user turned it off themselves (`cliControl` in
 `settingsMeta.chosen`, not `inferred`), checked again when the install ends. A launch that finds a started auto install
 with no `autoInstalledAt` (the app quit mid-install) finishes it. A CLI the user removed after it was installed stays
 removed. An installed CLI older than the app is upgraded on the same schedule, and each upgrade installs and
-refreshes the agent skill (`ardia skills install --auto`, `ardia skills refresh`). Settings › Advanced installs or
+refreshes the agent skill (`nilla-browser skills install --auto`, `nilla-browser skills refresh`). Settings › Advanced installs or
 reinstalls it by hand. Test instances install only with `cliHome` and `cliBinDir` set (the installer's `HOME` is then
 `<cliHome>/home`, so the skill copies land there), and on their own only with a `file://` `cliUrl`; a build without a pinned digest never installs on its own (`CliInstaller.canInstallUnattended`).
 Dashboard: `usage_counts.cli_auto_installs`, `cli_auto_install_failures`, `cli_auto_enables`, `cli_upgrades`,
 `cli_upgrade_failures`, `cli_settings_installs`, `cli_settings_install_failures`.
 
-While it drives a page, a pill floats over the bottom centre of the page ("Claude Code is controlling Ardia · Stop", or
-"The ardia command is controlling Ardia" when it can't tell who runs it; Stop turns the setting off). It shows for a
-DevTools connection (`browse`, `scripts test`) and for `ardia run`, which presses Ardia's own commands; reading and
+While it drives a page, a pill floats over the bottom centre of the page ("Claude Code is controlling Nilla · Stop", or
+"The nilla-browser command is controlling Nilla" when it can't tell who runs it; Stop turns the setting off). It shows for a
+DevTools connection (`browse`, `scripts test`) and for `nilla-browser run`, which presses Nilla's own commands; reading and
 organizing (`tabs`, `groups`, `apply`, `windows`, `commands`, `events`, `pinned`, `history`, `config`) never shows it. It overlays the page and never resizes it. It shows at the first connection and stays 3 s after
 the last one closes, so a burst of commands shows one steady pill; turning the setting off hides it at once. One per
 window: the focused pane of a split, the full screen page, or the Peek while one is open
@@ -26,7 +26,7 @@ window: the focused pane of a split, the full screen page, or the Peek while one
 Command line › Show the control pill as an icon and Stop (`compactCliPill`) keeps only the caller's icon and Stop, the
 line moving to its tooltip and accessibility label; nothing hides it.
 
-The pill names who runs the command (`ardia_cli/caller.py`). The command walks its own process ancestry once (parent
+The pill names who runs the command (`nilla_browser_cli/caller.py`). The command walks its own process ancestry once (parent
 pids through libproc's `proc_pidinfo`, each one's executable through `proc_pidpath` and its first two arguments
 through `KERN_PROCARGS2`; well under a millisecond). A known agent anywhere up the chain wins: `claude` is Claude
 Code, then Codex, Cursor Agent, Gemini CLI, OpenCode, Aider, Amp, Goose, Crush, Droid, Qwen Code, Copilot CLI, Kiro
@@ -34,15 +34,15 @@ and Cline, matched on the program's name, on `argv[0]` (Claude Code's binary is 
 interpreter (`node`, `bun`, `deno`, `python`, `ruby`) runs. Otherwise it's the app that owns the chain: the first
 ancestor inside an `.app` bundle, named by the outermost bundle's `CFBundleDisplayName`, else `CFBundleName`, else its
 folder (so VS Code's helpers name VS Code), and that bundle's icon replaces the terminal glyph. Otherwise (a process
-reparented to launchd, ssh) it's "ardia". The name and the bundle path travel as `{"name", "app"?}` in the control
+reparented to launchd, ssh) it's "nilla". The name and the bundle path travel as `{"name", "app"?}` in the control
 socket's `hello` (`docs/automation.md`); a `browse` client puts them in its request and the daemon, which outlives
-the client, tells the app over a short socket connection (`hello`, then `caller`) when it connects to Ardia and
+the client, tells the app over a short socket connection (`hello`, then `caller`) when it connects to Nilla and
 whenever a request comes from someone else. `scripts test` does the same as it connects. The name is display only:
 it never changes what a connection may do, and both ends strip control and invisible characters and keep 40
 characters (the app keeps `app` only when it's an absolute, outermost `.app` path). When several run at once the pill
-names the most recent one; a pill that hid and shows again without a new name says "The ardia command".
+names the most recent one; a pill that hid and shows again without a new name says "The nilla-browser command".
 
-Code: `apps/cli` (`ardia_cli`, `install.sh`, `scripts/build.sh`). It runs on macOS (Apple silicon) and Linux
+Code: `apps/cli` (`nilla_browser_cli`, `install.sh`, `scripts/build.sh`). It runs on macOS (Apple silicon) and Linux
 (x86_64). Dependencies are pinned with hashes in `apps/cli/requirements.lock` (regenerate with `uv pip compile
 requirements.in --python-version 3.13 --python-platform aarch64-apple-darwin --generate-hashes --no-annotate
 --no-header -o requirements.lock`, then copy the pins into `pyproject.toml`). uv writes the hash of every file a
@@ -53,103 +53,103 @@ you bump a pin.
 
 ## Commands
 
-- `ardia browse <command> [args]` takes agent-browser's commands, flags and output against the running Ardia (see
-  The `ardia browse` command).
-- `ardia pinned [--json] [--data-dir DIR]` lists the favorites and pinned tabs, and `ardia history [--days N]
+- `nilla-browser browse <command> [args]` takes agent-browser's commands, flags and output against the running Nilla (see
+  The `nilla-browser browse` command).
+- `nilla-browser pinned [--json] [--data-dir DIR]` lists the favorites and pinned tabs, and `nilla-browser history [--days N]
   [--limit N] [--profile P] [--domains] [--json] [--data-dir DIR]` the recent history (see Browsing data). `--days`
   defaults to 1 and `--limit` to 200 (0 for no limit). A pin's `kind` is `favorite` for a Top Apps tile (`folder` is
   its tile folder) and `pinned` for a pinned row or a tab in a pinned folder (`folder` is the folder). They read
   `session.json` from version 2 on, the tab's `pin` field or the older `pinned` flag. Exit 0 done, 1 the data
-  couldn't be read or ran out of time, 2 Ardia can't be reached.
-- `ardia notes [get|set|append|list|rm] [SITE] [TEXT|-]` keeps plain-text notes per site for the user's own agent
-  (see Site notes). It hands its arguments to `ardia_cli/notes.py` (`main(argv)`), which runs them as
-  `ardia browse notes …`, with the shared options given before `notes` put first.
-- `ardia skills install --target general|codex|claude-code|cursor|opencode [--target …] [--project]` installs the
-  agent skill (`ardia_cli/skill`: a `SKILL.md` of about 5K characters with the fast paths (read, batch, select,
+  couldn't be read or ran out of time, 2 Nilla can't be reached.
+- `nilla-browser notes [get|set|append|list|rm] [SITE] [TEXT|-]` keeps plain-text notes per site for the user's own agent
+  (see Site notes). It hands its arguments to `nilla_browser_cli/notes.py` (`main(argv)`), which runs them as
+  `nilla-browser browse notes …`, with the shared options given before `notes` put first.
+- `nilla-browser skills install --target general|codex|claude-code|cursor|opencode [--target …] [--project]` installs the
+  agent skill (`nilla_browser_cli/skill`: a `SKILL.md` of about 5K characters with the fast paths (read, batch, select,
   script, notes), plus `references/troubleshooting.md`, `script.md`, `flows.md`, `userscripts.md`, `config.md`,
   `automation.md` and `daily-reports.md` read only when a task needs them) into `~/.agents/skills` (general, codex),
   `~/.claude/skills`, `~/.cursor/skills` or `~/.config/opencode/skills`; with `--project`, into `./.agents/skills`,
   `./.claude/skills`, `./.cursor/skills` or `./.opencode/skills`. It writes each file it ships in place (temp file,
-  then rename, so a linked file is replaced, never written through) plus a `.ardia-skill` marker (vendor, version and
+  then rename, so a linked file is replaced, never written through) plus a `.nilla-skill` marker (vendor, version and
   the files it wrote), removes only files an earlier marker listed that it no longer ships, and leaves every other
   file alone. A folder counts as ours only when it isn't a link and its marker is a plain file naming vendor
-  `ardia`. `install` also adopts a copy from before the marker, but only when its files, none of them links, have
-  exactly the paths and SHA-256 of a version we shipped (`ardia_cli/skill_hashes.json`, frozen, written from git
-  history by `apps/cli/scripts/skill-hashes.py`, which `--check`s it). Anything else, a foreign skill named ardia
+  `nilla`. `install` also adopts a copy from before the marker, but only when its files, none of them links, have
+  exactly the paths and SHA-256 of a version we shipped (`nilla_browser_cli/skill_hashes.json`, frozen, written from git
+  history by `apps/cli/scripts/skill-hashes.py`, which `--check`s it). Anything else, a foreign skill named nilla
   included, is refused with the folder's path; `--replace` removes that one folder (a link itself, never its target)
-  and installs fresh. Each folder it wrote goes into `$ARDIA_CLI_HOME/skills.json`. `ardia skills refresh` never
+  and installs fresh. Each folder it wrote goes into `$ARDIA_CLI_HOME/skills.json`. `nilla-browser skills refresh` never
   adopts: it rewrites every marked folder in that list and every marked user-level folder above, prints
   `skipped <folder>` for the rest, refuses a linked subfolder, and keeps only our folders in the list. `install.sh` runs it after
   each upgrade, so installed copies follow the CLI. Both also install cua-driver's skill next to ours (see Computer
   use); `--no-cua` skips it.
-- `ardia skills get [--full]` (and `ardia --skill [--full]`, the same command) prints the skill that ships inside
+- `nilla-browser skills get [--full]` (and `nilla --skill [--full]`, the same command) prints the skill that ships inside
   this CLI to stdout, byte for byte, so an agent reads the version that matches the command it is about to run:
   `SKILL.md` alone, or with `--full` followed by every file under `references/`, each after a `--- references/<name> ---`
-  line. `ardia skills list` prints each shipped skill's name and description (the front matter), tab-separated.
-  Neither needs Ardia, writes a file or prints to stderr, and both exit 0 (141, quietly, when the reader closes the
-  pipe). `ardia --help` tells an agent to run `ardia --skill` unless an ardia skill is already in its context.
-- `ardia computer <cua-driver command> [args]`, `ardia computer setup [--no-grant]` and
-  `ardia computer mcp-config [--target …]` operate native Mac apps through the pinned cua-driver (see Computer use).
-- `ardia scripts new|test|install|uninstall|list` writes, tests and installs userscripts (see Userscripts).
-- `ardia config path|init|get|set|unset|list|edit|check` reads, writes and checks `config.json` (see
-  `docs/config.md`, The ardia command). Never needs Ardia running.
-- `ardia theme new|use|list|check|get|set|unset` makes, picks, edits and checks themes: colours, type, metrics,
-  layout and icons. `ardia theme set KEY VALUE` changes one key of the active theme (`dark.accent`,
-  `metrics.radius.row`, `icons.chevron.down`) and a running Ardia restyles at once (see `docs/config.md`, Themes).
-- `ardia run COMMAND [ARG]` runs one of Ardia's commands over `<data dir>/ArdiaControl.sock` (see
+  line. `nilla-browser skills list` prints each shipped skill's name and description (the front matter), tab-separated.
+  Neither needs Nilla, writes a file or prints to stderr, and both exit 0 (141, quietly, when the reader closes the
+  pipe). `nilla --help` tells an agent to run `nilla --skill` unless a nilla skill is already in its context.
+- `nilla-browser computer <cua-driver command> [args]`, `nilla-browser computer setup [--no-grant]` and
+  `nilla-browser computer mcp-config [--target …]` operate native Mac apps through the pinned cua-driver (see Computer use).
+- `nilla-browser scripts new|test|install|uninstall|list` writes, tests and installs userscripts (see Userscripts).
+- `nilla-browser config path|init|get|set|unset|list|edit|check` reads, writes and checks `config.json` (see
+  `docs/config.md`, The nilla-browser command). Never needs Nilla running.
+- `nilla-browser theme new|use|list|check|get|set|unset` makes, picks, edits and checks themes: colours, type, metrics,
+  layout and icons. `nilla-browser theme set KEY VALUE` changes one key of the active theme (`dark.accent`,
+  `metrics.radius.row`, `icons.chevron.down`) and a running Nilla restyles at once (see `docs/config.md`, Themes).
+- `nilla-browser run COMMAND [ARG]` runs one of Nilla's commands over `<data dir>/ArdiaControl.sock` (see
   `docs/automation.md`).
-- `ardia commands` lists the commands `run` takes (see `docs/automation.md`).
-- `ardia windows` lists the windows and their tabs (see `docs/automation.md`). With `--json` each tab also has
-  `targetId`, the DevTools page target `ardia browse` attaches to (null when the tab's page isn't loaded), and
+- `nilla-browser commands` lists the commands `run` takes (see `docs/automation.md`).
+- `nilla-browser windows` lists the windows and their tabs (see `docs/automation.md`). With `--json` each tab also has
+  `targetId`, the DevTools page target `nilla-browser browse` attaches to (null when the tab's page isn't loaded), and
   `pageGeneration`, bumped whenever that target changes (a slept tab reloading). The app asks each live tab through
   ArdiaCore's `devToolsCall` (`Target.getTargetInfo`, engine call `engine.cliTabTargets`); an older build leaves both
   out. A tab a page opened whose first page is still loading isn't asked and has a null `targetId` until that page
   commits: the DevTools attach counts as a touch of its blank initial document, after which Chrome and the tab show
   about:blank instead of the pending address (`awaitsFirstDocument`; `packages/ardiacore/scripts/pending-address-check.mjs
   <Debug app>` checks it).
-- `ardia tabs --usage` lists each tab with its renderer's process id, CPU and memory, hottest first, and
-  `ardia tabs --pid N` names the tabs in a process, so a pid from `top -o power` leads to its tab (`workspace`'s
+- `nilla-browser tabs --usage` lists each tab with its renderer's process id, CPU and memory, hottest first, and
+  `nilla-browser tabs --pid N` names the tabs in a process, so a pid from `top -o power` leads to its tab (`workspace`'s
   `usage`, `docs/automation.md` › Tabs and groups). Use counts come from the option names on the command event;
   `error_code` `no_pid` means an engine that reports no process ids.
-- `ardia tabs`, `ardia groups` and `ardia apply` list and organize tabs and groups by id: open URLs into a window,
+- `nilla-browser tabs`, `nilla-browser groups` and `nilla-browser apply` list and organize tabs and groups by id: open URLs into a window,
   profile, group or spot, move tabs between groups, windows and profiles without reloading, pin, mute, sleep, wake,
   close, rename and set icons; create, nest, reorder, pin, collapse, recolour, ungroup, close and delete groups; and
-  apply a JSON batch of those in one call (`ardia_cli/workspace_cli.py`; protocol, operations and rules in
-  `docs/automation.md` › Tabs and groups). Groups can be named by id or by name (`--group Work`, `ardia groups update
+  apply a JSON batch of those in one call (`nilla_browser_cli/workspace_cli.py`; protocol, operations and rules in
+  `docs/automation.md` › Tabs and groups). Groups can be named by id or by name (`--group Work`, `nilla-browser groups update
   Work …`); output names them next to their ids (`created group 💼 Work (g-…) with 4 tabs`, `moved Inbox (tab-…)`).
   `--json` prints the app's reply. Exit 0 done, 1 refused, a bad request
-  or a batch stopped at a failing operation, 2 Ardia can't be reached or the connection dropped after sending. Human
-  output shows control characters in page text, titles and names as `\u00NN` (`ardia_cli/printable.py`), so a page
+  or a batch stopped at a failing operation, 2 Nilla can't be reached or the connection dropped after sending. Human
+  output shows control characters in page text, titles and names as `\u00NN` (`nilla_browser_cli/printable.py`), so a page
   title can't drive the terminal (an OSC 52 clipboard write, say): see Terminal output.
-- `ardia events [EVENT…]` streams browser events (see `docs/automation.md`).
-- `ardia on EVENT[,EVENT…] -- PROGRAM` runs a program for each event (see `docs/automation.md`). PROGRAM's output goes
+- `nilla-browser events [EVENT…]` streams browser events (see `docs/automation.md`).
+- `nilla-browser on EVENT[,EVENT…] -- PROGRAM` runs a program for each event (see `docs/automation.md`). PROGRAM's output goes
   to the terminal untouched; event data such as `ARDIA_TITLE` and `ARDIA_URL` comes from pages, so a program that
   prints it should escape control characters, as the CLI's own output does.
-- `ardia hooks run|install|uninstall|list` runs the hooks in `hooks.json`, at login through a LaunchAgent on macOS
+- `nilla-browser hooks run|install|uninstall|list` runs the hooks in `hooks.json`, at login through a LaunchAgent on macOS
   or a systemd user service on Linux (see Linux below and `docs/automation.md`).
-- `ardia feedback --title TITLE [--kind bug|slow|idea|other] [--attach FILE]… [--command CMD] [--data-dir DIR] TEXT|-`
+- `nilla-browser feedback --title TITLE [--kind bug|slow|idea|other] [--attach FILE]… [--command CMD] [--data-dir DIR] TEXT|-`
   reports a problem or an idea to the developer (see Feedback and the star nudge). Exit 0 sent (or the same report
   already went out today), 1 not sent and kept on the Mac (the line says why), 2 a missing or bad title, description
   or attachment.
-- `ardia star [--data-dir DIR]` stars github.com/mantrakp04/ardia for the user, run only after they said yes (see
+- `nilla-browser star [--data-dir DIR]` stars github.com/NoorChasib/nilla for the user, run only after they said yes (see
   Feedback and the star nudge). Exit 0 starred or the page opened, 1 neither worked.
-- `ardia --version`, `ardia --help`, `ardia browse --help`, `ardia scripts <command> --help`,
-  `ardia config <command> --help`, `ardia theme <command> --help`, `ardia hooks <command> --help` and `--help` on
+- `nilla --version`, `nilla --help`, `nilla-browser browse --help`, `nilla-browser scripts <command> --help`,
+  `nilla-browser config <command> --help`, `nilla-browser theme <command> --help`, `nilla-browser hooks <command> --help` and `--help` on
   each of `pinned`, `history`, `run`, `commands`, `windows`, `events`, `on`, `apply`, and `tabs` and `groups` and
-  their commands. `ardia browse <command> --help` (or `ardia browse help <command>`) prints that command's entry; a
+  their commands. `nilla-browser browse <command> --help` (or `nilla-browser browse help <command>`) prints that command's entry; a
   command without one prints its line from the overview and `flags: none`, never the whole overview.
 
-`ardia exec` is gone: `ardia browse` is the one way to drive the browser. `ardia exec …` (and any other unknown
-command) prints `ardia: unknown command '…'` with where to go instead, and exits 2. What `exec` offered maps to
-`ardia browse` for pages, `ardia pinned` and `ardia history` for `pinned()` and `history()`, and `ardia run`,
-`ardia windows` and `ardia events` for `run()`, `windows()` and `events()`.
+`nilla exec` is gone: `nilla-browser browse` is the one way to drive the browser. `nilla exec …` (and any other unknown
+command) prints `nilla: unknown command '…'` with where to go instead, and exits 2. What `exec` offered maps to
+`nilla-browser browse` for pages, `nilla-browser pinned` and `nilla-browser history` for `pinned()` and `history()`, and `nilla-browser run`,
+`nilla-browser windows` and `nilla-browser events` for `run()`, `windows()` and `events()`.
 
 ### Terminal output
 
 Page text, titles, notes, names and other text from pages or files reach the terminal only with their control
 characters (C0, C1 and DEL) shown as `\u00NN`, so a page can't write escape sequences (an OSC 52 clipboard write, a
-screen clear) through the CLI. Two places do it, so new commands get it without asking: `ardia browse` and
-`ardia notes` text output in `render` (`browse/daemon.py`), keeping line breaks and tabs, so snapshots, page text and
+screen clear) through the CLI. Two places do it, so new commands get it without asking: `nilla-browser browse` and
+`nilla-browser notes` text output in `render` (`browse/daemon.py`), keeping line breaks and tabs, so snapshots, page text and
 notes read as before; and `cli.main` wraps stdout and stderr for every other command (`printable.inert_output`), with
 single-line fields (titles in `tabs`, `windows`, `events`, `pinned`, `history`) escaping line breaks too. Other text
 (accents, CJK, Arabic, emoji) is untouched. JSON output (`--json`, and `AGENT_BROWSER_JSON` for browse) keeps
@@ -161,33 +161,33 @@ JSON (a script's result) valid JSON.
 ### Shared options
 
 `--port N`, `--ws URL` and `--data-dir DIR`, plus `--timeout S` and `--json` where a command has them, go before the
-command or after it: `ardia --port 9222 browse snapshot` and `ardia browse --port 9222 snapshot` are the same, and so
-are `ardia --json windows`, `ardia windows --json` and `ardia hooks --data-dir DIR list`. `cli.py` moves the ones in
+command or after it: `nilla --port 9222 browse snapshot` and `nilla-browser browse --port 9222 snapshot` are the same, and so
+are `nilla --json windows`, `nilla-browser windows --json` and `nilla-browser hooks --data-dir DIR list`. `cli.py` moves the ones in
 front of (or between) the command words to just after them, so a flag written after the command wins over the same
 flag before it; arguments after `on`'s `--` are never touched. A command that doesn't take a flag given before it
-says so and exits 2 (`ardia: windows doesn't take --port`). For `browse` the flags go to the front of browse's own
+says so and exits 2 (`nilla: windows doesn't take --port`). For `browse` the flags go to the front of browse's own
 arguments, where its parser reads them; `browse` takes `--port`, `--ws`, `--data-dir` and `--json`, not `--timeout`.
 
 Each has an environment variable, and a flag wins over it: `ARDIA_PORT`, `ARDIA_WS`, `ARDIA_DATA_DIR`. The
 endpoint comes from `--ws`, else `--port`, else `$ARDIA_WS`, else `$ARDIA_PORT`, else `$ARDIA_CDP_URL`, else
-`<data dir>/Chromium/ArdiaControl.json` (see How it finds Ardia). For `browse`, `ARDIA_WS` or `ARDIA_PORT` is
+`<data dir>/Chromium/ArdiaControl.json` (see How it finds Nilla). For `browse`, `ARDIA_WS` or `ARDIA_PORT` is
 passed as `--ws`/`--port` only when its arguments have none of `--ws`, `--port` and `--cdp` (a `--port` after
 `stream` is the stream's own), so the session is keyed on the endpoint it really uses. A bad `ARDIA_PORT` exits 2.
 
-The CLI never quits Ardia: every DevTools WebSocket it opens (`browse`, `scripts test`; `ardia_cli/guard.py`) checks
+The CLI never quits Nilla: every DevTools WebSocket it opens (`browse`, `scripts test`; `nilla_browser_cli/guard.py`) checks
 each outgoing message and refuses fragmented sends, so `Browser.close`, `Browser.crash` and `Browser.crashGpuProcess`
 never leave the process, whether sent one at a time, in an `execute_commands` batch (checked whole before anything is
 sent) or straight on the socket. Its WebSockets always connect directly, ignoring `http_proxy`, `ws_proxy` and the
 like, so no proxy sees the token.
 
-## The `ardia browse` command
+## The `nilla-browser browse` command
 
-`ardia browse` gives agent-browser's command line (0.35: commands, flags, `@eN` refs, text output with `✓`/`✗`, and
-`--json` as `{"success","data","error"}`) on top of the running Ardia, so an agent that knows `agent-browser <args>`
-types `ardia browse <args>`. None of agent-browser's code is used. Code: `ardia_cli/browse/` (`cli.py` parses the
+`nilla-browser browse` gives agent-browser's command line (0.35: commands, flags, `@eN` refs, text output with `✓`/`✗`, and
+`--json` as `{"success","data","error"}`) on top of the running Nilla, so an agent that knows `agent-browser <args>`
+types `nilla-browser browse <args>`. None of agent-browser's code is used. Code: `nilla_browser_cli/browse/` (`cli.py` parses the
 globals and runs the commands that need no browser, `daemon.py` owns the connection, `commands.py`, `actions.py`,
 `snapshot.py`, `changes.py`, `fields.py`, `capture.py`, `media.py`, `audit.py`, `react.py`, `vault.py`, `plugins.py`,
-`readurl.py`; site notes in `ardia_cli/notes.py`).
+`readurl.py`; site notes in `nilla_browser_cli/notes.py`).
 
 An agent's loop is short: `snapshot -i` once, then actions, each of which prints what it changed, so it rarely needs
 another snapshot; repetitive work goes in one `batch` on stdin. Input is instant unless `--humanize`, a session works
@@ -196,7 +196,7 @@ in background tabs of its own until it picks the user's with `tab active`, and t
 ### Process model
 
 Each session has a background daemon that owns the CDP connection, the refs, the tabs it opened and the tracked
-mouse position, so a humanized path starts where the last one ended. `ardia browse` talks to it over a Unix socket.
+mouse position, so a humanized path starts where the last one ended. `nilla-browser browse` talks to it over a Unix socket.
 
 - Everything lives in `<data dir>/Browse/` (`--data-dir`, else `$ARDIA_DATA_DIR`, else the installed app's, with
   `--port` and `--ws` too). The folder is created 0700 and must be a real folder the
@@ -230,7 +230,7 @@ mouse position, so a humanized path starts where the last one ended. `ardia brow
   re-checks `ArdiaControl.json` (or `/json/version`) and refuses, ending the session, if the browser instance
   (`pid:generation:browser path`, or the browser WebSocket path) changed. Admission and the idle check run on one
   event loop under the command lock, so a disconnect never races a command.
-- **Connection loss is terminal.** When Ardia closes the connection itself (Stop, control turned off, Ardia quit),
+- **Connection loss is terminal.** When Nilla closes the connection itself (Stop, control turned off, Nilla quit),
   the session ends: queued commands fail, nothing reconnects and nothing is replayed. `cdp.Connection` opens once
   and never reconnects, with a 256 MB `max_size`; a message over it closes the connection (1009). A link found dead when a command
   starts is treated the same way, before any endpoint is resolved again; only the daemon's own idle disconnect
@@ -242,8 +242,8 @@ mouse position, so a humanized path starts where the last one ended. `ardia brow
   run and is reported as `not_run`. Isolated-world reads are retried once when the document changes under them;
   writes (`history.go`, `storage set`, `select`, `pushstate`, scripted scrolls) fail with `document_changed` and are
   never replayed on the new document.
-- **A detached tab.** Ardia can detach a tab from the connection while a command uses it: the tab closed, crashed,
-  went to sleep (Memory Saver, `ardia tabs sleep`) or moved to a window Ardia keeps for itself. The page then has no
+- **A detached tab.** Nilla can detach a tab from the connection while a command uses it: the tab closed, crashed,
+  went to sleep (Memory Saver, `nilla-browser tabs sleep`) or moved to a window Nilla keeps for itself. The page then has no
   CDP session, and a command sent without one goes to the browser target, which answered `'Page.getFrameTree' wasn't
   found` (a multi-page `read` printed that for each page whose reading tab went away). `Page.send` now refuses to send
   without a session (`code: "tab_detached"`), `Page.detach` fails the calls still waiting for an answer at once (a
@@ -276,9 +276,9 @@ mouse position, so a humanized path starts where the last one ended. `ardia brow
   256 MB.
 - While disconnected the daemon watches `ArdiaControl.json` every 2 s and exits when it disappears or names another
   instance. It also exits after `--idle-timeout`/`AGENT_BROWSER_IDLE_TIMEOUT_MS` (default 1 h) without commands, and
-  on `close`. It takes a lease on its CLI version like `ardia` does.
+  on `close`. It takes a lease on its CLI version like `nilla` does.
 - Sessions (`--session`, `AGENT_BROWSER_SESSION`, default `default`; `--namespace`) are command-state namespaces on
-  the same Ardia, not isolated browsers: cookies, storage and logins are the user's in all of them. A capture or
+  the same Nilla, not isolated browsers: cookies, storage and logins are the user's in all of them. A capture or
   route claims its tab in `Browse/claims/` (checked against the owner's lock), and a second live session is refused
   on a tab another one owns. The claim is taken before the CDP domain is enabled (console and errors, including
   `open --capture-console`, network, HAR, route and credentials, trace, record, stream), dropped if enabling fails,
@@ -453,7 +453,7 @@ connection up). An interrupted drag reports an unknown outcome.
 `drag` from an HTML5 draggable (the source or an ancestor has `draggable`, as links and images do by default) goes
 through drag interception, the way Playwright does it, since a synthetic mouse drag would start a real macOS drag
 session. It turns on `Input.setInterceptDrags` for the tab's CDP session before sending anything, presses on the
-source and moves toward the target; when the page starts a drag, Ardia hands it over as `Input.dragIntercepted`
+source and moves toward the target; when the page starts a drag, Nilla hands it over as `Input.dragIntercepted`
 (the `dataTransfer` items), and from then on each point of the path is an `Input.dispatchDragEvent`: `dragEnter`,
 `dragOver` along the rest of the path, then `drop` at the target, and the button is released. The drop point (for
 both kinds of drag) is the target's far half: 75% of its height when the target is below the source and 25% when
@@ -472,7 +472,7 @@ included) gets a `dragCancel`; a held button is released, while interception is 
 fails; and only then is interception turned off. Each of its CDP calls is bounded (2 s, plus up to 1.5 s for a
 late handover), instead of one deadline that could cut a release short and leave it running. Interception
 belongs to the CDP session, so it also ends when the session disconnects, and a drag the session still holds then (the daemon killed, Stop pressed mid-drag) is ended by the engine, so the page doesn't stay deaf to clicks and keys (`chromium-drag-always-ends.patch`). If the token policy refuses
-`Input.setInterceptDrags` (an Ardia older than this engine), the command fails before any input with the gated message (`policy_refused`). Ardia hands a drag to a session only when the drag started from that session's own press (`docs/engine-build.md`, the control-token patch); sessions still share control of the tab, so one session's drag timing and payload aren't isolated from another session's. It reports
+`Input.setInterceptDrags` (a Nilla older than this engine), the command fails before any input with the gated message (`policy_refused`). Nilla hands a drag to a session only when the drag started from that session's own press (`docs/engine-build.md`, the control-token patch); sessions still share control of the tab, so one session's drag timing and payload aren't isolated from another session's. It reports
 what happened: `✓ Done (HTML5 drag and drop)`, `the target didn't accept the drop` (the page cancelled no `dragover`, so
 no `drop` event arrived) or `the page didn't start an HTML5 drag, so it was a plain mouse drag` (its `dragstart` was
 cancelled); `--json` has `html5`, `started` and `dropped`. It confirms delivery like other input (a `mousedown`, then a
@@ -480,15 +480,15 @@ cancelled); `--json` has `html5`, `started` and `dropped`. It confirms delivery 
 `tests/fixtures/browse/dnd.html` is a sortable list; the end-to-end test reorders it both ways.
 
 Chrome doesn't deliver mouse or keyboard input to a hidden tab, and a tab `open` puts in the background is hidden
-unless the engine keeps it live. An Ardia that does keeps a tab with a CLI CDP session attached visible to the
+unless the engine keeps it live. A Nilla that does keeps a tab with a CLI CDP session attached visible to the
 renderer (a capturer count, as tab capture does) without switching the user's view, so the page reports
 `document.visibilityState === 'visible'` shortly after attaching (about 90 ms) and gets a `visibilitychange` back to
 `hidden` when the session detaches or the connection closes, the idle disconnect included; its timers run unthrottled
-meanwhile. Ardia does this on the token path from engine 27cc5eff (`ac_cli_visible_tabs.cc`), and on a `--port` test
+meanwhile. Nilla does this on the token path from engine 27cc5eff (`ac_cli_visible_tabs.cc`), and on a `--port` test
 instance only when it's launched with `--test cdpTabsVisible`. Input commands check visibility first; when the tab
 is hidden they poll it for up to 0.5 s, every time (one tab that stayed hidden doesn't make later ones refused
 without waiting). A hidden tab fails with `code: "tab_hidden"` and the exact
-fix, `[t2] is a background tab, … use: ardia browse tab t2 --show (or open <url> --show)` (`data.use` carries the
+fix, `[t2] is a background tab, … use: nilla browse tab t2 --show (or open <url> --show)` (`data.use` carries the
 command). `open --show`, `tab new --show`, `tab <id> --show` or `AGENT_BROWSER_SHOW_TAB=1` show the tab
 (`Target.activateTarget`, retried until the page reports visible and the tab target's `embedderData.tabActive` has
 held for 0.3 s, since the app could switch back right after). `scroll` on a hidden tab keeps the
@@ -498,11 +498,11 @@ attaching, before an engine that keeps attached tabs live has made them visible.
 
 ### What the page can see
 
-`ardia browse` doesn't change the page's main world by default: locating, snapshots (`Accessibility.getFullAXTree`,
+`nilla-browser browse` doesn't change the page's main world by default: locating, snapshots (`Accessibility.getFullAXTree`,
 cursor-interactive elements found by computed style), `get`, `is`, `find`, `read`, `storage`, `select`, `pushstate`,
 `vitals` (`PerformanceObserver` with buffered entries) and `a11y` (axe-core, `iframes: false`) run in an isolated
-world (`Page.createIsolatedWorld`, `ardia-browse`) or through browser-side CDP. `--annotate` lists and labels only the refs whose boxes fall inside the
-captured image (agent-browser 0.35.1 prints every ref on the page in its legend; ardia browse lists only what the
+world (`Page.createIsolatedWorld`, `nilla-browse`) or through browser-side CDP. `--annotate` lists and labels only the refs whose boxes fall inside the
+captured image (agent-browser 0.35.1 prints every ref on the page in its legend; nilla browse lists only what the
 image shows), and draws its labels on the
 PNG in Python, so nothing is added to the page. The page still sees what a person causes: trusted input events,
 focus, scrolling, and the DOM changes those lead to (`select` and `pushstate` dispatch their `input`/`change` and
@@ -528,15 +528,15 @@ screenshot, that the detector does fire once `console` turns Runtime on, and tha
 `mousemove`s before `mousedown`, presses over 20 ms, one `keydown`/`keyup` per character with varying gaps, exact
 final value).
 
-### Ardia etiquette
+### Nilla etiquette
 
 `open` without a session tab opens a new background tab in the sidebar (`Target.createTarget` at `about:blank`,
 init scripts registered, then `Page.navigate`); later `open`s navigate the session's tab. A session works in the
 background by default: it never takes the tab the user is looking at on its own. Until it has a tab (`open`, `tab
 new`, `tab active` or `tab <id>`), every command that needs a page fails with `no_session_tab` and names both ways in
-(`ardia browse open <url>`, or `ardia browse tab active` to work in the user's tab). Before #1738 such a session took
+(`nilla-browser browse open <url>`, or `nilla-browser browse tab active` to work in the user's tab). Before #1738 such a session took
 the active tab for its first command, so an agent's first `snapshot`, click or fill landed in the page the user was
-on. `tab active` picks the page shown in Ardia's last focused window: on the token path `GET /ardia/active?token=…`;
+on. `tab active` picks the page shown in Nilla's last focused window: on the token path `GET /ardia/active?token=…`;
 on `--port`/`--ws` test servers, or when that route fails, the page that's visible and focused, else one that's
 visible (each tab is probed through a flat session and an isolated world, then detached). It errors (`no_tab`) only
 when there's no such page, as on New Tab. Once a session's tab closes it doesn't move on to whatever the user is
@@ -551,17 +551,17 @@ session's own tab). `eval` is left alone. `open` stays in the background and nev
 `--show`. When it opens a background tab it checks whether the tab takes input (`--json`: `tabId`, `background`,
 `takesInput`) and says so in its own output when the session was in the user's tab or the tab won't take input, so an
 agent learns it before its first click fails: `→ [t2] is this session's tab now, a background tab of its own, since
-this session uses your tab [t1] and won't navigate it; `tab t1` goes back; this Ardia doesn't deliver input there.
-use: ardia browse tab t2 --show (or open <url> --show)`, or `…; it takes input without being shown`. It names the tab
+this session uses your tab [t1] and won't navigate it; `tab t1` goes back; this Nilla doesn't deliver input there.
+use: nilla browse tab t2 --show (or open <url> --show)`, or `…; it takes input without being shown`. It names the tab
 it left (`--json`: `left`) so an agent switches back with `tab t1` instead of running `tab list` (telemetry:
 `open_moved_tab`); a command that opens its own tab for the same reason (`vitals <url>`, say) ends its notice the same
-way. A tab that won't take input and wasn't a move says `→ Opened in its own background tab [t2]; this Ardia doesn't
+way. A tab that won't take input and wasn't a move says `→ Opened in its own background tab [t2]; this Nilla doesn't
 deliver input there…`. Telemetry: `error_code` `no_session_tab` counts agents that tried to act before opening or
 picking a tab (it should fall as the skill's `batch "tab active" "snapshot -i"` start spreads), and `tab` commands with
 no error count the picks. `close` and `tab close` close only tabs this session opened, and not one another live session
 uses (reserved through the tab registry; the answer says which stayed open); the guard refuses `Browser.close` on every
 socket. `tab list` shows the user's tabs too (minus prewarmed `about:blank` pages, read/script tabs and tabs another
-session is closing), with the `tab-…` id `ardia windows` prints when the app reports the tab's target, and which
+session is closing), with the `tab-…` id `nilla-browser windows` prints when the app reports the tab's target, and which
 session opened or uses each. `tab <id>` takes `tN`, a label, a target id or that `tab-…` id (an unloaded tab is
 `tab_asleep`). When a tab's page is replaced, the session follows it only where the app's `targetId` says it went,
 keeping whether it borrowed or opened the tab; otherwise it's `tab_gone` and the agent re-picks. `alert` and `beforeunload`
@@ -577,7 +577,7 @@ plain `--port`/`--ws` URL. After `frame <iframe>`, if that iframe goes away, com
 its DOM value, read from the isolated world: `- textbox "Date" [type=date, required, ref=e7]: 2026-11-06`. Their
 internal spinbuttons and picker buttons are left out, in full and `-i` snapshots alike. Those pieces also had doubled
 names (`spinbutton "Month Month"`, `button "Show date picker Show date picker"`). That comes from Chromium, not
-ardia browse: for a field inside a date or time control `AXNodeObject::GetName` appends the control's own name and
+nilla-browser browse: for a field inside a date or time control `AXNodeObject::GetName` appends the control's own name and
 passes the same `name_sources` vector to it, and DevTools' `Accessibility.getFullAXTree` always asks for sources
 (`inspector_type_builder_helper.cc`), so `GetSavedTextAlternativeFromNameSource` picks the first winning source in
 the shared vector, the field's own `aria-label`, and the name becomes `Month Month` instead of `Month Date`. Screen
@@ -676,7 +676,7 @@ POST http://127.0.0.1:8792/api/events → 200
 Text output of every command stops at 12,000 characters (20,000 for `script`, whose result the agent asked for), at a
 line break when there's one in the last fifth, and ends with one line that says where the whole output was saved,
 points at narrowing, tailored to the command, and names `--max-output` last: `[output capped at 6,000 of 15,920
-characters; all of it is in …/ardia-browse-output-501/output-k2x9.txt. Narrow it instead: snapshot -i (interactive only), snapshot -s <css> (one region), find
+characters; all of it is in …/nilla-browse-output-501/output-k2x9.txt. Narrow it instead: snapshot -i (interactive only), snapshot -s <css> (one region), find
 role <role> <action> --name <text> (act without a snapshot). Only if you need every line: --max-output 15920]`. It
 used to suggest `--full`, and agents ran `snapshot --full` at up to 35K characters a time. The same line also goes to
 stderr (so does `read`'s own "pages cut to fit" line), so it survives `| head`, `| grep` and `> file`. `--max-output N` (or
@@ -697,9 +697,9 @@ session that the daemon keeps between scripts: the worker sends it back (at most
 awaits, and at the end), so a script that times out keeps what it gathered, and the timeout error lists what's in
 it; when nothing was kept, it says to push results into `state` as they come. A timed-out script that had opened three
 or more pages one after another is pointed at `read <url> <url> …`, which loads them side by side with a time limit
-each: a `bu12` task lost three minutes to a script that opened seven pages in a row and saved nothing. Browser Use's agent keeps data in a persistent REPL and Betterwright's in a `state` object; Ardia's agents lost
+each: a `bu12` task lost three minutes to a script that opened seven pages in a row and saved nothing. Browser Use's agent keeps data in a persistent REPL and Betterwright's in a `state` object; Nilla's agents lost
 whole loops to timeouts and rebuilt them through files. Browser Use's agent on
-BU Bench keeps extracted data in its program and writes deliverables from it; Ardia's agents saw the output cap in
+BU Bench keeps extracted data in its program and writes deliverables from it; Nilla's agents saw the output cap in
 every transcript and retyped values, and the judge's faithfulness items were met half as often. The saved
 copy goes in a `0700` folder in the user's temp dir, which keeps the newest 40: agents on BU Bench reran long
 scripts with `--max-output` only to see the result the cap had cut, and complained most about that. `--full` after `screenshot` or `diff` is still their
@@ -712,12 +712,12 @@ used to read as a heading or nothing. Each page's header carries its HTTP status
 (`=== Title (HTTP 200, read 2026-11-14 06:04:19 UTC)`), so a judge or reviewer can see when and how each source
 answered. A page that reads like a bot check or block (a 401/403/429, or a short page saying "Just a moment",
 "verify you are human", CAPTCHA, "access denied"…) gets a note under its header: wait 30-60 s and read it again,
-try the site's other pages or another source, and name what stayed blocked. On BU Bench, 60% of the tasks Ardia's
+try the site's other pages or another source, and name what stayed blocked. On BU Bench, 60% of the tasks Nilla's
 agents lost by 30+ points showed such a block, and the agent usually gave up after one try. Each page read also carries a scope line
 when the page states its own extent: `(scope: page says "1–20 of 340 results"; has a Next page link, pages up to 17)`
 (a count range, an "N results"-style total, "page N of M", a rel=next or Next link, a Load more button, the highest
 number in a pagination nav); `read` of the session's tab ends with `[scope: …]`, then `[read <UTC time>]`, the moment it read the page (also `readAt` in `--json`), which agents used to take with `date -u` at the wrong moment, before or after the filter the answer depended on. On BU Bench, coverage was the rubric
-family Ardia's agents failed most (45% violated), and Browser Use's prompt has its agent check counts and coverage
+family Nilla's agents failed most (45% violated), and Browser Use's prompt has its agent check counts and coverage
 against the source. The cap rose from 6,000 to 12,000 (6,000 a page for multi-page reads, up to 36,000): 746 of
 5,755 baseline commands hit it and 704 of those reran with `--max-output`; Browser Use's agent allows 12,000. A script
 or eval value that is a list of objects prints one compact JSON row per line (as does an object holding such lists). A `read` of several pages gets 6,000 characters a page instead (at least 12,000, at most 36,000) and
@@ -747,14 +747,14 @@ its id, else its offset in the box plus its text, and rows print in that order, 
 `--match` keeps rows containing the text, ignoring case. The last line says how many rows it read and why it
 stopped: `[2 of 200 rows match "staples"; scrolled to the end of the list]`. A hidden tab (plain Chrome without
 `--show`) draws no animation frames, so lists that render rows in one stop early; then that line adds `the tab is
-hidden, so the page may not have drawn every row: ardia browse tab t3 --show, then read again`. The inbox of the expenses fixture (200
+hidden, so the page may not have drawn every row: nilla browse tab t3 --show, then read again`. The inbox of the expenses fixture (200
 mails, 40 a page) reads in about 3 s, and its 2,682-row grid in about 16 s.
 
 ### Batch
 
-`ardia browse batch [--bail] [--json]` runs commands one after another in one call and one daemon request. With no
+`nilla-browser browse batch [--bail] [--json]` runs commands one after another in one call and one daemon request. With no
 command arguments it reads them from stdin, one per line, so a heredoc works; blank lines and lines starting with `#`
-are skipped. A line is a command as you'd type it after `ardia browse` (shell quoting rules, through `shlex`), or a
+are skipped. A line is a command as you'd type it after `nilla-browser browse` (shell quoting rules, through `shlex`), or a
 JSON array of strings. The session's flags (`--session`, `--port`, `--data-dir`, …) go on the `batch` command; a line
 takes its command's own flags and the per-command ones (`--full`, `--max-output`, `--no-changes`, `--no-text`, `--humanize`,
 `--show`); `--full` or a larger `--max-output` on a line widens the whole batch's cap, never narrows it. Each
@@ -767,8 +767,8 @@ takes JavaScript (`eval --stdin` from a heredoc) and runs it in the page's main 
 Filling a form five times is one call:
 
 ```sh
-ardia browse snapshot -i
-ardia browse batch --bail <<'EOF'
+nilla-browser browse snapshot -i
+nilla-browser browse batch --bail <<'EOF'
 # one contact per block; @e10 is "Add contact" from the snapshot
 click @e10
 fill #name "Ana Ruiz"
@@ -786,23 +786,23 @@ Refs stay valid across the batch as long as their nodes do (a dialog that's reop
 every selector form (see Refs) and `find` line works as on the command line. `eval` with `fetch(`, `DOMParser` or
 XHR, and open → `get text` on three pages in a row, print a one-time tip on stderr pointing at `read` and `script`.
 
-`ardia browse script` (`browse/script.py`) runs its JavaScript in a Worker of a blank background page, outside the
+`nilla-browser browse script` (`browse/script.py`) runs its JavaScript in a Worker of a blank background page, outside the
 page it drives: each `page.*` call is a browse command on the session, and `page.evaluate(fn, arg)` (also
 `page.eval`) is `eval` of `(fn)(arg)` in the page's main world. `page.dblclick`, `page.focus` and `page.keyboard(text)`
 (`keyboard type`) cover cells and fields that only take typing. Two mistakes get a hint under the error: a
 `ReferenceError` for `document`, `window`, `localStorage`, `sessionStorage` or `getComputedStyle` in the script itself
-says the script runs outside the page and points at `page.evaluate` or `ardia browse eval`, and one from inside
+says the script runs outside the page and points at `page.evaluate` or `nilla-browser browse eval`, and one from inside
 `page.evaluate` for a script variable says to pass it as the argument.
 
 ### Site notes
 
-`ardia notes` (and `ardia browse notes`, the same command) keeps plain notes per site for the user's own agent;
-Ardia runs no AI and never reads them itself.
+`nilla-browser notes` (and `nilla-browser browse notes`, the same command) keeps plain notes per site for the user's own agent;
+Nilla runs no AI and never reads them itself.
 
-- `ardia notes [get] [SITE]` prints them; `set [SITE] TEXT|-` replaces them, `append [SITE] TEXT|-` adds a line,
+- `nilla-browser notes [get] [SITE]` prints them; `set [SITE] TEXT|-` replaces them, `append [SITE] TEXT|-` adds a line,
   `rm [SITE]` deletes them and `list` shows every site with its size and time. `-` reads stdin.
 - `SITE` is `host[:port]` (a URL works too; default ports are dropped, names are lowercased and IDN hosts become
-  punycode). Without it, it's the session's tab's site, so that form needs Ardia (and auto-attaches like any command);
+  punycode). Without it, it's the session's tab's site, so that form needs Nilla (and auto-attaches like any command);
   with it, or for `list`, it runs without the browser. For `set` and `append` the first of two or more arguments is
   taken as the site only when it looks like one (a dot, a port or `localhost`), else all of them are the text.
 - One markdown file per site, `<data dir>/Notes/<host[:port]>.md`: the folder is made 0700 and must be a real folder
@@ -810,8 +810,8 @@ Ardia runs no AI and never reads them itself.
   refused), writes go to a temp
   file that's renamed over the old one, and each site holds at most 8 KB (`code: "notes_too_large"`, nothing
   written).
-- On a page with notes, `snapshot` and `snapshot -i` start with them, cut at 1,000 characters (the rest is one `ardia
-  notes get` away): `# notes for 127.0.0.1:8792 (ardia notes): Add events with + New Event` and `# `-prefixed lines
+- On a page with notes, `snapshot` and `snapshot -i` start with them, cut at 1,000 characters (the rest is one `nilla
+  notes get` away): `# notes for 127.0.0.1:8792 (nilla notes): Add events with + New Event` and `# `-prefixed lines
   after it. `--json` has them in `data.notes`. They count as page content (inside `--content-boundaries`), since a
   page could have talked an agent into writing them. Writes take an exclusive lock on the folder, reads never block
   on a FIFO.
@@ -900,7 +900,7 @@ can't be saved (`flow_not_get`), and GraphQL over GET works only when its URL va
   recorded `accept` (so no CORS preflight), once and never retried, from a tab the session opened itself (never the
   user's tab picked with `tab active`) when it is already on the request's or the start page's origin, else from a
   temporary background tab that loads the start URL the way `open` does (closed again afterwards); a start page that
-  lands off the flow's origins (a sign-in page) is `redirected`. No body is ever sent and cookies stay in Ardia.
+  lands off the flow's origins (a sign-in page) is `redirected`. No body is ever sent and cookies stay in Nilla.
   There is no direct-HTTP tier (it would need the cookies through `Network.getCookies`, which the token policy
   refuses) and no command replay.
 - **Outcomes.** One answer, checked once; every failure says to drive the page instead: a redirect is `redirected`
@@ -925,7 +925,7 @@ can't be saved (`flow_not_get`), and GraphQL over GET works only when its URL va
 
 ### Gated by the token policy
 
-The engine's ardia-command policy (`ac_cli_token_policy_methods.cc`) refuses these methods, so on the real connection
+The engine's nilla-command policy (`ac_cli_token_policy_methods.cc`) refuses these methods, so on the real connection
 these commands fail with exit 1, naming the method and the command (`code: "policy_refused"`, `data.method`, and
 `data.reason` empty). Each is implemented and works against a plain `--port` test server, so allowing the method is the
 only change needed.
@@ -946,16 +946,16 @@ only change needed.
 | `record start\|stop\|restart` | `Page.startScreencast` (and ffmpeg on PATH for the WebM) |
 | `stream enable` | `Page.startScreencast` |
 
-On the token path Ardia also strips `Cookie`, `Set-Cookie` and `Authorization` from network events, so
+On the token path Nilla also strips `Cookie`, `Set-Cookie` and `Authorization` from network events, so
 `network requests` and HAR files never contain them.
 
 The policy also refuses some uses of methods it allows (`ac_cli_token_policy.cc`), and says which in its reply:
-`ardia: <method> <reason> isn't allowed for the ardia command`. The command keeps that reason (`data.reason`, same
+`nilla: <method> <reason> isn't allowed for the ardia command`. The command keeps that reason (`data.reason`, same
 `code`) and words the error around it, so it never reads as a method that is off the list:
 
 | Reason | Methods | Means |
 | --- | --- | --- |
-| `to that target`, `on that target` | `Target.attachToTarget`, `activateTarget`, `closeTarget`, `getTargetInfo` | The tab is gone, isn't a web page (an Ardia or extension page), or sits in a window Ardia keeps for itself |
+| `to that target`, `on that target` | `Target.attachToTarget`, `activateTarget`, `closeTarget`, `getTargetInfo` | The tab is gone, isn't a web page (a Nilla or extension page), or sits in a window Nilla keeps for itself |
 | `without flatten` | `Target.attachToTarget`, `setAutoAttach` | The command always sends `flatten`, so this is a bug in it |
 | `to that URL`, `in another browser context` | `Target.createTarget`, `Page.navigate` | Only http, https, data and about:blank pages, in the user's own profile |
 | `in that execution context`, `on that object` | `Runtime.*`, `DOM.*` | A context or object the connection didn't make |
@@ -967,7 +967,7 @@ never in a user's window, so nothing has to be restored in place or held off the
 version of that unsound: e7f251520 and the commits before it).
 
 - **The automation window.** One per profile, made on first use (`OffscreenWindowFor`, `ArdiaHost.mm`): an
-  `ArdiaCoreWindow` that is `internal` (never ordered on screen, hidden from extensions, not in `ardia windows`) and
+  `ArdiaCoreWindow` that is `internal` (never ordered on screen, hidden from extensions, not in `nilla-browser windows`) and
   `automation`, 1280×800. The token policy treats a tab in an internal window as not a web target; the automation
   window is the exception (`IsPrivilegedContents`), and only tabs the command created ever get into it.
 - **Going off-screen.** `set viewport` first asks the app, over the control socket, to take the session's tab there
@@ -975,7 +975,7 @@ version of that unsound: e7f251520 and the commits before it).
   created (`ac_cli_owns_tab`), has never been in a shown slot (the shown-slot report, kept as this check), and isn't
   shown, warm or being revealed now. The page's view lets go of the tab (`releasePageForOffscreen`), the window
   adopts the same `WebContents` (`adoptTab:`, no reload), and the store drops the row with no closed-tab record
-  (`removeTabs(…, false)`): the tab has no sidebar row while it is off-screen. `ardia browse tab list` still lists it
+  (`removeTabs(…, false)`): the tab has no sidebar row while it is off-screen. `nilla-browser browse tab list` still lists it
   for its session.
 - **The policy.** `Emulation.setDeviceMetricsOverride` and `clearDeviceMetricsOverride` are allowed only on a session
   attached to a tab the command created that is in the automation window now and was never in a shown slot
@@ -1010,14 +1010,14 @@ version of that unsound: e7f251520 and the commits before it).
   `--port` server sets the override where the tab is, as before. Telemetry: `viewport_set` on the command event;
   watch `error_code` `viewport_needs_hidden_tab` and `viewport_unsupported` on `set`.
 
-A refused `Target.attachToTarget` also says what Ardia's own tab list has for that page (`ardia windows`): the tab and
+A refused `Target.attachToTarget` also says what Nilla's own tab list has for that page (`nilla-browser windows`): the tab and
 its address, or that no tab holds it. The command used to print the off-the-list sentence for every refusal, which hid
 the reason.
 
 ### Skipped
 
-`connect` and `inspect` (the endpoint is Ardia's; opening DevTools on the user's tab isn't something the command
-does), `install`, `upgrade`, `doctor`, `dashboard`, `mcp`, `chat` (Ardia has no AI features), `profiles` (it never
+`connect` and `inspect` (the endpoint is Nilla's; opening DevTools on the user's tab isn't something the command
+does), `install`, `upgrade`, `doctor`, `dashboard`, `mcp`, `chat` (Nilla has no AI features), `profiles` (it never
 reads browser profiles), `confirm`/`deny` and `--action-policy`/`--confirm-actions`, iOS and Safari (`-p ios`,
 `--device`, `swipe`, `tap`), cloud providers (`-p`, `--provider`), and launch options that only mean something when
 agent-browser starts its own browser (`--headed`, `--profile`, `--executable-path`, `--extension`, `--args`,
@@ -1025,9 +1025,9 @@ agent-browser starts its own browser (`--headed`, `--profile`, `--executable-pat
 `--hide-scrollbars`, `--webgpu`, `--engine`, `--restore*`, `--state`, `--auto-connect`, `--allowed-domains`); these
 fail with a message saying so. `--headers`, `--color-scheme` and `--download-path` are launch-time too: they point at
 `set headers`, `set media` and `download <sel> <path>`. Config files (`~/.agent-browser/config.json`, `./agent-browser.json`) and
-`AGENT_BROWSER_PLUGINS` are never read. `read <url>` fetches with Python's `urllib`, so it never touches Ardia.
+`AGENT_BROWSER_PLUGINS` are never read. `read <url>` fetches with Python's `urllib`, so it never touches Nilla.
 
-When the reader of its output goes away early (`ardia browse snapshot -i | head`), it stops writing and exits 141, as a
+When the reader of its output goes away early (`nilla-browser browse snapshot -i | head`), it stops writing and exits 141, as a
 program killed by SIGPIPE would, without a traceback.
 
 ### Captures and bounds
@@ -1049,7 +1049,7 @@ the CDP token), checks `Host` and `Origin` exactly (localhost or 127.0.0.1 on it
 stdin or from a no-echo prompt; `--password` is refused. It talks to Keychain only through `/usr/bin/security -i`
 with the command written to its stdin, so `ps` never shows the secret, and captures its output privately (non-ASCII
 passwords come back hex-encoded, which the metadata records). The item is a generic password, service
-`dev.ardia.browse.auth`, account `<name>`, in the login Keychain. Non-secret metadata (url, origins, username,
+`com.nilladigital.nilla.browse.auth`, account `<name>`, in the login Keychain. Non-secret metadata (url, origins, username,
 selectors) is `Browse/auth/<name>.json`, 0600. Each credential is bound to https origins (http only for localhost).
 `auth login` checks the tab's committed top-level origin and the field's frame origin against them before typing,
 types per character, and stops if the page navigates, the frame's loader or origin changes, or focus leaves the
@@ -1073,21 +1073,21 @@ from their environment and a 60 s limit.
 built app (never `/Applications`):
 
 ```sh
-ARDIA_BROWSE_E2E_APP=<build>/Ardia.app python -m unittest apps/cli/tests/test_browse_e2e.py
+ARDIA_BROWSE_E2E_APP=<build>/Nilla.app python -m unittest apps/cli/tests/test_browse_e2e.py
 ```
 
 A Debug build takes its JavaScript from Metro, and the token instance has no DevTools port to find it by, so name it:
 `ARDIA_BROWSE_E2E_JS=localhost:8081`. Without it that instance never turns control on and `BrowseTokenPath` times out
 waiting for `ArdiaControl.json`.
 
-`apps/cli/scripts/token-smoke.sh <Ardia.app> <ardia command> [metro host:port]` is the short version: one hidden
+`apps/cli/scripts/token-smoke.sh <Nilla.app> <nilla command> [metro host:port]` is the short version: one hidden
 instance on the token connection, then `read <url>`, `open <url>`, `read` and a refused `cookies`. The release smoke
 test runs it with the release's own CLI tarball against the release candidate, since nothing else runs the command
 against a real token connection.
 
 It serves `tests/fixtures/browse` on 127.0.0.1, launches one hidden instance with a DevTools port (`ac launch
 --no-wait`) and one on the token path (`open -g -n`, `ARDIA_BACKGROUND=1`, control on in `session.json`), both under
-`~/ardia-scratch/browse-impl/e2e` (`ARDIA_BROWSE_E2E_DIR`), runs the core loop, the probe (humanized with
+`~/nilla-scratch/browse-impl/e2e` (`ARDIA_BROWSE_E2E_DIR`), runs the core loop, the probe (humanized with
 `--humanize`), instant input by default, the hidden-tab refusal, refs across an idle disconnect, `fill` on every typed
 input and the snapshot of them (`form.html`), the changes report with a dialog and a POST that carries a token in its
 query (`form.html`; the fixture server answers 501), `snapshot --diff`, auto-attach on both paths, site notes, the
@@ -1095,23 +1095,23 @@ output cap (`many.html`), five form fills in one `batch` from stdin, the gated e
 mid-session, then closes its sessions and quits both. `tests/test_browse_changes.py` covers the same pieces as unit
 tests (formats, the report and its folding, URL cleaning, the network watch and its bound, the cap, batch comments,
 auto-attach choices, notes storage).
-The a11y command needs `ardia_cli/vendor/axe.min.js`: `build.sh` adds axe-core 4.10.3 (pinned by sha256 and npm's
+The a11y command needs `nilla_browser_cli/vendor/axe.min.js`: `build.sh` adds axe-core 4.10.3 (pinned by sha256 and npm's
 sha512); from the repo it falls back to `node_modules/axe-core` in a parent folder.
 
 ## Browsing data
 
-For daily reports, `ardia pinned` and `ardia history` read files in Ardia's data dir (`ardia_cli/browsing.py`,
+For daily reports, `nilla-browser pinned` and `nilla-browser history` read files in Nilla's data dir (`nilla_browser_cli/browsing.py`,
 `browsing_cli.py`), each with one 20 s deadline from the start (the session read, the snapshot, every SQLite connection
 through a progress handler that aborts past it, row fetching capped at 200,000); the worker deletes its temp snapshot
 in its own `finally`, and at exit a hook sets a closing flag first (workers check it before making a temp folder and
 at every backup or copy step), waits up to 1 s for live workers, then deletes any temp folder still registered. The
 data dir is `--data-dir`, else `$ARDIA_DATA_DIR`, else the installed app's. Both run the same `ArdiaControl.json`
-checks as the token path first (regular file, owned, 0600, live pid), so they work only while Ardia runs with control
+checks as the token path first (regular file, owned, 0600, live pid), so they work only while Nilla runs with control
 on (exit 2 otherwise). Neither reads cookies, passwords, Login Data or Web Data. Text output is one line per row;
 `--json` prints the rows.
 
-- `ardia pinned` reads `<data dir>/session.json` (the app's persisted state, `apps/browser/src/state/session/persist.ts`;
-  version 2 or later) and, on Linux, `<data dir>/<app profile>/Ardia/linux-session.json` (see Linux) and lists one
+- `nilla-browser pinned` reads `<data dir>/session.json` (the app's persisted state, `apps/browser/src/state/session/persist.ts`;
+  version 2 or later) and, on Linux, `<data dir>/<app profile>/Nilla/linux-session.json` (see Linux) and lists one
   row per pin: `title` (custom title first), `url` (else the pinned URL), `pinned_url`, `kind` (`favorite` for a
   Top Apps tile, `pinned` for a pinned row or a tab in a pinned folder), `folder` (the pinned folder, the innermost
   one when they nest, or the tile's folder), `profile` (its name) and `parked` (pins of a profile no window shows,
@@ -1120,21 +1120,21 @@ on (exit 2 otherwise). Neither reads cookies, passwords, Login Data or Web Data.
   then each window's tab order. Pins mirrored across windows (one `pinKey`) count once. Incognito profiles, private
   and small windows are skipped. A missing file gives no rows; a symlink, a file that isn't regular, one past the
   size cap (256 MB for `session.json`, the host's 8 MB for `linux-session.json`) or invalid JSON is an error.
-- `ardia history [--days N] [--limit N] [--profile P] [--domains]` (default 1 day, 200 rows, `--limit 0` for all) reads Chromium's `History` for each `Default` and
+- `nilla-browser history [--days N] [--limit N] [--profile P] [--domains]` (default 1 day, 200 rows, `--limit 0` for all) reads Chromium's `History` for each `Default` and
   `Profile <id>` folder under `<data dir>/Chromium/` (on Linux, the data dir itself) (never incognito, guest or system profiles; `--profile` must be a
   profile name or one of those folder names, never a path). Rows per URL, newest first: `url`, `title`, `visits` in
   the window, `total_visits`, `last_visit` (ISO 8601, local time), `profile`. Only http(s) pages; subframe
   navigations and hidden URLs are left out. `--domains` rolls rows up per domain (`domain`, `visits`, `pages`,
   `last_visit`, `top_title`, `profile`), most visited first. It never touches the live file for writing: it opens it
   read-only (`mode=ro`) and copies it with SQLite's backup API into a private temp dir; the progress callback ends
-  the backup once 0.5 s have passed. Chromium keeps `History` exclusively locked while Ardia runs, so that usually
+  the backup once 0.5 s have passed. Chromium keeps `History` exclusively locked while Nilla runs, so that usually
   fails, and it falls back to copying `History` plus its `-wal`/`-journal` (no symlinks, regular files only), checking
   the copy opens, up to 3 tries. A copy taken mid-write can miss the last few visits. The copy checks the deadline
   between 1 MB chunks.
 
 ## Userscripts
 
-`ardia scripts` runs Violentmonkey-style userscripts written in TypeScript or JavaScript. A `.user.js` from
+`nilla-browser scripts` runs Violentmonkey-style userscripts written in TypeScript or JavaScript. A `.user.js` from
 Violentmonkey or Tampermonkey works as is. Keys read from the `// ==UserScript==` block: `@name` (the id is its slug),
 `@namespace`, `@version`, `@description`, `@match`/`@exclude-match` (Chrome match patterns for content scripts:
 `*`, `http`, `https`, `file`, `ftp` schemes, checked when parsed the way `URLPattern::Parse` does, a bit stricter:
@@ -1151,21 +1151,21 @@ Builds go through esbuild: `--bundle --format=iife --platform=browser --target=c
 minified, so relative imports bundle in and no `tsconfig.json` is read (no `paths` aliases). Types are stripped, not
 checked. Every input esbuild reports in its metafile must be a `.ts .tsx .mts .cts .js .jsx .mjs .cjs .css` source
 (JSON, text and other loader types are refused), a regular file with no other hard links, and inside the script's
-own folder tree; nothing may come from Ardia's data dir (the `--data-dir`/`$ARDIA_DATA_DIR` one and the installed
+own folder tree; nothing may come from Nilla's data dir (the `--data-dir`/`$ARDIA_DATA_DIR` one and the installed
 app's), even inside the tree. Both are decided by file identity (`st_dev`, `st_ino` of each ancestor after
 resolving symlinks), not by path spelling, since APFS is case-insensitive. A script directly in the home folder or
 `/` may import nothing. Otherwise the build fails
 before anything is injected or published, so a script can't bundle `ArdiaControl.json` or other files and send
-them to a page. `data:` imports are allowed. The tarball ships esbuild in `ardia_cli/bin/esbuild` and an installed
-CLI uses only that one; from the repo (`python -m ardia_cli`) it falls back to
+them to a page. `data:` imports are allowed. The tarball ships esbuild in `nilla_browser_cli/bin/esbuild` and an installed
+CLI uses only that one; from the repo (`python -m nilla_browser_cli`) it falls back to
 `node_modules/@esbuild/darwin-arm64/bin/esbuild` (`@esbuild/linux-x64` on Linux) in a parent folder of the package,
 then `esbuild` on PATH. It never
 looks in the cwd.
 
-- `ardia scripts new NAME [--match PATTERN]…` writes `NAME.user.ts` in the cwd (default match
+- `nilla-browser scripts new NAME [--match PATTERN]…` writes `NAME.user.ts` in the cwd (default match
   `https://example.com/*`), never over an existing file.
-- `ardia scripts test FILE [--url URL] [--expect JS] [--wait S] [--screenshot PATH] [--keep] [--json] [--data-dir DIR]
-  [--port N] [--ws URL]` finds Ardia like `browse` (exit 2 when it can't), opens its own background target at `about:blank`,
+- `nilla-browser scripts test FILE [--url URL] [--expect JS] [--wait S] [--screenshot PATH] [--keep] [--json] [--data-dir DIR]
+  [--port N] [--ws URL]` finds Nilla like `browse` (exit 2 when it can't), opens its own background target at `about:blank`,
   attaches a flat session, turns on Runtime and Page, registers the script with `Page.addScriptToEvaluateOnNewDocument`
   (no `worldName`: the token policy refuses named worlds), and only then navigates to `--url` (default: the first
   `@match` whose host has no wildcard, path up to its first `*`). The registered source is a wrapper around the
@@ -1178,7 +1178,7 @@ looks in the cwd.
   controls, spaces, default-ignorable and format characters, lock emoji) (`/café/*` matches `/caf%C3%A9`), with a
   raw fallback, and `/foo/*`
   matching `/foo`. `apps/cli/tests` runs both against cases taken from `url_pattern_unittest.cc` and
-  `pattern_unittest.cc`, and they agreed with a real Ardia on the glob and percent-encoding cases. Console output and uncaught exceptions count
+  `pattern_unittest.cc`, and they agreed with a real Nilla on the glob and percent-encoding cases. Console output and uncaught exceptions count
   as the script's when a stack frame is the script's `sourceURL`; positions map back to the sources through esbuild's
   source map. Cross-origin iframes are reached by `Target.setAutoAttach` with `waitForDebuggerOnStart`, on the token
   path too: the token policy attaches a web frame while it waits to commit, so the script runs at its document start.
@@ -1190,16 +1190,16 @@ looks in the cwd.
   first pass that starts and never finishes, in any frame, fails the test; when the top frame's doesn't finish in 30 s
   the test stops there. Then, in a bounded cleanup, it removes the registration and
   closes the target it made, unless `--keep`. `@inject-into content` is tested in the page's world, with a warning.
-  Exit 0 ran without uncaught exceptions and `--expect` truthy, 1 otherwise, 2 Ardia unreachable.
-- `ardia scripts install FILE [--data-dir DIR]`, `ardia scripts uninstall NAME [--data-dir DIR]` (by `@name` or id),
-  `ardia scripts list [--json] [--data-dir DIR]`. Install and uninstall need control on (the `ArdiaControl.json`
+  Exit 0 ran without uncaught exceptions and `--expect` truthy, 1 otherwise, 2 Nilla unreachable.
+- `nilla-browser scripts install FILE [--data-dir DIR]`, `nilla-browser scripts uninstall NAME [--data-dir DIR]` (by `@name` or id),
+  `nilla-browser scripts list [--json] [--data-dir DIR]`. Install and uninstall need control on (the `ArdiaControl.json`
   checks, else the exit-2 line); list doesn't.
 
 ### Install contract with the app
 
 The data dir is `--data-dir`, else `$ARDIA_DATA_DIR`, else the installed app's (`~/Library/Application
-Support/com.ardia.browser`; on Linux `${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia`, see How it finds
-Ardia).
+Support/com.nilladigital.nilla`; on Linux `${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia`, see How it finds
+Nilla).
 
 1. The CLI takes an exclusive `flock` on `<data dir>/Scripts/.lock` (polled, 30 s deadline). The app takes a shared
    one while it reads and validates. `Scripts/`, `Scripts/scripts/`, record folders and `extension/` must be real
@@ -1235,18 +1235,18 @@ Ardia).
    no `extension/` means every script was uninstalled.
 5. It drops the lock, then polls `Scripts/status.json` for up to 10 s: `{"generation": N, "profiles": {"<profile>":
    {"ok": true} | {"error": "…"} | {"disabled": true} | {"removed": true}}}`; `removed` means no scripts are left and the extension is gone from that profile. Exit 0 when every profile loaded or is turned off, 1 on any
-   error, 3 when Ardia didn't report in 10 s (the outcome is unknown; it may still be loading), and 0 with "loads on
-   its next launch" when Ardia quit or turned control off while it waited. A newer generation in `status.json` means
+   error, 3 when Nilla didn't report in 10 s (the outcome is unknown; it may still be loading), and 0 with "loads on
+   its next launch" when Nilla quit or turned control off while it waited. A newer generation in `status.json` means
    another change replaced this one, and its result is printed.
 
-## How it finds Ardia
+## How it finds Nilla
 
 1. `--ws URL`, a browser WebSocket URL.
 2. `--port N`, a plain DevTools server on 127.0.0.1 (`/json/version`). For test servers only.
 3. `$ARDIA_WS`, like `--ws`, then `$ARDIA_PORT`, like `--port`.
 4. `$ARDIA_CDP_URL`, like `--ws`.
 5. `<data dir>/Chromium/ArdiaControl.json`, with `--data-dir` or `$ARDIA_DATA_DIR`, else the installed app's
-   `~/Library/Application Support/com.ardia.browser/Chromium/ArdiaControl.json`.
+   `~/Library/Application Support/com.nilladigital.nilla/Chromium/ArdiaControl.json`.
    On Linux the browser is Chromium itself and its user data dir is the data dir, so it's `<data dir>/ArdiaControl.json`
    and, without `--data-dir` or `$ARDIA_DATA_DIR`, `$ARDIA_CONFIG_HOME/ardia/ArdiaControl.json`: this development build
    never guesses `~/.config/ardia`, and refuses a data dir or config folder inside it or the other folders the upstream
@@ -1254,7 +1254,7 @@ Ardia).
    `LOCAL_PEERCRED` on macOS and `SO_PEERCRED` on Linux; its path may be 103 bytes on macOS and 107 on Linux.
 
 The active-page route is `GET http://127.0.0.1:P/ardia/active?token=<token>`: `{"targetId": "<id>"}`, or `null` when
-New Tab or an Ardia view is showing; anything else is a 404. The CLI calls it directly (no proxy, no Origin header)
+New Tab or a Nilla view is showing; anything else is a 404. The CLI calls it directly (no proxy, no Origin header)
 with the token redacted like everywhere else, and falls back to the visibility check if it fails.
 
 The app writes `ArdiaControl.json` when the setting is on:
@@ -1262,7 +1262,7 @@ The app writes `ArdiaControl.json` when the setting is on:
 following links and trusts it only when it's a regular file the user owns, mode 0600, and `pid` is alive. It connects
 to `ws://127.0.0.1:P<browser>?token=<token>`; every CDP call goes over that one browser socket
 (flattened sessions), so it always carries the token. A missing, stale or unsafe file, or a refused connection, prints one line and exits 2:
-`Ardia isn't running, or "Let the ardia command control Ardia" is off in Settings.` There's no port scanning and no
+`Nilla isn't running, or "Let the nilla-browser command control Nilla" is off in Settings.` There's no port scanning and no
 `/json` fallback on this path. The token never reaches the output: stdout and stderr are redacted as a stream (a token
 split across writes is held back until it's complete), and so are log records and everything a logging handler
 formats, tracebacks included. The `websockets` logger (only the `stream` server uses it) stays at ERROR. The stream holds back only a tail that could start a
@@ -1271,19 +1271,19 @@ two parts with an explicit flush between them gets through; that gap is accepted
 
 ## Crash reports and usage
 
-`ardia_cli/telemetry.py` records crash reports and usage only while the app's "Share anonymous crash reports and usage
+`nilla_browser_cli/telemetry.py` records crash reports and usage only while the app's "Share anonymous crash reports and usage
 stats" is on for the data dir the command resolved (`--data-dir`, else `$ARDIA_DATA_DIR`, else the installed app's):
 `<data dir>/telemetry.json`, the app's own saved choice, must say `"sharing": true` with an `installId` (and, during a
 14-day watch, a `sharingUntil` still in the future). That id is the events' `distinct_id`, so the command's events join
 the install's. The CLI reads only the fields it needs and ignores the rest, at any `version`, so a newer app format never
 silently stops CLI telemetry. Nothing is sent when the file is missing, unreadable or says sharing is off, with `DO_NOT_TRACK` set (anything but empty, `0` or `false`) or
 `ARDIA_TELEMETRY=0` (or `false`, `off`, `no`), for a command pointed at a test endpoint (`--port`, `--ws`, `--cdp`,
-`ARDIA_PORT`, `ARDIA_WS`, `ARDIA_CDP_URL`, `AGENT_BROWSER_CDP`), or from a checkout (version `0.0.0.dev0`). `ardia
+`ARDIA_PORT`, `ARDIA_WS`, `ARDIA_CDP_URL`, `AGENT_BROWSER_CDP`), or from a checkout (version `0.0.0.dev0`). `nilla
 --version` records nothing.
 
 The wire format is the app's: OTLP log records (`otlp.ts` `eventRecord`/`logsRequest`) posted as `application/json`
-to `https://ardia.dev/otel/v1/logs`, scope `ardia.analytics`, resource `service.name` `ardia-cli`, so they land in
-`telemetry.events` with `source = 'ardia-cli'`. Every event carries `$lib` `ardia-cli`, `cli_version`, `$os_version`,
+to `https://ardia.dev/otel/v1/logs`, scope `nilla.analytics`, resource `service.name` `nilla-cli`, so they land in
+`telemetry.events` with `source = 'nilla-cli'`. Every event carries `$lib` `nilla-cli`, `cli_version`, `$os_version`,
 `arch`, `python_version`, `$environment` (`production` for the installed app's data dir, `test` for any other, `dev`
 from a checkout), `$geoip_disable`, `$process_person_profile: false` and `$session_id`: the app's `sessionId` from
 `telemetry.json` while it says `sessionOpen`, else one UUIDv7 per CLI process. During a watch, events also carry
@@ -1291,7 +1291,7 @@ from a checkout), `$geoip_disable`, `$process_person_profile: false` and `$sessi
 `telemetry.py`, the same value as `packages/core/src/ingestKeys.ts`; a test keeps them equal).
 
 - `cli_command`, one per run: `command` (the first command word; `unknown` for a word it doesn't know, `none` for
-  bare `ardia` and `--help`), `subcommand` (the second word; for `browse`, the browse command, or `other` when it
+  bare `nilla` and `--help`), `subcommand` (the second word; for `browse`, the browse command, or `other` when it
   isn't one), `exit_code`, `error_code` (browse's `code`, such as `stale_ref`, `element_replaced` or
   `connection_lost`, or `unhandled_exception`), and `flags`, the option names given, comma-separated, only names the
   command's parser knows. Then times in whole ms and counts, each capped (an hour, 100 million): `total_ms` (process
@@ -1301,8 +1301,8 @@ from a checkout), `$geoip_disable`, `$process_person_profile: false` and `$sessi
   `snapshot`, `eval_ms` for `eval` or `action_ms` for the rest (the daemon's time less connect, attach and settle),
   `settle_ms` (the wait for the change report's network to settle, `changes.observe`), `snapshot_nodes` and
   `snapshot_chars`, `network_writes_count` and `unsettled` from the change report,
-  `output_chars` and `output_truncated`, `humanize`, `followed_redrawn_ref` (a stale ref followed its redrawn node), `followed_ref_after_reload` (a ref from before the page reloaded the same address was used, its element was unique by role and name before and after, so the command used the new one and said so; a different address still fails as a stale ref), `stale_ref_after_navigation` (a ref from before the page navigated was used; the error says the page navigated, where it used to say only that the ref came from an earlier snapshot, and names the same role and name on the new page when there is one; watch `error_code` `stale_ref`), `attach_refused` (the policy refused the attach to a tab; watch it with `error_code` `policy_refused` on `read` and `open`, where it should stay at zero), `tab_kept_awake` (on a browser reached with `--ws`, `--port` or `--cdp`, a tab the command opened, a session tab or a reader tab for `read <url>`, got `Emulation.setFocusEmulationEnabled`, which Chromium keeps visible and focused while the command stays attached, so its timers aren't slowed to once a second in the background and it takes input without being shown; Ardia's own token path does this in the engine and skips it; watch `read_waited_for_content` and `error_code` `tab_hidden`, which it should lower), `network_disable_unconfirmed` (a command's change report turned network capture off and the page didn't confirm within 2 s, usually because it was mid-navigation or its main thread was busy; the tab is kept, where it used to be detached and the command failed with `error_code` `tab_detached`), `reattached_after_detach` (`open`, or an action's change report, found its tab detached from the command while the tab was still open, attached to it again and finished; watch `error_code` `tab_detached` on `open` and `script`, which should stay near zero), `setup_restored` and `setup_restore_failed` (after attaching again, the session's init scripts, `set` overrides and interception were put back, or something couldn't be and the command failed with `error_code` `setup_lost`, which should stay near zero), `renderer_exit_kept_session` (Chromium said a tab's renderer exited and the session was kept), `earlier_requests_ignored` (a change report left out requests that began before its capture was on), `cell_edits` (grid cells `fill` edited through their editor; watch `error_code` `rejected` and `not_editable` on `fill`), `fill_picked_option` (`fill` picked a `<select>` option), `fill_inserted_text` (`fill` put the text in with one `Input.insertText`), `fill_no_reaction_hint` (a `fill` into a text, number, search or phone input changed nothing else on the page, neither its text nor its controls nor a request, and the answer said some fields only apply on Enter or when left; watch it against `press` right after `fill`), `waited_for_enabled` (a `click`, `fill`, `select` or `check` target was disabled and was waited for; `error_code` `disabled` when it stayed so), `drag_side_given` (`drag --before`/`--after`) and `drag_list_position` (the drag answer named the new place in a list), `select_opened_list` (`select` picked from the one list that opened when it opened a field with no linked list; watch `error_code` `no_fresh_suggestions` on `select`, which it should lower), `press_targeted` (`press <sel> <key>` focused the element first), `find_closest_names` (`find role … --name` matched nothing and the error listed the names closest to the one asked for first, where it used to list the first eight on the page, usually navigation links; watch `error_code` `not_found` on `find`), `focused_inner_field` (an element that couldn't take focus itself, like a combobox wrapper, had the field inside it focused instead; a hidden or inert one now fails with `error_code` `not_focusable` and says to click it open, where it used to print the raw `DOM.focus: Element is not focusable`), `waited_for_reaction` (after typing into a search or filter field, the next command that targets something else waited, best effort, at least 0.6 s from the last keystroke for the page to redraw and go quiet, longer while anything is `aria-busy`, counting only the results the field `aria-controls` when it names them, up to 1.5 s; key presses without a target, `tab`, `notes`, `frame` and `get url`/`title` don't wait, and `--no-changes` keeps the wait; watch `error_code` `target_replaced` and `input_not_delivered` on `fill`, which it should keep low), `selector_nth` (a selector ended in `>> nth=N`; a CSS selector with an unquoted attribute value that has spaces or punctuation, like `[aria-label=Two words]`, is quoted for you, in `eval` too when it's a string literal passed to `querySelector`, `querySelectorAll`, `closest` or `matches` (`eval_selectors_quoted`; the answer names what it quoted), and an `eval` that still fails on one says how to quote it; watch `error_code` `page_script_error` on `click` and `eval`), `saved_as_csv` (`--out` wrote a CSV or TSV table), `script_state_kept` (a script ended or timed out with something in `state`), `script_state_kept_on_interrupt` (a script was interrupted, its caller's Ctrl-C or a closed connection, and what it had put in `state` was kept for the next script, where it used to be thrown away; the interrupt message says to read it with `script 'return state'`), `eval_timed_out` (an `eval`'s page code, usually an awaited promise, ran past its limit, 60 s or `--timeout` up to 10m, and the error said so and pointed at `--timeout`, where it used to say Ardia didn't answer `Runtime.evaluate`; it stays an unknown outcome, so a `batch` stops after it; watch `error_code` `outcome_unknown` on `eval`), `navigation_https_only_hint` (an `http://` navigation failed with `net::ERR_BLOCKED_BY_CLIENT`, which usually means Ardia's https-only loading found no working https on the site, and the error said so and pointed at the https:// address, where it used to read like an ad blocker; watch `error_code` `navigation_failed` on `open` and `read`), `batch_lines_compacted` (how many lines of a `batch`, other than its last successful one, were a `fill`, `select`, `check`, `uncheck` or `type` whose whole change report was the field taking the value it was given, and so were printed as one line, `✓ fill #title "Board prep"`, instead of the report; a line that changed anything else, new elements, text, the URL or a request, keeps its full report; on the landing-page bench, change reports were half of everything the CLI printed), `open_read` (`open <url> --read` opened the page and printed its full `read` text in the same call, instead of the change report; agents had run `open` and then `read` on the same page about 440 times in two full BU Bench runs), `covered_close_ref` (a click target was covered and the error named the covering layer's own close control as a ref, `its close control is @e12 "×"`, so the agent closes it in one step; watch `error_code` `covered` on `click`), `script_timeout_state_shown` (a timed-out `script` had put something in `state`, and the error printed it, up to 1,500 characters, where it used to name only its keys), `download_fetched_again` (`download` or `wait --download` finished on a browser that saved the file on its own machine, a browser reached with `--ws` on another host, so the file was fetched again from the page, through the page's cookies, and written to the local path, up to 50 MB; it used to fail with `FileNotFoundError`; a fetch that fails says so with `error_code` `download_remote`), `session_busy_on_stuck_tab` (a command gave up with `error_code` `session_busy` while the running command was waiting on a tab whose page wasn't answering, and the message named that tab), `page_busy_fast_fail` (a tab whose page had already left a command unanswered for its full wait, because the page's own scripts kept its main thread busy, was checked with a 3 s probe before the next command and was still stuck, so that command failed with `error_code` `page_busy` in about 3 s instead of waiting 30 s again; the first unanswered call now says the same thing in plain words and suggests `reload` or a lighter page; the tab is checked for 2 minutes after it last failed to answer; watch `error_code` `page_busy` and `session_busy`, which it should lower), `navigation_site_silent` (`open`, a script's `goto` or `read <url>` sent `Page.navigate` and got nothing back within its time limit because the site never answered; the error names the host, says the site may be down, slow or not answering automated traffic, and that a retry rarely helps, with code `timeout`, where it used to read "Ardia didn't answer Page.navigate" with `outcome_unknown`, which also ended a whole `script` past its own try/catch; watch `error_code` `outcome_unknown` on `open`, `script` and `read`, which it should lower), `navigation_dropped_hint` (a navigation failed because the site dropped or refused the connection, and the error said a retry of the same URL rarely loads, named what may still answer and asked to say what couldn't be reached, counting the failures on that host; watch `error_code` `navigation_failed` on `open`), `queued_behind_script` (a command arrived while its session was running a `script` and waited its turn, up to 5 minutes, where it used to give up after 30 s; watch `error_code` `session_busy`), `script_queued_behind_busy` (a `script` arrived while its session was busy and waited its turn, up to its own `--timeout` or 90 s, where every command used to give up after 30 s; watch `error_code` `session_busy` on `script`, which it should lower), `script_timeout_read_hint` (a timed-out script had opened three or more pages one after another and was pointed at `read <url> <url> …`; watch `error_code` `timeout` on `script`, which it should lower), `saved_to_file` (`script`, `eval` or `read` ran with `--out`; watch `output_truncated` on `script`, which it should lower), `batch_line_saved` (a `batch` line carried `--out` and saved its file, where it used to fail with Unknown flag), `batch_saved` (`batch … --out <file>` saved everything the batch printed and listed the lines that failed, where it used to fail with Unknown flag), `waited_for_element` (a selector matched only after polling; watch `error_code` `not_found`, which it should lower), `output_saved` (a capped output was saved whole to a file; watch `output_truncated` on `script`, which it should lower), `consent_dismissed` (a click dismissed the consent banner covering it; watch `error_code` `covered` on `click`, which it should lower), `popup_dismissed` (a click closed an email-signup popup or a feedback-survey invite (Medallia/Kampyle, Qualtrics, Hotjar, ForeSee, Usabilla, Survicate) covering it, through its close, No thanks or × button, never its signup or survey button; watch `error_code` `covered` on `click`), `modal_dismissed` (a click target was covered by a site popup whose class or id names it a popup, overlay, pop-layer, lightbox or interstitial (or a Bounce Exchange or Wisepops box), so it was closed through its own close control, ×, Close or a close label, never another button, and the click went through; a dialog marked only by role or aria-modal is left alone, as are other buttons; watch `error_code` `covered` on `click`), `menu_closed_for_click` (a click target was covered by an open menu, dropdown list or suggestion list, so the click pressed Escape once to close it and tried again, and the answer said so; a consent layer still fading in now also gets a second try after 0.8 s; watch `error_code` `covered` on `click`, which it should lower), `dom_click_fallback` (a click target outside the page got a DOM click), `dom_click_behind_modal` (a click target outside the page sat outside the modal dialog showing over it, so it got no DOM click and the error named that dialog; watch `error_code` `outside_viewport` on `click` and `dom_click_fallback` against it), `dom_click_waited_for_modal` (that dialog was still closing and went within 0.5 s, so the click went through after the wait; watch it against `dom_click_behind_modal`), `input_in_inner_frame` (a raw `mouse` event's point, or a key press's focus, was in a frame inside the page, a cross-process iframe, a frame in a shadow root or an `embed`, so delivery counted as confirmed instead of failing with `input_not_delivered`; watch `error_code` `input_not_delivered` on `mouse` and `press`, which it should lower), `screenshot_unchanged` (`screenshot --if-changed` found the view unchanged since its last screenshot and saved nothing), `flow_saved` with `flow_requests_kept` and `flow_params` (a `flow save` and what it kept), `flow_run_page` (a `flow run` got its answer), `flow_drifted` (an answer's shape changed; watch it with `error_code` `drifted`, `redirected`, `auth_expired`, `blocked`, `rate_limited`, `fetch_failed` and `flow_not_get` on `flow`), `flow_shaped` with `flow_items` (`--fields`, `--where` or `--limit` were given, and the items returned), `flow_hint_shown` (`open` or `snapshot` listed a site's saved flows), `frame_cross_process_box` (`frame` on a cross-process iframe, which ardia browse can't enter, answered with `error_code` `cross_process_frame`, the iframe's viewport box and the `mouse move`/`down`/`up` recipe for clicking inside it), `click_scroll_locked` (a click target the page couldn't scroll to was held back by an open dialog or a scroll lock, and the error named it and said to close it; watch `error_code` `outside_viewport` on `click`), `click_recentered` (a covered or off-screen click target was scrolled to the middle and retried; watch `error_code` `outside_viewport`), `element_rehomed` (a page call was refused because an element's handle belonged to an older JavaScript world of the page, so the element was resolved again in the current world by its node and the call retried, where the command used to fail with a raw `Runtime.callFunctionOn` error), `clicked_visible_content` (a click target with no box of its own, like a zero-size wrapper around its visible content, was clicked through its first visible descendant, which the event reaches it from; a hidden target still fails with `error_code` `not_visible`, now in plain words where a raw `DOM.scrollIntoViewIfNeeded` error used to leak), `clicked_label_of_hidden_input` (a click on a checkbox or radio drawn by its label, with the input itself hidden, went to the label; watch `error_code` `not_visible` on `click`), `waited_for_box_to_settle` (a click target was still moving, from a scroll or a layout change, and the click waited up to 1 s for it to stop before aiming), `read_scope_shown` (a read printed the page's own total or pagination), `read_data` with `read_data_blocks` and `read_data_shaped` (`read --data` listed the JSON blocks the page embeds, how many, and whether `--fields`/`--where`/`--limit` shaped one; watch `error_code` `no_data` on `read`), `read_bot_check` (a page read like a bot check or block and got the retry note), `network_reloaded` (`network requests --reload` started recording and reloaded the page so its own loads were listed; plain `network requests` that starts recording now points at it), `read_empty_page` (a page came back with no title and no text and was marked as a likely block; watch `read_pages` against it), `read_scroll_waited_at_end` (`read --scroll` reached the bottom of a list with no new rows, waited up to 3 s, nudging the scroll once to set off the page's loader again, and more rows arrived, so it kept going, where it used to call the list ended after about 0.2 s and stop a feed that fetches its next batch at a few hundred rows; watch `read_rows` against it), `read_scroll_guessed` (`read --scroll` without `-s` picked the page's main repeated list; watch `error_code` `no_list`), `read_beside_busy` (a `read` of named URLs ran in the sibling session because its own was busy; watch `error_code` `session_busy` on `read`, which it should lower), `read_queued_beside` (that sibling session was itself busy, so the read waited its turn there, up to its own time limit, where it used to give up after 30 s), `read_waited_for_content` (a page read thin after settling and was read again until it filled in or 5 s passed; watch `read_pages` against it), `read_partial_page` (a `read <url>` page hit its time limit before the document finished arriving but had already shown text, so that text was returned with a note saying the page was still loading, where the page used to fail with `error_code` `timeout`; watch `error_code` `timeout` on `read`, which it should lower), `read_waited_for_requests` (a `read <url>` page looked settled while a fetch or XHR it started in the last 1.5 s was still in flight, so the read kept waiting, within the usual 3 s settle limit, for results a page fetches after it loads; watch `read_pages` against it, and `read_waited_for_content`, which it should lower), `read_scope_empty` (`read -s` on the session's tab matched elements that still had no text after 5 s of polling, and the answer said so and pointed at reading without `-s`, where it used to print nothing and succeed; a selector that matches nothing now fails with `error_code` `not_found` on `read`, so watch both), `read_pdf` (`read` extracted a PDF's text; watch `error_code` `pdf_unreadable`), `script_eval_alias` (a script called `page.eval`), `script_command_line_split` (a script called `browse()` with a whole command line in one string, like `browse('read --data')`, and it was split into the command and its arguments, where it used to fail with Unknown command; watch `error_code` `usage` on `script`), `script_page_world_hint` (a script's error got the page-world hint), `read_scrolled` with `read_rows` (a `read --scroll` and the rows it read) and `read_matched` (it had `--match`), `read_pages` (the pages a multi-page `read` read; watch `output_truncated` on those), `read_tabs_reopened` (reading tabs Ardia detached mid-read that were opened again; watch it with `error_code` `tab_detached`, which should stay near zero), `read_virtualized_grid` (a read printed the virtualized-grid note), `read_frame_text` (a read reached into an iframe: a visible same-origin frame of at least 120×80 px is read in place between `[frame "<title>"]` and `[end of frame "<title>"]`, three frames deep at most, where frames used to be left out, so a careers page or a form inside one read as its wrapper; a cross-origin frame of at least 400×300 px, which the page's script can't reach, gets a line with its address to `read`); `read` marks navigation, asides and blocks titled or named like related, recently viewed, sponsored or recommended items with `[<title>: not the main content]` … `[end of <title>]`, so they're easy to skip or scope away from (nothing is removed, and reading such a block itself with `-s` doesn't mark it); `read` writes the label of an icon that carries one (an `aria-label` on a textless element, or an SVG's `aria-label` or `<title>`) in brackets beside its value, like `[Customer care] 1-800-…`, where it used to drop it; nothing extra is counted for this, `change_text` with `change_text_chars` (a change report carried `text:` lines, and their length), `change_run_choices` (a mixed run listed its enabled members), `open_report` (`open` printed a change report), `open_moved_tab` (`open` moved the session off the user's tab to its own and named the way back), `open_still_loading` (`open` hit its time limit waiting for the load event on a page that already showed content, and returned it with a note instead of failing; watch `error_code` `timeout` on `open`, which it should lower), `snapshot_disabled_folded` (`snapshot -i` folded disabled members into a count), `snapshot_repeat_labels` (`snapshot -i` labeled controls that share a name, or have none, with the nearest heading, link, cell or text around them, as `(near "…")`; headings get none, a text that is itself a repeated name is never used, and a label two of the same controls would share is left out), `names_clipped` (a name was cut at 100 characters), `daemon_answer_timed_out` (the client gave up waiting for the
-  daemon's answer: the queue wait plus the command's own limit plus 30 s, `browse/limits.py`), `batch_steps` (also the operations an `ardia apply`, `tabs …`
+  `output_chars` and `output_truncated`, `humanize`, `followed_redrawn_ref` (a stale ref followed its redrawn node), `followed_ref_after_reload` (a ref from before the page reloaded the same address was used, its element was unique by role and name before and after, so the command used the new one and said so; a different address still fails as a stale ref), `stale_ref_after_navigation` (a ref from before the page navigated was used; the error says the page navigated, where it used to say only that the ref came from an earlier snapshot, and names the same role and name on the new page when there is one; watch `error_code` `stale_ref`), `attach_refused` (the policy refused the attach to a tab; watch it with `error_code` `policy_refused` on `read` and `open`, where it should stay at zero), `tab_kept_awake` (on a browser reached with `--ws`, `--port` or `--cdp`, a tab the command opened, a session tab or a reader tab for `read <url>`, got `Emulation.setFocusEmulationEnabled`, which Chromium keeps visible and focused while the command stays attached, so its timers aren't slowed to once a second in the background and it takes input without being shown; Nilla's own token path does this in the engine and skips it; watch `read_waited_for_content` and `error_code` `tab_hidden`, which it should lower), `network_disable_unconfirmed` (a command's change report turned network capture off and the page didn't confirm within 2 s, usually because it was mid-navigation or its main thread was busy; the tab is kept, where it used to be detached and the command failed with `error_code` `tab_detached`), `reattached_after_detach` (`open`, or an action's change report, found its tab detached from the command while the tab was still open, attached to it again and finished; watch `error_code` `tab_detached` on `open` and `script`, which should stay near zero), `setup_restored` and `setup_restore_failed` (after attaching again, the session's init scripts, `set` overrides and interception were put back, or something couldn't be and the command failed with `error_code` `setup_lost`, which should stay near zero), `renderer_exit_kept_session` (Chromium said a tab's renderer exited and the session was kept), `earlier_requests_ignored` (a change report left out requests that began before its capture was on), `cell_edits` (grid cells `fill` edited through their editor; watch `error_code` `rejected` and `not_editable` on `fill`), `fill_picked_option` (`fill` picked a `<select>` option), `fill_inserted_text` (`fill` put the text in with one `Input.insertText`), `fill_no_reaction_hint` (a `fill` into a text, number, search or phone input changed nothing else on the page, neither its text nor its controls nor a request, and the answer said some fields only apply on Enter or when left; watch it against `press` right after `fill`), `waited_for_enabled` (a `click`, `fill`, `select` or `check` target was disabled and was waited for; `error_code` `disabled` when it stayed so), `drag_side_given` (`drag --before`/`--after`) and `drag_list_position` (the drag answer named the new place in a list), `select_opened_list` (`select` picked from the one list that opened when it opened a field with no linked list; watch `error_code` `no_fresh_suggestions` on `select`, which it should lower), `press_targeted` (`press <sel> <key>` focused the element first), `find_closest_names` (`find role … --name` matched nothing and the error listed the names closest to the one asked for first, where it used to list the first eight on the page, usually navigation links; watch `error_code` `not_found` on `find`), `focused_inner_field` (an element that couldn't take focus itself, like a combobox wrapper, had the field inside it focused instead; a hidden or inert one now fails with `error_code` `not_focusable` and says to click it open, where it used to print the raw `DOM.focus: Element is not focusable`), `waited_for_reaction` (after typing into a search or filter field, the next command that targets something else waited, best effort, at least 0.6 s from the last keystroke for the page to redraw and go quiet, longer while anything is `aria-busy`, counting only the results the field `aria-controls` when it names them, up to 1.5 s; key presses without a target, `tab`, `notes`, `frame` and `get url`/`title` don't wait, and `--no-changes` keeps the wait; watch `error_code` `target_replaced` and `input_not_delivered` on `fill`, which it should keep low), `selector_nth` (a selector ended in `>> nth=N`; a CSS selector with an unquoted attribute value that has spaces or punctuation, like `[aria-label=Two words]`, is quoted for you, in `eval` too when it's a string literal passed to `querySelector`, `querySelectorAll`, `closest` or `matches` (`eval_selectors_quoted`; the answer names what it quoted), and an `eval` that still fails on one says how to quote it; watch `error_code` `page_script_error` on `click` and `eval`), `saved_as_csv` (`--out` wrote a CSV or TSV table), `script_state_kept` (a script ended or timed out with something in `state`), `script_state_kept_on_interrupt` (a script was interrupted, its caller's Ctrl-C or a closed connection, and what it had put in `state` was kept for the next script, where it used to be thrown away; the interrupt message says to read it with `script 'return state'`), `eval_timed_out` (an `eval`'s page code, usually an awaited promise, ran past its limit, 60 s or `--timeout` up to 10m, and the error said so and pointed at `--timeout`, where it used to say Nilla didn't answer `Runtime.evaluate`; it stays an unknown outcome, so a `batch` stops after it; watch `error_code` `outcome_unknown` on `eval`), `navigation_https_only_hint` (an `http://` navigation failed with `net::ERR_BLOCKED_BY_CLIENT`, which usually means Nilla's https-only loading found no working https on the site, and the error said so and pointed at the https:// address, where it used to read like an ad blocker; watch `error_code` `navigation_failed` on `open` and `read`), `batch_lines_compacted` (how many lines of a `batch`, other than its last successful one, were a `fill`, `select`, `check`, `uncheck` or `type` whose whole change report was the field taking the value it was given, and so were printed as one line, `✓ fill #title "Board prep"`, instead of the report; a line that changed anything else, new elements, text, the URL or a request, keeps its full report; on the landing-page bench, change reports were half of everything the CLI printed), `open_read` (`open <url> --read` opened the page and printed its full `read` text in the same call, instead of the change report; agents had run `open` and then `read` on the same page about 440 times in two full BU Bench runs), `covered_close_ref` (a click target was covered and the error named the covering layer's own close control as a ref, `its close control is @e12 "×"`, so the agent closes it in one step; watch `error_code` `covered` on `click`), `script_timeout_state_shown` (a timed-out `script` had put something in `state`, and the error printed it, up to 1,500 characters, where it used to name only its keys), `download_fetched_again` (`download` or `wait --download` finished on a browser that saved the file on its own machine, a browser reached with `--ws` on another host, so the file was fetched again from the page, through the page's cookies, and written to the local path, up to 50 MB; it used to fail with `FileNotFoundError`; a fetch that fails says so with `error_code` `download_remote`), `session_busy_on_stuck_tab` (a command gave up with `error_code` `session_busy` while the running command was waiting on a tab whose page wasn't answering, and the message named that tab), `page_busy_fast_fail` (a tab whose page had already left a command unanswered for its full wait, because the page's own scripts kept its main thread busy, was checked with a 3 s probe before the next command and was still stuck, so that command failed with `error_code` `page_busy` in about 3 s instead of waiting 30 s again; the first unanswered call now says the same thing in plain words and suggests `reload` or a lighter page; the tab is checked for 2 minutes after it last failed to answer; watch `error_code` `page_busy` and `session_busy`, which it should lower), `navigation_site_silent` (`open`, a script's `goto` or `read <url>` sent `Page.navigate` and got nothing back within its time limit because the site never answered; the error names the host, says the site may be down, slow or not answering automated traffic, and that a retry rarely helps, with code `timeout`, where it used to read "Nilla didn't answer Page.navigate" with `outcome_unknown`, which also ended a whole `script` past its own try/catch; watch `error_code` `outcome_unknown` on `open`, `script` and `read`, which it should lower), `navigation_dropped_hint` (a navigation failed because the site dropped or refused the connection, and the error said a retry of the same URL rarely loads, named what may still answer and asked to say what couldn't be reached, counting the failures on that host; watch `error_code` `navigation_failed` on `open`), `queued_behind_script` (a command arrived while its session was running a `script` and waited its turn, up to 5 minutes, where it used to give up after 30 s; watch `error_code` `session_busy`), `script_queued_behind_busy` (a `script` arrived while its session was busy and waited its turn, up to its own `--timeout` or 90 s, where every command used to give up after 30 s; watch `error_code` `session_busy` on `script`, which it should lower), `script_timeout_read_hint` (a timed-out script had opened three or more pages one after another and was pointed at `read <url> <url> …`; watch `error_code` `timeout` on `script`, which it should lower), `saved_to_file` (`script`, `eval` or `read` ran with `--out`; watch `output_truncated` on `script`, which it should lower), `batch_line_saved` (a `batch` line carried `--out` and saved its file, where it used to fail with Unknown flag), `batch_saved` (`batch … --out <file>` saved everything the batch printed and listed the lines that failed, where it used to fail with Unknown flag), `waited_for_element` (a selector matched only after polling; watch `error_code` `not_found`, which it should lower), `output_saved` (a capped output was saved whole to a file; watch `output_truncated` on `script`, which it should lower), `consent_dismissed` (a click dismissed the consent banner covering it; watch `error_code` `covered` on `click`, which it should lower), `popup_dismissed` (a click closed an email-signup popup or a feedback-survey invite (Medallia/Kampyle, Qualtrics, Hotjar, ForeSee, Usabilla, Survicate) covering it, through its close, No thanks or × button, never its signup or survey button; watch `error_code` `covered` on `click`), `modal_dismissed` (a click target was covered by a site popup whose class or id names it a popup, overlay, pop-layer, lightbox or interstitial (or a Bounce Exchange or Wisepops box), so it was closed through its own close control, ×, Close or a close label, never another button, and the click went through; a dialog marked only by role or aria-modal is left alone, as are other buttons; watch `error_code` `covered` on `click`), `menu_closed_for_click` (a click target was covered by an open menu, dropdown list or suggestion list, so the click pressed Escape once to close it and tried again, and the answer said so; a consent layer still fading in now also gets a second try after 0.8 s; watch `error_code` `covered` on `click`, which it should lower), `dom_click_fallback` (a click target outside the page got a DOM click), `dom_click_behind_modal` (a click target outside the page sat outside the modal dialog showing over it, so it got no DOM click and the error named that dialog; watch `error_code` `outside_viewport` on `click` and `dom_click_fallback` against it), `dom_click_waited_for_modal` (that dialog was still closing and went within 0.5 s, so the click went through after the wait; watch it against `dom_click_behind_modal`), `input_in_inner_frame` (a raw `mouse` event's point, or a key press's focus, was in a frame inside the page, a cross-process iframe, a frame in a shadow root or an `embed`, so delivery counted as confirmed instead of failing with `input_not_delivered`; watch `error_code` `input_not_delivered` on `mouse` and `press`, which it should lower), `screenshot_unchanged` (`screenshot --if-changed` found the view unchanged since its last screenshot and saved nothing), `flow_saved` with `flow_requests_kept` and `flow_params` (a `flow save` and what it kept), `flow_run_page` (a `flow run` got its answer), `flow_drifted` (an answer's shape changed; watch it with `error_code` `drifted`, `redirected`, `auth_expired`, `blocked`, `rate_limited`, `fetch_failed` and `flow_not_get` on `flow`), `flow_shaped` with `flow_items` (`--fields`, `--where` or `--limit` were given, and the items returned), `flow_hint_shown` (`open` or `snapshot` listed a site's saved flows), `frame_cross_process_box` (`frame` on a cross-process iframe, which nilla browse can't enter, answered with `error_code` `cross_process_frame`, the iframe's viewport box and the `mouse move`/`down`/`up` recipe for clicking inside it), `click_scroll_locked` (a click target the page couldn't scroll to was held back by an open dialog or a scroll lock, and the error named it and said to close it; watch `error_code` `outside_viewport` on `click`), `click_recentered` (a covered or off-screen click target was scrolled to the middle and retried; watch `error_code` `outside_viewport`), `element_rehomed` (a page call was refused because an element's handle belonged to an older JavaScript world of the page, so the element was resolved again in the current world by its node and the call retried, where the command used to fail with a raw `Runtime.callFunctionOn` error), `clicked_visible_content` (a click target with no box of its own, like a zero-size wrapper around its visible content, was clicked through its first visible descendant, which the event reaches it from; a hidden target still fails with `error_code` `not_visible`, now in plain words where a raw `DOM.scrollIntoViewIfNeeded` error used to leak), `clicked_label_of_hidden_input` (a click on a checkbox or radio drawn by its label, with the input itself hidden, went to the label; watch `error_code` `not_visible` on `click`), `waited_for_box_to_settle` (a click target was still moving, from a scroll or a layout change, and the click waited up to 1 s for it to stop before aiming), `read_scope_shown` (a read printed the page's own total or pagination), `read_data` with `read_data_blocks` and `read_data_shaped` (`read --data` listed the JSON blocks the page embeds, how many, and whether `--fields`/`--where`/`--limit` shaped one; watch `error_code` `no_data` on `read`), `read_bot_check` (a page read like a bot check or block and got the retry note), `network_reloaded` (`network requests --reload` started recording and reloaded the page so its own loads were listed; plain `network requests` that starts recording now points at it), `read_empty_page` (a page came back with no title and no text and was marked as a likely block; watch `read_pages` against it), `read_scroll_waited_at_end` (`read --scroll` reached the bottom of a list with no new rows, waited up to 3 s, nudging the scroll once to set off the page's loader again, and more rows arrived, so it kept going, where it used to call the list ended after about 0.2 s and stop a feed that fetches its next batch at a few hundred rows; watch `read_rows` against it), `read_scroll_guessed` (`read --scroll` without `-s` picked the page's main repeated list; watch `error_code` `no_list`), `read_beside_busy` (a `read` of named URLs ran in the sibling session because its own was busy; watch `error_code` `session_busy` on `read`, which it should lower), `read_queued_beside` (that sibling session was itself busy, so the read waited its turn there, up to its own time limit, where it used to give up after 30 s), `read_waited_for_content` (a page read thin after settling and was read again until it filled in or 5 s passed; watch `read_pages` against it), `read_partial_page` (a `read <url>` page hit its time limit before the document finished arriving but had already shown text, so that text was returned with a note saying the page was still loading, where the page used to fail with `error_code` `timeout`; watch `error_code` `timeout` on `read`, which it should lower), `read_waited_for_requests` (a `read <url>` page looked settled while a fetch or XHR it started in the last 1.5 s was still in flight, so the read kept waiting, within the usual 3 s settle limit, for results a page fetches after it loads; watch `read_pages` against it, and `read_waited_for_content`, which it should lower), `read_scope_empty` (`read -s` on the session's tab matched elements that still had no text after 5 s of polling, and the answer said so and pointed at reading without `-s`, where it used to print nothing and succeed; a selector that matches nothing now fails with `error_code` `not_found` on `read`, so watch both), `read_pdf` (`read` extracted a PDF's text; watch `error_code` `pdf_unreadable`), `script_eval_alias` (a script called `page.eval`), `script_command_line_split` (a script called `browse()` with a whole command line in one string, like `browse('read --data')`, and it was split into the command and its arguments, where it used to fail with Unknown command; watch `error_code` `usage` on `script`), `script_page_world_hint` (a script's error got the page-world hint), `read_scrolled` with `read_rows` (a `read --scroll` and the rows it read) and `read_matched` (it had `--match`), `read_pages` (the pages a multi-page `read` read; watch `output_truncated` on those), `read_tabs_reopened` (reading tabs Nilla detached mid-read that were opened again; watch it with `error_code` `tab_detached`, which should stay near zero), `read_virtualized_grid` (a read printed the virtualized-grid note), `read_frame_text` (a read reached into an iframe: a visible same-origin frame of at least 120×80 px is read in place between `[frame "<title>"]` and `[end of frame "<title>"]`, three frames deep at most, where frames used to be left out, so a careers page or a form inside one read as its wrapper; a cross-origin frame of at least 400×300 px, which the page's script can't reach, gets a line with its address to `read`); `read` marks navigation, asides and blocks titled or named like related, recently viewed, sponsored or recommended items with `[<title>: not the main content]` … `[end of <title>]`, so they're easy to skip or scope away from (nothing is removed, and reading such a block itself with `-s` doesn't mark it); `read` writes the label of an icon that carries one (an `aria-label` on a textless element, or an SVG's `aria-label` or `<title>`) in brackets beside its value, like `[Customer care] 1-800-…`, where it used to drop it; nothing extra is counted for this, `change_text` with `change_text_chars` (a change report carried `text:` lines, and their length), `change_run_choices` (a mixed run listed its enabled members), `open_report` (`open` printed a change report), `open_moved_tab` (`open` moved the session off the user's tab to its own and named the way back), `open_still_loading` (`open` hit its time limit waiting for the load event on a page that already showed content, and returned it with a note instead of failing; watch `error_code` `timeout` on `open`, which it should lower), `snapshot_disabled_folded` (`snapshot -i` folded disabled members into a count), `snapshot_repeat_labels` (`snapshot -i` labeled controls that share a name, or have none, with the nearest heading, link, cell or text around them, as `(near "…")`; headings get none, a text that is itself a repeated name is never used, and a label two of the same controls would share is left out), `names_clipped` (a name was cut at 100 characters), `daemon_answer_timed_out` (the client gave up waiting for the
+  daemon's answer: the queue wait plus the command's own limit plus 30 s, `browse/limits.py`), `batch_steps` (also the operations an `nilla-browser apply`, `tabs …`
   or `groups …` call sent), and `cdp_calls` with `cdp_ms_total` (the
   command's own DevTools calls, counted in `connection.py`). The daemon returns its share as `metrics` in its answer
   (`command_metrics.py`).
@@ -1311,14 +1311,14 @@ from a checkout), `$geoip_disable`, `$process_person_profile: false` and `$sessi
   no free text: the message is sent only when it's one of the fixed built-in messages that carry no input
   (`FIXED_MESSAGES` in `telemetry_scrub.py`, like `division by zero` or `Event loop is closed`), or as
   `[Errno N] <the system's text for N>` for an `OSError`; otherwise the value is the type again. Frames are module,
-  function and line, where a frame outside `ardia_cli`, the standard library and the bundled packages shows as
+  function and line, where a frame outside `nilla_browser_cli`, the standard library and the bundled packages shows as
   `<other>`. At most 10 per process, one per type, message and top frame. The daemon checks its own environment and
   also each request's `telemetry` field, which the client sets from the command's own environment (opt-outs, test
   endpoints, a checkout): it reports a command's crash only when that request was eligible, and a crash of the
   daemon itself only when the last request it took was.
 
 It never sends argv values, URLs, page text, selectors, refs, typed text, JS, notes, file paths, cookies or anything
-from the page. Reports from `ardia feedback` don't go through this pipeline (see Feedback and the star nudge).
+from the page. Reports from `nilla-browser feedback` don't go through this pipeline (see Feedback and the star nudge).
 
 Every event it builds, sent or not, is also appended to a 7-day local copy, `<data dir>/Telemetry/local/cli-<UTC
 day>.jsonl` (folder 0700 when the CLI makes it; the app shares it, so one it made without group or other write access
@@ -1337,7 +1337,7 @@ the command starts a detached `python -I` flusher with its config on stdin and t
 reads `telemetry.json` again before every post: sharing turned off stops it and deletes the spool, a new install id
 stops it and drops the old id's events. Anything else keeps the events and backs off 30 s, doubling up to 30 minutes. With sharing off,
 the next command deletes the spool, and so does a flusher. The browse daemon only appends; the next command's exit
-sends it. Turning sharing off in the app stops new events at once; what's already spooled goes at the next `ardia`
+sends it. Turning sharing off in the app stops new events at once; what's already spooled goes at the next `nilla`
 run.
 
 `ARDIA_TELEMETRY_URL` is for tests only: a loopback `http://` URL (`127.0.0.1`, `localhost` or `[::1]`) gets the
@@ -1346,7 +1346,7 @@ runs against a local stub with fixture data dirs.
 
 ## Feedback and the star nudge
 
-`ardia feedback --title "<short title>" "<what you ran, what happened, what you expected>"` (or the description on
+`nilla-browser feedback --title "<short title>" "<what you ran, what happened, what you expected>"` (or the description on
 stdin, or `-`) is for agents and people to report a problem or an idea: a confusing error, a missing command, output
 that cost turns, something slow. It follows the contract in `docs/feedback.md`: `--title` is required, 1-67 characters
 once runs of whitespace are folded into one space; the description is required and kept to 4,000 characters after
@@ -1373,7 +1373,7 @@ Anything else, an empty file or one over its cap is refused before anything is s
 private and never reach GitHub.
 
 `telemetry_scrub.scrub` removes secrets by exact pattern, never by cutting at a keyword, so a report about
-`ardia browse session`, `auth save` or an expired token keeps its words. It replaces control characters, then
+`nilla-browser browse session`, `auth save` or an expired token keeps its words. It replaces control characters, then
 removes: private key blocks; every parameter of a Digest header; the value of `Authorization`, `Proxy-Authorization`,
 `Cookie`, `Set-Cookie`, `Api-Key`, `Private-Token` and `X-…-Token/Key/Secret/Auth/Session/Password` headers; URL logins
 and queries (`https://host/path?<redacted>`); `key=value`, `key: value`, `key => value` and `--key value` where the key
@@ -1389,12 +1389,12 @@ A title or description with nothing left but those placeholders is refused (exit
 
 When it isn't sent, the report is kept, scrubbed, in `$ARDIA_CLI_HOME/Usage/feedback.jsonl` (newest 200, with the
 reason and any reference the service gave), and the line says exactly why: `DO_NOT_TRACK=… is set`,
-`ARDIA_TELEMETRY=… is set`, `ARDIA_PORT points ardia at a test browser` (any of the test endpoint variables), a
+`ARDIA_TELEMETRY=… is set`, `ARDIA_PORT points nilla at a test browser` (any of the test endpoint variables), a
 checkout build (`0.0.0.dev0`, which never sends to ardia.dev), an `ARDIA_FEEDBACK_URL` that isn't loopback, the daily
 limit, the network failing (with the system's reason), or the service's HTTP status and message. At most 20 reports a
 rolling day go out per CLI home, and the same kind, title and description twice in a day is sent once
 (`$ARDIA_CLI_HOME/Usage/usage.json`, under `usage.lock`); a report that fails gives its slot back, and when another
-`ardia` holds that lock the report is kept with that reason. From a checkout without `ARDIA_CLI_HOME`, nothing is
+`nilla` holds that lock the report is kept with that reason. From a checkout without `ARDIA_CLI_HOME`, nothing is
 counted or saved, and the line says so.
 
 `ARDIA_FEEDBACK_URL` is for tests: a loopback `http://` URL gets the reports instead of ardia.dev, from a checkout too
@@ -1407,31 +1407,31 @@ Every command (but `feedback` and `star`) also leaves its name and, when it fail
 `recent` list (five at most), for the next report's `recent_commands`. From a checkout (`0.0.0.dev0`) nothing is recorded
 unless `ARDIA_CLI_HOME` is set, so tests never touch the installed CLI's state.
 
-A task is a stretch of `ardia browse` work: it starts with a successful command that does something (`open`, `click`,
+A task is a stretch of `nilla-browser browse` work: it starts with a successful command that does something (`open`, `click`,
 `fill`, `type`, `press`, `select`, `find`, `eval`, `batch`, `script`, `read`, `scroll`, `back`…, not `snapshot` or
 `help` alone) and ends when 30 minutes pass without another one. Gaps make it robust to agents that run hundreds of
 commands for one job or several jobs a day. Commands aimed at a test endpoint (`--port`, `--ws`, `--cdp`, their
 variables) or at a data dir other than the installed app's (hidden test instances, the bench) never count. When a
 sixth task starts after five finished ones, the CLI prints once, on stderr after the command's output:
 
-> Ardia here: if this helped, you may ask the user once whether they'd like to star github.com/mantrakp04/ardia.
-> Only if they say yes, run `ardia star`.
+> Nilla here: if this helped, you may ask the user once whether they'd like to star github.com/NoorChasib/nilla.
+> Only if they say yes, run `nilla-browser star`.
 
 It records `star.prompted_at` first, so it never shows twice. `ARDIA_STAR_PROMPT=0`
 (or `false`, `off`, `no`) and CI (`CI`, `GITHUB_ACTIONS`, `BUILDKITE`, `JENKINS_URL`) keep it quiet; tasks still count.
 
-`ardia star` runs `gh api --method PUT /user/starred/mantrakp04/ardia --silent` when `gh` is on the PATH (no prompts,
+`nilla-browser star` runs `gh api --method PUT /user/starred/NoorChasib/nilla --silent` when `gh` is on the PATH (no prompts,
 20 s cap). If gh is missing, not signed in or fails, it opens the repo with
-`ardia browse --session ardia-star open https://github.com/mantrakp04/ardia --show` (its own session, so the agent's
+`nilla-browser browse --session nilla-star open https://github.com/NoorChasib/nilla --show` (its own session, so the agent's
 tab stays where it was) and says to ask the user to click Star; it never clicks it. If that fails too it prints the
 URL and exits 1. Whatever happened, it records `star.done_at` so the nudge never shows again.
 
 ## Computer use
 
-`ardia computer` is [cua-driver](https://github.com/trycua/cua/tree/main/libs/cua-driver) (MIT, Cua AI): an MCP server
+`nilla-browser computer` is [cua-driver](https://github.com/trycua/cua/tree/main/libs/cua-driver) (MIT, Cua AI): an MCP server
 and CLI that operates native apps through the accessibility tree, in background windows, with a cursor of its own.
-The browser stays `ardia browse`; `ardia computer` is for everything that isn't a web page in Ardia. Code:
-`ardia_cli/computer.py`.
+The browser stays `nilla-browser browse`; `nilla-browser computer` is for everything that isn't a web page in Nilla. Code:
+`nilla_browser_cli/computer.py`.
 
 ### What ships and where it lands
 
@@ -1444,7 +1444,7 @@ signed `CuaDriver.app`, `LICENSE` and `THIRD_PARTY_NOTICES.md` are kept, in `$AR
 app is stored as `CuaDriver` (no `.app`) so LaunchServices never sees a second copy. It must be Cua AI's: bundle id
 `com.trycua.driver`, the pinned version, and `codesign --verify --deep --strict` against
 `identifier "com.trycua.driver" and anchor apple generic and certificate leaf[subject.OU] = "YCK386LBJ7"`. The
-bundle is Developer ID signed, hardened and notarized with a stapled ticket; ardia never re-signs or modifies it, so
+bundle is Developer ID signed, hardened and notarized with a stapled ticket; nilla never re-signs or modifies it, so
 our own signing and notarization are untouched. The cached copy is checked the same way every time it's reused; one
 that fails is deleted and fetched again. The current and one older version stay; `install.sh` keeps the folder
 across upgrades and `--uninstall` removes it.
@@ -1454,77 +1454,77 @@ across upgrades and `--uninstall` removes it.
 macOS ties Accessibility and Screen Recording to the app that asks. cua-driver's daemon is always
 `/Applications/CuaDriver.app` (hardcoded upstream): `cua-driver mcp` starts it with `open -n -g
 /Applications/CuaDriver.app --args serve`, and `permissions grant` asks for the switches from inside it, so the
-grants land on `com.trycua.driver`, never on the terminal, the agent or ardia. `ardia computer setup` therefore
+grants land on `com.trycua.driver`, never on the terminal, the agent or nilla. `nilla-browser computer setup` therefore
 copies the verified app there, links `$ARDIA_CLI_BIN_DIR/cua-driver` (default `~/.local/bin`) to a shim that runs
-`ardia computer` (cua's skill calls `cua-driver`), turns cua-driver's telemetry off (`cua-driver telemetry disable`, saved in `~/.cua-driver/config.json`; the daemon starts through
+`nilla-browser computer` (cua's skill calls `cua-driver`), turns cua-driver's telemetry off (`cua-driver telemetry disable`, saved in `~/.cua-driver/config.json`; the daemon starts through
 LaunchServices and never sees our environment), then runs `cua-driver permissions grant` when it has a terminal.
-A `CuaDriver.app` that ardia didn't put there (cua's own installer, another version) is kept and used as it is, and
-a `cua-driver` command that isn't our link is kept too. Replacing ardia's copy with a newer one signed by the same
+A `CuaDriver.app` that nilla didn't put there (cua's own installer, another version) is kept and used as it is, and
+a `cua-driver` command that isn't our link is kept too. Replacing nilla's copy with a newer one signed by the same
 team keeps the grants (TCC matches the designated requirement).
 
 Putting the app in place is one recoverable operation. Setup and refresh hold an flock on
 `$ARDIA_CLI_HOME/cua-driver/.applications.lock` (up to 120 s, then they give up with an error). The verified app is
-copied with `ditto` to `/Applications/.CuaDriver.app.ardia-new` and checked again; then the record
+copied with `ditto` to `/Applications/.CuaDriver.app.nilla-new` and checked again; then the record
 (`$ARDIA_CLI_HOME/cua-driver/applications.json`: path, version, the new copy's CDHash) is written as `pending`,
-keeping the previous record inside it. Only then does ardia stop the old daemon (after verifying the old app), rename
-the old app to `.CuaDriver.app.ardia-old`, rename the new one into place, commit the record, delete the old copy and
+keeping the previous record inside it. Only then does nilla stop the old daemon (after verifying the old app), rename
+the old app to `.CuaDriver.app.nilla-old`, rename the new one into place, commit the record, delete the old copy and
 register the app with LaunchServices. A failure before the swap changes nothing; a failure during it puts the old
-app and record back. After a crash, the next setup, refresh or `ardia computer` run (under the same lock) recovers:
-it puts `.ardia-old` back when `CuaDriver.app` is missing, commits a pending record whose CDHash matches a
+app and record back. After a crash, the next setup, refresh or `nilla-browser computer` run (under the same lock) recovers:
+it puts `.nilla-old` back when `CuaDriver.app` is missing, commits a pending record whose CDHash matches a
 `CuaDriver.app` that verifies, restores the previous record only on a definite mismatch (a different CDHash, or a
-signature codesign rejects), and removes leftover `.ardia-new` and `.ardia-old` copies. When `codesign` can't answer
-(it fails to run or times out), recovery leaves the pending record and `.ardia-old` exactly as they are, says
-recovery is pending, and setup and refresh exit 1; the next run tries again. An app counts as ardia's only with a
+signature codesign rejects), and removes leftover `.nilla-new` and `.nilla-old` copies. When `codesign` can't answer
+(it fails to run or times out), recovery leaves the pending record and `.nilla-old` exactly as they are, says
+recovery is pending, and setup and refresh exit 1; the next run tries again. An app counts as nilla's only with a
 committed record whose path and CDHash match.
 
 The shim runs `$ARDIA_CLI_HOME/current/bin/ardia` when that resolves inside `$ARDIA_CLI_HOME`, else the launcher of
-the installation that is running (`<root>/bin/ardia` next to `<root>/python`). It never takes whatever `ardia` is first
+the installation that is running (`<root>/bin/ardia` next to `<root>/python`). It never takes whatever `nilla` is first
 on PATH: with neither, setup and `mcp-config` refuse and say why.
 
 ### Running it
 
-`ardia computer <args>` execs the driver with the arguments unchanged: `/Applications/CuaDriver.app`'s binary when
+`nilla-browser computer <args>` execs the driver with the arguments unchanged: `/Applications/CuaDriver.app`'s binary when
 it's there, otherwise the bundled copy (fetched on demand). Either is verified before every run (`codesign --verify
---deep --strict` against Cua's designated requirement, about 0.1 s); an app in `/Applications` that fails, ardia's or
+--deep --strict` against Cua's designated requirement, about 0.1 s); an app in `/Applications` that fails, nilla's or
 not, is refused with a line saying to move it away and run setup. The check runs right before every launch; the
 window that remains between it and the exec needs the user's own write access to the app (macOS has no `fexecve`),
-and that access could replace `ardia` itself. Any version Cua signed runs. The bundled copy
+and that access could replace `nilla` itself. Any version Cua signed runs. The bundled copy
 answers `--version`, `--help`, `list-tools`, `describe` and the like. `mcp`, `call`, `serve` and `permissions` need the installed app, so before setup they print
-one line pointing at `ardia computer setup` and exit 1. `CUA_DRIVER_RS_TELEMETRY_ENABLED=0` and
+one line pointing at `nilla-browser computer setup` and exit 1. `CUA_DRIVER_RS_TELEMETRY_ENABLED=0` and
 `CUA_DRIVER_RS_UPDATE_CHECK=0` are set unless the caller set them. `update`, `channel` and `skills` exit 2 with where
-to go instead: the driver moves with ardia, not with cua's curl-to-bash installer. `help` is cua-driver's `--help`.
-When ardia's copy in `/Applications` is older than the pin, it says to run setup. Shared flags (`--port` and the
+to go instead: the driver moves with nilla, not with cua's curl-to-bash installer. `help` is cua-driver's `--help`.
+When nilla's copy in `/Applications` is older than the pin, it says to run setup. Shared flags (`--port` and the
 rest) are refused.
 
-`ardia computer mcp-config --target general|claude-code|codex|cursor|opencode` prints the MCP entry, which runs
+`nilla-browser computer mcp-config --target general|claude-code|codex|cursor|opencode` prints the MCP entry, which runs
 `$ARDIA_CLI_HOME/current/bin/ardia computer mcp` so it keeps working across upgrades: `claude mcp add-json --scope
 user cua-driver '…'` for Claude Code, `codex mcp add cua-driver -- … computer mcp` for Codex, and the JSON to paste
 for the others.
 
-`install.sh` starts `ardia computer refresh` in the background after each upgrade: when the app in `/Applications`
-is ardia's (path and CDHash match the record) and older than the pin, it stops the daemon and swaps in the new one
+`install.sh` starts `nilla-browser computer refresh` in the background after each upgrade: when the app in `/Applications`
+is nilla's (path and CDHash match the record) and older than the pin, it stops the daemon and swaps in the new one
 (staged next to it, renamed into place); otherwise it does nothing.
 
 ### Its skill
 
-`ardia skills install` puts cua-driver's own skill (`SKILL.md` plus its references, `LINUX.md` and `WINDOWS.md`
-left out) in a `cua-driver` folder next to each `ardia` folder, from the pinned skills asset (cached in
-`$ARDIA_CLI_HOME/cua-driver/<V>/skills`). It writes the same `.ardia-skill` marker with `"skill": "cua-driver"` and
+`nilla-browser skills install` puts cua-driver's own skill (`SKILL.md` plus its references, `LINUX.md` and `WINDOWS.md`
+left out) in a `cua-driver` folder next to each `nilla` folder, from the pinned skills asset (cached in
+`$ARDIA_CLI_HOME/cua-driver/<V>/skills`). It writes the same `.nilla-skill` marker with `"skill": "cua-driver"` and
 the upstream tag, under the same rules as ours: files written by rename, only files its marker listed removed,
 links never followed. A `cua-driver` folder or link without our marker (cua's installer links
-`~/.cua-driver/skills/cua-driver` into each agent) is left alone and reported as `kept`. Our `ardia` marker records
+`~/.cua-driver/skills/cua-driver` into each agent) is left alone and reported as `kept`. Our `nilla` marker records
 `"companions": ["cua-driver"]` once the companion is in place; `refresh` rewrites a marked companion, adds one
-next to an `ardia` folder written before companions existed, and never brings back one the user deleted. A failed
+next to an `nilla` folder written before companions existed, and never brings back one the user deleted. A failed
 download fails the command (exit 1), leaves our skill installed, and is retried by the next refresh. `--no-cua`
-records no companions. Our `SKILL.md` has one line pointing native-app work at `ardia computer`.
+records no companions. Our `SKILL.md` has one line pointing native-app work at `nilla-browser computer`.
 
 ### Bumping it
 
-Change `VERSION`, `DRIVER_SHA256` and `SKILLS_SHA256` at the top of `ardia_cli/computer.py`, taking the digests
+Change `VERSION`, `DRIVER_SHA256` and `SKILLS_SHA256` at the top of `nilla_browser_cli/computer.py`, taking the digests
 from the release's `SHA256SUMS` and checking them against your own download (`shasum -a 256`), then run
-`ardia computer --version` against a scratch `ARDIA_CLI_HOME`, the tests, and `ardia computer --help` for new or
+`nilla-browser computer --version` against a scratch `ARDIA_CLI_HOME`, the tests, and `nilla-browser computer --help` for new or
 renamed subcommands (`DRIVER_COMMANDS`, `DAEMON_COMMANDS`). Pick a release at least a week or two old: cua ships
-several a day. The bump ships with the next CLI release; `install.sh` then updates ardia's copy in `/Applications`.
+several a day. The bump ships with the next CLI release; `install.sh` then updates nilla's copy in `/Applications`.
 
 ## Install and upgrade
 
@@ -1534,28 +1534,28 @@ The app runs `install.sh` with its own environment minus every `ARDIA_*` variabl
 
 `install.sh [--version V] [--sha256 DIGEST] [--uninstall]` (run with `/bin/sh`; `--help`):
 
-- Downloads `https://github.com/mantrakp04/ardia/releases/download/v<V>/ardia-cli-<V>-macos-arm64.tar.gz` on macOS
+- Downloads `https://github.com/NoorChasib/nilla/releases/download/v<V>/ardia-cli-<V>-macos-arm64.tar.gz` on macOS
   and `…/ardia-cli-<V>-linux-x64.tar.gz` on Linux (https only) into a private temp dir; it runs on Apple silicon and
   x86_64 Linux and stops with an error anywhere else. Without `--version` it
   takes the latest release that has the asset. `--sha256` is the only
-  digest it trusts (the app passes `Ardia.app/Contents/Resources/ardia-cli.sha256`, which the signed bundle pins), and
+  digest it trusts (the app passes `Nilla.app/Contents/Resources/ardia-cli.sha256`, which the signed bundle pins), and
   a download needs it: a `.sha256` from the same release would only prove the tarball came from wherever the tarball
   came from. Only a `file://` `ARDIA_CLI_URL` (tests) may go without it, reading `<url>.sha256`. A Debug build has no
   pinned digest, so it installs only that way.
 - Verifies the digest, refuses entries outside `ardia-cli-<V>/`, `..` paths, hard links and links pointing outside the
   tree, plus names with control characters, backslashes or ` -> `, extracts to `$ARDIA_CLI_HOME/<V>.partial`, checks
   the extracted tree again (`find`, no line parsing), renames it to `<V>`, and swaps `current` atomically.
-- It keeps the current and the previous version, and any version a running `ardia` uses: `ardia_cli` writes
-  `<V>/.leases/<pid>` when it starts (from the launcher or `python -m ardia_cli`) and removes it at exit. A lease
+- It keeps the current and the previous version, and any version a running `nilla` uses: `nilla_browser_cli` writes
+  `<V>/.leases/<pid>` when it starts (from the launcher or `python -m nilla_browser_cli`) and removes it at exit. A lease
   counts only while a process with that pid runs and started no later than the lease was written (`ps -o lstart`
   against the lease's mtime), so a reused pid doesn't pin a version.
-- Links `$ARDIA_CLI_BIN_DIR/ardia` (default `~/.local/bin`) to `current/bin/ardia`. It replaces only a link that
+- Links `$ARDIA_CLI_BIN_DIR/nilla` (default `~/.local/bin`) to `current/bin/ardia`. It replaces only a link that
   already points into `$ARDIA_CLI_HOME` and refuses anything else. With the default bin dir off the login shell's
   PATH, it adds `export PATH="$HOME/.local/bin:$PATH"` to the shell's login file once: on macOS `~/.zprofile`
   (`~/.bash_profile` for bash); on Linux `~/.zprofile` for zsh, `~/.bash_profile` for bash when it exists, else
   `~/.profile`, and `~/.profile` for any other shell. Fish reads none of those, so for fish (on both) it writes
   `contains -- $HOME/.local/bin $PATH; or set -gx PATH $HOME/.local/bin $PATH` to
-  `${XDG_CONFIG_HOME:-~/.config}/fish/conf.d/ardia.fish` instead. The login shell comes from `dscl` on macOS and
+  `${XDG_CONFIG_HOME:-~/.config}/fish/conf.d/nilla.fish` instead. The login shell comes from `dscl` on macOS and
   `getent passwd` on Linux, else `$SHELL`.
 - A version that is already current is a no-op. Two runs never overlap: each takes a flock on
   `$ARDIA_CLI_HOME/.lock` through fd 9 (`/usr/bin/lockf -s -t 120 9`; `flock -w 120 9` on Linux). The kernel drops it
@@ -1565,7 +1565,7 @@ The app runs `install.sh` with its own environment minus every `ARDIA_*` variabl
 - Output for the app, one line each: `step resolve|download|verify|install|link`, `version <v>`, `path <rc file>`,
   then `installed <bin path>` or `uninstalled`, or `error <message>` with exit 1.
 
-`$ARDIA_CLI_HOME` defaults to `~/Library/Application Support/Ardia/CLI` (on Linux
+`$ARDIA_CLI_HOME` defaults to `~/Library/Application Support/Nilla/CLI` (on Linux
 `${XDG_DATA_HOME:-~/.local/share}/ardia/cli`). The installed version is
 `basename "$(readlink "$ARDIA_CLI_HOME/current")"`; the app reads that link to decide whether to upgrade, and after an
 app update it runs `install.sh --version <app version> --sha256 <pinned digest>` in the background. The CLI never
@@ -1579,17 +1579,17 @@ updates itself. After switching `current` to a new version, `install.sh` runs `c
 and must be the host's, since the bundled Python installs the wheels and runs the checks; the Linux tarball builds on
 any x86_64 Linux with uv. Both hold python-build-standalone CPython 3.13 (release and sha256 pinned in the script per
 platform: `aarch64-apple-darwin` and `x86_64-unknown-linux-gnu` `install_only_stripped`), the locked dependencies and
-`ardia_cli` in its site-packages, pruned of tests, idlelib, Tk, ensurepip, the unused libpython (a dylib on macOS; on
+`nilla_browser_cli` in its site-packages, pruned of tests, idlelib, Tk, ensurepip, the unused libpython (a dylib on macOS; on
 Linux `python3.13` links it statically, so the `.so` goes too) and `__pycache__`, plus `bin/ardia`, an sh launcher
-that resolves its links and runs `python3 -I -m ardia_cli`, and esbuild (the npm `@esbuild/darwin-arm64` or
+that resolves its links and runs `python3 -I -m nilla_browser_cli`, and esbuild (the npm `@esbuild/darwin-arm64` or
 `@esbuild/linux-x64` tarball, the same version, its sha256 and npm's sha512 pinned in the script) in
-`ardia_cli/bin/esbuild`. Downloads are cached in `~/Library/Caches/ardia-cli-build` on macOS and
+`nilla_browser_cli/bin/esbuild`. Downloads are cached in `~/Library/Caches/ardia-cli-build` on macOS and
 `${XDG_CACHE_HOME:-~/.cache}/ardia-cli-build` on Linux. The macOS tarball is about 18 MB, 52 MB installed; the Linux
-one about 26 MB, 76 MB installed. `ardia --version` takes about 10 ms; the first command about 1 s while Python writes its
+one about 26 MB, 76 MB installed. `nilla --version` takes about 10 ms; the first command about 1 s while Python writes its
 bytecode cache, later ones about 0.15 s.
 
 `scripts/release.sh` builds it into the release's dist dir after the export and writes its digest to
-`Ardia.app/Contents/Resources/ardia-cli.sha256` before the app is signed. The release skill's `publish.sh` uploads the
+`Nilla.app/Contents/Resources/ardia-cli.sha256` before the app is signed. The release skill's `publish.sh` uploads the
 tarball and its `.sha256`.
 
 ## Test
@@ -1597,9 +1597,9 @@ tarball and its `.sha256`.
 Never against the real home. A hidden instance's plain DevTools port works with `--port`:
 
 ```sh
-scripts/agent/ac launch <Ardia.app> --data /tmp/ardia-cli-test --onboarded
-ardia browse --port <port> open https://example.com
-ardia browse --port <port> get title
+scripts/agent/ac launch <Nilla.app> --data /tmp/ardia-cli-test --onboarded
+nilla-browser browse --port <port> open https://example.com
+nilla-browser browse --port <port> get title
 scripts/agent/ac quit /tmp/ardia-cli-test
 ```
 
@@ -1610,10 +1610,10 @@ socket but answers 500 on page sockets with a query. For the installer:
 apps/cli/scripts/build.sh 0.0.1 /tmp/ardia-cli-out
 HOME=/tmp/ardia-cli-home ARDIA_CLI_URL=file:///tmp/ardia-cli-out/ardia-cli-0.0.1-macos-arm64.tar.gz \
   /bin/sh apps/cli/install.sh
-HOME=/tmp/ardia-cli-home ardia skills install --target claude-code
+HOME=/tmp/ardia-cli-home nilla skills install --target claude-code
 ```
 
-`ardia scripts test` needs a running instance; it reaches cross-origin iframes on both paths, and over `--port` also frames that show an extension's page. Install and the
+`nilla-browser scripts test` needs a running instance; it reaches cross-origin iframes on both paths, and over `--port` also frames that show an extension's page. Install and the
 helpers need the token path: an instance launched without `ARDIA_REMOTE_DEBUGGING_PORT` (the app doesn't start its
 control server when the port switch is set) and with control on, for example a scratch dir whose `session.json` has
 `"settings": {"cliControl": true}`, opened with `open -g -n --env ARDIA_BACKGROUND=1 --env ARDIA_DATA_DIR=<dir>`.
@@ -1643,38 +1643,38 @@ The same CLI, with these differences:
   reads too; on macOS the default is `~/.config/nilla`), so `hooks.json` lives there as well, CLI home
   `${XDG_DATA_HOME:-~/.local/share}/ardia/cli` for `install.sh` (`hooks install` takes it only from `$ARDIA_CLI_HOME` and
   refuses without it, so it never runs a CLI it didn't pick), bin dir `~/.local/bin`, hooks log
-  `${XDG_STATE_HOME:-~/.local/state}/ardia/hooks.log` (rotated at 5 MB as on macOS). An `XDG_*_HOME` that isn't an
+  `${XDG_STATE_HOME:-~/.local/state}/nilla/hooks.log` (rotated at 5 MB as on macOS). An `XDG_*_HOME` that isn't an
   absolute path is ignored, as the XDG spec, systemd and the engine's CLI installer do, except `XDG_CONFIG_HOME` (and
   `ARDIA_CONFIG_HOME`) for the data dir and config folder, where Chromium takes any non-empty value.
-- `ardia hooks install` writes `${XDG_CONFIG_HOME:-~/.config}/systemd/user/dev.ardia.hooks.service` (`Type=exec`,
+- `nilla-browser hooks install` writes `${XDG_CONFIG_HOME:-~/.config}/systemd/user/com.nilladigital.nilla.hooks.service` (`Type=exec`,
   `ExecStart` the installed `current/bin/ardia hooks run --log <log>`, `WorkingDirectory` the home folder, `PATH`
   from the installing shell, an empty `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME` set to the folder the installing
   shell resolved (`$ARDIA_CONFIG_HOME`, else `${XDG_CONFIG_HOME:-~/.config}`), so the service reads the same
-  `hooks.json` and reaches the same Ardia as `ardia hooks list` even when the systemd user manager's environment
+  `hooks.json` and reaches the same Nilla as `nilla-browser hooks list` even when the systemd user manager's environment
   differs, `Restart=on-failure` with `RestartSec=10` and
   `StartLimitIntervalSec=0` so it never gives up, output to null, `WantedBy=default.target`), then runs `systemctl
   --user daemon-reload`, `enable` and `restart` (so a reinstall picks up a new unit). `hooks run` exits 0 only on
   SIGTERM or SIGHUP, so `systemctl --user stop` sticks and every crash restarts it. `uninstall` runs `disable --now`,
   removes the unit and reloads; `list` reads `systemctl --user show` and prints whether it's active. Paths in the unit
   escape `%`, `$`, `"` and `\`; control characters are refused.
-- `ardia config edit` uses `$VISUAL`, then `$EDITOR`; with neither, in a desktop session (`$DISPLAY` or
+- `nilla-browser config edit` uses `$VISUAL`, then `$EDITOR`; with neither, in a desktop session (`$DISPLAY` or
   `$WAYLAND_DISPLAY` set) it opens the file with `xdg-open`, which returns at once, so it prints a reminder to run
-  `ardia config check` instead of checking. Without a display (an SSH session) or without `xdg-open` it uses `vi`.
-- `ardia scripts install|uninstall|list` use `<data dir>/Scripts`, which is where the engine's scripts policy looks on
+  `nilla-browser config check` instead of checking. Without a display (an SSH session) or without `xdg-open` it uses `vi`.
+- `nilla-browser scripts install|uninstall|list` use `<data dir>/Scripts`, which is where the engine's scripts policy looks on
   Linux (the Mac's `Chromium/..` parent would be `~/.config` here). The Linux host reads, watches and reports the
   folder with the same contract as the Mac (`ac_linux_user_scripts*.cc`, see [linux-port.md](linux-port.md) › "The
-  `ardia` command"); one regular window applies the scripts, and another takes over when it closes.
-- `ardia browse` runs on Linux for opening, reading, snapshots and screenshots, with two gaps. `open --show` and
-  `tab <id> --show` switch Ardia to the tab, but a tab it opened in the background stays hidden to the page, so `click`
+  `nilla` command"); one regular window applies the scripts, and another takes over when it closes.
+- `nilla-browser browse` runs on Linux for opening, reading, snapshots and screenshots, with two gaps. `open --show` and
+  `tab <id> --show` switch Nilla to the tab, but a tab it opened in the background stays hidden to the page, so `click`
   and typing refuse it with the hidden-tab error. `auth` stores passwords through `/usr/bin/security`, the macOS
   Keychain tool, which Linux doesn't have.
-- `ardia computer` is macOS only (cua-driver drives macOS apps): `setup` and every passthrough print `ardia computer:
+- `nilla-browser computer` is macOS only (cua-driver drives macOS apps): `setup` and every passthrough print `nilla-browser computer:
   computer use through cua-driver needs macOS here` and exit 1, and `computer refresh`, which `install.sh` starts after
   an upgrade, does nothing. `skills refresh` works as on macOS.
-- The caller name (`ardia_cli/caller.py`) walks the parent processes through `/proc/<pid>/stat`, `exe` and `cmdline`
+- The caller name (`nilla_browser_cli/caller.py`) walks the parent processes through `/proc/<pid>/stat`, `exe` and `cmdline`
   instead of libproc and `sysctl`; app bundles don't exist here, so a process with no known agent above it is
-  `ardia`. Telemetry's `startup_ms` reads the process start from `/proc/self/stat` against `CLOCK_BOOTTIME`.
-- `ardia pinned` reads the host's session, `<data dir>/<app profile>/Ardia/linux-session.json`
+  `nilla`. Telemetry's `startup_ms` reads the process start from `/proc/self/stat` against `CLOCK_BOOTTIME`.
+- `nilla-browser pinned` reads the host's session, `<data dir>/<app profile>/Nilla/linux-session.json`
   (`engine/ardiacore-linux/src/ardia/linux/ac_linux_host.cc`, `MergeAndWriteSession`; the shape is
   `snapshotHostSession` in `apps/linux/src/hostSession.ts`), never `session.json`. The app profile is the folder
   `profile.last_used` names in `<data dir>/Local State`, which the host pins to its app profile, when it's `Default`
@@ -1682,7 +1682,7 @@ The same CLI, with these differences:
   `tabs`, `groups` and `splits` are objects keyed by id rather than lists, there's no `version`, and windows carry
   `kind` instead of `incognito`. Nothing macOS's pins need is missing: profile names, `profileOrder`,
   `windowOrder`, tab order, pin keys, folders and `parkedPins` are all there, so the rows match macOS's. The host
-  writes it with `ImportantFileWriter::WriteFileAtomically` (a temp file in `Ardia/`, then a rename), so the CLI
-  opens the profile folder, `Ardia` and the file each with `O_NOFOLLOW` (relative to the folder above) and reads
-  the one file it opened, which is always a whole version; it never writes there. `ardia history` takes its profile
+  writes it with `ImportantFileWriter::WriteFileAtomically` (a temp file in `Nilla/`, then a rename), so the CLI
+  opens the profile folder, `Nilla` and the file each with `O_NOFOLLOW` (relative to the folder above) and reads
+  the one file it opened, which is always a whole version; it never writes there. `nilla-browser history` takes its profile
   labels from the same file (`Profile <dataId>` is that profile's folder).

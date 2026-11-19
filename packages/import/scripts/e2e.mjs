@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// End-to-end import of cookies, addresses and cards into a hidden Ardia instance, from a fake Chrome home
+// End-to-end import of cookies, addresses and cards into a hidden Nilla instance, from a fake Chrome home
 // (scripts/e2e_fixture.py; never a real profile). It drives the real import window through the dev harness
 // (apps/browser/src/components/dev/devHarness.ts) and its `globalThis.acImport` hook (components/import/importDevHandle.ts,
 // Debug builds only), reads the profile's cookies over CDP, and checks a local fixture site receives them.
 //
-//   node packages/import/scripts/e2e.mjs <Ardia.app> <scratch dir> [import|restart|all] [--keep]
+//   node packages/import/scripts/e2e.mjs <Nilla.app> <scratch dir> [import|restart|all] [--keep]
 //
-//   <Ardia.app>  a Debug build at the current NATIVE_API_VERSION (Metro on :8081 serves it the JS)
+//   <Nilla.app>  a Debug build at the current NATIVE_API_VERSION (Metro on :8081 serves it the JS)
 //   <scratch dir>    data/ is ARDIA_DATA_DIR and home/ the fake Chrome home (both wiped by the import phase);
 //                    result-<phase>.json lists each phase's failures
 //   import           a private profile is refused; the UI imports 5 cookies, 1 address and
@@ -99,7 +99,7 @@ async function cdp(method, params = {}) {
 const fixtureCookies = async () => (await cdp("Storage.getCookies")).cookies.filter((c) => c.name.startsWith("ac_"));
 
 const nativeImport = (jobId, profile) => `
-  const m = globalThis.expo.modules.ArdiaImport;
+  const m = globalThis.expo.modules.NillaImport;
   return m.unlockBrowser("chrome", null)
     .then(() => m.importData(${JSON.stringify(jobId)}, "chrome", "Default", ["cookies"], {}))
     .then((json) => {
@@ -117,7 +117,7 @@ async function importPhase(ok) {
   ok(refused.keys && !refused.keys.includes("cookies"), "import JSON carries no cookie list");
   ok((await fixtureCookies()).length === 0, "nothing landed after the private attempt");
 
-  await evaluate(`globalThis.expo.modules.ArdiaImport.forgetUnlockedKeys(); ac.runCommand({ command: "importBrowserData" }); return true`);
+  await evaluate(`globalThis.expo.modules.NillaImport.forgetUnlockedKeys(); ac.runCommand({ command: "importBrowserData" }); return true`);
   await until("return !!globalThis.acImport && globalThis.acImport.step", (r) => r === "choose", 30_000);
   ok((await evaluate(`return globalThis.acImport.select("chrome")`)) === true, "Chrome fixture is listed");
   const kinds = await until("return globalThis.acImport.kinds", (r) => Array.isArray(r) && r.includes("cookies"), 10_000);

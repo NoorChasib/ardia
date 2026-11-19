@@ -286,10 +286,10 @@ test("--help prints the header", () => {
 
 test("publish-engine.sh copies the dSYMs with the framework, packs them before stripping and uploads them", () => {
   const source = readFileSync(join(scripts, "publish-engine.sh"), "utf8");
-  const copy = source.indexOf('"$framework" "$work/Ardia.app/Contents/Frameworks/" "$(dirname "$framework")" "$out/dsyms")');
+  const copy = source.indexOf('"$framework" "$work/Nilla.app/Contents/Frameworks/" "$(dirname "$framework")" "$out/dsyms")');
   const locked = source.indexOf('locked" chromium --wait 500 -- "${copy[@]}"');
-  const pack = source.indexOf('pack-symbols.sh" "$work/Ardia.app/Contents/Frameworks/Chromium Framework.framework" "$out/dsyms" "$symbols_archive" "$uuids_file"');
-  const strip = source.indexOf('strip-engine.sh" "$work/Ardia.app" "$out/symbols"');
+  const pack = source.indexOf('pack-symbols.sh" "$work/Nilla.app/Contents/Frameworks/Chromium Framework.framework" "$out/dsyms" "$symbols_archive" "$uuids_file"');
+  const strip = source.indexOf('strip-engine.sh" "$work/Nilla.app" "$out/symbols"');
   assert.ok(copy > 0 && locked > copy, "the dSYMs are copied in the same locked command as the framework");
   assert.ok(pack > locked && strip > pack, "pack-symbols.sh runs on the copies, before strip-engine.sh");
   assert.match(source, /^symbols_archive="\$out\/\$\(engine_symbols_name "\$tag"\)"$/m);

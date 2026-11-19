@@ -7,7 +7,7 @@ import { launch, reporter, session, sleep } from "../../../scripts/lib/instance.
 
 const [appArg, port, metroPort] = process.argv.slice(2);
 if (!appArg) {
-  console.error("usage: node symbol-geometry-test.mjs <ad hoc Debug Ardia.app> [cdpPort] [metroPort]");
+  console.error("usage: node symbol-geometry-test.mjs <ad hoc Debug Nilla.app> [cdpPort] [metroPort]");
   process.exit(2);
 }
 const scratch = mkdtempSync(join(tmpdir(), "ac-symbol-geometry-"));
@@ -42,7 +42,7 @@ try {
     globalThis.symbolFolder = ac.live.store.createFolder("default", "pullRequests");
     globalThis.symbolItems = [1, 2, 3].map((n) => ({ id: "pr" + n, source: "github", url: "https://example.invalid/pr/" + n,
       title: ["Checkmark and triangle", "Failing X and triangle", "Fixed triangle"][n - 1], subtitle: "", icon: null,
-      updatedAt: 1000 - n, section: "authored", pr: { number: n, repo: "fixture/ardia", author: "test", authorAvatar: null,
+      updatedAt: 1000 - n, section: "authored", pr: { number: n, repo: "fixture/nilla", author: "test", authorAvatar: null,
         draft: false, headRef: "fixture", baseRef: "main", review: null, mergeable: "conflicting", checks: [],
         comments: 0, unresolvedThreads: 0, additions: 1, deletions: 1, changedFiles: 1 } }));
     ac.live.store.applyFetch(symbolFolder, symbolItems, {});

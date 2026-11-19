@@ -1,4 +1,4 @@
-# Ardia for phones (Expo)
+# Nilla for phones (Expo)
 
 One Expo app for both phones, replacing the SwiftUI iPhone app and the Compose Android app (issue #1556). On this
 branch the old Android app is gone ("The old Android app, cleaned out" below); `main` keeps it until the merge.
@@ -10,32 +10,32 @@ Swift code that already exists. Both phones run it: Android and the iPhone.
 ```
 apps/phone/                 the app, and the root of its own Bun workspace with packages/phone: Expo 58, React
                             Native 0.88.1, React 19.3, Reanimated 4.7, Worklets 0.13, Gesture Handler 3.3, Hermes V1
-  android/                  the Android project, checked in (application id com.ardia.browser.android, minSdk 29,
+  android/                  the Android project, checked in (application id com.nilladigital.nilla.android, minSdk 29,
                             arm64-v8a and x86_64)
   src/                      the Mac's folder rules (docs/conventions.md): components/ui, components/<feature>,
                             state/<domain>, platform, lib
-  ios/                      the iPhone and iPad project, checked in (bundle id com.ardia.browser.ios, the SwiftUI
+  ios/                      the iPhone and iPad project, checked in (bundle id com.nilladigital.nilla.ios, the SwiftUI
                             app's, iOS 27, React Native's prebuilt core)
   scripts/gradle-locked     Gradle under one lock, so one Android build runs at a time
-packages/phone/             @ardia/phone-native, the Expo module package
+packages/phone/             @nilla/phone-native, the Expo module package
   src/                      the TypeScript side: PageView and its types
-  android/                  the Kotlin side: the module (com.ardia.phone) and the engine it owns, the page engine
-                            (com.ardia.browser), content blocking, the script runtime and sync, with their tests
-  ios/                      the Swift side, pod ArdiaPhoneNative. It builds against ArdiaKit's ArdiaBrowser, so the
+  android/                  the Kotlin side: the module (com.nilladigital.nilla.phone) and the engine it owns, the page engine
+                            (com.nilladigital.nilla), content blocking, the script runtime and sync, with their tests
+  ios/                      the Swift side, pod NillaPhoneNative. It builds against NillaKit's NillaBrowser, so the
                             SwiftUI app and this app run one WebEngine and WebTab
 ```
 
-`@ardia/core` is imported straight from `src/mobile.ts`; no bundle, no script engine.
+`@nilla/core` is imported straight from `src/mobile.ts`; no bundle, no script engine.
 
 The phone is its own Bun workspace, apart from the Mac's, so the two apps can run different Expo and React Native
 versions (decided 2026-11-15 for the move to Expo 58 and React Native 0.88, which the Mac can't follow: Expo 58 has no
 macOS and react-native-macos stops at 0.83):
 - `apps/phone/package.json`'s `workspaces` holds `packages/phone`, with its own `bun.lock` and, through
-  `apps/phone/bunfig.toml` (`linker = "hoisted"`, `peer = false`), a hoisted `apps/phone/node_modules`. `@ardia/core` comes in as `link:../../packages/core`; it imports only `node:`
+  `apps/phone/bunfig.toml` (`linker = "hoisted"`, `peer = false`), a hoisted `apps/phone/node_modules`. `@nilla/core` comes in as `link:../../packages/core`; it imports only `node:`
   modules. The root workspace leaves both out. Install with `scripts/agent/locked pod -- bun install --cwd apps/phone`.
 - Nothing of the Mac's is on the phone's resolution path. Metro reads only `apps/phone/node_modules` and watches
   `packages/phone` and `packages/core`. TypeScript keeps symlinks (`preserveSymlinks` in the three tsconfigs), so
-  `packages/phone` is read through `apps/phone/node_modules/@ardia/phone-native` and its imports find the phone's
+  `packages/phone` is read through `apps/phone/node_modules/@nilla/phone-native` and its imports find the phone's
   modules; tests import it by that name, never by a relative path. `customConditions: ["react-native"]` and
   `moduleSuffixes: [".native", ""]` resolve types as Metro resolves code. Jest's `test/render/resolver.js` resolves a
   bare import from `packages/phone` as if from `apps/phone`, through Reanimated's own jest resolver.
@@ -45,11 +45,11 @@ macOS and react-native-macos stops at 0.83):
 
 ## The page view
 
-`PageView` (`packages/phone/src`) is the page. Android backs it with `PageEngine` (`com.ardia.browser` in `packages/phone/android`)
+`PageView` (`packages/phone/src`) is the page. Android backs it with `PageEngine` (`com.nilladigital.nilla` in `packages/phone/android`)
 (`DevelopmentWebViewEngine` over the system WebView today). The iPhone backs it with `WebEngine` and `WebTab` from
-`packages/phone/ios/ArdiaKit` (WKWebView with the SwiftUI app's content blocking, popups, downloads and page requests),
+`packages/phone/ios/NillaKit` (WKWebView with the SwiftUI app's content blocking, popups, downloads and page requests),
 in an in-memory tab store until this app takes over the SwiftUI app's data. Its tone is `PageTone.resolve` and
-`ToneSampler` in ArdiaBrowser, the code the SwiftUI app's bar uses. The page takes iOS's edge swipes for back and
+`ToneSampler` in NillaBrowser, the code the SwiftUI app's bar uses. The page takes iOS's edge swipes for back and
 forward.
 
 - Props: `pageId` (a page lives in the native engine under this id and survives remounts), `initialUrl` (loaded when
@@ -72,24 +72,24 @@ forward.
   An unanswered request is sent again when JS reopens a page it was already watching (07fca2a67).
 
 `browser`'s `Omnibox.kt` (the ScriptEngine bridge) and `PageSurface.kt` (Compose) are left out of the module's build:
-the Expo app calls `@ardia/core` itself and hosts the page's view natively.
+the Expo app calls `@nilla/core` itself and hosts the page's view natively.
 
 ## Sync on Android
 
 Sync is a native subsystem with its own script runtime; the app's JavaScript never sees the host functions,
-keys, the phrase's entropy or sealed bytes. `@ardia/phone-native` holds the sync engine (`com.ardia.sync`) and its
-script runtime (`com.ardia.shared`, `ardia_hermes.cpp`), and `ArdiaPhoneSync` (`packages/phone/src/sync.ts`) wraps `SyncController` whole:
+keys, the phrase's entropy or sealed bytes. `@nilla/phone-native` holds the sync engine (`com.nilladigital.nilla.sync`) and its
+script runtime (`com.nilladigital.nilla.shared`, `nilla_hermes.cpp`), and `NillaPhoneSync` (`packages/phone/src/sync.ts`) wraps `SyncController` whole:
 status and the synced view as getters and events, connect and change folder with the system folder picker, sync
 now, stop, the reset notice, device name, profile, send, pin to Mac, incoming sends. One controller owns every
 cycle on its own thread; `MainApplication` is the `SyncControllerOwner`, so WorkManager's `SyncWorker` (every 15
 minutes, and a flush after the app leaves the screen) runs it without React Native.
 
-- **Runtime.** `ardia_hermes.cpp` builds against React Native 0.88's prefab Hermes V1 (`hermes-engine::hermesvm`),
+- **Runtime.** `nilla_hermes.cpp` builds against React Native 0.88's prefab Hermes V1 (`hermes-engine::hermesvm`),
   JSI and fbjni, the same Hermes line the Compose app ships (260318099.0.5), so the process has one Hermes and
-  sync gets its own runtime instance. `libardiahermes.so` needs only the `libhermesvm.so`, `libjsi.so` and
+  sync gets its own runtime instance. `libnillahermes.so` needs only the `libhermesvm.so`, `libjsi.so` and
   `libfbjni.so` the app ships. A store build defines `ARDIA_SCRIPT_QUIET`, so the sync script's `__log` writes
-  nothing to logcat; a lab build logs it as `ArdiaJS`.
-- **Bytecode.** `CompileSyncBundle` (`packages/phone/android/build.gradle`) compiles `ardia-sync.js` as it is, with
+  nothing to logcat; a lab build logs it as `NillaJS`.
+- **Bytecode.** `CompileSyncBundle` (`packages/phone/android/build.gradle`) compiles `nilla-sync.js` as it is, with
   `hermes-compiler`'s `hermesc` and `-Xes6-block-scoping`, as the Compose app does. It refuses to run unless
   `hermes-compiler` and React Native's Hermes (`sdks/hermes-engine/version.properties`) are both 260318099.0.5 and
   the `hermesc` binary matches its pinned sha256, so the bytecode always matches the runtime that loads it. The
@@ -118,7 +118,7 @@ minutes, and a flush after the app leaves the screen) runs it without React Nati
 
 #### Sync tester script (lab build, a Mac with sync on)
 
-Watch `adb logcat -s PAGELAB ArdiaJS` throughout. Each step passes when the app keeps working, the status
+Watch `adb logcat -s PAGELAB NillaJS` throughout. Each step passes when the app keeps working, the status
 says what happened, and no tab or removed visit is lost or shows up twice.
 
 1. **Connect.** Sync › connect with the Mac's phrase and its folder. Status reaches `updated`; the view lists
@@ -130,16 +130,16 @@ says what happened, and no tab or removed visit is lost or shows up twice.
    Repeat three times. Sync keeps cycling, the checks still pass, and nothing crashes (`adb logcat -b crash`).
 5. **A slow or revoked folder.** Point sync at a folder on a provider that lags (a cloud drive's folder with
    the phone on a slow network): status shows `updating`, then `updated` or `stalled`, never a hang past a
-   minute. Then revoke the grant (Settings › Apps › Ardia › clear the folder permission, or remove the folder in
+   minute. Then revoke the grant (Settings › Apps › Nilla › clear the folder permission, or remove the folder in
    the provider): status turns `needsFolderAccess`, and Change folder recovers it.
 6. **WorkManager with the app process dead.** Make a change on the Mac, leave the app, run
-   `adb shell am kill com.ardia.browser.android`, then
-   `adb shell cmd jobscheduler run -f com.ardia.browser.android <job id>` (ids from
-   `adb shell dumpsys jobscheduler com.ardia.browser.android`). Open the app: the change is there before the
+   `adb shell am kill com.nilladigital.nilla.android`, then
+   `adb shell cmd jobscheduler run -f com.nilladigital.nilla.android <job id>` (ids from
+   `adb shell dumpsys jobscheduler com.nilladigital.nilla.android`). Open the app: the change is there before the
    first foreground cycle, and the inbox holds any tabs the Mac sent.
 7. **Stalled age.** Turn on airplane mode and wait three minutes: the status reads `Last synced N minutes ago`
    and N moves each minute.
-- **Scanning the phrase.** The module's own `ScanView` (`scanner`, `@ardia/phone-native`) scans the Mac's QR code
+- **Scanning the phrase.** The module's own `ScanView` (`scanner`, `@nilla/phone-native`) scans the Mac's QR code
   with the Compose app's CameraX and ZXing code and hands the text to `sync.connect`; expo-camera and its ML Kit are
   gone (00b9064e9). It asks for the camera again once a one-time grant has expired (d8460729e).
 
@@ -154,18 +154,18 @@ The Expo app has the Compose app's entry points, beside the iPhone's:
 | Lock Screen widgets | none |
 | Control Center controls | a Quick Settings tile: Search |
 | Home Screen quick actions | app shortcuts: Search, Voice Search, New Incognito Tab, and Open Synced Tabs where sync is offered |
-| Share extension | a share target (`ShareActivity`): Open in Ardia, Search in Ardia, and Send to Your Mac where sync is offered |
-| Open in Ardia action | the same share target, and Search in Ardia in the text selection menu (`PROCESS_TEXT`) |
+| Share extension | a share target (`ShareActivity`): Open in Nilla, Search in Nilla, and Send to Your Mac where sync is offered |
+| Open in Nilla action | the same share target, and Search in Nilla in the text selection menu (`PROCESS_TEXT`) |
 | App Intents and Siri phrases | `WEB_SEARCH` intents; no assistant phrases |
 | Spotlight for open and archived tabs | none |
 | Handoff of the current page | none: Android has no counterpart |
 
 Where it can be shared, it is the app's own code:
-- **Links.** `MainActivity` hands every intent to `PhoneSystemLinks` (`@ardia/phone-native`), which maps it to
+- **Links.** `MainActivity` hands every intent to `PhoneSystemLinks` (`@nilla/phone-native`), which maps it to
   a `SystemLink` with the Compose app's `SystemLink` parser and queues it until the app listens
   (`system.initialLink()`, `system.addLinkListener`). http and https `VIEW` (default browser) is `open`, source
   `web`; `ardia://` from widgets and the tile is its kind, source `system`, and from launcher shortcuts, source
-  `shortcut`; `WEB_SEARCH` and `PROCESS_TEXT` (Search in Ardia on selected text) search, or open a web
+  `shortcut`; `WEB_SEARCH` and `PROCESS_TEXT` (Search in Nilla on selected text) search, or open a web
   address, source `intent`; `SEND` text opens its first link or searches the text, source `share`. A link is
   delivered once, not again on recreate or from Recents, and a new activity drops links an earlier one left
   untaken (50824c133). `system.setHidesFromRecents(hidden)` is the Compose
@@ -173,7 +173,7 @@ Where it can be shared, it is the app's own code:
 - **Default browser.** `defaultBrowser` uses the Compose app's `AndroidSystemActions` (`RoleManager.ROLE_BROWSER`).
 - **Tile, widgets and shortcuts.** The Compose app's `SearchTileService`, Glance widgets (Search, Your Mac's Tabs)
   and `SystemSnapshots` compile in place in the Expo app, with its `res-system` resources and a small
-  `ardia-design` library for `ProfileLook`, `Monogram` and `Colors`. `SystemExport` writes the widgets'
+  `nilla-design` library for `ProfileLook`, `Monogram` and `Colors`. `SystemExport` writes the widgets'
   snapshot from the wrapped sync controller, as the Compose app does; demo mode feeds no widgets.
 - **Not ported.** Nothing: the share sheet (Open, Search, Send to Your Mac) and the widgets' Color tint are in.
 - **Files.** A file request carries `offersPhoto`, `offersVideo` and `capturesDirectly` (the Compose app's
@@ -182,7 +182,7 @@ Where it can be shared, it is the app's own code:
   off or following it (`setOpensLinksInApps(host, null)`).
 
 **What the Codex review of 15 November changed.**
-- A share sent with Ardia cold waits for sync to load before it gives up. It is recorded before the wait, and a
+- A share sent with Nilla cold waits for sync to load before it gives up. It is recorded before the wait, and a
   WorkManager job resumes it if the process dies. The sheet's ViewModel holds one key, so rotation never sends
   twice. Only sane extras are read (e8b5c7798).
 - Native counts, such as the share sheet's tabs_sent, are kept only while usage sharing is on and within its
@@ -196,13 +196,13 @@ Where it can be shared, it is the app's own code:
 - **Sync is not offered in Android release builds** (the first Android release ships without it; lab builds keep
   it). One value, `SyncOffer.isOffered` in `packages/phone` (true in a lab build, false in a release build), decides
   every native entry point; JavaScript reads the same through `system.syncOffered()`. In a release build:
-  - the share sheet offers Open in Ardia and Search in Ardia only, no Send to Your Mac and no hint to turn sync on;
+  - the share sheet offers Open in Nilla and Search in Nilla only, no Send to Your Mac and no hint to turn sync on;
   - the Your Mac's Tabs widget is not in the widget picker: its receiver is disabled by the build's
-    `@bool/ardia_sync_offered`. A Your Mac's Tabs widget placed by a Compose tester build loses its provider, and
+    `@bool/nilla_sync_offered`. A Your Mac's Tabs widget placed by a Compose tester build loses its provider, and
     the launcher shows that it can't be loaded until it is removed; no released build ever placed one;
   - the Your Mac's Tabs launcher shortcut is disabled the same way, and an `ardia://mac-tabs` link does nothing;
   - no sync controller is made, so nothing syncs, in front or in the background. Sync work a Compose tester left
-    queued (`ardia-sync`, `ardia-sync-flush`) is cancelled at start, and a worker that runs anyway holds;
+    queued (`nilla-sync`, `nilla-sync-flush`) is cancelled at start, and a worker that runs anyway holds;
   - the sync code scanner reports the camera as unsupported and never opens it;
   - a Compose tester who had sync connected keeps the sync identity on disk untouched and unused; nothing is reset,
     so a later build that offers sync finds it as it was.
@@ -211,37 +211,37 @@ Where it can be shared, it is the app's own code:
 #### Entry points tester script (lab build)
 
 Before any run, prove the phone has the build you were sent:
-- Clear old Ardia APKs from the phone's Downloads first, so an on-phone installer cannot pick an old one
-  (sync13 on the M3 once installed sync12 that way): `adb shell ls /sdcard/Download | grep -i ardia`, then
-  `adb shell rm /sdcard/Download/<each old ardia apk>`.
+- Clear old Nilla APKs from the phone's Downloads first, so an on-phone installer cannot pick an old one
+  (sync13 on the M3 once installed sync12 that way): `adb shell ls /sdcard/Download | grep -i nilla`, then
+  `adb shell rm /sdcard/Download/<each old nilla apk>`.
 - After installing, hash what is installed and compare it with the `sha256:` line of the build's `.txt`:
-  `adb shell sha256sum $(adb shell pm path com.ardia.browser.android | sed -n 's/^package://p' | grep base.apk)`.
+  `adb shell sha256sum $(adb shell pm path com.nilladigital.nilla.android | sed -n 's/^package://p' | grep base.apk)`.
   An `adb install` of a single APK keeps it byte for byte as `base.apk`.
 - On the first launch logcat has `PAGELAB build <commit> dirty: no …`, and the commit must be the one sent
   with the APK. If the hash or the commit differs, stop and reinstall: nothing measured on the wrong build
   counts.
 
-`P=com.ardia.browser.android/.MainActivity`. Open the lab
-(`adb shell am start -n $P --ez com.ardia.phone.PAGE_LAB true`), tap System, and watch
+`P=com.nilladigital.nilla.android/.MainActivity`. Open the lab
+(`adb shell am start -n $P --ez com.nilladigital.nilla.phone.PAGE_LAB true`), tap System, and watch
 `adb logcat -s PAGELAB | grep "PAGELAB system"`. Each command should print one `PAGELAB system link`
 line with the kind and source shown. The lab also prints `PAGELAB system default browser` once when it opens
 and again only when that status changes.
 
 1. **Web link:** `adb shell am start -a android.intent.action.VIEW -d https://example.com/a -n $P`: open, web.
-2. **Ardia links:** the same with `-d ardia://search?q=otters` (search, query otters), `ardia://voice`
+2. **Nilla links:** the same with `-d ardia://search?q=otters` (search, query otters), `ardia://voice`
    (voiceSearch), `ardia://incognito`, `ardia://mac-tabs` (macTabs), `ardia://tab/t1` (tab, id t1),
    `ardia://open?url=https%3A%2F%2Fexample.com%2F` (open), `ardia://inbox`: each with source system.
 3. **Shortcuts:** long-press the app icon: Search, Voice Search, Incognito Tab, Synced Tabs each give their kind
    with source shortcut.
 4. **Web search:** `adb shell am start -a android.intent.action.WEB_SEARCH --es query "red pandas" -n $P`:
    search, intent. With `--es query https://example.com/`: open.
-5. **Selected text:** select words in any app, choose Search in Ardia: search with the words, intent. Or
+5. **Selected text:** select words in any app, choose Search in Nilla: search with the words, intent. Or
    `adb shell am start -a android.intent.action.PROCESS_TEXT -t text/plain --es android.intent.extra.PROCESS_TEXT "two words" -n $P`.
-6. **Share:** share a page from another app and pick Ardia: open, share. Or
+6. **Share:** share a page from another app and pick Nilla: open, share. Or
    `adb shell am start -a android.intent.action.SEND -t text/plain --es android.intent.extra.TEXT "Look https://example.com/b." -n $P`
    (open https://example.com/b) and with `"just words"` (search).
-7. **Once only:** after a link, go to Recents and back to Ardia, and rotate if the screen allows: no new line.
-8. **Cold start:** force-stop the app, then run step 1 with `--ez com.ardia.phone.PAGE_LAB true` added: open
+7. **Once only:** after a link, go to Recents and back to Nilla, and rotate if the screen allows: no new line.
+8. **Cold start:** force-stop the app, then run step 1 with `--ez com.nilladigital.nilla.phone.PAGE_LAB true` added: open
    System; the initial link line shows the link.
    Expected on every cold start, as in both native apps, and not a failure: with Auto-Open Keyboard on the app
    opens on the start page with the tray and keyboard up over the start page's backdrop (its logo and bar faded out,
@@ -249,10 +249,10 @@ and again only when that status changes.
    selected tab. Report only a white or empty frame behind the tray, which e10082e90 removed.
 9. **Default browser:** the status line shows isDefault and canAsk; Request role shows the system dialog and
    the line follows the answer; Default apps settings opens the settings page.
-   `adb shell cmd role get-role-holders android.app.role.BROWSER` agrees. With Ardia as the default, step 1
-   without `-n` opens Ardia directly.
-10. **Recents:** Hide from Recents, then open Recents: Ardia's card is blank. Show in Recents restores it.
-11. **Quick Settings tile:** add Ardia's Search tile; tapping it opens Ardia with a search link (system). With
+   `adb shell cmd role get-role-holders android.app.role.BROWSER` agrees. With Nilla as the default, step 1
+   without `-n` opens Nilla directly.
+10. **Recents:** Hide from Recents, then open Recents: Nilla's card is blank. Show in Recents restores it.
+11. **Quick Settings tile:** add Nilla's Search tile; tapping it opens Nilla with a search link (system). With
     the phone locked it asks to unlock first.
 12. **Widgets:** add Search and Your Mac's Tabs from the launcher's widget picker. Search: the field gives
     search, the mic gives voiceSearch. Your Mac's Tabs with sync off: "Sync With Your Mac"; with real sync
@@ -275,12 +275,12 @@ and again only when that status changes.
     shows its notice; after a force-stop and relaunch the notice is still there, until sync next writes the
     inbox.
 16. **Shortcuts with the app in the background:** open the System section, press Home (don't swipe the app
-    away), and use each launcher shortcut. Ardia comes back without restarting (the lab is still open, no
+    away), and use each launcher shortcut. Nilla comes back without restarting (the lab is still open, no
     splash) and prints one link line with source shortcut. `adb logcat -b main | grep -c "Unable to find viewState"`
     stays 0.
 17. **Not yet covered:** the tile with the phone locked behind a PIN (it asks to unlock, then opens the
     search); the Search widget's mic (at its medium size, 4×2: the Compose widget shows the mic only from 250 dp
-    wide); Search in Ardia on text selected in a real app; a share from a real app (Chrome's Share › Ardia).
+    wide); Search in Nilla on text selected in a real app; a share from a real app (Chrome's Share › Nilla).
 18. **Widgets and dark mode:** with the app in the background, switch the phone between light and dark: both
     widgets' backdrops follow within a second.
 19. **Scanner:** Scanner section › Ask for camera, then point at the Mac's sync code: one
@@ -298,7 +298,7 @@ and again only when that status changes.
     airplane mode on and off: `network lost`, then `online again` once.
 23. **Accessibility dump:** in the app (not the lab), open the tray, the page menu, a long-press menu, Spaces
     and the Archive sheet in turn, and with each open run
-    `adb shell am broadcast -a com.ardia.phone.A11Y_DUMP -p com.ardia.browser.android` and
+    `adb shell am broadcast -a com.nilladigital.nilla.phone.A11Y_DUMP -p com.nilladigital.nilla.android` and
     `adb logcat -d -s PAGELAB | grep "PAGELAB a11y"`. The lines between `begin` and `end` are what TalkBack can
     reach; the surface behind a cover should not be among them.
 Look checks (24, 25, 32, 33, 38) start from the look on. The lab's Look on/Look off switch lasts across launches
@@ -326,14 +326,14 @@ off in the lab`.
     steps (Settings › Show Onboarding). Settings › What’s Sent lists what is counted. A lab release build sends to
     ardia.dev with environment test.
 27. **Memory after tabs close** (the lab broadcasts here and below, MEMORY, FRAMES, TRIM and DECK_PARTS, are
-    answered while Ardia is in front. From sync20d its receiver also stays registered in the background, but
+    answered while Nilla is in front. From sync20d its receiver also stays registered in the background, but
     Android 14 and later, and MIUI's freezer, hold a broadcast to a cached app until it is back on screen. For the
     background itself use `adb shell dumpsys gfxinfo $P` and `dumpsys meminfo $P`.)
-    `adb shell am broadcast -a com.ardia.phone.MEMORY -p com.ardia.browser.android`
+    `adb shell am broadcast -a com.nilladigital.nilla.phone.MEMORY -p com.nilladigital.nilla.android`
     and `adb logcat -d -s PAGELAB | grep "PAGELAB memory"` (or System › Memory) at four points, after a
     force-stop and cold start each time you start over: with one tab; after opening nine tabs and visiting each;
-    after closing eight of them; and after `adb shell am broadcast -a com.ardia.phone.TRIM -p
-    com.ardia.browser.android` (System › Trim, the same clear Android's low-memory signal does). Report the four
+    after closing eight of them; and after `adb shell am broadcast -a com.nilladigital.nilla.phone.TRIM -p
+    com.nilladigital.nilla.android` (System › Trim, the same clear Android's low-memory signal does). Report the four
     lines; the image cache's MB should fall when tabs close.
 28. **Scanner without a camera:** Scanner section with the camera allowed: Feed a phrase code gives
     `code: … 24 words, valid true`, Feed another code gives `rejected`; no recovery phrase in
@@ -351,13 +351,13 @@ off in the lab`.
     Since the widgets carry both modes' colours (Android 12 and later), also add each widget once in light mode
     and once in dark mode, then switch modes with the app closed (`adb shell am force-stop $P` first): every
     widget follows within a few seconds whichever mode it was added in, its panel keeps a gradient, and the
-    pill, icons, label and text all change together. Watch `adb logcat -s ArdiaWidget`: each update logs
+    pill, icons, label and text all change together. Watch `adb logcat -s NillaWidget`: each update logs
     `widget search|macTabs update on API N: the launcher picks day or night …; the app sees day|night`. A switch
     with the app closed needs no update line at all. If a widget doesn't follow, report whether any line
     appeared and what it said.
-    With TalkBack on, each widget reads its name from the moment it is placed, before its first update: "Ardia
-    Search" and "Ardia, Your Mac’s Tabs", never "Ardianull".
-    MIUI's launcher reads its own frame around a widget as "Ardianull"; the Compose app's widgets read the same on
+    With TalkBack on, each widget reads its name from the moment it is placed, before its first update: "Nilla
+    Search" and "Nilla, Your Mac’s Tabs", never "Nillanull".
+    MIUI's launcher reads its own frame around a widget as "Nillanull"; the Compose app's widgets read the same on
     the same launcher (F4, sync12), so it is the launcher's and is not checked further.
 32. **Deck backdrop:** in the app's deck, three slow blobs in lighter shades of the profile colour drift over the base
     (two screenshots 10 s apart differ). In the lab, Look: the stage above the frosted bar shows the mesh and blobs
@@ -398,7 +398,7 @@ off in the lab`.
     when the delete wins, the close says `no snapshot files left (…)` and the delete line carries the drops. For
     a tab that had a card, one of the two lines drops 1 or more; report any close of a carded tab where both say
     0. The image cache after closing eight is no larger than with nine open. Then run
-    `adb shell am send-trim-memory com.ardia.browser.android RUNNING_CRITICAL` (Android's own signal, which
+    `adb shell am send-trim-memory com.nilladigital.nilla.android RUNNING_CRITICAL` (Android's own signal, which
     also trims the system's GPU caches; the lab's Trim only clears the image cache) and tap Memory again. Report
     all the lines, graphics included.
     - Each Memory line now ends with `look on|off: N of M frost(s) blurring, about X MB of blur layers (largest …),
@@ -407,7 +407,7 @@ off in the lab`.
       between), so the look's share of graphics shows.
     - Android only releases GPU caches, the WebViews' tiles included, at "UI hidden" or deeper, not at
       `RUNNING_CRITICAL` with the app in front. So also press Home, run
-      `adb shell am send-trim-memory com.ardia.browser.android UI_HIDDEN`, come back and tap Memory.
+      `adb shell am send-trim-memory com.nilladigital.nilla.android UI_HIDDEN`, come back and tap Memory.
 38. **Frames with and without the look:** measure twice, look on and look off, doing the same thing each time.
     - In the lab's Look, set the toggle (Look on or Look off; it logs `PAGELAB look views off|on` and lasts across
       launches), then `adb shell am force-stop $P` and open the app normally.
@@ -469,13 +469,13 @@ off in the lab`.
 40. **Connect in two steps**: pick the sync folder (Choose Folder… under step 2; its name then shows there), then enter a
     phrase with one wrong word: connecting starts by itself and fails with the phrase's message, and the folder's
     name stays. Fix the word: it connects again by itself, no folder picker opens, and sync connects. Then Stop Syncing, pick a folder and leave without connecting; pick another folder and connect with
-    it. `adb shell dumpsys activity uri-permissions | grep -i ardia` (or the Files app's access list) shows only the
+    it. `adb shell dumpsys activity uri-permissions | grep -i nilla` (or the Files app's access list) shows only the
     connected folder's grant, not the one left unused.
 41. **Launch arguments** (lab build): run the capture commands from "Launch arguments on Android" against the Expo
     app, for example
-    `adb shell am start -S -n $P/.MainActivity --ez ArdiaDemo true --es BrowseQuery otters`,
-    `… --ez ArdiaDemo true --ez BrowseDeck true`, `… --ez ArdiaDemo true --es ArdiaOpenSheet settings` and
-    `… --ez ArdiaOnboarding true`. Each does what it does in the Compose app, and with `ArdiaDemo` the sync view
+    `adb shell am start -S -n $P/.MainActivity --ez NillaDemo true --es BrowseQuery otters`,
+    `… --ez NillaDemo true --ez BrowseDeck true`, `… --ez NillaDemo true --es NillaOpenSheet settings` and
+    `… --ez NillaOnboarding true`. Each does what it does in the Compose app, and with `NillaDemo` the sync view
     shows the demo Macs, not the real ones. Lab builds log `PAGELAB launch arguments {…}` once per launch
     with what the app was given. A store build ignores every one of them.
 42. **Inline completion** (the tray on Android, and the lab's Completion panel). Do it first in the app's real tray
@@ -578,7 +578,7 @@ off in the lab`.
     - System settings win: with Remove animations on (Settings › Accessibility), the deck stands still whatever
       the budget says, and no sample is taken (nothing moves to measure).
 52. **An idle app draws nothing** (sync11's look-off deck drew 1825 frames in 30 s with nothing changing). With the
-    deck open and untouched, run `adb shell am broadcast -a com.ardia.phone.FRAMES -p com.ardia.browser.android
+    deck open and untouched, run `adb shell am broadcast -a com.nilladigital.nilla.phone.FRAMES -p com.nilladigital.nilla.android
     --ei seconds 5` and keep hands off for 5 s. Logcat (`-s PAGELAB`) has `PAGELAB idle frames: N frame(s) drawn in
     5.0 s, … draw pass(es), … layout pass(es), … with no view redrawn; look views redrawn: <view> xN, …; redrawn:
     <view> xN, … and K more`. The look views (backdrops, frosts, frost sources) are listed first and in full,
@@ -588,7 +588,7 @@ off in the lab`.
     chase.
 53. **The look lets go when the app is hidden.** Look on, nine tabs, tap Memory (step 37) and note the look part
     (`… frost(s) holding a blur layer, about X MB …`). Press Home, then
-    `adb shell am send-trim-memory com.ardia.browser.android HIDDEN` (this Android's name for UI_HIDDEN). Logcat
+    `adb shell am send-trim-memory com.nilladigital.nilla.android HIDDEN` (this Android's name for UI_HIDDEN). Logcat
     has `PAGELAB memory trim received: level 20 (UI_HIDDEN); …; look released for the hidden app: N frost
     layer(s) …`; every trim the app receives now logs one such line, whatever its level, so a missing line means
     the app never got it. Come back and tap Memory: graphics should be near the look-off figure until the deck is
@@ -604,7 +604,7 @@ off in the lab`.
 55. **Deck scroll, look on against look off** (from sync14). Run the Deck speed script's step 2 (`## Deck speed`)
     four times on each phone, two with the look off and two with it on (paced, budget forced full on a phone
     that degraded). Force-stop between look switches. In each look-on run also:
-    - start `adb shell am broadcast -a com.ardia.phone.FRAMES -p $P --ei seconds 5` just before the first swipe.
+    - start `adb shell am broadcast -a com.nilladigital.nilla.phone.FRAMES -p $P --ei seconds 5` just before the first swipe.
       During the scroll, `redrawn:` should list the cards and not `DeckBackdropView`, or only once or twice
       when the scroll starts and stops: the backdrop holds still while anything else draws;
     - from the `PAGELAB perf deck scroll` lines, check the look field reads `look drew backdrop 0, recorded 0,
@@ -630,41 +630,41 @@ off in the lab`.
       appears only after Android grants. Allow it: the camera picture shows.
     - Open a map and tap its "my location" button. Android's location dialog first; approximate location is
       enough for the site's dialog to follow.
-    - Clear Ardia's permissions (Settings › Apps), open the camera test again and refuse in Android's dialog: no site
+    - Clear Nilla's permissions (Settings › Apps), open the camera test again and refuse in Android's dialog: no site
       dialog follows, and logcat has `PAGELAB page request camera refused by Android: the site's request ends
       without a dialog`.
     - A permission Android already holds goes straight to the site's dialog with no Android dialog.
-57. **Pull to refresh** (from sync18). Pull a page down past the trigger and let go: the spinner is the Ardia blue
+57. **Pull to refresh** (from sync18). Pull a page down past the trigger and let go: the spinner is the Nilla blue
     (#6395FC, #4A77D4 in dark), the pull holds at 56 dp while the page reloads and springs back with a slight
     overshoot when it is done. A short pull that doesn't reach the trigger springs back the same way. On a page with
     no background colour of its own, swipe back from the edge: what shows behind is the profile's surface colour,
     not plain white or black.
 58. **The widgets take the Color setting** (from sync19b). With the Search and Your Mac's Tabs widgets on the home
     screen, set Settings › Color to green: both widgets turn green within a few seconds; set it back to the
-    profile's colour: they follow. Force-stop Ardia and switch the phone between light and dark: they keep the
+    profile's colour: they follow. Force-stop Nilla and switch the phone between light and dark: they keep the
     chosen colour.
 59. **The pager rounds pages to the display's corner** (from sync18). On Android 12 or later, swipe slowly between
     tabs on the bar: the moving page's corners match the screen's own rounded corners. On an older phone they stay
     at 55. Report the phone and whether the corners line up.
 60. **Share sheet** (from sync19b).
-    - Signed in (sync connected to the Mac): in Chrome, open a page, then Share › Ardia. A sheet rises over Chrome
-      with "Open in Ardia" and "Send to Your Mac" ("Your Devices" when another phone receives tabs). Tap Send to
+    - Signed in (sync connected to the Mac): in Chrome, open a page, then Share › Nilla. A sheet rises over Chrome
+      with "Open in Nilla" and "Send to Your Mac" ("Your Devices" when another phone receives tabs). Tap Send to
       Your Mac: "Sent to …" shows and the sheet closes itself after about 1.4 s, Chrome still in front; the tab
-      arrives on the Mac. Repeat with Ardia force-stopped first: the send still arrives (it waits up to 20 s for
+      arrives on the Mac. Repeat with Nilla force-stopped first: the send still arrives (it waits up to 20 s for
       sync to load).
-    - Share again and tap Open in Ardia: Ardia opens the page as a new tab.
-    - Share plain text from a notes app: the sheet offers "Search in Ardia", which runs that search.
-    - Signed out (sync off): sharing a page offers Open in Ardia and the sync hint, no Send.
-    - Back or a tap outside closes the sheet; Chrome is untouched and Ardia doesn't appear in Recents.
+    - Share again and tap Open in Nilla: Nilla opens the page as a new tab.
+    - Share plain text from a notes app: the sheet offers "Search in Nilla", which runs that search.
+    - Signed out (sync off): sharing a page offers Open in Nilla and the sync hint, no Send.
+    - Back or a tap outside closes the sheet; Chrome is untouched and Nilla doesn't appear in Recents.
 61. **The tray follows predictive back** (from sync19b, Android 14 or later). Open the tray and swipe back slowly
     from the screen's edge: the tray moves down with the finger, up to 72 dp. Let go early: it springs back and
     stays open. Swipe all the way: it closes as Back did before. With the tray closed, Back works as before
     everywhere else (menus, dialogs, the Archive). Before Android 14, Back simply closes the tray.
-62. **A cold share** (from sync20). Signed in, force-stop Ardia. In Chrome, open a page, then Share › Ardia › Send
-    to Your Mac. "Sent to …" shows and the tab reaches the Mac although Ardia wasn't running. Share the same page
+62. **A cold share** (from sync20). Signed in, force-stop Nilla. In Chrome, open a page, then Share › Nilla › Send
+    to Your Mac. "Sent to …" shows and the tab reaches the Mac although Nilla wasn't running. Share the same page
     again: the Mac gets one tab for each share, never two.
-63. **A rotation in the middle of a send** (from sync20). Share › Ardia, tap Send to Your Mac and rotate the phone
-    at once. The sheet comes back in the new orientation, and the Mac gets exactly one tab. Repeat with Ardia
+63. **A rotation in the middle of a send** (from sync20). Share › Nilla, tap Send to Your Mac and rotate the phone
+    at once. The sheet comes back in the new orientation, and the Mac gets exactly one tab. Repeat with Nilla
     force-stopped first.
 64. **Back with a menu or voice search over the tray** (from sync20). Open the tray, long-press a row so its menu
     opens, then press or swipe Back: the menu closes and the tray stays open; Back again closes the tray. A slow
@@ -693,12 +693,12 @@ off in the lab`.
     - the tray open: ◁ closes it; with voice search over the tray, ◁ closes voice search first;
     - nothing open over the page and no page history: ◁ opens the deck, and ◁ on the deck reopens that tab, as
       Compose's does (BackOrder.next ends at the tab switcher; DeckState.back reopens the selected tab). Only on the
-      start screen with no tab does ◁ send Ardia to the background. Reopen it from Recents and try the menu and
+      start screen with no tab does ◁ send Nilla to the background. Reopen it from Recents and try the menu and
       Settings again: ◁ still closes them;
     - rotate with the page menu open, then ◁: the menu closes.
     With gesture navigation, the same with an edge swipe.
-69. **Remove animations is followed while Ardia runs** (from sync20b). Open the deck: the blobs move. Without
-    closing Ardia, turn on Settings › Accessibility › Remove animations (or Developer options › Animator duration
+69. **Remove animations is followed while Nilla runs** (from sync20b). Open the deck: the blobs move. Without
+    closing Nilla, turn on Settings › Accessibility › Remove animations (or Developer options › Animator duration
     scale › Animation off) and come back. The deck stands still at once, and the lab line reads `still (reduce
     motion…)`. Turn it off and come back: the blobs move again, with no relaunch. Open a sheet each time: it fades
     while the setting is on and springs while it is off. That half needs the screens' hook; until it lands, only the
@@ -712,7 +712,7 @@ off in the lab`.
     While using the app. The site's dialog follows; tap Allow. The map centres on you, and Android asks nothing more
     (no "change to precise" dialog).
 72. **A fullscreen video turns with the phone** (from the build after sync20b). With auto-rotate on, play a video
-    fullscreen and turn the phone: the video goes landscape and back. Exit fullscreen while landscape: Ardia goes
+    fullscreen and turn the phone: the video goes landscape and back. Exit fullscreen while landscape: Nilla goes
     back to portrait. With auto-rotate off, the video stays as the phone's rotation lock says.
 
 #### R8 pass (sync19-r8 and later R8 builds)
@@ -720,7 +720,7 @@ off in the lab`.
 `apps/phone/scripts/build-apk <name>` shrinks the release with R8 (`android.enableMinifyInReleaseBuilds`) since
 sync20b; `--no-r8` builds the unshrunk control.
 The keep rules are in `apps/phone/android/app/proguard-rules.pro`. R8's reports (`mapping.txt`, `usage.txt`,
-`seeds.txt`, `configuration.txt`) land in `<name>-r8/` beside the APK in `/tmp/ardia-phone`.
+`seeds.txt`, `configuration.txt`) land in `<name>-r8/` beside the APK in `/tmp/nilla-phone`.
 `apps/phone/test/r8/check-names.py <r8 apk> <unshrunk apk>` checks that what Android and the JavaScript reach by
 name survived. R8 renames the libraries' classes, so a crash's stack trace names classes like `a.b.c`: run
 `~/Library/Android/sdk/cmdline-tools/latest/bin/retrace <name>-r8/mapping.txt <trace.txt>` (or paste the trace into
@@ -743,25 +743,25 @@ Start the pass where R8 is most likely to have broken something, then run the wh
 
 ## Upgrade from the Compose app on Android
 
-Both apps are `com.ardia.browser.android`, so the Expo app installs over the Compose app and finds its files.
+Both apps are `com.nilladigital.nilla.android`, so the Expo app installs over the Compose app and finds its files.
 Nothing in the Compose app's data is changed or deleted, so installing the Compose app back still works.
 
 - **The gate** (`UpgradeGate.kt`, 9cc21830b). An import is pending while any Compose source (`databases/browser.db`,
-  `shared_prefs/ardia.browser.xml`, `ardia.blocking.xml`, `ardia.reader.xml`) exists and
+  `shared_prefs/nilla.browser.xml`, `nilla.blocking.xml`, `ardia.reader.xml`) exists and
   `no_backup/PhoneSync/legacy-import.json` doesn't hold a valid, versioned receipt. While it is pending:
   - no sync controller is made (`ERR_IMPORT_PENDING`);
   - the browsing source refuses every read with `LocalBrowsingNotReady`, never an empty list;
   - `SyncWorker` retries instead of succeeding;
   - the page module makes no blocking or site settings;
   - links are queued, then delivered once, in order, when the gate opens.
-- **The reader** (`PhoneLegacy.kt`, `ArdiaPhoneLegacy`, d0c0b4a79).
+- **The reader** (`PhoneLegacy.kt`, `NillaPhoneLegacy`, d0c0b4a79).
   - It copies `browser.db` and its WAL to `no_backup/PhoneSync/LegacySnapshot` and opens only the copy, so
     committed rows still in the WAL are read.
   - It runs `quick_check`, needs `user_version` 1 and every Compose column, and reports anything else as
     `unusable` (`schema`, `corrupt`, `locked`, `io`), never as empty.
   - `readLegacy` returns every tab and Archive entry with its saved state, the most recently active tab as
     selected, and the 14 JS-owned preference keys. `readVisits(afterId, limit)` pages history by id.
-  - `applyNativeSettings` copies `ardia.blocking` into `ardia-blocking` (the same keys), splits `browsing.sites`
+  - `applyNativeSettings` copies `nilla.blocking` into `nilla-blocking` (the same keys), splits `browsing.sites`
     into the zoom, Night Shade and app-links maps and their defaults, and copies the thumbnails of regular tabs and Archive entries
     into `files/PageSnapshots`. The thumbnail must sit inside `cache/TabSnapshots` and be a real image.
   - `markImportedWith(receipt)` applies those settings, writes the marker last, opens the gate and starts one
@@ -785,9 +785,9 @@ Nothing in the Compose app's data is changed or deleted, so installing the Compo
   - Every record is imported or counted under a reason (`notWeb`, `duplicate`, `malformed`, `present`, and for
     settings `unknownKey`, `badValue`, `empty`). The source's counts must match what it reads, and the store's
     rows and setting values must match what was written, or the transaction rolls back. The log line
-    (`ardia-legacy imported …` or `ardia-legacy failed reason=…`) holds counts and reason codes only.
+    (`nilla-legacy imported …` or `nilla-legacy failed reason=…`) holds counts and reason codes only.
   - It refuses the in-memory store (a store from a newer version): `failed reason=memory`, nothing marked.
-  - Any failure shows a screen in place of the app: Ardia couldn't bring over the tabs and settings, they are still
+  - Any failure shows a screen in place of the app: Nilla couldn't bring over the tabs and settings, they are still
     on the phone, Try Again. After a second failure, and only where the native module has `startFresh()`, it
     also offers Start Without Them: native opens the gate first, then `legacy.startedFresh` is recorded (not a
     receipt), and the app starts; if either fails the screen stays. The old data is left alone so a later
@@ -808,7 +808,7 @@ Nothing in the Compose app's data is changed or deleted, so installing the Compo
 - **Names that must survive.** A placed widget, a pinned shortcut, the tile, a share target pinned in Android's share
   sheet and a job WorkManager queued all name a class, so the Expo app keeps every component the Compose app exports
   under the same name. The Compose app's `.share.ShareActivity` is an activity-alias of `.share.PhoneShareActivity`,
-  and the alias is the only share target, so Ardia shows once in the share sheet. `apps/phone/test/r8/check-upgrade.py
+  and the alias is the only share target, so Nilla shows once in the share sheet. `apps/phone/test/r8/check-upgrade.py
   <compose apk> <expo apk>` checks the pair:
   - every exported component's name, kind, export and intent actions, and its class (or an alias's target) in the R8
     dex;
@@ -823,14 +823,14 @@ Nothing in the Compose app's data is changed or deleted, so installing the Compo
 
 #### A Mac for a phone without one
 
-The phones are on corex; the Mac is a hidden Ardia for Mac on shiv. `apps/phone/scripts/phone-sync-mac.mjs` runs on
+The phones are on corex; the Mac is a hidden Nilla for Mac on shiv. `apps/phone/scripts/phone-sync-mac.mjs` runs on
 shiv (a hidden instance with its own data folder and a sync folder in its work folder), and
 `apps/phone/scripts/phone-sync-relay.mjs` runs on corex, where it keeps that folder and the phone's
-`Documents/Ardia Sync` the same over ssh and the phone's own adb. Each has `start`, `status`, `sync` and `stop`
+`Documents/Nilla Sync` the same over ssh and the phone's own adb. Each has `start`, `status`, `sync` and `stop`
 (`--help` on either). On corex, per phone:
 
 ```sh
-S=<serial>; R=/Users/shivam-mini/.t3/worktrees/ardia/t3-ffb1082e-c9e4c64b1897b325; W=/tmp/ardia-upgrade-mac-$S
+S=<serial>; R=/Users/shivam-mini/.t3/worktrees/nilla/t3-ffb1082e-c9e4c64b1897b325; W=/tmp/nilla-upgrade-mac-$S
 mac() { ssh shiv "cd $R && node apps/phone/scripts/phone-sync-mac.mjs $* --work $W"; }
 relay() { node ~/phone-sync-relay.mjs "$@" --serial $S; }
 scp shiv:$R/apps/phone/scripts/phone-sync-relay.mjs ~/phone-sync-relay.mjs
@@ -845,7 +845,7 @@ relay start --mac shiv:$W/folder   # checks the phone's folder with a probe file
   needs native API N, but the app was built with M". They print the commands that bring it up to date:
   `scripts/agent/locked pod -- sh -c 'cd apps/browser/macos && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install'`
   when the Pods are behind, then the `build-app --as phone-sync-mac` line from `--help`. pod install can re-quote
-  `MARKETING_VERSION` in `apps/browser/macos/Ardia.xcodeproj/project.pbxproj`. If `git diff` shows only that,
+  `MARKETING_VERSION` in `apps/browser/macos/Nilla.xcodeproj/project.pbxproj`. If `git diff` shows only that,
   write HEAD's copy back (`git show HEAD:<path> > <path>`), so it never reaches a commit.
 
 - `mac status` (or `mac sync` to sync first) prints every device the Mac sees with its id, name and kind, each
@@ -863,9 +863,9 @@ relay start --mac shiv:$W/folder   # checks the phone's folder with a probe file
   (`keyboardType` `visible-password`, no autocorrect, autofill or spell check), and so does the Compose one
   (`KeyboardType.Password`, which keeps it out of the keyboard's learning but has no visual transformation). Only a
   private tab sets the Recents and screenshot protection. A screen read of that page captures the words. Step 2, Choose
-  Folder…: in the system picker open Documents › Ardia Sync, then Use This Folder and Allow.
+  Folder…: in the system picker open Documents › Nilla Sync, then Use This Folder and Allow.
 - When done: `relay stop`, then `mac stop` (it quits the instance and deletes `$W`), then
-  `adb -s $S shell 'rm -rf "/sdcard/Documents/Ardia Sync"'` (the inner quotes are for the phone's shell, which
+  `adb -s $S shell 'rm -rf "/sdcard/Documents/Nilla Sync"'` (the inner quotes are for the phone's shell, which
   would otherwise split at the space).
 
 Checked without a phone: the Mac side started with the AGENTS.md rules (a Debug build, never the installed app,
@@ -880,9 +880,9 @@ pass.
 #### Upgrade tester script
 
 Use the Compose APK and the Expo upgrade APK built for this run (same key), named here `$COMPOSE_APK` and
-`$EXPO_APK`. Watch `adb logcat -s ReactNativeJS:I ArdiaJS PAGELAB` throughout (the lab's own lines are all under
+`$EXPO_APK`. Watch `adb logcat -s ReactNativeJS:I NillaJS PAGELAB` throughout (the lab's own lines are all under
 `PAGELAB`), and `adb logcat -b crash` for crashes.
-`P=com.ardia.browser.android`. The lab is `adb shell am start -n $P/.MainActivity --ez com.ardia.phone.PAGE_LAB true`,
+`P=com.nilladigital.nilla.android`. The lab is `adb shell am start -n $P/.MainActivity --ez com.nilladigital.nilla.phone.PAGE_LAB true`,
 then Upgrade; opening the lab never runs the import, and while the import waits its page area stays blank ("no
 state"). A launch intent reaches a process that is already running, so to get from the app to the lab (or back)
 force-stop first.
@@ -892,7 +892,7 @@ fresh Compose setup (steps 1 to 3): pass A (steps 4 to 10: the reader, the kills
 back), pass B (step 11: the failure screen, then an import) and pass C (step 12: Start Without Them).
 
 1. **Start from the Compose app.** MIUI refuses a fresh `adb install` (`INSTALL_FAILED_USER_RESTRICTED`), so
-   install `$COMPOSE_APK` through the phone's own installer. If Ardia is on the phone, remove it in the phone's
+   install `$COMPOSE_APK` through the phone's own installer. If Nilla is on the phone, remove it in the phone's
    settings first (an Expo build has another key). `adb install -r` works over adb for every later update.
 2. **Set up the Compose app as a tester has it.** Finish onboarding, then:
    - Open at least eight tabs and open the deck so each gets a thumbnail.
@@ -906,7 +906,7 @@ back), pass B (step 11: the failure screen, then an import) and pass C (step 12:
    - The Reader's size, serif and theme.
    - Connect sync. With no Mac of the tester's own, start the Mac on shiv and the relay as in "A Mac for a phone
      without one" (`mac start`, `relay start`) and leave both running for the whole pass. In the Compose app, connect
-     with that phrase and Documents › Ardia Sync. Within a minute `mac sync` lists a `phone` device with the phone's
+     with that phrase and Documents › Nilla Sync. Within a minute `mac sync` lists a `phone` device with the phone's
      name and an id, and its open tabs; the Compose app's Sync page lists the Mac. Send one tab each way:
      `mac send https://example.com/before-upgrade` arrives on the phone once, and a page opened on the phone shows
      under the phone's tabs in `mac sync`.
@@ -918,7 +918,7 @@ back), pass B (step 11: the failure screen, then an import) and pass C (step 12:
      Mac's device list (Settings › Sync on the Mac, with the phone's device id in its detail; with the helper, save
      the output of `mac sync`, which has the phone's id and its tabs).
    - Run `adb shell am force-stop $P`.
-   - Run `adb shell "run-as $P sh -c 'sha256sum databases/* shared_prefs/ardia.*.xml cache/TabSnapshots/*'"`
+   - Run `adb shell "run-as $P sh -c 'sha256sum databases/* shared_prefs/nilla.*.xml cache/TabSnapshots/*'"`
      and save the output. (`run-as` works only on the Compose debug build; the Expo build can't be inspected so.)
 
 Pass A
@@ -932,18 +932,18 @@ Pass A
    - `preferences` lists the keys you changed, and `visits` matches the source's visit count.
    - The lab's page area stays blank with "no state": the page engine waits for the import. Force-stop.
 6. **A kill at each durable step.** A lab build can hold the import for 20 s at a step, through
-   `--es ArdiaImportPause <step>`. Do these three in order, each from a stopped app:
-   - `adb shell am start -n $P/.MainActivity --es ArdiaImportPause afterReceipt`. When logcat says
+   `--es NillaImportPause <step>`. Do these three in order, each from a stopped app:
+   - `adb shell am start -n $P/.MainActivity --es NillaImportPause afterReceipt`. When logcat says
      `PAGELAB upgrade paused at settingsStart`, send a link to the held app:
      `adb shell am start -a android.intent.action.VIEW -d https://example.com/held-a -n $P/.MainActivity`. It does
      not open; the import is still waiting. Then run `adb shell am force-stop $P`. The SQL receipt is written, and
      the native settings and the marker are not. The link was kept on disk, so it survives the kill: it must open
      in step 7, once. (Don't send the link from a stopped app: that launch runs the import with no pause.)
    - The same with `afterSettings`, killing at `paused at settingsDone`. This launch finds the receipt, so it only
-     applies the native settings (no `ardia-legacy imported` line). Send no new link: `held-a` from the first
+     applies the native settings (no `nilla-legacy imported` line). Send no new link: `held-a` from the first
      kill must survive this one and the next.
    - The same with `beforeMarker`, killing at `paused at beforeMarker`, again with no new link.
-   Report the `ardia-legacy` and `PAGELAB upgrade` lines from each. With the helper, run `mac sync` after each
+   Report the `nilla-legacy` and `PAGELAB upgrade` lines from each. With the helper, run `mac sync` after each
    kill: still only the step-3 phone id (a held import never makes a second device).
 7. **The import.** Open the app normally. The import finishes from the receipt, nothing is imported twice, and
    `example.com/held-a` opens once, after the deck. Then check every item against step 3:
@@ -969,7 +969,7 @@ Pass A
      asked for.
    Report the `mac sync` output from step 3, after the import, and after step 9, and the `relay status` lines.
 9. **Relaunch with no second import.** `adb shell am force-stop $P`, then open the app twice. Each time, the deck,
-   the Archive and History have the same counts as step 7 (nothing doubled), no `ardia-legacy imported` line, and
+   the Archive and History have the same counts as step 7 (nothing doubled), no `nilla-legacy imported` line, and
    `example.com/held-a` does not open again. With the helper, after the second relaunch, `mac send
    https://example.com/after-relaunch`: it arrives once, by itself, within about 20 s, as in step 8.
 9a. **One tab per typed address** (the double tab after sync9's upgrade). With sync connected, open the tray and
@@ -997,7 +997,7 @@ Pass B (after steps 1 to 3 again)
 11. **Failure screen, then an import.** `adb install -r $EXPO_APK`. Open the lab, tap Make source unusable
     (`source reports unusable (io)`; no Compose file is touched), then force-stop and open the app normally.
     - The "Couldn’t Bring Over Your Tabs" screen shows in place of the deck, and logcat has
-      `ardia-legacy failed reason=unusable_io`.
+      `nilla-legacy failed reason=unusable_io`.
     - Send a link while the screen is up:
       `adb shell am start -a android.intent.action.VIEW -d https://example.com/held-b -n $P/.MainActivity`. It does
       not open.
@@ -1033,7 +1033,7 @@ The render thread and the GPU don't appear there, so every run pairs the lines w
 Run it once with the look off (lab › Look) and once with it on, at animator scale 1. `$P` is the package. Swipes are in pixels for a 1080-wide screen; scale them for others.
 
 The tab count is part of the run. Deck speed depends on it: with up to 19 tabs every card stays mounted, and with more the deck mounts cards as it moves (sync19 ran 26 tabs against sync16's 9, and its deck scroll looked twice as slow for that reason alone). So:
-- State the count before you start: 9 unless the brief says otherwise (26 for a large deck). Every tab must have a picture: open each site and wait until it has loaded, then launch with `--es ArdiaDeck "warm"` and wait until the `PAGELAB snapshot` lines stop.
+- State the count before you start: 9 unless the brief says otherwise (26 for a large deck). Every tab must have a picture: open each site and wait until it has loaded, then launch with `--es NillaDeck "warm"` and wait until the `PAGELAB snapshot` lines stop.
 - Check it before every measured step: each deck open logs `PAGELAB deck shown with N tabs, M private`. If N isn't the stated count, or M isn't 0, fix the tabs before measuring; tabs sent from a Mac or opened by an earlier check count too.
 - Print it with every result: `tabs=N (checked HH:MM:SS from the deck line)` at the top of each gfxinfo and perf file, and the count in the report's table. Two runs with different counts aren't compared.
 
@@ -1058,7 +1058,7 @@ stand.
 #### Against the Compose release (F4, 2026-11-15)
 
 One session on the F4, medians, the Compose app's release build (OLD) against sync23 (React Native 0.81) and expo58b
-(Expo 58). From `/tmp/ardia-phone-shots/expo58b-f4/table.txt`.
+(Expo 58). From `/tmp/nilla-phone-shots/expo58b-f4/table.txt`.
 
 | Row | Compose release | sync23 | expo58b |
 | --- | --- | --- | --- |
@@ -1085,7 +1085,7 @@ first: the 26-tab deck scroll, the deck open's first frame (+116 ms), cold start
 
 To find what a deck frame costs, take the deck's parts away one at a time while the backdrop repaints at its
 pace (lab › Look › Backdrop: flat colour, budget forced full), and measure each with the idle gfxinfo and
-framestats. `adb shell am broadcast -a com.ardia.phone.DECK_PARTS -p $P --es part <part>` logs
+framestats. `adb shell am broadcast -a com.nilladigital.nilla.phone.DECK_PARTS -p $P --es part <part>` logs
 `PAGELAB deck parts: …`: what it changed, then an inventory of the shown views (how many are drawn offscreen
 every frame because they are partly transparent and overlap with no layer, listed by size and alpha; hardware
 layers and their pixels; views with elevation; outline and overflow clips; image views and how many are
@@ -1135,7 +1135,7 @@ it once and turns the look down if it can't; the system settings always come fir
   F4's 19 to 30% and the M3's 29%. From sync21 the lab's line breaks the other main-thread work down: how many
   messages, the backdrop's ticks against the rest, and the three longest messages by their handler and callback
   (`… other main-thread work 241.7 ms in 412 message(s): backdrop ticks 3.2 ms, the rest 238.5 ms; longest …`).
-  Our own callbacks are named whatever R8 does (`ardia deck tick`, `ardia deck scene hand-back`). Other messages
+  Our own callbacks are named whatever R8 does (`nilla deck tick`, `nilla deck scene hand-back`). Other messages
   keep their full class names, which on a shrunk build read like `j6.s what 3`; `retrace` with the build's
   `mapping.txt` gives the real ones.
 - **How busy is formed** (from sync22). Busy = (Σ each frame's work + the main thread's other messages + the
@@ -1191,7 +1191,7 @@ Shared and per-phone parts:
 - Shared, in TypeScript (`packages/phone/src/lookBudgetRules.ts`): judging a sample, the two-sample agreement,
   the verdict per version, the re-measure, the system settings, the telemetry enum and the probe's timing (skip,
   idle only, one per open). `lookBudget.ts` keeps the state and gives the hook and the lab their calls.
-- Each phone supplies five calls on `ArdiaPhoneLook`, and makes its look views read the stored `apply`
+- Each phone supplies five calls on `NillaPhoneLook`, and makes its look views read the stored `apply`
   ("full" or "degraded") when they are built:
   - `sampleFrames(ms)`: resolves `{ totals, deadlines, refreshMs? }`, one entry per frame the app drew in that
     window, in milliseconds, and the display's refresh interval read at the start (Android:
@@ -1212,15 +1212,15 @@ Off until the user chooses, in Settings (Share anonymous usage stats, with What'
 
 The gate is one file, `apps/phone/src/lib/telemetryGate.ts` (`createGate`): every capture, count and send goes through `isSharing()` there, and `state/telemetry/telemetry.ts` makes the app's one instance on the preferences table (`telemetry.sharing`, `telemetry.installId`, `telemetry.daily`, none of which the old iPhone app's import can set). The schema is `lib/telemetrySchema.ts`: every field is a fixed value, an enum, a bounded count or duration, or a version or UUID pattern, and a record that fails it is never queued. The OTLP encoding is shared with the Mac through `packages/core/src/telemetryWire.ts`.
 
-Events (service `ardia-phone`, `$lib` `ardia-phone-telemetry`, tags `app: phone` and `platform: android|ios` on every one):
+Events (service `nilla-phone`, `$lib` `nilla-phone-telemetry`, tags `app: phone` and `platform: android|ios` on every one):
 
 | Event | Fields | When |
 | --- | --- | --- |
 | `sharing_turned_on` | `source` (settings, onboarding) | turning sharing on |
 | `app_launched` | `legacy_import` (imported, started_fresh, none), `legacy_import_failures` (failed tries before the app opened), `look_mode` (full, no_blur, no_motion, neither: the look this launch shows, after the look's budget and the system's Reduce Motion and Reduce Transparency), `interface_style` (match_mac, glass, classic) and `color_scheme` (match_mac, system, light, dark): the redesign's Appearance choices | each launch with sharing on |
-| `perf_launch` | `launch_ms`, `js_ms` | each launch, once the module gives the process start (`ArdiaPhoneSystem.processStartedAt()`, epoch ms) |
+| `perf_launch` | `launch_ms`, `js_ms` | each launch, once the module gives the process start (`NillaPhoneSystem.processStartedAt()`, epoch ms) |
 | `perf_backdrop` | `backdrop_ms` | each launch on iPhone, once the native launch backdrop has shown (`system.launchBackdropShownAt()`, epoch ms on the process start's clock) |
-| `perf_launch_tray` | `tray_ms` | each launch with Auto-Open Keyboard on, once the launch tray is up (process start on `ArdiaPhoneSystem.processStartedAt()`'s clock) |
+| `perf_launch_tray` | `tray_ms` | each launch with Auto-Open Keyboard on, once the launch tray is up (process start on `NillaPhoneSystem.processStartedAt()`'s clock) |
 | `usage_counts` | `tabs_opened`, `searches`, `pins_to_mac`, `tabs_sent`, `page_processes_gone`, `links_given_up` (a link whose handling passed its 8 s deadline), `pages_reloaded_online` (a failed page reloaded when the phone came back online), `find_opened_system` and `find_opened_bar` (Find on Page opened in WebKit's own panel, or in the app's find bar), `spaces_swiped` (a swipe in Spaces or on the start page that changed the profile), `tray_hidden_rows_opened` (a tray row opened while it peeked or sat under the keyboard), `deck_pictures_late` (a deck opened from a page whose picture hadn't painted within 250 ms, so it shrank without waiting), `search_tabs_opened` (the deck's Search Tabs field focused, in the redesign), `spaces_picked` (a space picked from the deck's switcher menu, or by a VoiceOver adjustment of the start page's dots, that changed the profile, in the redesign), `tabs_moved_to_space` (a tab moved to another space with the deck card menu's Move to Space, in the redesign), `pages_printed` (a page printed from the page menu's Print, counted when the print sheet opened, in the redesign), `pages_translated` (a page sent to Google Translate from the page menu's Translate, never from an Incognito tab), `pinned_tabs_refound` (a pinned site's tile or row switched to the tab it had opened after that tab had left the pinned address, where it used to open a second copy), `site_permissions_revoked` (a site's camera, microphone or location access revoked from Site Settings, by swipe or by its dialog, on iPhone's Expo UI Settings), `tray_back_swiped` (a search tray closed with Android's predictive back swipe), `card_opens_waited` (a card opened from the deck whose growth landed before its page had laid out and its picture painted, so the page waited up to 250 ms to take over), `native_menus_opened` (a menu opened as the system's own: a deck card's long press, the deck's ···, the space switchers, the + menus, Reader's Text Appearance, the page menu's Send to Device, the tabs button's recent tabs, on iPhone), `library_opened` (History, Bookmarks or Downloads opened in the system sheet from the page menu, on iPhone), `deck_grid_shown` (Grid picked for the deck in Settings › Appearance › Tabs, on iPhone), `landscape_shown` (a launch in which the phone was turned to landscape at least once, counted once a launch), `duo_layout_shown` (a launch that used the column, wide or split layout at least once, counted once a launch, on iPhone), `list_sheets_late` (an Archive or History sheet whose rows were drawn more than 400 ms after it was asked for, on iPhone), `list_pages_added` (Archive or History adding its next 200 rows as you scroll, on iPhone), `search_reveals_late` (a search panel opened whose content had not laid out within 250 ms, so the stage revealed it on its deadline, on iPhone), `address_field_scrolled` (a long address in the search field scrolled sideways with a swipe, on iPhone), `deck_bar_swipes` (the deck opened by swiping up on the browsing bar, the second way in beside the tabs button) | at most once a day, for the last UTC day the app was used before today, when anything was counted; private tabs are never counted |
 
 On the dashboard they are kept out of every Mac section by source and lib (`PHONE_APP_SOURCE` in `apps/dashboard/src/server/sql.ts`).
@@ -1250,7 +1250,7 @@ Every count and timing the phone can send, for the owner to read as one set and 
 | `library_opened` | the Library sheets on Expo UI | Whether people reach History, Bookmarks and Downloads from the page menu on iPhone; zero across testers after a release means the rows or the sheet stopped opening |
 | `deck_grid_shown` | the deck's grid on iPhone, picked in Settings › Appearance › Tabs since the owner's tabs pass | Whether people use main's grid view now that it lives in Settings; zero across testers after a release means the Tabs rows stopped switching |
 | `deck_bar_swipes` | the owner's tabs pass (the swipe up on the bar, beside the tabs button) | Whether people use the swipe as well as the button; zero across testers after a release means the swipe stopped opening the deck |
-| `duo_layout_shown` | the Duo layouts on iPhone | Whether anyone runs Ardia on a Duo; zero after a release reaching Duo owners means the layout probe stopped reporting |
+| `duo_layout_shown` | the Duo layouts on iPhone | Whether anyone runs Nilla on a Duo; zero after a release reaching Duo owners means the layout probe stopped reporting |
 | `landscape_shown` | landscape on both phones | How often people turn the phone; zero across testers after a release that rotates means the orientation lock came back |
 | `card_opens_waited` | the card open's hand-over | Whether the page mounted at the start of a card's growth is ready when the card lands; a share of card opens that grows after a release means the open is again held at full size before the page takes over |
 | `deck_pictures_late` | the deck-entrance hold | Whether the leaving page's picture paints before the deck shrinks; a share of deck opens that grows after a release means a card may again open on a blank or placeholder face |
@@ -1283,13 +1283,13 @@ iPhone follows the SwiftUI app on main since the merge of main (8203d0b3c, 2026-
 - One design on both phones: Android takes main's iPhone redesign too ("the same look on Android and iPhone … keep one design, not two"). Plan: flip Android to the redesign, run both suites and an Android phone pass, then delete the classic design and its tests in one commit, so there is never a third state. Where a platform has a native element it uses its own: on iPhone the system context menus with lift and blur and the action sheets, on Android their native equivalents, behind one JavaScript component; the drawn menus go once both are in. Android's native needs for the redesign are with the Android agent:
   - Done: Print (7b4330166), the sync-cycle flag (c095acaec), and the site permissions kept, listed and revoked (91d934628).
   - Done: the Downloads list, with preview, share and delete, refusing anything outside the app's own files in Download/ (76285c87c).
-  - Done: `Glass` with Classic, its shapes, tint and `shown` fade, and the Mac's synced look (045dea52d). It's behind the lab launch flag `ArdiaNativeGlass` until a phone run compares it with today's drawn surfaces.
+  - Done: `Glass` with Classic, its shapes, tint and `shown` fade, and the Mac's synced look (045dea52d). It's behind the lab launch flag `NillaNativeGlass` until a phone run compares it with today's drawn surfaces.
   - Done: the page under the bar, Android's way: the page stops at the bars and the page view paints the bands they cover in the bars' own colours, from iPhone's `obscuredInsets` and a new `obscuredColors` (177dfa936; "Deliberately different").
   - Done: every toolkit piece iPhone's Expo UI screens name, in Compose (ddec03ae1): `SettingsShortcuts`, `SpaceTitle`, `SpacePageDots`, `GlassCircleButton`, `PinnedTiles`, `FullScreenCover` and `FilterTextEditor`, the `spaceBackdrop`, `minListRowHeight` and `navigationBarBackButtonHidden` modifiers, and `spaceMenuSymbol`, `spaceSymbol` and `spaceColor`.
-  - Done: Android's own menus and confirmations behind `MenuTrigger` and `confirmInSheet`, a PopupMenu and an AlertDialog (e42837edd). They're Android's default since the F4 runs on the side branch: the gestures under a card's menu are cancelled, a menu ends above the navigation bar and keeps the bar's side inset, and an accessibility click opens it. The lab launch flag `ArdiaDrawnMenus` brings back the drawn menus for comparison; `native_menus_opened` counts them in the field.
+  - Done: Android's own menus and confirmations behind `MenuTrigger` and `confirmInSheet`, a PopupMenu and an AlertDialog (e42837edd). They're Android's default since the F4 runs on the side branch: the gestures under a card's menu are cancelled, a menu ends above the navigation bar and keeps the bar's side inset, and an accessibility click opens it. The lab launch flag `NillaDrawnMenus` brings back the drawn menus for comparison; `native_menus_opened` counts them in the field.
   - To do: the deck's grid. Android's redesigned deck has no grid yet, and Settings offers no Tabs choice there (`deckGridOffered()` in `state/browse/deckGrid.ts`; the old bar button did nothing on the F4, 16 Nov 2026). Bring main's grid (`TabGridView.swift`, already in the Expo iPhone) to Android, then let `deckGridOffered()` answer yes.
   - The page under the bar has no Android counterpart: WebView has no `obscuredContentInsets`, nor any public way to lay fixed footers or the scroll end above an overlay; WebView 140+ only feeds `env(safe-area-inset-*)` to `viewport-fit=cover` pages. The recommendation awaiting the owner: the page stops at the bar's top, and the band under the glass bar takes the page's bottom tone.
-- The sync demo gets tabs of its own, kept in memory, and never touches the tester's real tabs. Built: a launch with `ArdiaDemo`, `com.ardia.phone.SYNC_DEMO` or `-ArdiaSyncDemo` runs on an in-memory store seeded from `demoSeed` (eight open tabs with Sintra selected, four archived, seven visits), chosen in one place (`tabDatabase()`). Every tab change goes there: open, close, select, archive, page updates, pictures, scroll positions, received tabs, Move to Space, Close All, remembered page tones and history. It never touches the real tabs, saved states, archive or history, never deletes a real tab's picture or saved page, and doesn't apply the Mac's inbox, so sent tabs wait for the next real launch; usage counts aren't kept. At the next launch without the demo the real tabs are exactly as they were (`render/demoTabs.render.test.tsx` checks it byte for byte). Still shared with the real app in a sync-demo launch: settings, kept links, the telemetry consent, and the engine's website data (Clear Browsing Data in the demo clears it).
+- The sync demo gets tabs of its own, kept in memory, and never touches the tester's real tabs. Built: a launch with `NillaDemo`, `com.nilladigital.nilla.phone.SYNC_DEMO` or `-NillaSyncDemo` runs on an in-memory store seeded from `demoSeed` (eight open tabs with Sintra selected, four archived, seven visits), chosen in one place (`tabDatabase()`). Every tab change goes there: open, close, select, archive, page updates, pictures, scroll positions, received tabs, Move to Space, Close All, remembered page tones and history. It never touches the real tabs, saved states, archive or history, never deletes a real tab's picture or saved page, and doesn't apply the Mac's inbox, so sent tabs wait for the next real launch; usage counts aren't kept. At the next launch without the demo the real tabs are exactly as they were (`render/demoTabs.render.test.tsx` checks it byte for byte). Still shared with the real app in a sync-demo launch: settings, kept links, the telemetry consent, and the engine's website data (Clear Browsing Data in the demo clears it).
 - Default Browser: Apple's web-browser entitlement is requested; the iPhone code stays ready to switch on when it is granted. On Android, Default Browser is offered by default (the role prompt), in onboarding and Settings.
 
 - The owner's tabs pass on a real iPhone (2026-11-17, first built on main's SwiftUI app in 24c1ade07 on `ios-browse-for-me`), in the Expo app:
@@ -1298,7 +1298,7 @@ iPhone follows the SwiftUI app on main since the merge of main (8203d0b3c, 2026-
   - The deck is the stack; Grid is a choice in Settings › Appearance › Tabs ("How your open tabs are laid out. Swipe up on the bottom bar to see them."), iPhone only. The deck's bars have no grid button.
   - Closing a card has no dust cloud. The card flies off the top on main's `flyAway` spring (response 0.32, no bounce), starting at the flick's speed, and the cards after it close the gap in the same frames: the order drops the card at once and a leaving record (`DeckLeave` in `lib/deckGeometry.ts`, timed by one UI-thread clock) draws it until it is off the screen. Closing the last tab lets the card leave before the start screen comes. With Reduce Motion the card fades where it is.
 
-- Find on Page on iPhone is WebKit's own find panel (`UIFindInteraction`), as main's SwiftUI app has, decided from the side-by-side screenshots in `/tmp/ardia-phone-shots/find-on-page/`. The app's own find bar stays for Android, and on iPhone behind the launch switch `-ArdiaAppFind YES` for comparison. `find_opened_system` and `find_opened_bar` count which one opens.
+- Find on Page on iPhone is WebKit's own find panel (`UIFindInteraction`), as main's SwiftUI app has, decided from the side-by-side screenshots in `/tmp/nilla-phone-shots/find-on-page/`. The app's own find bar stays for Android, and on iPhone behind the launch switch `-NillaAppFind YES` for comparison. `find_opened_system` and `find_opened_bar` count which one opens.
 
 ### Waiting on the owner
 
@@ -1348,10 +1348,10 @@ Against the old reference, everything was wired and re-checked on the simulator 
 
 **Audit against main, 2026-11-16** (the iPhone agent, one iPhone 17 Pro lease). Main's SwiftUI app (the ad hoc
 Release build of `apps/ios`, which matches `main`) beside a build of head (6cbc6e048), in light and dark, with demo
-data. Screens were reached through each app's own UI and the `-ArdiaDemo` / `Browse*` switches. Main reads
-`-ArdiaOpenSheet` and `-ArdiaOpenSettings` only in Debug builds, so its sheets were opened by hand. Inventory of
+data. Screens were reached through each app's own UI and the `-NillaDemo` / `Browse*` switches. Main reads
+`-NillaOpenSheet` and `-NillaOpenSettings` only in Debug builds, so its sheets were opened by hand. Inventory of
 main's screens: an Explore pass over `apps/ios/App`. Pairs (Expo left, main right):
-`/tmp/ardia-phone-shots/iphone-audit/pairs/`. Second pass at a1973a86e, light, with typing for real: `iphone-audit/r-e-light/` (Expo),
+`/tmp/nilla-phone-shots/iphone-audit/pairs/`. Second pass at a1973a86e, light, with typing for real: `iphone-audit/r-e-light/` (Expo),
 `r-m-light/` (main), pairs in `pairs2/`, the deck-glass experiments in `glassexp/`.
 
 Status:
@@ -1370,7 +1370,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Onboarding | Sync step | not seen | Art centred as main's (911cbb80b); our demo shows the connected state, main's the connect buttons | screens |
 | Onboarding | All set | match | Plain tip rows on main's card, 911cbb80b | |
 | Onboarding | All set: usage-stats toggle | deliberate | Expo only; consent is asked where sharing is described (telemetry rule) | owner's rule |
-| Onboarding | Default browser step | match | Seen 2026-11-17 with `-ArdiaOnboarding YES` on a fresh install of each: both walk the same four steps (welcome, blocking, sync, tips) into the app, and no step, row or text names a default browser; the code stays off without Apple's entitlement and nothing breaks (`unseen/onboarding-{ours,ref}/`) | |
+| Onboarding | Default browser step | match | Seen 2026-11-17 with `-NillaOnboarding YES` on a fresh install of each: both walk the same four steps (welcome, blocking, sync, tips) into the app, and no step, row or text names a default browser; the code stays off without Apple's entitlement and nothing breaks (`unseen/onboarding-{ours,ref}/`) | |
 | Start page | Header, dots, bar | match | | |
 | Start page | Space name | deliberate | A title with no chevron and no menu; the dots and the swipe change space, and VoiceOver or TalkBack adjusts the dots. The SwiftUI reference's name opens a menu of the spaces (#2466) | owner's call, 2026-11-18 |
 | Start page | Pinned tiles | match | Tiles draw main's SF Symbols (Calendar, folders) at main's sizes, d09343dba | |
@@ -1397,7 +1397,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Page | Collapsed bar (host pill) | match | Main's glass host pill on scroll down, tap or scroll up to expand, 3fa565c4f | |
 | Page | Tabs button menu | match | Main's BarControls: up to eight recent tabs, a divider, Close Tab; Previous and Next Tab are its VoiceOver actions, not menu items. Ours is the system menu with the same items. Since the owner's tabs pass a swipe up on the bar also opens the deck | |
 | Page | Find on Page | match by decision | The system find navigator by default since ec6f9bc52 | |
-| Page menu | Rows and groups | match | The sheet now reaches the safe top as main's large detent does, and rows land at main's places; the action glyphs are main's size; Open in Default Browser shows, as main's does, only when Ardia can ask to be the default and isn't (hidden in builds without the entitlement) | |
+| Page menu | Rows and groups | match | The sheet now reaches the safe top as main's large detent does, and rows land at main's places; the action glyphs are main's size; Open in Default Browser shows, as main's does, only when Nilla can ask to be the default and isn't (hidden in builds without the entitlement) | |
 | Page menu | History, Bookmarks, Downloads rows | match | Main's group after Find, Send and Print, opening the Library sheet | |
 | Page menu | Translate | match | Main's #2259: the first Translate asks "Translate with Google?", the answer stands, and the row then names the remembered language. Seen on the iPhone 17 at e3be236e1: the question once, then "Translate to English" going straight to translate.goog; an Incognito tab always asks (`ports/06-translate-ask.png`, `08-menu-second.png`). Android has the same through its own `PageTranslation.kt` | |
 | Reader | Article | match | | |
@@ -1422,13 +1422,13 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Settings | Trusted Sites | match | Empty state the same | |
 | Settings | Filter Lists | match | The demo now uses main's demo lists (`FilterLists.demo`, as main's AppModel does): a fresh demo install shows 11 lists and 271,481 rules at once, no downloads. Neither app bundles list files: a real install downloads them, and the built-in seed rules block from the first page, network or not (`PhoneBlockingTests`); on the simulator 46 requests were blocked within 5 s of a fresh launch | |
 | Settings | My Filters | match | Same editor and footer; the page now takes the settings chrome (the bar in the space's colour) and Apply is the prominent glass capsule, as main's `role: .confirm` draws it, seen on the simulator (`dialogs/ours-myfilters.png`) | |
-| Settings | About | match | The app icon since 042a23ace (main's asset catalog); the version reads "Ardia Dev (1)", as current main's AppVersionLabel does for a build without a release version (the reference SwiftUI build predates it) | |
+| Settings | About | match | The app icon since 042a23ace (main's asset catalog); the version reads "Nilla Dev (1)", as current main's AppVersionLabel does for a build without a release version (the reference SwiftUI build predates it) | |
 | Settings | Licenses | match | | |
 | Settings | Connect pages | match | The connect flow worked end to end on 2026-11-16 | |
 | Toasts | Copy Link | match | Neither app shows a toast half a second after Copy Link in the page menu; both keep the menu open. Other kinds not seen | |
-| Extensions, widgets, intents | | partly | The Expo project compiles main's own sources for these. Seen on our build 2026-11-17 (`unseen/widgets/`): the gallery offers main's four widgets (Search small and medium, Your Mac's Tabs medium and large, with the demo Mac's tabs in the previews); the large one on the home screen shows "Sync With Your Mac" without a synced snapshot (demo mode writes none) and a tap opens the app on the Spaces sheet with the Mac's tabs. Main's tap does the same (`unseen/widgets/ref-p4/`). The share sheet, seen 2026-11-17 on the iPhone 17 at e3be236e1 beside main's from Safari with no Mac connected: the same sheet in both, the page's title and host, Open in Ardia and the line about turning on Sync With Your Mac, its top edge on the same pixel row (`ports/30-ref-share-1.png`, `32-ours-share-b.png`). Not seen: the widgets in dark, and the share sheet's Send to Your Mac row with a Mac connected (the demo writes no snapshot; the row and the exporter are main's own sources) | iPhone |
-| Duo | Open and half-open layouts | not seen | Simlock leases the iPhone Duo folded only: `fold open` needs a simulator in the default set and Simlock's are in a scoped one (2026-11-17). Later the same day Simlock's Duo did not boot at all (two tries: a boot timeout, then a closed connection), and a Duo simulator made in the default set is not offered by the Device panel, so the layouts are still seen only under `-ArdiaDuoCanvas` on the iPhone 18 Pro (the row below) | |
-| iPhone in landscape, Duo layouts | | partly | Decided 2026-11-16. Built to the specification below. `phone` in landscape (db4823c0f and this change): every bar pads by `max(left, right)`, the deck takes main's landscape card, and the archive capsule now swaps the deck to main's archive geometry (407.6×188 at 852×393; 273.2 wide in portrait on a 402×874 iPhone), springing from the old card as main animates it. Seen on the iPhone 18 Pro simulator turned on its side: browsing, the deck with and without the capsule. `column`, `wide` and `split` are built (components/column, components/duo) and switch from the native probe (44797e4ed); under `-ArdiaDuoCanvas` on the iPhone 18 Pro each draws, but the 669×951 canvas overflows that screen, so their sizes still need the iPhone Duo simulator. `column` seen beside main on the iPhone Duo simulator closed (466×678, trailing 84): the deck's and browsing's columns land on main's, and the deck now clips its cards at the content edge as main's does. Simlock's Duo can't fold or turn (its scoped simulator set has no hinge), so `wide` and `split` are checked by tests only (duoLayout.test.ts, duoWide.render.test.tsx, main's numbers), not yet seen at their real size: this Mac's default-set Duo holds someone's install of main and is left as it is, until the owner names a Duo that may be folded. The command bar keeps its greatest height as main's does (main's rows take `rowsBudget`). Not matched yet: the status bar in `wide` follows the backdrop rather than the page's top tone | screens |
+| Extensions, widgets, intents | | partly | The Expo project compiles main's own sources for these. Seen on our build 2026-11-17 (`unseen/widgets/`): the gallery offers main's four widgets (Search small and medium, Your Mac's Tabs medium and large, with the demo Mac's tabs in the previews); the large one on the home screen shows "Sync With Your Mac" without a synced snapshot (demo mode writes none) and a tap opens the app on the Spaces sheet with the Mac's tabs. Main's tap does the same (`unseen/widgets/ref-p4/`). The share sheet, seen 2026-11-17 on the iPhone 17 at e3be236e1 beside main's from Safari with no Mac connected: the same sheet in both, the page's title and host, Open in Nilla and the line about turning on Sync With Your Mac, its top edge on the same pixel row (`ports/30-ref-share-1.png`, `32-ours-share-b.png`). Not seen: the widgets in dark, and the share sheet's Send to Your Mac row with a Mac connected (the demo writes no snapshot; the row and the exporter are main's own sources) | iPhone |
+| Duo | Open and half-open layouts | not seen | Simlock leases the iPhone Duo folded only: `fold open` needs a simulator in the default set and Simlock's are in a scoped one (2026-11-17). Later the same day Simlock's Duo did not boot at all (two tries: a boot timeout, then a closed connection), and a Duo simulator made in the default set is not offered by the Device panel, so the layouts are still seen only under `-NillaDuoCanvas` on the iPhone 18 Pro (the row below) | |
+| iPhone in landscape, Duo layouts | | partly | Decided 2026-11-16. Built to the specification below. `phone` in landscape (db4823c0f and this change): every bar pads by `max(left, right)`, the deck takes main's landscape card, and the archive capsule now swaps the deck to main's archive geometry (407.6×188 at 852×393; 273.2 wide in portrait on a 402×874 iPhone), springing from the old card as main animates it. Seen on the iPhone 18 Pro simulator turned on its side: browsing, the deck with and without the capsule. `column`, `wide` and `split` are built (components/column, components/duo) and switch from the native probe (44797e4ed); under `-NillaDuoCanvas` on the iPhone 18 Pro each draws, but the 669×951 canvas overflows that screen, so their sizes still need the iPhone Duo simulator. `column` seen beside main on the iPhone Duo simulator closed (466×678, trailing 84): the deck's and browsing's columns land on main's, and the deck now clips its cards at the content edge as main's does. Simlock's Duo can't fold or turn (its scoped simulator set has no hinge), so `wide` and `split` are checked by tests only (duoLayout.test.ts, duoWide.render.test.tsx, main's numbers), not yet seen at their real size: this Mac's default-set Duo holds someone's install of main and is left as it is, until the owner names a Duo that may be folded. The command bar keeps its greatest height as main's does (main's rows take `rowsBudget`). Not matched yet: the status bar in `wide` follows the backdrop rather than the page's top tone | screens |
 
 **Motions from main's pass (d199b885c)**:
 
@@ -1467,7 +1467,7 @@ Nothing here is done until it has been watched in the screens agent's own simula
 - Sheets with Remove animations on Android: Settings, Spaces, the archive and the small sheets come up and go at once, as Compose's do (the system scales Compose's durations to zero); with Reduce Motion on iPhone they still move on a 200 ms timing.
 - Page menu: the sheet opening and closing on its white or black fill and its drag; the capsules' press scale and glass; row press highlights (instant, where main fades them over 0.2 s); the title feedback crossfade; the print sheet after the menu has gone; the Send to Device menu's place; Site Settings opening as the menu slides away; the accessibility-size layout.
 - Tray field on the way out: from the first frame the tray leaves, its text shows as plain text with no caret (the native field is blurred and dropped), on both phones; check it doesn't jump or change size.
-- Page load motion moved to the UI thread: the page's loading line (now a scaleX from the left edge where it animated its width, and fed from the store without renders) and the settings switch's knob and colour (now Reanimated). Seen on the F4 (`/tmp/ardia-phone-shots/loadline-proof/`): with a page loading, slow UI-thread frames 286 to 202 and janky 10.85% to 10.35%, the deck open's worst stall 108 to 92 ms; the card open keeps a 100 ms stall in both builds (another cause, the hand-over). Still to see on iPhone: the search panel's lift no longer frozen (`screens-depart9`).
+- Page load motion moved to the UI thread: the page's loading line (now a scaleX from the left edge where it animated its width, and fed from the store without renders) and the settings switch's knob and colour (now Reanimated). Seen on the F4 (`/tmp/nilla-phone-shots/loadline-proof/`): with a page loading, slow UI-thread frames 286 to 202 and janky 10.85% to 10.35%, the deck open's worst stall 108 to 92 ms; the card open keeps a 100 ms stall in both builds (another cause, the hand-over). Still to see on iPhone: the search panel's lift no longer frozen (`screens-depart9`).
 - Deck: the bar rising above the keyboard and back; Search Tabs typing (the gap-close, the scroll to the last match, the keyboard hiding on a tap); the plus menu above the new bar; the header and bar fading with the deck's open and close; the glass on the new pieces and the grid glyph.
 
 The owner's decisions on these (native menus on both phones, the entitlement requested) are in "Decided by the owner".
@@ -1477,13 +1477,13 @@ The owner's decisions on these (native menus on both phones, the entitlement req
 Decided 2026-11-16: main has landscape and the Duo layouts, so the Expo app gets them, after the three missing screens
 (Library, deck grid, collapsed pill). Read from main's source at d2d73b04a (`apps/ios/App/Duo/*`, `RootView`,
 `BrowsingView`, `BottomBar`, `WebPageView`, `TabSwitcherView`, `TabDeckBar`, `DeckChrome`, `SearchTrayHost`,
-`SearchHomeView`, and the tokens in `ArdiaDesign/{BrowseTokens,TabsTokens,TabsDeckGeometry,Tokens}.swift`). Native
+`SearchHomeView`, and the tokens in `NillaDesign/{BrowseTokens,TabsTokens,TabsDeckGeometry,Tokens}.swift`). Native
 side: the iPhone agent. Screens: the screens agent. Numbers are points.
 
 **Orientations.** On iPhone, portrait, landscape left and landscape right; never upside down. On iPad all four,
 so the app takes part in Split View and Slide Over (`TARGETED_DEVICE_FAMILY = "1,2"` on the app and its three
 extensions, no `UIRequiresFullScreen`). In Expo that is `UISupportedInterfaceOrientations` and
-`UISupportedInterfaceOrientations~ipad` in `apps/phone/ios/Ardia/Info.plist` (by hand: `app.json`'s `"default"` would
+`UISupportedInterfaceOrientations~ipad` in `apps/phone/ios/Nilla/Info.plist` (by hand: `app.json`'s `"default"` would
 add upside down on iPhone; `supportsTablet` there only records the choice). An iPad window at least 600 pt both ways
 gets the open Duo's `wide` layout; a narrower one (a Split View third, Slide Over) gets `phone`, from the same probe
 as the Duo, never the device model. A new device joining sync on an iPad is named "iPad" (`SyncMeta.deviceName`).
@@ -1626,11 +1626,11 @@ the Compose app has no orientation lock.
 
 | Piece | Change | Owner |
 | --- | --- | --- |
-| `apps/phone/ios/Ardia/Info.plist` | The three orientations (done, 76f5df8c8) | iPhone |
+| `apps/phone/ios/Nilla/Info.plist` | The three orientations (done, 76f5df8c8) | iPhone |
 | `apps/phone/android/app/src/main/AndroidManifest.xml` | Drop `screenOrientation="portrait"` from `MainActivity` | Android |
 | `FullscreenHost` (`packages/phone/android`) | Ask for no orientation once the lock is gone; never end fullscreen on rotation | Android |
 | `PageView` (`packages/phone/ios`) | Done: `obscuresSafeTop` takes the obscured top from the view's own safe top, re-applied on every safe-area change, as main's `applyInsets`; `topClearance` (63 in `wide`) sets the scroll view's top content and indicator insets and adds to the obscured top | iPhone |
-| Simulation | Done: `<ScreenLayoutProbe onLayoutChange>` (mounted full screen) reports `layout`, `column {edge, inset}` (rounded to 12), `fold {top, bottom}` (screen points, safe top added), `canvas`, `forced` and the raw space, once per settled change; resolve is main's, tested in `ScreenLayoutTests`. In test builds `-ArdiaDuoCanvas wide\|split\|column` (main's `open` and `half` too) forces a layout: wide and split on a 669×951 canvas with the fold at 465.5 to 485.5, column trailing at 84; reports log as `ARDIA_SCREEN` | iPhone |
+| Simulation | Done: `<ScreenLayoutProbe onLayoutChange>` (mounted full screen) reports `layout`, `column {edge, inset}` (rounded to 12), `fold {top, bottom}` (screen points, safe top added), `canvas`, `forced` and the raw space, once per settled change; resolve is main's, tested in `ScreenLayoutTests`. In test builds `-NillaDuoCanvas wide\|split\|column` (main's `open` and `half` too) forces a layout: wide and split on a 669×951 canvas with the fold at 465.5 to 485.5, column trailing at 84; reports log as `ARDIA_SCREEN` | iPhone |
 | `App.tsx` | Resolve the layout from window size, insets and the probe; swap in the Duo view | screens |
 | `FloatingBar`, `BottomBar`, `barGeometry` | Pad by `max(left, right)`; the column arrangement | screens |
 | `PageSurface`, `TabPager` | Insets and pager width on rotation; the `wide` clearance | screens |
@@ -1665,7 +1665,7 @@ simulator, the list under "The iPhone redesign".
 - [ ] **iPhone:** open the deck, then update the app once more and open it again. Expect: imported cards keep their pictures both times.
 - [ ] **Android:** the upgrade script ("Upgrade from the Compose app on Android") if this build hasn't had it.
 
-**2. Onboarding** (a fresh install, or a lab build launched with `ArdiaOnboarding`)
+**2. Onboarding** (a fresh install, or a lab build launched with `NillaOnboarding`)
 - [ ] Go forward and back through every step. Expect: each step slides 60 points with a fade both ways; leaving the welcome crossfades the backdrop; each step ticks and the last gives a success haptic; the keyboard goes down between steps.
 - [ ] On the sync step. Expect: a Mac window with a QR code and a phone scanning it, not a symbol. Tap Connect to Your Mac: the connect screen slides up from the bottom; Cancel slides it down. Connect: the phone in the picture turns plum, its viewfinder shrinks away as a checkmark grows in, and the subtitle crossfades to "Connected."
 - [ ] **Android:** on the welcome, tap Continue at once. Expect: the default-browser step still shows.
@@ -1686,7 +1686,7 @@ simulator, the list under "The iPhone redesign".
 - [ ] Tap the incognito chip. Expect: what Compose's `IncognitoChip` does on Android; on iPhone a one-item menu, as SwiftUI shows.
 - [ ] With TalkBack or VoiceOver on, move to a row's refine arrow. Expect: reachable, read as "Refine" and the row's title; each row's menu items are listed as actions; Close Search can be activated.
 - [ ] Tap the mic in the tray, then Cancel. Expect: the keyboard goes down over the voice screen and comes back on the tray. **iPhone:** allow speech and the microphone and say "otters": the words appear as you speak and the search runs; say nothing: after a few seconds it says it didn't hear anything. Watch the voice screen: the transcript crossfades as words arrive, the logo has a soft shadow, on iPhone the waveform eases.
-- [ ] Select text in another app and choose Search in Ardia, and run a web search into Ardia (Android steps 4 and 5). Expect: results open at once. Open the voice shortcut: the voice screen opens over the tray. Open a tab widget's link to an archived tab: it is restored; to a private tab: nothing happens. **iPhone:** share a page to Ardia from Safari: it opens in a new tab, as shared.
+- [ ] Select text in another app and choose Search in Nilla, and run a web search into Nilla (Android steps 4 and 5). Expect: results open at once. Open the voice shortcut: the voice screen opens over the tray. Open a tab widget's link to an archived tab: it is restored; to a private tab: nothing happens. **iPhone:** share a page to Nilla from Safari: it opens in a new tab, as shared.
 
 **4. A page**
 - [ ] **iPhone:** on a page with history, drag right from the middle. Expect: the previous page slides in with a tick under your thumb as it commits; a short drag springs back with no tick; a drag on a sideways carousel scrolls it and doesn't go back. (Android: steps 21, 29 and 35.)
@@ -1725,7 +1725,7 @@ simulator, the list under "The iPhone redesign".
 **7. Sync and Spaces**
 - [ ] **iPhone:** leave the app for an hour with the Mac open, then open it. Expect: the Mac's tabs are current without waiting.
 - [ ] Send a tab from the Mac. Expect: a toast names it for about two seconds on both phones, and tapping it opens the tab.
-- [ ] Settings › Sync › Connect to Your Mac › Scan Code, at the Mac's code. Expect: the scanner covers the whole screen with four corner arms; "Not an Ardia sync code." fades in for a wrong code; Cancel and Android's Back stop the camera; the status bar reads. **iPhone:** the code is outlined when found, pinch zooms, and it connects without typing. (Android: steps 19 and 28.)
+- [ ] Settings › Sync › Connect to Your Mac › Scan Code, at the Mac's code. Expect: the scanner covers the whole screen with four corner arms; "Not a Nilla sync code." fades in for a wrong code; Cancel and Android's Back stop the camera; the status bar reads. **iPhone:** the code is outlined when found, pinch zooms, and it connects without typing. (Android: steps 19 and 28.)
 - [ ] Enter Words. Expect: it slides in from the right over the connect page; the counter and footer crossfade as you type; on iPhone the keyboard is ASCII and a drag on the list dismisses it. **iPhone:** copy the phrase on the Mac and tap Paste: the words fill in with no "Allow Paste" question; Add a List does the same with an address.
 - [ ] Open Spaces with the Mac connected. Expect: pinned tabs show their symbols; what you open or expand is kept when you come back; new rows fade in; the header crossfades; at 1.5x text size tab icons grow, titles take three lines and tiles drop their titles; a long press offers its menu to TalkBack and VoiceOver. With sync off, the empty state opens Connect. **iPhone:** the banner icons are the system's.
 - [ ] Open a Spaces row, then type its host in the tray. Expect: it is offered as a visit you typed (`AppModel.kt` `openRemote`).
@@ -1737,20 +1737,20 @@ simulator, the list under "The iPhone redesign".
 - [ ] **iPhone:** Clear Browsing Data from Settings. Expect: the "Cleared" toast shows above the sheet. Sign in to a site, use the phone for a day, then clear Last Hour with Cookies and Site Data on: you are still signed in.
 - [ ] **iPhone:** Restore Defaults and Remove List. Expect: today centred dialogs; action sheets once the native menus land ("Decided by the owner").
 - [ ] **iPhone:** tap About's links and a filter list's link. Expect: they open where SwiftUI's `Link` opens them.
-- [ ] **iPhone:** once the build carries the web-browser entitlement, Settings › Default Browser › Open Default Apps. Expect: the system's Default Apps page; choose Ardia and come back: the page says Ardia is your default browser.
+- [ ] **iPhone:** once the build carries the web-browser entitlement, Settings › Default Browser › Open Default Apps. Expect: the system's Default Apps page; choose Nilla and come back: the page says Nilla is your default browser.
 
 **9. Toasts**
 - [ ] Raise a toast, hold it, then drag or flick it down; raise the same one twice; raise one with the keyboard up. Expect: it slides up from slightly smaller and slides down as it leaves; a finger holds it; a drag or flick down dismisses it; a short drag springs back and it leaves 1.2 s later; the same toast doesn't replay; with the keyboard up it sits at the top; VoiceOver reads it; a tab from an iPhone shows a phone.
 
 **10. Outside the app (iPhone; Android's are steps 1 to 18 and 31)**
 - [ ] With a page open, look at the Mac's Dock. Expect: a Handoff icon offers the same page; private tabs never offer one.
-- [ ] Say "Open Otter in Ardia" for an open tab; add Shortcuts' Open Tab action and run it. Expect: Ardia switches to the tab; the action lists your tabs with their sites.
-- [ ] In Spotlight, type a word from an open tab's title and tap the result; do the same for an archived tab. Expect: Ardia opens that tab; the archived one comes back from the Archive.
+- [ ] Say "Open Otter in Nilla" for an open tab; add Shortcuts' Open Tab action and run it. Expect: Nilla switches to the tab; the action lists your tabs with their sites.
+- [ ] In Spotlight, type a word from an open tab's title and tap the result; do the same for an archived tab. Expect: Nilla opens that tab; the archived one comes back from the Archive.
 - [ ] Touch and hold the app icon. Expect: Search, Voice Search and New Incognito Tab each open what they say.
 - [ ] Add a Lock Screen widget and a Control Center control, and the search widget. Expect: each opens the right link; the search widget follows the profile colour and Match My Mac.
 
 **11. Lab builds only**
-- [ ] Launch with `ArdiaDemo`, then each `Browse…` and `Ardia…` argument in "Launch arguments on Android" and "Launch arguments on iPhone" below (Android: step 41). Expect: eight demo tabs with Sintra selected, nothing written to the real store, the demo Macs in Spaces; each argument does what it does in the native apps at the same delays (6 s browse delay, 600 ms sheet, 1.5 s toast, 3 s deck open, 1.2 s deck script start); `ArdiaDeck` steps play in order; the pager freeze and script hold and swipe as Compose's do.
+- [ ] Launch with `NillaDemo`, then each `Browse…` and `Nilla…` argument in "Launch arguments on Android" and "Launch arguments on iPhone" below (Android: step 41). Expect: eight demo tabs with Sintra selected, nothing written to the real store, the demo Macs in Spaces; each argument does what it does in the native apps at the same delays (6 s browse delay, 600 ms sheet, 1.5 s toast, 3 s deck open, 1.2 s deck script start); `NillaDeck` steps play in order; the pager freeze and script hold and swipe as Compose's do.
 
 Not audited at all: Compose's `SyncSetupContent` internals inside onboarding.
 
@@ -1849,7 +1849,7 @@ apps/phone/scripts/corex-build <name> <commit> [build-apk options]   an APK, in 
 apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Kotlin unit tests, the same way
 ```
 
-- **`corex-test`** runs `:ardia-phone-native:testDebugUnitTest` in the same build-only clone, at a pushed commit.
+- **`corex-test`** runs `:nilla-phone-native:testDebugUnitTest` in the same build-only clone, at a pushed commit.
   - `--patch` applies a diff from the main checkout (`git diff HEAD -- <your files>`) for that run only; the clone is
     reset when it ends.
   - It prints each test class's count and every failure.
@@ -1861,7 +1861,7 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
   the Gradle lock, as on the Mac.
 - **What it builds.** A pushed commit on `t3/unify-expo-architecture`, or on the branch `ARDIA_BUILD_BRANCH` names
   (`corex-test` reads it too). The branch's head must hold the Bun files (`apps/phone/bunfig.toml`): both scripts refuse
-  one from before Bun. `~/Developer/ardia-android-build/src` is a
+  one from before Bun. `~/Developer/nilla-android-build/src` is a
   build-only clone: every build fetches, detaches it at the commit, resets and cleans it (only the build outputs Git
   ignores stay).
   - **Never edit, commit or push there.** All work happens in the main checkout; the folder's README says so.
@@ -1872,10 +1872,10 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
   - The signer is the committed `apps/phone/android/app/debug.keystore`, the same as on the Mac, so a corex APK
     installs over a Mac one.
   - `--compose-key` (the upgrade pair, signed with the Compose app's key) is built on the Mac only.
-- **Output.** `~/Developer/ardia-phone-apks/<name>.apk`, with `<name>.txt` (the stamp, plus a `built on:` line
+- **Output.** `~/Developer/nilla-phone-apks/<name>.apk`, with `<name>.txt` (the stamp, plus a `built on:` line
   with the install and build times) and `<name>-r8/`. The newest 8 builds are kept.
   - Phone runs on corex read them there: no `scp` from the Mac for Android.
-  - The Compose app's release build, the reference in every run, is `reference/ardia-compose-release.{apk,txt}`
+  - The Compose app's release build, the reference in every run, is `reference/nilla-compose-release.{apk,txt}`
     (signer `eeb05c92…`); pruning never touches `reference/`.
 - **The tools it adds, beside the clone, not in the shared SDK:** `bun-<version>/` (the version `packageManager`
   pins, first on the path, since `bundle-export` runs `bun install` too), `bun-cache/` (its install cache) and
@@ -1886,7 +1886,7 @@ apps/phone/scripts/corex-test <commit> [--patch FILE] [--tests filters]   the Ko
 
   ```
   ssh corex bash -s <<'EOF'
-  docker exec -i bots bash -lc 'b=$HOME/Developer/ardia-android-build; mkdir -p $b; [ -d $b/src/.git ] || git clone -q --no-checkout https://github.com/ardia-browser/ardia.git $b/src; git -C $b/src fetch -q origin t3/unify-expo-architecture; git -C $b/src show FETCH_HEAD:apps/phone/scripts/corex-build > $b/corex-build.run; bash $b/corex-build.run <name> <commit>'
+  docker exec -i bots bash -lc 'b=$HOME/Developer/nilla-android-build; mkdir -p $b; [ -d $b/src/.git ] || git clone -q --no-checkout https://github.com/NoorChasib/nilla.git $b/src; git -C $b/src fetch -q origin t3/unify-expo-architecture; git -C $b/src show FETCH_HEAD:apps/phone/scripts/corex-build > $b/corex-build.run; bash $b/corex-build.run <name> <commit>'
   EOF
   ```
 
@@ -1925,9 +1925,9 @@ gh run watch --exit-status                                     the run's summary
 ```
 
 - **What a run does.** It builds the shrunk arm64 APK on `ubuntu-latest` with `build-apk --store` from the commit's
-  export, so the lab is off and `ardia_sync_offered` is false. Then it runs `sign-release-apk.test.sh`, signs the APK
+  export, so the lab is off and `nilla_sync_offered` is false. Then it runs `sign-release-apk.test.sh`, signs the APK
   with the release key through `apps/phone/scripts/sign-release-apk`, and runs `check-release-apk`.
-  - **dry-run** keeps `Ardia-<version>.apk`, its `.txt` stamp and `.sha256` as a workflow artifact for 14 days.
+  - **dry-run** keeps `Nilla-<version>.apk`, its `.txt` stamp and `.sha256` as a workflow artifact for 14 days.
   - **draft** attaches the same three files to a new draft prerelease `android-v<version>`.
   - Neither publishes, and neither marks a release as latest.
 - **The release key.** It lives only in the repository secrets: `ANDROID_RELEASE_KEYSTORE_B64` (PKCS12),
@@ -1947,7 +1947,7 @@ gh run watch --exit-status                                     the run's summary
 
     It runs in the workflow before the real signing, and on a Mac without Gradle.
   - It is never on corex. Lab builds keep the repo's debug key.
-  - The alias is a secret, so GitHub masks the word "ardia" in that job's logs and summary; the attached stamp file
+  - The alias is a secret, so GitHub masks the word "nilla" in that job's logs and summary; the attached stamp file
     isn't masked.
 - **Dispatching.** A workflow can only be dispatched once its file is on the default branch, the same as
   `ios-release.yml` for the Expo iPhone app. A run on a commit without the release scripts stops at its first step and
@@ -1957,13 +1957,13 @@ gh run watch --exit-status                                     the run's summary
 
 **The checks** (`apps/phone/scripts/check-release-apk`). The run fails if any of these fail:
 - the signer equals the pinned fingerprint, and the signature verifies;
-- the package is `com.ardia.browser.android`;
+- the package is `com.nilladigital.nilla.android`;
 - the versionName and versionCode are what `android-version.ts` gives;
 - there's no debuggable flag, and the native code is exactly `arm64-v8a`;
 - the stamps: the commit, a clean tree, and the JS from the export;
 - sync isn't offered, the shell's profiling is off, and the release version is stamped;
 - the main window is locked to portrait. Store builds set `screenOrientation` portrait through the manifest placeholder
-  `ardiaScreenOrientation`, and lab builds leave it free so landscape work goes on. A full-screen video still turns.
+  `nillaScreenOrientation`, and lab builds leave it free so landscape work goes on. A full-screen video still turns.
   When landscape ships, the placeholder and `--orientation "free to turn"` change together;
 - `check-names.py` passes.
 
@@ -1980,7 +1980,7 @@ commit, as `release-ios` takes it.
   updates over them.
 - `build-apk --version` passes both to Gradle. `appRelease()` gives the release version, empty for a Dev build. The
   Settings footer should read as `main`'s does: "Ardia 0.2.47 Nightly 2 (2047002)", "Ardia 0.2.47 (2047999)", or
-  "Ardia Dev". The JS label shows "Nightly" only for a TestFlight receipt, so this is the screens agent's change.
+  "Nilla Dev". The JS label shows "Nightly" only for a TestFlight receipt, so this is the screens agent's change.
 - The iPhone build of the same release reads "Ardia 0.2.47 Nightly 4 (n)". Its build number counts uploads; Android's
   versionCode comes from the version alone.
 
@@ -2024,7 +2024,7 @@ as `<name>-release.apk` with its stamp. The key never leaves that Mac. The phone
 
 **Who presses what.**
 1. **The Android agent:** the candidate's build on corex, and the phone pass on the signed file, with the evidence in
-   `/tmp/ardia-phone-shots/android-<candidate>/`.
+   `/tmp/nilla-phone-shots/android-<candidate>/`.
 2. **The lead:** signing a candidate with the release key on the owner's Mac.
 3. **After #1556 merges, the owner the first time:** the workflow's dry run, then `mode=draft` for the release version.
 4. **The owner only:** publishing the draft on GitHub. Keep it a prerelease, and never set it as latest.
@@ -2036,7 +2036,7 @@ and what comparisons need. `main` keeps it until this branch merges. The iPhone 
 
 **What the Expo app built from `apps/android`** (443 tracked files; 163 compiled by the Expo build). Each was compiled
 in place through source sets with file lists, in `packages/phone/android/build.gradle`,
-`apps/phone/android/app/build.gradle` and `apps/phone/android/ardia-design/build.gradle`. The clean-up's commits:
+`apps/phone/android/app/build.gradle` and `apps/phone/android/nilla-design/build.gradle`. The clean-up's commits:
 - a83ddfb2b pins;
 - 0f7aadf43 moves (223 renames);
 - 683d4fecb and 6c4cb6e19 paths;
@@ -2047,23 +2047,23 @@ Reverting them restores `apps/android`.
 
 | In `apps/android` | What used it | Decision | Now |
 |---|---|---|---|
-| `browser/src/main/kotlin`, all but `Omnibox.kt` and `PageSurface.kt` | `@ardia/phone-native`: the page engine (WebView pages, downloads, page requests, captures) | keep | `packages/phone/android/src/main/java/com/ardia/{browser,browsing}` |
-| `browser/src/main/assets` (night shade, page look, readable content) | the page engine | keep | `packages/phone/android/src/main/assets/ardia-browser` |
+| `browser/src/main/kotlin`, all but `Omnibox.kt` and `PageSurface.kt` | `@nilla/phone-native`: the page engine (WebView pages, downloads, page requests, captures) | keep | `packages/phone/android/src/main/java/com/nilladigital/nilla/{browser,browsing}` |
+| `browser/src/main/assets` (night shade, page look, readable content) | the page engine | keep | `packages/phone/android/src/main/assets/nilla-browser` |
 | `browser/src/main/res` (strings, capture paths) | the page engine; the phone manifest's capture provider | keep | `packages/phone/android/src/main/res/values/page_engine_strings.xml`, `res/xml` |
 | `Omnibox.kt`, `PageSurface.kt`, `browser`'s manifest | the Compose app only; the manifest's provider is already in the phone manifest | delete | |
-| `blocking/src/main` (Kotlin and `resources`: filter list catalog, consent script, public suffix list) | `@ardia/phone-native`: content blocking | keep | `packages/phone/android/src/main/java/com/ardia/blocking`, `src/main/resources` |
-| `shared/src/main/kotlin` and `cpp/ardia_hermes.cpp` | `@ardia/phone-native`: the script runtime that runs the sync bundle (`-DARDIA_SCRIPT_SHIM`) | keep | `packages/phone/android/src/main/java/com/ardia/shared`, `src/main/cpp` |
+| `blocking/src/main` (Kotlin and `resources`: filter list catalog, consent script, public suffix list) | `@nilla/phone-native`: content blocking | keep | `packages/phone/android/src/main/java/com/nilladigital/nilla/blocking`, `src/main/resources` |
+| `shared/src/main/kotlin` and `cpp/nilla_hermes.cpp` | `@nilla/phone-native`: the script runtime that runs the sync bundle (`-DARDIA_SCRIPT_SHIM`) | keep | `packages/phone/android/src/main/java/com/nilladigital/nilla/shared`, `src/main/cpp` |
 | `shared/src/main/cpp/CMakeLists.txt` | nothing: the phone's own `CMakeLists.txt` builds the shim | delete | |
-| `sync/src/main` and `sync/src/test` | `@ardia/phone-native`: the sync engine and its unit tests, compiled into `CompileSyncBundle`'s module | keep | `packages/phone/android/src/{main,test}/java/com/ardia/sync` |
-| `appmodel`: `SystemLink.kt`, `SystemActions.kt`, `LaunchArguments.kt` | `@ardia/phone-native`: system links, launch arguments | keep | `packages/phone/android/src/main/java/com/ardia/appmodel` |
-| `settings`: `SyncCodeReading.kt`, `SyncCodeCamera.kt` | the sync code scanner | keep | `packages/phone/android/src/main/java/com/ardia/settings` |
-| `search`: `SpeechRecorder.kt`, `DictationTypes.kt`, `ClipboardOffer.kt`, `CompletingFieldState.kt` and `CompletingFieldStateTest.kt` | voice search, the paste offer, the completing field | keep | `packages/phone/android/src/{main,test}/java/com/ardia/search` |
-| `store`: `InlineCompletionEditor.kt` | the completing field | keep | `packages/phone/android/src/main/java/com/ardia/store` |
-| `design`: `FaviconPixels.kt` | favicons | keep | `packages/phone/android/src/main/java/com/ardia/design` |
-| `design`: the 20 files `ardia-design` listed (`ProfileLook`, `Colors`, `MeshGradient`, `FrostedStyle`, `Motion`…) and its `res` | the `:ardia-design` module: the look, the settings tokens | keep | `apps/phone/android/ardia-design/src/main/{java/com/ardia/design,res}` |
-| `app`: `ArdiaWidgets`, `WidgetColors`, `SearchTileService`, `ShortcutActivity`, `SystemSnapshot(s)`, `ShareSheetModel`, `ShareSheetView`, and `res-system` | the Expo app: the widgets, the tile, the shortcuts, the share sheet | keep | `apps/phone/android/app/src/main/{java/com/ardia/browser/android,res-system}` |
+| `sync/src/main` and `sync/src/test` | `@nilla/phone-native`: the sync engine and its unit tests, compiled into `CompileSyncBundle`'s module | keep | `packages/phone/android/src/{main,test}/java/com/nilladigital/nilla/sync` |
+| `appmodel`: `SystemLink.kt`, `SystemActions.kt`, `LaunchArguments.kt` | `@nilla/phone-native`: system links, launch arguments | keep | `packages/phone/android/src/main/java/com/nilladigital/nilla/appmodel` |
+| `settings`: `SyncCodeReading.kt`, `SyncCodeCamera.kt` | the sync code scanner | keep | `packages/phone/android/src/main/java/com/nilladigital/nilla/settings` |
+| `search`: `SpeechRecorder.kt`, `DictationTypes.kt`, `ClipboardOffer.kt`, `CompletingFieldState.kt` and `CompletingFieldStateTest.kt` | voice search, the paste offer, the completing field | keep | `packages/phone/android/src/{main,test}/java/com/nilladigital/nilla/search` |
+| `store`: `InlineCompletionEditor.kt` | the completing field | keep | `packages/phone/android/src/main/java/com/nilladigital/nilla/store` |
+| `design`: `FaviconPixels.kt` | favicons | keep | `packages/phone/android/src/main/java/com/nilladigital/nilla/design` |
+| `design`: the 20 files `nilla-design` listed (`ProfileLook`, `Colors`, `MeshGradient`, `FrostedStyle`, `Motion`…) and its `res` | the `:nilla-design` module: the look, the settings tokens | keep | `apps/phone/android/nilla-design/src/main/{java/com/nilladigital/nilla/design,res}` |
+| `app`: `NillaWidgets`, `WidgetColors`, `SearchTileService`, `ShortcutActivity`, `SystemSnapshot(s)`, `ShareSheetModel`, `ShareSheetView`, and `res-system` | the Expo app: the widgets, the tile, the shortcuts, the share sheet | keep | `apps/phone/android/app/src/main/{java/com/nilladigital/nilla/android,res-system}` |
 | unit tests of kept code: `browser` (13), `blocking` (12, with 5 sample lists), `browsing`'s `PickedFileRuleTest` | nothing ran them in the Expo build | keep, now run by `corex-test` | `packages/phone/android/src/test/{java,resources}` |
-| `app`'s `ShareSheetTest`, `SystemSnapshotTest`, `WidgetColorsTest`; `design`'s `ColorsTest`, `DrawingTest`, `ProfileLookTest` | nothing ran them | keep, now run by `corex-test` | the app's and `ardia-design`'s `src/test` |
+| `app`'s `ShareSheetTest`, `SystemSnapshotTest`, `WidgetColorsTest`; `design`'s `ColorsTest`, `DrawingTest`, `ProfileLookTest` | nothing ran them | keep, now run by `corex-test` | the app's and `nilla-design`'s `src/test` |
 | device tests of kept code: `browser` (12, with its test activity), `blocking` (1), `shared` (2), `sync` (6, with its documents provider) | `android.yml`'s emulator job | keep, not run anywhere yet | `packages/phone/android/src/androidTest` |
 | `scripts/swift-crosscheck.sh` and `scripts/crosscheck` | the Kotlin and Swift sync vaults read each other's writes (`SwiftCrossCheckTest`) | replaced by committed test vectors: both sides seal the same fixed inputs to the same bytes and open each other's sets, with no Swift and Gradle on one machine | `packages/sync/tests/fixtures/sync-vectors`, `SyncVectorsTests.swift`, `SyncVectorsTest.kt` |
 | everything else: the Compose screens, app shell and model (`app`, `appmodel`, `browsing`, `search`, `settings`, `store`, `tabs`, the rest of `design`), their tests, the Gradle project, wrapper and catalog, `gradle-locked` | the Compose app only | delete | |
@@ -2071,7 +2071,7 @@ Reverting them restores `apps/android`.
 **What else named `apps/android`:**
 - `bundle-guard.ts`'s native paths: the old app folder goes; its files are now under `apps/phone/android`.
 - `LegacyNamesTest`: it read four constants from the Compose sources. It now reads them frozen in
-  `packages/phone/android/src/test/resources/com/ardia/phone/compose-store-names-01a149d87.tsv`, copied verbatim from the
+  `packages/phone/android/src/test/resources/com/nilladigital/nilla/phone/compose-store-names-01a149d87.tsv`, copied verbatim from the
   release reference's commit, where `HEAD` still had the same four.
 - `android.yml`: it built and tested the Compose app. It now runs the Expo Android app's unit tests on pull requests
   that touch the phone's Android side or sync, behind the same `gate` job, so its `GATED_WORKFLOWS` entry stays.
@@ -2080,13 +2080,13 @@ Reverting them restores `apps/android`.
 - `.github/vouch/vouch.cjs`: unchanged.
 - The site, dashboard, CLI and the Mac app name nothing in `apps/android`.
 
-**The pinned references.** Both are kept outside the repo, on this Mac in `~/Developer/ardia-phone-references/`
-(linked from the old `/tmp` paths) and on corex in `~/Developer/ardia-phone-apks/reference/`.
+**The pinned references.** Both are kept outside the repo, on this Mac in `~/Developer/nilla-phone-references/`
+(linked from the old `/tmp` paths) and on corex in `~/Developer/nilla-phone-apks/reference/`.
 
 | File | Built from | How | sha256 |
 |---|---|---|---|
-| `ardia-compose-release.apk` | `01a149d87` | `:app:assembleRelease`: R8, resources shrunk, not debuggable, signed with this Mac's `~/.android/debug.keystore` (`eeb05c92…`) | `7fb9decc…de190` |
-| `ardia-compose-upgrade17.apk` | `1e343bb81` | `:app:assembleDebug`: debuggable, the upgrade pair's Compose half, the same key | `4e7e4010…3f148` |
+| `nilla-compose-release.apk` | `01a149d87` | `:app:assembleRelease`: R8, resources shrunk, not debuggable, signed with this Mac's `~/.android/debug.keystore` (`eeb05c92…`) | `7fb9decc…de190` |
+| `nilla-compose-upgrade17.apk` | `1e343bb81` | `:app:assembleDebug`: debuggable, the upgrade pair's Compose half, the same key | `4e7e4010…3f148` |
 
 To rebuild either once `apps/android` is gone, run on corex, in the bots container:
 
@@ -2118,7 +2118,7 @@ apksigner sign --ks ~/.android/debug.keystore --ks-pass pass:android <apk>
 **The upgrade tests' Compose store.** Two sources:
 - `PhoneLegacyTest` writes its own Compose-shaped store from the schema it pins (`COMPOSE_SCHEMA`), so it needs no
   app.
-- A store written by the Compose app itself, captured with `run-as` from `ardia-compose-upgrade17.apk` (debuggable)
+- A store written by the Compose app itself, captured with `run-as` from `nilla-compose-upgrade17.apk` (debuggable)
   on a phone, is to be kept as a fixture beside `PhoneLegacyTest`. That's the clean-up's F4 step. Until it lands, the
   import is proven against the schema the test pins and against `check-upgrade.py` on the two APKs.
 
@@ -2131,18 +2131,18 @@ Expo app builds from and what comparisons need. `main` keeps it until this branc
 
 | In `apps/ios` | What used it | Decision | Now |
 |---|---|---|---|
-| `Packages/ArdiaKit` (ArdiaShared, ArdiaSync, ArdiaBrowser, ArdiaDesign) and its tests | the `ArdiaPhoneNative` pod (ArdiaBrowser, ArdiaDesign, through the Podfile's `link_ardia_kit`); the widgets and the share extension (ArdiaDesign); the PhoneMotion and PhoneSync test packages; Android's sync bundle (`ArdiaShared/Scripts/ardia-sync.js`); `ios.yml` | keep | `packages/phone/ios/ArdiaKit` |
+| `Packages/NillaKit` (NillaShared, NillaSync, NillaBrowser, NillaDesign) and its tests | the `NillaPhoneNative` pod (NillaBrowser, NillaDesign, through the Podfile's `link_nilla_kit`); the widgets and the share extension (NillaDesign); the PhoneMotion and PhoneSync test packages; Android's sync bundle (`NillaShared/Scripts/nilla-sync.js`); `ios.yml` | keep | `packages/phone/ios/NillaKit` |
 | `Share`, `Action`, `Widgets` | the Expo project's three extension targets, compiled in place as synchronized folders | keep | `apps/phone/ios/{Share,Action,Widgets}` |
-| `Config`: `Share`, `Open` and `Widgets` Info.plists and entitlements, `Ardia.entitlements`, `Ardia-DefaultBrowser.entitlements` | the Expo project's build settings; `defaultBrowserSwitch.test.ts` | keep | `apps/phone/ios/Config` |
+| `Config`: `Share`, `Open` and `Widgets` Info.plists and entitlements, `Nilla.entitlements`, `Nilla-DefaultBrowser.entitlements` | the Expo project's build settings; `defaultBrowserSwitch.test.ts` | keep | `apps/phone/ios/Config` |
 | `Config/ExportOptions-TestFlight.plist` | `release-ios` | keep | `apps/phone/ios/Config` |
 | `Config/TestFlight-WhatToTest.txt` | `ios-release.yml`'s public link step | keep | `apps/phone/ios/Config` |
-| `Config/Ardia-Info.plist` | the SwiftUI app only (the Expo app has `apps/phone/ios/Ardia/Info.plist`) | delete | |
+| `Config/Nilla-Info.plist` | the SwiftUI app only (the Expo app has `apps/phone/ios/Nilla/Info.plist`) | delete | |
 | `App/AppIcon.icon`, `App/Assets.xcassets` | the Expo app's icon and asset catalog | keep | `apps/phone/ios/App` |
 | The rest of `App` (screens, app model, intents, its PrivacyInfo) | the SwiftUI app only; the Expo app has its own intents and `PrivacyInfo.xcprivacy` | delete | |
-| `Ardia.xcodeproj`, `project.yml` | the SwiftUI app only | delete | |
+| `Nilla.xcodeproj`, `project.yml` | the SwiftUI app only | delete | |
 | `scripts/asc.mjs` | `ios-release.yml` (status, next build, wait, public link, testers, certificates), `release-ios` | keep | `apps/phone/scripts/asc.mjs` |
 | `scripts/bundle-shared.mjs` | the `packages/core` and `packages/sync` test scripts; `ios.yml` | keep | `apps/phone/scripts/bundle-shared.mjs` |
-| `scripts/update-filter-catalog.mjs` | refreshes ArdiaBrowser's `FilterListCatalog.json`, which the iPhone ships | keep | `apps/phone/scripts/update-filter-catalog.mjs` |
+| `scripts/update-filter-catalog.mjs` | refreshes NillaBrowser's `FilterListCatalog.json`, which the iPhone ships | keep | `apps/phone/scripts/update-filter-catalog.mjs` |
 
 **Outside `apps/ios`:**
 - `scripts/release-ios.sh`: the SwiftUI app's TestFlight build, reached only through `ios-release.yml`'s `swiftui`
@@ -2155,11 +2155,11 @@ Expo app builds from and what comparisons need. `main` keeps it until this branc
 - `.gitignore`, the Podfile, the Expo project, `build-sim-app`, `release-ios`, `packages/phone/android/build.gradle`
   (the sync bundle) and the PhoneMotion and PhoneSync manifests follow the moves.
 - `ios-update-launch-check` and the upgrade proof take the SwiftUI app as a built `.app`, the pinned reference below.
-  `PhoneSyncTests` writes its own SwiftUI-shaped store with ArdiaKit's schema, so it needs no app.
+  `PhoneSyncTests` writes its own SwiftUI-shaped store with NillaKit's schema, so it needs no app.
 - The site, dashboard, CLI, extras, infra and the Mac app name nothing in `apps/ios`.
 
-**The pinned reference.** `~/Developer/ardia-phone-references/swiftui-main.app` (linked from
-`/tmp/ardia-phone/swiftui-main.app`), with `swiftui-main.txt`, is main's SwiftUI app built from
+**The pinned reference.** `~/Developer/nilla-phone-references/swiftui-main.app` (linked from
+`/tmp/nilla-phone/swiftui-main.app`), with `swiftui-main.txt`, is main's SwiftUI app built from
 `e945077b66efc7595382510e4a3c78c8e541957f` (PR #2010's search morph): Release, for the simulator, ad hoc signed with
 simulated entitlements. It is the one SwiftUI build the launch check, the upgrade proof and the speed comparisons
 install. Install the folder, not the `/tmp` link: the Simlock upload refuses links. The previous pin, from
@@ -2182,10 +2182,10 @@ origin/main`.
 **The clean-up's commits**, reverted together to bring `apps/ios` back: d895a9e02 (this inventory and the pin),
 73429dc8c (133 moves, no content), 58d5c392d (paths), 0ab20bbb3 (workflows and docs), aa1329b2e (119 files and
 16,581 lines deleted: the rest of `apps/ios`, `scripts/release-ios.sh`, `docs/ios.md`) and 030844cdb (the
-conventions check now covers ArdiaKit).
+conventions check now covers NillaKit).
 
 **Proved after it** (2026-11-16, at 030844cdb):
-- `swift test` passes in ArdiaKit (219 tests), PhoneMotion (22) and PhoneSync (24) from their new homes.
+- `swift test` passes in NillaKit (219 tests), PhoneMotion (22) and PhoneSync (24) from their new homes.
 - `release-ios 10 --version 0.2.47 --unsigned` passes every check, at 57.3 MB installed, as before the clean-up.
 - `build-sim-app` builds the simulator app with its JavaScript from a clean export of the commit.
 - `ios-update-launch-check` passes on a lease with the pinned SwiftUI build, and the Expo app imports the store that
@@ -2198,9 +2198,9 @@ conventions check now covers ArdiaKit).
 
 ### The lab switch
 
-The page lab (`com.ardia.phone.PAGE_LAB`) and sync's demo mode (`com.ardia.phone.SYNC_DEMO`) exist only in lab
-builds. `gradle-locked` makes them: it passes `-PardiaLab=true`, which `@ardia/phone-native` turns into
-`BuildConfig.ARDIA_LAB` (checked before either launch extra is read), and sets `EXPO_PUBLIC_ARDIA_LAB=true`, which
+The page lab (`com.nilladigital.nilla.phone.PAGE_LAB`) and sync's demo mode (`com.nilladigital.nilla.phone.SYNC_DEMO`) exist only in lab
+builds. `gradle-locked` makes them: it passes `-PnillaLab=true`, which `@nilla/phone-native` turns into
+`BuildConfig.ARDIA_LAB` (checked before either launch extra is read), and sets `EXPO_PUBLIC_NILLA_LAB=true`, which
 `index.js` reads at bundle time, so a build without it has no lab JavaScript at all and never makes the demo
 controller. Even in a lab build the demo is refused while real sync is set up. The app's Gradle file fails the build
 when the property and the variable disagree, and Metro's cache is keyed on the variable.
@@ -2211,7 +2211,7 @@ A store build leaves both off:
 ARDIA_LAB=0 apps/phone/scripts/gradle-locked :app:bundleRelease
 ```
 
-To see the lab with Metro, start it with `EXPO_PUBLIC_ARDIA_LAB=true bun run --cwd apps/phone dev` and run a debug
+To see the lab with Metro, start it with `EXPO_PUBLIC_NILLA_LAB=true bun run --cwd apps/phone dev` and run a debug
 build from `gradle-locked`.
 
 ### Launch arguments on Android
@@ -2220,28 +2220,28 @@ The iPhone's launch arguments are intent extras on Android, with the same names.
 (`LaunchExtras.allowedInThisBuild`); a store build ignores them.
 
 ```
-adb shell am start -S -n com.ardia.browser.android/.MainActivity --ez ArdiaDemo true --es BrowseQuery otters
+adb shell am start -S -n com.nilladigital.nilla.android/.MainActivity --ez NillaDemo true --es BrowseQuery otters
 ```
 
-`ArdiaDemo` runs on demo data (two Macs, two profiles) and never touches real data. The rest drive captures without
+`NillaDemo` runs on demo data (two Macs, two profiles) and never touches real data. The rest drive captures without
 touch:
 - `BrowseOpen <url>`, `BrowseQuery <text>`, `BrowseSurface browsing`, `BrowseTab <n>`, `BrowseToolbar`, `BrowseReader`,
   `BrowseIncognito`, `BrowseDelay <s>`;
 - `BrowseDeck`, `BrowseDeckOpen <n>`, `BrowsePlus`, `BrowseOverlay <text>`, `BrowseSteps <n,n>` with
   `BrowseStepGap <s>`;
-- `ArdiaDeck <script>`, `ArdiaOnboarding`, `ArdiaOpenSheet <sheet>`, `ArdiaOpenSettings`, `ArdiaRestingStart`,
-  `ArdiaColor <name>`, `ArdiaToast <text>`, `ArdiaTrustedSites`;
+- `NillaDeck <script>`, `NillaOnboarding`, `NillaOpenSheet <sheet>`, `NillaOpenSettings`, `NillaRestingStart`,
+  `NillaColor <name>`, `NillaToast <text>`, `NillaTrustedSites`;
 - motion captures, demo only: `BrowsePagerFreeze <fraction>`, `BrowsePagerScript`, `BrowseLoadFreeze <progress>`;
-- the lab's own flags, such as `ArdiaOneContainerScroll`, `ArdiaOpeningCard`, `ArdiaNativeGlass`, `ArdiaDrawnMenus` (Android's drawn menus instead of its own PopupMenu and AlertDialog behind `MenuTrigger` and `confirmInSheet`) and `ArdiaRedesign` (Android draws the redesigned design, for checking the page under the bar before it becomes Android's default).
+- the lab's own flags, such as `NillaOneContainerScroll`, `NillaOpeningCard`, `NillaNativeGlass`, `NillaDrawnMenus` (Android's drawn menus instead of its own PopupMenu and AlertDialog behind `MenuTrigger` and `confirmInSheet`) and `NillaRedesign` (Android draws the redesigned design, for checking the page under the bar before it becomes Android's default).
 
 Flags take `--ez` (or any string but false, no and 0); everything else can be `--es`. The list is `LaunchArguments.kt`
-(`packages/phone/android/src/main/java/com/ardia/appmodel`).
+(`packages/phone/android/src/main/java/com/nilladigital/nilla/appmodel`).
 
 ### Size on Android
 
 What an arm64 phone downloads and installs. "Download" is every entry an arm64 phone gets, each deflated on its own
 (zlib level 9), which is close to what the Play Store sends; a directly downloaded APK costs its file size. Store
-builds (R8 on, lab off) against the Compose app's non-debuggable release (`ardia-compose-release.apk`, R8 and
+builds (R8 on, lab off) against the Compose app's non-debuggable release (`nilla-compose-release.apk`, R8 and
 resource shrinking).
 
 | Build | File | Download | Installed |
@@ -2341,12 +2341,12 @@ By part, installed (deflated):
 | App binary | 12.7 MB (4.7) | 5.9 MB (2.4) |
 | React Native's frameworks: React 11.6, hermesvm 6.1, ReactNativeDependencies 1.2, ExpoModulesJSI 1.2 | 20.1 MB as shipped, 16.5 after the Release strip: React 10.1, hermesvm 4.2, ReactNativeDependencies 1.1, ExpoModulesJSI 1.2 | none |
 | JS bundle (Hermes bytecode) | 5.4 MB (2.2) | none |
-| The three extensions (Share, Open in Ardia, Widgets) | 11.2 MB (4.4) | 11.2 MB (4.4) |
+| The three extensions (Share, Open in Nilla, Widgets) | 11.2 MB (4.4) | 11.2 MB (4.4) |
 | Asset catalog | 9.4 MB (9.3) | 9.5 MB (9.4) |
-| ArdiaKit's resource bundles | 1.0 MB | 0.9 MB |
+| NillaKit's resource bundles | 1.0 MB | 0.9 MB |
 
 **Where the Expo binary's 11.5 MB of linked code goes** (from its link map):
-- our native module with ArdiaKit linked in: 3.2 MB;
+- our native module with NillaKit linked in: 3.2 MB;
 - Expo UI: 2.2;
 - Expo's modules core: 1.3;
 - expo-sqlite: 1.2;
@@ -2356,7 +2356,7 @@ By part, installed (deflated):
 - expo-file-system: 0.4;
 - then React Native's codegen, Gesture Handler, Expo's other modules and the linker's own.
 
-The SwiftUI app's 5.9 MB binary is ArdiaKit plus its SwiftUI screens.
+The SwiftUI app's 5.9 MB binary is NillaKit plus its SwiftUI screens.
 
 **The asset catalog is the largest part of both downloads, and it is the app icon.** The Icon Composer icon is stored
 as 1024 px renditions (any, dark, tinted), each once for iPhone and once for iPad: 8.6 of its 9.4 MB. It barely
@@ -2375,7 +2375,7 @@ icon, so it doesn't change the difference between them.
      frameworks ship no dSYMs (only ExpoModulesJSI has one), so these names are what makes their frames in a
      crash report readable. Proof on the stripped device archive: `atos` names a React and a Hermes local function
      from the stripped binaries. Our own code goes through the archive's dSYMs, which stay with the archive: the app
-     binary's UUID matches `Ardia.app.dSYM`, and an address in it resolves to `SettingsShortcutsView.body.getter
+     binary's UUID matches `Nilla.app.dSYM`, and an address in it resolves to `SettingsShortcutsView.body.getter
      (SettingsUIModule.swift:148)`.
    - `strip -x -S` would save 5.5 MB more installed, but it removes the local function names, and with no dSYM for
      these frameworks nothing can restore them. lldb then shows `___lldb_unnamed_symbol…` for React and Hermes
@@ -2405,23 +2405,23 @@ difference, as on Android.
 
 ```
 scripts/agent/locked pod -- bash -c 'cd apps/phone/ios && pod install'     after native dependencies change
-scripts/agent/locked xcodebuild -- xcodebuild -workspace apps/phone/ios/Ardia.xcworkspace -scheme Ardia \
+scripts/agent/locked xcodebuild -- xcodebuild -workspace apps/phone/ios/Nilla.xcworkspace -scheme Nilla \
   -configuration Release -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
   -derivedDataPath <your own dir> ARCHS=arm64 CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- \
   DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= build                                   JS bundled in
-agent-device install com.ardia.browser.ios <dir>/Build/Products/Release-iphonesimulator/Ardia.app
+agent-device install com.nilladigital.nilla.ios <dir>/Build/Products/Release-iphonesimulator/Nilla.app
 ```
 
 The ad hoc identity signs locally for the simulator with each target's entitlements (the app group, so the app and
 its extensions share the SwiftUI app's container) and needs no account or profile. The Podfile adds
-`packages/phone/ios/ArdiaKit` to the `ArdiaPhoneNative` pod as a local Swift package (ArdiaBrowser and ArdiaDesign);
-Xcode links ArdiaKit into the pod's library and copies its resource bundles into the app. The app target must not
-link ArdiaKit itself, or every symbol is linked twice; it finds ArdiaDesign's module for its intents through
+`packages/phone/ios/NillaKit` to the `NillaPhoneNative` pod as a local Swift package (NillaBrowser and NillaDesign);
+Xcode links NillaKit into the pod's library and copies its resource bundles into the app. The app target must not
+link NillaKit itself, or every symbol is linked twice; it finds NillaDesign's module for its intents through
 `SWIFT_INCLUDE_PATHS`. iOS 27 refuses to launch an app without the scene lifecycle, which Expo 54's template lacks, so
 `SceneDelegate` starts React Native in the scene's window and hands links, quick actions and Handoff to the module.
 
 The project carries the SwiftUI app's extensions, compiled from `apps/phone/ios/Share`, `Action` and `Widgets`, with
-the Info.plists and entitlement files in `apps/phone/ios/Config`: the Share extension, Open in Ardia and the widgets, under the same
+the Info.plists and entitlement files in `apps/phone/ios/Config`: the Share extension, Open in Nilla and the widgets, under the same
 bundle ids. The SwiftUI app's intents need its `AppModel`, so the app target has its own copies with the same names,
 titles and phrases that post links instead.
 
@@ -2429,37 +2429,37 @@ titles and phrases that post links instead.
   `voiceSearch`, `incognito`, `tab` (id), `macTabs` or `inbox`, and source `web` (an http link from another app),
   `system` (an `ardia://` link from a widget, the share sheet or the action), `shortcut`, `share` (the share
   sheet's inbox, when it couldn't open the app), `handoff` or `intent`.
-- `defaultBrowser`: `status()` from ArdiaBrowser's `DefaultBrowserStatus`, shared with the SwiftUI app;
+- `defaultBrowser`: `status()` from NillaBrowser's `DefaultBrowserStatus`, shared with the SwiftUI app;
   `requestRole()` is always false on iPhone, which has no role prompt; `openDefaultAppsSettings()`.
 - `legacy.available()` and `legacy.read()`: the SwiftUI app's tabs, archive, history and preferences, read from a
-  copy of its SwiftData store so the store itself is never opened. `-ArdiaLegacyDump YES` logs what `read()` returns
-  (`ARDIA_LEGACY` lines) and `-ArdiaLegacyRestore YES` also opens the first saved tab, for checking an import;
-  `-ArdiaLogSystemLinks YES` logs each link (`ARDIA_SYSTEM_LINK`). These need a test build (below).
+  copy of its SwiftData store so the store itself is never opened. `-NillaLegacyDump YES` logs what `read()` returns
+  (`ARDIA_LEGACY` lines) and `-NillaLegacyRestore YES` also opens the first saved tab, for checking an import;
+  `-NillaLogSystemLinks YES` logs each link (`ARDIA_SYSTEM_LINK`). These need a test build (below).
 
 #### Seeing a change on an iPhone simulator, beside main's SwiftUI app
 
 Watch your own frames before you hand a change on. The loop, for any agent:
 
-1. **Build.** `apps/phone/scripts/build-sim-app <name> [--commit REV]` makes `/tmp/ardia-phone/<name>.app` (Release,
+1. **Build.** `apps/phone/scripts/build-sim-app <name> [--commit REV]` makes `/tmp/nilla-phone/<name>.app` (Release,
    simulator, lab on) and `<name>.txt` beside it.
    - The JavaScript is bundled from a `git archive` export of REV (default HEAD), never the working tree.
    - The native app is built from the working tree once and cached under a hash of its inputs (`apps/phone/ios`
-     with its Podfile.lock, `packages/phone/ios`, ArdiaKit, `app.json`, the module config, the lockfile, `patches`).
+     with its Podfile.lock, `packages/phone/ios`, NillaKit, `app.json`, the module config, the lockfile, `patches`).
    - When those didn't change, only the bundle is rebuilt into a copy of the cached app, which is then re-signed ad
      hoc: about 25 seconds, against about 2 to 2.5 minutes for a full native build (504a9db41).
    - It refuses below 4 GB free, below 6 GB when the native app is rebuilt over its cached build products, and below 10 GB when it is built from nothing; it runs one at a time and cleans its own scratch.
    - The `.txt` carries the commit, dirty, the bundle source, the native state, whether the native app was built or
-     reused, and the bundle's sha256. The app logs the same at launch as `ARDIA build <commit> dirty: … from the …;
+     reused, and the bundle's sha256. The app logs the same at launch as `NILLA build <commit> dirty: … from the …;
      native …`.
 2. **Simulator.** In T3, `device_open` with host `simlock` and an id like `simlock:ios:iPhone 17 Pro` leases a booted
    simulator and returns its `agent-device` command; every tap, screenshot and launch goes through that command. The
    lease is wiped when it ends: close it with `device_close` (`shutdown: true`). Its udid, for `simctl`'s logs and
    recordings: `xcrun simctl --set ~/.simlock/devices/ios list devices booted`.
 3. **Install and launch,** from the repo root (the lease accepts installs only from this checkout):
-   `<agent-device> install com.ardia.browser.ios /tmp/ardia-phone/<name>.app`, then
-   `<agent-device> open com.ardia.browser.ios --relaunch --launch-args -ArdiaDemo --launch-args YES`. Add
+   `<agent-device> install com.nilladigital.nilla.ios /tmp/nilla-phone/<name>.app`, then
+   `<agent-device> open com.nilladigital.nilla.ios --relaunch --launch-args -NillaDemo --launch-args YES`. Add
    `--launch-args -BrowseDeck --launch-args YES` to open on the deck. Confirm the build:
-   `xcrun simctl --set ~/.simlock/devices/ios spawn <udid> log show --last 2m --style compact --predicate 'eventMessage CONTAINS "ARDIA build"'`.
+   `xcrun simctl --set ~/.simlock/devices/ios spawn <udid> log show --last 2m --style compact --predicate 'eventMessage CONTAINS "NILLA build"'`.
 4. **Record.** Start `xcrun simctl --set ~/.simlock/devices/ios io <udid> recordVideo --codec h264 --force run.mp4` in
    the background, act through `agent-device`, then `kill -INT` the recorder; `agent-device record` comes back empty
    under load. A still at device resolution: `<agent-device> screenshot shot.png --pixel-density 3` (3 px = 1 pt).
@@ -2470,18 +2470,18 @@ Watch your own frames before you hand a change on. The loop, for any agent:
    - Measure positions, sizes and opacity from the pixels, not by eye.
 6. **Main's SwiftUI app,** the reference for the iPhone redesign.
    - It has the same bundle id, so uninstall one app before installing the other
-     (`xcrun simctl --set ~/.simlock/devices/ios uninstall <udid> com.ardia.browser.ios`).
-   - The pinned Release build is `~/Developer/ardia-phone-references/swiftui-main.app` (linked from
-     `/tmp/ardia-phone/swiftui-main.app`), with `swiftui-main.txt` saying from which commit. To make a fresh one from
+     (`xcrun simctl --set ~/.simlock/devices/ios uninstall <udid> com.nilladigital.nilla.ios`).
+   - The pinned Release build is `~/Developer/nilla-phone-references/swiftui-main.app` (linked from
+     `/tmp/nilla-phone/swiftui-main.app`), with `swiftui-main.txt` saying from which commit. To make a fresh one from
      any commit of main (about 50 s), run `apps/phone/scripts/rebuild-swiftui-reference <commit>`: it builds that
      commit's `apps/ios` from a `git archive` export and signs it ad hoc, never with `CODE_SIGNING_ALLOWED=NO`.
      The ad hoc build carries simulated entitlements
-     (`application-identifier` `FAKETEAMID.com.ardia.browser.ios` and the app group), the same as `build-sim-app`'s
+     (`application-identifier` `FAKETEAMID.com.nilladigital.nilla.ios` and the app group), the same as `build-sim-app`'s
      Expo builds. Without them the app has no Keychain: Sync With Mac stops at "Couldn't save the sync key in your
      Keychain", and an upgrade can't carry the key over. Check with
-     `otool -l <app>/Ardia | grep -c 'sectname __entitlements'` (1).
-   - Its launch arguments: `-ArdiaDemo YES`, `-ArdiaDeck deck`, `-ArdiaInterfaceStyle classic`,
-     `-ArdiaColorScheme dark`, `-ArdiaOpenSheet history`, `-ArdiaSpace <syncId>` (all in `SettingsLaunchHooks.swift`).
+     `otool -l <app>/Nilla | grep -c 'sectname __entitlements'` (1).
+   - Its launch arguments: `-NillaDemo YES`, `-NillaDeck deck`, `-NillaInterfaceStyle classic`,
+     `-NillaColorScheme dark`, `-NillaOpenSheet history`, `-NillaSpace <syncId>` (all in `SettingsLaunchHooks.swift`).
    - Record both apps doing the same thing in the same state, light and dark, and compare the same crop.
 7. **Traps.**
    - A fresh lease's first keyboard shows the "Type English and Hindi" tip over the keys. Press its Continue, which
@@ -2502,7 +2502,7 @@ Watch your own frames before you hand a change on. The loop, for any agent:
 #### Speed against the SwiftUI app
 
 The question is whether the Expo app is slower than the SwiftUI app it replaces on iPhone. The bar is main's SwiftUI
-app, built Release for the same simulator (`/tmp/ardia-phone/swiftui-main.app`), against a Release `build-sim-app`
+app, built Release for the same simulator (`/tmp/nilla-phone/swiftui-main.app`), against a Release `build-sim-app`
 build of the Expo app from head.
 
 Three runs so far: on Expo 54 / React Native 0.81 (first table), on Expo 58 / React Native 0.88 with Reanimated's
@@ -2512,7 +2512,7 @@ settled re-render on (second table), and on 0.88 with it off (third table, cfbdc
 Expo 54 / React Native 0.81: measured 2026-11-15 on one leased iPhone 17 Pro simulator (iOS 27), Expo at 5fbcd2308 and SwiftUI from main, at a
 load under 10 and under `scripts/agent/locked perflab`. Each timed row is the median of five recordings, taken in
 four rounds that alternate the apps. Times run from the first frame that changes to the last change before 0.5 s of
-stillness. The recordings, frame scripts and pages are in `/tmp/ardia-phone-shots/iphone-agent-speed/`
+stillness. The recordings, frame scripts and pages are in `/tmp/nilla-phone-shots/iphone-agent-speed/`
 (`rec/<app>-<measure>-<round><n>.mp4`, `analysis.json`).
 
 | Measure | SwiftUI | Expo | Difference | Judgement | Simulator trust |
@@ -2539,7 +2539,7 @@ What to fix before a device run, from these numbers:
 Expo 58 / React Native 0.88: measured 2026-11-15, Expo at dc1bdecad (with the screens agent's main-token motion, 15c4af926,
 and the card handover fix) against the same SwiftUI build, same simulator model, same method and pages, four
 alternating rounds, five recordings per measure. The load stayed under 15 for rounds one to three; the last
-SwiftUI round ended at 72, so its rows lean slow. Recordings and the analysis: `/tmp/ardia-phone-shots/iphone-agent-speed-088/`.
+SwiftUI round ended at 72, so its rows lean slow. Recordings and the analysis: `/tmp/nilla-phone-shots/iphone-agent-speed-088/`.
 
 | Measure | SwiftUI | Expo 58 | Difference | Judgement | Against 0.81 |
 |---|---|---|---|---|---|
@@ -2551,7 +2551,7 @@ SwiftUI round ended at 72, so its rows lean slow. Recordings and the analysis: `
 | Search submitted to the page's first paint (cached) | 130 ms | 83 ms | −47 ms | faster | as before, WebKit's own time |
 | Search submitted to settled | 498 ms | 282 ms | −216 ms (−43%) | faster | |
 | Tab swipe in the pager, settled (the 250 ms drag included) | 855 ms | 803 ms | −52 ms (−6%) | level | from +16%: main's 0.26/1 spring |
-| Search panel's departure on Go: first change to the panel moving (773ee4ded, 3 runs each) | 285 ms (255–287) | 192 ms (178–192) | −93 ms | faster | was frozen 230–320 ms on 0.88 before MotionView; the screens agent's 50 ms strips show it gone by about 150 ms against main's 200 (`/tmp/ardia-phone-shots/lift-sim-58/`) |
+| Search panel's departure on Go: first change to the panel moving (773ee4ded, 3 runs each) | 285 ms (255–287) | 192 ms (178–192) | −93 ms | faster | was frozen 230–320 ms on 0.88 before MotionView; the screens agent's 50 ms strips show it gone by about 150 ms against main's 200 (`/tmp/nilla-phone-shots/lift-sim-58/`) |
 | Back and forward by edge swipe | cannot be measured | cannot be measured | | | needs a device |
 | Deck scrolling, frames over 34 ms per scripted swipe pair | 0 of 36–50 | 0 of 32–66 | none in either | level | weak on a simulator |
 | Memory after nine tabs (app + WebKit) | 318 MB (124–129 + 189–194) | 360–415 MB (161–190 + 199–225) | +42 to +97 MB | higher | was lower on 0.81; the app process is 37–61 MB above SwiftUI's and WebKit 10–31 MB |
@@ -2561,7 +2561,7 @@ Expo 58 / React Native 0.88 with Reanimated's settled re-render off: measured 20
 a987eb84b with native d82a2839d (Pods installed after cfbdc5050, so `RNReanimated.release.xcconfig` carries
 `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:false`), against the same SwiftUI build. Same simulator model, method and
 nine pages, four alternating rounds, five recordings per measure, load 2 to 4 throughout, under the perflab lock.
-Evidence: `/tmp/ardia-phone-shots/iphone-agent-speed-nf/`.
+Evidence: `/tmp/nilla-phone-shots/iphone-agent-speed-nf/`.
 
 | Measure | SwiftUI | Expo 58 | Difference | Judgement | Against the second table |
 |---|---|---|---|---|---|
@@ -2587,7 +2587,7 @@ At 996b1f307 the hold is gone: Expo's open is one continuous change from the fir
 `expo-card-a2.mp4`). Its card is still round-cornered with the deck at its edge at 2.030 s, and the bar arrives and
 the corners square off in one step by 2.05 s. Main's deck bar instead fades into the page's bar during the growth, and
 main is settled at 2.282 s, 174 ms after it starts. What's left is about one frame, from that step at the end
-(`/tmp/ardia-phone-shots/iphone-agent-card-996b/`, `expo-tail.png` and `main-tail.png`).
+(`/tmp/nilla-phone-shots/iphone-agent-card-996b/`, `expo-tail.png` and `main-tail.png`).
 
 What 0.88 leaves to fix, from these numbers:
 - **Card opening is level** since 51c36153c: 177 ms against 172.5, 4.5 ms apart, under a frame. With that, every
@@ -2661,7 +2661,7 @@ What a simulator can say:
 The six-row table above runs at nine tabs. This one widens it: 30 and 100 open tabs, 1,000 archived tabs and 3,000
 History visits, typing in search, and opening and scrolling Archive and History. Measured 2026-11-16 on one leased
 iPhone 17 Pro Max simulator (iOS 27.0), Expo builds from `build-sim-app` (lab on) beside main's SwiftUI build
-(`/tmp/ardia-phone/swiftui-main.app`), the apps alternating round by round, under the perflab lock, rounds started only
+(`/tmp/nilla-phone/swiftui-main.app`), the apps alternating round by round, under the perflab lock, rounds started only
 below a load of 10. Each figure is a median of the opens in that session; ranges are in brackets.
 
 How the state is made, so both apps hold the same tabs:
@@ -2737,7 +2737,7 @@ Scrolling, what was found and what the stepped window and the pages do:
 - Archive gained less (10.5 to 7.5); its rows sit in native `Section`s, and what is left there is not yet found.
 
 Left, and the next step for each (2026-11-16, the screens agent took these over from the speed agent):
-- Archive and History scroll, re-measured 2026-11-16 21:40 on the iPhone 18 Pro with the lab's `-ArdiaDemoScale 1000`
+- Archive and History scroll, re-measured 2026-11-16 21:40 on the iPhone 18 Pro with the lab's `-NillaDemoScale 1000`
   (1,004 archived tabs, 3,007 visits over 30 days; the demo seed now writes them, so any leased device can be seeded),
   one 150 ms flick a recording, load 4–8: Archive 5 long frames a flick (4, 5, 7, 5; worst 49 ms), History 4.5 (3, 6, 1,
   12; worst 44 ms). Main wasn't re-measured in this session (its demo seed has a handful of rows); its figures above
@@ -2760,7 +2760,7 @@ and left off: at 100 tabs, four drags spent 81–117 ms of the main thread in Re
 and 74–123 ms with the container, and neither dropped a frame on the simulator. The per-card cost that shows on
 Android's F4 doesn't show on the Mac's CPU; it needs a real iPhone to decide.
 
-The search rows above are against the SwiftUI reference at e945077b6 (`/Users/shivam-mini/Developer/ardia-phone-references/swiftui-main.app`),
+The search rows above are against the SwiftUI reference at e945077b6 (`/Users/shivam-mini/Developer/nilla-phone-references/swiftui-main.app`),
 30 open tabs, two rounds each with the apps alternating, five opens and five submits a round to
 `http://localhost:8777/p2.html` … `p6.html`. The rest of this table was against the reference at a6ab64311
 (`swiftui-main-a6ab64311.app`). `sample` attached to the app stops `simctl io recordVideo` from starting ("Host
@@ -2793,13 +2793,13 @@ Traps for anyone repeating this:
 
 What it needs, for a yes or no:
 
-1. **The build.** A development-signed Release build of the Expo app, made with Xcode from `apps/phone/ios/Ardia.xcworkspace` (Release, a device destination).
+1. **The build.** A development-signed Release build of the Expo app, made with Xcode from `apps/phone/ios/Nilla.xcworkspace` (Release, a device destination).
    - Development signing keeps it debuggable, so Instruments can profile it. A TestFlight build can't be profiled that way.
-   - It can't sit beside the TestFlight SwiftUI app as things are: both are `com.ardia.browser.ios`, with extensions `com.ardia.browser.ios.share`, `.open` and `.widgets`, and the app group `group.com.ardia.browser.ios`. Installing it replaces the SwiftUI app and its data on that phone.
-   - The cleaner way is a second bundle id for measurement only: `com.ardia.browser.ios.measure`, built without the three extensions and the app group. Then both apps sit side by side and nothing of the owner's is touched. That's a build-setting change on our side, plus the signing below.
+   - It can't sit beside the TestFlight SwiftUI app as things are: both are `com.nilladigital.nilla.ios`, with extensions `com.nilladigital.nilla.ios.share`, `.open` and `.widgets`, and the app group `group.com.nilladigital.nilla.ios`. Installing it replaces the SwiftUI app and its data on that phone.
+   - The cleaner way is a second bundle id for measurement only: `com.nilladigital.nilla.ios.measure`, built without the three extensions and the app group. Then both apps sit side by side and nothing of the owner's is touched. That's a build-setting change on our side, plus the signing below.
 2. **The signing,** all the owner's to do (agents never touch the Apple developer account, certificates, profiles or the device list).
    - Register the phone's UDID in team U5L5T3NGVV's devices, or let Xcode do it while signed in as a team member with automatic signing, which is what the projects use (`CODE_SIGN_STYLE = Automatic`).
-   - Let Xcode create a development certificate and profile for the bundle id. For the measurement id, that means an App ID `com.ardia.browser.ios.measure`, with no capabilities beyond the defaults if it's built without the app group.
+   - Let Xcode create a development certificate and profile for the bundle id. For the measurement id, that means an App ID `com.nilladigital.nilla.ios.measure`, with no capabilities beyond the defaults if it's built without the app group.
    - On the phone, turn on Developer Mode (Settings › Privacy & Security › Developer Mode) and trust the Mac.
 3. **The devices.**
    - The oldest iPhone that runs iOS 27 (the deployment target is iOS 27.0 in both apps). It shows the worst case for JavaScript, glass and memory.
@@ -2807,7 +2807,7 @@ What it needs, for a yes or no:
    - Which phones he has is his to say.
 4. **The Mac.** This Mac, with Xcode 27.1, over a cable for the first pairing, then over the same network.
 5. **The tools.**
-   - Instruments' **App Launch** template (or `xcrun xctrace record --template 'App Launch' --device <udid> --launch -- com.ardia.browser.ios.measure`) for cold and warm launch.
+   - Instruments' **App Launch** template (or `xcrun xctrace record --template 'App Launch' --device <udid> --launch -- com.nilladigital.nilla.ios.measure`) for cold and warm launch.
    - **Animation Hitches** for the deck, the card opening, the tab swipe and scrolling: hitch time ratio and long frames, at 120 Hz.
    - **Time Profiler** for where JavaScript and native time goes.
    - **Allocations** and the VM Tracker for memory, with the WebKit processes counted.
@@ -2828,20 +2828,20 @@ What it needs, for a yes or no:
 Apple's web-browser entitlement (`com.apple.developer.web-browser`) has been requested. Until it is granted the
 app ships with the default browser off, and one build setting turns all of it on together:
 
-- **The switch.** `ARDIA_DEFAULT_BROWSER = NO` in the Debug and Release settings of the Ardia target in
-  `apps/phone/ios/Ardia.xcodeproj/project.pbxproj`. Flip both to `YES` (or pass `ARDIA_DEFAULT_BROWSER=YES` to
+- **The switch.** `ARDIA_DEFAULT_BROWSER = NO` in the Debug and Release settings of the Nilla target in
+  `apps/phone/ios/Nilla.xcodeproj/project.pbxproj`. Flip both to `YES` (or pass `ARDIA_DEFAULT_BROWSER=YES` to
   `xcodebuild`) for a build that should offer it.
 - **The entitlement.** `CODE_SIGN_ENTITLEMENTS = $(ARDIA_ENTITLEMENTS_$(ARDIA_DEFAULT_BROWSER))`, so `NO` signs with
-  `apps/phone/ios/Config/Ardia.entitlements` and `YES` with `apps/phone/ios/Config/Ardia-DefaultBrowser.entitlements`,
+  `apps/phone/ios/Config/Nilla.entitlements` and `YES` with `apps/phone/ios/Config/Nilla-DefaultBrowser.entitlements`,
   the same file plus `com.apple.developer.web-browser`. Main's SwiftUI app signs with the same two files.
-- **Info.plist.** `ArdiaDefaultBrowser` is `$(ARDIA_DEFAULT_BROWSER)`, which ArdiaKit's
+- **Info.plist.** `NillaDefaultBrowser` is `$(ARDIA_DEFAULT_BROWSER)`, which NillaKit's
   `DefaultBrowserStatus.isOffered` reads. The http and https `CFBundleURLTypes` iOS requires of a default browser are
-  already declared and do nothing until the system lists Ardia.
-- **What appears.** With `isOffered` true, `ArdiaPhoneDefaultBrowser.status()` returns `canAsk: true`: the
+  already declared and do nothing until the system lists Nilla.
+- **What appears.** With `isOffered` true, `NillaPhoneDefaultBrowser.status()` returns `canAsk: true`: the
   onboarding step shows (unless asked within 100 days, as in SwiftUI), and Settings › Default Browser opens the
-  system's Default Apps page. Page menu › Open in Default Browser hides once Ardia is the default. With `NO`,
+  system's Default Apps page. Page menu › Open in Default Browser hides once Nilla is the default. With `NO`,
   `isDefault` and `canAsk` are both false and none of this shows.
-- **The signing side**, for the owner: the App ID `com.ardia.browser.ios` needs the Default Web Browser capability
+- **The signing side**, for the owner: the App ID `com.nilladigital.nilla.ios` needs the Default Web Browser capability
   once Apple grants it, and the provisioning profiles regenerated with it. A build with `YES` and an old profile
   fails to sign, so it cannot ship half on.
 
@@ -2853,7 +2853,7 @@ the Info.plist key come from that one setting, and the two entitlement files dif
 The Expo UI Settings is compared against main's SwiftUI Settings (`apps/ios/App/Settings/`, read at 654d6396f),
 screen by screen and row by row. Every row below names the SwiftUI main uses, so the Expo UI screen uses the same
 view or our extension of it. Icon rows are `SettingsRowLabel(title, systemImage:, tint:)`: a `Label` whose icon is
-`SettingsIconTile`; tints are `SettingsTint` (ArdiaDesign `SettingsTokens.swift`).
+`SettingsIconTile`; tints are `SettingsTint` (NillaDesign `SettingsTokens.swift`).
 
 Whole stack (`SettingsView.swift`):
 - `NavigationStack(path:)` with `navigationDestination(for: SettingsRoute)`; title "Settings", inline; toolbar
@@ -2891,7 +2891,7 @@ Root (`SettingsRootList`), sections in order:
    ("arrow.up.forward.app.fill", #3EA82E), both menu pickers tinted secondary; "Clear Browsing Data" link
    ("eraser.fill", #FF5A5F); "Export Open Tabs" ("square.and.arrow.up.fill", #0153FF): a `ShareLink` of the open
    tabs' addresses, or a toast when there are none.
-7. "Show Onboarding" button ("hand.wave.fill", #FF901A, tinted primary); "About Ardia" link ("info", neutral).
+7. "Show Onboarding" button ("hand.wave.fill", #FF901A, tinted primary); "About Nilla" link ("info", neutral).
    Footer: the version line, centred, 16 pt above.
 
 Appearance (`AppearancePage.swift`, `ColorChoiceRows.swift`):
@@ -2937,31 +2937,31 @@ an `EditButton`.
 Clear Browsing Data: a "Time Range" `Picker`; "Clear" section of `Toggle`s History, Cache, Cookies and Site Data,
 Archived Tabs; destructive "Clear Data…" with a `ProgressView`, confirmed by a `confirmationDialog`.
 
-Default Browser: an explanation page with "How to change your default browser" and an "Open Ardia in Settings"
-button. About: `AppIconPreview` (72 pt, 22.5% continuous corners, a 0.5 pt hairline) and "Ardia", three `Link` rows
+Default Browser: an explanation page with "How to change your default browser" and an "Open Nilla in Settings"
+button. About: `AppIconPreview` (72 pt, 22.5% continuous corners, a 0.5 pt hairline) and "Nilla", three `Link` rows
 (ardia.dev, Release Notes, Source Code), a footer, "Open Source Licenses" (each credit a `LabeledContent` and a
 `Link`).
 
 What Expo UI doesn't have and we add through its extension path (`ExpoUIView` views and
-`ViewModifierRegistry` modifiers in a module that depends on `ExpoUI`), taken from ArdiaDesign so both apps share one
+`ViewModifierRegistry` modifiers in a module that depends on `ExpoUI`), taken from NillaDesign so both apps share one
 source:
-- Views: `SettingsIconTile` (already public in ArdiaDesign), `SettingsRowLabel`, `SettingsHero`, `SetupStepRow`,
+- Views: `SettingsIconTile` (already public in NillaDesign), `SettingsRowLabel`, `SettingsHero`, `SetupStepRow`,
   `ColorSwatch` row, `CheckmarkRow`, `AppIconPreview`, `ProfileBackdrop`.
 - Modifiers: `settingsChrome`, `settingsPage(title)`, `lookBackdrop`, `chromeSurface(in:interactive:tinted:)` (glass
   `.regular`/`.interactive()`, or Classic: `look.surface` or the background with a 0.5 pt stroke at 12%),
   `SettingsSwitchStyle`, `PressableStyle`, the `LegibleInk` text style.
 - Tokens as values: `SettingsTint`, `Palette.formAccent`, `Spacing` (4, 8, 12, 16, 20, 24, 32), `Motion.press` and
   `Motion.snappy`.
-- The app-only pieces live in ArdiaDesign. `packages/phone/ios/ArdiaKit/Sources/ArdiaDesign/SettingsPieces.swift`
+- The app-only pieces live in NillaDesign. `packages/phone/ios/NillaKit/Sources/NillaDesign/SettingsPieces.swift`
   holds public `SettingsRowLabel`, `SettingsHero` (built on `SettingsHeroContent`), `SetupStepRow`, `CheckmarkRow`
   (built on `CheckmarkLabel`), `ColorSwatch`, `AppIconPreview`, `PressableStyle`, `LegibleInk` and
   `SettingsSwitchStyle`, for the Expo screens; `SettingsTint.named(_:)` in `SettingsTokens.swift` maps the token
   names. With the SwiftUI app gone from this branch they are the only source: change them there. Main's SwiftUI app
   has its own copies (`App/Settings/SettingsComponents.swift` and others), which shadowed the package's types while
-  both lived here, so the extension members are named `ardiaSettingsChrome()`, `ardiaSettingsPage(_:)` and
-  `.ardiaInk(_:)`.
-- The Expo side: `packages/phone/ios/SettingsUIModule.swift` (`ArdiaPhoneSettingsUI`: the `ExpoUIView` views and the
-  `ardia.*` modifiers registered in `OnCreate`) and `packages/phone/src/settingsUI.tsx` (one API for both phones;
+  both lived here, so the extension members are named `nillaSettingsChrome()`, `nillaSettingsPage(_:)` and
+  `.nillaInk(_:)`.
+- The Expo side: `packages/phone/ios/SettingsUIModule.swift` (`NillaPhoneSettingsUI`: the `ExpoUIView` views and the
+  `nilla.*` modifiers registered in `OnCreate`) and `packages/phone/src/settingsUI.tsx` (one API for both phones;
   without the native module the views draw nothing and the modifiers are null).
 
 The Expo app keeps one row main has no counterpart for: What's Sent (opt-in usage stats, the owner's approval).
@@ -2982,9 +2982,9 @@ out of the id order CocoaPods writes in (fixed in 8304ed5c6, and on `expo-ios-in
 d5fbaabc1). After a hand edit to the project, run `pod install` and commit what it writes.
 
 **What the build is.**
-- **App record:** the same as the SwiftUI app: "Ardia", bundle id `com.ardia.browser.ios`, team `U5L5T3NGVV`, and the
-  extensions `.share`, `.widgets` and `.open`. The Expo project (`apps/phone/ios/Ardia.xcodeproj`) already uses these
-  ids and the same entitlement files, now in `apps/phone/ios/Config`: the app group `group.com.ardia.browser.ios`, and the default
+- **App record:** the same as the SwiftUI app: "Nilla", bundle id `com.nilladigital.nilla.ios`, team `U5L5T3NGVV`, and the
+  extensions `.share`, `.widgets` and `.open`. The Expo project (`apps/phone/ios/Nilla.xcodeproj`) already uses these
+  ids and the same entitlement files, now in `apps/phone/ios/Config`: the app group `group.com.nilladigital.nilla.ios`, and the default
   browser off (`ARDIA_DEFAULT_BROWSER = NO`).
 - **Version and build number:**
   - The Apple version is the Mac's release version, as `apps/phone/scripts/release-ios --help` has it.
@@ -2995,8 +2995,8 @@ d5fbaabc1). After a hand edit to the project, run `pod install` and commit what 
     is never committed.
 - **The release path** (9ac589838, 6dfe58539):
   - `apps/phone/scripts/release-ios <build> --version <release> [--unsigned | --no-upload]` is the Expo counterpart
-    of main's `scripts/release-ios.sh`. It archives `apps/phone/ios/Ardia.xcworkspace` for a device in Release, with the
-    release version on every target and `ArdiaReleaseVersion` in the app.
+    of main's `scripts/release-ios.sh`. It archives `apps/phone/ios/Nilla.xcworkspace` for a device in Release, with the
+    release version on every target and `NillaReleaseVersion` in the app.
   - The commit's JavaScript is compiled with Hermes with the lab off, handed to the bundle phase through
     `ARDIA_PREBUILT_BUNDLE`, and stamped.
   - It refuses an uncommitted native tree or Pods behind `Podfile.lock`.
@@ -3012,7 +3012,7 @@ d5fbaabc1). After a hand edit to the project, run `pod install` and commit what 
     one already there as it is) and uploads a development-signed `ios-device-build` .ipa, built from the ref the run
     starts on by `release-ios --development`. It uploads nothing to App Store Connect and takes no build number, so
     trying a branch on a phone spends no TestFlight build. Install it on the plugged-in iPhone, with Developer Mode
-    on, by `xcrun devicectl device install app --device <udid> Ardia.ipa`. The repository is public, so the job's
+    on, by `xcrun devicectl device install app --device <udid> Nilla.ipa`. The repository is public, so the job's
     first step masks the UDID from the event payload, before any step's environment is printed.
 - **Proved without the Apple account** (2026-11-16): `release-ios 10 --version 0.2.47 --unsigned` on this Mac.
   - Every check passed, at 56.5 MB installed.
@@ -3037,7 +3037,7 @@ d5fbaabc1). After a hand edit to the project, run `pod install` and commit what 
      - The build number is taken above App Store Connect's highest, from 10 on, unless `-f build=` sets it.
      - The release version must be the train the owner wants. 0.2.47 still has builds in review, so the next Mac
        release version is cleaner.
-  4. **On the owner's phone:** install it from TestFlight over the SwiftUI app. Settings' footer should read "Ardia
+  4. **On the owner's phone:** install it from TestFlight over the SwiftUI app. Settings' footer should read "Nilla
      <version> Nightly (<build>)".
 - **Who uploads, and how 0.2.47 (9) went up:**
   - The SwiftUI build was sent from `main` by the iOS Release workflow on 15 Nov (`gh workflow run ios-release.yml -f
@@ -3069,7 +3069,7 @@ build.
 
 **Proving the upgrade on a copy of real data.** On a leased simulator, never the owner's phone or live profile.
 1. **Where real data comes from.**
-   - A TestFlight app's container can't be read from a Mac. So the source is the owner's Mac Ardia profile, copied
+   - A TestFlight app's container can't be read from a Mac. So the source is the owner's Mac Nilla profile, copied
      into a scratch folder (the repo's rule: copies only, never the live profile, nothing written back).
    - Delete `sync.json` from the copy before anything starts, so the copy never syncs to the owner's real iCloud
      folder.
@@ -3077,10 +3077,10 @@ build.
      `<work>/mac`, which needs a `--seed <copy>` option added to the script). It turns sync on against
      `<work>/folder`, so the phone side gets the owner's real spaces, pinned tabs and open tabs from a Mac that
      isn't his.
-2. **Set up main's SwiftUI app as the owner uses it** (`/tmp/ardia-phone/swiftui-main.app`, onboarding done):
+2. **Set up main's SwiftUI app as the owner uses it** (`/tmp/nilla-phone/swiftui-main.app`, onboarding done):
    - Connect: Settings › Sync With Mac › Connect to Your Mac, Enter Words, with the phrase read from
      `<work>/phrase.txt` straight into the field (never printed, no screenshot while it shows). Then the folder:
-     `<work>/folder` mirrored into the app's `Documents/Ardia Sync` and chosen there.
+     `<work>/folder` mirrored into the app's `Documents/Nilla Sync` and chosen there.
    - Then use it: at least nine tabs, two archived, about 30 pages visited, a private tab, every Settings row moved
      off its default, Site Settings, blocking (a trusted site, a My Filters line, one list off), the Reader's
      settings, and Appearance.
@@ -3089,7 +3089,7 @@ build.
    - `mac sync`, which lists the phone's device id, name and tabs;
    - the Keychain and folder state as the Sync page shows them.
 4. **Upgrade:** install the Expo build over it, the same bundle id with the container kept, as
-   `ios-update-launch-check` does, and launch it. The import logs one `ardia-legacy imported …` line with counts per
+   `ios-update-launch-check` does, and launch it. The import logs one `nilla-legacy imported …` line with counts per
    kind and no rejects beyond `notWeb` and `duplicate`.
 5. **Compare "after" with "before":**
    - the same open tabs in the same order with the same tab selected, and the Archive's count;
@@ -3109,21 +3109,21 @@ build.
 - **One folder for both sides, no relay.** The leased simulator's "On My iPhone" is the `File Provider Storage` of
   its `group.com.apple.FileProvider.LocalStorage` app group container under
   `~/.simlock/devices/ios/<udid>/data/Containers/Shared/AppGroup/` (read each container's
-  `.com.apple.mobile_container_manager.metadata.plist` for `MCMMetadataIdentifier`). Make `Ardia Sync` there, and
+  `.com.apple.mobile_container_manager.metadata.plist` for `MCMMetadataIdentifier`). Make `Nilla Sync` there, and
   before `mac start` make `<work>/folder` a symlink to it. The Mac writes into it, and the phone's picker shows it as
-  On My iPhone › Ardia Sync.
+  On My iPhone › Nilla Sync.
 - **The phrase without a screen read:** on Enter Words, take one snapshot while the field is empty, to get the
   field's ref and the Use Phrase button. Then `<agent-device> fill <field ref> --text-stdin < <work>/phrase.txt`,
   which keeps the words out of argv and output, and press Use Phrase by its coordinates. Read the screen again only
   once it shows "Step 1, done".
-- **The folder:** Choose Folder… › Browse › On My iPhone › Ardia Sync, then Open from inside the folder.
+- **The folder:** Choose Folder… › Browse › On My iPhone › Nilla Sync, then Open from inside the folder.
 - **Main's app must be the ad hoc build** (the simulator section above). A `CODE_SIGNING_ALLOWED=NO` build connects
   but can't save the key.
 - **Expect Appearance to change once connected:** Match My Mac follows the Mac profile, so a profile set to dark turns
   the phone dark.
 
 **The stand-in run (not the proof).** The owner's profile isn't on this Mac, and copying it is his to allow. So the
-tooling ran on a stand-in made through the app: `/tmp/ardia-phone-seed/standin-profile`, with its counts and recipe
+tooling ran on a stand-in made through the app: `/tmp/nilla-phone-seed/standin-profile`, with its counts and recipe
 in `MANIFEST.md` beside it. It has 4 spaces with 40 tabs, 7 pins, a pinned folder, a split, 613 URLs and 3,025 visits
 over 79 days, ten settings off their defaults, and its own test sync identity. Chrome expires visits after 90 days,
 so no real profile holds more history than that. How far it got:
@@ -3135,11 +3135,11 @@ so no real profile holds more history than that. How far it got:
 - The first attempt lost its simulator to Simlock under load, and the second to a double lease (the screens agent's
   install wiped main's app). The third ran to the end on lease f04ed0f4 (udid 97D6E59E), 2026-11-16 04:17–04:44.
   Evidence, with both stores, the Preferences plist, screenshots, trees and `mac sync` output:
-  `/tmp/ardia-phone-shots/iphone-standin-upgrade/`.
+  `/tmp/nilla-phone-shots/iphone-standin-upgrade/`.
 
 **A fresh connect on 0.88** (2026-11-16, the Expo build at cb2876bc7, clean install on lease cfc7a246, a scratch Mac
 seeded from the stand-in). Onboarding's Connect to Your Mac took the phrase (Enter Words, `fill --text-stdin`) and On My
-iPhone › Ardia Sync, and showed "Connected." The Mac listed one new phone (ci7pa7gk…). A tab sent from the Mac arrived
+iPhone › Nilla Sync, and showed "Connected." The Mac listed one new phone (ci7pa7gk…). A tab sent from the Mac arrived
 once, marked from "shiv". A page opened on the phone appeared under its tabs on the Mac within one sync.
 
 **The stand-in run's before and after** (the real run reads the same things the same way):
@@ -3153,7 +3153,7 @@ once, marked from "shiv". A page opened on the phone appeared under its tabs on 
 | Settings | Search Suggestions off, Auto-Open Keyboard off, archive after 7 days, app links in App, Appearance Green and Classic with Match My Mac off | the same, in `preferences`; Settings reads the same rows |
 | Synced from the Mac | Search Engine DuckDuckGo, the Personal space's pins | the same pins on the start page, four spaces |
 | Import | none | `legacy.receipt` `{"tabs":21,"archive":2,"visits":23,"preferences":7}`, all records accounted for |
-| Sync With Mac | connected: Mac "shiv", "This iPhone", folder Ardia Sync | opens on the connected page with the same devices and folder; no Connect step |
+| Sync With Mac | connected: Mac "shiv", "This iPhone", folder Nilla Sync | opens on the connected page with the same devices and folder; no Connect step |
 | The Mac's view (`mac sync`) | one phone, ckl2z6gj…, 21 tabs | the same one phone, the same id, 21 tabs |
 | Mac to phone | | a tab sent from the Mac arrived once, marked from "shiv" |
 | Phone to Mac | | a page opened on the phone appeared under its tabs on the Mac |
@@ -3161,7 +3161,7 @@ once, marked from "shiv". A page opened on the phone appeared under its tabs on 
 
 Notes for the real run:
 - **Read the import's result from the database, not the log.** A Release build's JavaScript `console.log` doesn't
-  reach the system log, so the `ardia-legacy imported` line never shows. `legacy.receipt` in `preferences` holds the
+  reach the system log, so the `nilla-legacy imported` line never shows. `legacy.receipt` in `preferences` holds the
   same counts.
 - **The data container moves on install.** It gets a new UUID path, with main's files inside, so look it up again with
   `get_app_container` after installing. Main's store lives in the app group container, not the app's own.
@@ -3177,9 +3177,9 @@ Notes for the real run:
 hoc build) was set up off its defaults in every place its source stores something (an Explore pass listed them: every
 `UserDefaults.standard` key, the SwiftData store in the app group, Documents/Downloads, Caches, Application
 Support/Sync, the Keychain, website data). It was connected to a scratch Mac seeded from a copy of the stand-in profile
-with bookmarks added (`/tmp/ardia-phone-seed/standin-proof`). Then the Expo build at **d94eaf4c0** (JavaScript and
+with bookmarks added (`/tmp/nilla-phone-seed/standin-proof`). Then the Expo build at **d94eaf4c0** (JavaScript and
 native from that commit, lab build) was installed over it, as an App Store update keeps the container. Evidence:
-`/tmp/ardia-phone-shots/upgrade-proof/` (`before/`, `after/`, side-by-side `pairs/`). The import's receipt:
+`/tmp/nilla-phone-shots/upgrade-proof/` (`before/`, `after/`, side-by-side `pairs/`). The import's receipt:
 `{"tabs":8,"archive":1,"visits":11,"preferences":16}`.
 
 The first full run (at f94bcc021) carried everything except History's hidden entries; d94eaf4c0 fixes that, and this
@@ -3196,9 +3196,9 @@ run is the proof. The same run's source pass found four other things the upgrade
 | Page thumbnails | 9 in Caches/TabSnapshots | 9 `-legacy` pictures | pass |
 | Website data | a page's cookie and localStorage `main1` | the page reads `cookie-main1` and `local-main1` | pass |
 | Downloads | proof-note.txt in Documents/Downloads | the same file | pass: the file, and the Library's Downloads lists it (run3) |
-| Bookmarks (from the Mac) | Ardia; Proof Folder with 2; Hacker News in Other Bookmarks | the same in the Library's Bookmarks (run3) | pass |
+| Bookmarks (from the Mac) | Nilla; Proof Folder with 2; Hacker News in Other Bookmarks | the same in the Library's Bookmarks (run3) | pass |
 | Spaces, pins, the Mac's tabs | 4 spaces; Personal's 4 pins; the Mac's tabs | the same in the Spaces sheet and on the start page | pass |
-| Sync With Mac | connected: Mac "shiv", "iPhone", folder Ardia Sync | the connected page, the same; no Connect step | pass |
+| Sync With Mac | connected: Mac "shiv", "iPhone", folder Nilla Sync | the connected page, the same; no Connect step | pass |
 | The Mac's view | one phone, kty6evegx…, 48 tab lines | the same one phone and id, 48 tab lines | pass |
 | Site permissions | localhost: camera, microphone, location | the same grant (`browsing.sitePermissions`, identical) and Site Settings row | pass; Revoke Camera after the upgrade left Microphone and Location in the row and the stored grant, and the page asked for the camera again (run3) |
 | Per-site settings | Wikipedia 125% and Night Shade on | identical `browsing.sites`; the page menu shows Night Shade on, 125% | pass |
@@ -3228,8 +3228,8 @@ core has its own). Not applicable: the default-browser status (no entitlement in
 #### TestFlight: the workflow, its certificate and its testers
 
 This was `docs/ios.md`'s, for main's SwiftUI app; since the clean-up the workflow builds only the Expo app.
-- **The app record.** "Ardia", bundle id `com.ardia.browser.ios`, team `U5L5T3NGVV`; the extensions are `.widgets`,
-  `.share` and `.open`, sharing the app group `group.com.ardia.browser.ios`.
+- **The app record.** "Nilla", bundle id `com.nilladigital.nilla.ios`, team `U5L5T3NGVV`; the extensions are `.widgets`,
+  `.share` and `.open`, sharing the app group `group.com.nilladigital.nilla.ios`.
 - **The workflow** (`.github/workflows/ios-release.yml`). What each mode touches in App Store Connect:
   - `mode=status` only reads: the app record, App IDs, devices, certificates, profiles, builds, build uploads and
     tester groups.
@@ -3250,7 +3250,7 @@ This was `docs/ios.md`'s, for main's SwiftUI app; since the clean-up the workflo
 - **CI's certificate.** The archive signs with one development certificate kept in `IOS_DEVELOPMENT_P12` and
   `IOS_DEVELOPMENT_P12_PASSWORD` ("Apple Development: Created via API", expires 12 Nov 2027), so a run makes and
   revokes nothing on the team; a revoked certificate mails the account holder. To renew it: make a key and a request
-  (`openssl req -new -newkey rsa:2048 -nodes -keyout key.pem -out request.csr -subj "/CN=Ardia CI"`), run
+  (`openssl req -new -newkey rsa:2048 -nodes -keyout key.pem -out request.csr -subj "/CN=Nilla CI"`), run
   `mode=certificate` with `signing_request` set to the request's base64, download the `ios-development-certificate`
   artifact, pack it with the key into a .p12 with macOS's `/usr/bin/openssl`, and set both secrets. Distribution
   signing is Apple's cloud-managed certificate.
@@ -3273,26 +3273,26 @@ This was `docs/ios.md`'s, for main's SwiftUI app; since the clean-up the workflo
 #### Launch arguments on iPhone
 
 Main's SwiftUI app reads these, and the Expo app is checked against them in test builds (step 11 of the tester
-checklist). `-ArdiaDemo YES` runs on an in-memory store with the demo Macs and never touches real data; `-ArdiaSpace <name>`
+checklist). `-NillaDemo YES` runs on an in-memory store with the demo Macs and never touches real data; `-NillaSpace <name>`
 starts in that space. Captures without touch: `-BrowseQuery <text>`, `-BrowseSurface browsing`, `-BrowseTab <n>`,
-`-BrowseToolbar`, `-BrowseReader`, `-BrowseIncognito`, `-BrowseDelay <s>`, `-ArdiaDeck <script>`,
-`-ArdiaOnboarding YES`, `-ArdiaOpenSheet archive|spaces|history|bookmarks|downloads`, `-BrowsePlus`,
-`-BrowseOverlay <text>`, `-BrowseCollapsed`, `-BrowseOpen <url>`, `-ArdiaRestingStart`, `-ArdiaColor <name>`,
-`-ArdiaInterfaceStyle glass|classic`, `-ArdiaColorScheme light|dark`, `-ArdiaSettingsPage <route>`,
-`-ArdiaNoSitePermissions`, `-ArdiaDeckQuery <text>` and `-ArdiaDuoCanvas open|half`. Motion captures:
+`-BrowseToolbar`, `-BrowseReader`, `-BrowseIncognito`, `-BrowseDelay <s>`, `-NillaDeck <script>`,
+`-NillaOnboarding YES`, `-NillaOpenSheet archive|spaces|history|bookmarks|downloads`, `-BrowsePlus`,
+`-BrowseOverlay <text>`, `-BrowseCollapsed`, `-BrowseOpen <url>`, `-NillaRestingStart`, `-NillaColor <name>`,
+`-NillaInterfaceStyle glass|classic`, `-NillaColorScheme light|dark`, `-NillaSettingsPage <route>`,
+`-NillaNoSitePermissions`, `-NillaDeckQuery <text>` and `-NillaDuoCanvas open|half`. Motion captures:
 `-BrowsePagerFreeze <fraction>`, `-BrowsePagerScript` and `-BrowseLoadFreeze <progress>`.
 
 #### Sync on iPhone
 
-`ArdiaPhoneSync` on iPhone wraps the SwiftUI app's `SyncService` (ArdiaKit's ArdiaSync) whole, behind the same
+`NillaPhoneSync` on iPhone wraps the SwiftUI app's `SyncService` (NillaKit's NillaSync) whole, behind the same
 interface and events as Android. `PhoneSyncHost` owns the one service: `AppDelegate` creates it in
-`didFinishLaunching`, registers the background refresh task (`com.ardia.browser.ios.sync`) and starts it, so a
+`didFinishLaunching`, registers the background refresh task (`com.nilladigital.nilla.ios.sync`) and starts it, so a
 background launch with no scene runs a cycle without React Native. `SceneDelegate` tells it when the app becomes
 active and resigns. Keys, the phrase's entropy and sealed bytes stay in Swift; only the typed phrase crosses, to
 `connect`.
 
 - **Continuing the SwiftUI app's sync.** Same bundle id, same container: the service reads `Application
-  Support/Sync` (`sync.json`, `sync-state.nns`, `sync-journal.nns`, `sync-snapshot.nns`) and the `Ardia Sync Key`
+  Support/Sync` (`sync.json`, `sync-state.nns`, `sync-journal.nns`, `sync-snapshot.nns`) and the `Nilla Sync Key`
   Keychain item, so a tester's phone keeps its device id and folder with no new connect.
 - **The phone's data.** `packages/phone/ios/PhoneSync` (a Swift package the Podfile links into the pod) reads
   `Documents/SQLite/browser.db` read-only, one connection and one read transaction per cycle, with a busy timeout;
@@ -3305,32 +3305,32 @@ active and resigns. Keys, the phrase's entropy and sealed bytes stay in Swift; o
 - **Waiting for the import.** While the SwiftUI app's `Browser.store` exists and `legacy.markImported()` hasn't
   written `Application Support/PhoneSync/legacy-imported.json`, the source refuses to read and no cycle runs, in
   the foreground or in the background task; status says it is waiting. `legacy.imported()` reads the marker.
-- **Widgets.** The host writes the Mac tabs widget's app-group snapshot with ArdiaDesign's `WidgetExporter`, the
+- **Widgets.** The host writes the Mac tabs widget's app-group snapshot with NillaDesign's `WidgetExporter`, the
   SwiftUI app's code, whenever the synced view changes.
-- **Test build.** `ARDIA_TEST_BUILD=YES` on the xcodebuild line sets `ArdiaTestBuild` in Info.plist and
-  `EXPO_PUBLIC_ARDIA_LAB=true` in the JS bundle phase; it is `NO` in the project, so a store build has no lab, no
-  demo and no logging hooks. In a test build, `-ArdiaSyncDemo YES` swaps in `SyncService.demo` unless sync is set up,
-  and `-ArdiaPageLab YES` opens the page lab. With Metro, start it with `EXPO_PUBLIC_ARDIA_LAB=true`.
+- **Test build.** `ARDIA_TEST_BUILD=YES` on the xcodebuild line sets `NillaTestBuild` in Info.plist and
+  `EXPO_PUBLIC_NILLA_LAB=true` in the JS bundle phase; it is `NO` in the project, so a store build has no lab, no
+  demo and no logging hooks. In a test build, `-NillaSyncDemo YES` swaps in `SyncService.demo` unless sync is set up,
+  and `-NillaPageLab YES` opens the page lab. With Metro, start it with `EXPO_PUBLIC_NILLA_LAB=true`.
 - **Background refresh.** The app registers the task at launch and submits a request each time it resigns
-  (the simulator's log shows `submitTaskRequest: <BGAppRefreshTaskRequest: com.ardia.browser.ios.sync …>`). On the
+  (the simulator's log shows `submitTaskRequest: <BGAppRefreshTaskRequest: com.nilladigital.nilla.ios.sync …>`). On the
   iOS 27 simulator, `_simulateLaunchForTaskWithIdentifier:` from lldb on a backgrounded, suspended app did not run
   the handler. To check it on a device: run from Xcode, send the app to the background, pause, run
-  `e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.ardia.browser.ios.sync"]`,
+  `e -l objc -- (void)[[BGTaskScheduler sharedScheduler] _simulateLaunchForTaskWithIdentifier:@"com.nilladigital.nilla.ios.sync"]`,
   continue, and look for the Mac's latest send in `Application Support/PhoneSync/inbox.json`.
 
-**What ArdiaSync does** (it was `docs/ios.md`'s, and holds for the Expo app, which runs the same service). The iPhone
+**What NillaSync does** (it was `docs/ios.md`'s, and holds for the Expo app, which runs the same service). The iPhone
 is a device in the Mac's chain: its own device id, its own logs, the same file format. A Mac that has never heard of
 the iPhone reads its files.
-- **Folder.** iCloud Drive › Ardia Sync, the Mac's default. iOS gives an app no path into iCloud Drive without a
+- **Folder.** iCloud Drive › Nilla Sync, the Mac's default. iOS gives an app no path into iCloud Drive without a
   container entitlement, and the Mac writes there without one, so the iPhone asks for the folder once with the system
-  folder picker and keeps a security-scoped bookmark. Picking iCloud Drive itself works too: the app looks for Ardia
+  folder picker and keeps a security-scoped bookmark. Picking iCloud Drive itself works too: the app looks for Nilla
   Sync (or Netnyahoo Sync) inside it. Reads and writes go through `NSFileCoordinator`, which makes iCloud bring files
   down; dataless files are reported as pending, as on the Mac.
 - **Joining.** The Mac's Settings › Sync › Connect Another Device shows a QR code of the phrase. The iPhone scans it
   (or takes the 24 words typed or pasted), checks the checksum, and checks that the folder holds that phrase's chain
   before saving anything. Its errors are the Mac's. A different phrase entered after a failure clears the old error
   and, with a folder already chosen, tries again at once (`SyncConnectFlow`); the same words retyped don't.
-- **Keys.** The phrase's entropy is kept in the Keychain (`Ardia Sync Key`, this device only,
+- **Keys.** The phrase's entropy is kept in the Keychain (`Nilla Sync Key`, this device only,
   `AfterFirstUnlockThisDeviceOnly`, so background refresh can read it). The sync state (replica, base, version
   vectors, journal) is sealed with the file key in the app's container, like the Mac's `sync-state.nns`.
 - **What the iPhone writes.** `dev:<id>` (its name), `tabs:<id>` (its 30 most recent open tabs), history visits as
@@ -3353,13 +3353,13 @@ the iPhone reads its files.
   iOS through `packages/sync/Package.swift`; its macOS-only parts are behind `#if os(macOS)`.
 - TypeScript: the merge (`packages/sync/src/scope.ts`, `hlc.ts`, `canon.ts`, `order.ts`) and the omnibox
   (`packages/core/src`) run in JavaScriptCore. `node apps/phone/scripts/bundle-shared.mjs` strips the types and writes
-  `ardia-sync.js` and `ardia-core.js` into `packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts` from
+  `nilla-sync.js` and `nilla-core.js` into `packages/phone/ios/NillaKit/Sources/NillaShared/Scripts` from
   `packages/sync/src/companion/index.ts` and `packages/core/src/mobile.ts`. The bundles are checked in, Android
-  compiles the same `ardia-sync.js`, and `--check` (run by the sync and core test scripts and `ios.yml`) fails when
+  compiles the same `nilla-sync.js`, and `--check` (run by the sync and core test scripts and `ios.yml`) fails when
   one is out of date. So a merge rule changed on the Mac is the phones' rule after the next bundle.
 
 **Tests.**
-- `swift test --package-path packages/phone/ios/ArdiaKit --scratch-path <scratch>`: sync end to end over a real vault
+- `swift test --package-path packages/phone/ios/NillaKit --scratch-path <scratch>`: sync end to end over a real vault
   with a fake Mac, the browser layer (tabs, archive, blocking, omnibox, reader extraction in a real WKWebView), the
   JavaScriptCore bridge and the design pieces. `SyncThroughICloudTests` carries files the way iCloud Drive does: late,
   out of order, as `.icloud` placeholders, with conflict copies; its soak runs hours of random edits on a test clock.

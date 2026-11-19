@@ -15,17 +15,17 @@
   "normal_pressure_only": true,
   "memory_headroom_pct": 10,
   "clean_run_scratch": true,
-  "app": "~/ardia-scratch/bench-proper/app-geom/Ardia.app",
+  "app": "~/nilla-scratch/bench-proper/app-geom/Nilla.app",
   "shared_app": true,
   "port": 9371,
   "cli": "dev:bu45",
-  "ardia_test": "cdpTabsVisible",
-  "results": "~/ardia-scratch/bench-others/results/landing-bu45-1",
+  "nilla_test": "cdpTabsVisible",
+  "results": "~/nilla-scratch/bench-others/results/landing-bu45-1",
   "contenders": [
     {
-      "id": "ardia-codex",
-      "label": "Ardia + Codex (GPT-6.1 Sol)",
-      "kind": "ardia",
+      "id": "nilla-codex",
+      "label": "Nilla + Codex (GPT-6.1 Sol)",
+      "kind": "nilla",
       "agent": "codex",
       "model": "gpt-6.1-sol",
       "effort": "high"

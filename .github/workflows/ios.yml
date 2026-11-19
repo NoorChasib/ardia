@@ -74,7 +74,7 @@ jobs:
           git diff --exit-code -- apps/phone/ios ':!apps/phone/ios/Pods' || { echo "::error::pod install rewrote the iPhone project (diff above): run pod install locally and commit what it writes"; exit 1; }
       - name: Build the Expo app for the simulator, unsigned
         run: >-
-          xcodebuild -workspace apps/phone/ios/Ardia.xcworkspace -scheme Ardia -configuration Debug
+          xcodebuild -workspace apps/phone/ios/Nilla.xcworkspace -scheme Nilla -configuration Debug
           -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$SCRATCH/dd"
           CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet build
 
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            .ci/ardiakit
+            .ci/nillakit
             .ci/phonemotion
             .ci/phonesync
             .ci/sync
@@ -103,8 +103,8 @@ jobs:
           restore-keys: swiftpm-xcode-27.1-
       - name: The JavaScriptCore bundles match their TypeScript
         run: node apps/phone/scripts/bundle-shared.mjs --check
-      - name: ArdiaKit tests
-        run: swift test --package-path packages/phone/ios/ArdiaKit --scratch-path "$SCRATCH/ardiakit"
+      - name: NillaKit tests
+        run: swift test --package-path packages/phone/ios/NillaKit --scratch-path "$SCRATCH/nillakit"
       - name: The phone's Swift tests
         run: |
           swift test --package-path packages/phone/ios/PhoneMotion --scratch-path "$SCRATCH/phonemotion"
@@ -115,7 +115,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            .ci/ardiakit
+            .ci/nillakit
             .ci/phonemotion
             .ci/phonesync
             .ci/sync

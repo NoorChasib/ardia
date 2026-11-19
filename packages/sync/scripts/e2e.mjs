@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { freePort, launch, reporter, sleep } from "../../../scripts/lib/instance.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
-const APP = path.resolve(process.argv[2] ?? `${repo}/apps/browser/build-sync/Build/Products/Debug/Ardia.app`);
+const APP = path.resolve(process.argv[2] ?? `${repo}/apps/browser/build-sync/Build/Products/Debug/Nilla.app`);
 const WORK = path.resolve(process.argv[3] ?? `${process.env.TMPDIR ?? "/tmp"}/ac-sync-e2e`);
 const FOLDER = `${WORK}/folder`;
 const PORT = await freePort();
@@ -122,7 +122,7 @@ function bip39(entropy) {
 
 const savePassword = (origin, user, password) =>
   `return ac.engine.call("passwords.remove", { profile: "", origin: "${origin}", username: "${user}" }).catch((e) => ({ error: e.message }))
-    .then(() => globalThis.expo.modules.ArdiaPasswords.save("", "${origin}", "${user}", "${password}").then(JSON.parse).catch((e) => ({ error: e.message })));`;
+    .then(() => globalThis.expo.modules.NillaPasswords.save("", "${origin}", "${user}", "${password}").then(JSON.parse).catch((e) => ({ error: e.message })));`;
 
 fs.mkdirSync(FOLDER, { recursive: true });
 const swift = fs.readFileSync(`${repo}/packages/sync/ios/Core/Wordlist.swift`, "utf8");
@@ -166,7 +166,7 @@ try {
   const swapped = [...words];
   [swapped[0], swapped[1]] = [swapped[1], swapped[0]];
   const typo = [...words];
-  typo[3] = "ardia";
+  typo[3] = "nilla";
   const wrong = {
     "a valid phrase of someone else": [bip39(crypto.randomBytes(32)), "mismatch"],
     "two words swapped": [swapped[0] === swapped[1] ? [...words].reverse().join(" ") : swapped.join(" "), "checksum"],
