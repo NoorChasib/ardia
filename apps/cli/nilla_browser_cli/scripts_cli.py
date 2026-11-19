@@ -73,9 +73,11 @@ Endpoint: --ws, else --port (plain DevTools servers only), else $ARDIA_CDP_URL, 
 <data dir>/Chromium/ArdiaControl.json with --data-dir or $ARDIA_DATA_DIR, else the installed Nilla's.
 """
 if endpoint.LINUX:
-    ENDPOINT_EPILOG = ENDPOINT_EPILOG.replace("<data dir>/Chromium/ArdiaControl.json", "<data dir>/ArdiaControl.json").replace(
-        "else the installed Nilla's.", f"else {endpoint.LINUX_DATA_DIR_SHOWN}\nwith $ARDIA_CONFIG_HOME set; with neither variable set it refuses."
-    )
+    ENDPOINT_EPILOG = f"""\
+Endpoint: --ws, else --port (plain DevTools servers only), else $ARDIA_CDP_URL, else
+<data dir>/ArdiaControl.json with --data-dir, else {endpoint.LINUX_DATA_DIR_SHOWN} with $ARDIA_CONFIG_HOME set,
+else $ARDIA_DATA_DIR; with neither variable set it refuses.
+"""
 UNKNOWN_EXIT = 3
 
 

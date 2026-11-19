@@ -106,7 +106,7 @@ def hooks_help(linux: bool | None = None) -> dict:
         uninstall = f"Unload and remove the {hooks.LABEL} LaunchAgent. Refused with --data-dir or $ARDIA_DATA_DIR."
         listing = "List the hooks in hooks.json, check them, and show whether the LaunchAgent is loaded. Exit 1 if hooks.json is invalid."
     return {
-        "description": fill(HOOKS_DESCRIPTION, words),
+        "description": fill(HOOKS_DESCRIPTION, words).replace("--data-dir or $ARDIA_DATA_DIR)", f"{endpoint.DATA_DIR_CHOICE})"),
         "log": f"where output goes (default {words['log']}; - for the terminal)",
         "install": (f"run the hooks at login ({words['agent']} {words['agent_name']})", install),
         "uninstall": (f"remove the {words['agent']}", uninstall),

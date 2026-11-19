@@ -98,13 +98,13 @@ THEME_KEY_HELP = "a dotted key: dark.ROLE, light.ROLE, type.family, metrics.radi
 CUSTOM_THEME = "custom"
 FOLDER_SHOWN = f"{endpoint.LINUX_DATA_DIR_SHOWN}/config" if endpoint.LINUX else files.MAC_FOLDER_SHOWN
 EDITOR_FALLBACK = "xdg-open (vi with no display)" if endpoint.LINUX else "vi"
-CONFIG_DESCRIPTION = CONFIG_DESCRIPTION.replace("{folder}", FOLDER_SHOWN).replace("{fallback}", EDITOR_FALLBACK)
+CONFIG_DESCRIPTION = CONFIG_DESCRIPTION.replace("{folder}", FOLDER_SHOWN).replace("{fallback}", EDITOR_FALLBACK).replace("--data-dir or $ARDIA_DATA_DIR", endpoint.DATA_DIR_CHOICE)
 EDIT_HELP = (
     ("open config.json in $VISUAL or $EDITOR and check it, else with xdg-open", "Open config.json (created first if needed) in $VISUAL or $EDITOR, wait for the editor to exit, then\ncheck it like nilla-browser config check. With neither set, in a desktop session it opens the file with xdg-open, which\nreturns at once, so run nilla-browser config check once you've saved it; with no display or no xdg-open it uses vi.")
     if endpoint.LINUX
     else ("open config.json in $VISUAL, $EDITOR, else vi, then check it", "Open config.json (created first if needed) in $VISUAL, $EDITOR, else vi, wait for the editor to exit, then\ncheck it like nilla-browser config check.")
 )
-DATA_DIR_HELP = f"the Nilla data dir; the config folder is <DIR>/config (default: $ARDIA_DATA_DIR, else {FOLDER_SHOWN})"
+DATA_DIR_HELP = f"the Nilla data dir; the config folder is <DIR>/config (default: $ARDIA_DATA_DIR{' without $ARDIA_CONFIG_HOME' if endpoint.LINUX else ''}, else {FOLDER_SHOWN})"
 CHANNEL = r"\s*(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\s*"
 ALPHA = r"\s*(?:0|1|0?\.[0-9]+|1\.0+)\s*"
 COLOUR = re.compile(

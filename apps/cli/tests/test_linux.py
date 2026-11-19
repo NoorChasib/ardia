@@ -71,7 +71,7 @@ class DataDir(unittest.TestCase):
         if ON_LINUX:
             self.assertIn(f"else {endpoint.LINUX_DATA_DIR_SHOWN}/config)", config_cli.DATA_DIR_HELP)
             self.assertIn(f"{endpoint.LINUX_DATA_DIR_SHOWN}/config", config_cli.CONFIG_DESCRIPTION)
-            self.assertIn(f"else {endpoint.LINUX_DATA_DIR_SHOWN}\nwith $ARDIA_CONFIG_HOME set; with neither variable set it refuses.", scripts_cli.ENDPOINT_EPILOG)
+            self.assertIn(f"with --data-dir, else {endpoint.LINUX_DATA_DIR_SHOWN} with $ARDIA_CONFIG_HOME set,\nelse $ARDIA_DATA_DIR; with neither variable set it refuses.", scripts_cli.ENDPOINT_EPILOG)
         self.assertEqual(automation_cli.agent_words(linux=True)["config_folder"], f"{endpoint.LINUX_DATA_DIR_SHOWN}/config")
 
     def test_macos_data_dir_is_unchanged(self):
@@ -92,6 +92,24 @@ class DataDir(unittest.TestCase):
             self.assertTrue(found.ws.startswith("ws://127.0.0.1:9222/devtools/browser/abc-123?token="))
         with mock.patch.object(endpoint, "LINUX", False):
             self.assertEqual(endpoint.resolve(data_dir=str(data)).source, str(data / "Chromium" / endpoint.CONTROL_FILE))
+
+    def test_the_profile_under_config_home_wins_over_the_data_dir_when_both_are_set(self):
+        scratch = self.temp / "data"
+        config = self.temp / "config"
+        write_control(config / "ardia")
+        scratch.mkdir()
+        with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": str(scratch), "ARDIA_CONFIG_HOME": str(config)}):
+            with mock.patch.object(endpoint, "LINUX", True), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.installed_data_dir(linux=True)):
+                self.assertEqual(endpoint.resolve().source, str(config / "ardia" / endpoint.CONTROL_FILE))
+                self.assertEqual(endpoint.data_root(), config / "ardia")
+                self.assertEqual(control.socket_path(), config / "ardia" / control.SOCKET_FILE)
+                self.assertEqual(config_files.places().folder, config / "ardia" / "config")
+                self.assertEqual(endpoint.data_root(str(scratch)), scratch)
+            with mock.patch.object(endpoint, "LINUX", False), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", self.home / "installed"):
+                self.assertEqual(endpoint.data_root(), scratch)
+        with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": str(config / "ardia"), "ARDIA_CONFIG_HOME": ""}):
+            with mock.patch.object(endpoint, "LINUX", True), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.installed_data_dir(linux=True)):
+                self.assertEqual(endpoint.resolve().source, str(config / "ardia" / endpoint.CONTROL_FILE))
 
     def test_a_command_without_a_data_dir_exits_2_with_instructions_and_no_traceback(self):
         from nilla_browser_cli import cli

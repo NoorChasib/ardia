@@ -399,8 +399,8 @@ def run(args, stdin=None, env=None) -> int:
         sys.stderr.write(f"nilla-browser feedback: {refused}\n")
         return 2
     home = usage.recording_home(env)
-    explicit = args.data_dir or env.get("ARDIA_DATA_DIR")
-    root = Path(os.path.abspath(data_root(explicit))) if explicit or not telemetry.is_dev_build() else None
+    chosen = args.data_dir or env.get("ARDIA_DATA_DIR")
+    root = Path(os.path.abspath(data_root(args.data_dir))) if chosen or not telemetry.is_dev_build() else None
     doc = telemetry.read_consent(root) if root is not None else None
     install_id, sharing = identity(doc)
     environment = telemetry.environment_for(root) if root is not None else "dev"

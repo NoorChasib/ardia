@@ -15,8 +15,13 @@ NOT_REACHABLE = (
     "Nilla isn't running, or \"Let the nilla-browser command control Nilla\" is off in Settings."
 )
 CONTROL_FILE = "ArdiaControl.json"
-DATA_DIR_HELP = "the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)"
 LINUX = sys.platform.startswith("linux")
+DATA_DIR_HELP = (
+    "the Nilla data dir (default: $ARDIA_CONFIG_HOME/ardia, else $ARDIA_DATA_DIR)"
+    if LINUX
+    else "the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)"
+)
+DATA_DIR_CHOICE = "--data-dir, or $ARDIA_DATA_DIR without $ARDIA_CONFIG_HOME" if LINUX else "--data-dir or $ARDIA_DATA_DIR"
 ID_PREFIX = "com.nilladigital"
 BUNDLE_ID = f"{ID_PREFIX}.nilla"
 
@@ -126,8 +131,18 @@ def data_root(data_dir: str | None = None) -> Path:
     return explicit if explicit is not None else known_data_dir(INSTALLED_DATA_DIR)
 
 
+def env_data_dir(env=None) -> str | None:
+    env = os.environ if env is None else env
+    chosen = env.get("ARDIA_DATA_DIR") or None
+    if LINUX and env.get("ARDIA_CONFIG_HOME") and INSTALLED_DATA_DIR != UNSET_DATA_DIR:
+        if chosen:
+            own_folder(Path(chosen).expanduser(), "ARDIA_DATA_DIR")
+        return None
+    return chosen
+
+
 def explicit_data_root(data_dir: str | None = None) -> Path | None:
-    root = data_dir or os.environ.get("ARDIA_DATA_DIR")
+    root = data_dir or env_data_dir()
     return own_folder(Path(root).expanduser(), "the data dir") if root else None
 
 
