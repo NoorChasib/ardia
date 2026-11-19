@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { PlatformColor } from "react-native";
-import { Button, Form, HStack, Image, LabeledContent, NavigationLink, Section, Spacer, Text, VStack } from "@expo/ui/swift-ui";
+import { Button, DisclosureGroup, Form, HStack, Image, LabeledContent, NavigationLink, Section, Spacer, Text, VStack } from "@expo/ui/swift-ui";
 import { accessibilityAddTraits, accessibilityHidden, accessibilityHint, font, foregroundStyle, frame, lineLimit, listRowBackground, navigationBarTitleDisplayMode, navigationTitle, opacity, padding, shadow, textSelection, tint, truncationMode } from "@expo/ui/swift-ui/modifiers";
 import { services } from "@nilla/core/src/services.ts";
 import { copy } from "../../lib/platformCopy";
 import { appVersion, openFromSettings } from "../../state/settings/actions";
+import { LICENSE_TEXTS } from "../../state/settings/licenseTexts";
 import { settingsRouteKey } from "../../state/settings/nav";
 import { AppIconPreview, modifierList, settingsChrome, settingsUIAvailable, useTheme } from "../ui";
 import { dataCredits, LIBRARY_CREDITS } from "./DataPages";
@@ -65,6 +67,11 @@ export function ExpoLicensesPage() {
           </Button>
         </Section>
       ))}
+      <Section title="License Texts">
+        {LICENSE_TEXTS.map((license) => (
+          <ExpoLicenseText key={license.id} title={license.title} text={license.text} />
+        ))}
+      </Section>
       <Section title="Code in This App">
         {LIBRARY_CREDITS.map((credit) => (
           <Button key={`${credit.name}@${credit.detail}`} onPress={() => openFromSettings(credit.url)} modifiers={[tint("primary"), accessibilityHint("Opens in a new tab")]}>
@@ -79,5 +86,14 @@ export function ExpoLicensesPage() {
         ))}
       </Section>
     </Form>
+  );
+}
+
+function ExpoLicenseText({ title, text }: { title: string; text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <DisclosureGroup label={title} isExpanded={open} onIsExpandedChange={setOpen}>
+      <Text modifiers={[font({ textStyle: "footnote" }), foregroundStyle(SECONDARY), textSelection(true)]}>{text.trim()}</Text>
+    </DisclosureGroup>
   );
 }

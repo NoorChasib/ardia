@@ -5,6 +5,8 @@ import * as settingsActions from "../state/settings/actions";
 import * as defaultBrowser from "../state/settings/defaultBrowser";
 import { openSettings, type SettingsRoute } from "../state/settings/nav";
 import { PHONE_WHATS_SENT } from "../lib/telemetryCopy";
+import { LICENSE_TEXTS } from "../state/settings/licenseTexts";
+import { dataCredits } from "../components/settings/DataPages";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 
 const onIos = Platform.OS === "ios" ? test : test.skip;
@@ -51,18 +53,37 @@ onIos("Clear Browsing Data is main's form on Expo UI: Time Range, the Clear swit
   await done(root);
 });
 
-onIos("About Nilla has main's three links with their arrows and Open Source Licenses; Licenses lists each credit with its license and address", async () => {
+onIos("About Nilla has one Source Code link to Nilla's repository with its arrow and Open Source Licenses, and no Release Notes", async () => {
   const openLink = jest.spyOn(settingsActions, "openFromSettings").mockImplementation(() => undefined);
   const about = await open({ page: "about" });
-  expect(texts(about.page)).toEqual(expect.arrayContaining(["Nilla", "ardia.dev", "Release Notes", "Source Code", "Open Source Licenses"]));
-  expect(within(about.page, (props) => props.systemName === "arrow.up.forward")).toHaveLength(3);
-  await press(within(about.page, (props) => typeof props.onButtonPress === "function" || typeof props.onPress === "function").find((node) => texts(node).includes("Release Notes"))!);
-  expect(openLink).toHaveBeenCalledWith("https://ardia.dev/release-notes");
+  expect(texts(about.page)).toEqual(expect.arrayContaining(["Nilla", "Source Code", "Open Source Licenses"]));
+  expect(texts(about.page)).not.toContain("Release Notes");
+  expect(within(about.page, (props) => props.systemName === "arrow.up.forward")).toHaveLength(1);
+  await press(within(about.page, (props) => typeof props.onButtonPress === "function" || typeof props.onPress === "function").find((node) => texts(node).includes("Source Code"))!);
+  expect(openLink).toHaveBeenCalledWith("https://github.com/NoorChasib/nilla");
   await done(about.root);
+});
+
+onIos("Licenses lists every credit with its use, license and address, the full license texts, and the code in this app", async () => {
+  const openLink = jest.spyOn(settingsActions, "openFromSettings").mockImplementation(() => undefined);
   const licenses = await open({ page: "licenses" });
-  expect(texts(licenses.page)).toEqual(expect.arrayContaining(["EasyList", "Public Suffix List", "publicsuffix.org"]));
+  const words = texts(licenses.page);
+  expect(dataCredits().map((credit) => credit.name)).toEqual(expect.arrayContaining(["Nilla", "!Bang List", "EasyList", "Public Suffix List"]));
+  for (const credit of dataCredits()) expect(words).toEqual(expect.arrayContaining([credit.name, credit.use, credit.license, credit.url.replace(/^https:\/\//, "")]));
   expect(within(licenses.page, (props) => props.label === "License").length).toBeGreaterThan(3);
   expect(within(licenses.page, (props) => props.title === "Code in This App")).toHaveLength(1);
+  expect(within(licenses.page, (props) => props.title === "License Texts")).toHaveLength(1);
+  const groups = within(licenses.page, (props) => typeof props.onIsExpandedChange === "function");
+  expect(groups.map((group) => group.props.label)).toEqual(LICENSE_TEXTS.map((license) => license.title));
+  expect(groups.every((group) => group.props.isExpanded === false)).toBe(true);
+  for (const group of groups) await act(async () => group.props.onIsExpandedChange({ nativeEvent: { isExpanded: true } }));
+  const shown = texts(licenses.page);
+  for (const license of LICENSE_TEXTS) expect(shown).toContain(license.text.trim());
+  const buttons = within(licenses.page, (props) => typeof props.onButtonPress === "function" || typeof props.onPress === "function");
+  for (const credit of dataCredits()) {
+    await press(buttons.find((node) => texts(node).includes(credit.url.replace(/^https:\/\//, "")))!);
+    expect(openLink).toHaveBeenLastCalledWith(credit.url);
+  }
   await done(licenses.root);
 });
 
