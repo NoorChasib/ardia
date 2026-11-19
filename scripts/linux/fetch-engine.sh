@@ -95,7 +95,7 @@ else
     index=$((index + 1))
   done < <(git -C "$root" rev-list --max-count=200 HEAD -- "${key_paths[@]}")
   if [ -z "$found" ]; then
-    die "no prebuilt Linux engine for engine key ${key:0:12} or any of the 200 commits before it that changed a path the key covers. Layer 1 fetches the engines published upstream ($repo) and Nilla publishes none: build this commit's engine on a Linux builder (scripts/linux/build.sh --apply) and pass that out dir to scripts/linux/release.sh --engine DIR (docs/linux-ci.md)"
+    die "no prebuilt Linux engine for engine key ${key:0:12} or any of the 200 commits before it that changed a path the key covers. Layer 1 fetches the engines published upstream ($repo) and Nilla publishes none: build this commit's engine on a Linux builder (scripts/linux/build.sh --apply) and pass that out dir to scripts/linux/release.sh --engine DIR, or publish it to a repo of your own with scripts/linux/publish-engine.sh --upload --repo OWNER/REPO (docs/linux-ci.md)"
   fi
   if [ "$nearest" = 0 ]; then
     die "no prebuilt Linux engine for engine key ${key:0:12}: pass --nearest to use ${found:0:12}, $distance engine commits older, or build this commit's engine on a Linux builder (scripts/linux/build.sh --apply) and pass that out dir to scripts/linux/release.sh --engine DIR. Layer 1 fetches the engines published upstream ($repo) and Nilla publishes none (docs/linux-ci.md)"
