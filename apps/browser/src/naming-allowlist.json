@@ -1241,6 +1241,42 @@
    "why": "The Ardia import source's fixture test (OWNER-IMPORT): every name in it is Ardia's profile layout, bundle id and keychain item."
   },
   {
+   "id": "V-import-source-ardia-onboarding",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "^\\s*\\[\\{ id: \"ardia\", name: \"Ardia\", app: \"/Applications/Ardia\\.app\", onlyWhenFound: true \\}\\],$|(?<=\\| \"opera\" \\| )\"ardia\"(?= \\| \"fresh\";)|^\\s*ardia: \"Ardia\",$|^\\s*ardia: \\{\\},$|(?<=\"vivaldi\", \"opera\", )\"ardia\"(?=\\] \\};)|(?<=hiddenBrowserSources: \\[\"safari\", \"dia\", )\"ardia\"(?=\\])|(?<=hiddenBrowserSources: \\[\"safari\", \"dia\", \"helium\", )\"ardia\"(?=\\])",
+   "scope": [
+    "apps/browser/src/components/onboarding/sourceTiles.ts",
+    "apps/browser/src/state/onboarding/presets.ts",
+    "apps/browser/src/state/presets/setupCode.ts",
+    "apps/browser/src/lib/platformFeatures.linux.ts",
+    "apps/browser/src/lib/platformFeatures.windows.ts"
+   ],
+   "why": "Ardia listed like any other browser (lead decision 2026-11-19): the Mac onboarding's found-only Ardia tile (found by its app bundle, as Chrome and Helium are), its preset id and name and the setup code's preset value, and the Linux and Windows feature lists that hide the tile because their importers have no Ardia source in Layer 1. They name the other browser Nilla imports from."
+  },
+  {
+   "id": "V-import-source-ardia-js-tests",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "apps/browser/src/state/import/readsAfterPick.test.mjs"
+   ],
+   "why": "The JS test that drives the Arc theme lookup, onboarding and the importer against a recording import module: its fixture source is Ardia (id, name and fake profile paths), the browser whose profile must be read only after the user picks it."
+  },
+  {
+   "id": "X-ardia-install-guards-windows-watch",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "scripts/windows/upstream-traces.ps1",
+    "scripts/windows/upstream-watch.cs",
+    "scripts/windows/upstream-watch.test.ps1"
+   ],
+   "why": "The Windows CI no-upstream watch (plan 2.6): upstream-traces.ps1 checks that the upstream app's folders, its ArdiaHTM ProgID and its RegisteredApplications entry don't exist, upstream-watch.cs names the upstream GitHub owners it refuses (the same fixed list as the Linux upstream_rules.py), and upstream-watch.test.ps1 sends it upstream hosts and paths. Renamed, they would watch for Nilla's own names instead."
+  },
+  {
    "id": "V-licence-texts-phone",
    "class": "never",
    "mechanism": "never",

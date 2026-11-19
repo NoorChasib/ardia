@@ -16,10 +16,12 @@ const SOURCES = [
 
 let calls = [];
 let honoursOnly = true;
+let unlocked = true;
 globalThis.acTestNativeModules = {
   NillaImport: {
     addListener: () => ({ remove() {} }),
-    isBrowserUnlocked: (...args) => (calls.push(["isBrowserUnlocked", ...args]), true),
+    isBrowserUnlocked: (...args) => (calls.push(["isBrowserUnlocked", ...args]), unlocked),
+    profilesNeedingKey: async (...args) => (calls.push(["profilesNeedingKey", ...args]), JSON.stringify(args[1])),
     forgetUnlockedKeys() {},
     cancelImport() {},
     listBrowsers: async (only) => {
@@ -43,10 +45,11 @@ const { useBrowser } = await import("../browser/store.ts");
 const { chooseSource, importNow, setImportKinds, startImport } = await import("./flow.ts");
 const { continueImport } = await import("./runImport.ts");
 const { arcThemeChoices } = await import("../profiles/arcThemes.ts");
-const { listedSourceTiles } = await import("../../components/onboarding/sourceTiles.ts");
+const { listedSourceTiles, sourceTiles } = await import("../../components/onboarding/sourceTiles.ts");
 const { listBrowsers } = await import("@nilla/import");
 const { PLATFORM_FEATURES: LINUX } = await import("../../lib/platformFeatures.linux.ts");
 const { PLATFORM_FEATURES: WINDOWS } = await import("../../lib/platformFeatures.windows.ts");
+const { PLATFORM_FEATURES: MAC } = await import("../../lib/platformFeatures.ts");
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 5));
 const touchesPicked = ([name, ...args]) => name !== "listBrowsers" && JSON.stringify(args).toLowerCase().includes(PICKED_ONLY);
@@ -64,7 +67,13 @@ test("the Arc theme lookup asks only for Arc, even from a platform that lists ev
   honoursOnly = true;
 });
 
-test("onboarding asks the import list only for the browsers it has tiles for, so it never lists Ardia", async () => {
+test("onboarding on the Mac offers an Ardia tile only when Ardia is installed, found by its app bundle like Chrome", () => {
+  const installed = sourceTiles((c) => c.id === PICKED_ONLY || c.id === "chrome", MAC);
+  assert.deepEqual(installed.filter((t) => t.found).map((t) => [t.id, t.app]), [["chrome", "/Applications/Google Chrome.app"], [PICKED_ONLY, "/Applications/Ardia.app"]]);
+  assert.ok(!sourceTiles(() => false, MAC).some((t) => t.id === PICKED_ONLY));
+});
+
+test("onboarding on Linux and Windows asks the import list only for the browsers it has tiles for; their importers have no Ardia source, so its tile is hidden there", async () => {
   for (const platform of [LINUX, WINDOWS]) {
     calls = [];
     const tiles = await listedSourceTiles(listBrowsers, platform);
@@ -73,6 +82,7 @@ test("onboarding asks the import list only for the browsers it has tiles for, so
     assert.ok(only.includes("chrome") && !only.includes(PICKED_ONLY));
     assert.ok(tiles.some((t) => t.id === "chrome" && t.found));
     assert.ok(!tiles.some((t) => t.id === PICKED_ONLY));
+    assert.ok(platform.hiddenBrowserSources.includes(PICKED_ONLY));
   }
 });
 
@@ -101,4 +111,22 @@ test("the importer lists Ardia like any browser but reads its profile only after
   await settle();
   assert.deepEqual(calls.slice(beforePick).filter(touchesPicked).map(([name, id]) => [name, id]), [["importData", PICKED_ONLY], ["listExtensions", PICKED_ONLY]]);
   stop();
+});
+
+test("whether Ardia's open tabs need its keychain key is asked only after the user picks it and continues", async () => {
+  calls = [];
+  unlocked = false;
+  const stop = startImport(0);
+  await settle();
+  assert.equal(importNow().source?.id, PICKED_ONLY);
+  assert.equal(importNow().source?.profiles[0].tabsNeedKey, undefined);
+  assert.deepEqual(calls.filter(touchesPicked), []);
+
+  setImportKinds(["tabs"]);
+  await continueImport();
+  assert.deepEqual(calls.filter(touchesPicked).filter(([name]) => name !== "isBrowserUnlocked"), [["profilesNeedingKey", PICKED_ONLY, ["Default"]]]);
+  assert.equal(importNow().step.name, "unlock");
+  assert.equal(importNow().source?.profiles[0].tabsNeedKey, true);
+  stop();
+  unlocked = true;
 });

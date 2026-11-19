@@ -79,4 +79,29 @@ final class ArdiaSourceTests: XCTestCase {
     try fileManager.removeItem(at: chromium)
     XCTAssertNil(discovery().list().first { $0.id == "ardia" })
   }
+
+  func writeSessions(_ profile: URL, cleartextComplete: Bool) throws {
+    for folder in ["Sessions", "Sessions_Encrypted"] {
+      try? fileManager.removeItem(at: profile.appendingPathComponent(folder))
+      try fileManager.createDirectory(at: profile.appendingPathComponent(folder), withIntermediateDirectories: true)
+    }
+    var cleartext = Data("SNSS".utf8)
+    cleartext.append(contentsOf: cleartextComplete ? [1, 0, 0, 0] : [3, 0, 0, 0])
+    try cleartext.write(to: profile.appendingPathComponent("Sessions/Session_13400000000000001"))
+    try Data("sealed".utf8).write(to: profile.appendingPathComponent("Sessions_Encrypted/Session_13400000000000002"))
+  }
+
+  func testListingArdiaIsTheSameWhateverItsSessionFilesHold() throws {
+    let profile = chromium.appendingPathComponent("Default", isDirectory: true)
+    let definition = try XCTUnwrap(BrowserDefinition.find("ardia"))
+    try writeSessions(profile, cleartextComplete: true)
+    let complete = try XCTUnwrap(discovery().list().first { $0.id == "ardia" })
+    XCTAssertEqual(discovery().profilesNeedingKey(definition, ["Default"]), [])
+    try writeSessions(profile, cleartextComplete: false)
+    let incomplete = try XCTUnwrap(discovery().list().first { $0.id == "ardia" })
+    XCTAssertEqual(complete.profiles.map(\.tabsNeedKey), [false, false])
+    XCTAssertEqual(incomplete.profiles.map(\.tabsNeedKey), [false, false])
+    XCTAssertEqual(complete.profiles.map(\.available), incomplete.profiles.map(\.available))
+    XCTAssertEqual(discovery().profilesNeedingKey(definition, ["Default"]), ["Default"])
+  }
 }

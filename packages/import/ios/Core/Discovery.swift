@@ -216,6 +216,13 @@ public struct BrowserDiscovery {
     return dir
   }
 
+  public func profilesNeedingKey(_ def: BrowserDefinition, _ profileIds: [String]) -> [String] {
+    guard def.family == .chromium, !asksAppForTabs(def) else { return [] }
+    return profileIds.filter { id in
+      chromiumProfiles(def, only: id).contains { ChromiumSessions.needsKey(profile: URL(fileURLWithPath: $0.path, isDirectory: true)) }
+    }
+  }
+
   public func profile(_ def: BrowserDefinition, _ profileId: String) -> BrowserProfile? {
     switch def.family {
     case .chromium, .arc:
@@ -280,7 +287,7 @@ public struct BrowserDiscovery {
         isDefault: dir == (lastUsed ?? "Default") || (dir == "." && lastUsed == nil),
         available: chromiumKinds(path, arc: def.family == .arc),
         spaces: nil,
-        tabsNeedKey: def.family != .arc && ChromiumSessions.needsKey(profile: path)
+        tabsNeedKey: false
       ))
     }
     return out

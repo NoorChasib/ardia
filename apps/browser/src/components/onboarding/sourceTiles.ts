@@ -25,6 +25,7 @@ export const SOURCE_CANDIDATES: SourceCandidate[][] = [
     { id: "edge", name: "Edge Beta", app: "/Applications/Microsoft Edge Beta.app", importId: "edgeBeta" },
   ],
   [{ id: "helium", name: "Helium", app: "/Applications/Helium.app", onlyWhenFound: true }],
+  [{ id: "ardia", name: "Ardia", app: "/Applications/Ardia.app", onlyWhenFound: true }],
   [{ id: "chromium", name: "Chromium", app: "", onlyWhenFound: true, listedOnly: true }],
   [{ id: "vivaldi", name: "Vivaldi", app: "", onlyWhenFound: true, listedOnly: true }],
   [{ id: "opera", name: "Opera", app: "", onlyWhenFound: true, listedOnly: true }],

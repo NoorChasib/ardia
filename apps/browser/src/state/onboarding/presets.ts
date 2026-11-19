@@ -1,6 +1,6 @@
 import type { Settings } from "../settings/settings";
 
-export type BrowserSourceId = "arc" | "dia" | "chrome" | "safari" | "firefox" | "zen" | "brave" | "edge" | "helium" | "chromium" | "vivaldi" | "opera" | "fresh";
+export type BrowserSourceId = "arc" | "dia" | "chrome" | "safari" | "firefox" | "zen" | "brave" | "edge" | "helium" | "chromium" | "vivaldi" | "opera" | "ardia" | "fresh";
 
 export type Preset = BrowserSourceId;
 
@@ -17,6 +17,7 @@ export const PRESET_NAMES: Record<Preset, string> = {
   chromium: "Chromium",
   vivaldi: "Vivaldi",
   opera: "Opera",
+  ardia: "Ardia",
   fresh: "Nilla",
 };
 
@@ -127,6 +128,7 @@ export const PRESETS: Record<Preset, Partial<Settings>> = {
   chromium: CLASSIC_TABS,
   vivaldi: CLASSIC_TABS,
   opera: CLASSIC_TABS,
+  ardia: {},
   fresh: { addressBar: "sidebar", commandBarPlacement: "centred", newTabPosition: "nextToCurrent", newTabButtonPosition: "bottom", profileSwitcherIcons: false },
 };
 

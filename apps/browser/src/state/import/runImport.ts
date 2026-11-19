@@ -45,18 +45,23 @@ import {
 import { importModule } from "./importApi";
 import { listFoundExtensions } from "./listedExtensions";
 import type { ExtensionGroup } from "./extensionListing";
+import { checkingSessionKeys, withSessionKeyNeeds } from "./sessionKeys";
 
-export function continueImport() {
-  const { source, step, kinds, sourceProfiles } = importNow();
-  if (!source) return;
+export async function continueImport() {
+  const { source: listed, step, kinds, sourceProfiles } = importNow();
+  if (!listed || checkingSessionKeys()) return;
   if (step.name === "choose") {
-    if (source.needsFullDiskAccess) return patchImport({ step: { name: "access" } });
-    if (source.requiresExport) return patchImport({ step: { name: "safari", error: null } });
-    if (source.profiles.length > 1 || (importsBySpaces(source) && spacesOf(source).length > 1)) return patchImport({ step: { name: "profiles" } });
+    if (listed.needsFullDiskAccess) return patchImport({ step: { name: "access" } });
+    if (listed.requiresExport) return patchImport({ step: { name: "safari", error: null } });
+    if (listed.profiles.length > 1 || (importsBySpaces(listed) && spacesOf(listed).length > 1)) return patchImport({ step: { name: "profiles" } });
   }
+  const unlocked = () => importModule().isBrowserUnlocked(listed.id);
+  const wantsSessionTabs = kinds.has("tabs") && !listed.asksAppForTabs && listed.family === "chromium";
+  const source = wantsSessionTabs && listed.needsKeychain && !unlocked() ? await withSessionKeyNeeds(listed, sourceProfiles) : listed;
+  if (!source) return;
   const sidebarKinds = DIA_SIDEBAR_KINDS.some((k) => kinds.has(k));
   const encryptedTabs = source.profiles.some((p) => sourceProfiles.includes(p.id) && p.tabsNeedKey && (kinds.has("tabs") || (!!p.diaSidebar && sidebarKinds)));
-  const locked = (encryptedTabs || ENCRYPTED_KINDS.some((k) => kinds.has(k))) && source.needsKeychain && !importModule().isBrowserUnlocked(source.id);
+  const locked = (encryptedTabs || ENCRYPTED_KINDS.some((k) => kinds.has(k))) && source.needsKeychain && !unlocked();
   if ((step.name === "choose" || step.name === "profiles") && locked) return patchImport({ step: { name: "unlock", unlocking: false, error: null } });
   void runImport(kinds);
 }

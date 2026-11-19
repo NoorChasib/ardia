@@ -42,7 +42,13 @@ Shared code: `Model.swift` (`ImportKind`, `ImportResult` and the other result ty
 
 ## Data flow
 
-1. `Discovery.swift`: `BrowserDiscovery.list()` returns each installed source and its profiles (`listBrowsers`).
+1. `Discovery.swift`: `BrowserDiscovery.list(only:)` returns each installed source and its profiles (`listBrowsers(only?)`;
+   `only` limits the listing to those ids, and the JS wrapper filters the answer too, because the Windows module and the
+   Linux engine list every source). Listing reads only what a row needs: the app, the profile folders, their `Local State`
+   names and which files exist, never a file's contents. Whether a profile's open tabs need the Safe Storage key
+   (`tabsNeedKey`, from its session files) is asked once the user has picked the browser and continues with tabs
+   (`profilesNeedingKey(id, profileIds)`, `continueImport` in `state/import/runImport.ts`); a Dia profile with a sidebar file is
+   marked at listing, from the file's existence.
 2. `Importer.swift`: `Importer.importData(browserId:profileId:kinds:…)` dispatches on `(kind, family)` to the readers
    above. A failed kind becomes a warning plus an entry in `failed`, and the other kinds still run. Safari, Dia tabs,
    HTML and CSV have their own module functions (`importSafariDirect`, `importSafariExport`, `readDiaTabs`,

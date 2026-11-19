@@ -11,6 +11,7 @@ const linux = nillaHost ? createHostImport(nillaHost, NillaError) : null;
 if (linux) setImportPasswordSink({ pending: pendingPasswords, write: linux.writePasswords, discard: linux.discardPasswords });
 
 export const listBrowsers: typeof real.listBrowsers = linux ? linux.listBrowsers : real.listBrowsers;
+export const profilesNeedingKey: typeof real.profilesNeedingKey = linux ? async () => [] : real.profilesNeedingKey;
 export const importData: typeof real.importData = linux ? linux.importData : real.importData;
 export const unlockBrowser: typeof real.unlockBrowser = linux ? linux.unlockBrowser : real.unlockBrowser;
 export const isBrowserUnlocked: typeof real.isBrowserUnlocked = linux ? linux.isBrowserUnlocked : real.isBrowserUnlocked;

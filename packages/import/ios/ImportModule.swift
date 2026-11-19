@@ -48,6 +48,13 @@ public class ImportModule: Module {
       self.run(promise) { try Self.json(self.importer.discovery.list(only: only.map(Set.init))) }
     }
 
+    AsyncFunction("profilesNeedingKey") { (browserId: String, profileIds: [String], promise: Promise) in
+      self.run(promise) {
+        guard let def = BrowserDefinition.find(browserId) else { return "[]" }
+        return try Self.json(self.importer.discovery.profilesNeedingKey(def, profileIds))
+      }
+    }
+
     AsyncFunction("importData") { (jobId: String, browserId: String, profileId: String, kinds: [ImportKind], options: ImportRequestOptions, promise: Promise) in
       let cancellation = self.jobs.start(jobId)
       let observer = self.observer(jobId: jobId, options: options)
