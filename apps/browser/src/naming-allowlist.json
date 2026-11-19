@@ -1434,6 +1434,54 @@
    "why": "Names in the frozen engine tree that the Linux syntax check reads: the ardia_sources list in chrome/browser/ardia/BUILD.gn and the gen/ardia folder its mojoms generate into (council C3)."
   },
   {
+   "id": "R-docs-engine-symbols",
+   "class": "R",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_])ardia::(?=[A-Za-z_<])|(?<![A-Za-z0-9_])SetArdiaLinuxThinScrollBars(?![A-Za-z0-9_])|(?<=Local\\\\)ArdiaBrowser(?=\\.)|(?<=…/)ardia(?=/)|ardia: <method> <reason> isn't allowed for the ardia command|(?<=keychain item, account \\\")Ardia(?=\\\")",
+   "scope": [
+    "docs/*.md"
+   ],
+   "why": "Engine symbols the docs name as the frozen engines spell them: the ardia:: C++ namespace, NativeTheme::SetArdiaLinuxThinScrollBars, the Windows launch guard's Local\\ArdiaBrowser.* objects, the engine/chromium/.../ardia/ folder written with an ellipsis, the engine's CLI refusal text and the Safe Storage account \"Ardia\" (council C4)."
+  },
+  {
+   "id": "V-history-folder",
+   "class": "never",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_-])(?:docs/)?history/ardia(?![A-Za-z0-9_-])",
+   "why": "The folder that archives Ardia's release notes, retired docs and their credits (docs/history/ardia/): Ardia's records, never Nilla's (council C4)."
+  },
+  {
+   "id": "N-linux-tarball-folder",
+   "class": "N",
+   "mechanism": "class",
+   "regex": "(?<=\\./)ardia(?=/install\\.sh)",
+   "scope": [
+    "apps/linux/*",
+    "scripts/linux/*",
+    "docs/linux-*.md",
+    "docs/perf/*linux*.md",
+    "apps/cli/*",
+    "docs/cli.md",
+    ".github/workflows/linux.yml",
+    ".github/workflows/release.yml",
+    "packages/shell/scripts/*",
+    "scripts/release/*",
+    "docs/releasing.md"
+   ],
+   "why": "The Linux tarball's top folder ardia/ (package.py arcname), written as ./ardia/install.sh where the docs say how to install it (council C4)."
+  },
+  {
+   "id": "V-conventions-file-names",
+   "class": "never",
+   "mechanism": "never",
+   "text": "`Ardia<Thing>`",
+   "boundary": "none",
+   "scope": [
+    "docs/conventions.md"
+   ],
+   "why": "docs/conventions.md says the app-side ObjC files keep their Ardia<Thing> names until Layer 2 (council C4)."
+  },
+  {
    "id": "V-linux-ci-engine-source",
    "class": "never",
    "mechanism": "never",
@@ -1988,8 +2036,8 @@
    "files": 166,
    "occurrences": 627,
    "decision": "class",
-   "protectedOccurrences": 321,
-   "renamedOccurrences": 306,
+   "protectedOccurrences": 325,
+   "renamedOccurrences": 302,
    "notRsFiles": 354,
    "coveredBy": [
     "N-linux-layout",
@@ -2000,6 +2048,8 @@
     "K-brand-folder",
     "A-rendezvous",
     "N-linux-data-folder",
+    "R-docs-engine-symbols",
+    "N-linux-tarball-folder",
     "P-windows-profile-test-folder"
    ],
    "why": "Path fragment: covered by A-rendezvous (/ardia/active), F-chrome-host, N-cli-home, N-linux-layout and R-engine-gn."

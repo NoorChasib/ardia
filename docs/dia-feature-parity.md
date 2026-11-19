@@ -5,7 +5,7 @@ visual rows re-checked against **1.50.1 (87750)** (`docs/dia-spec.md` › "1.50 
 Nilla = this working tree on **2026‑09‑25, after the Chrome migration**: then our patched Chrome-style CEF
 (154.0.28), where every app window was Chrome's own Browser window (since 0.2.0) and every tab a real Chrome tab of
 it, hosted in our React Native views. Since 0.2.22 the app runs on ArdiaCore, Chrome's own framework with our layer
-(`docs/ardiacore-parity.md`), and since 0.2.31 on plain Chromium with no CEF left (`docs/engine-build.md`); the rows
+(`docs/history/ardia/ardiacore-parity.md`), and since 0.2.31 on plain Chromium with no CEF left (`docs/engine-build.md`); the rows
 hold for all three, and rows changed since say so.
 
 How this audit was done: every non-AI row re-read against the code (then `packages/cef`, apps/browser/src,

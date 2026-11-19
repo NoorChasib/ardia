@@ -246,7 +246,8 @@ writeDocument(DOC, versionedJson(data, VERSION));
 
 ## Names
 
-- App-side ObjC classes and their files are `Nilla<Thing>`; Swift types use plain names (the module namespaces them).
+- App-side ObjC classes are `Nilla<Thing>`; their files keep the `Ardia<Thing>` names until Layer 2. Swift types use plain names
+  (the module namespaces them).
 - The engine's exported ObjC API is `ArdiaCore*`; engine C/C++ is `ac_*`.
 - No `Cef*`/`CEF`/`cef` names, no `AC*` or app-side `ArdiaCore*` classes in `packages/*/ios`.
 - No upstream name (the app Nilla forked, or the name before it) outside what `apps/browser/src/naming-allowlist.json`

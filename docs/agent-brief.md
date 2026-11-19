@@ -19,7 +19,7 @@ variables) is in `docs/conventions.md`, enforced by `apps/browser/src/convention
 - Native code lives in Expo modules under `packages/*/ios` (Swift / Objective-C++):
   - `packages/ardiacore`: the web engine, **ArdiaCore**: Chrome's own framework (`Chromium Framework.framework`,
     Chromium 157.0.8103.50 + Helium 0.21.2 + our patch series, `docs/engine-build.md`) with our layer linked
-    in, and the Expo modules and JS API the app uses (`docs/ardiacore-spike.md`, `docs/ardiacore-parity.md`).
+    in, and the Expo modules and JS API the app uses (`docs/history/ardia/ardiacore-spike.md`, `docs/history/ardia/ardiacore-parity.md`).
     - **Chromium runs the process.** `main.swift` calls `NillaHost.run`: `ChromeMain` starts with our
       `ACMainDelegate`, `NSApp` is Chrome's `BrowserCrApplication`, and the React Native host (`AppDelegate`) starts
       inside Chrome's run loop. Nothing may touch `NSApp` before that.
@@ -93,7 +93,7 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
 | Tab activation | `ardiacore_window.mm` `-activateTab:`, `ac_window_host_tabs.mm` `ActiveTabChanged` | `ArdiaWebView+Tab.mm` `-tabActivatedByChrome:`, `ArdiaTabStrip.mm` | same |
 | Focus guard (test instances) | `ac_window_host.mm` (`WindowHost` activation) | `ArdiaActivation.mm` (`activation.log`), `ArdiaWindowFullScreen.mm` (acted-out occlusion), `ArdiaWebView+Focus.mm` | `packages/shell/ios/WindowManager.swift` |
 | Fullscreen | `ac_browser_window_exclusive_access.mm` (`ExclusiveAccessContext`), `ac_window_host_tabs.mm` `FullscreenChanged` | `ArdiaWindowFullScreen.mm` (acted out in test instances), `ArdiaPageCover.mm` | `components/window/ContentCard.tsx`, `state/tabs/pageState.ts` |
-| Picture in Picture | `ac_picture_in_picture.mm`; Dia's window and controls in `engine/chromium/…/nilla/pip/`; the auto-PiP hook in `engine/ardiacore/apply.sh` | `ArdiaPictureInPicture.mm` (monitors, `nilla_pip`), `ArdiaPiPController.mm` (+`Swipe`, +`Skip`, +`SelfTest`), `ArdiaPiPZoom.mm`, `ArdiaWebView+PictureInPicture.mm` | `state/media/pip.ts` |
+| Picture in Picture | `ac_picture_in_picture.mm`; Dia's window and controls in `engine/chromium/…/ardia/pip/`; the auto-PiP hook in `engine/ardiacore/apply.sh` | `ArdiaPictureInPicture.mm` (monitors, `nilla_pip`), `ArdiaPiPController.mm` (+`Swipe`, +`Skip`, +`SelfTest`), `ArdiaPiPZoom.mm`, `ArdiaWebView+PictureInPicture.mm` | `state/media/pip.ts` |
 | Password and autofill bubbles | `ac_password_prompt.mm`, `ac_browser_window.h` (`ACAutofillBubbleHandler`), `ac_autofill_trigger.mm` (dropdown) | `ArdiaWindowController.mm` (`window:passwordPrompt:forTab:`) → `NillaWebView` event | `components/site/Prompts.tsx`, `site/Autofill.tsx` |
 | Share tab, screen share | `ardiacore_tab_media.mm` (`TabSharingDelegateFor`), `ac_desktop_capture.mm` | `ArdiaHost.mm` `shareTabInstead`, `MediaModule.swift` | `components/media/ShareBar.tsx`, `SharePicker.tsx` |
 | Restore, discard | `engine/chromium/…/ac_tab_restore.cc` (closed tabs), `ac_tab_restore_history.cc` (each tab's history) | `ArdiaWebView+Tab.mm` (`discard:`), `ArdiaWebView+Transfer.mm` (`transferKey`), `ArdiaTabParking.mm` | `state/tabs/tabLifecycle.ts`, `state/windows/windows.ts` |
@@ -125,7 +125,7 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
   `Extensions`) are `ardiacore_tab_<category>.mm`; the engine's calls into the app delegate are `ardiacore_hooks.mm`. A
   split class or file shares its ivars and helpers through one internal header (`ardiacore_api_internal.h`,
   `ardiacore_tab_internal.h`, `ac_browser_internal.h`, `ac_video_upscaler_internal.h`; in `chrome/browser/ardia`,
-  `ac_<domain>_internal.h` in namespace `nilla::<domain>_internal`).
+  `ac_<domain>_internal.h` in namespace `ardia::<domain>_internal`).
 - **Adding to `ArdiaCore.h`:** one form per call. Implement it in its class's file, or a category's (a new file goes in
   `BUILD.gn` `sources`); a member implemented in a category file is declared in that category in `ArdiaCore.h`. A new class
   must be named `ArdiaCore*` to be exported (the `ardiacore.exports` wildcard). The pod reads `ArdiaCore.h` from the repo and
@@ -135,7 +135,7 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
   `engine/chromium/src/chrome/browser/ardia/ac_<domain>.cc` (`AC_ARGS_CALL` for a call that needs no profile; conventions
   in `public/ac_engine.h` and `ac_engine.h`; a new file goes in that `BUILD.gn`; `ac_engine.exports` exports every
   `ac_*`). A private window's calls arrive with `offTheRecord: true` and are refused unless the call says
-  `nilla::OffTheRecord::kAllow`: the engine alone decides which calls serve a private session; (2) `scripts/agent/engine-build`; (3) call it with
+  `ardia::OffTheRecord::kAllow`: the engine alone decides which calls serve a private session; (2) `scripts/agent/engine-build`; (3) call it with
   `NillaEngineBridge call:` (`callWithSecret:` for secrets); for JS, add `"verb": EngineCall.passing("ac_<domain>_<verb>")`
   to the domain module's call table and its `"domain.verb": [args, result]` row to `packages/ardiacore/src/engine/api.ts`.
 - **The page script** is `packages/ardiacore/ios/page_script.js`, a pod resource: `ArdiaHostEngineDelegate.mm` hands it to the

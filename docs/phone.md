@@ -2073,10 +2073,9 @@ Reverting them restores `apps/android`.
   `packages/phone/android/src/test/resources/com/nilladigital/nilla/phone/compose-store-names-01a149d87.tsv`, copied verbatim from the
   release reference's commit, where `HEAD` still had the same four.
 - `android.yml`: it built and tested the Compose app. It now runs the Expo Android app's unit tests on pull requests
-  that touch the phone's Android side or sync, behind the same `gate` job, so its `GATED_WORKFLOWS` entry stays.
+  that touch the phone's Android side or sync.
 - `docs/android.md`: it documented the Compose app and goes. This file is the Android documentation.
 - `check-upgrade.py`, the upgrade gate and the legacy reader: they read only APKs and the phone's own sources.
-- `.github/vouch/vouch.cjs`: unchanged.
 - The site, dashboard, CLI and the Mac app name nothing in `apps/android`.
 
 **The pinned references.** Both are kept outside the repo, on this Mac in `~/Developer/nilla-phone-references/`
@@ -2148,7 +2147,7 @@ Expo app builds from and what comparisons need. `main` keeps it until this branc
   path. It goes, and so do that path and the workflow's `app` input. The Expo app is the only iPhone app; build
   0.2.47 (9) stays on TestFlight as it is.
 - `ios.yml`: its `app` job built the SwiftUI project and goes. Its `packages` job stays and also runs PhoneMotion and
-  PhoneSync, so its `GATED_WORKFLOWS` entry in `.github/vouch/vouch.cjs` stays.
+  PhoneSync.
 - `docs/ios.md`: it documented the SwiftUI app and goes. What is still true (the code shared with the Mac, the
   TestFlight secrets and the version scheme) is in this file.
 - `.gitignore`, the Podfile, the Expo project, `build-sim-app`, `release-ios`, `packages/phone/android/build.gradle`

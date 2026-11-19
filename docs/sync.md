@@ -392,7 +392,7 @@ A tab sent to another device (the tab menu's "Send to <device>" on a Mac; the iP
 ### Extensions
 
 What Chrome Sync does for extensions, through our folder (`packages/sync/src/extensions.ts`, the app's host in
-`apps/browser/src/state/sync/extensions.ts`, Chrome's side in `engine/chromium/…/nilla/ac_extensions_sync.cc`).
+`apps/browser/src/state/sync/extensions.ts`, Chrome's side in `engine/chromium/…/ardia/ac_extensions_sync.cc`).
 - **What syncs.** Extensions from the Chrome Web Store that Chrome itself would sync (`sync_util::ShouldSync`:
   installed by the user from the store, not by default, policy or a component, not blocklisted, no other update
   URL), and not themes or apps. Unpacked extensions, Ardia Scripts and uBlock Origin (bundled) stay on their Mac. Per

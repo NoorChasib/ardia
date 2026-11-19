@@ -28,7 +28,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
 
 ### The shell and its bridge
 
-- **Startup.** `chromium-ardia-linux-layer.patch` calls `nilla::StartLinuxHost()` from
+- **Startup.** `chromium-ardia-linux-layer.patch` calls `ardia::StartLinuxHost()` from
   `ChromeBrowserMainParts::PostBrowserStart()`. Each browser window gets a `ShellHostView` (`ac_linux_host.cc`). It
   lays a WebView over Chromium's `BrowserView` client area and loads `chrome://ardia/` into it. Chromium keeps
   ownership of `Browser`, `BrowserWindow` and `TabStripModel`, and its normal browser delegates.
@@ -699,7 +699,7 @@ command ([linux-ci.md](linux-ci.md) › Linux releases).
   `--user-data-dir` and `--password-store=basic`, inside the same disposable host. Keep the sandbox on.
 - **Installing.** Only on a disposable VM, container or CI runner, never on a machine you use: an installed package
   starts the engine without `nilla-dev-run`, and today's engine opens Ardia's default profile.
-  `sudo ./nilla/install.sh` installs under `/usr`. It also accepts `--prefix /opt/ardia` and
+  `sudo ./ardia/install.sh` installs under `/usr`. It also accepts `--prefix /opt/ardia` and
   `--destdir <staging root>`.
   - Without `--destdir` it must run as root and refuses otherwise, so it never leaves a partial install. Installed
     files are owned by root.
@@ -1315,7 +1315,7 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
     ciphertext's provider tag (`v10` built-in, `v11` keyring, `v12` portal) and flag Chromium's silent fallback to the
     obfuscating v10 key (`protectionFallback`).
   - An unreadable store answers `ERR_PASSWORDS_UNAVAILABLE` or `ERR_AUTOFILL_UNAVAILABLE`, never an empty list.
-- **Reauthentication.** `nilla::Reauth` (`ac_reauth_linux.cc`) asks polkit for `dev.ardia.linux.reauthenticate`. The
+- **Reauthentication.** `ardia::Reauth` (`ac_reauth_linux.cc`) asks polkit for `dev.ardia.linux.reauthenticate`. The
   browser's own bus name is the subject, with interaction allowed and a 120 s timeout.
   - The policy is `auth_self` for active sessions and `no` for inactive and remote ones.
   - Only `is_authorized && !is_challenge` grants. Everything else is `denied`, `cancelled`, `expired` or
@@ -1592,7 +1592,7 @@ A link another app opens (`xdg-open`, a mail client, the package's launcher run 
 other apps first apply. The Mac's `source` and `pointer` are left out: Linux can't tell which app sent a link, and the
 Mac leaves `source` out too when it doesn't know.
 
-- **The hook.** `chromium-linux-open-urls.patch` asks `nilla::TakeLinuxLaunchUrls` (`ac_linux_launch_urls.cc`) in the
+- **The hook.** `chromium-linux-open-urls.patch` asks `ardia::TakeLinuxLaunchUrls` (`ac_linux_launch_urls.cc`) in the
   two places Chromium turns command-line arguments into tabs: `StartupBrowserCreator::Start` (the launch that starts
   Nilla) and `ProcessCommandLineWithProfile` (a second launch, handed to the running process through the process
   singleton). The URLs are the ones Chromium itself would open (`StartupTabProviderImpl::GetCommandLineTabs`).
@@ -1669,7 +1669,7 @@ Both are ports of the Mac's native code (`ArdiaWebView+Peek.mm`, `ArdiaWebView+T
   when the pointer is near the bottom.
 - **`ArdiaSystem.setThinScrollBars(thin)`** (Settings › Appearance › Scroll bars). Helium turns on Chromium's
   overlay scroll bars in the mode that follows the OS, which on Linux is GTK's `gtk-overlay-scrolling`.
-  `chromium-linux-thin-scroll-bars.patch` adds `ui::NativeTheme::SetNillaLinuxThinScrollBars`: Thin makes
+  `chromium-linux-thin-scroll-bars.patch` adds `ui::NativeTheme::SetArdiaLinuxThinScrollBars`: Thin makes
   `NativeTheme::CalculateUseOverlayScrollbar` prefer overlay scroll bars whatever GTK says, and the change runs the
   path an OS setting change takes, so open pages switch without a reload and new ones start that way. The shell
   sends the setting at every launch.

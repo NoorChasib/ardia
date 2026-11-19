@@ -1,7 +1,7 @@
 # Building the engine from source
 
 Nilla runs on ArdiaCore: Chrome's own framework (`//chrome:chrome_framework`) built from our Chromium tree, with our
-layers linked in (`docs/ardiacore-spike.md`). The tree is **Chromium 157.0.8103.50** (`CHROMIUM_VERSION` in
+layers linked in (`docs/history/ardia/ardiacore-spike.md`). The tree is **Chromium 157.0.8103.50** (`CHROMIUM_VERSION` in
 `env.sh`), plus **Helium** 0.21.2 (helium-chromium) and 0.21.2.1 (helium-macos) minus a short skip list, then our
 patch series. Nothing of CEF's is checked out or built. CEF left the tree
 on 2026-10-09: its 117 patches to Chrome are gone, except a few kept as `chromium-cef-carryover.patch`
@@ -40,7 +40,7 @@ What the build adds:
 | `chromium-password-bubble-hook.patch` | ArdiaCore may replace Chrome's password bubble (`g_ardia_password_bubble`) |
 | `chromium-extension-install-prompt-hook.patch` | ArdiaCore may replace Chrome's extension install dialog (`g_ardia_extension_install_prompt`) |
 | `chromium-branding.patch` | Nilla's bundle and team id (`branding_file_path`), for the passkey and payments keychain access groups; product names stay "Chromium" |
-| `chromium-safe-storage-name.patch` | The Safe Storage key lives in its own "Ardia Safe Storage" keychain item, account "Nilla". **Load-bearing:** it's Chromium's own `os_crypt` code, so ArdiaCore uses it too, and every user's saved passwords and cookies are encrypted with that item's key. Keep it, unchanged, through every re-sync and version bump; without it Chrome reads "Chromium Safe Storage" and nothing decrypts |
+| `chromium-safe-storage-name.patch` | The Safe Storage key lives in its own "Ardia Safe Storage" keychain item, account "Ardia". **Load-bearing:** it's Chromium's own `os_crypt` code, so ArdiaCore uses it too, and every user's saved passwords and cookies are encrypted with that item's key. Keep it, unchanged, through every re-sync and version bump; without it Chrome reads "Chromium Safe Storage" and nothing decrypts |
 | `chromium-safe-storage-no-silent-reset.patch` | Nilla never replaces its Safe Storage key. Chromium added a new key whenever the item didn't show up, and its add looked the item up again and overwrote it if it was there by then, so an item briefly invisible at login left every saved password and cookie undecryptable. Now a missing item may be created only when `g_ardia_safe_storage_key_may_be_created` says so: ArdiaCore (`ac_safe_storage.mm`) allows it when, at startup, the user data dir had no `Local State` and no entry holding `Preferences`, `Cookies`, `Network/Cookies`, `Login Data` or `Web Data` and every check answered cleanly (any error but "not found", and any link that doesn't resolve, counts as existing data), or once after the user chose to start over. The add is add-only (`KeychainV2::AddGenericPasswordIfAbsent`): an item that appeared meanwhile is read back, never overwritten. Otherwise the key provider retries 3 × 1 s and fails closed; `g_ardia_safe_storage_unreadable` then gets the error and the retry, and ArdiaCore asks: a missing item, "Ardia can't read its Safe Storage key." with Quit (the default) or Start Over with a New Key, the only choice that lets one key be made; a locked keychain or denied access, "Ardia can't open its Safe Storage key." (unlock the login keychain, or allow the app to use "Ardia Safe Storage" in Keychain Access); a missing entitlement, "This copy of Ardia can't use your keychain." (today's engine text tells the user to reinstall Ardia from ardia.dev, which doesn't apply to Nilla: rebuild or re-sign this build instead); an undecodable secret, "Ardia's Safe Storage key is damaged." (restore the keychain from a backup, or delete the item and try again, which then reaches the missing-item dialog); anything else, a neutral try-again. Each of those offers Quit or Try Again and creates nothing. Test instances can use a file-backed keychain (`ARDIA_TEST` `keychain=file`, `keychainHiddenReads=<n>`, `keychainFail=decode|denied|interaction|entitlement|io`, `safeStorageAnswer=start-over`), honoured only by the test gate (`ac_launch_switches.cc`: not signed for distribution, the mock keychain, `--user-data-dir` resolving to `--ardia-data-dir`/Chromium) |
 | `chromium-device-chooser-hook.patch` | `chrome::ShowDeviceChooserDialog` (and its extension-page variant) asks ArdiaCore (`g_ardia_device_chooser`) once Chrome's `DropFullscreenForChooserDialog` has dropped the page's full screen and revalidated the frame and active tab: ArdiaCore gets that WebContents and the full-screen blocker, which its chooser holds until it closes |
 | `chromium-media-access-hook.patch` | `MediaCaptureDevicesDispatcher::ProcessMediaAccessRequest` asks ArdiaCore first (`g_ardia_media_access_request`, `ac_desktop_capture.mm`'s `AnswerNativeDisplayCapture`), whichever delegate passed the request on (a tab, Document Picture-in-Picture, an extension host): while pages pick their display media natively, a page's screen or window capture without a click is refused (`NO_TRANSIENT_ACTIVATION`); everything else goes on to Chrome's handlers |
@@ -280,7 +280,7 @@ the signature again, so a new writer fails the release.
 
 ## ArdiaCore's layer: `//ardia/core`
 
-ArdiaCore (`docs/ardiacore-spike.md`) is our own layer over Chrome. `engine/ardiacore/apply.sh` copies `engine/ardiacore/src` to
+ArdiaCore (`docs/history/ardia/ardiacore-spike.md`) is our own layer over Chrome. `engine/ardiacore/apply.sh` copies `engine/ardiacore/src` to
 `//ardia/core` and adds its hooks: in files only Chrome's framework compiles (`chrome/BUILD.gn`'s macOS
 `chrome_dll`, `chrome/app/chrome_main.cc`), H1–H6 ([above](#our-hooks-in-chromes-code)), and a few `CHECK`s made
 tolerant of a Browser without a `BrowserView` (`read_anything_side_panel_controller.cc`, `sad_tab_controller.cc`…).
@@ -332,7 +332,7 @@ framework.
   calls serve a private session.
 - **The app** includes `public/ac_engine.h` from the repo and looks each export up with `dlsym` on the engine
   framework (`packages/ardiacore/ios/ArdiaEngineBridge.mm`). A missing export aborts: the app bundles an engine it wasn't built
-  for. Add each new call to `docs/ardiacore-parity.md`.
+  for. Add each new call to `docs/history/ardia/ardiacore-parity.md`.
 
 ## The patch series
 

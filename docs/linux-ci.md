@@ -197,7 +197,7 @@ with `release.sh` and uploads them by hand.
   does ([linux-port.md](linux-port.md) › Packaging and installing).
 - **In CI.** The workflow lifts the restriction on its throwaway runner before the smoke step and never passes
   `--no-sandbox`.
-- **For users.** Users on Ubuntu 24.04 hit the same restriction. `sudo ./nilla/install.sh` installs and loads an
+- **For users.** Users on Ubuntu 24.04 hit the same restriction. `sudo ./ardia/install.sh` installs and loads an
   AppArmor profile for the installed `chrome`, as Chrome's `.deb` does ([linux-port.md](linux-port.md) › Packaging
   and installing). An extracted tarball run in place says how to fix it and exits; an AppImage runs without the
   sandbox there and says so.

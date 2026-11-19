@@ -626,7 +626,7 @@ is plain Chromium.
   handing its command line to a browser that is shutting down, or starting a second browser on the same profile once
   that one has let go of Chromium's process singleton (which happens before its shutdown is over: the old process
   then still writes its profile). The quitting browser signals it from `QuitApp` and from its main parts' end
-  (`launch_guard.cc`, named objects under `Local\NillaBrowser.<hash of the user data folder>`); a launch while it runs
+  (`launch_guard.cc`, named objects under `Local\ArdiaBrowser.<hash of the user data folder>`); a launch while it runs
   normally isn't held. Without this, Chromium's own singleton took the closing browser for a hung one and killed it
   (`RESULT_CODE_HUNG`) before it had written its profile. The launch log says how long a start waited.
 - When the app can't start inside the engine (its library doesn't load, it has no `ArdiaAppStart`, or that refuses),
@@ -891,7 +891,7 @@ is plain Chromium.
 - A page whose tab the engine refused (a private window opened while the old session would not end) stays in the
   app's list of pages; its next `loadUrl`, `reload` or `forceReload` asks for the tab once more and, when it opens,
   tells the page it is ready, or sends `loadError` when it is refused again (`engine/pages.ts`).
-- Engine call arguments are wiped after the call: the engine keeps them in `nilla::Secret` (`api.cc`) and cleanses the
+- Engine call arguments are wiped after the call: the engine keeps them in `ardia::Secret` (`api.cc`) and cleanses the
   copy it re-serializes for a private profile, and the app's `engineCall` keeps them in `WipedText`
   (`EngineHostModule.h`), which wipes its own buffer and every buffer it is moved from. This covers the copies the
   host and the app make, not every copy: the JavaScript string, React Native's own marshalling, Chromium's JSON

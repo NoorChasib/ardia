@@ -140,7 +140,7 @@ you bump a pin.
   command without one prints its line from the overview and `flags: none`, never the whole overview.
 
 `nilla-browser exec` is gone: `nilla-browser browse` is the one way to drive the browser. `nilla-browser exec …` (and any other unknown
-command) prints `nilla: unknown command '…'` with where to go instead, and exits 2. What `exec` offered maps to
+command) prints `nilla-browser: unknown command '…'` with where to go instead, and exits 2. What `exec` offered maps to
 `nilla-browser browse` for pages, `nilla-browser pinned` and `nilla-browser history` for `pinned()` and `history()`, and `nilla-browser run`,
 `nilla-browser windows` and `nilla-browser events` for `run()`, `windows()` and `events()`.
 
@@ -165,7 +165,7 @@ command or after it: `nilla-browser --port 9222 browse snapshot` and `nilla-brow
 are `nilla-browser --json windows`, `nilla-browser windows --json` and `nilla-browser hooks --data-dir DIR list`. `cli.py` moves the ones in
 front of (or between) the command words to just after them, so a flag written after the command wins over the same
 flag before it; arguments after `on`'s `--` are never touched. A command that doesn't take a flag given before it
-says so and exits 2 (`nilla: windows doesn't take --port`). For `browse` the flags go to the front of browse's own
+says so and exits 2 (`nilla-browser: windows doesn't take --port`). For `browse` the flags go to the front of browse's own
 arguments, where its parser reads them; `browse` takes `--port`, `--ws`, `--data-dir` and `--json`, not `--timeout`.
 
 Each has an environment variable, and a flag wins over it: `ARDIA_PORT`, `ARDIA_WS`, `ARDIA_DATA_DIR`. The
@@ -950,7 +950,7 @@ On the token path Nilla also strips `Cookie`, `Set-Cookie` and `Authorization` f
 `network requests` and HAR files never contain them.
 
 The policy also refuses some uses of methods it allows (`ac_cli_token_policy.cc`), and says which in its reply:
-`nilla: <method> <reason> isn't allowed for the ardia command`. The command keeps that reason (`data.reason`, same
+`ardia: <method> <reason> isn't allowed for the ardia command`. The command keeps that reason (`data.reason`, same
 `code`) and words the error around it, so it never reads as a method that is off the list:
 
 | Reason | Methods | Means |

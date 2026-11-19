@@ -78,7 +78,7 @@ holds the rest.
 | Video upscaling | `node apps/browser/scripts/video-upscaling-test.mjs <Debug app> [--keep] [check…]` (`--list`) | What the GPU process upscales in every state the gate decides (playing, paused, native size, background tab, app inactive, occluded, Low Power, thermal, screen sharing (acted, and a real tab share through the picker), PiP, HDR, full screen, Little Nilla, setting off), from its `NillaVSR.*` trace events and `videoUpscalingState()` |
 | PiP click to skip | `node apps/browser/scripts/pip-click-seek-test.mjs <Debug app> [--keep] [--expect-no-seek]` | A click on the left or right of the video Picture in Picture window skips 10 s back or ahead, and each click of a quick double or triple click skips again; the centre column, a drag (also one that only passes 3 pt at the release), a dead-band double-click and a stashed window never seek; the video in the window is the one that moves, even paused while another plays; a page with only a `seekto` handler is asked on the timeline it reported, kept current through repeated clicks and a pause though it reports once, also for a video in a closed shadow root; Chrome's close button still closes. `--expect-no-seek` runs it against a build from before, where no click moves the video |
 | Engine patches | `python3 engine/patches/series.py check` | The patch series reproduces the Chromium tree (`docs/engine-build.md`) |
-| Engine (ArdiaCore) | `node packages/ardiacore/scripts/acceptance.mjs <Debug app> <scratch dir> [--keep] [check…]` | The app on ArdiaCore, hidden (`docs/ardiacore-parity.md`). `--keep` leaves the instance up and `--attach <scratch dir> [check…]` re-runs checks on it in seconds; `--list` gives each check's section and what it needs (brought along automatically) |
+| Engine (ArdiaCore) | `node packages/ardiacore/scripts/acceptance.mjs <Debug app> <scratch dir> [--keep] [check…]` | The app on ArdiaCore, hidden (`docs/history/ardia/ardiacore-parity.md`). `--keep` leaves the instance up and `--attach <scratch dir> [check…]` re-runs checks on it in seconds; `--list` gives each check's section and what it needs (brought along automatically) |
 | Focus (ArdiaCore) | `node packages/ardiacore/scripts/activation-acceptance.mjs <Debug app> <scratch dir> [check…]` | The panes shown, Chrome's active tab and native focus agree |
 | UI pixels | `scripts/agent/ui-snapshots capture <Debug app> <out dir>` before and after, then `scripts/agent/ui-snapshots compare <before dir> <after dir>` (`list`, `--help`) | A refactor changed no pixels: every UI state of a fixed seeded session, snapshotted in-process (works with the screen locked) and diffed |
 | Native perf | `node apps/browser/scripts/perf/native-bench.mjs --app <Release app> --out <dir>` | Launch, idle, memory, tab and window latency; the release perf gate (`docs/perf/README.md`) |
@@ -86,7 +86,7 @@ holds the rest.
 
 ## ArdiaCore acceptance
 
-The acceptance run's checks and what each proves are listed in `docs/ardiacore-parity.md` › "Acceptance (hidden instance)".
+The acceptance run's checks and what each proves are listed in `docs/history/ardia/ardiacore-parity.md` › "Acceptance (hidden instance)".
 
 ```bash
 # Engine (once, and after engine/ changes): both apply.sh, then autoninja, under the chromium lock
