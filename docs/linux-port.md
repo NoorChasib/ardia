@@ -506,15 +506,31 @@ fake device, "Ardia Test Sink", and records routes without sending anything anyw
 
 To work on the UI you don't need a Chromium tree: run the shared UI on a prebuilt engine, as CI does.
 
+Do all of it, the package installs included, only on a disposable host: a throwaway VM, container or CI runner, or a
+user and mount namespace with a scratch `$HOME` in which every account's home is read-only. Never on an account that
+has, or could later get, an Ardia profile: today's Linux engine picks Ardia's default folder and secret-store items
+before any app code runs, and the UI's refusal comes after that. Start the browser only through
+`scripts/linux/nilla-dev-run`, which checks that isolation (or `NILLA_DISPOSABLE_HOST=1` on a throwaway machine),
+refuses a host with Ardia's folders, and passes its own `--user-data-dir` and `--password-store=basic`:
+
 ```bash
 sudo apt-get install clang pkg-config patch fakeroot xz-utils unzip curl util-linux openssl dbus dbus-x11 \
   libnss3-tools gnome-keyring python3-gi gir1.2-glib-2.0 libglib2.0-dev libgtk-3-0t64 libsecret-1-0
 bun install --frozen-lockfile
-scripts/linux/fetch-engine.sh --nearest
 bun run --cwd apps/linux build
-"$(scripts/linux/fetch-engine.sh --nearest)/chrome" --ardia-ui-dir="$PWD/apps/linux/dist" \
-  --user-data-dir="$(mktemp -d)" --remote-debugging-port=9222
+umask 022
+engine="$(scripts/linux/fetch-engine.sh --nearest)" || exit 1
+blocker="$(scripts/linux/fetch-ubo.sh)" || exit 1
+scratch="$(mktemp -d)"
+python3 scripts/linux/package.py --out "$engine" --ui apps/linux/dist --content-blocker "$blocker" \
+  --destination "$scratch/nilla-linux-x64.tar.xz"
+tar -xJf "$scratch/nilla-linux-x64.tar.xz" -C "$scratch"
+ARDIA_DATA_DIR="$scratch/data" ARDIA_CONFIG_HOME="$scratch/config" scripts/linux/nilla-dev-run "$scratch/ardia" \
+  --remote-debugging-port=9222
 ```
+
+The engine's own diagnostics (a raw `chrome` with `--ardia-ui-dir apps/linux/dist`) run only inside the same
+disposable host, and always with a scratch `--user-data-dir` and `--password-store=basic`.
 
 - **Toolchain.** Bun at the version `package.json`'s `packageManager` pins (`curl -fsSL https://bun.com/install | bash -s bun-v1.4.4`)
   and Node 24 (`.nvmrc`), which Vite and the engine's own tests run on.
@@ -524,14 +540,14 @@ bun run --cwd apps/linux build
   while `engine/` has uncommitted changes.
 - **Sandbox.** The fetched `chrome` has no setuid sandbox helper, so its sandbox needs user namespaces. On Ubuntu 24.04
   and later, AppArmor denies them to programs without a profile (`kernel.apparmor_restrict_unprivileged_userns=1`).
-  Grant them to the fetched engine the way `install.sh` does for an installed one: copy `scripts/linux/ardia.apparmor`
+  On the disposable VM, grant them to the fetched engine the way `install.sh` does for an installed one: copy `scripts/linux/ardia.apparmor`
   to `/etc/apparmor.d/ardia-dev`, rename its profile to `ardia-dev` so it can't collide with an installed Nilla's,
   replace `/usr/lib/ardia/chrome` with the engine's `chrome` path (AppArmor globs such as
   `/home/*/nilla/apps/browser/build-ardiacore/prebuilt-linux-x86_64/*/chrome` work), and load it with
   `sudo apparmor_parser -r`. Don't run with `--no-sandbox`.
 - **Checks.** `scripts/linux/ci-checks.sh` ([Tests](#tests)) also compiles the engine fixtures under ASan and UBSan
   and against OpenSSL and SQLite. On Ubuntu that needs `libclang-rt-<clang major>-dev libssl-dev libsqlite3-dev` too.
-- **Headless.** Under Xvfb, add `--ozone-platform=x11 --use-gl=angle --use-angle=swiftshader
+- **Headless.** Under Xvfb, pass `nilla-dev-run` `--ozone-platform=x11 --use-gl=angle --use-angle=swiftshader
   --enable-unsafe-swiftshader`. The shell is the `chrome://ardia/` CDP target; `window.nillaLinux.store` is the
   shared store and `window.__ardiaHost` the bridge ([linux-acceptance.md](linux-acceptance.md) › Hooks the scenarios
   use).
@@ -672,9 +688,13 @@ command ([linux-ci.md](linux-ci.md) › Linux releases).
   - `share/polkit-1/actions/dev.ardia.linux.policy`;
   - `share/apparmor.d/ardia`, the AppArmor profile `install.sh` installs on Ubuntu;
   - `install.sh`.
-- **Running it.** Run the extracted `bin/ardia`. A raw build-tree `chrome` needs `--ardia-ui-dir apps/linux/dist`.
-  Test with a throwaway `--user-data-dir` and keep the sandbox on.
-- **Installing.** `sudo ./nilla/install.sh` installs under `/usr`. It also accepts `--prefix /opt/ardia` and
+- **Running it.** Only on a disposable host, through `scripts/linux/nilla-dev-run <extracted folder>` with a scratch
+  `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME` ([Local Linux setup](#local-linux-setup)); the extracted `bin/ardia` refuses
+  to start without `--user-data-dir`. A raw build-tree `chrome` needs `--ardia-ui-dir apps/linux/dist`, a scratch
+  `--user-data-dir` and `--password-store=basic`, inside the same disposable host. Keep the sandbox on.
+- **Installing.** Only on a disposable VM, container or CI runner, never on a machine you use: an installed package
+  starts the engine without `nilla-dev-run`, and today's engine opens Ardia's default profile.
+  `sudo ./nilla/install.sh` installs under `/usr`. It also accepts `--prefix /opt/ardia` and
   `--destdir <staging root>`.
   - Without `--destdir` it must run as root and refuses otherwise, so it never leaves a partial install. Installed
     files are owned by root.
@@ -682,13 +702,13 @@ command ([linux-ci.md](linux-ci.md) › Linux releases).
   - It always installs the polkit policy at `<destdir>/usr/share/polkit-1/actions` (mode 0644), whatever the prefix,
     because polkit reads actions only from there. Without the policy Nilla can't ask for the system password, so saved
     passwords and card numbers stay hidden.
-- **Arch.** Copy `scripts/linux/arch/PKGBUILD` and the archive, renamed `nilla-linux-x64.tar.xz`, into an empty folder
+- **Arch.** On a disposable VM, copy `scripts/linux/arch/PKGBUILD` and the archive, renamed `nilla-linux-x64.tar.xz`, into an empty folder
   and run `makepkg -si` there. The package (`nilla-bin`) depends on `polkit` and installs through the same script.
   Its `pkgver()` reads the package's `VERSION`, with `-` turned into `_` (`0.2.44_nightly.3`), and falls back to
   `0.0.0` for a dev package. makepkg writes that version back into the PKGBUILD, which is why the copy goes in a
   folder of its own.
   `pkaction --action-id dev.ardia.linux.reauthenticate` then lists the action.
-- **Ubuntu.** On a host whose AppArmor reads the 4.0 ABI (`/etc/apparmor.d/abi/4.0`, Ubuntu 24.04 and later), an
+- **Ubuntu.** On a disposable host whose AppArmor reads the 4.0 ABI (`/etc/apparmor.d/abi/4.0`, Ubuntu 24.04 and later), an
   install without `--destdir` also writes `/etc/apparmor.d/ardia` and loads it with `apparmor_parser -r`. The profile
   leaves `<prefix>/lib/ardia/chrome` unconfined and allows it user namespaces, which Ubuntu denies to unprivileged
   programs and Chromium's sandbox needs. A staged install writes no profile, and an older AppArmor never gets the
@@ -745,18 +765,21 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
 
 ### Updates and kill switches
 
-- **Check.** With an engine that serves `ArdiaUpdates.releases`, Settings › General shows Updates. The host reads
-  GitHub's release list for NoorChasib/nilla (`ac_linux_updates.cc`: a cookieless GET of a fixed URL, at most
-  4 MiB, no redirects, 20 s), and the shell (`hostUpdates.ts`, `updateReleases.ts`) keeps published releases that
-  carry a Linux package and a github.com release page, newest per channel (a nightly build follows nightly).
-- **What it does.** Check Now and the app menu ask before opening the release page; an automatic check (30 s after
-  launch, then every 6 h, in one window, never in a hidden instance or a build without `lib/ardia/VERSION`) offers a
-  newer release once as a toast. Nilla doesn't install updates on Linux, so "Automatically update Nilla" is hidden.
+- **Layer 1.** Linux checks for no updates. Layer 1's gate (`layer1Gate.ts`, `docs/services.md` › Linux) refuses
+  `ArdiaUpdates.releases`, so Settings › General shows no Updates, no automatic check runs and Check Now isn't
+  offered. Nilla doesn't install updates on Linux, so "Automatically update Nilla" is hidden.
+- **What the gated code would do.** The engine's compiled-in release list is upstream's (`ac_linux_updates_policy.h`:
+  a cookieless GET of a fixed URL, at most 4 MiB, no redirects, 20 s), which is why the gate stays until Nilla's own
+  Linux engine. Ungated, the shell (`hostUpdates.ts`, `updateReleases.ts`) would keep published releases that carry a
+  Linux package and a github.com release page, newest per channel; Check Now and the app menu would ask before
+  opening the release page, and an automatic check (30 s after launch, then every 6 h, in one window, never in a
+  hidden instance or a build without `lib/ardia/VERSION`) would offer a newer release once as a toast.
 - **Kill switches.** `ArdiaShell.fetchKillSwitches` would fetch the engine's compiled-in upstream switches file
   (at most 16 KiB) once per browser process for every window, under the Mac's rule (automatic checks on). Layer 1's
   gate (`layer1Gate.ts`, `docs/services.md` › Linux) refuses the call, so Linux uses the local defaults.
 - **Telemetry.** `update_checks_asked`, `update_checks_automatic`, `update_check_failures`, `update_checks_found`,
-  `update_release_page_opens`, `kill_switch_refreshes`, `kill_switch_refresh_failures`.
+  `update_release_page_opens`, `kill_switch_refreshes`, `kill_switch_refresh_failures`. They stay on the device: Layer 1
+  posts no telemetry.
 
 ### System signals and location
 
@@ -1784,6 +1807,8 @@ A background instance rejects without fetching.
   and are never kept.
 
 ## Upstream syncs
+
+> Recorded in Ardia (https://github.com/ardia-browser/ardia) before Nilla forked it on 2026-11-18. Names, paths and issue numbers are Ardia's, as recorded.
 
 Newest first. Each entry names the upstream commit `linux-support` was rebased onto and what the Linux side needed.
 

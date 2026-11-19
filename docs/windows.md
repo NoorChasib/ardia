@@ -1180,13 +1180,17 @@ Swift core wrote (`fixtures/windows-interop/mac`), and the self-check opens that
 
 ## Updates
 
-- The updates live on the GitHub prerelease `windows-alpha`: `Nilla-Setup-x64.exe`, `Nilla-Setup-arm64.exe`, the
+Layer 1 checks for no updates and publishes none. `services.ts` sets no `windowsFeedUrl` or `windowsTrustedPrefix`
+(`docs/services.md`), so the updater isn't set up and Settings › General › Updates says so; nothing below runs until
+both are set and releases are turned on. What follows is how the code works once they are.
+
+- The updates would live on the GitHub prerelease `windows-alpha`: `Nilla-Setup-x64.exe`, `Nilla-Setup-arm64.exe`, the
   feed `windows-update.json` (version, build, and per CPU the installer's address, SHA-256 and size) and the
   engine's source. `scripts/windows/publish-alpha.sh` puts one build there, the feed last. It keeps the installers of
   the build before, so an update the app already offered still downloads, and removes older ones. It refuses a build
   at or below the live feed's, since no installed app would take it.
-- Every release refreshes it (Releases, below), so installed Windows apps update to each nightly and stable.
-  `publish-alpha.sh <run id>` still publishes one green Windows workflow run there as an alpha between releases.
+- Every release would refresh it (Releases, below), so installed Windows apps update to each nightly and stable.
+  `publish-alpha.sh <run id>` also publishes one green Windows workflow run there as an alpha between releases.
 - A build knows what it is from `Nilla.build.json` beside `Nilla.exe` (`assemble.ps1 -Version -Build`). The build
   number is the number of commits in the built commit's history (`git rev-list --count`, the workflow's `identity`
   job), so it grows with `main` and a release outranks every build before it, CI's included; builds before this rule
@@ -1207,7 +1211,9 @@ Swift core wrote (`fixtures/windows-interop/mac`), and the self-check opens that
 
 ## Releases
 
-The Release workflow (`.github/workflows/release.yml`, dispatched by hand) builds Windows next to the
+Nilla publishes no releases yet: the Release workflow's first job (`releases-enabled`) stops every run until the
+repository variable `NILLA_RELEASES_ENABLED` is set, and nothing reaches a GitHub release, `windows-alpha` or a feed.
+Once it is set, the Release workflow (`.github/workflows/release.yml`, dispatched by hand) builds Windows next to the
 Mac, for every nightly and stable:
 
 1. Its `windows` job calls `windows.yml` with the release's version, at the release's commit: the same build, pinned
