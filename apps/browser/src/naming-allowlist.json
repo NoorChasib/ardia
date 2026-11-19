@@ -1167,6 +1167,16 @@
    "why": "The native copies of the shared Sync and Shared Folders guard and their tests (owner decision 2, H2): the Mac's UpstreamSyncFolder.swift (Ardia Sync, Ardia Shared and both refusals), Android's UpstreamSyncFolder.kt (NAME), the Swift tests that plant an Ardia file and check it is untouched, and the shared folder test's name. Renamed, each would refuse Nilla's own Nilla Sync and Nilla Shared folders."
   },
   {
+   "id": "X-ardia-shared-parent-test",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)(?<![A-Za-z])ardia(?= shared| sync)|(?<=AParentOf)Ardias(?=SharedFolder)",
+   "scope": [
+    "packages/sync/tests/SharedFolderDirectoryTests.swift"
+   ],
+   "why": "The Shared Folders test that binds a parent of Ardia Shared and Ardia Sync fixtures (in every spelling the guard folds) and checks nothing inside them is listed, written, moved, deleted or created (council C7). Renamed, it would test Nilla's own folders."
+  },
+  {
    "id": "X-ardia-sync-folder-guard-windows",
    "class": "never",
    "mechanism": "never",

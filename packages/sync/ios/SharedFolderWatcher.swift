@@ -69,7 +69,10 @@ final class SharedFolderWatcher {
 
   private func changed(_ paths: [String]) {
     let hit = roots.filter { root in
-      paths.contains { $0 == root.real || $0.hasPrefix(root.real + "/") || root.real.hasPrefix($0 + "/") }
+      paths.contains { path in
+        guard path.hasPrefix(root.real + "/") else { return path == root.real || root.real.hasPrefix(path + "/") }
+        return !path.dropFirst(root.real.count + 1).split(separator: "/").contains { SharedFolderDirectory.namesUpstreamFolder(String($0)) }
+      }
     }
     guard !hit.isEmpty else { return }
     let watched = hit.map(\.watched)

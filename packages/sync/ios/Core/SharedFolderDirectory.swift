@@ -53,10 +53,17 @@ public struct SharedFolderDirectory {
     return ["conflicts": conflicts]
   }
 
+  public static func namesUpstreamFolder(_ name: String) -> Bool {
+    UpstreamSyncFolder.names(name, [UpstreamSyncFolder.sharedName, UpstreamSyncFolder.name])
+  }
+
   public static func create(in parent: URL, named name: String) throws -> URL {
     let fileManager = FileManager.default
-    try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
     let base = folderName(name)
+    guard !namesUpstreamFolder(base), case .own = UpstreamSyncFolder.checkShared(parent.appendingPathComponent(base, isDirectory: true).path) else {
+      throw failure(UpstreamSyncFolder.sharedRefusal)
+    }
+    try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
     var number = 1
     while true {
       let candidate = parent.appendingPathComponent(number == 1 ? base : "\(base) \(number)", isDirectory: true)
@@ -122,7 +129,7 @@ public struct SharedFolderDirectory {
     var manifest: Any = NSNull()
     var manifestPending = false
     let held = { (name: String, reason: String) in entries.append(["kind": "pending", "file": name, "reason": reason]) }
-    for name in names.sorted() {
+    for name in names.sorted() where !Self.namesUpstreamFolder(name) {
       let url = directory.appendingPathComponent(name)
       let kind = Self.kind(of: url.path)
       if name.hasPrefix(".") {
@@ -136,6 +143,7 @@ public struct SharedFolderDirectory {
         }
         guard name.hasSuffix(Self.placeholderSuffix), kind == .file else { continue }
         let real = String(name.dropFirst().dropLast(Self.placeholderSuffix.count))
+        guard !Self.namesUpstreamFolder(real) else { continue }
         try? fileManager.startDownloadingUbiquitousItem(at: directory.appendingPathComponent(real))
         if real == Self.manifestName {
           manifestPending = true
@@ -250,7 +258,9 @@ public struct SharedFolderDirectory {
 
   private func inside(_ path: String) -> URL? {
     let parts = path.split(separator: "/", omittingEmptySubsequences: true)
-    guard !parts.isEmpty, !path.hasPrefix("/"), !parts.contains(where: { $0 == ".." || $0 == "." }) else { return nil }
+    guard !parts.isEmpty, !path.hasPrefix("/"), !parts.contains(where: { $0 == ".." || $0 == "." || Self.namesUpstreamFolder(String($0)) }) else {
+      return nil
+    }
     var url = URL(fileURLWithPath: rootReal, isDirectory: true)
     for part in parts.dropLast() {
       url.appendPathComponent(String(part))

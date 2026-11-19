@@ -187,4 +187,53 @@ final class SharedFolderDirectoryTests: XCTestCase {
     XCTAssertNotNil(listing["error"] as? String)
     XCTAssertNil(SharedFolderDirectory(root: scratch.appendingPathComponent("nowhere")).read()["error"])
   }
+
+  private func tree(_ root: URL) -> [String] {
+    ((try? fm.subpathsOfDirectory(atPath: root.path)) ?? []).sorted().map { path in
+      let url = root.appendingPathComponent(path)
+      return "\(path)=\((try? String(contentsOf: url, encoding: .utf8)) ?? "dir")"
+    }
+  }
+
+  func testAParentOfArdiasSharedFolderNeverReadsOrWritesInsideIt() throws {
+    let root = try folder("iCloud Drive")
+    let upstream = try folder("iCloud Drive/Ardia Shared")
+    _ = try folder("iCloud Drive/Ardia Shared/Work")
+    try webloc("https://upstream.example/").write(to: upstream.appendingPathComponent("Work/Secret.webloc"), atomically: true, encoding: .utf8)
+    try "{}".write(to: upstream.appendingPathComponent(".nilla-folder.json"), atomically: true, encoding: .utf8)
+    _ = try folder("iCloud Drive/Ardia Sync")
+    let mine = try folder("iCloud Drive/Mine")
+    try webloc("https://mine.example/").write(to: mine.appendingPathComponent("Ok.webloc"), atomically: true, encoding: .utf8)
+    let before = tree(upstream)
+    let directory = SharedFolderDirectory(root: root)
+
+    let listing = directory.read()
+    XCTAssertEqual(entries(listing).compactMap { $0["file"] as? String }, ["Mine"])
+    XCTAssertFalse(String(describing: listing).contains("upstream.example"))
+
+    for change in [
+      ["op": "write", "path": "Ardia Shared/New.webloc", "text": webloc("https://new.example/"), "create": true],
+      ["op": "write", "path": "Ardia Shared/.nilla-folder.json", "text": "[]", "create": false],
+      ["op": "write", "path": "ardia shared./Work/New.webloc", "text": webloc("https://new.example/"), "create": true],
+      ["op": "mkdir", "path": "Ardia Shared/Fresh"],
+      ["op": "mkdir", "path": "ARDIA SHARED"],
+      ["op": "mkdir", "path": "Ardia Sync/Fresh"],
+      ["op": "move", "path": "Mine/Ok.webloc", "to": "Ardia Shared/Ok.webloc"],
+      ["op": "move", "path": "Ardia Shared/Work/Secret.webloc", "to": "Mine/Secret.webloc"],
+      ["op": "move", "path": "Ardia Shared/Work", "to": "Mine/Work"],
+      ["op": "delete", "path": "Ardia Shared/Work/Secret.webloc", "expect": "https://upstream.example/"],
+      ["op": "rmdir", "path": "Ardia Shared/Work"],
+    ] as [[String: Any]] {
+      XCTAssertThrowsError(try directory.apply(json: try ops([change])), "\(change)")
+    }
+    XCTAssertEqual(tree(upstream), before)
+    XCTAssertTrue(fm.fileExists(atPath: mine.appendingPathComponent("Ok.webloc").path))
+    XCTAssertFalse(fm.fileExists(atPath: mine.appendingPathComponent("Secret.webloc").path))
+
+    XCTAssertThrowsError(try SharedFolderDirectory.create(in: root, named: "Ardia Shared"))
+    XCTAssertThrowsError(try SharedFolderDirectory.create(in: root, named: " ardia sync "))
+    XCTAssertThrowsError(try SharedFolderDirectory.create(in: upstream, named: "Inside"))
+    XCTAssertEqual(tree(upstream), before)
+    XCTAssertEqual(try SharedFolderDirectory.create(in: root, named: "Ardia Shared Notes").lastPathComponent, "Ardia Shared Notes")
+  }
 }
