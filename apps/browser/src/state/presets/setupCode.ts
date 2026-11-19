@@ -82,7 +82,7 @@ export const SETUP_CODE_ERRORS = {
   empty: "Paste a setup code first.",
   shape: `That doesn't look like a setup code. It starts with ${SETUP_CODE_PREFIX}`,
   newer: "That code is from a newer Nilla. Update Nilla, then paste it again.",
-  damaged: "That code looks cut off or mistyped. Copy it again from ardia.dev.",
+  damaged: "That code looks cut off or mistyped. Copy it again from the demo.",
   nothing: "That code has nothing this version of Nilla can apply.",
 } as const;
 

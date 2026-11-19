@@ -73,7 +73,7 @@ test("garbage fails with a friendly message", () => {
   assert.deepEqual(decodeSetupCode(""), { ok: false, error: SETUP_CODE_ERRORS.empty });
   assert.deepEqual(decodeSetupCode("   "), { ok: false, error: SETUP_CODE_ERRORS.empty });
   assert.deepEqual(decodeSetupCode("hello there"), { ok: false, error: SETUP_CODE_ERRORS.shape });
-  assert.deepEqual(decodeSetupCode("https://ardia.dev/?code=1"), { ok: false, error: SETUP_CODE_ERRORS.shape });
+  assert.deepEqual(decodeSetupCode("https://example.com/?code=1"), { ok: false, error: SETUP_CODE_ERRORS.shape });
   assert.deepEqual(decodeSetupCode("nilla01-t0-00"), { ok: false, error: SETUP_CODE_ERRORS.shape });
   assert.deepEqual(decodeSetupCode(`nilla1-${"t0".repeat(SETUP_CODE_MAX_LENGTH)}-00`), { ok: false, error: SETUP_CODE_ERRORS.shape });
   assert.deepEqual(decodeSetupCode("nilla2-t0-00"), { ok: false, error: SETUP_CODE_ERRORS.newer });
