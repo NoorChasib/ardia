@@ -717,6 +717,13 @@
    "why": "The CLI's Linux home and data folders (class A and N)."
   },
   {
+   "id": "N-linux-data-folder",
+   "class": "A",
+   "mechanism": "class",
+   "regex": "(?:(?<=CONFIG_HOME/)|(?<=CONFIG_HOME\\}/)|(?<=\\.config\\}/)|(?<=\\.config\\}\\}/))ardia(?![A-Za-z0-9_-])",
+   "why": "The Linux engine's data folder ardia under a config home, spelled after a shell variable (the CLI's Linux data folder, class A): $ARDIA_CONFIG_HOME/ardia, ${ARDIA_CONFIG_HOME}/ardia, ${XDG_CONFIG_HOME:-~/.config}/ardia and ${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia in the CLI's help (endpoint.py LINUX_DATA_DIR_SHOWN) and the docs. Renamed, the help would name a folder the CLI and the engine never use."
+  },
+  {
    "id": "N-linux-ids",
    "class": "N",
    "mechanism": "class",
@@ -910,6 +917,19 @@
     "scripts/lib/identity.test.mjs"
    ],
    "why": "identity.test.mjs asserts that the old bundle id and the ardia OS scheme registrations are gone; those negative patterns keep the old names."
+  },
+  {
+   "id": "X-ardia-install-guards-cli",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=an installed )Ardia's(?= ~/\\.(?:config|local/share)/ardia)|dev\\.ardia(?:\\.hooks(?:\\.plist|\\.service)?)?(?![A-Za-z0-9_.-])",
+   "scope": [
+    "apps/cli/ardia_cli/endpoint.py",
+    "apps/cli/ardia_cli/hooks.py",
+    "apps/cli/tests/test_automation.py",
+    "apps/cli/tests/test_linux.py"
+   ],
+   "why": "The CLI's independence guards name the upstream Ardia install on purpose (owner decision 2): the Linux refusals that say they never reach an installed Ardia's ~/.config/ardia or ~/.local/share/ardia/cli, and the hooks tests that plant Ardia's own dev.ardia.hooks LaunchAgent and systemd unit and check that install and uninstall never touch them. Renamed, the messages would name Nilla and the tests would guard Nilla's own label."
   },
   {
    "id": "P-windows-engine-files",
@@ -1629,8 +1649,8 @@
    "files": 166,
    "occurrences": 627,
    "decision": "class",
-   "protectedOccurrences": 317,
-   "renamedOccurrences": 310,
+   "protectedOccurrences": 321,
+   "renamedOccurrences": 306,
    "notRsFiles": 354,
    "coveredBy": [
     "N-linux-layout",
@@ -1640,6 +1660,7 @@
     "F-chrome-host",
     "K-brand-folder",
     "A-rendezvous",
+    "N-linux-data-folder",
     "P-windows-profile-test-folder"
    ],
    "why": "Path fragment: covered by A-rendezvous (/ardia/active), F-chrome-host, N-cli-home, N-linux-layout and R-engine-gn."
