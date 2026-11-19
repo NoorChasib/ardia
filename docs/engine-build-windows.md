@@ -200,7 +200,7 @@ Resources: Helium's (its icons made with `sips`), then `ardia_resources.txt` as 
 `ardia_resources_win.txt`: the app's `Ardia.ico` as `chrome/app/theme/chromium/win/chromium.ico`. helium-windows'
 generated `.ico` files aren't made; ours replaces the app icon and Chromium's document icons stay.
 
-On the Windows tree (2026-11-10): `pins` and `guard` pass, 356 patches applied with no fuzz, 16 skipped; the uBlock patches go in without the omitted downloads' files, as on the Mac; `namesub` changed 2168 files; 56 Helium resources, 34 Nilla ones and the Windows icon. 2 min 51 s in all.
+On the Windows tree (2026-11-10): `pins` and `guard` pass, 356 patches applied with no fuzz, 16 skipped; the uBlock patches go in without the omitted downloads' files, as on the Mac; `namesub` changed 2168 files; 56 Helium resources, 34 Ardia ones and the Windows icon. 2 min 51 s in all.
 
 ## Our series on Windows
 

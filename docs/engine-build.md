@@ -574,7 +574,7 @@ A Chromium patch release, through Helium 0.21.2 and helium-macos 0.21.2.1. What 
   `helium/settings/update-search-suggest-text` (folded into the new settings patch). They add two local profile prefs,
   `helium.omnibox.autocomplete.history_enabled` and `…bookmark_enabled` (both on by default), that Chrome's own
   autocomplete providers check, and an "Address bar" section in chrome://settings/search with those toggles. No host,
-  no network change. Nilla's command bar doesn't use Chrome's autocomplete, so the prefs change nothing in the app.
+  no network change. Ardia's command bar doesn't use Chrome's autocomplete, so the prefs change nothing in the app.
   helium-macos only bumped its pin. `flags.gn`, `flags.macos.gn`, `deps.ini` and the resources are unchanged.
 - **Skips and guards.** Every `SKIP` entry is still in the series and still a leaf; the `guard` stage finds the same
   four reviewed hits; 354 patches applied with no fuzz and 14 skipped; `domsub-keep-store.txt` keeps the same 16 store

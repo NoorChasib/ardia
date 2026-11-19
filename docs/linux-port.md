@@ -764,7 +764,7 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
   (`ui::CalculateIdleTime`), polled only while a window watches a threshold. Automation's `user.idle`, `user.active`,
   sleep and wake hooks fire.
 - **Location.** Sites get positions from GeoClue 2 (`ac_linux_geoclue.cc`, hooked into
-  `OverrideSystemLocationProvider` by `chromium-linux-geolocation.patch`): desktop id `nilla`, exact accuracy for
+  `OverrideSystemLocationProvider` by `chromium-linux-geolocation.patch`): desktop id `ardia`, exact accuracy for
   high-accuracy requests and city level otherwise. Without GeoClue or a fix within 10 s a page gets "position
   unavailable". `ArdiaLocation.locationPermission` answers `servicesOff` when the desktop refuses Nilla.
 
@@ -1792,7 +1792,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
   came and went within the range, so the series is unchanged. The engine key moved from `1078820d892b` to
   `8562381ee0dd`; engine `engine-8562381ee0dd` is published, rebuilt incrementally at `-j 8` (13 steps). The link exports
   the same 63 dynamic symbols and no `ac_*`; the package passes all 12 smoke checks. Linux changes:
-  - set viewport now works only on a tab the nilla-browser command took into an off-screen automation window
+  - set viewport now works only on a tab the ardia command took into an off-screen automation window
     (`engine.cliMoveOffscreen`). Linux has no such window: `IsAutomationWindow` and `InAutomationWindow` answer false,
     `engine.cliMoveOffscreen`, `cliCloseOffscreenTabs` and `cliOwnsTab` answer that the call is unavailable on Linux,
     and set viewport stays refused over the token connection (see Known gaps).
@@ -1805,7 +1805,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
   - `engine/patches/build/helium-pins.ini`: upstream's helium-chromium 0.21.2 and helium-macos 0.21.2.1 pins, with
     `[helium-linux]` moved to 0.21.2.1 (`c594074e`), whose `helium-chromium` submodule is exactly 0.21.2 (`e817502a`);
     helium-linux changed only its packaging metadata. `HELIUM_LINUX_TAG` in `env.sh` follows.
-  - the nilla `BUILD.gn`: upstream added `ac_cli_owned_tabs.{cc,h}` to the Mac-only list; the CLI sources build on
+  - the ardia `BUILD.gn`: upstream added `ac_cli_owned_tabs.{cc,h}` to the Mac-only list; the CLI sources build on
     Linux, so they join the shared list with the rest of them.
 
   The engine key moved from `087c111e94fc` to `1078820d892b`; engine `engine-1078820d892b` is published. The build tree
@@ -1814,7 +1814,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
   later edit to `chromium-drag-always-ends.patch` went into the tree through `series.py materialize`, which rewrote only
   the six files that differed. The link exports the same 63 dynamic symbols as before and no `ac_*`; the package passes
   all 12 smoke checks. Linux changes:
-  - `nilla-browser browse set viewport`'s shown-slot record (`ac_host_visibility_linux.cc`): `ShellHostView::LayoutPane` notes a
+  - `ardia browse set viewport`'s shown-slot record (`ac_host_visibility_linux.cc`): `ShellHostView::LayoutPane` notes a
     tab when it attaches its contents to a visible pane, as the Mac web view does when it is visible in a window. A tab
     whose override is being cleared keeps its page hidden until the size is restored; with the page held back that
     usually ends at upstream's 250 ms deadline. Upstream gated set viewport over the token connection again for 0.2.46,
@@ -1852,7 +1852,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
 
 - **2026-11-12, upstream 42c6291** (77 commits after 39bd206). Three conflicts: `engine/patches/series` (upstream's new
   `chromium-pref-hash-safe-storage-key-change.patch` stays shared, beside the two Mac-only Safe Storage patches; it
-  touches only `services/preferences` and applies to the Linux tree unchanged), the shared source list in the nilla
+  touches only `services/preferences` and applies to the Linux tree unchanged), the shared source list in the ardia
   `BUILD.gn` (gains `ac_extensions_load_health.cc` and `ac_search_suggest.cc`, which build on Linux), and the Linux
   telemetry hunks in the onboarding and new-tab ask files that upstream rewrote. The engine key moved from
   `e3f26f7253b3` to `756f755c2bf0`. Linux changes:

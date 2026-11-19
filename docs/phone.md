@@ -1058,7 +1058,7 @@ stand.
 #### Against the Compose release (F4, 2026-11-15)
 
 One session on the F4, medians, the Compose app's release build (OLD) against sync23 (React Native 0.81) and expo58b
-(Expo 58). From `/tmp/nilla-phone-shots/expo58b-f4/table.txt`.
+(Expo 58). From `/tmp/ardia-phone-shots/expo58b-f4/table.txt`.
 
 | Row | Compose release | sync23 | expo58b |
 | --- | --- | --- | --- |
@@ -1298,7 +1298,7 @@ iPhone follows the SwiftUI app on main since the merge of main (8203d0b3c, 2026-
   - The deck is the stack; Grid is a choice in Settings › Appearance › Tabs ("How your open tabs are laid out. Swipe up on the bottom bar to see them."), iPhone only. The deck's bars have no grid button.
   - Closing a card has no dust cloud. The card flies off the top on main's `flyAway` spring (response 0.32, no bounce), starting at the flick's speed, and the cards after it close the gap in the same frames: the order drops the card at once and a leaving record (`DeckLeave` in `lib/deckGeometry.ts`, timed by one UI-thread clock) draws it until it is off the screen. Closing the last tab lets the card leave before the start screen comes. With Reduce Motion the card fades where it is.
 
-- Find on Page on iPhone is WebKit's own find panel (`UIFindInteraction`), as main's SwiftUI app has, decided from the side-by-side screenshots in `/tmp/nilla-phone-shots/find-on-page/`. The app's own find bar stays for Android, and on iPhone behind the launch switch `-NillaAppFind YES` for comparison. `find_opened_system` and `find_opened_bar` count which one opens.
+- Find on Page on iPhone is WebKit's own find panel (`UIFindInteraction`), as main's SwiftUI app has, decided from the side-by-side screenshots in `/tmp/ardia-phone-shots/find-on-page/`. The app's own find bar stays for Android, and on iPhone behind the launch switch `-ArdiaAppFind YES` for comparison. `find_opened_system` and `find_opened_bar` count which one opens.
 
 ### Waiting on the owner
 
@@ -1351,7 +1351,7 @@ Release build of `apps/ios`, which matches `main`) beside a build of head (6cbc6
 data. Screens were reached through each app's own UI and the `-NillaDemo` / `Browse*` switches. Main reads
 `-NillaOpenSheet` and `-NillaOpenSettings` only in Debug builds, so its sheets were opened by hand. Inventory of
 main's screens: an Explore pass over `apps/ios/App`. Pairs (Expo left, main right):
-`/tmp/nilla-phone-shots/iphone-audit/pairs/`. Second pass at a1973a86e, light, with typing for real: `iphone-audit/r-e-light/` (Expo),
+`/tmp/ardia-phone-shots/iphone-audit/pairs/`. Second pass at a1973a86e, light, with typing for real: `iphone-audit/r-e-light/` (Expo),
 `r-m-light/` (main), pairs in `pairs2/`, the deck-glass experiments in `glassexp/`.
 
 Status:
@@ -1467,7 +1467,7 @@ Nothing here is done until it has been watched in the screens agent's own simula
 - Sheets with Remove animations on Android: Settings, Spaces, the archive and the small sheets come up and go at once, as Compose's do (the system scales Compose's durations to zero); with Reduce Motion on iPhone they still move on a 200 ms timing.
 - Page menu: the sheet opening and closing on its white or black fill and its drag; the capsules' press scale and glass; row press highlights (instant, where main fades them over 0.2 s); the title feedback crossfade; the print sheet after the menu has gone; the Send to Device menu's place; Site Settings opening as the menu slides away; the accessibility-size layout.
 - Tray field on the way out: from the first frame the tray leaves, its text shows as plain text with no caret (the native field is blurred and dropped), on both phones; check it doesn't jump or change size.
-- Page load motion moved to the UI thread: the page's loading line (now a scaleX from the left edge where it animated its width, and fed from the store without renders) and the settings switch's knob and colour (now Reanimated). Seen on the F4 (`/tmp/nilla-phone-shots/loadline-proof/`): with a page loading, slow UI-thread frames 286 to 202 and janky 10.85% to 10.35%, the deck open's worst stall 108 to 92 ms; the card open keeps a 100 ms stall in both builds (another cause, the hand-over). Still to see on iPhone: the search panel's lift no longer frozen (`screens-depart9`).
+- Page load motion moved to the UI thread: the page's loading line (now a scaleX from the left edge where it animated its width, and fed from the store without renders) and the settings switch's knob and colour (now Reanimated). Seen on the F4 (`/tmp/ardia-phone-shots/loadline-proof/`): with a page loading, slow UI-thread frames 286 to 202 and janky 10.85% to 10.35%, the deck open's worst stall 108 to 92 ms; the card open keeps a 100 ms stall in both builds (another cause, the hand-over). Still to see on iPhone: the search panel's lift no longer frozen (`screens-depart9`).
 - Deck: the bar rising above the keyboard and back; Search Tabs typing (the gap-close, the scroll to the last match, the keyboard hiding on a tap); the plus menu above the new bar; the header and bar fading with the deck's open and close; the glass on the new pieces and the grid glyph.
 
 The owner's decisions on these (native menus on both phones, the entitlement requested) are in "Decided by the owner".
@@ -2375,7 +2375,7 @@ icon, so it doesn't change the difference between them.
      frameworks ship no dSYMs (only ExpoModulesJSI has one), so these names are what makes their frames in a
      crash report readable. Proof on the stripped device archive: `atos` names a React and a Hermes local function
      from the stripped binaries. Our own code goes through the archive's dSYMs, which stay with the archive: the app
-     binary's UUID matches `Nilla.app.dSYM`, and an address in it resolves to `SettingsShortcutsView.body.getter
+     binary's UUID matches `Ardia.app.dSYM`, and an address in it resolves to `SettingsShortcutsView.body.getter
      (SettingsUIModule.swift:148)`.
    - `strip -x -S` would save 5.5 MB more installed, but it removes the local function names, and with no dSYM for
      these frameworks nothing can restore them. lldb then shows `___lldb_unnamed_symbol…` for React and Hermes
@@ -2512,7 +2512,7 @@ settled re-render on (second table), and on 0.88 with it off (third table, cfbdc
 Expo 54 / React Native 0.81: measured 2026-11-15 on one leased iPhone 17 Pro simulator (iOS 27), Expo at 5fbcd2308 and SwiftUI from main, at a
 load under 10 and under `scripts/agent/locked perflab`. Each timed row is the median of five recordings, taken in
 four rounds that alternate the apps. Times run from the first frame that changes to the last change before 0.5 s of
-stillness. The recordings, frame scripts and pages are in `/tmp/nilla-phone-shots/iphone-agent-speed/`
+stillness. The recordings, frame scripts and pages are in `/tmp/ardia-phone-shots/iphone-agent-speed/`
 (`rec/<app>-<measure>-<round><n>.mp4`, `analysis.json`).
 
 | Measure | SwiftUI | Expo | Difference | Judgement | Simulator trust |
@@ -2539,7 +2539,7 @@ What to fix before a device run, from these numbers:
 Expo 58 / React Native 0.88: measured 2026-11-15, Expo at dc1bdecad (with the screens agent's main-token motion, 15c4af926,
 and the card handover fix) against the same SwiftUI build, same simulator model, same method and pages, four
 alternating rounds, five recordings per measure. The load stayed under 15 for rounds one to three; the last
-SwiftUI round ended at 72, so its rows lean slow. Recordings and the analysis: `/tmp/nilla-phone-shots/iphone-agent-speed-088/`.
+SwiftUI round ended at 72, so its rows lean slow. Recordings and the analysis: `/tmp/ardia-phone-shots/iphone-agent-speed-088/`.
 
 | Measure | SwiftUI | Expo 58 | Difference | Judgement | Against 0.81 |
 |---|---|---|---|---|---|
@@ -2551,7 +2551,7 @@ SwiftUI round ended at 72, so its rows lean slow. Recordings and the analysis: `
 | Search submitted to the page's first paint (cached) | 130 ms | 83 ms | −47 ms | faster | as before, WebKit's own time |
 | Search submitted to settled | 498 ms | 282 ms | −216 ms (−43%) | faster | |
 | Tab swipe in the pager, settled (the 250 ms drag included) | 855 ms | 803 ms | −52 ms (−6%) | level | from +16%: main's 0.26/1 spring |
-| Search panel's departure on Go: first change to the panel moving (773ee4ded, 3 runs each) | 285 ms (255–287) | 192 ms (178–192) | −93 ms | faster | was frozen 230–320 ms on 0.88 before MotionView; the screens agent's 50 ms strips show it gone by about 150 ms against main's 200 (`/tmp/nilla-phone-shots/lift-sim-58/`) |
+| Search panel's departure on Go: first change to the panel moving (773ee4ded, 3 runs each) | 285 ms (255–287) | 192 ms (178–192) | −93 ms | faster | was frozen 230–320 ms on 0.88 before MotionView; the screens agent's 50 ms strips show it gone by about 150 ms against main's 200 (`/tmp/ardia-phone-shots/lift-sim-58/`) |
 | Back and forward by edge swipe | cannot be measured | cannot be measured | | | needs a device |
 | Deck scrolling, frames over 34 ms per scripted swipe pair | 0 of 36–50 | 0 of 32–66 | none in either | level | weak on a simulator |
 | Memory after nine tabs (app + WebKit) | 318 MB (124–129 + 189–194) | 360–415 MB (161–190 + 199–225) | +42 to +97 MB | higher | was lower on 0.81; the app process is 37–61 MB above SwiftUI's and WebKit 10–31 MB |
@@ -2561,7 +2561,7 @@ Expo 58 / React Native 0.88 with Reanimated's settled re-render off: measured 20
 a987eb84b with native d82a2839d (Pods installed after cfbdc5050, so `RNReanimated.release.xcconfig` carries
 `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS:false`), against the same SwiftUI build. Same simulator model, method and
 nine pages, four alternating rounds, five recordings per measure, load 2 to 4 throughout, under the perflab lock.
-Evidence: `/tmp/nilla-phone-shots/iphone-agent-speed-nf/`.
+Evidence: `/tmp/ardia-phone-shots/iphone-agent-speed-nf/`.
 
 | Measure | SwiftUI | Expo 58 | Difference | Judgement | Against the second table |
 |---|---|---|---|---|---|
@@ -2587,7 +2587,7 @@ At 996b1f307 the hold is gone: Expo's open is one continuous change from the fir
 `expo-card-a2.mp4`). Its card is still round-cornered with the deck at its edge at 2.030 s, and the bar arrives and
 the corners square off in one step by 2.05 s. Main's deck bar instead fades into the page's bar during the growth, and
 main is settled at 2.282 s, 174 ms after it starts. What's left is about one frame, from that step at the end
-(`/tmp/nilla-phone-shots/iphone-agent-card-996b/`, `expo-tail.png` and `main-tail.png`).
+(`/tmp/ardia-phone-shots/iphone-agent-card-996b/`, `expo-tail.png` and `main-tail.png`).
 
 What 0.88 leaves to fix, from these numbers:
 - **Card opening is level** since 51c36153c: 177 ms against 172.5, 4.5 ms apart, under a frame. With that, every
@@ -2760,7 +2760,7 @@ and left off: at 100 tabs, four drags spent 81–117 ms of the main thread in Re
 and 74–123 ms with the container, and neither dropped a frame on the simulator. The per-card cost that shows on
 Android's F4 doesn't show on the Mac's CPU; it needs a real iPhone to decide.
 
-The search rows above are against the SwiftUI reference at e945077b6 (`/Users/shivam-mini/Developer/nilla-phone-references/swiftui-main.app`),
+The search rows above are against the SwiftUI reference at e945077b6 (`/Users/shivam-mini/Developer/ardia-phone-references/swiftui-main.app`),
 30 open tabs, two rounds each with the apps alternating, five opens and five submits a round to
 `http://localhost:8777/p2.html` … `p6.html`. The rest of this table was against the reference at a6ab64311
 (`swiftui-main-a6ab64311.app`). `sample` attached to the app stops `simctl io recordVideo` from starting ("Host
@@ -3135,7 +3135,7 @@ so no real profile holds more history than that. How far it got:
 - The first attempt lost its simulator to Simlock under load, and the second to a double lease (the screens agent's
   install wiped main's app). The third ran to the end on lease f04ed0f4 (udid 97D6E59E), 2026-11-16 04:17–04:44.
   Evidence, with both stores, the Preferences plist, screenshots, trees and `mac sync` output:
-  `/tmp/nilla-phone-shots/iphone-standin-upgrade/`.
+  `/tmp/ardia-phone-shots/iphone-standin-upgrade/`.
 
 **A fresh connect on 0.88** (2026-11-16, the Expo build at cb2876bc7, clean install on lease cfc7a246, a scratch Mac
 seeded from the stand-in). Onboarding's Connect to Your Mac took the phrase (Enter Words, `fill --text-stdin`) and On My
@@ -3179,7 +3179,7 @@ hoc build) was set up off its defaults in every place its source stores somethin
 Support/Sync, the Keychain, website data). It was connected to a scratch Mac seeded from a copy of the stand-in profile
 with bookmarks added (`/tmp/nilla-phone-seed/standin-proof`). Then the Expo build at **d94eaf4c0** (JavaScript and
 native from that commit, lab build) was installed over it, as an App Store update keeps the container. Evidence:
-`/tmp/nilla-phone-shots/upgrade-proof/` (`before/`, `after/`, side-by-side `pairs/`). The import's receipt:
+`/tmp/ardia-phone-shots/upgrade-proof/` (`before/`, `after/`, side-by-side `pairs/`). The import's receipt:
 `{"tabs":8,"archive":1,"visits":11,"preferences":16}`.
 
 The first full run (at f94bcc021) carried everything except History's hidden entries; d94eaf4c0 fixes that, and this
