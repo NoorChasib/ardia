@@ -48,7 +48,7 @@ macOS and react-native-macos stops at 0.83):
 `PageView` (`packages/phone/src`) is the page. Android backs it with `PageEngine` (`com.nilladigital.nilla` in `packages/phone/android`)
 (`DevelopmentWebViewEngine` over the system WebView today). The iPhone backs it with `WebEngine` and `WebTab` from
 `packages/phone/ios/NillaKit` (WKWebView with the SwiftUI app's content blocking, popups, downloads and page requests),
-in an in-memory tab store until this app takes over the SwiftUI app's data. Its tone is `PageTone.resolve` and
+in an in-memory tab store. Its tone is `PageTone.resolve` and
 `ToneSampler` in NillaBrowser, the code the SwiftUI app's bar uses. The page takes iOS's edge swipes for back and
 forward.
 
@@ -741,8 +741,9 @@ Start the pass where R8 is most likely to have broken something, then run the wh
 
 ## Upgrade from the Compose app on Android
 
-Both apps are `com.nilladigital.nilla.android`, so the Expo app installs over the Compose app and finds its files.
-Nothing in the Compose app's data is changed or deleted, so installing the Compose app back still works.
+No Nilla Compose app ever shipped. The gate and reader below look for a Compose app's files only in Nilla's own data
+(`com.nilladigital.nilla.android`), so a Nilla install finds none and the gate stays open. They never read Ardia's
+app (`com.ardia.browser.android`), whose data is its own; the tester checklist's step 1 checks that.
 
 - **The gate** (`UpgradeGate.kt`, 9cc21830b). An import is pending while any Compose source (`databases/browser.db`,
   `shared_prefs/nilla.browser.xml`, `nilla.blocking.xml`, `ardia.reader.xml`) exists and
@@ -1221,7 +1222,7 @@ Events (service `nilla-phone`, `$lib` `nilla-phone-telemetry`, tags `app: phone`
 | `perf_launch_tray` | `tray_ms` | each launch with Auto-Open Keyboard on, once the launch tray is up (process start on `NillaPhoneSystem.processStartedAt()`'s clock) |
 | `usage_counts` | `tabs_opened`, `searches`, `pins_to_mac`, `tabs_sent`, `page_processes_gone`, `links_given_up` (a link whose handling passed its 8 s deadline), `pages_reloaded_online` (a failed page reloaded when the phone came back online), `find_opened_system` and `find_opened_bar` (Find on Page opened in WebKit's own panel, or in the app's find bar), `spaces_swiped` (a swipe in Spaces or on the start page that changed the profile), `tray_hidden_rows_opened` (a tray row opened while it peeked or sat under the keyboard), `deck_pictures_late` (a deck opened from a page whose picture hadn't painted within 250 ms, so it shrank without waiting), `search_tabs_opened` (the deck's Search Tabs field focused, in the redesign), `spaces_picked` (a space picked from the deck's switcher menu, or by a VoiceOver adjustment of the start page's dots, that changed the profile, in the redesign), `tabs_moved_to_space` (a tab moved to another space with the deck card menu's Move to Space, in the redesign), `pages_printed` (a page printed from the page menu's Print, counted when the print sheet opened, in the redesign), `pages_translated` (a page sent to Google Translate from the page menu's Translate, never from an Incognito tab), `pinned_tabs_refound` (a pinned site's tile or row switched to the tab it had opened after that tab had left the pinned address, where it used to open a second copy), `site_permissions_revoked` (a site's camera, microphone or location access revoked from Site Settings, by swipe or by its dialog, on iPhone's Expo UI Settings), `tray_back_swiped` (a search tray closed with Android's predictive back swipe), `card_opens_waited` (a card opened from the deck whose growth landed before its page had laid out and its picture painted, so the page waited up to 250 ms to take over), `native_menus_opened` (a menu opened as the system's own: a deck card's long press, the deck's ···, the space switchers, the + menus, Reader's Text Appearance, the page menu's Send to Device, the tabs button's recent tabs, on iPhone), `library_opened` (History, Bookmarks or Downloads opened in the system sheet from the page menu, on iPhone), `deck_grid_shown` (Grid picked for the deck in Settings › Appearance › Tabs, on iPhone), `landscape_shown` (a launch in which the phone was turned to landscape at least once, counted once a launch), `duo_layout_shown` (a launch that used the column, wide or split layout at least once, counted once a launch, on iPhone), `list_sheets_late` (an Archive or History sheet whose rows were drawn more than 400 ms after it was asked for, on iPhone), `list_pages_added` (Archive or History adding its next 200 rows as you scroll, on iPhone), `search_reveals_late` (a search panel opened whose content had not laid out within 250 ms, so the stage revealed it on its deadline, on iPhone), `address_field_scrolled` (a long address in the search field scrolled sideways with a swipe, on iPhone), `deck_bar_swipes` (the deck opened by swiping up on the browsing bar, the second way in beside the tabs button) | at most once a day, for the last UTC day the app was used before today, when anything was counted; private tabs are never counted |
 
-Lab and development builds follow the Mac's rule for its development builds: they send when sharing is on, marked so the dashboard can leave them out. A lab build sends `$environment: "test"` (a Metro development build `"dev"`) and the resource `deployment.environment: "development"`; only a store build sends `"production"`. So an upload from a tester's lab build (as from sync20c) is labelled, not mixed with users'. `usageToday()` in `state/telemetry/telemetry.ts` gives a lab today's counts and whether sharing is on, without sending anything. To check counts on a phone: lab › Telemetry shows sharing, today's counts, native's pending counts (read without taking them) and native's consent with its generation, refreshes on Refresh and on each return to the app, and logs each reading as `PAGELAB telemetry day … sharing … | counts … | native pending … | native consent …`.
+Layer 1 sends nothing from any build: `services.ts` has no `telemetryUrl`, so `postTelemetry` (`platform/telemetry.ts`) returns without a request and `canPostTelemetry()` is false, with sharing on or off and in lab, development and release builds alike. With sharing on, counts are still kept on the phone. The labels below are what a post would carry if a collector is ever configured: a lab build marks `$environment: "test"` (a Metro development build `"dev"`) and the resource `deployment.environment: "development"`; only a store build marks `"production"`. `usageToday()` in `state/telemetry/telemetry.ts` gives a lab today's counts and whether sharing is on, without sending anything. To check counts on a phone: lab › Telemetry shows sharing, today's counts, native's pending counts (read without taking them) and native's consent with its generation, refreshes on Refresh and on each return to the app, and logs each reading as `PAGELAB telemetry day … sharing … | counts … | native pending … | native consent …`.
 
 Every count and timing the phone can send, for the owner to read as one set and strike what he doesn't want (the approved starting point was "the smallest set", c6ebf08a8). A new count needs a question someone would act on; those near the line say so.
 
@@ -1342,10 +1343,12 @@ What main changed, by screen:
 
 Against the old reference, everything was wired and re-checked on the simulator beside the SwiftUI app (2fbd950ca, dd36012eb): the deck bar on `Glass`, `FadeView`, the system Paste, Default Browser, Open in Background, VoiceOver names, Clear Browsing Data by range, the card handover.
 
+> Recorded in Ardia (https://github.com/ardia-browser/ardia) before Nilla forked it on 2026-11-18. Names, flags, paths and issue numbers are Ardia's, as recorded.
+
 **Audit against main, 2026-11-16** (the iPhone agent, one iPhone 17 Pro lease). Main's SwiftUI app (the ad hoc
 Release build of `apps/ios`, which matches `main`) beside a build of head (6cbc6e048), in light and dark, with demo
-data. Screens were reached through each app's own UI and the `-NillaDemo` / `Browse*` switches. Main reads
-`-NillaOpenSheet` and `-NillaOpenSettings` only in Debug builds, so its sheets were opened by hand. Inventory of
+data. Screens were reached through each app's own UI and the `-ArdiaDemo` / `Browse*` switches. Main reads
+`-ArdiaOpenSheet` and `-ArdiaOpenSettings` only in Debug builds, so its sheets were opened by hand. Inventory of
 main's screens: an Explore pass over `apps/ios/App`. Pairs (Expo left, main right):
 `/tmp/ardia-phone-shots/iphone-audit/pairs/`. Second pass at a1973a86e, light, with typing for real: `iphone-audit/r-e-light/` (Expo),
 `r-m-light/` (main), pairs in `pairs2/`, the deck-glass experiments in `glassexp/`.
@@ -1366,9 +1369,9 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Onboarding | Sync step | not seen | Art centred as main's (911cbb80b); our demo shows the connected state, main's the connect buttons | screens |
 | Onboarding | All set | match | Plain tip rows on main's card, 911cbb80b | |
 | Onboarding | All set: usage-stats toggle | deliberate | Expo only; consent is asked where sharing is described (telemetry rule) | owner's rule |
-| Onboarding | Default browser step | match | Seen 2026-11-17 with `-NillaOnboarding YES` on a fresh install of each: both walk the same four steps (welcome, blocking, sync, tips) into the app, and no step, row or text names a default browser; the code stays off without Apple's entitlement and nothing breaks (`unseen/onboarding-{ours,ref}/`) | |
+| Onboarding | Default browser step | match | Seen 2026-11-17 with `-ArdiaOnboarding YES` on a fresh install of each: both walk the same four steps (welcome, blocking, sync, tips) into the app, and no step, row or text names a default browser; the code stays off without Apple's entitlement and nothing breaks (`unseen/onboarding-{ours,ref}/`) | |
 | Start page | Header, dots, bar | match | | |
-| Start page | Space name | deliberate | A title with no chevron and no menu; the dots and the swipe change space, and VoiceOver or TalkBack adjusts the dots. The SwiftUI reference's name opens a menu of the spaces | owner's call, 2026-11-18 |
+| Start page | Space name | deliberate | A title with no chevron and no menu; the dots and the swipe change space, and VoiceOver or TalkBack adjusts the dots. The SwiftUI reference's name opens a menu of the spaces (#2466) | owner's call, 2026-11-18 |
 | Start page | Pinned tiles | match | Tiles draw main's SF Symbols (Calendar, folders) at main's sizes, d09343dba | |
 | Start page | No spaces, sync off (invitation) | match | The Sync With Your Mac capsule alone, same place and size (`r-e-light`/`r-m-light`/invitation) | |
 | Search panel | Empty, recent searches | match | Main's source lists recent searches and the Mac's tabs, no open tab (the audit's SwiftUI row is a Mac tab); rows now refresh live with sync, 2fd28bbe5 | |
@@ -1377,7 +1380,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Search panel | Classic in Incognito, through the morph | match | Seen 2026-11-17 on the iPhone 18 Pro at 006f1afa3 beside main set to Classic by hand: both grow the dark Incognito pill into the same solid dark Classic panel and fold it back into the pill with no tint change (`pr-2184/search-classic-incognito-open.png`, `-close.png`). At rest ours shows the red lock where main shows its eyeglasses: our bar puts not secure before private, and main's frame has no not-secure state on loopback | |
 | Search panel | Landed pill on a real site | match | A dim-tap close on en.wikipedia.org at 006f1afa3: the landed pill is whole (favicon, host, `···`) from the first frame it shows. The favicon-only pill for about 20 frames seen on an earlier build (stage-9, 6d88e1c95 plus one native line) doesn't reproduce at head | |
 | Search panel | Voice | match | Seen beside main on the iPhone 17 Pro: the same two prompts (speech recognition, then microphone, main's wording), Listening…, "couldn't hear anything" with Try Again, and Cancel, which brings the field back focused with the keyboard up in both (seen again at 006f1afa3; an earlier build left it down). The simulator has no audio, so a spoken search is unheard (`unseen/voice-*.png`, `unseen/ref-voice-*.png`, `unseen/voice-cancel-stage10.png`) | |
-| Search panel | Open and close morph (main's, e945077b6) | partly | Recorded 2026-11-16 on the iPhone 18 Pro beside main, one still localhost page, stage-4.app (`search-stage-18pro/{open,close,drag,go}-pair.png`). Open stills match: the address selected whole, its start shown, the site row then the typed-address row (363e43f41). Cancel into the pill: level within a frame, the face carrying its whole label (b861cd01e) and the bar back whole. Pull-down: the motion is level (616 ms both), but main folds the panel into the pill at the end and ours fades it in place; the JS sends `morph` with the pull's velocity, so the fold is the native close's (iPhone). Go: main holds the panel about 370 ms before departing up, ours about 170 ms; the JS blurs and closes in one tick, so this too is the native depart's. Open: ours sits about five frames before the panel moves, where main's face rises with the keyboard from the second frame; the native start now waits for the content's layout (e4b1e1739) and the field's late focus is traced by the iPhone agent | screens, iPhone |
+| Search panel | Open and close morph (main's PR #2010, e945077b6) | partly | Recorded 2026-11-16 on the iPhone 18 Pro beside main, one still localhost page, stage-4.app (`search-stage-18pro/{open,close,drag,go}-pair.png`). Open stills match: the address selected whole, its start shown, the site row then the typed-address row (363e43f41). Cancel into the pill: level within a frame, the face carrying its whole label (b861cd01e) and the bar back whole. Pull-down: the motion is level (616 ms both), but main folds the panel into the pill at the end and ours fades it in place; the JS sends `morph` with the pull's velocity, so the fold is the native close's (iPhone). Go: main holds the panel about 370 ms before departing up, ours about 170 ms; the JS blurs and closes in one tick, so this too is the native depart's. Open: ours sits about five frames before the panel moves, where main's face rises with the keyboard from the second frame; the native start now waits for the content's layout (e4b1e1739) and the field's late focus is traced by the iPhone agent | screens, iPhone |
 | Search panel | Morph: the open's start | match | Seen 2026-11-17 on the iPhone 17 Pro beside main (`stage/{ref,hold2}-open/zoom.png`, the first 24 frames from the tap): the pill lifts off the bar carrying its face, the card deepens behind it with the field's capsule in view, the face fades at frame 17 (main's 16), the field's text at 19 (18) and the rows at 21 (21). Our field had come in about 15 frames sooner: the focus raises the keyboard inside the stage's start, so the reveal fired a turn after the lens opened; the stage now holds it 0.25 s after the unfold, and the reveal covers the field's contents, not its capsule, as main's text field does. At load 15 the keyboard came at frame 9 in both; at load 13 earlier it was late (content laid out 186 ms after the tap, field focused at 661 ms) | iPhone |
 | Search panel | Morph: dim tap back into the pill | different | The panel folds down on the keyboard's curve into the pill as main's (`stage/{ref,ours}-dim/strip.png`, 2026-11-17). After it lands, our pill shows only its favicon for about 20 frames before the label comes back; main's pill is whole at once | screens |
 | Search panel | Morph: pull-down | match | Both follow the finger with the held lift, fade their contents and fold into the pill from where the finger left them, since 6d88e1c95 (`stage/{ref,ours}-drag/strip.png`) | |
@@ -1393,9 +1396,9 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Page | Collapsed bar (host pill) | match | Main's glass host pill on scroll down, tap or scroll up to expand, 3fa565c4f | |
 | Page | Tabs button menu | match | Main's BarControls: up to eight recent tabs, a divider, Close Tab; Previous and Next Tab are its VoiceOver actions, not menu items. Ours is the system menu with the same items. Since the owner's tabs pass a swipe up on the bar also opens the deck | |
 | Page | Find on Page | match by decision | The system find navigator by default since ec6f9bc52 | |
-| Page menu | Rows and groups | match | The sheet now reaches the safe top as main's large detent does, and rows land at main's places; the action glyphs are main's size; Open in Default Browser shows, as main's does, only when Nilla can ask to be the default and isn't (hidden in builds without the entitlement) | |
+| Page menu | Rows and groups | match | The sheet now reaches the safe top as main's large detent does, and rows land at main's places; the action glyphs are main's size; Open in Default Browser shows, as main's does, only when Ardia can ask to be the default and isn't (hidden in builds without the entitlement) | |
 | Page menu | History, Bookmarks, Downloads rows | match | Main's group after Find, Send and Print, opening the Library sheet | |
-| Page menu | Translate | match | Main's: the first Translate asks "Translate with Google?", the answer stands, and the row then names the remembered language. Seen on the iPhone 17 at e3be236e1: the question once, then "Translate to English" going straight to translate.goog; an Incognito tab always asks (`ports/06-translate-ask.png`, `08-menu-second.png`). Android has the same through its own `PageTranslation.kt` | |
+| Page menu | Translate | match | Main's #2259: the first Translate asks "Translate with Google?", the answer stands, and the row then names the remembered language. Seen on the iPhone 17 at e3be236e1: the question once, then "Translate to English" going straight to translate.goog; an Incognito tab always asks (`ports/06-translate-ask.png`, `08-menu-second.png`). Android has the same through its own `PageTranslation.kt` | |
 | Reader | Article | match | | |
 | Reader | Top buttons | match | Main's glass circle (textformat.size, label colour) and glass Done capsule, 16 pt from each side; the lead image's 12 pt corners | |
 | Deck | Cards, Archive capsule, tab strip | match | The Archive capsule comes back on every deck open until it is dismissed or an interval is picked, as main's `hasShownArchiveCard` (Android keeps Compose's once-on-offer); the Search Tabs placeholder is the system's placeholder tone, within 3 levels of main's in light and dark (`glass-five/grid2.png`) | |
@@ -1406,7 +1409,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Deck | Close | deliberate | The owner's tabs pass: no dust cloud. The closed card flies off the top on a 0.32 s critically damped spring that starts at the flick's speed, while the cards after it close the gap in the same frames; it is dropped once it has left the screen. With Reduce Motion it fades in place | owner |
 | Deck | Search Tabs | match | Typing "wiki": the bar rises above the keyboard and the deck narrows to the same Wikipedia tabs (`pairs3/search-tabs.png`) | |
 | Deck | Incognito pill | match | Seen 2026-11-17 on the iPhone 17 at e3be236e1 beside main's capture: the dark pill with the eyes and the count, and a private card's header reads Incognito beside the eyes icon instead of the page's title, as main's; before a2724b180 ours showed the page's title and hand-placed eyes (`unseen/deck-incognito/`, `ports/04-deck-incognito.png`) | |
-| Deck | Closing the last tab | match | Main's: Close All Tabs, or closing the last card, hands over to the start screen, which rests with the tray down even with Open Keyboard on; the start screen's and the deck's buttons and tiles give the bar's press haptic. Seen on the iPhone 17 at e3be236e1: Close 9 Tabs lands on the resting start screen (`ports/11-after-close-all-3s.png`); the haptic is checked by `emptyDeck.render.test.tsx`, since the simulator has none | |
+| Deck | Closing the last tab | match | Main's #2261: Close All Tabs, or closing the last card, hands over to the start screen, which rests with the tray down even with Open Keyboard on; the start screen's and the deck's buttons and tiles give the bar's press haptic. Seen on the iPhone 17 at e3be236e1: Close 9 Tabs lands on the resting start screen (`ports/11-after-close-all-3s.png`); the haptic is checked by `emptyDeck.render.test.tsx`, since the simulator has none | |
 | Deck | Dark | match | Deck, `···` menu and card menu as in light; once a card showed its placeholder (title and host) where main showed the snapshot, on the first deck open after a fresh install in dark. Not reproduced in two more fresh dark installs (browsing, then Tabs): every card showed its picture (`dark-deck/`) | |
 | Spaces | Sheet | match | The Bookmarks section is gone; bookmarks are in the Library sheet. Both show Show All after a device's eighth tab (main's `collapsedLimit`); in main that row sits behind the page dots and is unseen at rest, in ours it shows beside them (`pr-2184/spaces.png`) | screens |
 | Archive | Sheet | match | Light and dark | |
@@ -1418,13 +1421,13 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Settings | Trusted Sites | match | Empty state the same | |
 | Settings | Filter Lists | match | The demo now uses main's demo lists (`FilterLists.demo`, as main's AppModel does): a fresh demo install shows 11 lists and 271,481 rules at once, no downloads. Neither app bundles list files: a real install downloads them, and the built-in seed rules block from the first page, network or not (`PhoneBlockingTests`); on the simulator 46 requests were blocked within 5 s of a fresh launch | |
 | Settings | My Filters | match | Same editor and footer; the page now takes the settings chrome (the bar in the space's colour) and Apply is the prominent glass capsule, as main's `role: .confirm` draws it, seen on the simulator (`dialogs/ours-myfilters.png`) | |
-| Settings | About | match | The app icon since 042a23ace (main's asset catalog); the version reads "Nilla Dev (1)", as current main's AppVersionLabel does for a build without a release version (the reference SwiftUI build predates it) | |
+| Settings | About | match | The app icon since 042a23ace (main's asset catalog); the version reads "Ardia Dev (1)", as current main's AppVersionLabel does for a build without a release version (the reference SwiftUI build predates it) | |
 | Settings | Licenses | match | | |
 | Settings | Connect pages | match | The connect flow worked end to end on 2026-11-16 | |
 | Toasts | Copy Link | match | Neither app shows a toast half a second after Copy Link in the page menu; both keep the menu open. Other kinds not seen | |
-| Extensions, widgets, intents | | partly | The Expo project compiles main's own sources for these. Seen on our build 2026-11-17 (`unseen/widgets/`): the gallery offers main's four widgets (Search small and medium, Your Mac's Tabs medium and large, with the demo Mac's tabs in the previews); the large one on the home screen shows "Sync With Your Mac" without a synced snapshot (demo mode writes none) and a tap opens the app on the Spaces sheet with the Mac's tabs. Main's tap does the same (`unseen/widgets/ref-p4/`). The share sheet, seen 2026-11-17 on the iPhone 17 at e3be236e1 beside main's from Safari with no Mac connected: the same sheet in both, the page's title and host, Open in Nilla and the line about turning on Sync With Your Mac, its top edge on the same pixel row (`ports/30-ref-share-1.png`, `32-ours-share-b.png`). Not seen: the widgets in dark, and the share sheet's Send to Your Mac row with a Mac connected (the demo writes no snapshot; the row and the exporter are main's own sources) | iPhone |
-| Duo | Open and half-open layouts | not seen | Simlock leases the iPhone Duo folded only: `fold open` needs a simulator in the default set and Simlock's are in a scoped one (2026-11-17). Later the same day Simlock's Duo did not boot at all (two tries: a boot timeout, then a closed connection), and a Duo simulator made in the default set is not offered by the Device panel, so the layouts are still seen only under `-NillaDuoCanvas` on the iPhone 18 Pro (the row below) | |
-| iPhone in landscape, Duo layouts | | partly | Decided 2026-11-16. Built to the specification below. `phone` in landscape (db4823c0f and this change): every bar pads by `max(left, right)`, the deck takes main's landscape card, and the archive capsule now swaps the deck to main's archive geometry (407.6×188 at 852×393; 273.2 wide in portrait on a 402×874 iPhone), springing from the old card as main animates it. Seen on the iPhone 18 Pro simulator turned on its side: browsing, the deck with and without the capsule. `column`, `wide` and `split` are built (components/column, components/duo) and switch from the native probe (44797e4ed); under `-NillaDuoCanvas` on the iPhone 18 Pro each draws, but the 669×951 canvas overflows that screen, so their sizes still need the iPhone Duo simulator. `column` seen beside main on the iPhone Duo simulator closed (466×678, trailing 84): the deck's and browsing's columns land on main's, and the deck now clips its cards at the content edge as main's does. Simlock's Duo can't fold or turn (its scoped simulator set has no hinge), so `wide` and `split` are checked by tests only (duoLayout.test.ts, duoWide.render.test.tsx, main's numbers), not yet seen at their real size: this Mac's default-set Duo holds someone's install of main and is left as it is, until the owner names a Duo that may be folded. The command bar keeps its greatest height as main's does (main's rows take `rowsBudget`). Not matched yet: the status bar in `wide` follows the backdrop rather than the page's top tone | screens |
+| Extensions, widgets, intents | | partly | The Expo project compiles main's own sources for these. Seen on our build 2026-11-17 (`unseen/widgets/`): the gallery offers main's four widgets (Search small and medium, Your Mac's Tabs medium and large, with the demo Mac's tabs in the previews); the large one on the home screen shows "Sync With Your Mac" without a synced snapshot (demo mode writes none) and a tap opens the app on the Spaces sheet with the Mac's tabs. Main's tap does the same (`unseen/widgets/ref-p4/`). The share sheet, seen 2026-11-17 on the iPhone 17 at e3be236e1 beside main's from Safari with no Mac connected: the same sheet in both, the page's title and host, Open in Ardia and the line about turning on Sync With Your Mac, its top edge on the same pixel row (`ports/30-ref-share-1.png`, `32-ours-share-b.png`). Not seen: the widgets in dark, and the share sheet's Send to Your Mac row with a Mac connected (the demo writes no snapshot; the row and the exporter are main's own sources) | iPhone |
+| Duo | Open and half-open layouts | not seen | Simlock leases the iPhone Duo folded only: `fold open` needs a simulator in the default set and Simlock's are in a scoped one (2026-11-17). Later the same day Simlock's Duo did not boot at all (two tries: a boot timeout, then a closed connection), and a Duo simulator made in the default set is not offered by the Device panel, so the layouts are still seen only under `-ArdiaDuoCanvas` on the iPhone 18 Pro (the row below) | |
+| iPhone in landscape, Duo layouts | | partly | Decided 2026-11-16. Built to the specification below. `phone` in landscape (db4823c0f and this change): every bar pads by `max(left, right)`, the deck takes main's landscape card, and the archive capsule now swaps the deck to main's archive geometry (407.6×188 at 852×393; 273.2 wide in portrait on a 402×874 iPhone), springing from the old card as main animates it. Seen on the iPhone 18 Pro simulator turned on its side: browsing, the deck with and without the capsule. `column`, `wide` and `split` are built (components/column, components/duo) and switch from the native probe (44797e4ed); under `-ArdiaDuoCanvas` on the iPhone 18 Pro each draws, but the 669×951 canvas overflows that screen, so their sizes still need the iPhone Duo simulator. `column` seen beside main on the iPhone Duo simulator closed (466×678, trailing 84): the deck's and browsing's columns land on main's, and the deck now clips its cards at the content edge as main's does. Simlock's Duo can't fold or turn (its scoped simulator set has no hinge), so `wide` and `split` are checked by tests only (duoLayout.test.ts, duoWide.render.test.tsx, main's numbers), not yet seen at their real size: this Mac's default-set Duo holds someone's install of main and is left as it is, until the owner names a Duo that may be folded. The command bar keeps its greatest height as main's does (main's rows take `rowsBudget`). Not matched yet: the status bar in `wide` follows the backdrop rather than the page's top tone | screens |
 
 **Motions from main's pass (d199b885c)**:
 
@@ -1656,10 +1659,10 @@ a page with no title-and-host placeholder (sync15); the bar frosts taking the ti
 simulator, the list under "The iPhone redesign".
 
 **1. Install and upgrade**
-- [ ] **iPhone:** before updating the SwiftUI app, note a Trusted Site, a My Filters rule, one site's page zoom, Night Shade, the Open App Links In choice, a few tabs and one archived tab, with Sync connected; install the Expo build over it and open it. Expect: no onboarding; the same tabs, the archived one in the Archive; that site's page menu shows its zoom, Night Shade and blockers off; Settings › Sync still shows the Mac.
+- [ ] **iPhone:** on a phone that also has Ardia's app (`com.ardia.browser.ios`) with tabs, a Trusted Site and Sync connected, install the Nilla build and open it. Expect: onboarding; no tabs, Trusted Sites, filters, page zoom or Night Shade from Ardia; Settings › Sync not connected, so connecting to a Mac starts a new connection. Open Ardia's app afterwards. Expect: its tabs, settings and Sync as they were.
 - [ ] **iPhone:** relaunch twice. Expect: nothing appears twice.
-- [ ] **iPhone:** open the deck, then update the app once more and open it again. Expect: imported cards keep their pictures both times.
-- [ ] **Android:** the upgrade script ("Upgrade from the Compose app on Android") if this build hasn't had it.
+- [ ] **iPhone:** open the deck, then install the Nilla build once more over itself and open it again. Expect: the cards keep their pictures both times.
+- [ ] **Android:** the same with Ardia's app (`com.ardia.browser.android`) beside the Nilla build: onboarding, nothing from Ardia, Sync not connected, and Ardia's app unchanged afterwards.
 
 **2. Onboarding** (a fresh install, or a lab build launched with `NillaOnboarding`)
 - [ ] Go forward and back through every step. Expect: each step slides 60 points with a fade both ways; leaving the welcome crossfades the backdrop; each step ticks and the last gives a success haptic; the keyboard goes down between steps.
@@ -2465,8 +2468,8 @@ Watch your own frames before you hand a change on. The loop, for any agent:
    - Or a sheet: `-vf "fps=60,select='between(n,START,END)',scale=134:291,tile=18x2" -frames:v 1 sheet.png`.
    - Measure positions, sizes and opacity from the pixels, not by eye.
 6. **Main's SwiftUI app,** the reference for the iPhone redesign.
-   - It has the same bundle id, so uninstall one app before installing the other
-     (`xcrun simctl --set ~/.simlock/devices/ios uninstall <udid> com.nilladigital.nilla.ios`).
+   - It is Ardia's app, built from an Ardia commit with Ardia's bundle id (`com.ardia.browser.ios`), so it installs
+     beside the Nilla build and the two never share data.
    - The pinned Release build is `~/Developer/nilla-phone-references/swiftui-main.app` (linked from
      `/tmp/nilla-phone/swiftui-main.app`), with `swiftui-main.txt` saying from which commit. To make a fresh one from
      any commit of main (about 50 s), run `apps/phone/scripts/rebuild-swiftui-reference <commit>`: it builds that
@@ -2497,8 +2500,10 @@ Watch your own frames before you hand a change on. The loop, for any agent:
 
 #### Speed against the SwiftUI app
 
+> This section and the next were recorded in Ardia (https://github.com/ardia-browser/ardia) before Nilla forked it on 2026-11-18. Names, flags, paths and issue numbers are Ardia's, as recorded.
+
 The question is whether the Expo app is slower than the SwiftUI app it replaces on iPhone. The bar is main's SwiftUI
-app, built Release for the same simulator (`/tmp/nilla-phone/swiftui-main.app`), against a Release `build-sim-app`
+app, built Release for the same simulator (`/tmp/ardia-phone/swiftui-main.app`), against a Release `build-sim-app`
 build of the Expo app from head.
 
 Three runs so far: on Expo 54 / React Native 0.81 (first table), on Expo 58 / React Native 0.88 with Reanimated's
@@ -2657,7 +2662,7 @@ What a simulator can say:
 The six-row table above runs at nine tabs. This one widens it: 30 and 100 open tabs, 1,000 archived tabs and 3,000
 History visits, typing in search, and opening and scrolling Archive and History. Measured 2026-11-16 on one leased
 iPhone 17 Pro Max simulator (iOS 27.0), Expo builds from `build-sim-app` (lab on) beside main's SwiftUI build
-(`/tmp/nilla-phone/swiftui-main.app`), the apps alternating round by round, under the perflab lock, rounds started only
+(`/tmp/ardia-phone/swiftui-main.app`), the apps alternating round by round, under the perflab lock, rounds started only
 below a load of 10. Each figure is a median of the opens in that session; ranges are in brackets.
 
 How the state is made, so both apps hold the same tabs:
@@ -2685,7 +2690,7 @@ Ranked by how much a person feels it, worst first:
 | – | Closing a tab by flick, 30 / 100 tabs | 643 / 648 ms to still | 556 / 553 ms | | level |
 | – | Cold launch, first frame to settled, 30 / 100 tabs | 409 / 411 ms | 409 / 409 ms | | level (iOS's zoom; see the first table) |
 | – | Typing in search, one letter: the letter and the new suggestion rows | same frame | same frame | | level |
-| – | Search panel open from a page, to settled, against main at e945077b6 (the growing pill), 2026-11-16 19:18–19:33 | 393 ms (383–557) | 410 ms (382–417) | | level; Expo is the old search motion (JS at 82888f79f on native from 3e5ae048c), not the uncommitted native stage |
+| – | Search panel open from a page, to settled, against main at e945077b6 (#2010's growing pill), 2026-11-16 19:18–19:33 | 393 ms (383–557) | 410 ms (382–417) | | level; Expo is the old search motion (JS at 82888f79f on native from 3e5ae048c), not the uncommitted native stage |
 | – | Search submitted (Go) to the page's first paint, same session | 143 ms (58–287) | 98 ms (65–367) | | faster; WebKit's own time on the Mac's CPU |
 | – | Search submitted to settled, same session | 332 ms (282–530) | 328 ms (263–997) | | level |
 | – | Search panel open from a page, tap to settled, against main at e945077b6 with the native stage (e4b1e1739's stage-7), 2026-11-16 21:50, iPhone 18 Pro, still pages on loopback, ten each in alternating rounds, load 4–5 | 537.5 ms (458–558); first movement 150 ms after the tap | **435 ms** (423–540); first movement 54 ms | | faster |
@@ -2791,8 +2796,8 @@ What it needs, for a yes or no:
 
 1. **The build.** A development-signed Release build of the Expo app, made with Xcode from `apps/phone/ios/Nilla.xcworkspace` (Release, a device destination).
    - Development signing keeps it debuggable, so Instruments can profile it. A TestFlight build can't be profiled that way.
-   - It can't sit beside the TestFlight SwiftUI app as things are: both are `com.nilladigital.nilla.ios`, with extensions `com.nilladigital.nilla.ios.share`, `.open` and `.widgets`, and the app group `group.com.nilladigital.nilla.ios`. Installing it replaces the SwiftUI app and its data on that phone.
-   - The cleaner way is a second bundle id for measurement only: `com.nilladigital.nilla.ios.measure`, built without the three extensions and the app group. Then both apps sit side by side and nothing of the owner's is touched. That's a build-setting change on our side, plus the signing below.
+   - It is `com.nilladigital.nilla.ios`, with extensions `com.nilladigital.nilla.ios.share`, `.open` and `.widgets`, and the app group `group.com.nilladigital.nilla.ios`, so it installs beside Ardia's SwiftUI app (`com.ardia.browser.ios`) and never reads or replaces its data. Installed over a Nilla TestFlight build, it replaces that build and its data.
+   - To keep a Nilla TestFlight build on the same phone, use a second bundle id for measurement only: `com.nilladigital.nilla.ios.measure`, built without the three extensions and the app group. That's a build-setting change on our side, plus the signing below.
 2. **The signing,** all the owner's to do (agents never touch the Apple developer account, certificates, profiles or the device list).
    - Register the phone's UDID in the signing team's devices (`NILLA_TEAM_ID`, unset until the owner has a team), or let Xcode do it while signed in as a team member with automatic signing, which is what the projects use (`CODE_SIGN_STYLE = Automatic`).
    - Let Xcode create a development certificate and profile for the bundle id. For the measurement id, that means an App ID `com.nilladigital.nilla.ios.measure`, with no capabilities beyond the defaults if it's built without the app group.
@@ -2968,6 +2973,8 @@ and scroll speed on the root list.
 
 #### The Expo app on TestFlight, internal group first
 
+> Ardia's plan for replacing its SwiftUI app on TestFlight in place, recorded in Ardia (https://github.com/ardia-browser/ardia) before Nilla forked it on 2026-11-18. Names, ids, paths and issue numbers are Ardia's, as recorded. None of it applies to Nilla: Nilla has no earlier app to upgrade, never installs over or imports Ardia's app, and checks a fresh install beside it instead (the tester checklist's step 1).
+
 Nothing here is run by an agent on its own: the coordinator picks the moment, and no agent uploads or touches the
 Apple developer account. This is what the build needs and how the switch is proved.
 
@@ -2978,9 +2985,9 @@ out of the id order CocoaPods writes in (fixed in 8304ed5c6, and on `expo-ios-in
 d5fbaabc1). After a hand edit to the project, run `pod install` and commit what it writes.
 
 **What the build is.**
-- **App record:** the same as the SwiftUI app: "Nilla", bundle id `com.nilladigital.nilla.ios`, team `NILLA_TEAM_ID` (unset until the owner has one), and the
-  extensions `.share`, `.widgets` and `.open`. The Expo project (`apps/phone/ios/Nilla.xcodeproj`) already uses these
-  ids and the same entitlement files, now in `apps/phone/ios/Config`: the app group `group.com.nilladigital.nilla.ios`, and the default
+- **App record:** the same as the SwiftUI app: "Ardia", bundle id `com.ardia.browser.ios`, Ardia's Apple team, and the
+  extensions `.share`, `.widgets` and `.open`. The Expo project (`apps/phone/ios/Ardia.xcodeproj`) already uses these
+  ids and the same entitlement files, now in `apps/phone/ios/Config`: the app group `group.com.ardia.browser.ios`, and the default
   browser off (`ARDIA_DEFAULT_BROWSER = NO`).
 - **Version and build number:**
   - The Apple version is the Mac's release version, as `apps/phone/scripts/release-ios --help` has it.
@@ -2991,8 +2998,8 @@ d5fbaabc1). After a hand edit to the project, run `pod install` and commit what 
     is never committed.
 - **The release path** (9ac589838, 6dfe58539):
   - `apps/phone/scripts/release-ios <build> --version <release> [--unsigned | --no-upload]` is the Expo counterpart
-    of main's `scripts/release-ios.sh`. It archives `apps/phone/ios/Nilla.xcworkspace` for a device in Release, with the
-    release version on every target and `NillaReleaseVersion` in the app.
+    of main's `scripts/release-ios.sh`. It archives `apps/phone/ios/Ardia.xcworkspace` for a device in Release, with the
+    release version on every target and `ArdiaReleaseVersion` in the app.
   - The commit's JavaScript is compiled with Hermes with the lab off, handed to the bundle phase through
     `ARDIA_PREBUILT_BUNDLE`, and stamped.
   - It refuses an uncommitted native tree or Pods behind `Podfile.lock`.
@@ -3008,7 +3015,7 @@ d5fbaabc1). After a hand edit to the project, run `pod install` and commit what 
     one already there as it is) and uploads a development-signed `ios-device-build` .ipa, built from the ref the run
     starts on by `release-ios --development`. It uploads nothing to App Store Connect and takes no build number, so
     trying a branch on a phone spends no TestFlight build. Install it on the plugged-in iPhone, with Developer Mode
-    on, by `xcrun devicectl device install app --device <udid> Nilla.ipa`. The repository is public, so the job's
+    on, by `xcrun devicectl device install app --device <udid> Ardia.ipa`. The repository is public, so the job's
     first step masks the UDID from the event payload, before any step's environment is printed.
 - **Proved without the Apple account** (2026-11-16): `release-ios 10 --version 0.2.47 --unsigned` on this Mac.
   - Every check passed, at 56.5 MB installed.
@@ -3033,7 +3040,7 @@ d5fbaabc1). After a hand edit to the project, run `pod install` and commit what 
      - The build number is taken above App Store Connect's highest, from 10 on, unless `-f build=` sets it.
      - The release version must be the train the owner wants. 0.2.47 still has builds in review, so the next Mac
        release version is cleaner.
-  4. **On the owner's phone:** install it from TestFlight over the SwiftUI app. Settings' footer should read "Nilla
+  4. **On the owner's phone:** install it from TestFlight over the SwiftUI app. Settings' footer should read "Ardia
      <version> Nightly (<build>)".
 - **Who uploads, and how 0.2.47 (9) went up:**
   - The SwiftUI build was sent from `main` by the iOS Release workflow on 15 Nov (`gh workflow run ios-release.yml -f
@@ -3065,7 +3072,7 @@ build.
 
 **Proving the upgrade on a copy of real data.** On a leased simulator, never the owner's phone or live profile.
 1. **Where real data comes from.**
-   - A TestFlight app's container can't be read from a Mac. So the source is the owner's Mac Nilla profile, copied
+   - A TestFlight app's container can't be read from a Mac. So the source is the owner's Mac Ardia profile, copied
      into a scratch folder (the repo's rule: copies only, never the live profile, nothing written back).
    - Delete `sync.json` from the copy before anything starts, so the copy never syncs to the owner's real iCloud
      folder.
@@ -3073,10 +3080,10 @@ build.
      `<work>/mac`, which needs a `--seed <copy>` option added to the script). It turns sync on against
      `<work>/folder`, so the phone side gets the owner's real spaces, pinned tabs and open tabs from a Mac that
      isn't his.
-2. **Set up main's SwiftUI app as the owner uses it** (`/tmp/nilla-phone/swiftui-main.app`, onboarding done):
+2. **Set up main's SwiftUI app as the owner uses it** (`/tmp/ardia-phone/swiftui-main.app`, onboarding done):
    - Connect: Settings › Sync With Mac › Connect to Your Mac, Enter Words, with the phrase read from
      `<work>/phrase.txt` straight into the field (never printed, no screenshot while it shows). Then the folder:
-     `<work>/folder` mirrored into the app's `Documents/Nilla Sync` and chosen there.
+     `<work>/folder` mirrored into the app's `Documents/Ardia Sync` and chosen there.
    - Then use it: at least nine tabs, two archived, about 30 pages visited, a private tab, every Settings row moved
      off its default, Site Settings, blocking (a trusted site, a My Filters line, one list off), the Reader's
      settings, and Appearance.
@@ -3085,7 +3092,7 @@ build.
    - `mac sync`, which lists the phone's device id, name and tabs;
    - the Keychain and folder state as the Sync page shows them.
 4. **Upgrade:** install the Expo build over it, the same bundle id with the container kept, as
-   `ios-update-launch-check` does, and launch it. The import logs one `nilla-legacy imported …` line with counts per
+   `ios-update-launch-check` does, and launch it. The import logs one `ardia-legacy imported …` line with counts per
    kind and no rejects beyond `notWeb` and `duplicate`.
 5. **Compare "after" with "before":**
    - the same open tabs in the same order with the same tab selected, and the Archive's count;
@@ -3105,21 +3112,21 @@ build.
 - **One folder for both sides, no relay.** The leased simulator's "On My iPhone" is the `File Provider Storage` of
   its `group.com.apple.FileProvider.LocalStorage` app group container under
   `~/.simlock/devices/ios/<udid>/data/Containers/Shared/AppGroup/` (read each container's
-  `.com.apple.mobile_container_manager.metadata.plist` for `MCMMetadataIdentifier`). Make `Nilla Sync` there, and
+  `.com.apple.mobile_container_manager.metadata.plist` for `MCMMetadataIdentifier`). Make `Ardia Sync` there, and
   before `mac start` make `<work>/folder` a symlink to it. The Mac writes into it, and the phone's picker shows it as
-  On My iPhone › Nilla Sync.
+  On My iPhone › Ardia Sync.
 - **The phrase without a screen read:** on Enter Words, take one snapshot while the field is empty, to get the
   field's ref and the Use Phrase button. Then `<agent-device> fill <field ref> --text-stdin < <work>/phrase.txt`,
   which keeps the words out of argv and output, and press Use Phrase by its coordinates. Read the screen again only
   once it shows "Step 1, done".
-- **The folder:** Choose Folder… › Browse › On My iPhone › Nilla Sync, then Open from inside the folder.
+- **The folder:** Choose Folder… › Browse › On My iPhone › Ardia Sync, then Open from inside the folder.
 - **Main's app must be the ad hoc build** (the simulator section above). A `CODE_SIGNING_ALLOWED=NO` build connects
   but can't save the key.
 - **Expect Appearance to change once connected:** Match My Mac follows the Mac profile, so a profile set to dark turns
   the phone dark.
 
 **The stand-in run (not the proof).** The owner's profile isn't on this Mac, and copying it is his to allow. So the
-tooling ran on a stand-in made through the app: `/tmp/nilla-phone-seed/standin-profile`, with its counts and recipe
+tooling ran on a stand-in made through the app: `/tmp/ardia-phone-seed/standin-profile`, with its counts and recipe
 in `MANIFEST.md` beside it. It has 4 spaces with 40 tabs, 7 pins, a pinned folder, a split, 613 URLs and 3,025 visits
 over 79 days, ten settings off their defaults, and its own test sync identity. Chrome expires visits after 90 days,
 so no real profile holds more history than that. How far it got:
@@ -3135,7 +3142,7 @@ so no real profile holds more history than that. How far it got:
 
 **A fresh connect on 0.88** (2026-11-16, the Expo build at cb2876bc7, clean install on lease cfc7a246, a scratch Mac
 seeded from the stand-in). Onboarding's Connect to Your Mac took the phrase (Enter Words, `fill --text-stdin`) and On My
-iPhone › Nilla Sync, and showed "Connected." The Mac listed one new phone (ci7pa7gk…). A tab sent from the Mac arrived
+iPhone › Ardia Sync, and showed "Connected." The Mac listed one new phone (ci7pa7gk…). A tab sent from the Mac arrived
 once, marked from "shiv". A page opened on the phone appeared under its tabs on the Mac within one sync.
 
 **The stand-in run's before and after** (the real run reads the same things the same way):
@@ -3149,7 +3156,7 @@ once, marked from "shiv". A page opened on the phone appeared under its tabs on 
 | Settings | Search Suggestions off, Auto-Open Keyboard off, archive after 7 days, app links in App, Appearance Green and Classic with Match My Mac off | the same, in `preferences`; Settings reads the same rows |
 | Synced from the Mac | Search Engine DuckDuckGo, the Personal space's pins | the same pins on the start page, four spaces |
 | Import | none | `legacy.receipt` `{"tabs":21,"archive":2,"visits":23,"preferences":7}`, all records accounted for |
-| Sync With Mac | connected: Mac "shiv", "This iPhone", folder Nilla Sync | opens on the connected page with the same devices and folder; no Connect step |
+| Sync With Mac | connected: Mac "shiv", "This iPhone", folder Ardia Sync | opens on the connected page with the same devices and folder; no Connect step |
 | The Mac's view (`mac sync`) | one phone, ckl2z6gj…, 21 tabs | the same one phone, the same id, 21 tabs |
 | Mac to phone | | a tab sent from the Mac arrived once, marked from "shiv" |
 | Phone to Mac | | a page opened on the phone appeared under its tabs on the Mac |
@@ -3157,7 +3164,7 @@ once, marked from "shiv". A page opened on the phone appeared under its tabs on 
 
 Notes for the real run:
 - **Read the import's result from the database, not the log.** A Release build's JavaScript `console.log` doesn't
-  reach the system log, so the `nilla-legacy imported` line never shows. `legacy.receipt` in `preferences` holds the
+  reach the system log, so the `ardia-legacy imported` line never shows. `legacy.receipt` in `preferences` holds the
   same counts.
 - **The data container moves on install.** It gets a new UUID path, with main's files inside, so look it up again with
   `get_app_container` after installing. Main's store lives in the app group container, not the app's own.
@@ -3173,7 +3180,7 @@ Notes for the real run:
 hoc build) was set up off its defaults in every place its source stores something (an Explore pass listed them: every
 `UserDefaults.standard` key, the SwiftData store in the app group, Documents/Downloads, Caches, Application
 Support/Sync, the Keychain, website data). It was connected to a scratch Mac seeded from a copy of the stand-in profile
-with bookmarks added (`/tmp/nilla-phone-seed/standin-proof`). Then the Expo build at **d94eaf4c0** (JavaScript and
+with bookmarks added (`/tmp/ardia-phone-seed/standin-proof`). Then the Expo build at **d94eaf4c0** (JavaScript and
 native from that commit, lab build) was installed over it, as an App Store update keeps the container. Evidence:
 `/tmp/ardia-phone-shots/upgrade-proof/` (`before/`, `after/`, side-by-side `pairs/`). The import's receipt:
 `{"tabs":8,"archive":1,"visits":11,"preferences":16}`.
@@ -3192,9 +3199,9 @@ run is the proof. The same run's source pass found four other things the upgrade
 | Page thumbnails | 9 in Caches/TabSnapshots | 9 `-legacy` pictures | pass |
 | Website data | a page's cookie and localStorage `main1` | the page reads `cookie-main1` and `local-main1` | pass |
 | Downloads | proof-note.txt in Documents/Downloads | the same file | pass: the file, and the Library's Downloads lists it (run3) |
-| Bookmarks (from the Mac) | Nilla; Proof Folder with 2; Hacker News in Other Bookmarks | the same in the Library's Bookmarks (run3) | pass |
+| Bookmarks (from the Mac) | Ardia; Proof Folder with 2; Hacker News in Other Bookmarks | the same in the Library's Bookmarks (run3) | pass |
 | Spaces, pins, the Mac's tabs | 4 spaces; Personal's 4 pins; the Mac's tabs | the same in the Spaces sheet and on the start page | pass |
-| Sync With Mac | connected: Mac "shiv", "iPhone", folder Nilla Sync | the connected page, the same; no Connect step | pass |
+| Sync With Mac | connected: Mac "shiv", "iPhone", folder Ardia Sync | the connected page, the same; no Connect step | pass |
 | The Mac's view | one phone, kty6evegx…, 48 tab lines | the same one phone and id, 48 tab lines | pass |
 | Site permissions | localhost: camera, microphone, location | the same grant (`browsing.sitePermissions`, identical) and Site Settings row | pass; Revoke Camera after the upgrade left Microphone and Location in the row and the stored grant, and the page asked for the camera again (run3) |
 | Per-site settings | Wikipedia 125% and Night Shade on | identical `browsing.sites`; the page menu shows Night Shade on, 125% | pass |
@@ -3287,9 +3294,10 @@ background launch with no scene runs a cycle without React Native. `SceneDelegat
 active and resigns. Keys, the phrase's entropy and sealed bytes stay in Swift; only the typed phrase crosses, to
 `connect`.
 
-- **Continuing the SwiftUI app's sync.** Same bundle id, same container: the service reads `Application
-  Support/Sync` (`sync.json`, `sync-state.nns`, `sync-journal.nns`, `sync-snapshot.nns`) and the `Nilla Sync Key`
-  Keychain item, so a tester's phone keeps its device id and folder with no new connect.
+- **Sync state.** The service reads Nilla's own container, `Application Support/Sync` (`sync.json`,
+  `sync-state.nns`, `sync-journal.nns`, `sync-snapshot.nns`), and the `Nilla Sync Key` Keychain item. Ardia's app
+  (`com.ardia.browser.ios`) has its own container, app group and Keychain item, which Nilla can't read, so a phone
+  that had Ardia connected connects to Nilla as a new device.
 - **The phone's data.** `packages/phone/ios/PhoneSync` (a Swift package the Podfile links into the pod) reads
   `Documents/SQLite/browser.db` read-only, one connection and one read transaction per cycle, with a busy timeout;
   the same rules as Android (open web tabs, 30 newest per profile, visits by page and profile, a missing file is an
