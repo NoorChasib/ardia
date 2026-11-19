@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version        = '0.0.0'
   s.summary        = 'Nilla on ArdiaCore (our own Chromium layer) for React Native macOS'
   s.author         = ''
-  s.homepage       = 'https://github.com/nilla'
+  s.homepage       = 'https://github.com/NoorChasib/nilla'
   s.license        = 'Apache-2.0'
   s.platforms      = { :osx => '14.0' }
   s.source         = { git: '' }

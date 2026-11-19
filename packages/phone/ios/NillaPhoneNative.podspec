@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.description    = package['description']
   s.license        = 'Apache-2.0'
   s.author         = 'Nilla'
-  s.homepage       = 'https://ardia.dev'
+  s.homepage       = 'https://github.com/NoorChasib/nilla'
   s.platforms      = { :ios => '27.0' }
   s.swift_version  = '5.9'
   s.source         = { :git => '' }

@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version        = '0.0.0'
   s.summary        = 'Import bookmarks, history, tabs and logins from other browsers'
   s.author         = ''
-  s.homepage       = 'https://github.com/nilla'
+  s.homepage       = 'https://github.com/NoorChasib/nilla'
   s.license        = 'Apache-2.0'
   s.platforms      = { :osx => '14.0' }
   s.source         = { git: '' }
