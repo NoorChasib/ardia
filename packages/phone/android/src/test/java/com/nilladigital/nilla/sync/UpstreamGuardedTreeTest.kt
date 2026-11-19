@@ -185,6 +185,20 @@ class UpstreamGuardedTreeTest {
     }
 
     @Test
+    fun aPickIsRefusedFromItsTreeIdAloneWhenItsPlaceIsUnknownOrUpstream() {
+        assertEquals(UpstreamSyncFolder.UNPLACED, UpstreamSyncFolder.pickRefusal("com.google.android.apps.docs.storage", "acc=1;doc=encoded=root"))
+        assertEquals(UpstreamSyncFolder.UNPLACED, UpstreamSyncFolder.pickRefusal("com.microsoft.skydrive.content.StorageAccessProvider", "1234!56"))
+        assertEquals(UpstreamSyncFolder.UNPLACED, UpstreamSyncFolder.pickRefusal(null, "primary:Documents"))
+        assertEquals(UpstreamSyncFolder.UNPLACED, UpstreamSyncFolder.pickRefusal(UpstreamSyncFolder.EXTERNAL_STORAGE, null))
+        assertEquals(UpstreamSyncFolder.UNPLACED, UpstreamSyncFolder.pickRefusal(UpstreamSyncFolder.EXTERNAL_STORAGE, "primary:Documents/../${UpstreamSyncFolder.NAME}"))
+        assertEquals(UpstreamSyncFolder.REFUSAL, UpstreamSyncFolder.pickRefusal(UpstreamSyncFolder.EXTERNAL_STORAGE, "primary:Documents/${UpstreamSyncFolder.NAME}/Nilla Sync"))
+        assertEquals(UpstreamSyncFolder.REFUSAL, UpstreamSyncFolder.pickRefusal(UpstreamSyncFolder.EXTERNAL_STORAGE, "primary:Documents/${UpstreamSyncFolder.NAME.lowercase()}. "))
+        assertEquals(UpstreamSyncFolder.REFUSAL, UpstreamSyncFolder.pickRefusal(UpstreamSyncFolder.DOWNLOADS, "raw:/storage/emulated/0/Download/${UpstreamSyncFolder.NAME}"))
+        assertNull(UpstreamSyncFolder.pickRefusal(UpstreamSyncFolder.EXTERNAL_STORAGE, "primary:Documents/Nilla Sync"))
+        assertNull(UpstreamSyncFolder.pickRefusal(UpstreamSyncFolder.DOWNLOADS, "downloads"))
+    }
+
+    @Test
     fun aFolderOnThePhonesStorageIsPlacedAndStillSyncs() {
         assertEquals(listOf("Documents", "Nilla Sync"), UpstreamSyncFolder.ancestry(UpstreamSyncFolder.EXTERNAL_STORAGE, "primary:Documents/Nilla Sync"))
         assertEquals(emptyList<String>(), UpstreamSyncFolder.ancestry(UpstreamSyncFolder.EXTERNAL_STORAGE, "primary:"))

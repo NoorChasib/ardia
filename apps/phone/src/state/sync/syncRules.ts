@@ -72,7 +72,7 @@ export function connectMessage(result: ConnectResult): string | null {
     case "noSyncData":
       return "There’s no synced data in this folder yet. Choose the folder your other devices sync to, or wait for it to finish downloading.";
     case "folderUnavailable":
-      return copy().folderUnavailable;
+      return result.problem ?? copy().folderUnavailable;
     case "keyStoreFailed":
       return copy().keySaveFailed;
     case "busy":

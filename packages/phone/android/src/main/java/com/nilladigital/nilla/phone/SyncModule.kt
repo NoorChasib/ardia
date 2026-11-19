@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import com.nilladigital.nilla.sync.AndroidSyncFolderAccess
 import com.nilladigital.nilla.sync.ConnectResult
 import com.nilladigital.nilla.sync.SyncController
 import com.nilladigital.nilla.sync.SyncFolderPick
@@ -124,8 +125,8 @@ class SyncModule : Module() {
         AsyncFunction("pickFolder") { promise: Promise ->
             requestTree(onBusy = { promise.resolve(null) }) { tree ->
                 appContext.backgroundCoroutineScope.launch {
-                    val picked = tree?.takeIf { folderPicks.picked(it) }
-                    promise.resolve(picked?.let { mapOf("folder" to it, "name" to FolderNames.of(context.contentResolver, it)) })
+                    val choice = tree?.let { folderPicks.choose(it, AndroidSyncFolderAccess::pickRefusal) { picked -> FolderNames.of(context.contentResolver, picked) } }
+                    promise.resolve(SyncPayloads.pick(choice))
                 }
             }
         }.runOnQueue(Queues.MAIN)

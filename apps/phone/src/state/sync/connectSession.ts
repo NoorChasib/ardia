@@ -3,7 +3,7 @@ export type FolderPick = { folder: string; name: string };
 export type ConnectOutcome = { result: string };
 
 export type ConnectApi<R extends ConnectOutcome = ConnectOutcome> = {
-  pickFolder(): Promise<FolderPick | null>;
+  pickFolder(): Promise<FolderPick | R | null>;
   connect(phrase: string, folder: FolderPick): Promise<R>;
   forgetFolder(folder: FolderPick): Promise<void>;
 };
@@ -40,13 +40,17 @@ export function createConnectSession<R extends ConnectOutcome>(api: ConnectApi<R
 
   async function pickFolder(phrase: string): Promise<R | null> {
     if (state.connecting) return null;
-    let picked: FolderPick | null = null;
+    let picked: FolderPick | R | null = null;
     try {
       picked = await api.pickFolder();
     } catch {
       picked = null;
     }
     if (!picked) return null;
+    if ("result" in picked) {
+      set({ failure: picked });
+      return picked;
+    }
     if (state.folder && state.folder.folder !== picked.folder) forget(state.folder);
     set({ folder: picked, failure: null });
     return connectIfReady(phrase);

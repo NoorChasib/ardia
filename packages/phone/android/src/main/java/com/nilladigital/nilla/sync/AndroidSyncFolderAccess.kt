@@ -3,6 +3,7 @@ package com.nilladigital.nilla.sync
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import com.nilladigital.nilla.sync.core.UpstreamSyncFolder
 
 open class AndroidSyncFolderAccess(
@@ -45,6 +46,7 @@ open class AndroidSyncFolderAccess(
 
     override fun keep(location: SyncFolderLocation): Boolean {
         if (location !is SyncFolderLocation.Tree) return super.keep(location)
+        if (pickRefusal(location.treeUri) != null) return false
         return try {
             resolver.takePersistableUriPermission(Uri.parse(location.treeUri), READ_AND_WRITE)
             true
@@ -72,5 +74,12 @@ open class AndroidSyncFolderAccess(
 
     companion object {
         const val READ_AND_WRITE = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+        fun pickRefusal(treeUri: String): String? = try {
+            val uri = Uri.parse(treeUri)
+            UpstreamSyncFolder.pickRefusal(uri.authority, DocumentsContract.getTreeDocumentId(uri))
+        } catch (error: RuntimeException) {
+            UpstreamSyncFolder.UNPLACED
+        }
     }
 }

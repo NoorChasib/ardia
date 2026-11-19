@@ -14,6 +14,15 @@ class SyncPayloadsTest {
     }
 
     @Test
+    fun aPickedFolderIsSentWithItsNameAndARefusedOneAsFolderUnavailableWithItsReason() {
+        assertEquals(mapOf("folder" to "tree:a", "name" to "Nilla Sync"), SyncPayloads.pick(FolderPicks.Choice.Picked("tree:a", "Nilla Sync")))
+        val problem = com.nilladigital.nilla.sync.core.UpstreamSyncFolder.UNPLACED
+        assertEquals(mapOf("result" to "folderUnavailable", "problem" to problem), SyncPayloads.pick(FolderPicks.Choice.Refused(problem)))
+        assertNull(SyncPayloads.pick(FolderPicks.Choice.Failed))
+        assertNull(SyncPayloads.pick(null))
+    }
+
+    @Test
     fun theViewSaysWhichProfileIsShownBeforeAnyIsPickedAndAfter() {
         val demo = SyncController.demo().apply { start() }
         try {

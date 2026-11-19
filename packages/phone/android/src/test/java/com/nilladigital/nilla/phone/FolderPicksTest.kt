@@ -69,6 +69,50 @@ class FolderPicksTest {
     }
 
     @Test
+    fun aRefusedPickIsNeitherGrantedNorRecordedNorAskedForItsName() {
+        val asked = ArrayList<String>()
+        val named = ArrayList<String>()
+        val refusal = { tree: String -> asked += tree; "refused $tree" }
+        val choice = picks().choose("tree:drive", refusal) { tree -> named += tree; "Drive" }
+        assertEquals(FolderPicks.Choice.Refused("refused tree:drive"), choice)
+        assertEquals(listOf("tree:drive"), asked)
+        assertTrue("no grant is taken or released", log.isEmpty())
+        assertTrue("the provider is never asked for the folder's name", named.isEmpty())
+        assertFalse("nothing is recorded", file.exists())
+        assertFalse(picks().holds("tree:drive"))
+    }
+
+    @Test
+    fun aRefusedPickLeavesAnEarlierPickAndItsGrantAlone() {
+        picks().picked("tree:a")
+        log.clear()
+        picks().choose("tree:drive", { "refused" }) { "Drive" }
+        assertTrue(log.isEmpty())
+        assertEquals(setOf("tree:a"), held)
+        assertTrue(picks().holds("tree:a"))
+    }
+
+    @Test
+    fun aPlacedPickIsGrantedRecordedAndThenNamed() {
+        val order = ArrayList<String>()
+        val choice = picks().choose("tree:a", { order += "check"; null }) { tree -> order += "name"; assertTrue("the grant comes before the name", held.contains(tree)); "Nilla Sync" }
+        assertEquals(FolderPicks.Choice.Picked("tree:a", "Nilla Sync"), choice)
+        assertEquals(listOf("check", "name"), order)
+        assertEquals(listOf("take tree:a"), log)
+        assertTrue(picks().holds("tree:a"))
+    }
+
+    @Test
+    fun aPlacedPickWhoseGrantCannotBeTakenIsNeverNamed() {
+        val refusing = FolderPicks(file, object : FolderPicks.Grants by grants {
+            override fun take(tree: String): Boolean = false
+        }) { now }
+        var named = false
+        assertEquals(FolderPicks.Choice.Failed, refusing.choose("tree:z", { null }) { named = true; "z" })
+        assertFalse(named)
+    }
+
+    @Test
     fun aPickWhoseGrantCannotBeTakenIsRefused() {
         val refusing = FolderPicks(file, object : FolderPicks.Grants by grants {
             override fun take(tree: String): Boolean = false

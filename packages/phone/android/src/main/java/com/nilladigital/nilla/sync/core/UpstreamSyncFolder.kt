@@ -45,6 +45,9 @@ object UpstreamSyncFolder {
 
     fun refusesAncestry(ancestry: List<String>?): Boolean = ancestryRefusal(ancestry) != null
 
+    fun pickRefusal(authority: String?, treeDocumentId: String?): String? =
+        ancestryRefusal(ancestry(authority, treeDocumentId)) ?: REFUSAL.takeIf { refusesDocument(treeDocumentId) }
+
     fun ancestryRefusal(ancestry: List<String>?): String? = when {
         ancestry == null -> UNPLACED
         ancestry.any(::isUpstreamName) -> REFUSAL

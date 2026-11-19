@@ -15,6 +15,18 @@ class FolderPicks(private val file: File, private val grants: Grants, private va
 
     private data class Pick(val tree: String, val at: Long)
 
+    sealed interface Choice {
+        data class Picked(val tree: String, val name: String) : Choice
+        data class Refused(val problem: String) : Choice
+        data object Failed : Choice
+    }
+
+    fun choose(tree: String, refusal: (String) -> String?, name: (String) -> String): Choice {
+        refusal(tree)?.let { return Choice.Refused(it) }
+        if (!picked(tree)) return Choice.Failed
+        return Choice.Picked(tree, name(tree))
+    }
+
     fun picked(tree: String): Boolean = synchronized(LOCK) {
         if (!grants.take(tree)) return false
         val connected = grants.connected()

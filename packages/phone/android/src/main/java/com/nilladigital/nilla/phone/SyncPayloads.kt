@@ -74,6 +74,12 @@ object SyncPayloads {
         ConnectResult.Busy -> mapOf("result" to "busy")
     }
 
+    fun pick(choice: FolderPicks.Choice?): Map<String, Any?>? = when (choice) {
+        is FolderPicks.Choice.Picked -> mapOf("folder" to choice.tree, "name" to choice.name)
+        is FolderPicks.Choice.Refused -> connect(ConnectResult.FolderRefused(choice.problem))
+        FolderPicks.Choice.Failed, null -> null
+    }
+
     fun device(device: SyncedDevice): Map<String, Any?> = mapOf(
         "id" to device.id,
         "name" to device.name,

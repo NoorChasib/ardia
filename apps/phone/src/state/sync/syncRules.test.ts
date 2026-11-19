@@ -68,6 +68,7 @@ test("every connect result has the Compose wording, and a cancelled pick says no
   assert.match(connectMessage({ result: "mismatch" })!, /doesn’t match the synced data/);
   assert.match(connectMessage({ result: "noSyncData" })!, /no synced data in this folder yet/);
   assert.match(connectMessage({ result: "folderUnavailable" })!, /can’t open this folder/);
+  assert.equal(connectMessage({ result: "folderUnavailable", problem: "This storage app doesn’t tell Nilla which folders the one you chose is in" }), "This storage app doesn’t tell Nilla which folders the one you chose is in");
   assert.equal(connectMessage({ result: "keyStoreFailed" }), "Couldn’t save the sync key on this phone.");
   assert.equal(connectMessage({ result: "busy" }), "Nilla is still turning off sync. Try again in a moment.");
 });

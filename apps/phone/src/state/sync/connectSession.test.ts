@@ -5,7 +5,7 @@ import { createConnectSession, type ConnectApi, type FolderPick } from "./connec
 const GOOD = "good phrase";
 const valid = (phrase: string) => phrase.startsWith("good") || phrase.startsWith("wrong");
 
-function fakeApi(picks: (FolderPick | null)[]) {
+function fakeApi(picks: (FolderPick | { result: string; problem?: string } | null)[]) {
   const calls: string[] = [];
   const forgotten: string[] = [];
   const api: ConnectApi = {
@@ -76,4 +76,16 @@ test("a connect that throws reads as an unavailable folder and keeps the folder 
   assert.deepEqual(session.state().failure, { result: "folderUnavailable" });
   assert.deepEqual(session.state().folder, A);
   assert.equal(session.state().connecting, false);
+});
+
+test("a folder the phone refuses at the picker shows its reason, keeps the folder picked before and connects nothing", async () => {
+  const refused = { result: "folderUnavailable", problem: "This storage app doesn’t tell Nilla which folders the one you chose is in" };
+  const { api, calls, forgotten } = fakeApi([A, refused]);
+  const session = createConnectSession(api, valid);
+  await session.pickFolder("");
+  assert.deepEqual(await session.pickFolder(GOOD), refused);
+  assert.deepEqual(session.state().failure, refused);
+  assert.deepEqual(session.state().folder, A);
+  assert.deepEqual(calls, ["pick", "pick"]);
+  assert.deepEqual(forgotten, []);
 });
