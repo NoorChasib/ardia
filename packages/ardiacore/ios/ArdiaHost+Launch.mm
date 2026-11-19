@@ -425,6 +425,11 @@ void StartEarlyWindow() {
                     "Nilla won't read or write it\n", dataDirectory.fileSystemRepresentation);
     return 1;
   }
+  if (NSString *entry = nilla_upstream::UnownedDataEntry(dataDirectory)) {
+    fprintf(stderr, "[ardiacore] %s in the data dir %s leads into an installed Ardia's folders, or where it leads can't be told, "
+                    "so Nilla won't start Chromium on it\n", entry.fileSystemRepresentation, dataDirectory.fileSystemRepresentation);
+    return 1;
+  }
   gMakeDelegate = [makeDelegate copy];
   gDataDirectory = dataDirectory;
   NSError *dirError;

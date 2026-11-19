@@ -6,6 +6,7 @@
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
 #import "NillaTeamSigning.h"
+#import "NillaUpstreamFolders.h"
 #import "ArdiaWebViewInternal.h"
 
 #import <objc/runtime.h>
@@ -115,7 +116,9 @@ static void (^gQuitCancelledHandler)(void);
   [DeletedProfiles() addObject:profile];
   void (^remove)(ArdiaCoreProfile *) = ^(ArdiaCoreProfile *loaded) {
     if (!loaded) {
-      NSString *path = [gDataDirectory stringByAppendingPathComponent:nilla_host::ProfileDirectoryName(profile)];
+      NSString *directory = nilla_host::ProfileDirectoryName(profile);
+      if (!nilla_upstream::IsEntryName(directory.fileSystemRepresentation)) return completion(@[ @"files" ]);
+      NSString *path = [gDataDirectory stringByAppendingPathComponent:directory];
       [NSFileManager.defaultManager removeItemAtPath:path error:nil];
       return completion([NSFileManager.defaultManager fileExistsAtPath:path] ? @[ @"files" ] : @[]);
     }

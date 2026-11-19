@@ -1204,9 +1204,10 @@
    "regex": "(?<=installed )Ardia(?='s folders| folders)",
    "scope": [
     "packages/ardiacore/ios/ArdiaHost+Launch.mm",
+    "packages/ardiacore/ios/ArdiaProfiles.mm",
     "packages/ardiacore/tests/launch-config-switches.test.mjs"
    ],
-   "why": "The data dir refusal in runWithArgc and the wiring tests' names say the folders belong to an installed Ardia."
+   "why": "The data dir, data dir entry and caller argument refusals in runWithArgc, the profile folder refusal in WithProfile, and the wiring tests' names say the folders belong to an installed Ardia."
   },
   {
    "id": "X-ardia-sync-folder-guard-windows",

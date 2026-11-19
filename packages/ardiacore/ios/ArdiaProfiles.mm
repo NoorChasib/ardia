@@ -6,6 +6,7 @@
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
 #import "ArdiaWebViewInternal.h"
+#import "NillaUpstreamFolders.h"
 
 #import <Security/Security.h>
 #import <objc/runtime.h>
@@ -192,6 +193,10 @@ void WithProfile(NSString *name, void (^completion)(ArdiaCoreProfile *)) {
   NSString *directory = DirectoryName(name);
   if (!directory) {
     NSLog(@"[ardiacore] no profile named \"%@\": that's a Chromium folder name, not a profile", name);
+    return completion(nil);
+  }
+  if (!nilla_upstream::IsOwnProfileFolder(gDataDirectory, directory)) {
+    NSLog(@"[ardiacore] no profile named \"%@\": its folder leads into an installed Ardia's folders, or where it leads can't be told", name);
     return completion(nil);
   }
   NSMutableArray *waiters = ProfileWaiters()[name];

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
@@ -95,6 +95,34 @@ test("the data dir and its Chromium folder must resolve outside an installed Ard
   const cached = body("- (NSDictionary<NSString *, NSNumber *> *)readCachedSwitches {");
   assert.ok(cached.indexOf("if (!nilla_upstream::IsOwnFolder(directory)) return @{};") >= 0);
   assert.ok(cached.indexOf("IsOwnFolder(directory)") < cached.indexOf("dataWithContentsOfFile"), "the switches cache is read only from an own folder");
+});
+
+test("no profile or other entry of the data dir may lead into an installed Ardia's folders, at launch or when a profile loads", () => {
+  const run = launch.slice(launch.indexOf("+ (int)runWithArgc:"), launch.indexOf("nilla_host::InstallTestCrashGuard("));
+  const rootGuard = run.indexOf("!nilla_upstream::IsOwnFolder(dataDirectory)) {");
+  const entryGuard = run.indexOf("if (NSString *entry = nilla_upstream::UnownedDataEntry(dataDirectory)) {");
+  assert.ok(rootGuard >= 0 && entryGuard > rootGuard, "the entry guard follows the root guard");
+  assert.match(run.slice(entryGuard), /^[^}]*return 1;\s*\}/);
+  assert.ok(run.indexOf("gDataDirectory = dataDirectory;") > entryGuard, "the data dir is taken only after the entry guard");
+  assert.ok(run.indexOf("createDirectoryAtPath:gDataDirectory") > entryGuard, "nothing is created before the entry guard");
+  const native = read("../ios/NillaUpstreamFolders.h");
+  const unowned = native.slice(native.indexOf("inline std::optional<std::string> UnownedEntry("), native.indexOf("\n}\n", native.indexOf("inline std::optional<std::string> UnownedEntry(")));
+  assert.match(unowned, /std::vector<std::string> names = \{kDefaultProfile\};/);
+  assert.match(unowned, /readdir\(dir\)/);
+  assert.match(native, /inline constexpr const char \*kDefaultProfile = "Default";/);
+  assert.match(launch, /"--profile-directory=Default",/);
+  const profiles = read("../ios/ArdiaProfiles.mm");
+  const withProfile = profiles.slice(profiles.indexOf("void WithProfile(NSString *name"), profiles.indexOf("\n}\n", profiles.indexOf("void WithProfile(NSString *name")));
+  const check = withProfile.indexOf("if (!nilla_upstream::IsOwnProfileFolder(gDataDirectory, directory)) {");
+  assert.ok(check >= 0 && check < withProfile.indexOf("[engine loadProfile:directory"), "a profile's folder is checked before it loads");
+  assert.match(withProfile.slice(check), /^[^}]*return completion\(nil\);\s*\}/);
+  assert.equal(profiles.match(/loadProfile:/g).length, 1, "WithProfile is the only place the host loads a profile");
+  const host = read("../ios/ArdiaHost.mm");
+  const deletion = host.slice(host.indexOf("+ (void)deleteProfileData:"), host.indexOf("\n}\n", host.indexOf("+ (void)deleteProfileData:")));
+  const named = deletion.indexOf("if (!nilla_upstream::IsEntryName(directory.fileSystemRepresentation)) return completion(@[ @\"files\" ]);");
+  assert.ok(named >= 0 && named < deletion.indexOf("removeItemAtPath:path"), "only a single folder name is ever removed");
+  const loaders = readdirSync(new URL("../ios/", import.meta.url)).filter((file) => /\.(mm|m|swift)$/.test(file) && /\bloadProfile:/.test(read(`../ios/${file}`)));
+  assert.deepEqual(loaders, ["ArdiaProfiles.mm"]);
 });
 
 test("the native data dir guard lists the same installed Ardia folders as the Mac config guard and the CLI", () => {

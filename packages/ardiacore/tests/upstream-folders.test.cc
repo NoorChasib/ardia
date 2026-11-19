@@ -112,7 +112,104 @@ int main() {
   CHECK(!Own("relative/Chromium"));
   CHECK(!Own(""));
 
+  const std::string scratchData = scratch + "/scratch-data";
+  const std::string chromium = scratchData + "/Chromium";
+  const auto launchAdmits = [&]() {
+    const auto roots = ProtectedRoots(home);
+    return roots && Own(scratchData) && Own(chromium) && !UnownedEntry(chromium, *roots);
+  };
+  const auto unowned = [&]() { return UnownedEntry(chromium, *ProtectedRoots(home)).value_or("<none>"); };
+
+  Fresh();
+  Folder(chromium);
+  CHECK(launchAdmits());
+  CHECK(unowned() == "<none>");
+  Folder(chromium + "/Default");
+  Folder(chromium + "/Profile 1");
+  File(chromium + "/Local State");
+  Link(chromium + "/SingletonLock", "nilla-host-4242");
+  Link(chromium + "/SingletonSocket", scratch + "/tmp-socket-dir/SingletonSocket");
+  Link(chromium + "/SingletonCookie", "8051398273");
+  Link(chromium + "/RunningChromeVersion", "157.0.8103.50");
+  CHECK(launchAdmits());
+
+  Fresh();
+  Folder(chromium);
+  Link(chromium + "/Default", Data("com.ardia.browser/Chromium/Default"));
+  CHECK(Own(scratchData) && Own(chromium));
+  CHECK(!launchAdmits());
+  CHECK(unowned() == "Default");
+
+  Fresh();
+  Folder(chromium);
+  Link(chromium + "/Profile 3", At("Library/Application Support/Ardia"));
+  CHECK(!launchAdmits());
+  CHECK(unowned() == "Profile 3");
+
+  Fresh();
+  Folder(chromium);
+  Link(chromium + "/System Profile", At(".config/ardia"));
+  CHECK(unowned() == "System Profile");
+
+  Fresh();
+  Folder(chromium);
+  Link(chromium + "/GrShaderCache", At(".config/ardia/config"));
+  CHECK(unowned() == "GrShaderCache");
+
+  Fresh();
+  Folder(chromium);
+  Link(chromium + "/Default", Data("com.ardia.browser/Chromium/Not Yet"));
+  CHECK(unowned() == "Default");
+
+  Fresh();
+  Folder(chromium);
+  Folder(scratch + "/hop");
+  Link(scratch + "/hop/support", At("Library/Application Support"));
+  Link(chromium + "/Default", scratch + "/hop/support/com.ardia.browser/Chromium/Default");
+  CHECK(unowned() == "Default");
+
+  Fresh();
+  Folder(chromium);
+  Link(chromium + "/Default", "Default");
+  CHECK(unowned() == "Default");
+
+  Fresh();
+  Folder(chromium);
+  Folder(scratch + "/elsewhere/Default");
+  Link(chromium + "/Default", scratch + "/elsewhere/Default");
+  CHECK(launchAdmits());
+
+  Fresh();
+  CHECK(!UnownedEntry(scratch + "/no-such-data", *ProtectedRoots(home)));
+  CHECK(UnownedEntry(scratch + "/no-such-data", *ProtectedRoots(home)) == std::nullopt);
+
+  Fresh();
+  Folder(chromium);
+  const auto roots = *ProtectedRoots(home);
+  CHECK(IsOwnEntry(chromium, "Profile 2", roots));
+  Link(chromium + "/Profile 2", Data("com.ardia.browser/Chromium/Profile 2"));
+  CHECK(!IsOwnEntry(chromium, "Profile 2", roots));
+  for (const char *name : {"", ".", "..", "Profile a/../../../.config/ardia", "Profile /x", "a/b"}) CHECK(!IsEntryName(name));
+  for (const char *name : {"Default", "Profile 1", "Profile ..", "Profile .", "Guest Profile"}) CHECK(IsEntryName(name));
+
+  Fresh();
+  CHECK(ReachesProtected(At(".config/ardia/x"), "", roots));
+  CHECK(ReachesProtected("x", At(".config/ardia"), roots));
+  CHECK(!ReachesProtected("x", scratch, roots));
+  CHECK(ReachesProtected("x", "", roots));
+  CHECK(ReachesProtected(scratch + "/missing/../x", "", roots));
+  CHECK(!ReachesProtected(scratch + "/" + std::string(NAME_MAX + 1, 'a') + "/../home/.config/ardia", "", roots));
+  Link(scratch + "/dangling", At(".config/ardia/new-file"));
+  CHECK(ReachesProtected(scratch + "/dangling", "", roots));
+  Link(scratch + "/dangling-elsewhere", scratch + "/not-there");
+  CHECK(!ReachesProtected(scratch + "/dangling-elsewhere", "", roots));
+
 #if __APPLE__
+  Fresh();
+  Folder(chromium);
+  Link(chromium + "/DEFAULT", Data("com.ardia.browser/Chromium/Default"));
+  CHECK(unowned() == "DEFAULT");
+  CHECK(!IsOwnEntry(chromium, "Default", *ProtectedRoots(home)));
   Fresh();
   CHECK(!Own(At("Library/Application Support/COM.ARDIA.BROWSER/Chromium")));
   CHECK(!Own(At(".config/ARDIA/config")));

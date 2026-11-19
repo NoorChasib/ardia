@@ -4,6 +4,8 @@
 #include <cerrno>
 #include <climits>
 #include <cstdlib>
+#include <cstring>
+#include <dirent.h>
 #include <optional>
 #include <string>
 #include <sys/stat.h>
@@ -144,25 +146,95 @@ inline std::optional<std::string> Comparable(const std::string &path) {
   return trimmed;
 }
 
-inline std::optional<std::string> OwnPath(const std::string &path, const std::string &home) {
-  const auto resolved = Resolve(path);
-  if (!resolved) return std::nullopt;
-  const auto candidate = Comparable(*resolved);
-  if (!candidate) return std::nullopt;
+inline std::optional<std::vector<std::string>> ProtectedRoots(const std::string &home) {
+  std::vector<std::string> roots;
   for (const auto &folder : Folders(home)) {
     const auto root = Resolve(folder, true);
     if (!root) return std::nullopt;
     const auto comparableRoot = Comparable(*root);
     if (!comparableRoot) return std::nullopt;
-    if (*candidate == *comparableRoot || candidate->rfind(*comparableRoot + "/", 0) == 0) return std::nullopt;
+    roots.push_back(*comparableRoot);
   }
+  return roots;
+}
+
+inline bool InsideRoots(const std::string &comparable, const std::vector<std::string> &roots) {
+  for (const auto &root : roots)
+    if (comparable == root || comparable.rfind(root == "/" ? root : root + "/", 0) == 0) return true;
+  return false;
+}
+
+inline std::optional<std::string> OwnPath(const std::string &path, const std::string &home) {
+  const auto resolved = Resolve(path);
+  if (!resolved) return std::nullopt;
+  const auto candidate = Comparable(*resolved);
+  if (!candidate) return std::nullopt;
+  const auto roots = ProtectedRoots(home);
+  if (!roots || InsideRoots(*candidate, *roots)) return std::nullopt;
   return resolved;
+}
+
+inline bool CanName(const std::string &path) {
+  if (path.empty() || path.size() >= PATH_MAX) return false;
+  for (const auto &part : Components(path))
+    if (part.size() > NAME_MAX) return false;
+  return true;
+}
+
+inline bool ReachesProtected(const std::string &path, const std::string &workingDirectory, const std::vector<std::string> &roots) {
+  if (!CanName(path)) return false;
+  if (path[0] != '/' && (workingDirectory.empty() || workingDirectory[0] != '/')) return true;
+  const auto resolved = Resolve(path[0] == '/' ? path : workingDirectory + "/" + path, true);
+  if (!resolved) return true;
+  const auto comparable = Comparable(*resolved);
+  return !comparable || InsideRoots(*comparable, roots);
+}
+
+inline bool IsEntryName(const std::string &name) {
+  return !name.empty() && name != "." && name != ".." && name.find('/') == std::string::npos && name.find('\0') == std::string::npos;
+}
+
+inline bool IsOwnEntry(const std::string &dataDirectory, const std::string &name, const std::vector<std::string> &roots) {
+  return IsEntryName(name) && !ReachesProtected(dataDirectory + "/" + name, "", roots);
+}
+
+inline constexpr const char *kDefaultProfile = "Default";
+
+inline std::optional<std::string> UnownedEntry(const std::string &dataDirectory, const std::vector<std::string> &roots) {
+  std::vector<std::string> names = {kDefaultProfile};
+  if (DIR *dir = opendir(dataDirectory.c_str())) {
+    while (const dirent *entry = readdir(dir))
+      if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) names.push_back(entry->d_name);
+    closedir(dir);
+  } else if (errno != ENOENT) {
+    return dataDirectory;
+  }
+  for (const auto &name : names)
+    if (!IsOwnEntry(dataDirectory, name, roots)) return name;
+  return std::nullopt;
 }
 
 #ifdef __OBJC__
 inline bool IsOwnFolder(NSString *path) {
   if (!path.length) return false;
   return OwnPath(path.fileSystemRepresentation, NSHomeDirectory().fileSystemRepresentation).has_value();
+}
+
+inline std::optional<std::vector<std::string>> HomeProtectedRoots() {
+  return ProtectedRoots(NSHomeDirectory().fileSystemRepresentation);
+}
+
+inline NSString *UnownedDataEntry(NSString *dataDirectory) {
+  const auto roots = HomeProtectedRoots();
+  if (!roots || !dataDirectory.length) return dataDirectory ?: @"";
+  const auto entry = UnownedEntry(dataDirectory.fileSystemRepresentation, *roots);
+  return entry ? @(entry->c_str()) : nil;
+}
+
+inline bool IsOwnProfileFolder(NSString *dataDirectory, NSString *directoryName) {
+  const auto roots = HomeProtectedRoots();
+  return roots && dataDirectory.length && directoryName.length &&
+         IsOwnEntry(dataDirectory.fileSystemRepresentation, directoryName.fileSystemRepresentation, *roots);
 }
 #endif
 
