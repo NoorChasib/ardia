@@ -18,19 +18,20 @@ const FOLDER_CALLS = [
   ["revealFolder", (folder) => [folder]],
 ];
 
-function windowsWithPicker(picked) {
+function windowsWithPicker(picked, { resolved = true } = {}) {
   const touched = [];
   turboModules[NATIVE_SYNC] = new Proxy({ getConstants: () => ({ oneDriveFolder: "C:\\Users\\me\\OneDrive", documentsFolder: "C:\\Users\\me\\Documents", computerName: "PC" }) }, {
     get: (target, key) => (key in target ? target[key] : (...args) => {
       touched.push([String(key), ...args]);
-      return Promise.resolve(key === "folderState" ? { exists: true, writable: true, hasSyncData: true } : key === "readChain" ? { entries: [] } : null);
+      return Promise.resolve(key === "folderState" ? { exists: true, writable: true, hasSyncData: true, resolved } : key === "readChain" ? { entries: [] } : null);
     }),
   });
-  turboModules.NillaDialogs = { ...turboModules.NillaDialogs, pickFolder: async () => picked };
+  const seeds = [];
+  turboModules.NillaDialogs = { ...turboModules.NillaDialogs, pickFolder: async (start) => (seeds.push(start), picked) };
   turboModules.NillaSystem = { ...turboModules.NillaSystem, revealFile: async (path) => void touched.push(["revealFile", path]) };
   const sync = ownSyncFoldersOnly(windowsSync());
   assert.ok(sync);
-  return { sync, touched };
+  return { sync, touched, seeds };
 }
 
 const touchedPaths = (touched, path) => touched.filter((call) => call.slice(1).some((arg) => typeof arg === "string" && arg.toLowerCase().startsWith(path.toLowerCase())));
@@ -66,6 +67,16 @@ test("Nilla's own Sync folder and any other custom folder still work", async () 
   await sync.chainStatus(own).catch(() => {});
   assert.ok(touched.some(([name, path]) => name === "folderState" && path === custom));
   assert.ok(touched.some((call) => call.includes(own)));
+});
+
+test("a folder the native side can't resolve to its real location is refused and never seeds the picker", async () => {
+  const unresolved = "D:\\Shared\\Through A Link";
+  const { sync, touched, seeds } = windowsWithPicker(unresolved, { resolved: false });
+  await assert.rejects(sync.chooseFolder(null), (error) => error instanceof UpstreamSyncFolderError);
+  await assert.rejects(sync.chooseFolder(unresolved), (error) => error instanceof UpstreamSyncFolderError);
+  assert.deepEqual(seeds, [null, null]);
+  assert.deepEqual(touched.filter(([name]) => name !== "folderState"), []);
+  assert.deepEqual(touched.filter(([name]) => name === "folderState").map(([, path]) => path), [unresolved, unresolved, unresolved]);
 });
 
 test("the Mac's iCloud Drive and any other spelling of the upstream folder are refused, and nothing else is", () => {
