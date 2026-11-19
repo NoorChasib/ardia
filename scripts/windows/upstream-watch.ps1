@@ -5,13 +5,17 @@ param(
   [Parameter(Mandatory = $true)][string]$Out,
   [Parameter(Mandatory = $true)][string]$State,
   [Parameter(ParameterSetName = "Start")][string[]]$Program = @(),
-  [Parameter(ParameterSetName = "Start")][string]$Installed = ""
+  [Parameter(ParameterSetName = "Start")][string[]]$ProgramFile = @(),
+  [Parameter(ParameterSetName = "Start")][string]$Installed = "",
+  [Parameter(ParameterSetName = "Start")][string]$Probe = "",
+  [Parameter(ParameterSetName = "Start")][string]$ProbeUrl = "https://github.com/robots.txt"
 )
 
 $ErrorActionPreference = "Stop"
 if (-not ([System.Management.Automation.PSTypeName]"NillaWatch.Proxy").Type) {
   Add-Type -Path (Join-Path $PSScriptRoot "upstream-watch.cs") -IgnoreWarnings
 }
+. (Join-Path $PSScriptRoot "upstream-verdict.ps1")
 
 $ruleGroup = "Nilla no-upstream watch"
 $auditCategory = "{0CCE9226-69AE-11D9-BED3-505054503030}"
@@ -19,8 +23,10 @@ $dnsLog = "Microsoft-Windows-DNS-Client/Operational"
 $firewallLog = if ($env:SystemRoot) { Join-Path $env:SystemRoot "System32\LogFiles\Firewall\nilla-watch.log" } else { "" }
 $nonLoopback = @("0.0.0.0-126.255.255.255", "128.0.0.0-255.255.255.255", "::2-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff")
 $bypassList = "<local>;127.0.0.1;localhost;[::1]"
-$extraNames = @("nilla-setup*")
+$extraNames = @("nilla-setup*", "unins*.exe", "_iu*.tmp")
+$neverBlocked = @("pwsh.exe", "powershell.exe", "node.exe", "git.exe", "cmd.exe", "conhost.exe", "bash.exe", "svchost.exe", "runner.worker.exe", "runner.listener.exe")
 $stateFile = Join-Path $State "watch.json"
+$enforceFile = Join-Path $State "enforce.json"
 $portFile = Join-Path $State "proxy.port"
 $authorityFile = Join-Path $State "authority.cer"
 $proxyLog = Join-Path $Out "proxy.jsonl"
@@ -32,10 +38,43 @@ if ($Serve) {
   [System.IO.File]::WriteAllBytes($authorityFile, $authority.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert))
   $proxy = [NillaWatch.Proxy]::new($proxyLog, $authority)
   $proxy.Start()
+  $proxy.RunInBackground()
+  $enforce = Get-Content -LiteralPath $enforceFile -Raw | ConvertFrom-Json
+  $blocked = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+  foreach ($path in @($enforce.blocked)) { if ($path) { $null = $blocked.Add("$path") } }
+  $seen = [System.Collections.Generic.HashSet[string]]::new()
+  $late = 0
   Set-Content -LiteralPath "$portFile.partial" -Value $proxy.Port -Encoding ascii
   Move-Item -LiteralPath "$portFile.partial" -Destination $portFile -Force
-  $proxy.Run()
-  exit 0
+  while ($true) {
+    foreach ($process in [System.Diagnostics.Process]::GetProcesses()) {
+      $started = $null
+      try { $started = $process.StartTime } catch { }
+      if (-not $seen.Add("$($process.Id) $(if ($started) { $started.Ticks })")) { continue }
+      $path = [NillaWatch.Processes]::ImagePath($process.Id)
+      if (-not $path -or $blocked.Contains($path)) { continue }
+      $leaf = [System.IO.Path]::GetFileName($path).ToLowerInvariant()
+      if (@($enforce.never) -contains $leaf) { continue }
+      $named = $false
+      foreach ($name in @($enforce.names)) { if ($leaf -like $name) { $named = $true; break } }
+      if (-not $named) { continue }
+      $late += 1
+      $null = $blocked.Add($path)
+      $entry = [System.Collections.Generic.Dictionary[string, object]]::new()
+      $entry["event"] = "enforced"
+      $entry["path"] = $path
+      $entry["pid"] = $process.Id
+      $entry["lag_ms"] = if ($started) { [int]((Get-Date) - $started).TotalMilliseconds } else { -1 }
+      try {
+        New-NetFirewallRule -DisplayName "$ruleGroup late $late" -Group $ruleGroup -Direction Outbound -Action Block -Program $path -RemoteAddress $nonLoopback -Profile Any | Out-Null
+        $entry["action"] = "blocked from all but loopback"
+      } catch {
+        $entry["action"] = "the block rule failed: $($_.Exception.Message)"
+      }
+      $proxy.Record($entry)
+    }
+    Start-Sleep -Milliseconds 200
+  }
 }
 
 function Save-Watch($Watch) {
@@ -56,7 +95,11 @@ function Get-WatchedPrograms {
       $relative.Add($exe.FullName.Substring($root.Length))
     }
   }
-  if ($Installed) { foreach ($name in $relative) { $paths.Add((Join-Path $Installed $name)) } }
+  if ($Installed) {
+    foreach ($name in $relative) { $paths.Add((Join-Path $Installed $name)) }
+    $paths.Add((Join-Path $Installed "unins000.exe"))
+  }
+  foreach ($file in $ProgramFile) { if ($file) { $paths.Add([System.IO.Path]::GetFullPath($file)) } }
   return @($paths | Sort-Object -Unique)
 }
 
@@ -104,6 +147,42 @@ function Stop-Logging($Watch) {
   }
   if ($Watch.dnsEnabled -eq $false) { wevtutil sl $dnsLog /e:false | Out-Null }
   return $problems
+}
+
+function Invoke-Probe([string]$Engine, [string]$Url) {
+  if (-not (Test-Path -LiteralPath $Engine -PathType Leaf)) { return "the engine $Engine isn't there" }
+  . (Join-Path $PSScriptRoot "process-tree.ps1")
+  $target = [uri]$Url
+  $probeProfile = Join-Path $State ("probe-" + [guid]::NewGuid().ToString("N"))
+  New-Item -ItemType Directory -Force -Path $probeProfile | Out-Null
+  $rowsBefore = if (Test-Path -LiteralPath $proxyLog) { @(Get-Content -LiteralPath $proxyLog).Count } else { 0 }
+  $arguments = @("--headless=new", "--no-first-run", "--no-default-browser-check", "--disable-extensions", "--disable-background-networking", "--user-data-dir=`"$probeProfile`"", "--dump-dom", $Url)
+  $saved = @{}
+  foreach ($name in "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY") { $saved[$name] = [Environment]::GetEnvironmentVariable($name); [Environment]::SetEnvironmentVariable($name, $null) }
+  try {
+    $run = Start-Process -FilePath $Engine -ArgumentList $arguments -PassThru -WindowStyle Hidden -RedirectStandardOutput (Join-Path $Out "probe-dom.txt") -RedirectStandardError (Join-Path $Out "probe-stderr.txt")
+    $null = $run.Handle
+    if (-not $run.WaitForExit(90000)) {
+      $running = @(Get-CimInstance Win32_Process | Select-Object ProcessId, ParentProcessId, CreationDate)
+      foreach ($id in (Get-StopOrder $run.Id $running)) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue }
+    }
+  } finally {
+    foreach ($name in $saved.Keys) { [Environment]::SetEnvironmentVariable($name, $saved[$name]) }
+  }
+  $deadline = (Get-Date).AddSeconds(15)
+  $rows = @()
+  do {
+    $rows = @(if (Test-Path -LiteralPath $proxyLog) { Get-Content -LiteralPath $proxyLog | Select-Object -Skip $rowsBefore | Where-Object { $_ } | ForEach-Object { try { $_ | ConvertFrom-Json } catch { $null } } | Where-Object { $_ -and "$($_.host)" -ieq $target.Host } })
+    $seen = @($rows | Where-Object { $_.event -eq "request" -and "$($_.path)" -eq $target.PathAndQuery }) | Select-Object -First 1
+    if ($seen) { break }
+    Start-Sleep -Milliseconds 500
+  } while ((Get-Date) -lt $deadline)
+  Remove-Item -LiteralPath $probeProfile -Recurse -Force -ErrorAction SilentlyContinue
+  if ($seen) { return "path seen: $($seen.method) $($target.Host)$($seen.path), $($seen.action)" }
+  $tls = @($rows | Where-Object { $_.event -eq "tls-failed-client" }) | Select-Object -First 1
+  if ($tls) { return "Chromium refused the watch's certificate authority for $($target.Host) ($($tls.error)), so GitHub paths can't be read" }
+  if ($rows.Count) { return "Chromium reached $($target.Host) through the watch, but no request for $($target.PathAndQuery) was logged" }
+  return "Chromium never reached $($target.Host) through the watch (exit $(if ($run.HasExited) { $run.ExitCode } else { 'none, stopped' })), so the system proxy isn't in effect for it"
 }
 
 function Get-EventData($Record) {
@@ -155,11 +234,14 @@ if ($Start) {
     authority = $null
     systemProxy = $false
     systemProxyCheck = ""
+    probe = ""
+    startProblems = @()
   }
   Save-Watch $watch
   try {
     $watch.programs = @(Get-WatchedPrograms)
-    $watch.names = @(@($watch.programs | ForEach-Object { (Split-Path -Leaf $_).ToLowerInvariant() }) + $extraNames | Sort-Object -Unique)
+    $watch.names = @(@($watch.programs | ForEach-Object { (Split-Path -Leaf $_).ToLowerInvariant() }) + $extraNames | Where-Object { $neverBlocked -notcontains $_ } | Sort-Object -Unique)
+    [ordered]@{ names = @($watch.names); never = $neverBlocked; blocked = @($watch.programs) } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $enforceFile -Encoding utf8NoBOM
     $watch.profiles = @(Get-NetFirewallProfile | ForEach-Object {
         [ordered]@{ Name = "$($_.Name)"; Enabled = "$($_.Enabled)"; LogAllowed = "$($_.LogAllowed)"; LogBlocked = "$($_.LogBlocked)"; LogFileName = "$($_.LogFileName)"; LogMaxSizeKilobytes = "$($_.LogMaxSizeKilobytes)"; NotifyOnListen = "$($_.NotifyOnListen)" }
       })
@@ -209,8 +291,18 @@ if ($Start) {
     $watch.systemProxyCheck = "$probe".Trim()
     Save-Watch $watch
     if ($watch.systemProxyCheck -ne "http://127.0.0.1:$($watch.port)/") {
-      Write-Host "::warning::the system proxy reads back as '$($watch.systemProxyCheck)', not http://127.0.0.1:$($watch.port)/; launches without --proxy-server may go direct, where the block rules and the connection audit still catch them"
+      $watch.startProblems += "the system proxy reads back as '$($watch.systemProxyCheck)', not http://127.0.0.1:$($watch.port)/, so launches without --proxy-server may go around the watch's path log"
+      Save-Watch $watch
     }
+
+    if ($Probe) {
+      $watch.probe = try { Invoke-Probe $Probe $ProbeUrl } catch { "could not run: $($_.Exception.Message)" }
+      if ($watch.probe -notlike "path seen*") { $watch.startProblems += "Chromium probe: $($watch.probe)" }
+    } else {
+      $watch.probe = "not run: no engine on this runner, so path-level GitHub evidence from Chromium is unverified"
+    }
+    Save-Watch $watch
+    foreach ($problem in $watch.startProblems) { Write-Host "::error::no-upstream watch: $problem" }
 
     & (Join-Path $PSScriptRoot "upstream-traces.ps1") -Out (Join-Path $Out "traces-at-start.json") -Label "when the watch started"
   } catch {
@@ -296,29 +388,15 @@ if (Test-Path -LiteralPath $proxyLog) {
   $problems += "the proxy wrote no log"
 }
 
-$upstream = [System.Collections.Generic.List[object]]::new()
-$allowed = [System.Collections.Generic.List[object]]::new()
-$github = [System.Collections.Generic.List[object]]::new()
-$others = @{}
-$requests = @($proxyRows | Where-Object { $_.event -eq "request" })
-$requestHosts = @{}
-foreach ($row in $requests) {
-  $requestHosts["$($row.host)".ToLowerInvariant()] = $true
-  $verdict = [NillaWatch.Rules]::Classify("$($row.host)", "$($row.path)")
-  $entry = [ordered]@{ source = "proxy"; what = "$($row.method) $($row.scheme)://$($row.host)$($row.path)"; why = $verdict[1]; action = "$($row.action)" }
-  if ($verdict[0] -eq "upstream") { $upstream.Add($entry) } elseif ($verdict[0] -eq "allowed") { $allowed.Add($entry) } else { $others["$($row.host)"] = 1 + [int]$others["$($row.host)"] }
-}
-foreach ($row in @($proxyRows | Where-Object { $_.event -in @("connect", "tls-failed-client", "no-request") })) {
-  if ($requestHosts.ContainsKey("$($row.host)".ToLowerInvariant())) { continue }
-  $verdict = [NillaWatch.Rules]::ClassifyHost("$($row.host)")
-  $entry = [ordered]@{ source = "proxy $($row.event)"; what = "$($row.host):$($row.port)"; why = $(if ($verdict[1]) { $verdict[1] } else { "$($row.error)" }); action = "$($row.action)" }
-  switch ($verdict[0]) {
-    "upstream" { $upstream.Add($entry) }
-    "github-unknown-path" { $github.Add($entry) }
-    "allowed" { $allowed.Add($entry) }
-    default { $others["$($row.host)"] = 1 + [int]$others["$($row.host)"] }
-  }
-}
+$judged = Get-ProxyVerdict $proxyRows -ChromiumTrustsTheWatch:("$($watch.probe)" -like "path seen*")
+$upstream = $judged.upstream
+$allowed = $judged.allowed
+$github = $judged.unclassified
+$others = $judged.others
+$requests = $judged.requests
+$requestHosts = $judged.requestHosts
+$enforced = @($proxyRows | Where-Object { $_.event -eq "enforced" })
+foreach ($row in $enforced) { if ("$($row.action)" -notlike "blocked*") { $problems += "a watched program at $($row.path) could not be blocked: $($row.action)" } }
 foreach ($row in $dnsRows) {
   $verdict = [NillaWatch.Rules]::ClassifyHost($row.name)
   if ($verdict[0] -eq "upstream") { $upstream.Add([ordered]@{ source = "dns (event $($row.id), process $($row.pid))"; what = $row.name; why = $verdict[1]; action = "looked up" }) }
@@ -326,8 +404,14 @@ foreach ($row in $dnsRows) {
 foreach ($row in $connections) {
   $verdicts = @($row.names | ForEach-Object { [NillaWatch.Rules]::ClassifyHost($_)[0] })
   $entry = [ordered]@{ source = "connection audit"; what = "$($row.outcome) $($row.application) -> $($row.address):$($row.port) ($(if ($row.names.Count) { $row.names -join ', ' } else { 'no DNS name seen' }))"; why = "bypassed the proxy"; action = $row.outcome }
-  if ($verdicts -contains "upstream") { $upstream.Add($entry) } elseif ($verdicts -contains "github-unknown-path") { $github.Add($entry) }
+  if ($verdicts -contains "upstream") { $upstream.Add($entry) } elseif ($verdicts -contains "github-unknown-path") { $github.Add($entry) } elseif ($row.outcome -eq "allowed" -and -not (Test-LinkOnly $row.address)) { $problems += "a watched program reached $($row.address):$($row.port) around the proxy and was not blocked ($(Split-Path -Leaf $row.application), $(if ($row.names.Count) { $row.names -join ', ' } else { 'no DNS name seen' }))" }
 }
+foreach ($entry in $github) { $problems += "a GitHub contact could not be classified: $($entry.source) $($entry.what) ($($entry.why))" }
+$problems = @(@($watch.startProblems | Where-Object { $_ }) + $problems)
+$unverifiedRows = @(
+  "the hourly telemetry watch and the 6-hour update repeat: longer than the job, so they never fire on Windows CI (the shared JS timers are covered by the Linux run's virtual clock)",
+  "the nilla-browser command: not shipped on Windows (PLATFORM_FEATURES.nillaCommand is false), so there is nothing to exercise"
+)
 
 $dnsRows | ForEach-Object { $_ | ConvertTo-Json -Compress -Depth 4 } | Set-Content -LiteralPath (Join-Path $Out "dns-lookups.jsonl") -Encoding utf8NoBOM
 $connections | ForEach-Object { $_ | ConvertTo-Json -Compress -Depth 4 } | Set-Content -LiteralPath (Join-Path $Out "app-connections.jsonl") -Encoding utf8NoBOM
@@ -337,14 +421,17 @@ $lines.Add("# No-upstream check, Windows")
 $lines.Add("")
 $lines.Add("- watched from $($startedUtc.ToString('o')) to $($stopped.ToUniversalTime().ToString('o'))")
 $lines.Add("- upstream attempts: **$($upstream.Count)**")
-$lines.Add("- proxy: $($requests.Count) requests to $($requestHosts.Count) hosts, $(@($proxyRows | Where-Object { $_.event -eq 'connect' }).Count) CONNECTs; the system proxy read back as '$($watch.systemProxyCheck)'")
+$lines.Add("- proxy: $requests requests to $($requestHosts.Count) hosts, $($judged.connects) CONNECTs, $($judged.nothingSent.Count) GitHub connections that sent no request; the system proxy read back as '$($watch.systemProxyCheck)'")
+$lines.Add("- Chromium probe: $($watch.probe)")
+$lines.Add("- programs blocked after they started (copies, setup and uninstall): $($enforced.Count)$(if ($enforced.Count) { ' (' + (@($enforced | ForEach-Object { "$(Split-Path -Leaf $_.path) after $($_.lag_ms) ms" }) -join ', ') + ')' })")
 $lines.Add("- programs blocked from all but loopback: $(@($watch.programs).Count); attributed by name: $($names -join ', ')")
 $lines.Add("- connections from those programs that didn't go through the proxy: $($connections.Count) ($(@($connections | Where-Object { $_.outcome -eq 'blocked' }).Count) blocked)")
 $lines.Add("- DNS client lookups on the runner: $($dnsRows.Count)")
 $lines.Add("- Windows Firewall log: $($firewallCounts['ALLOW']) allowed and $($firewallCounts['DROP']) dropped connections (firewall.log)")
-$lines.Add("- GitHub contacts without a visible path: $($github.Count)")
+$lines.Add("- GitHub contacts that could not be classified: $($github.Count)")
 $lines.Add("- allowed exceptions: $($allowed.Count)")
 if ($problems.Count) { $lines.Add("- watch problems: $($problems -join '; ')") }
+foreach ($row in $unverifiedRows) { $lines.Add("- unverified on Windows: $row") }
 $lines.Add("")
 if ($upstream.Count) {
   $lines.Add("## Upstream attempts")
@@ -355,7 +442,7 @@ if ($upstream.Count) {
   $lines.Add("")
 }
 if ($github.Count) {
-  $lines.Add("## GitHub without a visible path")
+  $lines.Add("## GitHub contacts that could not be classified")
   $lines.Add("")
   foreach ($entry in $github) { $lines.Add("- $($entry.source) ``$($entry.what)`` ($($entry.why))") }
   $lines.Add("")
@@ -373,13 +460,13 @@ if ($others.Count) {
   $lines.Add("")
 }
 $lines | Set-Content -LiteralPath (Join-Path $Out "no-upstream.md") -Encoding utf8NoBOM
-[ordered]@{ upstream = @($upstream); github = @($github); allowed = @($allowed); bypassed = $connections.Count; problems = @($problems) } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $Out "no-upstream.json") -Encoding utf8NoBOM
+[ordered]@{ upstream = @($upstream); github = @($github); allowed = @($allowed); nothingSent = @($judged.nothingSent); enforced = @($enforced); bypassed = $connections.Count; probe = $watch.probe; problems = @($problems); unverified = $unverifiedRows } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $Out "no-upstream.json") -Encoding utf8NoBOM
 $lines | ForEach-Object { Write-Host $_ }
 if ($env:GITHUB_STEP_SUMMARY) {
-  $verdict = if ($upstream.Count) { "**failed**: $($upstream.Count) upstream attempts" } elseif ($problems.Count) { "**unverified**: $($problems -join '; ')" } else { "**passed**: no upstream attempt" }
-  @("### No-upstream watch", "- $verdict", "- proxy requests $($requests.Count), connections around the proxy $($connections.Count), GitHub without a path $($github.Count), firewall log $($firewallCounts['ALLOW']) allowed / $($firewallCounts['DROP']) dropped") | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+  $verdict = if ($upstream.Count) { "**failed**: $($upstream.Count) upstream attempts" } elseif ($problems.Count) { "**unverified**: $($problems -join '; ')" } else { "**passed** for what ran: no upstream attempt" }
+  @("### No-upstream watch", "- $verdict", "- proxy requests $requests, connections around the proxy $($connections.Count), GitHub contacts not classified $($github.Count), programs blocked late $($enforced.Count), firewall log $($firewallCounts['ALLOW']) allowed / $($firewallCounts['DROP']) dropped", "- Chromium probe: $($watch.probe)") + @($unverifiedRows | ForEach-Object { "- unverified on Windows: $_" }) | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
 }
-Remove-Item -LiteralPath $stateFile, $portFile, $authorityFile -Force -ErrorAction SilentlyContinue
+Remove-Item -LiteralPath $stateFile, $portFile, $authorityFile, $enforceFile -Force -ErrorAction SilentlyContinue
 
 foreach ($entry in $upstream) { Write-Host "::error::upstream attempt: $($entry.source) $($entry.what) ($($entry.why))" }
 foreach ($problem in $problems) { Write-Host "::error::no-upstream watch: $problem" }

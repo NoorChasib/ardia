@@ -2,7 +2,8 @@ param(
   [Parameter(Mandatory = $true)][string]$App,
   [Parameter(Mandatory = $true)][string]$Out,
   [int]$Seconds = 30,
-  [string]$Note = ""
+  [switch]$AppOnly,
+  [string]$KnownLimit = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,7 +17,8 @@ $failures = @()
 $App = (Resolve-Path -LiteralPath $App).Path
 $appFolder = Split-Path -Parent $App
 $report.Add("App: $App")
-if ($Note) { $report.Add($Note) }
+if ($AppOnly) { $report.Add("Without an assembled engine: the app alone was launched, so this says nothing about the engine's own default folders") }
+if ($KnownLimit) { $report.Add("Known limit: $KnownLimit") }
 
 & $traces -Out (Join-Path $Out "traces-before.json") -Label "before the bare launch"
 if ($LASTEXITCODE -ne 0) { $failures += "an upstream trace was already there before the bare launch (traces-before.json), so the bare launch can't show it left none" }
@@ -58,7 +60,11 @@ $report | Set-Content -LiteralPath (Join-Path $Out "bare-launch.md") -Encoding u
 $report | ForEach-Object { Write-Host $_ }
 if ($env:GITHUB_STEP_SUMMARY) {
   $summary = @("### Bare launch, last on the runner") + @($report | ForEach-Object { "- $_" })
-  if ($failures.Count) { $summary += @($failures | ForEach-Object { "- **failed:** $_" }) } else { $summary += "- **passed**" }
+  if ($failures.Count) { $summary += @($failures | ForEach-Object { "- **failed:** $_" }) }
+  if ($failures.Count -and $KnownLimit) { $summary += "- **known Layer 2 limit, still failing:** $KnownLimit" }
+  elseif ($KnownLimit) { $summary += "- **passed**, although this row was expected to fail as a known Layer 2 limit: check what changed in the engine, then retire the limit" }
+  elseif ($AppOnly) { $summary += "- **unverified** for the engine: the app alone $(if ($failures.Count) { 'failed' } else { 'left no upstream trace' })" }
+  elseif (-not $failures.Count) { $summary += "- **passed**" }
   $summary | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
 }
 if ($failures.Count) {

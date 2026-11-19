@@ -1748,8 +1748,10 @@ $marker = Join-Path (Split-Path -Parent $gateApp) "Ardia.test-build"
 Remove-Item -Force -LiteralPath $marker
 try { Test-NotATestInstance $gateData "no test-build marker" } finally { New-Item -ItemType File -Force -Path $marker | Out-Null }
 Test-NotATestInstance "gate-relative" "a relative ARDIA_DATA_DIR"
+$realProfile = Join-Path $env:LOCALAPPDATA "Ardia"
+$realProfileExisted = Test-Path -LiteralPath $realProfile
+try {
 if ($env:GITHUB_ACTIONS -eq "true") {
-  $realProfile = Join-Path $env:LOCALAPPDATA "Ardia"
   New-Item -ItemType Directory -Force -Path $realProfile | Out-Null
   Test-NotATestInstance $realProfile "the real profile folder"
   $junction = Join-Path (New-DataDirectory "gate-junction") "profile"
@@ -1792,6 +1794,17 @@ if ($withEngine -and $env:GITHUB_ACTIONS -eq "true") {
   $extension = New-CallingExtension 9341
   Test-WalkAround "" "--load-extension and debugging switches without a test instance" "" @("--load-extension=`"$extension`"", "--remote-debugging-port=$gatePort", "--remote-allow-origins=*", "--disable-web-security", "--enable-automation", "--no-sandbox", "--renderer-cmd-prefix=cmd.exe") -ExtensionPort 9341
   Test-ExtensionRunsInATestInstance $extension 9341
+}
+} finally {
+  if (-not $realProfileExisted -and (Test-Path -LiteralPath $realProfile)) {
+    $left = @(Get-ChildItem -LiteralPath $realProfile -Recurse -Force -ErrorAction SilentlyContinue | ForEach-Object { $_.FullName.Substring($realProfile.Length) })
+    try {
+      Remove-Item -LiteralPath $realProfile -Recurse -Force
+      Write-Host "test gate: removed the upstream profile folder its refusal fixtures made$(if ($left.Count) { ", with $($left -join ', ') in it" })"
+    } catch {
+      $failures += "the upstream profile folder the refusal fixtures made could not be removed, so later trace checks would count it: $($_.Exception.Message)"
+    }
+  }
 }
 if ($withEngine) { Test-ATestInstance (New-DataDirectory "gate-test-instance") "a scratch folder with the marker" }
 }

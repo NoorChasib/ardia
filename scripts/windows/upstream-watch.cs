@@ -112,6 +112,8 @@ namespace NillaWatch {
     readonly object logGate = new object();
     readonly Dictionary<string, X509Certificate2> leaves = new Dictionary<string, X509Certificate2>(StringComparer.OrdinalIgnoreCase);
     TcpListener listener;
+    long connections;
+    [ThreadStatic] static long connection;
 
     public int Port { get; private set; }
     public Func<string, int, IPEndPoint> Redirect { get; set; }
@@ -158,6 +160,7 @@ namespace NillaWatch {
 
     public void Record(Dictionary<string, object> entry) {
       entry["ts"] = Math.Round(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0, 3);
+      if (connection > 0 && !entry.ContainsKey("conn")) entry["conn"] = connection;
       string line = JsonSerializer.Serialize(entry) + "\n";
       lock (logGate) {
         File.AppendAllText(logPath, line, new UTF8Encoding(false));
@@ -293,6 +296,7 @@ namespace NillaWatch {
     }
 
     void Handle(TcpClient client) {
+      connection = Interlocked.Increment(ref connections);
       using (client) {
         client.NoDelay = true;
         NetworkStream stream = client.GetStream();
@@ -441,6 +445,31 @@ namespace NillaWatch {
           originSecure.Flush();
           Join(secure, originSecure);
         }
+      }
+    }
+  }
+
+  public static class Processes {
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern IntPtr OpenProcess(int access, bool inherit, int id);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode, EntryPoint = "QueryFullProcessImageNameW")]
+    static extern bool QueryFullProcessImageName(IntPtr process, int flags, StringBuilder name, ref int size);
+
+    const int QueryLimitedInformation = 0x1000;
+
+    public static string ImagePath(int id) {
+      IntPtr process = OpenProcess(QueryLimitedInformation, false, id);
+      if (process == IntPtr.Zero) return null;
+      try {
+        var name = new StringBuilder(32768);
+        int size = name.Capacity;
+        return QueryFullProcessImageName(process, 0, name, ref size) ? name.ToString(0, size) : null;
+      } finally {
+        CloseHandle(process);
       }
     }
   }

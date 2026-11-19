@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 if (-not ([System.Management.Automation.PSTypeName]"NillaWatch.Proxy").Type) {
   Add-Type -Path (Join-Path $PSScriptRoot "upstream-watch.cs") -IgnoreWarnings
 }
+. (Join-Path $PSScriptRoot "upstream-verdict.ps1")
 
 $failures = @()
 
@@ -36,6 +37,35 @@ $cases = @(
 foreach ($case in $cases) {
   $verdict = if ($null -eq $case[1]) { [NillaWatch.Rules]::ClassifyHost($case[0])[0] } else { [NillaWatch.Rules]::Classify($case[0], $case[1])[0] }
   Check "classify '$($case[0])' '$($case[1])' as $($case[2])" ($verdict -eq $case[2]) "got $verdict"
+}
+
+function Row([string]$Event, [string]$TargetHost, $Conn, [hashtable]$More = @{}) {
+  $row = [ordered]@{ event = $Event; host = $TargetHost; port = 443 }
+  if ($null -ne $Conn) { $row.conn = $Conn }
+  foreach ($key in $More.Keys) { $row[$key] = $More[$key] }
+  return [pscustomobject]$row
+}
+
+$tlsFailed = @((Row "connect" "github.com" 1 @{ action = "opened to read the path" }), (Row "tls-failed-client" "github.com" 1 @{ error = "AuthenticationException: unknown CA" }))
+$judged = Get-ProxyVerdict $tlsFailed
+Check "a GitHub connection whose TLS failed is unclassified" ($judged.unclassified.Count -eq 1 -and $judged.upstream.Count -eq 0) ($judged | ConvertTo-Json -Depth 4 -Compress)
+$judged = Get-ProxyVerdict ($tlsFailed + @((Row "connect" "github.com" 2 @{ action = "opened to read the path" }), (Row "request" "github.com" 2 @{ method = "GET"; scheme = "https"; path = "/NoorChasib/nilla"; action = "forwarded" })))
+Check "a benign request on another connection to the same host doesn't hide the unclassified one" ($judged.unclassified.Count -eq 1 -and $judged.requests -eq 1) ($judged | ConvertTo-Json -Depth 4 -Compress)
+$quiet = @((Row "connect" "api.github.com" 3 @{ action = "opened to read the path" }), (Row "no-request" "api.github.com" 3))
+$judged = Get-ProxyVerdict $quiet -ChromiumTrustsTheWatch
+Check "a GitHub connection that sent no request is nothing sent once the probe showed Chromium trusts the watch" ($judged.unclassified.Count -eq 0 -and $judged.nothingSent.Count -eq 1)
+$judged = Get-ProxyVerdict $quiet
+Check "without that probe, a GitHub connection that sent no request is unclassified, since a refused certificate looks the same" ($judged.unclassified.Count -eq 1 -and $judged.nothingSent.Count -eq 0)
+$judged = Get-ProxyVerdict @((Row "connect" "github.com" 4 @{ action = "opened to read the path" }), (Row "error" "" 4 @{ error = "IOException: reset" }))
+Check "a GitHub connection that failed before its request is unclassified" ($judged.unclassified.Count -eq 1)
+$judged = Get-ProxyVerdict @((Row "connect" "github.com" 5 @{ action = "opened to read the path" }))
+Check "a GitHub CONNECT with nothing logged after it is unclassified" ($judged.unclassified.Count -eq 1)
+$judged = Get-ProxyVerdict @((Row "connect" "github.com" $null @{ action = "opened to read the path" }), (Row "request" "github.com" $null @{ method = "GET"; scheme = "https"; path = "/x"; action = "forwarded" }))
+Check "rows without a connection id never vouch for each other" ($judged.unclassified.Count -eq 1)
+$judged = Get-ProxyVerdict @((Row "connect" "lab.ardia.dev" 6 @{ action = "refused" }), (Row "connect" "github.com" 7 @{ action = "opened to read the path" }), (Row "request" "github.com" 7 @{ method = "GET"; scheme = "https"; path = "/ardia-browser/ardia/releases"; action = "refused" }))
+Check "a refused upstream CONNECT and an upstream GitHub path both count as upstream" ($judged.upstream.Count -eq 2 -and $judged.unclassified.Count -eq 0)
+foreach ($case in @(@("224.0.0.251", $true), @("239.255.255.250", $true), @("169.254.1.1", $true), @("ff02::fb", $true), @("fe80::1", $true), @("140.82.112.3", $false), @("2606:50c0:8000::153", $false), @("::ffff:224.0.0.251", $true))) {
+  Check "link-only address $($case[0]) is $($case[1])" ((Test-LinkOnly $case[0]) -eq $case[1])
 }
 
 $work = Join-Path ([System.IO.Path]::GetTempPath()) ("nilla-watch-test-" + [guid]::NewGuid().ToString("N"))
@@ -200,14 +230,24 @@ try {
   Check "the GitHub origin gets the same path" ($secureOrigin.LastRequestLine -eq "GET /NoorChasib/nilla/issues HTTP/1.1") $secureOrigin.LastRequestLine
   Check "the GitHub origin is asked to close the connection" ($secureOrigin.LastConnection -eq "close") $secureOrigin.LastConnection
 
+  $refusing = [NillaWatch.Authority]::Create()
+  $handshake = try { [NillaWatchTest.Client]::Inspected($proxy.Port, "github.com", "/NoorChasib/nilla", $refusing) } catch { "refused: $($_.Exception.InnerException.Message)" }
+  Check "a client that doesn't trust the watch's authority never gets an answer" ($handshake -like "refused*") $handshake
+  $deadline = (Get-Date).AddSeconds(10)
+  while ((Get-Date) -lt $deadline -and -not @(Read-Log | Where-Object { $_.event -eq "tls-failed-client" }).Count) { Start-Sleep -Milliseconds 200 }
+
   $rows = Read-Log
+  Check "every proxy row carries its connection id" (@($rows | Where-Object { -not $_.conn }).Count -eq 0) ($rows | Where-Object { -not $_.conn } | ConvertTo-Json -Compress)
+  Check "rows of one connection share an id, and connections differ" (@($rows | Group-Object conn).Count -ge 7) "$(@($rows | Group-Object conn).Count) connections"
+  $judged = Get-ProxyVerdict $rows
+  Check "the live log judges three upstream attempts, and the client that refused the authority as unclassified" ($judged.upstream.Count -eq 3 -and $judged.unclassified.Count -eq 1 -and $judged.nothingSent.Count -eq 0) ($judged | ConvertTo-Json -Depth 4 -Compress)
   $requests = @($rows | Where-Object { $_.event -eq "request" })
   $connects = @($rows | Where-Object { $_.event -eq "connect" })
   Check "the plain request is logged with its path" (@($requests | Where-Object { $_.path -eq "/hello?x=1" -and $_.action -eq "forwarded" -and $_.verdict -eq "other" }).Count -eq 1) ($requests | ConvertTo-Json -Compress)
   Check "the refused plain request is logged as upstream" (@($requests | Where-Object { $_.host -eq "ardia.dev" -and $_.path -eq "/switches.json" -and $_.verdict -eq "upstream" -and $_.action -eq "refused" }).Count -eq 1)
   Check "the refused CONNECT is logged as upstream" (@($connects | Where-Object { $_.host -eq "lab.ardia.dev" -and $_.verdict -eq "upstream" -and $_.action -eq "refused" }).Count -eq 1)
   Check "the tunnel is logged by host" (@($connects | Where-Object { $_.host -eq "127.0.0.1" -and $_.action -eq "tunnelled" }).Count -eq 1)
-  Check "the GitHub CONNECTs are logged without a path" (@($connects | Where-Object { $_.host -eq "github.com" -and $_.verdict -eq "github-unknown-path" }).Count -eq 2)
+  Check "the GitHub CONNECTs are logged without a path" (@($connects | Where-Object { $_.host -eq "github.com" -and $_.verdict -eq "github-unknown-path" }).Count -eq 3)
   Check "the upstream GitHub path is logged as upstream and refused" (@($requests | Where-Object { $_.host -eq "github.com" -and $_.path -eq "/ardia-browser/ardia/releases/latest" -and $_.verdict -eq "upstream" -and $_.action -eq "refused" }).Count -eq 1)
   Check "the other GitHub path is logged and forwarded" (@($requests | Where-Object { $_.host -eq "github.com" -and $_.path -eq "/NoorChasib/nilla/issues" -and $_.verdict -eq "other" -and $_.action -eq "forwarded" }).Count -eq 1)
   Check "every log row has a time" (@($rows | Where-Object { -not $_.ts }).Count -eq 0)
