@@ -68,4 +68,3 @@ test("the licences show every credit with its use, license and address, and each
   }
   unmount(root);
 });
-
