@@ -83,8 +83,10 @@ engines exist (Layer 2), today's prebuilt engines still force a few Ardia names,
   the engine-side fix for Layer 2; never relax this for convenience.
 - The one allowed read is an import the user starts by picking Ardia in the importer: it reads a snapshot, writes
   nothing to Ardia's folder and never runs at startup.
-- **Windows and Linux run only inside disposable OS isolation**: a CI runner, a throwaway VM, or (Linux) a user and
-  mount namespace with a scratch `$HOME`. Never on a host or account that has, or could later get, an Ardia profile:
+- **Windows and Linux run only inside disposable OS isolation**: a CI runner, a throwaway VM, or (Linux) verified
+  filesystem isolation: a user and mount namespace with a scratch `$HOME` that covers every account's home with a
+  read-only mount, entered through a nested user namespace with no capabilities. `NILLA_DISPOSABLE_HOST=1` is only for
+  a throwaway machine. Never on a host or account that has, or could later get, an Ardia profile:
   the engines pick Ardia's default profile before any app code runs. Start them through `scripts/linux/nilla-dev-run`
   and `scripts/windows/nilla-dev-run.ps1`. A bare-launch test passes only when listing the folders shows Ardia's were
   never created.

@@ -141,9 +141,11 @@ build.
 
 ### Linux
 
-Run Linux builds only inside a disposable VM or a user and mount namespace with a scratch `$HOME`, never on an account
-that has, or could later get, an Ardia profile: today's Linux engine picks Ardia's default folder before any app code
-runs. Inside that VM or namespace, build the UI, package it with the prebuilt engine and uBlock Origin into a
+Run Linux builds only on a throwaway VM, container or CI runner, or inside verified filesystem isolation: a user and
+mount namespace with a scratch `$HOME` that covers every account's home with a read-only mount (a mode change doesn't
+count), entered through a nested user namespace that holds no capabilities, as an isolation harness gives. Never on an
+account that has, or could later get, an Ardia profile: today's Linux engine picks Ardia's default folder before any
+app code runs. Inside that host or namespace, build the UI, package it with the prebuilt engine and uBlock Origin into a
 development tarball, extract it, and start it with `scripts/linux/nilla-dev-run`, which refuses to start without a
 scratch `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME`:
 
@@ -160,9 +162,12 @@ ARDIA_DATA_DIR="$scratch/data" ARDIA_CONFIG_HOME="$scratch/config" scripts/linux
 ```
 
 The engine refuses a group-writable data folder, hence `umask 022`. The tarball extracts to `ardia/` (its launcher is
-`bin/ardia` until Nilla's own engine). `nilla-dev-run` also passes `--user-data-dir=$ARDIA_CONFIG_HOME/ardia`. It
-runs only inside a user namespace, or with `NILLA_DISPOSABLE_HOST=1` on a throwaway VM, container or CI runner, and it
-refuses an account that has Ardia's config, data, cache or state folders. The tarball's `bin/ardia` refuses to start
+`bin/ardia` until Nilla's own engine). `nilla-dev-run` also passes `--user-data-dir=$ARDIA_CONFIG_HOME/ardia` and
+`--password-store=basic`. It starts only where it verifies that isolation: a user namespace whose shell holds no
+capabilities, a `$HOME` that is no account's home, and every account's home (and the folders in it that would hold a
+profile) unwritable and, when it is yours, on a read-only mount. `NILLA_DISPOSABLE_HOST=1` skips that check and belongs
+only on a throwaway VM, container or CI runner. Either way it refuses a machine where Ardia's config, data, cache or
+state folders exist in `$HOME`, the XDG folders or any account's home. The tarball's `bin/ardia` refuses to start
 without `--user-data-dir`, and a window started any other way shows a page saying the UI stopped before it read any
 settings or saved anything. None of these replaces the disposable VM or namespace: the engine opens its profile before
 any app code runs, and the `.deb` and AppImage start it without the tarball's launcher. Don't install the tarball,

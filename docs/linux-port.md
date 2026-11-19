@@ -506,12 +506,17 @@ fake device, "Ardia Test Sink", and records routes without sending anything anyw
 
 To work on the UI you don't need a Chromium tree: run the shared UI on a prebuilt engine, as CI does.
 
-Do all of it, the package installs included, only on a disposable host: a throwaway VM, container or CI runner, or a
-user and mount namespace with a scratch `$HOME` in which every account's home is read-only. Never on an account that
+Do all of it, the package installs included, only on a disposable host: a throwaway VM, container or CI runner, or
+verified filesystem isolation. That is a user and mount namespace with a scratch `$HOME` that covers every account's
+home with a read-only mount (a mode change doesn't count), entered through a nested user namespace that holds no
+capabilities, as an isolation harness gives. Never on an account that
 has, or could later get, an Ardia profile: today's Linux engine picks Ardia's default folder and secret-store items
 before any app code runs, and the UI's refusal comes after that. Start the browser only through
-`scripts/linux/nilla-dev-run`, which checks that isolation (or `NILLA_DISPOSABLE_HOST=1` on a throwaway machine),
-refuses a host with Ardia's folders, and passes its own `--user-data-dir` and `--password-store=basic`:
+`scripts/linux/nilla-dev-run`. It starts only where it verifies that isolation: a user namespace whose shell holds no
+capabilities, a `$HOME` that is no account's home, and every account's home (and the folders in it that would hold a
+profile) unwritable and, when it is yours, on a read-only mount. `NILLA_DISPOSABLE_HOST=1` skips that check and belongs
+only on a throwaway VM, container or CI runner. Either way it refuses a host with Ardia's folders in `$HOME`, the XDG
+folders or any account's home, and it passes its own `--user-data-dir` and `--password-store=basic`:
 
 ```bash
 sudo apt-get install clang pkg-config patch fakeroot xz-utils unzip curl util-linux openssl dbus dbus-x11 \
