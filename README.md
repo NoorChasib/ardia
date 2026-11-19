@@ -193,11 +193,11 @@ scripts/windows/assemble.ps1 -App apps/browser/windows/x64/Release -Engine $env:
 ```
 
 Start the assembled app through `scripts/windows/nilla-dev-run.ps1`, which sets `ARDIA_DATA_DIR` to a Nilla-only or
-scratch folder first; a development build started without it shows a message and quits. Pass it the app you just
-assembled (its launcher is `Ardia.exe` until Nilla's own engine):
+scratch folder first; a development build started without it shows a message and quits. Pass it the launcher of the
+app you just assembled, `Nilla.exe`:
 
 ```powershell
-scripts/windows/nilla-dev-run.ps1 -App $env:TEMP\Nilla\Ardia.exe -DataDir $env:TEMP\nilla-data
+scripts/windows/nilla-dev-run.ps1 -App $env:TEMP\Nilla\Nilla.exe -DataDir $env:TEMP\nilla-data
 ```
 
 [docs/windows.md](docs/windows.md) › Test instances has the details. The Windows workflow builds, launches, tours and
