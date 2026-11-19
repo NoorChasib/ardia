@@ -3,6 +3,7 @@ package com.nilladigital.nilla.sync.core
 import com.nilladigital.nilla.sync.LocalFolderAccess
 import com.nilladigital.nilla.sync.SyncFolderLocation
 import com.nilladigital.nilla.sync.SyncFolderPick
+import com.nilladigital.nilla.sync.SyncFolders
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -93,5 +94,30 @@ class UpstreamSyncFolderTest {
         assertNull(access.resolve(SyncFolderLocation.Path(upstream.path, upstream.name)))
         assertFalse(access.keep(SyncFolderLocation.Path(upstream.path, upstream.name)))
         assertNotNull(access.open(SyncFolderPick.Folder(folder("Nilla Sync"))))
+    }
+
+    @Test
+    fun discoveryNeverProbesACandidateThatLeadsIntoTheUpstreamFolder() {
+        val upstream = folder(UpstreamSyncFolder.NAME)
+        folder(UpstreamSyncFolder.NAME, "a".repeat(26))
+        val picked = folder("Picked")
+        link(File(picked, "Nilla Sync"), upstream)
+        assertEquals(picked, SyncFolders.locate(picked))
+        assertNull(SyncFolders.locate(upstream))
+        val granted = LocalFolderAccess().open(SyncFolderPick.Folder(picked))
+        assertEquals(SyncFolderLocation.Path(picked.path, picked.name), granted?.location)
+    }
+
+    @Test
+    fun removingATreeDeletesALinkInsideItWithoutFollowingIt() {
+        val upstream = folder(UpstreamSyncFolder.NAME)
+        val marker = File(upstream, "marker").apply { writeText("kept") }
+        val chain = folder("Nilla Sync", "a".repeat(26), "inner")
+        link(File(chain, "into"), upstream)
+        File(chain, "own.nls").writeText("gone")
+        FolderStorage(folder("Nilla Sync")).removeTree(listOf("a".repeat(26)))
+        assertTrue(marker.exists())
+        assertFalse(File(home, "Nilla Sync/${"a".repeat(26)}").exists())
+        FolderStorage(folder("Nilla Sync")).removeTree(listOf("missing"))
     }
 }

@@ -1,15 +1,16 @@
 package com.nilladigital.nilla.sync
 
 import com.nilladigital.nilla.sync.core.Base32
+import com.nilladigital.nilla.sync.core.UpstreamSyncFolder
 import java.io.File
 
 object SyncFolders {
     val folderNames = listOf("Nilla Sync")
 
     fun locate(picked: File): File? {
-        if (!picked.isDirectory) return null
+        if (UpstreamSyncFolder.refuses(picked) || !picked.isDirectory) return null
         if (holdsChains(picked)) return picked
-        val present = folderNames.map { File(picked, it) }.filter { it.isDirectory }
+        val present = folderNames.map { File(picked, it) }.filter { !UpstreamSyncFolder.refuses(it) && it.isDirectory }
         return present.firstOrNull { holdsChains(it) } ?: present.firstOrNull() ?: picked
     }
 

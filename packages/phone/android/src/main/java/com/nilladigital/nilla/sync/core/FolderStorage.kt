@@ -4,9 +4,14 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.FileVisitResult
 import java.nio.file.Files
+import java.nio.file.LinkOption
 import java.nio.file.NoSuchFileException
+import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.BasicFileAttributes
 
 class FolderStorage(val root: File) : SyncStorage {
     override val name: String get() = root.name
@@ -37,8 +42,26 @@ class FolderStorage(val root: File) : SyncStorage {
     }
 
     override fun removeTree(path: List<String>) {
-        val target = file(path)
-        if (target.exists() && !target.deleteRecursively()) throw IOException("can't remove ${target.name}")
+        val target = file(path).toPath()
+        if (!Files.exists(target, LinkOption.NOFOLLOW_LINKS)) return
+        try {
+            Files.walkFileTree(target, RemoveWithoutFollowingLinks)
+        } catch (error: IOException) {
+            throw IOException("can't remove ${target.fileName}", error)
+        }
+    }
+
+    private object RemoveWithoutFollowingLinks : SimpleFileVisitor<Path>() {
+        override fun visitFile(file: Path, attributes: BasicFileAttributes): FileVisitResult {
+            Files.delete(file)
+            return FileVisitResult.CONTINUE
+        }
+
+        override fun postVisitDirectory(directory: Path, failure: IOException?): FileVisitResult {
+            if (failure != null) throw failure
+            Files.delete(directory)
+            return FileVisitResult.CONTINUE
+        }
     }
 
     override fun read(path: List<String>): ByteArray = file(path).readBytes()

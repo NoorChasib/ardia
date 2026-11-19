@@ -54,9 +54,7 @@ class SyncStorageTimedOut : IOException("the sync folder didn’t answer in time
 open class LocalFolderAccess : SyncFolderAccess {
     override fun open(pick: SyncFolderPick): SyncFolderGrant? {
         val folder = (pick as? SyncFolderPick.Folder)?.file ?: return null
-        if (UpstreamSyncFolder.refuses(folder)) return null
         val located = SyncFolders.locate(folder) ?: return null
-        if (UpstreamSyncFolder.refuses(located)) return null
         return SyncFolderGrant(FolderStorage(located), SyncFolderLocation.Path(located.path, located.name))
     }
 
