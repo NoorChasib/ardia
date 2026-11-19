@@ -550,8 +550,8 @@
    "id": "F-scheme",
    "class": "F",
    "mechanism": "class",
-   "regex": "(?<![A-Za-z0-9_.-])ardia(?=:(?:\\\\{0,2}/|\\(|[\\\"'`\\])]))|(?<=[(|])ardia(?=[|)])|(?<=:)ardia(?=\\|)",
-   "why": "The ardia: app URL scheme in every spelling (URLs, escaped and double-escaped regexes, quoted scheme names, alternations)."
+   "regex": "(?<![A-Za-z0-9_.-])ardia(?=:(?:\\\\{0,2}/|\\(|[\\\"'`\\])]))|(?<=[(|])(?<![A-Za-z0-9_]\\()ardia(?=[|)])|(?<=:)ardia(?=\\|)",
+   "why": "The ardia: app URL scheme in every spelling (URLs, escaped and double-escaped regexes, quoted scheme names, alternations). A call's only argument, such as Python's str(ardia) or os.readlink(ardia), is a variable, not an alternation, and renames with its assignment."
   },
   {
    "id": "F-app-scheme-const",
@@ -930,6 +930,26 @@
     "apps/cli/tests/test_linux.py"
    ],
    "why": "The CLI's independence guards name the upstream Ardia install on purpose (owner decision 2): the Linux refusals that say they never reach an installed Ardia's ~/.config/ardia or ~/.local/share/ardia/cli, and the hooks tests that plant Ardia's own dev.ardia.hooks LaunchAgent and systemd unit and check that install and uninstall never touch them. Renamed, the messages would name Nilla and the tests would guard Nilla's own label."
+  },
+  {
+   "id": "X-ardia-sync-folder-guard",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "packages/sync/src/upstreamSyncFolder.ts"
+   ],
+   "why": "The shared Sync guard names the upstream Ardia Sync folder on purpose (owner decision 2): the Mac and Windows Sync adapters refuse it before any probe, save or chain write. Renamed, it would refuse Nilla's own Nilla Sync folder."
+  },
+  {
+   "id": "X-ardia-upstream-folders-cli",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "apps/cli/ardia_cli/upstream.py"
+   ],
+   "why": "The CLI's list of an installed Ardia's folders (owner decision 2): the data, config, cache, state, CLI and log folders, and the Mac bundle id folder, that nilla-browser refuses as a data dir or config folder. The module imports nothing of the CLI's own. Renamed, it would refuse Nilla's own folders."
   },
   {
    "id": "P-windows-engine-files",
