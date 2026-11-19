@@ -4,12 +4,16 @@
 # Starts an extracted Linux build of Nilla with ARDIA_DATA_DIR and ARDIA_CONFIG_HOME, which must both be set to a
 # scratch or Nilla-only folder, with --user-data-dir=$ARDIA_CONFIG_HOME/ardia (so the UI knows the profile is its own)
 # and --password-store=basic, so today's engine never reaches an installed Ardia's profile, data or secret-store items.
-# It refuses --user-data-dir and --password-store among the browser arguments, so they can't undo that. It never
-# installs anything. It is not a sandbox: it runs only inside a user namespace, or with NILLA_DISPOSABLE_HOST=1 on a
-# throwaway VM, container or CI runner, and refuses an account that has Ardia's config, data, cache or state folders.
+# The engine writes the nilla-browser rendezvous file (ArdiaControl.json) into that profile, where nilla-browser looks
+# when ARDIA_CONFIG_HOME is set. It refuses --user-data-dir and --password-store among the browser arguments. It never
+# installs anything. It is not a sandbox: it runs only where the filesystem is verified to be isolated (a user and mount
+# namespace with a scratch HOME, in which no account's home folder, nor the folder that would hold Ardia's config,
+# data, cache or state folders in it, is writable, as tools/isolate gives), or with NILLA_DISPOSABLE_HOST=1 on a
+# throwaway VM, container or CI runner. Either way it refuses a machine where Ardia's folders exist in HOME or in any
+# account's home.
 set -euo pipefail
 
-usage() { sed -n '2,9s/^# \{0,1\}//p' "$0"; }
+usage() { sed -n '2,13s/^# \{0,1\}//p' "$0"; }
 die() { echo "nilla-dev-run: $*" >&2; exit 2; }
 
 case "${1:-}" in
@@ -21,26 +25,61 @@ shift
 launcher="$build/bin/ardia"
 [ -x "$launcher" ] || die "$build has no bin/ardia; pass the folder the build's tarball extracted to"
 
-config_root="${XDG_CONFIG_HOME:-$HOME/.config}"
-ardia_folders=("$config_root/ardia" "${XDG_DATA_HOME:-$HOME/.local/share}/ardia" "${XDG_CACHE_HOME:-$HOME/.cache}/ardia" "${XDG_STATE_HOME:-$HOME/.local/state}/ardia" "$HOME/.config/ardia" "$HOME/.local/share/ardia" "$HOME/.cache/ardia" "$HOME/.local/state/ardia")
+resolved() { realpath -m -- "$1"; }
 
-in_disposable_namespace() {
+ardia_subfolders=(.config/ardia .local/share/ardia .cache/ardia .local/state/ardia)
+
+account_homes() {
+  {
+    getent passwd || true
+    getent passwd "$(id -u)" || true
+    local inside outside count
+    while read -r inside outside count; do getent passwd "$outside" || true; done < /proc/self/uid_map
+  } | cut -d: -f6 | awk 'NF && !seen[$0]++'
+}
+
+mapfile -t homes < <(account_homes)
+ardia_folders=("${XDG_CONFIG_HOME:-$HOME/.config}/ardia" "${XDG_DATA_HOME:-$HOME/.local/share}/ardia" "${XDG_CACHE_HOME:-$HOME/.cache}/ardia" "${XDG_STATE_HOME:-$HOME/.local/state}/ardia")
+for home in "$HOME" "${homes[@]}"; do
+  for subfolder in "${ardia_subfolders[@]}"; do ardia_folders+=("$home/$subfolder"); done
+done
+
+in_user_namespace() {
   local map
   map="$(cat /proc/self/uid_map 2>/dev/null)" || return 1
   read -r -a map <<< "$map"
   [ "${map[*]}" != "0 0 4294967295" ]
 }
 
-if [ "${NILLA_DISPOSABLE_HOST:-}" != 1 ] && ! in_disposable_namespace; then
-  die "run it inside a disposable user namespace (unshare, bwrap or tools/isolate), or set NILLA_DISPOSABLE_HOST=1 on a throwaway VM, container or CI runner; never on an account that has or may get Ardia"
+nearest_existing() {
+  local path="$1"
+  while [ ! -e "$path" ] && [ ! -L "$path" ] && [ "$path" != / ]; do path="$(dirname -- "$path")"; done
+  printf '%s\n' "$path"
+}
+
+not_isolated=""
+filesystem_isolated() {
+  in_user_namespace || { not_isolated="this isn't a user namespace"; return 1; }
+  local scratch_home home target subfolder
+  scratch_home="$(resolved "$HOME")"
+  for home in "${homes[@]}"; do
+    [ -d "$home" ] || continue
+    [ "$(resolved "$home")" != "$scratch_home" ] || { not_isolated="HOME=$HOME is the account folder $home, not a scratch HOME"; return 1; }
+    for subfolder in "" "${ardia_subfolders[@]}"; do
+      target="$(nearest_existing "${home}${subfolder:+/$subfolder}")"
+      if [ -w "$target" ]; then not_isolated="$target is writable here, so the build could reach $home"; return 1; fi
+    done
+  done
+}
+
+if [ "${NILLA_DISPOSABLE_HOST:-}" != 1 ] && ! filesystem_isolated; then
+  die "the filesystem isn't verified to be isolated ($not_isolated). Run it inside tools/isolate, or a user and mount namespace that gives a scratch HOME and covers every account's home read-only, or set NILLA_DISPOSABLE_HOST=1 on a throwaway VM, container or CI runner; never on an account that has or may get Ardia"
 fi
 for folder in "${ardia_folders[@]}"; do
   if [ -e "$folder" ] || [ -L "$folder" ]; then
-    die "this account has Ardia's $folder; run Nilla's development build only where Ardia has never run"
+    die "this machine has Ardia's $folder; run Nilla's development build only where Ardia has never run"
   fi
 done
-
-resolved() { realpath -m -- "$1"; }
 
 touches_ardia() {
   local path folder
