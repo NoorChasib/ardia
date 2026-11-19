@@ -1155,6 +1155,175 @@
    "why": "The header of the two generated symbol tables. packages/demo/scripts/icons/gen-data.mjs already writes Nilla demo symbol artwork, but regenerate.mjs needs macOS with swiftc (native SF Symbol renders and the fit cache), so the files keep the last generated header until wave 4 regenerates them on the Mac and drops this entry."
   },
   {
+   "id": "X-ardia-sync-folder-guard-native",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "packages/sync/ios/Core/UpstreamSyncFolder.swift",
+    "packages/sync/tests/UpstreamSyncFolderTests.swift",
+    "packages/sync/src/upstreamSyncFolder.test.ts",
+    "packages/phone/android/src/main/java/com/nilladigital/nilla/sync/core/UpstreamSyncFolder.kt"
+   ],
+   "why": "The native copies of the shared Sync and Shared Folders guard and their tests (owner decision 2, H2): the Mac's UpstreamSyncFolder.swift (Ardia Sync, Ardia Shared and both refusals), Android's UpstreamSyncFolder.kt (NAME), the Swift tests that plant an Ardia file and check it is untouched, and the shared folder test's name. Renamed, each would refuse Nilla's own Nilla Sync and Nilla Shared folders."
+  },
+  {
+   "id": "X-ardia-sync-folder-guard-windows",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=UpstreamFolderName = L\\\")Ardia Sync(?=\\\")|(?<=UpstreamRefusal\\[\\] = \\\")That folder is Ardia's Sync folder\\. Nilla keeps its sync data apart from Ardia's, so choose another folder\\.(?=\\\")|(?<=Join-Path \\$syncAliases \\\")Ardia Sync(?=\\\")|(?<=no symbolic link to )Ardia Sync(?= here)",
+   "scope": [
+    "apps/browser/windows/Ardia/SyncHandles.h",
+    "scripts/windows/launch-smoke.ps1"
+   ],
+   "why": "The Windows native copy of the Sync guard (SyncHandles.h UpstreamFolderName and UpstreamRefusal, which windowsSyncFolderGuard.test.mjs asserts equal to upstreamSyncFolder.ts) and the launch smoke's Ardia Sync alias fixture. Renamed, the native check would refuse Nilla Sync and the smoke would stop planting the upstream folder."
+  },
+  {
+   "id": "X-ardia-install-guards-windows-checks",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "scripts/windows/installer-check.ps1",
+    "scripts/windows/nilla-dev-run.test.ps1"
+   ],
+   "why": "The Windows independence checks name Ardia's install on purpose (owner decision 2, H4): installer-check.ps1 proves the installer leaves Ardia's folders, uninstall entry, ArdiaHTM/ArdiaPDF ProgIDs and ardia scheme alone, and nilla-dev-run.test.ps1 plants Ardia's folders and junctions to them for the launcher to refuse. Renamed, both would check Nilla's own names instead."
+  },
+  {
+   "id": "X-ardia-install-guards-windows-roots",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=Join-Path \\$base \\\")(?:Programs\\\\)?Ardia(?=\\\")|^\\s*for \\(const kind of \\[\\\"a junction to Ardia's data folder\\\"[^\\n]*",
+   "scope": [
+    "scripts/windows/nilla-dev-run.ps1",
+    "apps/browser/src/platform/windowsLaunchConfig.test.mjs"
+   ],
+   "why": "The Windows dev launcher's upstream roots (Ardia and Programs\\Ardia under every Local and Roaming base, H4) and the source test's list of nilla-dev-run.test.ps1 case names, which must match that file."
+  },
+  {
+   "id": "X-ardia-upstream-folders-cli-tests",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "apps/cli/tests/test_upstream_guard.py"
+   ],
+   "why": "The CLI guard's tests plant and name an installed Ardia's folders in every spelling (owner decision 2, H1), and usage.py says the Linux CLI never writes into Ardia's CLI home. Renamed, the tests would guard Nilla's own folders."
+  },
+  {
+   "id": "X-ardia-upstream-folders-cli-usage",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=so it never writes into an installed )Ardia's ~/\\.local/share/ardia/cli",
+   "scope": [
+    "apps/cli/ardia_cli/usage.py"
+   ],
+   "why": "usage.py's Linux refusal names an installed Ardia's CLI home (~/.local/share/ardia/cli), the folder it never writes into."
+  },
+  {
+   "id": "V-import-source-ardia",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "chromium\\(\\\"ardia\\\", \\\"Ardia\\\", \\[\\\"com\\.ardia\\.browser\\\"\\], \\\"com\\.ardia\\.browser/Chromium\\\", \\\"Ardia\\\"\\)",
+   "scope": [
+    "packages/import/ios/Core/Discovery.swift"
+   ],
+   "why": "The Ardia import source (OWNER-IMPORT, plan 2.1): the Discovery row for Ardia's Chromium profile (id ardia, name Ardia, bundle id com.ardia.browser, keychain Ardia Safe Storage) and its fixture test, which builds a copied Ardia profile layout. They name the other browser Nilla imports from."
+  },
+  {
+   "id": "V-import-source-ardia-tests",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "packages/import/tests/ArdiaSourceTests.swift"
+   ],
+   "why": "The Ardia import source's fixture test (OWNER-IMPORT): every name in it is Ardia's profile layout, bundle id and keychain item."
+  },
+  {
+   "id": "V-licence-texts-phone",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)ardia",
+   "scope": [
+    "apps/phone/src/state/settings/licenseTexts.json"
+   ],
+   "why": "The phone's licence texts: a byte copy of NOTICE (Ardia's verbatim block and the credit), LICENSE.Apache-2.0 and the bang list's licence, written by bun run --cwd apps/phone licenses and checked byte for byte by licenseTexts.test.ts."
+  },
+  {
+   "id": "V-conventions-layer2-names",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "^### Names that stay Ardia until Layer 2$[\\s\\S]*?(?=^#{1,3} )",
+   "scope": [
+    "docs/conventions.md"
+   ],
+   "why": "docs/conventions.md's Names that stay Ardia until Layer 2 section: the engine contract list, which names each kept Ardia spelling on purpose. Bounded by its heading and the next heading."
+  },
+  {
+   "id": "V-history-provenance-blocks",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "^> Recorded in Ardia \\(https://github\\.com/ardia-browser/ardia\\) before Nilla forked it on 2026-11-18\\. Names, flags, paths and issue numbers are Ardia's, as recorded\\.$[\\s\\S]*?(?=^#### Landscape and Duo: the specification$)|^> This section and the next were recorded in Ardia \\(https://github\\.com/ardia-browser/ardia\\) before Nilla forked it on 2026-11-18\\.[^\\n]*$[\\s\\S]*?(?=^#### Measuring speed on a real iPhone$)|^> Ardia's plan for replacing its SwiftUI app on TestFlight in place, recorded in Ardia \\(https://github\\.com/ardia-browser/ardia\\) before Nilla forked it on 2026-11-18\\.[^\\n]*$[\\s\\S]*?(?=^#### TestFlight: the workflow, its certificate and its testers$)|^> Recorded in Ardia \\(https://github\\.com/ardia-browser/ardia\\) before Nilla forked it on 2026-11-18\\. Names, paths and issue numbers are Ardia's, as recorded\\.$[\\s\\S]*?(?=^## Known gaps$)",
+   "scope": [
+    "docs/phone.md",
+    "docs/linux-port.md"
+   ],
+   "why": "Text restored byte for byte from Ardia (ac1d3453c) under a provenance line saying it was recorded in Ardia before the fork (D21; owner requirements: historical Ardia measurements are kept): docs/phone.md's audit against main, the two speed sections and Ardia's TestFlight plan, and docs/linux-port.md's Upstream syncs. Each span runs from its provenance line to the named heading after it."
+  },
+  {
+   "id": "V-upstream-apps-phone-doc",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=They never read )Ardia's\\napp \\(`com\\.ardia\\.browser\\.android`\\)|^- \\[ \\] \\*\\*iPhone:\\*\\* on a phone that also has Ardia's app \\(`com\\.ardia\\.browser\\.ios`\\)[^\\n]*|^- \\[ \\] \\*\\*Android:\\*\\* the same with Ardia's app \\(`com\\.ardia\\.browser\\.android`\\)[^\\n]*|It is Ardia's app, built from an Ardia commit with Ardia's bundle id \\(`com\\.ardia\\.browser\\.ios`\\)|(?<=so it installs beside )Ardia's SwiftUI app \\(`com\\.ardia\\.browser\\.ios`\\)|Ardia's app\\n  \\(`com\\.ardia\\.browser\\.ios`\\) has its own container, app group and Keychain item, which Nilla can't read, so a phone\\n  that had Ardia connected",
+   "scope": [
+    "docs/phone.md"
+   ],
+   "why": "docs/phone.md names Ardia's phone apps (com.ardia.browser.ios and .android) as the separate app a Nilla install sits beside and never reads (owner decision 2): the Android gate, tester checklist step 1, the SwiftUI reference app, the measurement build and Sync state."
+  },
+  {
+   "id": "V-history-phone-evidence",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=`)/tmp/ardia-phone-shots/[^`\\s]*|(?<=binary's UUID matches `)Ardia\\.app\\.dSYM(?=`)",
+   "scope": [
+    "docs/phone.md"
+   ],
+   "why": "Dated evidence in docs/phone.md: the /tmp/ardia-phone-shots folders past runs wrote (new runs use /tmp/nilla-phone-shots) and the Ardia.app.dSYM the size proof matched."
+  },
+  {
+   "id": "X-linux-isolation-doc",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=has, or could later get, an )Ardia profile: today's Linux engine picks Ardia's default folder|(?<=refuses a host with )Ardia's folders|(?<=and today's engine opens )Ardia's default profile|(?<=nilla-dev-run \\\")\\$scratch/ardia(?=\\\")|(?<=desktop id `)ardia(?=`)",
+   "scope": [
+    "docs/linux-port.md"
+   ],
+   "why": "docs/linux-port.md's isolation text names Ardia's profile and folders (owner decision 2, H3), and two Linux layout names that stay until Layer 2: the tarball's ardia folder and the engine's GeoClue desktop id ardia (kDesktopId)."
+  },
+  {
+   "id": "Q-engine-texts-docs",
+   "class": "Q",
+   "mechanism": "class",
+   "regex": "Ardia can't open its Safe Storage key\\.|This copy of Ardia can't use your keychain\\.|(?<=tells the user to reinstall )Ardia(?= from ardia\\.dev)|ardia: <Method>(?= isn't allowed for the ardia command)",
+   "scope": [
+    "docs/engine-build.md"
+   ],
+   "why": "docs/engine-build.md quotes the prebuilt engine's own Safe Storage dialogs and the control server's refusal as the engine draws them today."
+  },
+  {
+   "id": "V-history-dated-docs",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=no network change\\. )Ardia's(?= command bar doesn't use Chrome's autocomplete)|(?<=with the `)Ardia-Setup-arm64(?=` installer of run)|(?<=56 Helium resources, 34 )Ardia(?= ones and the Windows icon)",
+   "scope": [
+    "docs/engine-build.md",
+    "docs/windows.md",
+    "docs/engine-build-windows.md"
+   ],
+   "why": "Dated records of Ardia builds: the 0.21.1 to 0.21.2 engine check (2026-11-12) on Ardia's command bar, the 2026-11-14 Windows walk with the Ardia-Setup-arm64 installer, and the 2026-11-10 Windows engine build's 34 Ardia resources."
+  },
+  {
    "id": "U-tap",
    "class": "U",
    "mechanism": "report",
@@ -1673,8 +1842,8 @@
    "files": 508,
    "occurrences": 1889,
    "decision": "class",
-   "protectedOccurrences": 325,
-   "renamedOccurrences": 1564,
+   "protectedOccurrences": 337,
+   "renamedOccurrences": 1552,
    "notRsFiles": 680,
    "coveredBy": [
     "N-cli-artifacts",
@@ -1682,6 +1851,7 @@
     "D-dom-hooks",
     "S-switch-names",
     "N-linux-layout",
+    "V-history-phone-evidence",
     "F-page-operations",
     "R-engine-basenames",
     "U-tap",
