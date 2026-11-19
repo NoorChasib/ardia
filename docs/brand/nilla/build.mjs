@@ -210,11 +210,11 @@ for (const [tint, col] of Object.entries(NTP_TINTS)) {
   };
   for (const [layer, svg] of Object.entries(parts))
     for (const [suffix, size] of [["", 100], ["@2x", 200]])
-      add(`icons/ntp/${prefix}-${layer}${suffix}.png`, png(svg, size), { current: `apps/browser/assets/${prefix}-${layer}${suffix}.png`, action: "optional", note: `New Tab page mark, ${tint} profile colour, ${layer} layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Nilla's logo painting (see the notes)` });
+      add(`icons/ntp/${prefix}-${layer}${suffix}.png`, png(svg, size), { current: `apps/browser/assets/${prefix}-${layer}${suffix}.png`, note: `New Tab page mark, ${tint} profile colour, ${layer} layer, redrawn from Nilla's mark. Required: today's file is cut from Ardia's logo painting (see the notes)` });
 }
 const silhouette = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 100 824 824" width="32" height="32"><defs><clipPath id="nt"><path d="${SQ}"/></clipPath><mask id="gap"><rect x="0" y="0" width="1024" height="1024" fill="#FFFFFF"/><path d="M100 812C380 760 650 600 924 338" fill="none" stroke="#000000" stroke-width="70"/></mask></defs><circle cx="${SUN.cx}" cy="${SUN.cy}" r="${SUN.r + 20}" fill="#000000"/><g clip-path="url(#nt)"><path d="${BACK}" fill="#000000" mask="url(#gap)"/><path d="${FRONT}" fill="#000000"/></g></svg>\n`;
-add("icons/ntp/new-tab-mark.png", png(silhouette, 16), { current: "apps/browser/assets/new-tab-mark.png", action: "optional", note: "New Tab favicon: one colour (drawn tinted), hills split, sun cut free. Optional, like the New Tab hills, but today's is a small copy of Nilla's logo" });
-add("icons/ntp/new-tab-mark@2x.png", png(silhouette, 32), { current: "apps/browser/assets/new-tab-mark@2x.png", action: "optional", note: "New Tab favicon @2x (optional, as above)" });
+add("icons/ntp/new-tab-mark.png", png(silhouette, 16), { current: "apps/browser/assets/new-tab-mark.png", note: "New Tab favicon: one colour (drawn tinted), hills split, sun cut free. Required, like the New Tab hills: today's is a small copy of Ardia's logo" });
+add("icons/ntp/new-tab-mark@2x.png", png(silhouette, 32), { current: "apps/browser/assets/new-tab-mark@2x.png", note: "New Tab favicon @2x (required, as above)" });
 
 const THEME = "engine/chromium/src/chrome/app/theme";
 const COMP = "engine/chromium/src/components/resources";
@@ -314,10 +314,10 @@ const manifest = {
   palette: { default: DEFAULT.id, colors: DEFAULT.colors, alternates: ALTS.map((a) => a.id) },
   notes: [
     "file: relative to the --out folder. current: the path at the repo base today (null for new files). target: the path the output goes to in the repo (the same as current for a replaced file); the conversion workflow owns the final paths.",
-    "action: replace (overwrite current, then move to target), add (new file), remove (delete the current path), edit (change a value in place), optional (owner decision pending; today's file can stay), mac-step (must be produced on a Mac), preview (not shipped).",
+    "action: replace (overwrite current, then move to target), add (new file), remove (delete the current path), edit (change a value in place), mac-step (must be produced on a Mac), preview (not shipped).",
     "layer: 1 = works with today's prebuilt engines; 2 = engine/ (and its interface), lands with the first Nilla engine builds. Every engine/chromium asset is Layer 2.",
     "Site assets (favicons, apple-touch, og) target docs/brand/nilla/web/ because apps/site is deleted under D4. README.md's header image moves to docs/brand/nilla/app-icon-256.png.",
-    "New Tab hills (ntp-mark*, new-tab-mark*) are optional: the owner keeps today's as scenery, but they are cut from Nilla's logo painting, which the attribution rules say Nilla must not use as its brand. The redrawn set is ready if the owner wants it.",
+    "New Tab hills (ntp-mark*, new-tab-mark*) are required replacements: today's files are cut from Ardia's logo painting, which Nilla must not use as its brand (Ardia's mark is only their provenance). The redrawn set replaces them. The shader meadow in packages/shaders is separate scenery code, not the logo, and stays.",
     "Default icon: Highland. AppIcons.swift's variants become the 23 alternates in palettes.json order, each drawn whole from its AppIconVariant-<id> imageset (no plate, no monochrome filter).",
   ],
   assets: entries,
