@@ -5,8 +5,9 @@ and writes sealed files in a folder the user picks; any service that syncs a fol
 between Macs. The default is `iCloud Drive › Nilla Sync`
 (`~/Library/Mobile Documents/com~apple~CloudDocs/Nilla Sync`: iCloud Drive syncs any folder
 under it, with no CloudKit container and no entitlement). Dropbox, a NAS or a USB drive work
-the same way. A Mac that turned sync on before the rename keeps `Netnyahoo Sync`, and one setting up after it is
-offered that folder while it holds the data (`SyncModule.defaultFolder`).
+the same way. A test instance (`ARDIA_DATA_DIR`) uses `Nilla Sync` inside its data folder instead
+(`SyncModule.defaultFolder`). The app Nilla forked has its own sync folder, and Nilla refuses to use it
+(`packages/sync/src/upstreamSyncFolder.ts`).
 
 The UX follows Dia's sync (Settings › Account › Sync in Dia 1.50.1; its strings are quoted from
 its binary below). Dia's data sits on its servers and devices pair with a 6-character code; here
@@ -54,7 +55,7 @@ Apple, Dropbox, whoever has the NAS or finds the USB drive, malware that reads c
 
 What they do see (metadata): how many profiles sync (one folder each) and how many devices; when
 and how much each writes (file count, times, sizes to 1 KiB); and that it's Nilla sync data
-(the `NNS1` magic and `.nns` extension).
+(the `NLS1` magic and `.nls` extension).
 
 What they can do: delete or withhold files (denial of service). Withheld files show as
 "waiting for N files to download". They can also replay an old file under its own name, which is
@@ -81,8 +82,9 @@ reset by email, because there's no one to email.
   are all accepted.
 - The wordlist is the standard one; a test checks its SHA-256
   (`2f5eed53…dbda`) and Trezor's reference vectors.
-- Keys: HKDF-SHA256 over the entropy, salt `netnyahoo-sync/v1`. The magic and the salt keep the app's old name
-  for good: every Mac on any version reads the same files (`LegacyName` in `packages/sync/ios/Core/LegacyMigration.swift`).
+- Keys: HKDF-SHA256 over the entropy, salt `nilla-sync/v1` (`SyncCrypto.swift`). The magic and the salt are Nilla's
+  own, so Nilla never opens the sync files of the app it forked, even under the same phrase. Linux's engine still
+  has the upstream constants, and Linux sync is off in Layer 1.
   - `file-key` (AES-256-GCM) seals every file.
   - `name-key` (HMAC-SHA256) names folders: the chain tag is `HMAC("chain")` and a scope's tag
     is `HMAC("scope/<scope id>")`, each cut to 128 bits and written in base32.
@@ -114,11 +116,11 @@ synced data in this folder".
 <sync folder>/
   <chain tag>/                 one per phrase (several people can share one folder)
     <scope tag>/               "app" (settings, profiles, devices) or "p:<profile sync id>"
-      <file id>.nns            128 random bits, base32
+      <file id>.nls            128 random bits, base32
 ```
 
-A file is `"NNS1" | nonce (12) | AES-GCM ciphertext | tag (16)`.
-- AAD: `"NNS1" + "<chain>/<scope>/<file>"`.
+A file is `"NLS1" | nonce (12) | AES-GCM ciphertext | tag (16)`.
+- AAD: `"NLS1" + "<chain>/<scope>/<file>"`.
 - Plaintext: `length (u32 BE) | UTF-8 JSON | zero padding` to the next 1024 bytes.
 
 The JSON is one of:
@@ -154,7 +156,7 @@ Writing:
   saved when quitting began (tested).
 
 Reading (`SyncVault.read`) handles files that aren't there in full yet:
-- iCloud placeholders (`.<id>.nns.icloud` stubs, or dataless files whose
+- iCloud placeholders (`.<id>.nls.icloud` stubs, or dataless files whose
   `ubiquitousItemDownloadingStatus` isn't current) are reported as pending, and
   `startDownloadingUbiquitousItem` is asked for them.
 - Files mid-copy (Dropbox, SMB) and empty files fail to open. They're reported as damaged, with
@@ -560,7 +562,6 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
     - `SyncKeyStoreTests`: saving again replaces the key; a save the keychain refuses keeps the key it would have
       replaced; a test instance's key file is never wider than 0600 and nothing is left beside it.
     - `SharedFolderDirectoryTests`: the shared folders' reads and writes (symlinks, conflicts, size caps, permissions).
-    - `LegacyMigrationTests`, `LegacyKeychainTests`, `LegacyDockTileTests`: the Netnyahoo → Nilla migration.
   - `bun test` (`packages/sync/src/**/*.test.ts`):
     - `scope.test.ts`, `fileHealth.test.ts`: concurrent edits converge in any order; deletes, re-adds and
       edit-after-delete; clock skew; late, out-of-order, half-copied and given-up files; an edit during a read; an
@@ -575,14 +576,13 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
       records through their snapshots; on a framework without the engine calls nothing is published or applied.
     - `companion/companion.test.ts`: the iPhone's adapters and cycle.
   - `apps/phone/scripts/bundle-shared.mjs --check`: the iPhone's bundle of this code is up to date.
-  - `scripts/legacy-migration-e2e.mjs`: the migration tool run end to end on a scratch install.
 - `bun run --cwd apps/browser test` runs `src/state/sync/adapters.test.mjs` (4 tests against the real
   store: delete versus add, concurrent moves that would make a cycle, parked pinned tabs, passwords
   both ways), `src/state/sync/send.test.mjs` (sent tabs: one addressed elsewhere is never touched; it opens once and
   is deleted by its receiver; dropped by its sender after 7 days; waits while it can't open; a crash opens it twice
   rather than losing it, and a sender's crash never sends it again over the deletion; a Mac before this build keeps
   the records and opens its own once it updates; only http and https open), `src/state/sync/pinned.test.mjs` (the pinned area's adapters in their order: a row and a tile folder land as
-  such, an unpin deletes the marks with the pin, the app's old names are read as today's, pinned group tabs' homes go across and
+  such, an unpin deletes the marks with the pin, pinned group tabs' homes go across and
   survive a Mac on the previous version) and `src/state/sync/engine.test.mjs` (the engine against a fake native module: a crash the
   moment a batch lands re-sends the journalled batches byte for byte and numbers the next one after
   them; nothing is published before its journal is on disk; a sent tab opens once in the background of the window

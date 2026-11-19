@@ -3324,7 +3324,7 @@ the iPhone reads its files.
 - **Folder.** iCloud Drive › Nilla Sync, the Mac's default. iOS gives an app no path into iCloud Drive without a
   container entitlement, and the Mac writes there without one, so the iPhone asks for the folder once with the system
   folder picker and keeps a security-scoped bookmark. Picking iCloud Drive itself works too: the app looks for Nilla
-  Sync (or Netnyahoo Sync) inside it. Reads and writes go through `NSFileCoordinator`, which makes iCloud bring files
+  Sync inside it. Reads and writes go through `NSFileCoordinator`, which makes iCloud bring files
   down; dataless files are reported as pending, as on the Mac.
 - **Joining.** The Mac's Settings › Sync › Connect Another Device shows a QR code of the phrase. The iPhone scans it
   (or takes the 24 words typed or pasted), checks the checksum, and checks that the folder holds that phrase's chain

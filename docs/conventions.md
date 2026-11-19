@@ -11,7 +11,7 @@ its commit's engine key, `engine/engine-key.sh`), so code never tolerates a mism
 - No `respondsToSelector` guards for ArdiaCore's API, no optional `?.()` native calls, no always-true `isAvailable`
   checks, no metadata probes, no aliases for old names, no duplicate overloads. Keep `respondsToSelector` only for
   private AppKit or Chromium classes looked up at runtime.
-- What stays: versioned on-disk data migrations (Netnyahoo → Nilla included), the versioned sync payload (a nightly Mac
+- What stays: versioned on-disk data migrations, the versioned sync payload (a nightly Mac
   syncs with a stable Mac a version behind), and the one app/engine version assertion: `NATIVE_API_VERSION` and
   `apiVersion` in `packages/shell/ios/AppModule.swift`. Bump both when the native surface changes.
 

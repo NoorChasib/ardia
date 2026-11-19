@@ -9,7 +9,7 @@ no Mac; the Linux host tests and native fixtures run through `scripts/linux/ci-c
 | --- | --- | --- |
 | `apps/browser` | `bun run --cwd apps/browser test` | Every `src/**/*.test.mjs` and `scripts/**/*.test.mjs`, under `bun test` with the test preload, and the few that need Node under `node --test` (below) |
 | `packages/core` | `bun run --cwd packages/core test` | `apps/phone/scripts/bundle-shared.mjs --check` (on Node), then `src/**/*.test.ts` |
-| `packages/sync` | `bun run --cwd packages/sync test` | `swift test`, its JavaScript tests, the shared bundle check, then the rename's launch migration end to end (`scripts/legacy-migration-e2e.mjs`) |
+| `packages/sync` | `bun run --cwd packages/sync test` | `swift test`, its JavaScript tests and the shared bundle check |
 | `packages/import` | `bun run --cwd packages/import test` | `swift test` |
 | `packages/shell` | `bun run --cwd packages/shell test` | `swift test` (the updater's channel switch among them) |
 | `packages/shaders` | `bun run --cwd packages/shaders test` | `scripts/meadow.mjs --check` |
