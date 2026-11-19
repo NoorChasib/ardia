@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { finishOnboarding } from "../../state/onboarding/onboarding";
-import { requestAppDownload } from "../../state/onboarding/demoSteps";
 import { copySetupCode, onboardingSetupCode } from "../../state/presets/actions";
 import { StepActions, StepLayout } from "./StepLayout";
 import { SecondaryButton } from "./Buttons";
@@ -23,9 +22,8 @@ export function SetupCodeOutro() {
     return () => clearTimeout(timer);
   }, [copied]);
 
-  const downloadAndCopy = () => {
+  const copy = () => {
     copySetupCode(code);
-    requestAppDownload();
     setCopied(true);
   };
 
@@ -36,7 +34,7 @@ export function SetupCodeOutro() {
       actions={
         <>
           <StepActions icon="arrow.right" continueTitle="Done" onContinue={() => finishOnboarding()} />
-          <SecondaryButton title={copied ? "Copied" : "Get Nilla & Copy"} filled onPress={downloadAndCopy} />
+          <SecondaryButton title={copied ? "Copied" : "Copy Setup Code"} filled onPress={copy} />
         </>
       }
       preview={<SetupLines heading="You picked:" lines={lines} />}
