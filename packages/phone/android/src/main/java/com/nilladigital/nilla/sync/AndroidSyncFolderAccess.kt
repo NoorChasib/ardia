@@ -11,15 +11,12 @@ open class AndroidSyncFolderAccess(
 ) : LocalFolderAccess() {
     override fun open(pick: SyncFolderPick): SyncFolderGrant? {
         val tree = (pick as? SyncFolderPick.Tree)?.let { tree(it.treeUri) } ?: return super.open(pick)
-        if (UpstreamSyncFolder.refusesDocument(tree.rootId)) return null
         return try {
-            val root = tree.root()
-            if (UpstreamSyncFolder.isUpstreamName(root.name)) return null
-            val subfolder = DocumentTreeStorage.locate(tree)
-            if (UpstreamSyncFolder.isUpstreamName(subfolder)) return null
+            val root = UpstreamGuardedTree(tree).root()
+            val subfolder = UpstreamGuardedTree.locate(tree)
             val name = subfolder ?: root.name
             val location = SyncFolderLocation.Tree(pick.treeUri, subfolder, name)
-            SyncFolderGrant(DocumentTreeStorage(tree, subfolder, name), location)
+            SyncFolderGrant(UpstreamGuardedTree.storage(tree, subfolder, name), location)
         } catch (error: Exception) {
             null
         }
@@ -30,7 +27,7 @@ open class AndroidSyncFolderAccess(
         val tree = tree(location.treeUri) ?: return null
         if (UpstreamSyncFolder.refusesDocument(tree.rootId) || UpstreamSyncFolder.isUpstreamName(location.name) || UpstreamSyncFolder.isUpstreamName(location.subfolder)) return null
         if (!tree.hasPersistedAccess()) return null
-        return SyncFolderGrant(DocumentTreeStorage(tree, location.subfolder, location.name), location)
+        return SyncFolderGrant(UpstreamGuardedTree.storage(tree, location.subfolder, location.name), location)
     }
 
     override fun hasAccess(location: SyncFolderLocation): Boolean {
