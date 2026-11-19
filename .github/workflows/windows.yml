@@ -292,7 +292,7 @@ jobs:
   x64:
     needs: [depth, identity, javascript, app]
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     permissions:
       contents: write
     env:
@@ -328,6 +328,10 @@ jobs:
         if: env.SLUG == 'x64' && env.PART == 'launch'
         shell: pwsh
         run: scripts/windows/relaunch-facts.test.ps1
+      - name: Check the no-upstream watch's rules and proxy
+        if: env.PART == 'launch'
+        shell: pwsh
+        run: scripts/windows/upstream-watch.test.ps1
       - name: Take the app this run compiled
         if: env.COMPILED == 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -383,8 +387,8 @@ jobs:
           OUTCOME: ${{ steps.engine.outcome }}
         run: |
           $reason = "the fetch ended $env:OUTCOME (its log above has the reason)"
-          Write-Host "::warning::No engine for $env:SLUG`: $reason. The install, relaunch and AUMID checks are unverified, not passed."
-          "- $env:SLUG engine: $reason; install, relaunch and AUMID checks **unverified**" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "::warning::No engine for $env:SLUG`: $reason. The install, relaunch, AUMID and engine tour checks, the no-upstream exercise with the engine and the engine's part of the bare launch are skipped: unverified, not passed. The watch and the bare launch still cover the app alone."
+          "- $env:SLUG engine: $reason; install, relaunch, AUMID, engine tours, the no-upstream exercise and the engine's bare launch **unverified** (skipped); the app alone is still watched and bare-launched" >> $env:GITHUB_STEP_SUMMARY
       - name: Assemble with the engine
         id: assemble
         if: ${{ !cancelled() && steps.engine.outcome == 'success' }}
@@ -394,16 +398,27 @@ jobs:
         if: ${{ !cancelled() && steps.assemble.outcome == 'success' && env.PART == 'launch' }}
         shell: pwsh
         run: scripts/windows/dependency-check.ps1 -App "${{ runner.temp }}/Nilla"
+      - name: Watch for upstream traffic until the bare launch is done
+        id: watch
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        shell: pwsh
+        run: scripts/windows/upstream-watch.ps1 -Start -Out "${{ runner.temp }}/no-upstream" -State "${{ runner.temp }}/no-upstream-state" -Program "$env:APP", "${{ runner.temp }}/Nilla" -Installed (Join-Path $env:LOCALAPPDATA "Programs\Nilla")
       - name: Launch it
         if: ${{ !cancelled() && (env.FULL == 'true' || steps.engine.outcome != 'success' || env.COMPILED == 'true') }}
         timeout-minutes: 12
         shell: pwsh
+        env: &watched
+          HTTPS_PROXY: ${{ steps.watch.outputs.proxy }}
+          HTTP_PROXY: ${{ steps.watch.outputs.proxy }}
+          NO_PROXY: 127.0.0.1,localhost,::1
         run: scripts/windows/launch-smoke.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/launch" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
       - name: Tour
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' }}
         continue-on-error: true
         timeout-minutes: 12
         shell: pwsh
+        env: *watched
         run: |
           scripts/windows/tour.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/tour"
           if (Test-Path "${{ runner.temp }}/tour/tour.md") { Get-Content "${{ runner.temp }}/tour/tour.md" >> $env:GITHUB_STEP_SUMMARY }
@@ -415,12 +430,14 @@ jobs:
       - name: Install and uninstall it
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
         shell: pwsh
+        env: *watched
         run: scripts/windows/installer-check.ps1 -Setup "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe"
       - name: Close and reopen the installed app
         id: relaunch
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
         timeout-minutes: 15
         shell: pwsh
+        env: *watched
         run: |
           scripts/windows/relaunch-check.ps1 -Setup "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe" -Out "${{ runner.temp }}/relaunch"
           if (Test-Path "${{ runner.temp }}/relaunch/relaunch.md") { "### Close and reopen ($env:SLUG)" >> $env:GITHUB_STEP_SUMMARY; Get-Content "${{ runner.temp }}/relaunch/relaunch.md" | ForEach-Object { "- $_" } >> $env:GITHUB_STEP_SUMMARY }
@@ -428,7 +445,7 @@ jobs:
         id: release-files
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/release-files.ps1 -Installer "${{ runner.temp }}/installer" -Identity "${{ runner.temp }}/Ardia/Nilla.build.json" -Cpu $env:SLUG -Out "${{ runner.temp }}/release"
+        run: scripts/windows/release-files.ps1 -Installer "${{ runner.temp }}/installer" -Identity "${{ runner.temp }}/Nilla/Nilla.build.json" -Cpu $env:SLUG -Out "${{ runner.temp }}/release"
       - if: ${{ vars.NILLA_RELEASES_ENABLED && inputs.version && steps.release-files.outcome == 'success' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -441,34 +458,68 @@ jobs:
         if: ${{ !cancelled() && steps.engine.outcome == 'success' }}
         timeout-minutes: 12
         shell: pwsh
-        run: scripts/windows/launch-smoke.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/launch-engine" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
+        env: *watched
+        run: scripts/windows/launch-smoke.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/launch-engine" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
       - name: Tour the pages
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 20
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/tour-engine" -Only pages,peek,peek-dark,peek-tabs,peek-layouts
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/tour-engine" -Only pages,peek,peek-dark,peek-tabs,peek-layouts
           if (Test-Path "${{ runner.temp }}/tour-engine/tour.md") { Get-Content "${{ runner.temp }}/tour-engine/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Tour the first run
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
         timeout-minutes: 40
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/tour-first-run" -Only first-run
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/tour-first-run" -Only first-run
           if (Test-Path "${{ runner.temp }}/tour-first-run/tour.md") { Get-Content "${{ runner.temp }}/tour-first-run/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Tour the typing
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
         timeout-minutes: 18
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/tour-typing" -Only typing
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/tour-typing" -Only typing
           if (Test-Path "${{ runner.temp }}/tour-typing/tour.md") { Get-Content "${{ runner.temp }}/tour-typing/tour.md" >> $env:GITHUB_STEP_SUMMARY }
+      - name: Exercise the network with the engine, timers included
+        if: ${{ !cancelled() && env.PART == 'launch' && steps.assemble.outcome == 'success' && steps.watch.outcome == 'success' }}
+        timeout-minutes: 16
+        shell: pwsh
+        env: *watched
+        run: |
+          $seconds = if ($env:FULL -eq 'true') { 660 } else { 120 }
+          scripts/windows/upstream-exercise.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/no-upstream/exercise" -Proxy "${{ steps.watch.outputs.proxy }}" -Seconds $seconds
+      - name: The tours and the installer left nothing of the upstream app's
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: scripts/windows/upstream-traces.ps1 -Out "${{ runner.temp }}/no-upstream/traces-after-tours.json" -Label "after the tours and the installer check"
+      - name: Bare launch, last on the runner
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        shell: pwsh
+        env: *watched
+        run: |
+          if ("${{ steps.assemble.outcome }}" -eq "success") {
+            scripts/windows/bare-launch.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/bare-launch"
+          } else {
+            Write-Host "::notice::No assembled engine on this runner, so the bare launch starts the app alone; the engine's own default folders are unverified"
+            scripts/windows/bare-launch.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/bare-launch" -Note "Without the engine: the app alone was launched, so the engine's own default folders are unverified"
+          }
+          exit $LASTEXITCODE
+      - name: Stop the watch and fail on any upstream attempt
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: pwsh
+        run: scripts/windows/upstream-watch.ps1 -Stop -Out "${{ runner.temp }}/no-upstream" -State "${{ runner.temp }}/no-upstream-state"
       - name: Only logs and smoke results go up
         if: ${{ !cancelled() }}
         shell: bash
         env:
-          UPLOADS: relaunch launch-engine tour-engine tour-first-run tour-typing tour launch
+          UPLOADS: relaunch launch-engine tour-engine tour-first-run tour-typing tour launch no-upstream bare-launch
         run: |
           set -euo pipefail
           temp="$(cygpath -u "$RUNNER_TEMP" 2>/dev/null || printf '%s' "$RUNNER_TEMP")"
@@ -532,11 +583,20 @@ jobs:
           path: ${{ runner.temp }}/launch
           if-no-files-found: ignore
           retention-days: 3
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: nilla-dev-${{ github.sha }}-windows-independence${{ env.SUFFIX }}-logs
+          path: |
+            ${{ runner.temp }}/no-upstream
+            ${{ runner.temp }}/bare-launch
+          if-no-files-found: ignore
+          retention-days: 3
 
   x64-gate:
     needs: [depth, identity, javascript, app]
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     permissions:
       contents: write
     env:
@@ -556,7 +616,7 @@ jobs:
   arm64:
     needs: [depth, identity, javascript, arm64-app]
     runs-on: windows-11-arm
-    timeout-minutes: 60
+    timeout-minutes: 75
     permissions:
       contents: write
     env:
@@ -576,7 +636,7 @@ jobs:
   arm64-gate:
     needs: [depth, identity, javascript, arm64-app]
     runs-on: windows-11-arm
-    timeout-minutes: 45
+    timeout-minutes: 50
     permissions:
       contents: write
     env:
