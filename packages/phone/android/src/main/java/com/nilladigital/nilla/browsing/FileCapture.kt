@@ -1,4 +1,4 @@
-package com.ardia.browsing
+package com.nilladigital.nilla.browsing
 
 import android.content.Context
 import android.content.Intent
@@ -6,7 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Process
 import androidx.core.content.FileProvider
-import com.ardia.browser.PageRequest
+import com.nilladigital.nilla.PageRequest
 import java.io.File
 import java.util.UUID
 

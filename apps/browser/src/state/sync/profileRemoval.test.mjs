@@ -10,7 +10,7 @@ const downloading = new Set();
 const unreadable = new Set();
 let ids = 0;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => `id${++ids}`,
     deviceName: () => "Test Mac",
     createPhrase: async () => true,

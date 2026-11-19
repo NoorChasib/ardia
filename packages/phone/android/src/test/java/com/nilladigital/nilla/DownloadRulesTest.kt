@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import java.io.ByteArrayInputStream
 import java.util.concurrent.CountDownLatch

@@ -1,8 +1,8 @@
-import { nativeModule, type IntroMusicCues } from "@ardia/shell";
+import { nativeModule, type IntroMusicCues } from "@nilla/shell";
 
 export type { IntroMusicCues };
 
-const App = nativeModule("ArdiaApp");
+const App = nativeModule("NillaApp");
 
 export const playIntroMusic = (cues: IntroMusicCues, muted: boolean) => void App.playIntroMusic(cues, muted);
 export const setIntroMusicMuted = (muted: boolean) => void App.setIntroMusicMuted(muted);

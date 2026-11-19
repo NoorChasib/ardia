@@ -12,7 +12,7 @@ function watchStalls(tabId: string) {
   let last = start;
   const tick = () => {
     const now = Date.now();
-    if (now - last >= STALL_MS) console.info(`[ardia windows] js stall ${now - last} ms from +${last - start} ms after page ${tabId}`);
+    if (now - last >= STALL_MS) console.info(`[nilla windows] js stall ${now - last} ms from +${last - start} ms after page ${tabId}`);
     last = now;
     if (now - start < WATCH_MS) setTimeout(tick, TICK_MS);
   };
@@ -28,7 +28,7 @@ export const markNewTabBar: MarkNewTabBar = (stage, tabId) => {
     if (typedTabs.has(tabId)) return;
     typedTabs.add(tabId);
   }
-  console.info(`[ardia windows] new tab bar ${stage} ${tabId}`);
+  console.info(`[nilla windows] new tab bar ${stage} ${tabId}`);
 };
 
-export const markNewTabPane: MarkNewTabPane = (tabId, state) => console.info(`[ardia windows] new tab pane ${tabId} ${state}`);
+export const markNewTabPane: MarkNewTabPane = (tabId, state) => console.info(`[nilla windows] new tab pane ${tabId} ${state}`);

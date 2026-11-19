@@ -1,4 +1,4 @@
-import { INGEST_KEY_HEADER } from "@ardia/core";
+import { INGEST_KEY_HEADER } from "@nilla/core";
 import { cancelUploads, fileSize, onReportEvent, postReportJson, removeReportFile, uploadFile } from "../../platform/report";
 import { appServices } from "../../platform/launchConfig";
 import { copyText } from "../../platform/clipboard";

@@ -5,7 +5,7 @@ import json
 import re
 from urllib.parse import urlsplit
 
-from ardia_cli.browse.errors import BrowseError, ConnectionLost, Usage
+from nilla_browser_cli.browse.errors import BrowseError, ConnectionLost, Usage
 
 STEP_LIMIT = 200
 SECRET_LIMIT = 200
@@ -216,13 +216,13 @@ def extract_embedded(html: str, spec: dict):
 
 
 def parse_args(name: str, argv: list[str]) -> tuple[dict, list[str]]:
-    from ardia_cli.browse.commands import parse
+    from nilla_browser_cli.browse.commands import parse
 
     return parse(argv, COMMAND_FLAGS.get(name, NO_HUMANIZE))
 
 
 def element_target(state, selector: str) -> dict | None:
-    from ardia_cli.browse.state import parse_ref
+    from nilla_browser_cli.browse.state import parse_ref
 
     ref_id = parse_ref(selector)
     if not ref_id:
@@ -250,7 +250,7 @@ SECRET_HINT = re.compile(r"pass|secret|token|otp|\bpin\b|cvv|cvc|card", re.I)
 
 
 def registered_secret(text: str) -> bool:
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     return bool(text) and redact(text) != text
 
@@ -304,7 +304,7 @@ async def describe(state, page, name: str, argv: list[str], step: dict):
 
 
 def describe_find(options: dict, args: list[str], step: dict):
-    from ardia_cli.browse.commands import find_arguments
+    from nilla_browser_cli.browse.commands import find_arguments
 
     if not args:
         return
@@ -412,7 +412,7 @@ async def capture(page, watch):
 
 
 async def collect(page, watch, step: dict):
-    from ardia_cli.browse import flowurl
+    from nilla_browser_cli.browse import flowurl
 
     bases = {base_domain(host_of(url)) for url in (step.get("before") or "", page.url or "")} - {""}
     origins = step.setdefault("origins", [])

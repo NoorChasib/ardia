@@ -10,7 +10,7 @@ import { useBrowse } from "../state/browse/store";
 import { currentTabs } from "../state/tabs/store";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 
-const lookModule = require("@ardia/phone-native/src/look") as typeof import("@ardia/phone-native/src/look");
+const lookModule = require("@nilla/phone-native/src/look") as typeof import("@nilla/phone-native/src/look");
 
 const CHROME = ["deckHeaderMore", "deckSearchTabs", "deckBarPlus"];
 const GLYPHS = ["deckHeaderMoreGlyph", "deckSearchTabsContent", "deckBarPlusGlyph", "deckSwitcher"];

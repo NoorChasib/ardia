@@ -25,7 +25,7 @@ export type PlatformFeatures = {
   haptics: boolean;
   launchLoad: boolean;
   quitsWithLastWindow: boolean;
-  keepsNewTabLinksInLittleArdia: boolean;
+  keepsNewTabLinksInLittleNilla: boolean;
   commandScrollZoom: boolean;
   passwordAutofillSwitch: boolean;
   blocksAutoplay: boolean;
@@ -35,7 +35,7 @@ export type PlatformFeatures = {
   textInputRevertsFirstChange: boolean;
   defaultCloudDrive: boolean;
   interfaceSize: boolean;
-  ardiaCommand: boolean;
+  nillaCommand: boolean;
   claimsFollowFocus: boolean;
   inlineWritesEcho: boolean;
   holdsColdPagesUntilPainted: boolean;
@@ -43,4 +43,4 @@ export type PlatformFeatures = {
   attributesTabMemory: boolean;
 };
 
-export const PLATFORM_FEATURES: PlatformFeatures = { dock: true, appIcon: true, menuBar: true, memoryPressure: true, escapeClosesDownloads: false, unpacksArchivesSilently: true, findsBrowsersBy: "appBundle", hiddenBrowserSources: [], splitView: true, setsDefaultBrowser: true, exportsBookmarksAndPasswords: true, sync: true, calendar: true, webKit: true, contentBlocker: true, trackpadGestures: true, videoUpscaling: true, thinScrollBars: true, haptics: true, launchLoad: true, sharesFiles: true, syncsWithPhone: true, syncsPasswords: true, unloadsIdleProfiles: true, sleepsTabsOverBudget: true, quitsWithLastWindow: false, keepsNewTabLinksInLittleArdia: true, commandScrollZoom: true, passwordAutofillSwitch: true, blocksAutoplay: true, answersPermissionRequests: true, tabReachesUnderOverlays: false, newTabBarFirst: false, textInputRevertsFirstChange: false, defaultCloudDrive: true, interfaceSize: true, ardiaCommand: true, claimsFollowFocus: false, inlineWritesEcho: true, holdsColdPagesUntilPainted: true, preloadPages: true, attributesTabMemory: true };
+export const PLATFORM_FEATURES: PlatformFeatures = { dock: true, appIcon: true, menuBar: true, memoryPressure: true, escapeClosesDownloads: false, unpacksArchivesSilently: true, findsBrowsersBy: "appBundle", hiddenBrowserSources: [], splitView: true, setsDefaultBrowser: true, exportsBookmarksAndPasswords: true, sync: true, calendar: true, webKit: true, contentBlocker: true, trackpadGestures: true, videoUpscaling: true, thinScrollBars: true, haptics: true, launchLoad: true, sharesFiles: true, syncsWithPhone: true, syncsPasswords: true, unloadsIdleProfiles: true, sleepsTabsOverBudget: true, quitsWithLastWindow: false, keepsNewTabLinksInLittleNilla: true, commandScrollZoom: true, passwordAutofillSwitch: true, blocksAutoplay: true, answersPermissionRequests: true, tabReachesUnderOverlays: false, newTabBarFirst: false, textInputRevertsFirstChange: false, defaultCloudDrive: true, interfaceSize: true, nillaCommand: true, claimsFollowFocus: false, inlineWritesEcho: true, holdsColdPagesUntilPainted: true, preloadPages: true, attributesTabMemory: true };

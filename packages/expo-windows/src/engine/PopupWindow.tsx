@@ -1,7 +1,7 @@
 import { createElement, useCallback, useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { Pressable, Text, View, type NativeSyntheticEvent, type ViewStyle } from "react-native";
 import type { PageEvent } from "@ardia/ardiacore";
-import type { CaptionRegion, SymbolProps, WindowControlsNative, WindowsNative } from "@ardia/shell";
+import type { CaptionRegion, SymbolProps, WindowControlsNative, WindowsNative } from "@nilla/shell";
 import { requireNativeModule } from "../modules";
 import { Symbol } from "../symbol/Symbol";
 import { useAppDark } from "../views/appearance";
@@ -12,7 +12,7 @@ import { closePopupWindow, popupWindowInfo, requestPopupClose, setPopupWindowTit
 
 type Controls = WindowControlsNative & Pick<WindowsNative, "addListener">;
 
-const controls = () => requireNativeModule<Controls>("ArdiaAppWindows");
+const controls = () => requireNativeModule<Controls>("NillaAppWindows");
 
 const BUTTON = { width: 30, height: 28, edge: 12, gap: 3, radius: 7, glyph: 10, glyphRadius: 1.5, restoreCorner: 2 } as const;
 const BUTTON_COUNT = 3;

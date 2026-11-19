@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
-import com.ardia.blocking.BlockingCategory
-import com.ardia.blocking.ContentBlocker
-import com.ardia.blocking.FilterListException
+import com.nilladigital.nilla.blocking.BlockingCategory
+import com.nilladigital.nilla.blocking.ContentBlocker
+import com.nilladigital.nilla.blocking.FilterListException
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.functions.Queues
@@ -21,7 +21,7 @@ class BlockingModule : Module() {
     }
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneBlocking")
+        Name("NillaPhoneBlocking")
 
         Events("onBlockingEvent")
 

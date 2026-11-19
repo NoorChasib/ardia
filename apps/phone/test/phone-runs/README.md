@@ -2,11 +2,11 @@
 
 The testers' tooling for measuring the Android app on a real phone the same way every run (sync11 to sync14 on
 the POCO M3 Pro), kept here so a run does not rebuild it. Evidence from each run stays under
-`/tmp/ardia-phone-shots/<build>-<phone>/`; nothing here writes there by itself.
+`/tmp/nilla-phone-shots/<build>-<phone>/`; nothing here writes there by itself.
 
 ## The touch jar
 
-`touch-jar/` holds the source of `ardia-touch.jar` (class `agentd.ArdiaTouch`, run with `app_process`). It replays a
+`touch-jar/` holds the source of `nilla-touch.jar` (class `agentd.NillaTouch`, run with `app_process`). It replays a
 schedule of taps and swipes at fixed offsets through its own uhid touchscreen (`Hid.java`, agent-os be261a5a's file,
 whose input Xiaomi doesn't block as injected), so every mode gets identical input however fast the app settles.
 A stroke sends one report every 8 ms, a tap is held 50 ms, and the clock starts when it prints `ready`, once the
@@ -14,7 +14,7 @@ device shows up in InputManager. It refuses anything but portrait.
 
 Build it with `touch-jar/build.sh [out.jar]` (javac `--release 11` against the SDK's `android.jar`, then `d8
 --min-api 33`), push it to the run's folder on the phone, and run
-`CLASSPATH=<folder>/ardia-touch.jar app_process /system/bin agentd.ArdiaTouch <schedule>` (`timed.sh` does this). It
+`CLASSPATH=<folder>/nilla-touch.jar app_process /system/bin agentd.NillaTouch <schedule>` (`timed.sh` does this). It
 prints `done N ms; planned->started: …` with each step's planned and actual start. The sync13 and sync14 testers
 built it from this source against agent-os's stubs with agent-os's r8.jar (sync14's jar: sha256
 d0b5d083ee703e0c14201341e272435f31b5a856ac94481054fae27c4c52caba). This script's jar has the same classes but a
@@ -55,7 +55,7 @@ without frame stamps.
 ## Scripts
 
 Each starts with the serial (`S=`), the output folder on the Mac (`O=`) and the folder on the phone
-(`/data/local/tmp/ardia-sync12`) of the run it was written for; set them for the run.
+(`/data/local/tmp/nilla-sync12`) of the run it was written for; set them for the run.
 
 - `timed.sh <schedule> <window_s> <measure 1|0>` (on the phone): starts the jar, resets `gfxinfo` once the jar is
   ready, waits the window, dumps `gfxinfo`.

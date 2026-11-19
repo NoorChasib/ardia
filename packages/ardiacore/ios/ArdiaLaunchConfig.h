@@ -3,9 +3,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 NS_SWIFT_NAME(LaunchConfig)
-@interface ArdiaLaunchConfig : NSObject
+@interface NillaLaunchConfig : NSObject
 
-@property(class, readonly) ArdiaLaunchConfig *shared;
+@property(class, readonly) NillaLaunchConfig *shared;
 
 - (instancetype)initWithEnvironment:(NSDictionary<NSString *, NSString *> *)environment
               signedForDistribution:(BOOL (^)(void))signedForDistribution NS_DESIGNATED_INITIALIZER;

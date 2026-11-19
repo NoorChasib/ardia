@@ -11,8 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
-from ardia_cli import endpoint
-from ardia_cli.endpoint import EndpointError, chromium_dir, require_control
+from nilla_browser_cli import endpoint
+from nilla_browser_cli.endpoint import EndpointError, chromium_dir, require_control
 
 DEFAULT_PROFILE_ID = "default"
 WEBKIT_EPOCH_OFFSET = 11644473600
@@ -28,7 +28,7 @@ _closing = False
 MAX_SESSION_BYTES = 256 * 1024 * 1024
 MAX_LINUX_SESSION_BYTES = 8 * 1024 * 1024
 MAX_LOCAL_STATE_BYTES = 64 * 1024 * 1024
-LINUX_SESSION = ("Ardia", "linux-session.json")
+LINUX_SESSION = ("Nilla", "linux-session.json")
 LOCAL_STATE = "Local State"
 LEGACY_PIN_KEYS = ("pinned", "pinnedAsRow", "tileFolder")
 PRIVATE_PREFIXES = ("incognito", "guest", "private", "System Profile", "Guest Profile")
@@ -63,7 +63,7 @@ def new_work_dir() -> str:
     with _state:
         if _closing:
             raise OutOfTime("stopped: the command is exiting")
-        work = tempfile.mkdtemp(prefix="ardia-history-")
+        work = tempfile.mkdtemp(prefix="nilla-history-")
         _work_dirs.add(work)
     return work
 
@@ -136,7 +136,7 @@ def read_json(root: Path, parts: tuple[str, ...], deadline: float, limit: int):
     try:
         return json.loads(raw)
     except ValueError:
-        raise BrowsingDataError(f"{path} isn't valid JSON (Ardia may be writing it; try again)") from None
+        raise BrowsingDataError(f"{path} isn't valid JSON (Nilla may be writing it; try again)") from None
 
 
 def regular_profile_folder(name) -> bool:
@@ -337,7 +337,7 @@ def snapshot(history: Path, work: Path, deadline: float) -> tuple[Path, str]:
 
     def give_up(_status, _remaining, _total):
         if _closing or time.monotonic() > backup_deadline:
-            raise sqlite3.OperationalError("Ardia holds History locked")
+            raise sqlite3.OperationalError("Nilla holds History locked")
 
     out_of_time(deadline, "reading history")
     try:

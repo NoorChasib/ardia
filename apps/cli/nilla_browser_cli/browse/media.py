@@ -6,9 +6,9 @@ import time
 import zlib
 from pathlib import Path
 
-from ardia_cli.browse import snapshot
-from ardia_cli.browse.commands import Result, command, parse
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse import snapshot
+from nilla_browser_cli.browse.commands import Result, command, parse
+from nilla_browser_cli.browse.errors import BrowseError
 
 UNCHANGED_PERCENT = 0.5
 FONT = {
@@ -137,7 +137,7 @@ def default_path(ctx, extension: str) -> str:
     if folder:
         folder = ctx.path(folder)
     else:
-        folder = os.path.join(tempfile.gettempdir(), "ardia-browse", "screenshots")
+        folder = os.path.join(tempfile.gettempdir(), "nilla-browse", "screenshots")
     os.makedirs(folder, mode=0o700, exist_ok=True)
     return os.path.join(folder, f"screenshot-{int(time.time() * 1000)}.{extension}")
 
@@ -246,13 +246,13 @@ async def cmd_screenshot(ctx, argv):
     page = await ctx.state.page()
     clip = None
     if selector:
-        from ardia_cli.browse.actions import frame_offset, rect
+        from nilla_browser_cli.browse.actions import frame_offset, rect
 
         page, element = await ctx.state.locate(selector)
         await page.send("DOM.scrollIntoViewIfNeeded", {"backendNodeId": element.backend_id})
         box = await rect(page, element)
         ox, oy = await frame_offset(page, element.frame)
-        vp = await page.call("() => ardiaBrowse.viewport()", frame=page.main_frame, read=True)
+        vp = await page.call("() => nillaBrowse.viewport()", frame=page.main_frame, read=True)
         clip = {"x": box["x"] + ox + vp["scrollX"], "y": box["y"] + oy + vp["scrollY"], "width": max(1, box["width"]), "height": max(1, box["height"]), "scale": 1}
     rows = None
     if annotate:
@@ -261,14 +261,14 @@ async def cmd_screenshot(ctx, argv):
     if rows is not None:
         offset = None
         if full:
-            vp = await page.call("() => ardiaBrowse.viewport()", frame=page.main_frame, read=True)
+            vp = await page.call("() => nillaBrowse.viewport()", frame=page.main_frame, read=True)
             offset = (vp["scrollX"], vp["scrollY"])
         data = draw_annotations(data, rows, viewport, offset)
     shots = ctx.state.extras.setdefault("last_shots", {})
     view = (page.target_id, selector, full, fmt, annotate)
     before, shots[view] = shots.get(view), data
     if options.get("if_changed") and before is not None and unchanged(before, data, fmt, threshold_of(options.get("threshold"))):
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         command_metrics.flag("screenshot_unchanged", True)
         return Result({"path": None, "unchanged": True}, "= Unchanged since the last screenshot of this view, so nothing was saved")
@@ -310,7 +310,7 @@ def unchanged(before: bytes, after: bytes, fmt: str, percent: float) -> bool:
 async def cmd_pdf(ctx, argv):
     options, args = parse(argv, {"--landscape": "bool", "--format": "value"})
     if not args:
-        raise BrowseError("Usage: ardia browse pdf <path>")
+        raise BrowseError("Usage: nilla browse pdf <path>")
     page = await ctx.state.page()
     result = await page.send("Page.printToPDF", {"printBackground": True, "landscape": bool(options.get("landscape"))}, timeout=120)
     target = ctx.path(args[0])
@@ -350,16 +350,16 @@ async def diff_screenshot(ctx, argv):
     options, _ = parse(argv, {"--baseline": "value", "--output": "value", "--threshold": "value", "--selector": "value", "--full": "bool"},
                        {"-b": "--baseline", "-o": "--output", "-t": "--threshold", "-s": "--selector"})
     if not options.get("baseline"):
-        raise BrowseError("Usage: ardia browse diff screenshot --baseline <file> [--output <file>] [--threshold 0.1]")
+        raise BrowseError("Usage: nilla browse diff screenshot --baseline <file> [--output <file>] [--threshold 0.1]")
     baseline = Path(ctx.path(options["baseline"])).read_bytes()
     page = await ctx.state.page()
     clip = None
     if options.get("selector"):
-        from ardia_cli.browse.actions import rect
+        from nilla_browser_cli.browse.actions import rect
 
         page, element = await ctx.state.locate(options["selector"])
         box = await rect(page, element)
-        vp = await page.call("() => ardiaBrowse.viewport()", frame=page.main_frame, read=True)
+        vp = await page.call("() => nillaBrowse.viewport()", frame=page.main_frame, read=True)
         clip = {"x": box["x"] + vp["scrollX"], "y": box["y"] + vp["scrollY"], "width": box["width"], "height": box["height"], "scale": 1}
     current = await capture_png(page, bool(options.get("full")), clip)
     output = ctx.path(options["output"]) if options.get("output") else default_path(ctx, "png").replace("screenshot-", "diff-")

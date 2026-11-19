@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4

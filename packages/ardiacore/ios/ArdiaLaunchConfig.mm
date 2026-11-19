@@ -176,7 +176,7 @@ BOOL SignedForDistribution() {
 
 }
 
-@implementation ArdiaLaunchConfig {
+@implementation NillaLaunchConfig {
   NSDictionary<NSString *, NSString *> *_instance;
   NSDictionary<NSString *, NSNumber *> *_switches;
   NSDictionary<NSString *, NSNumber *> *_cachedSwitches;
@@ -187,11 +187,11 @@ BOOL SignedForDistribution() {
   NSDictionary<NSString *, NSString *> *_environmentForChildProcesses;
 }
 
-+ (ArdiaLaunchConfig *)shared {
-  static ArdiaLaunchConfig *shared;
++ (NillaLaunchConfig *)shared {
+  static NillaLaunchConfig *shared;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    shared = [[ArdiaLaunchConfig alloc] initWithEnvironment:NSProcessInfo.processInfo.environment
+    shared = [[NillaLaunchConfig alloc] initWithEnvironment:NSProcessInfo.processInfo.environment
                                       signedForDistribution:^BOOL { return SignedForDistribution(); }];
   });
   return shared;
@@ -259,7 +259,7 @@ BOOL SignedForDistribution() {
   NSString *directory = _dataDirectory;
   if (!directory) {
     NSString *support = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES).firstObject;
-    directory = [support stringByAppendingPathComponent:NSBundle.mainBundle.bundleIdentifier ?: @"com.ardia.browser"];
+    directory = [support stringByAppendingPathComponent:NSBundle.mainBundle.bundleIdentifier ?: @"com.nilladigital.nilla"];
   }
   NSData *data = [NSData dataWithContentsOfFile:[directory stringByAppendingPathComponent:kSwitchesCacheDocument]];
   NSDictionary *cache = data ? [NSJSONSerialization JSONObjectWithData:data options:0 error:nil] : nil;

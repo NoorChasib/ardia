@@ -1,8 +1,8 @@
-package com.ardia.shared
+package com.nilladigital.nilla.shared
 
 enum class SharedScript(val fileName: String, val global: String) {
-    SYNC("ardia-sync", "ArdiaSync"),
-    SYNC_CHECKS("ardia-sync-checks", "ArdiaSyncChecks");
+    SYNC("nilla-sync", "NillaSync"),
+    SYNC_CHECKS("nilla-sync-checks", "NillaSyncChecks");
 
     val assetName: String get() = "$fileName.hbc"
 }

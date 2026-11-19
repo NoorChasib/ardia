@@ -1,7 +1,7 @@
 #import "ArdiaWebViewInternal.h"
 #import "ArdiaTabParking.h"
 
-using namespace ardia_web_view;
+using namespace nilla_web_view;
 
 namespace {
 
@@ -13,7 +13,7 @@ void OnMain(void (^block)(void)) {
 }
 }
 
-namespace ardia_web_view {
+namespace nilla_web_view {
 
 NSView *PaneUnder(NSView *view, NSView *ancestor) {
   for (NSView *v = view; v; v = v.superview)
@@ -30,10 +30,10 @@ NSView *SharedAncestor(NSView *a, NSView *b) {
 }
 }
 
-@implementation ArdiaWebView (Reveals)
+@implementation NillaWebView (Reveals)
 
-static ArdiaWebView *ViewForKey(NSString *key) {
-  for (ArdiaWebView *view in LiveViews().allObjects)
+static NillaWebView *ViewForKey(NSString *key) {
+  for (NillaWebView *view in LiveViews().allObjects)
     if (view->_tab && [view->_transferKey isEqualToString:key]) return view;
   return nil;
 }
@@ -42,9 +42,9 @@ static ArdiaWebView *ViewForKey(NSString *key) {
   if (!transferKey.length) return;
   NSString *key = [transferKey copy];
   OnMain(^{
-    ArdiaWebView *view = ViewForKey(key);
+    NillaWebView *view = ViewForKey(key);
     if (!view.window) return;
-    [ArdiaWebView dropRevealsInWindow:view.window except:view];
+    [NillaWebView dropRevealsInWindow:view.window except:view];
     [view revealAhead];
   });
 }
@@ -53,13 +53,13 @@ static ArdiaWebView *ViewForKey(NSString *key) {
   if (!transferKey.length) return;
   NSString *key = [transferKey copy];
   OnMain(^{
-    ArdiaWebView *view = ViewForKey(key);
-    if (view.window) [ArdiaWebView dropRevealsInWindow:view.window except:nil];
+    NillaWebView *view = ViewForKey(key);
+    if (view.window) [NillaWebView dropRevealsInWindow:view.window except:nil];
   });
 }
 
-+ (void)dropRevealsInWindow:(NSWindow *)window except:(ArdiaWebView *)keep {
-  for (ArdiaWebView *other in LiveViews().allObjects) {
++ (void)dropRevealsInWindow:(NSWindow *)window except:(NillaWebView *)keep {
+  for (NillaWebView *other in LiveViews().allObjects) {
     if (other.window != window) continue;
     [other dropFront];
     if (other != keep) [other dropReveal];
@@ -70,15 +70,15 @@ static ArdiaWebView *ViewForKey(NSString *key) {
   if (!adoptId.length || !transferKey.length) return;
   NSString *offer = [adoptId copy], *key = [transferKey copy];
   OnMain(^{
-    ArdiaWebView *view = ViewForKey(key);
+    NillaWebView *view = ViewForKey(key);
     if (!view.window) return;
-    [ArdiaWebView dropRevealsInWindow:view.window except:nil];
-    ArdiaCoreTab *tab = [ArdiaTabRegistry offeredTab:offer];
+    [NillaWebView dropRevealsInWindow:view.window except:nil];
+    ArdiaCoreTab *tab = [NillaTabRegistry offeredTab:offer];
     NSView *page = tab.view;
     if (TraceVisibility())
       NSLog(@"[ardiacore-vis] %@ front %@ offered=%d closed=%d superview=%@ adopted=%d", key, offer, tab != nil, tab.closed,
-            page.superview.className, [ArdiaTabRegistry viewForTab:tab] != nil);
-    if (!tab || tab.closed || !page || page.superview || [ArdiaTabRegistry viewForTab:tab]) return;
+            page.superview.className, [NillaTabRegistry viewForTab:tab] != nil);
+    if (!tab || tab.closed || !page || page.superview || [NillaTabRegistry viewForTab:tab]) return;
     [tab noteInShownSlot];
     [view frontPage:page profile:tab.profile];
   });
@@ -86,12 +86,12 @@ static ArdiaWebView *ViewForKey(NSString *key) {
 
 + (BOOL)discardOffered:(NSString *)adoptId {
   if (![adoptId hasPrefix:@"ardiacore:"]) return NO;
-  ArdiaCoreTab *tab = [ArdiaTabRegistry offeredTab:adoptId];
-  if (!tab || tab.closed || [ArdiaTabRegistry viewForTab:tab] || [ArdiaTabParking linkMarkForTab:tab]) return NO;
+  ArdiaCoreTab *tab = [NillaTabRegistry offeredTab:adoptId];
+  if (!tab || tab.closed || [NillaTabRegistry viewForTab:tab] || [NillaTabParking linkMarkForTab:tab]) return NO;
   if (NSView *page = tab.view)
-    for (ArdiaWebView *view in LiveViews().allObjects)
+    for (NillaWebView *view in LiveViews().allObjects)
       if (view->_reveal.frontedPage == page) [view dropFront];
-  if ([ArdiaTabRegistry takeOffered:adoptId] != tab) return NO;
+  if ([NillaTabRegistry takeOffered:adoptId] != tab) return NO;
   [tab close];
   return YES;
 }
@@ -99,7 +99,7 @@ static ArdiaWebView *ViewForKey(NSString *key) {
 - (BOOL)onlyShownInWindow {
   NSWindow *window = self.window;
   if (!_visible || _warm || _reveal.active || _standalone || _life.closed() || !window || self.alphaValue < 1 || self.isHiddenOrHasHiddenAncestor) return NO;
-  for (ArdiaWebView *other in LiveViews().allObjects)
+  for (NillaWebView *other in LiveViews().allObjects)
     if (other != self && other.window == window && (other->_visible || other->_warm || other->_reveal.active)) return NO;
   return YES;
 }
@@ -113,9 +113,9 @@ static ArdiaWebView *ViewForKey(NSString *key) {
   _reveal.frontedPage = page;
   if (TraceVisibility()) NSLog(@"[ardiacore-vis] %@ fronts a new tab's page", _transferKey);
   const NSUInteger generation = ++_reveal.frontGeneration;
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kRevealBackstopSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
+    NillaWebView *view = weakSelf;
     if (view && view->_reveal.frontGeneration == generation) [view dropFront];
   });
 }
@@ -131,8 +131,8 @@ static ArdiaWebView *ViewForKey(NSString *key) {
   NSWindow *window = self.window;
   NSView *page = _tab.view;
   if (_visible || _reveal.active || _warm || _standalone || _life.closed() || !window || !page || page.superview != self) return;
-  ArdiaWebView *shown = nil;
-  for (ArdiaWebView *other in LiveViews().allObjects) {
+  NillaWebView *shown = nil;
+  for (NillaWebView *other in LiveViews().allObjects) {
     if (other == self || other.window != window) continue;
     if (other->_warm || other->_reveal.active) return;
     if (!other->_visible) continue;
@@ -154,9 +154,9 @@ static ArdiaWebView *ViewForKey(NSString *key) {
   shownPane.layer.zPosition = _reveal.loweredPaneZ - 1;
   [self applyPainting];
   const NSUInteger generation = ++_reveal.generation;
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kRevealBackstopSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
+    NillaWebView *view = weakSelf;
     if (view && view->_reveal.generation == generation && view->_reveal.active) [view dropReveal];
   });
 }
@@ -178,7 +178,7 @@ static ArdiaWebView *ViewForKey(NSString *key) {
 - (void)settleRevealsInWindow {
   [self endReveal];
   NSWindow *window = self.window;
-  if (window) [ArdiaWebView dropRevealsInWindow:window except:self];
+  if (window) [NillaWebView dropRevealsInWindow:window except:self];
 }
 
 @end

@@ -31,18 +31,18 @@ export type NativeMaterialGradientProps = ViewProps & {
 
 const colorAttribute = { process: processColor as (value: never) => unknown };
 
-export const NativeWindowMaterial = NativeComponentRegistry.get<NativeWindowMaterialProps>("ArdiaWindowMaterial", () => ({
-  uiViewClassName: "ArdiaWindowMaterial",
+export const NativeWindowMaterial = NativeComponentRegistry.get<NativeWindowMaterialProps>("NillaWindowMaterial", () => ({
+  uiViewClassName: "NillaWindowMaterial",
   validAttributes: { material: true, dark: true, fallbackColor: colorAttribute, tintColor: colorAttribute },
 }));
 
-export const NativeMaterialBlur = NativeComponentRegistry.get<NativeMaterialBlurProps>("ArdiaMaterialBlur", () => ({
-  uiViewClassName: "ArdiaMaterialBlur",
+export const NativeMaterialBlur = NativeComponentRegistry.get<NativeMaterialBlurProps>("NillaMaterialBlur", () => ({
+  uiViewClassName: "NillaMaterialBlur",
   validAttributes: { fallbackColor: colorAttribute, tintColor: colorAttribute, blurRadius: true, saturation: true, cornerRadius: true, shape: true },
 }));
 
-export const NativeMaterialGradient = NativeComponentRegistry.get<NativeMaterialGradientProps>("ArdiaMaterialGradient", () => ({
-  uiViewClassName: "ArdiaMaterialGradient",
+export const NativeMaterialGradient = NativeComponentRegistry.get<NativeMaterialGradientProps>("NillaMaterialGradient", () => ({
+  uiViewClassName: "NillaMaterialGradient",
   validAttributes: { colors: true, angle: true, span: true, reach: true, stops: true, fade: true, fadeStops: true, fadeAngle: true },
 }));
 

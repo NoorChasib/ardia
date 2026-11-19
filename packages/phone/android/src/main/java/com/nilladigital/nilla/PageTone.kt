@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import kotlin.math.pow
 import kotlin.math.roundToInt

@@ -6,7 +6,7 @@ public class AppWindowsModule: Module {
   private let lifetime = ModuleLifetime()
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaAppWindows")
+    Name("NillaAppWindows")
     Events(ShellEvents.Channel.window.rawValue)
 
     OnCreate {
@@ -27,10 +27,10 @@ public class AppWindowsModule: Module {
       self.lifetime.end()
     }
 
-    Function("windowCornerRadius") { () -> Double in Double(InterfaceScale.rootLength(fromWindow: ArdiaChromeWindowHost.windowCornerRadius)) }
+    Function("windowCornerRadius") { () -> Double in Double(InterfaceScale.rootLength(fromWindow: NillaChromeWindowHost.windowCornerRadius)) }
     AsyncFunction("frameCornerRadius") { (id: String) -> Double in
       guard let window = WindowManager.shared.window(id) else { return 0 }
-      return Double(InterfaceScale.rootLength(fromWindow: ArdiaChromeWindowHost.frameCornerRadius(of: window)))
+      return Double(InterfaceScale.rootLength(fromWindow: NillaChromeWindowHost.frameCornerRadius(of: window)))
     }.runOnQueue(.main)
 
     AsyncFunction("openWindow") { (id: String, options: OpenWindowOptions) in

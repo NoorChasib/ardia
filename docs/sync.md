@@ -2,8 +2,8 @@
 
 End-to-end-encrypted sync with no server, no account and no Apple entitlement. Every Mac reads
 and writes sealed files in a folder the user picks; any service that syncs a folder carries them
-between Macs. The default is `iCloud Drive › Ardia Sync`
-(`~/Library/Mobile Documents/com~apple~CloudDocs/Ardia Sync`: iCloud Drive syncs any folder
+between Macs. The default is `iCloud Drive › Nilla Sync`
+(`~/Library/Mobile Documents/com~apple~CloudDocs/Nilla Sync`: iCloud Drive syncs any folder
 under it, with no CloudKit container and no entitlement). Dropbox, a NAS or a USB drive work
 the same way. A Mac that turned sync on before the rename keeps `Netnyahoo Sync`, and one setting up after it is
 offered that folder while it holds the data (`SyncModule.defaultFolder`).
@@ -19,7 +19,7 @@ Code:
   - `SyncVault.swift`: the folder, with file coordination and partial files.
   - `SyncKeyStore.swift`: Keychain.
   - `RecoveryKit.swift`: PDF, text sheet and QR code.
-- `packages/sync/ios/SyncModule.swift`: the Expo module (`ArdiaSync`). It also reads this app's saved passwords.
+- `packages/sync/ios/SyncModule.swift`: the Expo module (`NillaSync`). It also reads this app's saved passwords.
 - `packages/sync/src`: the merge, in TypeScript with no dependencies.
   - `scope.ts`: replica, logs, snapshots, compaction.
   - `hlc.ts`: hybrid logical clocks.
@@ -53,7 +53,7 @@ Apple, Dropbox, whoever has the NAS or finds the USB drive, malware that reads c
   (CRIME-style).
 
 What they do see (metadata): how many profiles sync (one folder each) and how many devices; when
-and how much each writes (file count, times, sizes to 1 KiB); and that it's Ardia sync data
+and how much each writes (file count, times, sizes to 1 KiB); and that it's Nilla sync data
 (the `NNS1` magic and `.nns` extension).
 
 What they can do: delete or withhold files (denial of service). Withheld files show as
@@ -65,9 +65,9 @@ within a file, or move data between profiles.
 Not protected against:
 - Someone with the phrase. The phrase is the key, like Dia's.
 - Someone with the unlocked Mac. They have the data in the clear anyway.
-- A compromised Ardia binary.
+- A compromised Nilla binary.
 
-The phrase's entropy is in each Mac's login Keychain (`Ardia Sync Key`, this device only,
+The phrase's entropy is in each Mac's login Keychain (`Nilla Sync Key`, this device only,
 never iCloud Keychain). Losing every Mac and the Recovery Kit loses the synced data. There's no
 reset by email, because there's no one to email.
 
@@ -87,7 +87,7 @@ reset by email, because there's no one to email.
   - `name-key` (HMAC-SHA256) names folders: the chain tag is `HMAC("chain")` and a scope's tag
     is `HMAC("scope/<scope id>")`, each cut to 128 bits and written in base32.
   - The phrase already has 256 bits of entropy, so no password stretching is needed.
-- Where the entropy is kept: the login Keychain, as a generic password (`Ardia Sync Key`,
+- Where the entropy is kept: the login Keychain, as a generic password (`Nilla Sync Key`,
   account = this device's sync id, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, not
   synchronizable).
   - Test instances (`ARDIA_DATA_DIR`) keep it in a 0600 file in their data folder instead,
@@ -102,7 +102,7 @@ reset by email, because there's no one to email.
   Passwords pane; Stop Syncing ends it early. Cancelling returns nothing and changes nothing.
   The kit preview in the sheet is drawn with dots instead of the words. Hidden test instances
   never prompt: `ARDIA_TEST=reauth=granted` grants, anything else denies (#241).
-- The temporary kit for Copy and Share (`$TMPDIR/Ardia Recovery Kit/`) is deleted at launch.
+- The temporary kit for Copy and Share (`$TMPDIR/Nilla Recovery Kit/`) is deleted at launch.
 
 A wrong phrase is caught in one of two ways. A typo fails the checksum. A valid but different
 phrase derives a chain tag that isn't in the folder: "This recovery phrase doesn’t match the
@@ -327,7 +327,7 @@ synced profile, or Settings › Profiles › the profile › Sync All Open Tabs.
 `ptab:`. Tab sync runs for a profile when it syncs on this Mac, its switch is on and What Syncs › Open Tabs is on here.
 It covers profiles that share another's data (tabs are each profile's own).
 - **What goes.** The profile's regular tabs in its main windows (not pinned, not in a pinned group, not a peek, not a
-  live folder's item) whose page is http or https. Private windows, Little Ardia, blank New Tab pages and `file:` pages
+  live folder's item) whose page is http or https. Private windows, Little Nilla, blank New Tab pages and `file:` pages
   stay local; a tab that navigates to one keeps its last record. Positions are one order per profile, but a Mac keeps a
   position as long as it's in order within that tab's window, so two Macs that spread the same tabs over different
   windows settle instead of resending the order (tested). Collapsed groups, splits, zoom and mute stay local.
@@ -390,7 +390,7 @@ A tab sent to another device (the tab menu's "Send to <device>" on a Mac; the iP
 ### Extensions
 
 What Chrome Sync does for extensions, through our folder (`packages/sync/src/extensions.ts`, the app's host in
-`apps/browser/src/state/sync/extensions.ts`, Chrome's side in `engine/chromium/…/ardia/ac_extensions_sync.cc`).
+`apps/browser/src/state/sync/extensions.ts`, Chrome's side in `engine/chromium/…/nilla/ac_extensions_sync.cc`).
 - **What syncs.** Extensions from the Chrome Web Store that Chrome itself would sync (`sync_util::ShouldSync`:
   installed by the user from the store, not by default, policy or a component, not blocklisted, no other update
   URL), and not themes or apps. Unpacked extensions, Ardia Scripts and uBlock Origin (bundled) stay on their Mac. Per
@@ -436,14 +436,14 @@ Saved passwords are Chrome's (its password manager).
   can't be wiped; they live until the seal.
 - **All or nothing.** A list reaches the adapter only when the engine answered with one. On the Mac one password that
   doesn't decrypt fails Chrome's whole read (`SkipUndecryptablePasswords` is off there, and nothing is deleted:
-  Chrome never clears undecryptable passwords when `--user-data-dir` is set, which ArdiaHost always sets), and the
+  Chrome never clears undecryptable passwords when `--user-data-dir` is set, which NillaHost always sets), and the
   engine refuses to read at all with that feature on. A store error, the profile going away mid-read, no reply within
   30 s or a malformed entry all give `null`, so the cycle skips passwords and nothing is tombstoned.
 - **Sealed for JS.** Plain passwords never reach JS (#241). The native read gives JS each login's
   origin, username, creation time and the password sealed with the sync key (AES-256-GCM, its
   own HKDF key, bound to origin and username). The nonce is an HMAC of the login and password,
   so the same password seals the same on every Mac and the adapter can compare without opening
-  it. Applying a remote password hands the sealed value back to `ArdiaSync.savePassword`, which
+  it. Applying a remote password hands the sealed value back to `NillaSync.savePassword`, which
   opens it for that login only and writes through Chrome's API.
 - **Keys.** Records are `pws:<origin>\n<username>` → `{ o, u, s }`. Builds before this used
   `pw:` with the plain password; new builds ignore `pw:` records and never tombstone them, so a
@@ -457,7 +457,7 @@ Saved passwords are Chrome's (its password manager).
   a folder file is reported as damaged, and a local state or journal file reads as missing while
   `sealLocal` and `write` refuse for the rest of the session, so the files on disk and the
   folder stay as they were and sync shows an error instead of saving a rebuilt state over them.
-- **Writing.** Writes go through Chrome's API (`ArdiaServices.savePassword` from the sync module,
+- **Writing.** Writes go through Chrome's API (`NillaServices.savePassword` from the sync module,
   `deletePassword` in `@ardia/ardiacore`), so Chrome's in-memory store and autofill see them at
   once. A changed password is a delete plus an add, done natively only after the sealed value
   opens: the update API needs the device check.
@@ -488,7 +488,7 @@ Settings › Sync. Dia puts sync in Account › Sync, with the section icon
     lose access to this device.", with "another" underlined.
   - A preview of the page.
   - Buttons: Save…, Close, and Other Options (Copy, Share…, Save as Text…).
-  - The PDF is "Ardia Recovery Kit.pdf", US Letter as Dia's, with the 24 words and a QR code.
+  - The PDF is "Nilla Recovery Kit.pdf", US Letter as Dia's, with the 24 words and a QR code.
 - **Connect with Recovery Phrase.**
   - Dia's copy: "Enter your 24-word recovery phrase to sync with another device.", the
     placeholder "Enter your 24-word recovery phrase", the "%d/%d words" counter, "too many
@@ -560,7 +560,7 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
     - `SyncKeyStoreTests`: saving again replaces the key; a save the keychain refuses keeps the key it would have
       replaced; a test instance's key file is never wider than 0600 and nothing is left beside it.
     - `SharedFolderDirectoryTests`: the shared folders' reads and writes (symlinks, conflicts, size caps, permissions).
-    - `LegacyMigrationTests`, `LegacyKeychainTests`, `LegacyDockTileTests`: the Netnyahoo → Ardia migration.
+    - `LegacyMigrationTests`, `LegacyKeychainTests`, `LegacyDockTileTests`: the Netnyahoo → Nilla migration.
   - `bun test` (`packages/sync/src/**/*.test.ts`):
     - `scope.test.ts`, `fileHealth.test.ts`: concurrent edits converge in any order; deletes, re-adds and
       edit-after-delete; clock skew; late, out-of-order, half-copied and given-up files; an edit during a read; an
@@ -631,7 +631,7 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
 
 ## iPhone
 
-Ardia for iPhone is one more device in the same chain, with the same file format: it writes `dev:` (`k: "phone"`),
+Nilla for iPhone is one more device in the same chain, with the same file format: it writes `dev:` (`k: "phone"`),
 `tabs:`, history visits by the union rule, bookmarks it adds to Other Bookmarks and `send:` records, and keeps every
 other record untouched. It never compacts. Its side is in `docs/phone.md` › Sync on iPhone.
 

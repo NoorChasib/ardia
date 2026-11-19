@@ -1,5 +1,5 @@
 import XCTest
-@testable import ArdiaUpdaterCore
+@testable import NillaUpdaterCore
 
 final class ServicesSnapshotTests: XCTestCase {
   func read(_ json: String) -> Result<ServicesSnapshot, ServicesSnapshot.Refusal> {

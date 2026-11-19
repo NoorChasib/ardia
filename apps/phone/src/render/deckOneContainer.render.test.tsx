@@ -33,7 +33,7 @@ const FRAME_MS = 16;
 type Style = { opacity?: number; zIndex?: number; borderRadius?: number; transform?: Record<string, number>[] };
 
 function flagged(on: boolean) {
-  jest.spyOn(launchFlags, "launchArguments").mockImplementation(() => (on ? parseLaunchArguments({ ArdiaOneContainerScroll: "1" }) : NO_LAUNCH_ARGUMENTS));
+  jest.spyOn(launchFlags, "launchArguments").mockImplementation(() => (on ? parseLaunchArguments({ NillaOneContainerScroll: "1" }) : NO_LAUNCH_ARGUMENTS));
 }
 
 function steady() {
@@ -165,7 +165,7 @@ function countRuns() {
   return { take: () => runs, reset: () => void (runs = 0) };
 }
 
-onAndroid("with ArdiaOneContainerScroll, every card's on-screen x is the rounded true x at many scroll positions, and on every frame of each settle after", () => {
+onAndroid("with NillaOneContainerScroll, every card's on-screen x is the rounded true x at many scroll positions, and on every frame of each settle after", () => {
   const root = deck(true);
   let frames = 0;
   for (const target of [23.6, 22.3, 21.37, 18, 15.5, 16.85, 19.1, 24.5, 25, 23.02]) {
@@ -181,7 +181,7 @@ onAndroid("with ArdiaOneContainerScroll, every card's on-screen x is the rounded
   done(root);
 });
 
-onAndroid("with ArdiaOneContainerScroll, every on-screen card is within half a point of where the per-card deck puts it", () => {
+onAndroid("with NillaOneContainerScroll, every on-screen card is within half a point of where the per-card deck puts it", () => {
   for (const target of [0.3, 7.5, 18, 25]) {
     const lefts: number[][] = [];
     for (const on of [false, true]) {
@@ -221,7 +221,7 @@ function closeWatched(root: ReactTestRenderer, label: string) {
   return worst;
 }
 
-onAndroid("with ArdiaOneContainerScroll, closing the last card (the scroll moves back two) never shows the deck off by a spacing for a frame: the container and every card move together", () => {
+onAndroid("with NillaOneContainerScroll, closing the last card (the scroll moves back two) never shows the deck off by a spacing for a frame: the container and every card move together", () => {
   const root = deck(true, 9);
   scrollTo(root, 8);
   act(() => jest.advanceTimersByTime(2000));
@@ -233,7 +233,7 @@ onAndroid("with ArdiaOneContainerScroll, closing the last card (the scroll moves
   done(root);
 });
 
-onAndroid("with ArdiaOneContainerScroll, closing a card in the middle of 26 flies it away and slides the rest along without a jumped frame", () => {
+onAndroid("with NillaOneContainerScroll, closing a card in the middle of 26 flies it away and slides the rest along without a jumped frame", () => {
   const root = deck(true);
   scrollTo(root, 20);
   act(() => jest.advanceTimersByTime(2000));
@@ -245,7 +245,7 @@ onAndroid("with ArdiaOneContainerScroll, closing a card in the middle of 26 flie
 });
 
 
-onAndroid("with ArdiaOneContainerScroll, between two close scroll positions the cards right of the focus change nothing, and stacked cards change only their card's x, which cancels the container's move", () => {
+onAndroid("with NillaOneContainerScroll, between two close scroll positions the cards right of the focus change nothing, and stacked cards change only their card's x, which cancels the container's move", () => {
   const root = deck(true);
   scrollTo(root, 22);
   const container = () => shift(hosts(root, "deckScrollContainer")[0]!);
@@ -279,7 +279,7 @@ onAndroid("with ArdiaOneContainerScroll, between two close scroll positions the 
   done(root);
 });
 
-onAndroid("with ArdiaOneContainerScroll, mid-scroll every position is on a device pixel and every opacity on a 1/255 step, and a scroll changes only transforms and opacities", () => {
+onAndroid("with NillaOneContainerScroll, mid-scroll every position is on a device pixel and every opacity on a 1/255 step, and a scroll changes only transforms and opacities", () => {
   const root = deck(true);
   scrollTo(root, 21.37);
   const onPixel = (value: number) => Math.abs(value * RATIO - Math.round(value * RATIO)) < 1e-6;
@@ -321,7 +321,7 @@ function runsPerFrame(on: boolean, tabs: number) {
   return (eleven - one) / 10;
 }
 
-onAndroid("with ArdiaOneContainerScroll, a scroll frame runs a fraction of the per-card deck's worklets at 26 tabs and at 9", () => {
+onAndroid("with NillaOneContainerScroll, a scroll frame runs a fraction of the per-card deck's worklets at 26 tabs and at 9", () => {
   const counts: string[] = [];
   for (const tabs of [26, 9]) {
     const plain = runsPerFrame(false, tabs);
@@ -332,7 +332,7 @@ onAndroid("with ArdiaOneContainerScroll, a scroll frame runs a fraction of the p
   console.log(counts.join("; "));
 });
 
-onAndroid("with ArdiaOneContainerScroll, the screen reader finds every card, titled, in deck order, with nothing hiding it, a real width and the rightmost included, as it does without the flag", () => {
+onAndroid("with NillaOneContainerScroll, the screen reader finds every card, titled, in deck order, with nothing hiding it, a real width and the rightmost included, as it does without the flag", () => {
   const reachable = (root: ReactTestRenderer) => {
     const found: { title: string; left: number; width: number }[] = [];
     for (const node of root.root.findAll((inner) => typeof inner.type === "string" && inner.props.accessible === true && inner.props.accessibilityHint === "Opens the tab.")) {
@@ -366,7 +366,7 @@ onAndroid("with ArdiaOneContainerScroll, the screen reader finds every card, tit
   });
 });
 
-onAndroid("with ArdiaOneContainerScroll, each card is the same three views as without the flag, side by side in one parent, with no wrapper views", () => {
+onAndroid("with NillaOneContainerScroll, each card is the same three views as without the flag, side by side in one parent, with no wrapper views", () => {
   const layout: string[][] = [];
   for (const on of [false, true]) {
     const root = deck(on, 9);
@@ -379,7 +379,7 @@ onAndroid("with ArdiaOneContainerScroll, each card is the same three views as wi
   expect(layout[1]!.map((id) => (id === "deckCardReach" ? "Opens the tab." : id === "deckCardHeader" ? "header" : id))).toEqual(layout[0]);
 });
 
-onAndroid("with ArdiaOneContainerScroll, once a scroll has settled nothing more is computed or written, and the deck tells the look budget it is idle", () => {
+onAndroid("with NillaOneContainerScroll, once a scroll has settled nothing more is computed or written, and the deck tells the look budget it is idle", () => {
   const idle: boolean[] = [];
   jest.spyOn(look, "useLookBudgetProbe").mockImplementation((value) => void idle.push(value));
   const counter = countRuns();
@@ -399,7 +399,7 @@ onAndroid("with ArdiaOneContainerScroll, once a scroll has settled nothing more 
   done(root);
 });
 
-onAndroid("with ArdiaOneContainerScroll, a card still opens to full screen above the rest", () => {
+onAndroid("with NillaOneContainerScroll, a card still opens to full screen above the rest", () => {
   const root = deck(true);
   scrollTo(root, 23);
   act(() => jest.advanceTimersByTime(2000));
@@ -420,14 +420,14 @@ onAndroid("with ArdiaOneContainerScroll, a card still opens to full screen above
   done(root);
 });
 
-onAndroid("without ArdiaOneContainerScroll, Android's deck has no container and each card moves itself", () => {
+onAndroid("without NillaOneContainerScroll, Android's deck has no container and each card moves itself", () => {
   const root = deck(false);
   expect(hosts(root, "deckScrollContainer")).toHaveLength(0);
   expect(hosts(root, "deckCardReach")).toHaveLength(0);
   done(root);
 });
 
-oniPhone("on iPhone, ArdiaOneContainerScroll changes nothing: no container, and every card moves itself as before", () => {
+oniPhone("on iPhone, NillaOneContainerScroll changes nothing: no container, and every card moves itself as before", () => {
   const root = deck(true);
   expect(hosts(root, "deckScrollContainer")).toHaveLength(0);
   expect(hosts(root, "deckCardReach")).toHaveLength(0);

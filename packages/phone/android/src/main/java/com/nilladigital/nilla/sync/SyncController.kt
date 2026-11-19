@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.content.Context
 import java.io.File
@@ -43,7 +43,7 @@ interface SyncTimers {
 }
 
 class SystemSyncTimers : SyncTimers {
-    private val scheduler = ScheduledThreadPoolExecutor(1) { work -> Thread(work, "ardia-sync-timers").apply { isDaemon = true } }.apply {
+    private val scheduler = ScheduledThreadPoolExecutor(1) { work -> Thread(work, "nilla-sync-timers").apply { isDaemon = true } }.apply {
         removeOnCancelPolicy = true
     }
 
@@ -510,7 +510,7 @@ class SyncController(
         const val CYCLE_INTERVAL_MS = 15_000L
         const val AFTER_EDIT_MS = 3_000L
         const val SLOW_CYCLE_MS = 1_000L
-        const val THREAD_NAME = "ardia-sync"
+        const val THREAD_NAME = "nilla-sync"
         const val IDLE_THREAD_MS = 10_000L
 
         @Volatile

@@ -1,4 +1,4 @@
-import type { Listing, SyncNative } from "@ardia/sync";
+import type { Listing, SyncNative } from "@nilla/sync";
 import { isTag } from "./base32";
 
 export const FILE_EXTENSION = ".nns";

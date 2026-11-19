@@ -56,7 +56,7 @@ test("module dispatch keeps the named module and argument list", async () => {
   assert.deepEqual(requests, [["ArdiaShell.openWindow", { args: ["w_linux", { profile: "default" }] }]]);
 });
 
-test("main's swipe haptic, theme key-look hold and unattended ardia command install answer on Linux without reaching the host", async () => {
+test("main's swipe haptic, theme key-look hold and unattended nilla command install answer on Linux without reaching the host", async () => {
   const { host, requests } = fixture();
   assert.equal(resolveHostModule(host, "ArdiaSwipe", "haptic")("levelChange"), undefined);
   assert.equal(await resolveHostModule(host, "ArdiaWindowBackdrop", "holdKeyLook")(true), undefined);
@@ -366,7 +366,7 @@ test("before-close sends debounced changes once while transport is open and tole
   let disposed = false;
   const { host, requests } = fixture(async () => {
     assert.equal(disposed, false);
-    throw new Error("Ardia host closed");
+    throw new Error("Nilla host closed");
   });
   host.onBeforeClose = (callback) => { callbacks.add(callback); return () => callbacks.delete(callback); };
   const store = mutableStore(browserState());

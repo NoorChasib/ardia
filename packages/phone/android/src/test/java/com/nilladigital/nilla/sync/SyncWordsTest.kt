@@ -1,6 +1,6 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
-import com.ardia.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
 import kotlinx.serialization.encodeToString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

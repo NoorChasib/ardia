@@ -5,8 +5,8 @@ import { renderSurface, textOf, unmount } from "../../test/render/harness";
 
 const mockLaunch: { pageLab: boolean; known: boolean } = { pageLab: false, known: true };
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual("@nilla/phone-native");
   return { ...actual, pages: { ...actual.pages, launchOptions: () => (mockLaunch.known ? { pageLab: mockLaunch.pageLab, syncDemo: false, lab: true, arguments: {} } : null) } };
 });
 jest.mock("../App", () => ({ __esModule: true, default: () => require("react").createElement(require("react-native").Text, null, "the app") }));

@@ -8,7 +8,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
-from ardia_cli import __version__
+from nilla_browser_cli import __version__
 
 FEEDBACK_URL: str | None = None
 ISSUE_URL = "https://github.com/NoorChasib/nilla/issues/new"
@@ -38,7 +38,7 @@ MAX_LOCAL_LINES = 200
 REFERENCE = re.compile(r"^FB-[A-Z0-9]{2,16}$")
 TOKEN = re.compile(r"^[\x21-\x7e]{8,512}$")
 DESCRIPTION = """\
-Report a problem or an idea to Ardia's developer: a confusing error, a missing command, output that cost you extra
+Report a problem or an idea to Nilla's developer: a confusing error, a missing command, output that cost you extra
 turns, something slow. Give it a short title and say what you ran, what happened and what you expected.
 
 This build has no feedback service set up, so nothing is sent: the report is kept on this Mac and the command prints
@@ -49,10 +49,10 @@ headers, known key formats, JWTs), along with emails, URL logins and queries, ca
 """
 EPILOG = """\
 Examples:
-  ardia feedback --title "snapshot -i hides dialog buttons" "the Save button inside a dialog wasn't listed with a ref"
-  ardia feedback --kind slow --title "open takes 9 s" --command "ardia browse open https://example.com" "it used to take 1 s"
-  echo "fill on a date input typed into the wrong field" | ardia feedback --title "fill misses date inputs"
-  ardia feedback --title "click did nothing" --attach shot.png "the button stayed the same after click @e4"
+  nilla-browser feedback --title "snapshot -i hides dialog buttons" "the Save button inside a dialog wasn't listed with a ref"
+  nilla-browser feedback --kind slow --title "open takes 9 s" --command "nilla browse open https://example.com" "it used to take 1 s"
+  echo "fill on a date input typed into the wrong field" | nilla feedback --title "fill misses date inputs"
+  nilla-browser feedback --title "click did nothing" --attach shot.png "the button stayed the same after click @e4"
 
 Attach: .mp4 (one recording, 100 MB), .json.gz (one trace, 50 MB), .ips crash reports, and .png .jpg .jpeg .gif .webp
 .heic .mov .txt .log .md .json .jsonl .csv (10 MB each), 10 files at most.
@@ -84,13 +84,13 @@ class Outcome:
 
 
 def add_parser(commands, formatter) -> None:
-    parser = commands.add_parser("feedback", help="report a problem or idea to Ardia's developer (agents welcome)", description=DESCRIPTION, epilog=EPILOG, formatter_class=formatter)
+    parser = commands.add_parser("feedback", help="report a problem or idea to Nilla's developer (agents welcome)", description=DESCRIPTION, epilog=EPILOG, formatter_class=formatter)
     parser.add_argument("text", nargs="*", help="what happened and what you expected; - or nothing reads stdin")
     parser.add_argument("--title", help=f"a short title, 1-{MAX_TITLE} characters (required)")
     parser.add_argument("--kind", choices=KINDS, default="bug", help="bug (default), slow, idea or other")
     parser.add_argument("--attach", action="append", default=[], metavar="FILE", help="attach a file (repeatable)")
     parser.add_argument("--command", dest="about", metavar="CMD", help="the command that misbehaved")
-    parser.add_argument("--data-dir", help="the Ardia data dir whose install id and session apply")
+    parser.add_argument("--data-dir", help="the Nilla data dir whose install id and session apply")
 
 
 def read_text(words: list[str], stdin) -> str:
@@ -102,11 +102,11 @@ def read_text(words: list[str], stdin) -> str:
 
 
 def clean_title(title: str | None) -> str:
-    from ardia_cli import telemetry_scrub
+    from nilla_browser_cli import telemetry_scrub
 
     title = " ".join((title or "").split())
     if not title:
-        raise Refused(f'ardia feedback needs --title "…" (1-{MAX_TITLE} characters)')
+        raise Refused(f'nilla feedback needs --title "…" (1-{MAX_TITLE} characters)')
     if len(title) > MAX_TITLE:
         raise Refused(f"the title is {len(title)} characters; keep it to {MAX_TITLE}")
     clean = telemetry_scrub.scrub(title)
@@ -116,10 +116,10 @@ def clean_title(title: str | None) -> str:
 
 
 def clean_description(text: str) -> tuple[str, bool]:
-    from ardia_cli import telemetry_scrub
+    from nilla_browser_cli import telemetry_scrub
 
     if not text.strip():
-        raise Refused('ardia feedback needs a description: ardia feedback --title "…" "what happened, what you expected"')
+        raise Refused('nilla feedback needs a description: nilla feedback --title "…" "what happened, what you expected"')
     clean, truncated = telemetry_scrub.free_text(text.strip(), MAX_DESCRIPTION)
     if telemetry_scrub.only_placeholders(clean):
         raise Refused("nothing is left of the description once secrets and personal data are removed; describe what happened without them")
@@ -143,7 +143,7 @@ def attachment_kind(path: Path, counts: dict) -> tuple[str, int, str]:
         return f"crash-{counts['ips']}.ips", OTHER_FILE_BYTES, "text/plain"
     extension = lower.rsplit(".", 1)[-1] if "." in lower else ""
     if extension not in OTHER_TYPES:
-        raise Refused(f"{path.name}: can't attach this kind of file (see ardia feedback --help for the kinds)")
+        raise Refused(f"{path.name}: can't attach this kind of file (see nilla feedback --help for the kinds)")
     counts["other"] = counts.get("other", 0) + 1
     return f"attachment-{counts['other']}.{extension}", OTHER_FILE_BYTES, OTHER_TYPES[extension]
 
@@ -173,7 +173,7 @@ def attachments(files: list[str]) -> list[Attachment]:
 
 
 def feedback_url(env) -> tuple[str | None, str]:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     override = env.get(TEST_URL_ENV)
     if override:
@@ -186,12 +186,12 @@ def feedback_url(env) -> tuple[str | None, str]:
     if not FEEDBACK_URL:
         return None, "no feedback service is set up for this build"
     if telemetry.is_dev_build():
-        return None, f"this ardia is a checkout build ({__version__}), which never sends to a feedback service; set {TEST_URL_ENV} to a local service"
+        return None, f"this nilla is a checkout build ({__version__}), which never sends to a feedback service; set {TEST_URL_ENV} to a local service"
     return FEEDBACK_URL, ""
 
 
 def blocked_reason(env) -> str | None:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     do_not_track = (env.get("DO_NOT_TRACK") or "").strip()
     if do_not_track.lower() not in ("", "0", "false"):
@@ -201,19 +201,19 @@ def blocked_reason(env) -> str | None:
         return f"ARDIA_TELEMETRY={sharing} is set"
     for name in telemetry.TEST_ENDPOINT_ENV:
         if env.get(name):
-            return f"{name} points ardia at a test browser"
+            return f"{name} points nilla at a test browser"
     return None
 
 
 def identity(doc: dict | None) -> tuple[str, bool]:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     install_id = telemetry.sharing_id(doc)
     return (install_id, True) if install_id else (str(uuid.uuid4()), False)
 
 
 def body(kind: str, title: str, description: str, truncated: bool, about: str | None, found: list[Attachment], doc: dict | None, install_id: str, environment: str, home) -> dict:
-    from ardia_cli import caller, telemetry, telemetry_scrub, usage
+    from nilla_browser_cli import caller, telemetry, telemetry_scrub, usage
 
     info = telemetry.system_info()
     try:
@@ -253,7 +253,7 @@ def request(method: str, url: str, data, headers: dict, timeout: float) -> tuple
     import urllib.error
     import urllib.request
 
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     key = telemetry.CLI_INGEST_KEY or (LOCAL_CLI_KEY if telemetry.LOOPBACK_URL.match(url) else None)
     headers = {**({telemetry.INGEST_KEY_HEADER: key} if key else {}), **headers}
@@ -275,7 +275,7 @@ def request(method: str, url: str, data, headers: dict, timeout: float) -> tuple
 
 
 def service_refusal(status: int, raw: bytes) -> str:
-    from ardia_cli import telemetry_scrub
+    from nilla_browser_cli import telemetry_scrub
 
     try:
         message = json.loads(raw).get("message")
@@ -303,7 +303,7 @@ def upload(url: str, item: Attachment, token: str) -> tuple[int, str]:
 
 
 def issue_link(value, base: str) -> str | None:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     if not isinstance(value, str) or len(value) > 2048:
         return None
@@ -320,7 +320,7 @@ def submit(base: str, payload: dict, found: list[Attachment]) -> Outcome:
         return Outcome(False, failure or f"the feedback service answered HTTP {status}")
     reference, token = created.get("id"), created.get("upload_token")
     if not isinstance(reference, str) or not REFERENCE.match(reference) or not isinstance(token, str) or not TOKEN.match(token):
-        return Outcome(False, "the feedback service gave an answer ardia couldn't read")
+        return Outcome(False, "the feedback service gave an answer nilla couldn't read")
     item_url = f"{base}/{quote(reference)}"
     for item in found:
         status, failure = upload(item_url, item, token)
@@ -334,8 +334,8 @@ def submit(base: str, payload: dict, found: list[Attachment]) -> Outcome:
 
 
 def save_locally(home: Path, entry: dict) -> Path:
-    from ardia_cli import usage
-    from ardia_cli.browse import paths
+    from nilla_browser_cli import usage
+    from nilla_browser_cli.browse import paths
 
     dir_fd = usage.open_folder(home)
     try:
@@ -362,7 +362,7 @@ def save_locally(home: Path, entry: dict) -> Path:
 
 
 def keep(home: Path | None, entry: dict, reason: str) -> int:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     if home is None:
         print(f"Not sent: {reason}. It wasn't saved either: a checkout build keeps notes only with ARDIA_CLI_HOME set.")
@@ -377,7 +377,7 @@ def keep(home: Path | None, entry: dict, reason: str) -> int:
 
 
 def release_slot(home: Path, digest: str) -> None:
-    from ardia_cli import usage
+    from nilla_browser_cli import usage
 
     try:
         usage.release_feedback_slot(home, digest)
@@ -386,8 +386,8 @@ def release_slot(home: Path, digest: str) -> None:
 
 
 def run(args, stdin=None, env=None) -> int:
-    from ardia_cli import telemetry, usage
-    from ardia_cli.endpoint import data_root
+    from nilla_browser_cli import telemetry, usage
+    from nilla_browser_cli.endpoint import data_root
 
     env = os.environ if env is None else env
     text = read_text(args.text, sys.stdin if stdin is None else stdin)
@@ -396,7 +396,7 @@ def run(args, stdin=None, env=None) -> int:
         description, truncated = clean_description(text)
         found = attachments(args.attach)
     except Refused as refused:
-        sys.stderr.write(f"ardia feedback: {refused}\n")
+        sys.stderr.write(f"nilla feedback: {refused}\n")
         return 2
     home = usage.recording_home(env)
     explicit = args.data_dir or env.get("ARDIA_DATA_DIR")
@@ -426,7 +426,7 @@ def run(args, stdin=None, env=None) -> int:
     if slot == "limited":
         return keep(home, entry, f"{DAILY_LIMIT} reports already went out in the last day")
     if slot != "ok":
-        return keep(home, entry, "another ardia was updating the report count (try again)")
+        return keep(home, entry, "another nilla was updating the report count (try again)")
     outcome = submit(base, payload, found)
     if not outcome.sent:
         if home is not None:

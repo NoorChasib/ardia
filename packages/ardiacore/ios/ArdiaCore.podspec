@@ -1,9 +1,9 @@
 Pod::Spec.new do |s|
   s.name           = 'ArdiaCore'
   s.version        = '0.0.0'
-  s.summary        = 'Ardia on ArdiaCore (our own Chromium layer) for React Native macOS'
+  s.summary        = 'Nilla on ArdiaCore (our own Chromium layer) for React Native macOS'
   s.author         = ''
-  s.homepage       = 'https://github.com/ardia'
+  s.homepage       = 'https://github.com/nilla'
   s.license        = 'Apache-2.0'
   s.platforms      = { :osx => '14.0' }
   s.source         = { git: '' }

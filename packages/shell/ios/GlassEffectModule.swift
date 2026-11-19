@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public class GlassEffectModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaGlassEffect")
+    Name("NillaGlassEffect")
 
     Function("isLiquidGlass") { () -> Bool in LiquidGlass.available }
 

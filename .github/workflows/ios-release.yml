@@ -302,7 +302,7 @@ jobs:
           build="$BUILD_INPUT"
           [ -n "$build" ] || build="$(node apps/phone/scripts/asc.mjs next-build)"
           echo "build=$build" >> "$GITHUB_OUTPUT"
-          echo "### Ardia for iPhone ${RELEASE_VERSION:-from MARKETING_VERSION}, build $build ($MODE)" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Nilla for iPhone ${RELEASE_VERSION:-from MARKETING_VERSION}, build $build ($MODE)" >> "$GITHUB_STEP_SUMMARY"
       - if: inputs.mode == 'device'
         name: Register the iPhone
         env:

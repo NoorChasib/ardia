@@ -82,7 +82,7 @@ final class SQLiteSnapshot {
     if let tempDir { try? FileManager.default.removeItem(at: tempDir) }
   }
 
-  static let prefix = "ardia-import-"
+  static let prefix = "nilla-import-"
   static let leftoverAge: TimeInterval = 3600
 
   static func removeLeftovers(in folder: URL = FileManager.default.temporaryDirectory, now: Date = Date()) {

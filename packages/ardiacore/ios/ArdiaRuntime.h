@@ -2,7 +2,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 
-namespace ardia_runtime {
+namespace nilla_runtime {
 
 inline bool ReplaceMethod(Class cls, SEL sel, id (^make)(IMP original)) {
   Method method = cls ? class_getInstanceMethod(cls, sel) : nullptr;

@@ -13,8 +13,8 @@ final class BrowserWindow: NSWindow {
     )
     titlebarAppearsTransparent = true
     titleVisibility = .hidden
-    title = "Ardia"
-    ArdiaChromeWindowHost.setInterfaceMinSize(NSSize(width: 720, height: 460), of: self)
+    title = "Nilla"
+    NillaChromeWindowHost.setInterfaceMinSize(NSSize(width: 720, height: 460), of: self)
     isReleasedWhenClosed = false
     backgroundColor = NSColor(name: nil) { appearance in
       appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
@@ -25,7 +25,7 @@ final class BrowserWindow: NSWindow {
     for name in [NSWindow.didResizeNotification, NSWindow.didExitFullScreenNotification, NSWindow.didBecomeKeyNotification] {
       NotificationCenter.default.addObserver(self, selector: #selector(layoutTrafficLights), name: name, object: self)
     }
-    NotificationCenter.default.addObserver(self, selector: #selector(layoutTrafficLights), name: .ArdiaInterfaceScaleDidChange, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(layoutTrafficLights), name: .NillaInterfaceScaleDidChange, object: nil)
     layoutTrafficLights()
   }
 

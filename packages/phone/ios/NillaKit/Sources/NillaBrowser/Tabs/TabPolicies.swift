@@ -1,4 +1,4 @@
-import ArdiaSync
+import NillaSync
 import Foundation
 
 public enum AutoArchiveInterval: String, Codable, Sendable, CaseIterable, Identifiable {

@@ -29,7 +29,7 @@ test("an hour with only Option resizes still sends usage_counts, and the count s
   assert.deepEqual(await sentPlacementCounts(), [[2, 0]]);
 });
 
-test("an hour with only drags Ardia moved itself still sends usage_counts with how many, and the count starts again from zero", async () => {
+test("an hour with only drags Nilla moved itself still sends usage_counts with how many, and the count starts again from zero", async () => {
   client.loadChoice();
   client.setSharing(true, "onboarding");
   const sentDragLoops = async () => {

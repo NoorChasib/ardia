@@ -3,16 +3,16 @@ import contextlib
 import random
 import re
 
-from ardia_cli import command_metrics
-from ardia_cli.browse import fields, human
-from ardia_cli.browse.errors import BrowseError, CdpError, Gated, OutcomeUnknown
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse import fields, human
+from nilla_browser_cli.browse.errors import BrowseError, CdpError, Gated, OutcomeUnknown
 
 SCROLL_DEFAULT = 300
 DELIVERY_TIMEOUT = 1.5
 NOT_DELIVERED = (
     "{action} was sent, but the page received none of its {missing} events. Something may have caught them first (an overlay, "
     "or a frame this check can't see into), or the tab may have just been switched away from; take a screenshot to see what's "
-    "at that point, or show the tab (`ardia browse tab <id> --show`), before trying again"
+    "at that point, or show the tab (`nilla-browser browse tab <id> --show`), before trying again"
 )
 TARGET_REPLACED = (
     "{action} didn't land: {target} was removed from the page before it arrived (the page redrew it, as a list does after "
@@ -44,13 +44,13 @@ DISABLED_STATE = """(el) => ({
 })"""
 CELL_OF = "(el) => el.closest('[role=gridcell], [role=cell], td')"
 CELL_START = """(cell) => {
-  globalThis.ardiaCellFocusBefore = document.activeElement;
+  globalThis.nillaCellFocusBefore = document.activeElement;
   const editable = (n) => !n.disabled && (n.tagName === "SELECT" || n.isContentEditable
     || ((n.tagName === "INPUT" || n.tagName === "TEXTAREA") && !n.readOnly && n.type !== "hidden"));
   const grid = cell.closest("[role=grid], [role=treegrid], [role=table], table");
   const row = cell.closest("[role=row], tr");
   const rows = grid ? Array.from(grid.querySelectorAll("[role=row], tr")) : [];
-  globalThis.ardiaCellSpot = {
+  globalThis.nillaCellSpot = {
     cell, grid, id: cell.id || null,
     row: row && row.getAttribute("aria-rowindex"), column: cell.getAttribute("aria-colindex"),
     rowIndex: row ? rows.indexOf(row) : -1, cellIndex: row ? Array.from(row.children).indexOf(cell) : -1,
@@ -61,15 +61,15 @@ CELL_START = """(cell) => {
   const box = cell.getBoundingClientRect();
   const hit = box.width && box.height ? document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2) : null;
   if (active && editable(active) && (cell.contains(active) || hit && (hit === active || active.contains(hit)))) {
-    globalThis.ardiaCellInner = active;
+    globalThis.nillaCellInner = active;
     return { was, inner: true, open: true };
   }
   const inner = Array.from(cell.querySelectorAll("input, textarea, select, [contenteditable=true], [role=combobox], [role=textbox]"))
     .find((n) => editable(n) || n.getAttribute("role") === "combobox");
-  globalThis.ardiaCellInner = inner || null;
+  globalThis.nillaCellInner = inner || null;
   return { was, inner: !!inner, open: false };
 }"""
-CELL_INNER = "() => globalThis.ardiaCellInner || null"
+CELL_INNER = "() => globalThis.nillaCellInner || null"
 CELL_EDITOR = """(cell) => {
   let active = document.activeElement;
   while (active && active.shadowRoot && active.shadowRoot.activeElement) active = active.shadowRoot.activeElement;
@@ -77,7 +77,7 @@ CELL_EDITOR = """(cell) => {
   const editable = !active.disabled && (active.tagName === "SELECT" || active.isContentEditable
     || ((active.tagName === "INPUT" || active.tagName === "TEXTAREA") && !active.readOnly));
   if (!editable) return null;
-  return cell.contains(active) || active !== globalThis.ardiaCellFocusBefore ? active : null;
+  return cell.contains(active) || active !== globalThis.nillaCellFocusBefore ? active : null;
 }"""
 CELL_EDITOR_STATE = """(editor) => {
   let active = document.activeElement;
@@ -91,7 +91,7 @@ CELL_EDITOR_STATE = """(editor) => {
   return { open: true, invalid: editor.getAttribute("aria-invalid") === "true" || !!editor.validationMessage, message };
 }"""
 CELL_FIND = """() => {
-  const spot = globalThis.ardiaCellSpot;
+  const spot = globalThis.nillaCellSpot;
   if (!spot) return null;
   if (spot.cell.isConnected) return spot.cell;
   if (spot.id && document.getElementById(spot.id)) return document.getElementById(spot.id);
@@ -145,12 +145,12 @@ LIST_BEFORE = """(source, target) => {
   const key = (n) => (n.textContent || "").replace(/\\s+/g, " ").trim();
   const text = key(item);
   if (!text || items.filter((n) => key(n) === text).length !== 1) return null;
-  globalThis.ardiaDragList = { list, tag: item.tagName, text };
+  globalThis.nillaDragList = { list, tag: item.tagName, text };
   return { from: items.indexOf(item) + 1, count: items.length };
 }"""
 LIST_AFTER = """() => {
-  const spot = globalThis.ardiaDragList;
-  globalThis.ardiaDragList = null;
+  const spot = globalThis.nillaDragList;
+  globalThis.nillaDragList = null;
   if (!spot || !spot.list.isConnected) return null;
   const key = (n) => (n.textContent || "").replace(/\\s+/g, " ").trim();
   const items = Array.from(spot.list.children).filter((n) => n.tagName === spot.tag);
@@ -171,7 +171,7 @@ async def over_frame(page, x: float, y: float) -> bool:
             return True
         node = (await page.send("DOM.describeNode", {"backendNodeId": hit["backendNodeId"]}))["node"]
     except (CdpError, KeyError):
-        return bool(await page.call("(x, y) => ardiaBrowse.overFrame(x, y)", x, y, frame=page.main_frame, read=True))
+        return bool(await page.call("(x, y) => nillaBrowse.overFrame(x, y)", x, y, frame=page.main_frame, read=True))
     if node.get("nodeName") in FRAME_OWNERS:
         command_metrics.flag("input_in_inner_frame", True)
         return True
@@ -199,7 +199,7 @@ async def focus_in_other_frame(page, frame) -> bool:
 
 
 async def input_counts(page, frame):
-    return await page.call("() => ardiaBrowse.inputWatch()", frame=frame)
+    return await page.call("() => nillaBrowse.inputWatch()", frame=frame)
 
 
 def delivered(now: dict, before: dict, name: str) -> int:
@@ -207,7 +207,7 @@ def delivered(now: dict, before: dict, name: str) -> int:
 
 
 async def expect_input(page, frame, run, needs: dict, action: str, element=None):
-    from ardia_cli.browse.errors import ConnectionLost, OutcomeUnknown
+    from nilla_browser_cli.browse.errors import ConnectionLost, OutcomeUnknown
 
     frame = frame or page.main_frame
     loader = page.loader(frame)
@@ -287,11 +287,11 @@ class ScrollDriver:
 
 
 async def viewport(page, frame=None):
-    return await page.call("() => ardiaBrowse.viewport()", frame=frame or page.main_frame, read=True)
+    return await page.call("() => nillaBrowse.viewport()", frame=frame or page.main_frame, read=True)
 
 
 async def rect(page, element):
-    return await page.call("(el) => ardiaBrowse.rect(el)", element, frame=element.frame)
+    return await page.call("(el) => nillaBrowse.rect(el)", element, frame=element.frame)
 
 
 async def frame_offset(page, frame: str) -> tuple[float, float]:
@@ -361,8 +361,8 @@ async def laid_out(page):
             if vp["width"] >= 1 and vp["height"] >= 1:
                 return
     raise BrowseError(
-        f"This tab has no size yet ({vp['width']}×{vp['height']}: Ardia hasn't laid it out), so there's nowhere to click. Show it with "
-        f"`ardia browse tab {page.state.tab_id(page.target_id)} --show`, or wait a moment and retry", code="no_viewport",
+        f"This tab has no size yet ({vp['width']}×{vp['height']}: Nilla hasn't laid it out), so there's nowhere to click. Show it with "
+        f"`nilla-browser browse tab {page.state.tab_id(page.target_id)} --show`, or wait a moment and retry", code="no_viewport",
     )
 
 
@@ -415,7 +415,7 @@ async def scroll_into_view(page, element, humanize: bool):
 
 
 async def target_point(page, element, humanize: bool, check_cover: bool = True):
-    info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+    info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     if not info.get("connected"):
         raise BrowseError(f"Element {element.label} was removed from the page")
     await laid_out(page)
@@ -433,10 +433,10 @@ async def target_point(page, element, humanize: bool, check_cover: bool = True):
         if not check_cover:
             return cx, cy, info
         ox, oy = await frame_offset(page, element.frame)
-        cover = await page.call("(el, x, y) => ardiaBrowse.hitTest(el, x, y)", element, cx - ox, cy - oy, frame=element.frame)
+        cover = await page.call("(el, x, y) => nillaBrowse.hitTest(el, x, y)", element, cx - ox, cy - oy, frame=element.frame)
         if cover and humanize:
             cx, cy = (left + right) / 2, (top + bottom) / 2
-            cover = await page.call("(el, x, y) => ardiaBrowse.hitTest(el, x, y)", element, cx - ox, cy - oy, frame=element.frame)
+            cover = await page.call("(el, x, y) => nillaBrowse.hitTest(el, x, y)", element, cx - ox, cy - oy, frame=element.frame)
         if not cover:
             break
         if f"consent {cover}" not in tried and not cover.startswith("nothing"):
@@ -463,7 +463,7 @@ async def target_point(page, element, humanize: bool, check_cover: bool = True):
             where = f"{element.label} is outside the visible page (its middle is at {cx - ox:.0f},{cy - oy:.0f} in a {vp['width']}×{vp['height']} viewport)"
             lock = await scroll_lock(page, element)
             if lock:
-                from ardia_cli import command_metrics
+                from nilla_browser_cli import command_metrics
 
                 command_metrics.flag("click_scroll_locked", True)
                 raise BrowseError(
@@ -497,7 +497,7 @@ CLOSE_CONTROL = r"""(x, y) => {
   if (!layer) return [];
   const closeName = /^(close|dismiss|close (dialog|modal|popup|window|banner)|no,? thanks?|no thank you|not now|maybe later|skip|×|✕|✖|x)$/i;
   for (const control of layer.querySelectorAll("button, [role=button], a, [aria-label]")) {
-    if (!ardiaBrowse.visible(control)) continue;
+    if (!nillaBrowse.visible(control)) continue;
     const shown = ((control.innerText || control.value || "").trim()).replace(/\s+/g, " ");
     const label = (control.getAttribute("aria-label") || control.getAttribute("title") || "").trim();
     if (closeName.test(shown) || (shown.length <= 2 && closeName.test(label))) return [control];
@@ -507,7 +507,7 @@ CLOSE_CONTROL = r"""(x, y) => {
 
 
 async def close_control(page, element, x, y) -> str | None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     try:
         remote = await page.call(CLOSE_CONTROL, x, y, frame=element.frame, by_value=False, read=True)
@@ -525,10 +525,10 @@ async def close_control(page, element, x, y) -> str | None:
 
 
 async def dismissed_consent(page, element, x, y) -> bool:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     try:
-        done = await page.call("(x, y) => ardiaBrowse.dismissConsent(x, y)", x, y, frame=element.frame)
+        done = await page.call("(x, y) => nillaBrowse.dismissConsent(x, y)", x, y, frame=element.frame)
     except BrowseError:
         return False
     if not done:
@@ -542,7 +542,7 @@ async def dismissed_consent(page, element, x, y) -> bool:
 
 
 async def closed_menu(page, cover: str) -> bool:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     try:
         for kind in ("keyDown", "keyUp"):
@@ -556,7 +556,7 @@ async def closed_menu(page, cover: str) -> bool:
 
 
 async def centered(page, element) -> bool:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     try:
         moved = await page.call(CENTER, element, frame=element.frame)
@@ -645,7 +645,7 @@ async def scroll_lock(page, element) -> str | None:
 
 
 async def dom_click(page, element, error: BrowseError):
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     clicked = await page.call(DOM_CLICK, element, frame=element.frame)
     if isinstance(clicked, dict):
@@ -680,7 +680,7 @@ async def hover(page, element, humanize: bool):
 
 
 async def focus_field(page, element, info, humanize: bool, tolerate_detach: bool = False):
-    from ardia_cli.browse.errors import CdpError
+    from nilla_browser_cli.browse.errors import CdpError
 
     try:
         if humanize and not info.get("focused"):
@@ -812,7 +812,7 @@ DOM_CLICK = """(el) => {
 REPLACEMENT = """(old) => {
   const active = document.activeElement;
   if (!active || active === old || active === document.body) return null;
-  const info = ardiaBrowse.info(active);
+  const info = nillaBrowse.info(active);
   if (!info.editable || info.disabled) return null;
   const keys = ["id", "name", "placeholder", "aria-label", "title"];
   const same = active.tagName === old.tagName && (active.type || "") === (old.type || "")
@@ -846,23 +846,23 @@ async def type_into(page, element, text: str, humanize: bool, guard=None):
 
 
 async def clear_field(page, element, humanize: bool):
-    info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+    info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     if not info.get("value"):
         return
     await expect_input(page, element.frame, lambda: page.input.gesture("clear", lambda: page.input.press_combo("Meta+a", humanize)),
                        {"keydown": 2}, "Select all", element)
     await expect_input(page, element.frame, lambda: page.input.gesture("clear", lambda: page.input.press_combo("Backspace", humanize)),
                        {"keydown": 1}, "Backspace", element)
-    info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+    info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     if info.get("value"):
         raise BrowseError(f"Couldn't clear {element.label}; it still holds text")
 
 
 async def not_editable_message(page, element) -> str:
     try:
-        facts = await page.call("""(el) => ({ role: (el.getAttribute("role") || el.tagName).toLowerCase(), name: ardiaBrowse.accessibleText(el).trim().slice(0, 60),
+        facts = await page.call("""(el) => ({ role: (el.getAttribute("role") || el.tagName).toLowerCase(), name: nillaBrowse.accessibleText(el).trim().slice(0, 60),
             popup: (el.getAttribute("aria-haspopup") || "").toLowerCase(), expands: el.hasAttribute("aria-expanded"),
-            combo: ardiaBrowse.comboKind(el) })""", element, frame=element.frame, read=True)
+            combo: nillaBrowse.comboKind(el) })""", element, frame=element.frame, read=True)
     except BrowseError:
         return f"Element {element.label} isn't an editable field"
     named = f'{facts["role"]} "{facts["name"]}"' if facts.get("name") else facts["role"]
@@ -875,10 +875,10 @@ async def not_editable_message(page, element) -> str:
 
 
 async def fill(page, element, text: str, humanize: bool, guard=None):
-    info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+    info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     if info.get("disabled"):
         await wait_enabled(page, element)
-        info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+        info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     if info.get("tag") == "select" and guard is None:
         return False, await pick_option(page, element, text)
     if not info.get("editable") or info.get("disabled"):
@@ -987,7 +987,7 @@ async def set_editor(page, editor, text: str, humanize: bool):
     if kind == "select":
         await pick_option(page, editor, text)
     elif kind == "datalist":
-        known = await page.call("(el) => ardiaBrowse.datalistValues(el)", editor, frame=editor.frame, read=True) or []
+        known = await page.call("(el) => nillaBrowse.datalistValues(el)", editor, frame=editor.frame, read=True) or []
         items = [{"text": item, "pieces": []} for item in known]
         levels = [match_level(text, item) for item in items]
         best = max(levels, default=0)
@@ -1023,7 +1023,7 @@ async def commit_cell(page, editor, humanize: bool):
 async def fill_cell(page, element, cell, text: str, humanize: bool) -> dict | None:
     cell.label = element.label
     was, editor, opened = await cell_editor(page, cell, humanize)
-    names = await page.call("(el) => ardiaBrowse.labelText(el)", editor, frame=editor.frame, read=True) or []
+    names = await page.call("(el) => nillaBrowse.labelText(el)", editor, frame=editor.frame, read=True) or []
     name = next((" ".join(str(item).split()) for item in names if str(item).strip()), "")
     await set_editor(page, editor, text, humanize)
     command_metrics.add("cell_edits")
@@ -1054,7 +1054,7 @@ async def set_value(page, element, kind: str, text: str) -> str:
 
 
 async def type_text(page, element, text: str, humanize: bool):
-    info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+    info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     loader = page.loader(element.frame)
     await focus_field(page, element, info, humanize, tolerate_detach=True)
     element, retargeted = await settle_focus(page, element, loader)
@@ -1063,7 +1063,7 @@ async def type_text(page, element, text: str, humanize: bool):
 
 
 async def set_checked(page, element, wanted: bool, humanize: bool):
-    info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+    info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     if info.get("checked") == wanted:
         return
     if info.get("disabled"):
@@ -1080,7 +1080,7 @@ async def set_checked(page, element, wanted: bool, humanize: bool):
             raise
     await click(page, target, humanize)
     await asyncio.sleep(0.05)
-    info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+    info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
     if info.get("checked") != wanted:
         raise BrowseError(f"Clicking {element.label} didn't {'check' if wanted else 'uncheck'} it")
 
@@ -1088,7 +1088,7 @@ async def set_checked(page, element, wanted: bool, humanize: bool):
 async def select(page, element, values: list[str]):
     await wait_enabled(page, element)
     await page.focus_element(element)
-    return await page.call("(el, values) => ardiaBrowse.selectOptions(el, values)", element, values, frame=element.frame)
+    return await page.call("(el, values) => nillaBrowse.selectOptions(el, values)", element, values, frame=element.frame)
 
 
 def plain(text) -> str:
@@ -1140,21 +1140,21 @@ def unique_match(value: str, items: list[dict]) -> bool:
 
 
 async def combo_kind(page, element) -> str | None:
-    return await page.call("(el) => ardiaBrowse.comboKind(el)", element, frame=element.frame, read=True)
+    return await page.call("(el) => nillaBrowse.comboKind(el)", element, frame=element.frame, read=True)
 
 
 async def suggestions_now(page, element):
-    remote = await page.call("(el) => ardiaBrowse.suggestions(el)", element, frame=element.frame, by_value=False, read=True)
-    items = await page.call("() => globalThis.ardiaBrowseSuggestions || []", frame=element.frame, read=True)
+    remote = await page.call("(el) => nillaBrowse.suggestions(el)", element, frame=element.frame, by_value=False, read=True)
+    items = await page.call("() => globalThis.nillaBrowseSuggestions || []", frame=element.frame, read=True)
     options = await page.elements_from(remote, element.frame, "suggestion", 200)
     return options, items[: len(options)]
 
 
 async def unlinked_note(page, element) -> str:
-    linked = await page.call("(el) => ardiaBrowse.popupsOf(el).length", element, frame=element.frame, read=True)
+    linked = await page.call("(el) => nillaBrowse.popupsOf(el).length", element, frame=element.frame, read=True)
     if linked:
         return ""
-    lists = await page.call("(el) => ardiaBrowse.unlinkedListboxes(el)", element, frame=element.frame, read=True)
+    lists = await page.call("(el) => nillaBrowse.unlinkedListboxes(el)", element, frame=element.frame, read=True)
     shown = f" (visible lists: {', '.join(lists)})" if lists else ""
     return ("no list of suggestions is linked to this field (aria-controls, aria-owns, aria-activedescendant, or one inside the same "
             f"component){shown}, so picking one automatically could pick another field's option. Click the option yourself: "
@@ -1162,12 +1162,12 @@ async def unlinked_note(page, element) -> str:
 
 
 async def watch_suggestions(page, element):
-    await page.call("(el) => ardiaBrowse.watchSuggestions(el)", element, frame=element.frame)
+    await page.call("(el) => nillaBrowse.watchSuggestions(el)", element, frame=element.frame)
 
 
 async def unwatch_suggestions(page, element):
     with contextlib.suppress(BrowseError):
-        await page.call("(el) => ardiaBrowse.unwatchSuggestions(el)", element, frame=element.frame)
+        await page.call("(el) => nillaBrowse.unwatchSuggestions(el)", element, frame=element.frame)
 
 
 def suggestions_ready(watch: dict) -> bool:
@@ -1183,7 +1183,7 @@ async def settled_suggestions(page, element, timeout: float, value: str | None =
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout
     while True:
-        watch = await page.call("(el) => ardiaBrowse.suggestionState(el)", element, frame=element.frame, read=True)
+        watch = await page.call("(el) => nillaBrowse.suggestionState(el)", element, frame=element.frame, read=True)
         if suggestions_ready(watch):
             options, items = await suggestions_now(page, element)
             return options, items, True
@@ -1220,7 +1220,7 @@ async def choose(page, element, values: list[str], humanize: bool, where: str, t
     picked = []
     for value in values:
         if kind == "datalist":
-            known = await page.call("(el) => ardiaBrowse.datalistValues(el)", element, frame=element.frame, read=True)
+            known = await page.call("(el) => nillaBrowse.datalistValues(el)", element, frame=element.frame, read=True)
             index = pick_suggestion(value, [{"text": item, "pieces": []} for item in known], where)
             await fill(page, element, known[index], humanize)
             picked.append({"value": value, "picked": known[index]})
@@ -1240,7 +1240,7 @@ async def choose(page, element, values: list[str], humanize: bool, where: str, t
                     fresh = True
             if not fresh and exact_pick(value, items) is None:
                 raise await stale_refusal(page, element, value, items, where, timeout)
-            if items and await page.call("(el) => ardiaBrowse.usedOpenedList(el)", element, frame=element.frame, read=True):
+            if items and await page.call("(el) => nillaBrowse.usedOpenedList(el)", element, frame=element.frame, read=True):
                 command_metrics.flag("select_opened_list", True)
         finally:
             await unwatch_suggestions(page, element)
@@ -1289,7 +1289,7 @@ class DragInterception:
 
     async def page_started_drag(self) -> bool:
         try:
-            now = await self.page.call("() => ardiaBrowse.inputWatch()", frame=self.source_frame, timeout=CLEANUP_TIMEOUT)
+            now = await self.page.call("() => nillaBrowse.inputWatch()", frame=self.source_frame, timeout=CLEANUP_TIMEOUT)
         except BrowseError:
             return False
         return now.get("dragstart", 0) > self.before_source.get("dragstart", 0)
@@ -1298,7 +1298,7 @@ class DragInterception:
         try:
             return await asyncio.wait_for(asyncio.shield(self.intercepted), INTERCEPT_TIMEOUT)
         except asyncio.TimeoutError:
-            raise OutcomeUnknown("drag", "the page started an HTML5 drag, but Ardia didn't hand it over in time") from None
+            raise OutcomeUnknown("drag", "the page started an HTML5 drag, but Nilla didn't hand it over in time") from None
 
     async def moved(self, x: float, y: float):
         self.position = (x, y)

@@ -98,9 +98,9 @@ class Scheduler:
             return None, False
         if group == "aside":
             return Lane(id="aside", group=group, kind="aside", index=0), False
-        used = {ln.index for ln in self.lanes if ln.kind == "ardia"}
+        used = {ln.index for ln in self.lanes if ln.kind == "nilla"}
         index = next(i for i in range(self.lane_base, self.lane_base + len(used) + 1) if i not in used)
-        return Lane(id=f"{group}@{index}", group=group, kind="ardia", index=index), False
+        return Lane(id=f"{group}@{index}", group=group, kind="nilla", index=index), False
 
     def growth_ok(self, now, used):
         return (used < GROW_BELOW and not self.holding and self.growth_in_flight == 0
@@ -178,7 +178,7 @@ class Scheduler:
         starved = laneless and len(self.lanes) >= self.max_lanes
         out = []
         for ln in self.lanes:
-            if ln.kind != "ardia" or ln.busy:
+            if ln.kind != "nilla" or ln.busy:
                 continue
             mine = sorted((x for x in self.lanes if x.group == ln.group), key=lambda x: x.index)
             extra = mine.index(ln) >= 1

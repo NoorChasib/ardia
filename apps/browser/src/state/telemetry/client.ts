@@ -34,9 +34,9 @@ export const environment = (): "dev" | "test" | "production" =>
 function context(): Record<string, unknown> {
   const info = appInfo();
   return {
-    $lib: "ardia-telemetry",
+    $lib: "nilla-telemetry",
     $lib_version: "1",
-    $app_name: "Ardia",
+    $app_name: "Nilla",
     $app_version: info.appVersion,
     $app_build: info.appBuild,
     $os: telemetryHost().os,
@@ -202,7 +202,7 @@ async function send(kind: RequestLogEntry["kind"], body: string, count: number) 
 export function resource(): Record<string, unknown> {
   const info = appInfo();
   return {
-    "service.name": "ardia-app",
+    "service.name": "nilla-app",
     "service.version": info.appVersion,
     "deployment.environment": environment() === "production" ? "production" : "development",
     "os.type": telemetryHost().osType,

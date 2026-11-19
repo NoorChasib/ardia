@@ -15,7 +15,7 @@ platform :ios, deployment_target
 
 prepare_react_native_project!
 
-ardia_kit = Pathname.new(File.join(__dir__, '..', '..', '..', 'packages', 'phone', 'ios', 'ArdiaKit')).cleanpath
+nilla_kit = Pathname.new(File.join(__dir__, '..', '..', '..', 'packages', 'phone', 'ios', 'NillaKit')).cleanpath
 phone_sync = Pathname.new(File.join(__dir__, '..', '..', '..', 'packages', 'phone', 'ios', 'PhoneSync')).cleanpath
 
 publish_changed = '"${PODS_ROOT}/../publish-changed.sh"'
@@ -56,11 +56,11 @@ publish_expo_provider_by_change = lambda do |installer|
   end
 end
 
-link_ardia_kit = lambda do |installer|
+link_nilla_kit = lambda do |installer|
   project = installer.pods_project
-  target = project.targets.find { |t| t.name == 'ArdiaPhoneNative' }
+  target = project.targets.find { |t| t.name == 'NillaPhoneNative' }
   next unless target
-  { ardia_kit => %w[ArdiaBrowser ArdiaDesign], phone_sync => %w[PhoneSync] }.each do |package, products|
+  { nilla_kit => %w[NillaBrowser NillaDesign], phone_sync => %w[PhoneSync] }.each do |package, products|
     path = package.relative_path_from(Pathname.new(project.project_dir)).to_s
     reference = project.root_object.package_references.find do |existing|
       existing.is_a?(Xcodeproj::Project::Object::XCLocalSwiftPackageReference) && existing.relative_path == path
@@ -80,7 +80,7 @@ link_ardia_kit = lambda do |installer|
   end
 end
 
-target 'Ardia' do
+target 'Nilla' do
   use_expo_modules!
 
   config = use_native_modules!([
@@ -112,7 +112,7 @@ target 'Ardia' do
       end
     end
 
-    link_ardia_kit.call(installer)
+    link_nilla_kit.call(installer)
     publish_codegen_by_change.call(installer)
   end
 end

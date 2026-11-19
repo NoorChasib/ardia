@@ -19,7 +19,7 @@
 #include "MaterialViewParts.h"
 #include "VectorGeometry.h"
 
-namespace Ardia {
+namespace Nilla {
 
 REACT_STRUCT(WindowMaterialProps)
 struct WindowMaterialProps : winrt::implements<WindowMaterialProps, winrt::Microsoft::ReactNative::IComponentProps> {
@@ -439,9 +439,9 @@ inline void RegisterMaterialView(winrt::Microsoft::ReactNative::IReactPackageBui
 }
 
 inline void RegisterMaterialViews(winrt::Microsoft::ReactNative::IReactPackageBuilder const &packageBuilder) noexcept {
-  RegisterMaterialView<WindowMaterialView, WindowMaterialProps>(packageBuilder, L"ArdiaWindowMaterial");
-  RegisterMaterialView<MaterialBlurView, MaterialBlurProps>(packageBuilder, L"ArdiaMaterialBlur");
-  RegisterMaterialView<MaterialGradientView, MaterialGradientProps>(packageBuilder, L"ArdiaMaterialGradient");
+  RegisterMaterialView<WindowMaterialView, WindowMaterialProps>(packageBuilder, L"NillaWindowMaterial");
+  RegisterMaterialView<MaterialBlurView, MaterialBlurProps>(packageBuilder, L"NillaMaterialBlur");
+  RegisterMaterialView<MaterialGradientView, MaterialGradientProps>(packageBuilder, L"NillaMaterialGradient");
 }
 
 }

@@ -1,11 +1,11 @@
-import type { MenuShortcut, MenuState } from "@ardia/shell";
+import type { MenuShortcut, MenuState } from "@nilla/shell";
 import type { MenusModule, WindowsHostModule } from "../nativeModuleTypes";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
 type SentState = Omit<MenuState, "bookmarkFolders" | "recentBookmarks" | "bookmarksBar" | "otherBookmarks">;
 
-const menus = () => requireNativeModule<MenusModule>("ArdiaMenus");
+const menus = () => requireNativeModule<MenusModule>("NillaMenus");
 
 const withinSeconds = <Value>(seconds: number, what: string, promise: Promise<Value>) =>
   Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`${what} did not answer within ${seconds}s`)), seconds * 1000))]);
@@ -68,7 +68,7 @@ export const checks: Check[] = [
       await withinSeconds(5, "setMenuBookmarks", menus().setMenuBookmarks({ bookmarkFolders: [], recentBookmarks: [], bookmarksBar: [], otherBookmarks: [] }));
       const listed = byId(await withinSeconds(5, "menuShortcuts", menus().menuShortcuts()));
       expectEqual(listed.get("switchProfile:selfcheck-work")?.path, ["Window", "Profiles"], "switchProfile:selfcheck-work path");
-      expectEqual(listed.get("newLittleArdia:selfcheck-home")?.path, ["File", "New Little Ardia Window in Profile"], "newLittleArdia:selfcheck-home path");
+      expectEqual(listed.get("newLittleNilla:selfcheck-home")?.path, ["File", "New Little Nilla Window in Profile"], "newLittleNilla:selfcheck-home path");
       expectEqual(listed.get("openExtension:selfcheck-extension")?.path, ["Extensions"], "openExtension:selfcheck-extension path");
       expectTrue(!listed.has("newWindow:selfcheck-home"), "the profile's new-window alternate is listed");
     },
@@ -116,7 +116,7 @@ export const checks: Check[] = [
   {
     name: "menus: the pointer state behind right and middle clicks reads live with no button held",
     run() {
-      const host = requireNativeModule<Pick<WindowsHostModule, "pointerState">>("ArdiaWindowsHost");
+      const host = requireNativeModule<Pick<WindowsHostModule, "pointerState">>("NillaWindowsHost");
       const first = host.pointerState();
       const second = host.pointerState();
       expectTrue(Number.isInteger(first) && first >= 0 && first < 64, `pointerState returned ${JSON.stringify(first)}`);

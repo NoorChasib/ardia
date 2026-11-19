@@ -9,9 +9,9 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ardia_cli import hooks
-from ardia_cli.hook_decide import Decider, parse_answer
-from ardia_cli.hook_schedule import Scheduler, next_at
+from nilla_browser_cli import hooks
+from nilla_browser_cli.hook_decide import Decider, parse_answer
+from nilla_browser_cli.hook_schedule import Scheduler, next_at
 from test_automation import Base, event, wait_for
 
 ANSWERING = r"""
@@ -140,7 +140,7 @@ class _scratch:
     def __enter__(self):
         import tempfile
 
-        self.path = tempfile.mkdtemp(prefix="hk", dir=Path.home() / "ardia-scratch" if (Path.home() / "ardia-scratch").is_dir() else None)
+        self.path = tempfile.mkdtemp(prefix="hk", dir=Path.home() / "nilla-scratch" if (Path.home() / "nilla-scratch").is_dir() else None)
         return self.path
 
     def __exit__(self, *exc):

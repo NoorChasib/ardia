@@ -1,31 +1,31 @@
 #import "ArdiaCore.h"
 
-@class ArdiaWebView;
+@class NillaWebView;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaWindowController : NSObject <ArdiaCoreWindowDelegate>
-+ (nullable ArdiaWindowController *)forNSWindow:(nullable NSWindow *)window;
-+ (NSArray<ArdiaWindowController *> *)all;
+@interface NillaWindowController : NSObject <ArdiaCoreWindowDelegate>
++ (nullable NillaWindowController *)forNSWindow:(nullable NSWindow *)window;
++ (NSArray<NillaWindowController *> *)all;
 @property(nonatomic, readonly) ArdiaCoreWindow *coreWindow;
 @property(nonatomic, strong, nullable) NSView *root;
 @property(nonatomic) NSInteger hostChanges;
 @property(nonatomic, copy, nullable) NSString *appWindowId;
-+ (ArdiaWindowController *)strayWindowForProfile:(ArdiaCoreProfile *)profile;
-+ (nullable ArdiaWindowController *)chromeMadeWindowForProfile:(ArdiaCoreProfile *)profile;
++ (NillaWindowController *)strayWindowForProfile:(ArdiaCoreProfile *)profile;
++ (nullable NillaWindowController *)chromeMadeWindowForProfile:(ArdiaCoreProfile *)profile;
 @property(nonatomic, readonly) BOOL stray;
-+ (ArdiaWindowController *)standaloneWindowForProfile:(ArdiaCoreProfile *)profile;
++ (NillaWindowController *)standaloneWindowForProfile:(ArdiaCoreProfile *)profile;
 @property(nonatomic, readonly) BOOL standalone;
 - (void)noteClosing:(ArdiaCoreTab *)tab;
-+ (nullable ArdiaWindowController *)holding:(ArdiaCoreTab *)tab;
-+ (nullable ArdiaWebView *)hostingViewForProfile:(nullable ArdiaCoreProfile *)profile;
++ (nullable NillaWindowController *)holding:(ArdiaCoreTab *)tab;
++ (nullable NillaWebView *)hostingViewForProfile:(nullable ArdiaCoreProfile *)profile;
 + (BOOL)userSees:(nullable NSWindow *)window;
 + (BOOL)userSeesOnlyThroughWindowServer:(nullable NSWindow *)window;
 + (void)reconsiderSightOf:(nullable NSWindow *)window;
 + (nullable instancetype)claimChromeMadeWindow:(nullable NSString *)token;
 - (instancetype)initWithCoreWindow:(ArdiaCoreWindow *)coreWindow;
 @end
-extern NSNotificationName const ArdiaWindowSeenDidChange;
-extern NSString *const ArdiaWindowSeenLeftAppKey;
+extern NSNotificationName const NillaWindowSeenDidChange;
+extern NSString *const NillaWindowSeenLeftAppKey;
 
 NS_ASSUME_NONNULL_END

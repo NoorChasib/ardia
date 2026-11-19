@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import Testing
 
 struct RecentSearchesTests {

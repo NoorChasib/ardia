@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { View, type ViewProps } from "react-native";
-import { ardiaHost, hostSupports, invokeHost, reportHostError } from "../../host";
+import { nillaHost, hostSupports, invokeHost, reportHostError } from "../../host";
 import { FILE_DRAG } from "../../fileCapabilities";
 import { watchFileDragArea } from "./fileDragArea";
 
@@ -21,7 +21,7 @@ export function MouseArea({ path, onMiddleClick, ...props }: MouseAreaProps) {
   const node = useRef<HTMLElement | null>(null);
   const latestPath = useRef(path);
   latestPath.current = path;
-  const draggable = !!path && !!ardiaHost && hostSupports(FILE_DRAG);
+  const draggable = !!path && !!nillaHost && hostSupports(FILE_DRAG);
 
   useEffect(() => {
     const element = node.current;

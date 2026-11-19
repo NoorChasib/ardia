@@ -2,7 +2,7 @@ import Foundation
 import Synchronization
 import Testing
 import WebKit
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 final class StubProtocol: URLProtocol {
   struct Reply: Sendable {
@@ -41,8 +41,8 @@ final class StubProtocol: URLProtocol {
 
 @MainActor
 struct FilterListsFixture {
-  let directory = URL.temporaryDirectory.appending(path: "ardia-filters-\(UUID().uuidString)", directoryHint: .isDirectory)
-  let suite = "ardia.filters.\(UUID().uuidString)"
+  let directory = URL.temporaryDirectory.appending(path: "nilla-filters-\(UUID().uuidString)", directoryHint: .isDirectory)
+  let suite = "nilla.filters.\(UUID().uuidString)"
   let defaults: UserDefaults
   let lists: FilterLists
   let base: String
@@ -96,12 +96,12 @@ struct FilterListsFixture {
     #expect(first.skippedCount == 1)
     #expect(first.state == .ready)
     #expect(first.updatedAt != nil)
-    #expect(fixture.lists.compiled.map(\.identifier) == ["ardia.filters.good.0"])
+    #expect(fixture.lists.compiled.map(\.identifier) == ["nilla.filters.good.0"])
     #expect(fixture.lists.blockedDomains.contains("ads.example"))
 
     StubProtocol.serve("\(fixture.base)/good.txt", status: 503, "")
     await fixture.lists.updateNow()
-    #expect(fixture.lists.compiled.map(\.identifier) == ["ardia.filters.good.0"])
+    #expect(fixture.lists.compiled.map(\.identifier) == ["nilla.filters.good.0"])
     #expect(fixture.lists.list("good")?.ruleCount == 3)
     guard case .failed = fixture.lists.list("good")?.state else {
       Issue.record("expected a failed state, got \(String(describing: fixture.lists.list("good")?.state))")
@@ -130,7 +130,7 @@ struct FilterListsFixture {
 
     let result = await fixture.lists.applyMyFilters("||friend.example^\nnews.example##.paywall\n##+js(skip)")
     #expect(result == MyFiltersResult(ruleCount: 2, skippedCount: 1))
-    #expect(fixture.lists.compiled.contains { $0.identifier == "ardia.filters.my-filters.0" && $0.category == nil })
+    #expect(fixture.lists.compiled.contains { $0.identifier == "nilla.filters.my-filters.0" && $0.category == nil })
 
     let reloaded = FilterLists(directory: fixture.directory, defaults: fixture.defaults, session: StubProtocol.session, languages: ["en-US"], catalog: fixture.lists.catalog)
     #expect(reloaded.myFilters.contains("news.example##.paywall"))

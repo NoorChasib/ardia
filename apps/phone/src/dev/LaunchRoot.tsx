@@ -1,4 +1,4 @@
-import { pages } from "@ardia/phone-native";
+import { pages } from "@nilla/phone-native";
 import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 import App from "../App";

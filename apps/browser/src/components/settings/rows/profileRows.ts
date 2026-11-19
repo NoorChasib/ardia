@@ -145,7 +145,7 @@ export const profileRows = {
         },
         webStore: {
           title: "Get extensions",
-          description: "Add to Ardia installs into this profile.",
+          description: "Add to Nilla installs into this profile.",
           keywords: ["install extension", "chrome web store"],
         },
       },

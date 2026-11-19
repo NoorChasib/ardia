@@ -1,4 +1,4 @@
-import { scanner } from "@ardia/phone-native";
+import { scanner } from "@nilla/phone-native";
 import { Linking } from "react-native";
 import { accessAfterAsking, accessOf, type CameraAccess } from "../lib/cameraAccess";
 

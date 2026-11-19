@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
@@ -79,7 +79,7 @@ fun SettingsIconTile(icon: ImageVector, color: Color, modifier: Modifier = Modif
         modifier
             .size(side)
             .clip(RoundedCornerShape(side * 0.26f))
-            .background(color.ardiaGradient())
+            .background(color.nillaGradient())
             .clearAndSetSemantics {},
         contentAlignment = Alignment.Center,
     ) {
@@ -91,7 +91,7 @@ fun SettingsIconTile(icon: ImageVector, color: Color, modifier: Modifier = Modif
 fun SettingsRowLabel(title: String, icon: ImageVector, tint: Color, modifier: Modifier = Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(SettingsLayout.labelGap), verticalAlignment = Alignment.CenterVertically) {
         SettingsIconTile(icon, tint)
-        Text(title, style = ArdiaType.body, color = SystemPalette.label.current)
+        Text(title, style = NillaType.body, color = SystemPalette.label.current)
     }
 }
 
@@ -115,13 +115,13 @@ fun SettingsHero(
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.hairline), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 title,
-                style = ArdiaType.title2.bold,
+                style = NillaType.title2.bold,
                 color = SystemPalette.label.current,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.semantics { heading() },
             )
             Crossfade(subtitle, animationSpec = Motion.surfaceFade.spec(), label = "heroSubtitle") { text ->
-                Text(text, style = ArdiaType.subheadline, color = SystemPalette.secondaryLabel.current, textAlign = TextAlign.Center)
+                Text(text, style = NillaType.subheadline, color = SystemPalette.secondaryLabel.current, textAlign = TextAlign.Center)
             }
         }
         accessory?.invoke()
@@ -134,7 +134,7 @@ fun SettingsGroup(modifier: Modifier = Modifier, header: String? = null, footer:
         if (header != null) {
             Text(
                 header,
-                style = ArdiaType.footnote,
+                style = NillaType.footnote,
                 color = SystemPalette.secondaryLabel.current,
                 modifier = Modifier.padding(start = SettingsLayout.rowInset, bottom = Spacing.tight).semantics { heading() },
             )
@@ -149,7 +149,7 @@ fun SettingsGroup(modifier: Modifier = Modifier, header: String? = null, footer:
         if (footer != null) {
             Text(
                 footer,
-                style = ArdiaType.footnote,
+                style = NillaType.footnote,
                 color = SystemPalette.secondaryLabel.current,
                 modifier = Modifier.padding(start = SettingsLayout.rowInset, end = SettingsLayout.rowInset, top = Spacing.tight),
             )
@@ -216,9 +216,9 @@ fun SetupStepRow(
         label = "stepFill",
     )
     val description = when (progress) {
-        SetupStepProgress.Done -> stringResource(R.string.ardia_step_done, number)
-        SetupStepProgress.Current -> stringResource(R.string.ardia_step_current, number)
-        SetupStepProgress.Upcoming -> stringResource(R.string.ardia_step_upcoming, number)
+        SetupStepProgress.Done -> stringResource(R.string.nilla_step_done, number)
+        SetupStepProgress.Current -> stringResource(R.string.nilla_step_current, number)
+        SetupStepProgress.Upcoming -> stringResource(R.string.nilla_step_upcoming, number)
     }
     Row(
         modifier.padding(vertical = Spacing.hairline).semantics(mergeDescendants = false) { contentDescription = description },
@@ -235,11 +235,11 @@ fun SetupStepRow(
                 label = "stepBadge",
             ) { done ->
                 if (done) {
-                    Icon(ArdiaSymbols.checkmark, null, Modifier.size(badge * 0.5f), tint = Color.White)
+                    Icon(NillaSymbols.checkmark, null, Modifier.size(badge * 0.5f), tint = Color.White)
                 } else {
                     Text(
                         number.toString(),
-                        style = ArdiaType.subheadline.semibold.monospacedDigits,
+                        style = NillaType.subheadline.semibold.monospacedDigits,
                         color = if (progress == SetupStepProgress.Current) Color.White else SystemPalette.secondaryLabel.current,
                     )
                 }
@@ -248,10 +248,10 @@ fun SetupStepRow(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.hairline)) {
             Text(
                 title,
-                style = ArdiaType.body.semibold,
+                style = NillaType.body.semibold,
                 color = if (progress == SetupStepProgress.Upcoming) SystemPalette.secondaryLabel.current else SystemPalette.label.current,
             )
-            Text(detail, style = ArdiaType.subheadline, color = SystemPalette.secondaryLabel.current)
+            Text(detail, style = NillaType.subheadline, color = SystemPalette.secondaryLabel.current)
             if (content != null) Box(Modifier.padding(top = Spacing.hairline)) { content() }
         }
     }

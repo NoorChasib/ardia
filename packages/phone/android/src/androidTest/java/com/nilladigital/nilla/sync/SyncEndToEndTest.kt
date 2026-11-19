@@ -1,8 +1,8 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.ardia.sync.core.FileKeyStore
-import com.ardia.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.core.FileKeyStore
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

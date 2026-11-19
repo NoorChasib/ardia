@@ -7,7 +7,7 @@
       "type": ["string", "null"],
       "pattern": "^[a-z0-9][a-z0-9_-]*$",
       "default": null,
-      "description": "A theme in themes/<name>.json, or null for Ardia's own palette."
+      "description": "A theme in themes/<name>.json, or null for Nilla's own palette."
     },
     "settings": {
       "type": "object",
@@ -26,7 +26,7 @@
         },
         "mutedSites": { "type": "array", "items": { "type": "string" }, "default": [] },
         "keepActiveSites": { "type": "array", "items": { "type": "string" }, "maxItems": 3, "default": [] },
-        "littleArdiaSize": {
+        "littleNillaSize": {
           "type": "array",
           "prefixItems": [
             { "type": "number", "exclusiveMinimum": 0 },

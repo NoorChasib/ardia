@@ -17,7 +17,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ardia_cli import caller, cli, endpoint, feedback, telemetry, telemetry_scrub, usage
+from nilla_browser_cli import caller, cli, endpoint, feedback, telemetry, telemetry_scrub, usage
 from test_telemetry import CLEARED, INSTALL_ID, Stub, attributes, scratch_dir, write_consent
 
 REPO = Path(__file__).resolve().parents[3]
@@ -164,7 +164,7 @@ class ScrubTest(unittest.TestCase):
             "{'client_secret': 'abc', 'page': 2}": "{'client_secret': <redacted>, 'page': 2}",
             'access_token => "zz9" next': "access_token => <redacted> next",
             "SESSION_ID=abc123; theme=dark": "SESSION_ID=<redacted>; theme=dark",
-            "ardia browse fill @e2 --password hunter2 --session work": "ardia browse fill @e2 --password <redacted> --session work",
+            "nilla browse fill @e2 --password hunter2 --session work": "nilla browse fill @e2 --password <redacted> --session work",
             "token: abc123 then snapshot failed": "token: <redacted> then snapshot failed",
             "export GITHUB_TOKEN=abc123def": "export GITHUB_TOKEN=<redacted>",
             "DB_PASSWORD=hunter2\nSTRIPE_SECRET_KEY=whsec_1": "DB_PASSWORD=<redacted>\nSTRIPE_SECRET_KEY=<redacted>",
@@ -224,13 +224,13 @@ class ScrubTest(unittest.TestCase):
 
     def test_talking_about_sessions_auth_and_tokens_survives(self):
         for text in (
-            "ardia browse session list shows nothing after ardia browse --session work open https://example.com",
-            "ardia browse auth save github failed: the token expired and auth load said no saved state",
+            "nilla browse session list shows nothing after nilla browse --session work open https://example.com",
+            "nilla browse auth save github failed: the token expired and auth load said no saved state",
             "the Bearer token expired; Authorization header missing from the docs",
             "basic usage of --session work is unclear; session cookies vanish after reload",
             "the token didn't refresh\nsnapshot was fine",
             "password fields are skipped by fill, which is right, but the error says element_not_editable",
-            "ardia browse click @e7 on 0.2.44 exited 2 at 16:53 after 1234 ms",
+            "nilla browse click @e7 on 0.2.44 exited 2 at 16:53 after 1234 ms",
         ):
             with self.subTest(text=text):
                 self.assertEqual(self.clean(text), text)
@@ -292,7 +292,7 @@ class TitleAndDescriptionTest(FeedbackCase):
 
     def test_body_matches_the_contract_and_carries_no_raw_length(self):
         write_consent(self.data, lastVersion="0.2.45", lastBuild=245, sessionOpen=True, sessionId=APP_SESSION)
-        self.send("--title", "t", "--kind", "slow", "--command", "ardia browse open https://a.test/x?sid=1", "it took 9 s for bob@example.com")
+        self.send("--title", "t", "--kind", "slow", "--command", "nilla browse open https://a.test/x?sid=1", "it took 9 s for bob@example.com")
         body = self.service.created()["body"]
         self.assertEqual(set(body), {
             "kind", "title", "description", "source", "install_id", "session_id", "app_version", "app_build", "channel",
@@ -303,7 +303,7 @@ class TitleAndDescriptionTest(FeedbackCase):
         self.assertEqual(body["description"], "it took 9 s for <email>")
         self.assertEqual(body["session_id"], APP_SESSION)
         self.assertEqual((body["app_version"], body["app_build"]), ("0.2.45", "245"))
-        self.assertEqual(body["diagnostics"]["about_command"], "ardia browse open https://a.test/x?<redacted>")
+        self.assertEqual(body["diagnostics"]["about_command"], "nilla browse open https://a.test/x?<redacted>")
         self.assertEqual(body["diagnostics"]["agent"], "Claude Code")
         self.assertNotIn("text_chars", json.dumps(body))
         self.assertEqual(body["watch_days"], 0)
@@ -402,7 +402,7 @@ class SendingTest(FeedbackCase):
         cases = [
             ({"DO_NOT_TRACK": "1"}, "DO_NOT_TRACK=1 is set"),
             ({"ARDIA_TELEMETRY": "off"}, "ARDIA_TELEMETRY=off is set"),
-            ({"ARDIA_PORT": "9222"}, "ARDIA_PORT points ardia at a test browser"),
+            ({"ARDIA_PORT": "9222"}, "ARDIA_PORT points nilla at a test browser"),
             ({feedback.TEST_URL_ENV: "https://evil.example/api/feedback"}, "ARDIA_FEEDBACK_URL isn't a loopback http:// URL"),
             ({feedback.TEST_URL_ENV: ""}, "no feedback service is set up for this build"),
         ]
@@ -446,7 +446,7 @@ class SendingTest(FeedbackCase):
         with mock.patch.object(usage, "take_feedback_slot", return_value="busy"):
             status, out, _ = self.send("--title", "t", "busy")
         self.assertEqual(status, 1)
-        self.assertIn("another ardia was updating the report count", out)
+        self.assertIn("another nilla was updating the report count", out)
         self.assertEqual(self.kept()[0]["description"], "busy")
 
     def test_a_checkout_without_a_cli_home_writes_nothing(self):
@@ -576,7 +576,7 @@ class TelemetrySessionAndKeyTest(unittest.TestCase):
         self.assertTrue(sent["$session_id"])
 
     def test_every_cli_endpoint_matches_the_shared_services_config(self):
-        from ardia_cli import star
+        from nilla_browser_cli import star
 
         source = (REPO / "packages" / "core" / "src" / "services.ts").read_text()
         repo = re.search(r'export const SOURCE_REPO = "([^"]+)";', source).group(1)
@@ -680,11 +680,11 @@ class LocalServiceEndToEndTest(unittest.TestCase):
             self.server.kill()
         self.server.stdout.close()
 
-    def ardia(self, *argv) -> subprocess.CompletedProcess:
+    def nilla(self, *argv) -> subprocess.CompletedProcess:
         env = {k: v for k, v in os.environ.items() if k not in CLEARED + ("ARDIA_CLI_HOME",)}
         env.update({"ARDIA_CLI_HOME": str(self.home), feedback.TEST_URL_ENV: self.url})
         return subprocess.run(
-            [sys.executable, "-m", "ardia_cli", "feedback", "--data-dir", str(self.data), *argv],
+            [sys.executable, "-m", "nilla_browser_cli", "feedback", "--data-dir", str(self.data), *argv],
             cwd=REPO / "apps" / "cli", env=env, capture_output=True, text=True, timeout=60,
         )
 
@@ -692,7 +692,7 @@ class LocalServiceEndToEndTest(unittest.TestCase):
         write_consent(self.data, sessionOpen=True, sessionId=APP_SESSION)
         shot = self.temp / "shot.png"
         shot.write_bytes(b"\x89PNG" + os.urandom(2048))
-        done = self.ardia("--title", "snapshot hides dialog buttons", "--kind", "bug", "--attach", str(shot),
+        done = self.nilla("--title", "snapshot hides dialog buttons", "--kind", "bug", "--attach", str(shot),
                           "the Save button in a dialog had no ref; Authorization: Bearer abc123 was in the log")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         reference = re.search(r"^Sent\. Reference (FB-[A-Z0-9]+)\.$", done.stdout, re.M).group(1)
@@ -709,7 +709,7 @@ class LocalServiceEndToEndTest(unittest.TestCase):
         print(f"\n[e2e] {done.stdout.strip()}")
 
     def test_sharing_off_gets_a_one_time_id(self):
-        done = self.ardia("--title", "idea", "--kind", "idea", "a --json flag on ardia windows")
+        done = self.nilla("--title", "idea", "--kind", "idea", "a --json flag on nilla windows")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         reference = re.search(r"Reference (FB-[A-Z0-9]+)", done.stdout).group(1)
         report = json.loads((self.store / "feedback" / reference / "report.json").read_text())
@@ -717,10 +717,10 @@ class LocalServiceEndToEndTest(unittest.TestCase):
         self.assertIn("(a one-time id: sharing is off)", done.stdout)
 
     def test_a_refusal_from_the_service_is_reported_and_kept(self):
-        done = self.ardia("--title", "t", "--attach", str(self.temp / "nothing.png"), "d")
+        done = self.nilla("--title", "t", "--attach", str(self.temp / "nothing.png"), "d")
         self.assertEqual(done.returncode, 2)
         self.stop()
-        offline = self.ardia("--title", "t", "service is down")
+        offline = self.nilla("--title", "t", "service is down")
         self.assertEqual(offline.returncode, 1)
         self.assertIn("Not sent: the network failed", offline.stdout)
 

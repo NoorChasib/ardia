@@ -68,7 +68,7 @@ test("a refused report fails at create with the server's reason and nothing uplo
   assert.equal(result.stage, "create");
   assert.equal(result.created, null);
   assert.equal(result.errorClass, "rejected");
-  assert.equal(result.message, "Ardia's report server couldn't accept this report (title: required). Your draft is kept.");
+  assert.equal(result.message, "Nilla's report server couldn't accept this report (title: required). Your draft is kept.");
   assert.equal(server.calls.length, 1);
   assert.deepEqual(server.deps.sleeps, []);
 });
@@ -83,7 +83,7 @@ test("no connection says so", async () => {
   assert.equal(result.errorClass, "offline");
   assert.equal(result.attempts, 3);
   assert.deepEqual(server.deps.sleeps, [...RETRY_DELAYS_MS]);
-  assert.match(result.message, /^Couldn't reach Ardia's report server\. .*draft is kept\.$/);
+  assert.match(result.message, /^Couldn't reach Nilla's report server\. .*draft is kept\.$/);
 });
 
 test("storage down is retried twice with backoff, then explained in a sentence", async () => {
@@ -95,7 +95,7 @@ test("storage down is retried twice with backoff, then explained in a sentence",
   assert.equal(result.phase, "failed");
   assert.equal(result.errorClass, "storage");
   assert.equal(result.status, 502);
-  assert.equal(result.message, "Ardia's report server couldn't store this right now. Your draft is kept; try again in a minute.");
+  assert.equal(result.message, "Nilla's report server couldn't store this right now. Your draft is kept; try again in a minute.");
 });
 
 test("a server that recovers during the retries sends the report and counts the retries", async () => {

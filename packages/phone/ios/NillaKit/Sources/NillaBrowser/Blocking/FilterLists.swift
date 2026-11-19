@@ -430,7 +430,7 @@ public final class FilterLists {
     var categories: [String: String] = [:]
     var failed: Set<String> = []
     for chunk in output.chunks {
-      let identifier = "ardia.filters.\(chunk.listID).\(chunk.index)"
+      let identifier = "nilla.filters.\(chunk.listID).\(chunk.index)"
       let category = chunk.listID == Self.myFiltersID ? nil : category(of: chunk.listID)
       let hash = Self.hash(chunk.json)
       if record.chunkHashes[identifier] == hash, let existing = try? await store.contentRuleList(forIdentifier: identifier) {
@@ -466,9 +466,9 @@ public final class FilterLists {
     record.builtAt = .now
     saveRecord()
     for id in ids {
-      states[id] = failed.contains(id) ? .failed(String(localized: "Ardia couldn’t use this list’s rules. It keeps the last version that worked.")) : downloadStates[id]
+      states[id] = failed.contains(id) ? .failed(String(localized: "Nilla couldn’t use this list’s rules. It keeps the last version that worked.")) : downloadStates[id]
     }
-    buildError = failed.isEmpty ? nil : String(localized: "Some lists couldn’t be applied. Ardia keeps the last version that worked.")
+    buildError = failed.isEmpty ? nil : String(localized: "Some lists couldn’t be applied. Nilla keeps the last version that worked.")
     compiled = next
     blockedDomains = output.domains
     try? await Self.write(output.domains.sorted().joined(separator: "\n"), to: directory.appending(path: "domains.txt"))
@@ -493,7 +493,7 @@ public final class FilterLists {
       states[id] = .downloading
       refreshLists()
       let urls = sourceURLs(id)
-      var outcome: FilterListState? = .failed(String(localized: "This list couldn’t be downloaded. Ardia will try again later."))
+      var outcome: FilterListState? = .failed(String(localized: "This list couldn’t be downloaded. Nilla will try again later."))
       for url in urls {
         do {
           let previous = force ? nil : (FileManager.default.fileExists(atPath: fileURL(id).path(percentEncoded: false)) ? record.lists[id] : nil)
@@ -542,7 +542,7 @@ public final class FilterLists {
     guard let http = response as? HTTPURLResponse else { throw FilterListError.notAFilterList }
     if http.statusCode == 304 { return nil }
     guard (200..<300).contains(http.statusCode) else {
-      throw FilterListError.unreachable(String(localized: "The server couldn’t provide this list right now. Ardia will try again later."))
+      throw FilterListError.unreachable(String(localized: "The server couldn’t provide this list right now. Nilla will try again later."))
     }
     guard data.count < 40_000_000, let text = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1), Self.looksLikeFilterList(text) else {
       throw FilterListError.notAFilterList
@@ -691,9 +691,9 @@ public final class FilterLists {
     if let error = error as? FilterListError { return error.message }
     switch (error as? URLError)?.code {
     case .notConnectedToInternet?, .networkConnectionLost?: return String(localized: "Your iPhone isn’t connected to the internet.")
-    case .timedOut?: return String(localized: "The server took too long to respond. Ardia will try again later.")
+    case .timedOut?: return String(localized: "The server took too long to respond. Nilla will try again later.")
     case .cannotFindHost?, .dnsLookupFailed?: return String(localized: "The server can’t be found. Check the address and try again.")
-    default: return String(localized: "This list couldn’t be downloaded. Ardia will try again later.")
+    default: return String(localized: "This list couldn’t be downloaded. Nilla will try again later.")
     }
   }
 }

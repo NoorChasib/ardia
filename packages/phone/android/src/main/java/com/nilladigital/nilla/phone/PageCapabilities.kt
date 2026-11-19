@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
-import com.ardia.browser.PageEngine
-import com.ardia.browser.PageZoom
+import com.nilladigital.nilla.PageEngine
+import com.nilladigital.nilla.PageZoom
 
 object PageCapabilities {
     fun payload(context: Context): Map<String, Any?> {

@@ -56,7 +56,7 @@ def main():
         offsets = [int(text, 16) for text in args.offsets]
     except ValueError as error:
         parser.error(f'offsets are hex: {error}')
-    with tempfile.TemporaryDirectory(prefix='ardia-symbolize-') as scratch:
+    with tempfile.TemporaryDirectory(prefix='nilla-symbolize-') as scratch:
         found = debug_file(args.symbols, args.build_id, pathlib.Path(scratch))
         if found is None:
             print(f'symbolize.py: {args.symbols} has no symbols for build ID {args.build_id}', file=sys.stderr)

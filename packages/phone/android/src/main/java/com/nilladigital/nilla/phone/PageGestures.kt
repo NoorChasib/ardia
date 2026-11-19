@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.animation.ValueAnimator
 import android.content.Context
@@ -15,11 +15,11 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import com.ardia.browser.Page
-import com.ardia.browser.TouchScrollers
-import com.ardia.browsing.PageSwipe
-import com.ardia.browsing.PullToRefreshRules
-import com.ardia.browsing.SwipeDirection
+import com.nilladigital.nilla.Page
+import com.nilladigital.nilla.TouchScrollers
+import com.nilladigital.nilla.browsing.PageSwipe
+import com.nilladigital.nilla.browsing.PullToRefreshRules
+import com.nilladigital.nilla.browsing.SwipeDirection
 import kotlin.math.hypot
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -487,7 +487,7 @@ internal class PageGestures(private val owner: ViewGroup, private val host: View
 
         init {
             visibility = INVISIBLE
-            contentDescription = context.getString(com.ardia.browser.R.string.phone_reloading)
+            contentDescription = context.getString(com.nilladigital.nilla.R.string.phone_reloading)
         }
 
         internal val isSpinning: Boolean get() = spin?.isRunning == true

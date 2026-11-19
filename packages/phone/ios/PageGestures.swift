@@ -1,5 +1,5 @@
-import ArdiaBrowser
-import ArdiaDesign
+import NillaBrowser
+import NillaDesign
 import SwiftUI
 import UIKit
 import WebKit

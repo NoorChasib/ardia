@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 object SyncDemo {
     const val DEVICE_NAME = SyncMeta.DEFAULT_DEVICE_NAME

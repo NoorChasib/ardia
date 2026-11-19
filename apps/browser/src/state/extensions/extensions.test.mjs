@@ -990,7 +990,7 @@ test("re-checking kept panels: a re-check's \"no panel\" for a tab is ignored on
 
 test("Add on an install prompt the engine no longer holds says so in the dialog, and Cancel on one rejects nothing", async () => {
   const { showInstallPrompt, confirmInstall, cancelInstall } = await import("./actions.ts");
-  const { ArdiaError } = await import("@ardia/core");
+  const { NillaError } = await import("@nilla/core");
   const { w } = setup();
   const unhandled = [];
   const noteUnhandled = (reason) => unhandled.push(reason);
@@ -998,7 +998,7 @@ test("Add on an install prompt the engine no longer holds says so in the dialog,
   const answers = [];
   native.extensionAnswers.resolveInstallPrompt = async (requestId, accepted) => {
     answers.push([requestId, accepted]);
-    throw new ArdiaError("ERR_EXTENSION_PROMPT_STALE", "The prompt belongs to another window");
+    throw new NillaError("ERR_EXTENSION_PROMPT_STALE", "The prompt belongs to another window");
   };
   const prompt = { requestId: "install1", profile: "", id: "abc", name: "Ext", version: "1", type: "install", icon: null, permissions: [], tabId: null };
   try {
@@ -1044,11 +1044,11 @@ test("Add and Cancel answer an install prompt in the profile that asked, not the
 
 test("a failed Add doesn't replace an install prompt that arrived while it was waiting", async () => {
   const { showInstallPrompt, confirmInstall } = await import("./actions.ts");
-  const { ArdiaError } = await import("@ardia/core");
+  const { NillaError } = await import("@nilla/core");
   const { w } = setup();
   let fail;
   native.extensionAnswers.resolveInstallPrompt = (requestId, accepted) =>
-    accepted ? new Promise((_, reject) => { fail = () => reject(new ArdiaError("ERR_EXTENSION_PROMPT_STALE", "The prompt belongs to another window")); }) : Promise.resolve(null);
+    accepted ? new Promise((_, reject) => { fail = () => reject(new NillaError("ERR_EXTENSION_PROMPT_STALE", "The prompt belongs to another window")); }) : Promise.resolve(null);
   const prompt = { requestId: "first", profile: "", id: "abc", name: "Ext", version: "1", type: "install", icon: null, permissions: [], tabId: null };
   try {
     showInstallPrompt(w, prompt);

@@ -7,7 +7,7 @@ import {
   mobileSetSources,
   mobileSuggest,
   mobileSuggestRequest,
-} from "@ardia/core/src/mobile.ts";
+} from "@nilla/core/src/mobile.ts";
 import { dedupeByLanding, displayHost, landingKey } from "../../lib/url.ts";
 import type { PasteOffer } from "./pasteRow.ts";
 

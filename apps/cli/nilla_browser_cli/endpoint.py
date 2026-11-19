@@ -8,14 +8,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlsplit
 
-from ardia_cli import upstream
-from ardia_cli.redact import add_secret
+from nilla_browser_cli import upstream
+from nilla_browser_cli.redact import add_secret
 
 NOT_REACHABLE = (
-    "Ardia isn't running, or \"Let the ardia command control Ardia\" is off in Settings."
+    "Nilla isn't running, or \"Let the nilla-browser command control Nilla\" is off in Settings."
 )
 CONTROL_FILE = "ArdiaControl.json"
-DATA_DIR_HELP = "the Ardia data dir (default: $ARDIA_DATA_DIR, else the installed app's)"
+DATA_DIR_HELP = "the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)"
 LINUX = sys.platform.startswith("linux")
 ID_PREFIX = "com.nilladigital"
 BUNDLE_ID = f"{ID_PREFIX}.nilla"

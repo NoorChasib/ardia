@@ -7,7 +7,7 @@ export function SelectionPopover(props: React.ComponentProps<typeof BrowserSelec
   const wrapper = useRef<View & Element>(null);
   useInputRegion(wrapper, "hit");
   return (
-    <View ref={wrapper} testID="ardia-page-overlay" pointerEvents="box-none" style={{ position: "absolute", inset: 0 }}>
+    <View ref={wrapper} testID="nilla-page-overlay" pointerEvents="box-none" style={{ position: "absolute", inset: 0 }}>
       <BrowserSelectionPopover {...props} />
     </View>
   );

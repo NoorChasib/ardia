@@ -35,7 +35,7 @@ test("a profile switch is written to the focus history", () => {
   assert.match(internal, /void NoteProfileSwitch\(ArdiaCoreProfile \*profile, NSWindow \*_Nullable window\);/);
   const show = body(windowHost, "report:(void (^)(BOOL, double, double, BOOL))report");
   const setActive = show.indexOf("coreWindow.activeProfile = p;");
-  const noted = show.indexOf("ardia_host::NoteProfileSwitch(p, coreWindow.window);");
+  const noted = show.indexOf("nilla_host::NoteProfileSwitch(p, coreWindow.window);");
   assert.ok(setActive >= 0 && noted > setActive, "showProfile notes the switch right after it sets the active profile");
 });
 
@@ -76,5 +76,5 @@ test("a window's key epoch and paste gate are read from FocusHandoff without cha
 });
 
 test("engineInfo already returns the Focus block that Copy Diagnostics prints", () => {
-  assert.match(body(host, "+ (NSDictionary<NSString *, id> *)engineInfo"), /@"focus" : ardia_host::FocusState\(\)/);
+  assert.match(body(host, "+ (NSDictionary<NSString *, id> *)engineInfo"), /@"focus" : nilla_host::FocusState\(\)/);
 });

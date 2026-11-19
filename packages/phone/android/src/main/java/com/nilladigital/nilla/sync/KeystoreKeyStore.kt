@@ -1,9 +1,9 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
-import com.ardia.sync.core.FileKeyStore
-import com.ardia.sync.core.SyncKeyStore
+import com.nilladigital.nilla.sync.core.FileKeyStore
+import com.nilladigital.nilla.sync.core.SyncKeyStore
 import java.io.File
 import java.security.KeyStore
 import javax.crypto.Cipher

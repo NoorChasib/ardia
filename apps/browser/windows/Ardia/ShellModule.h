@@ -28,7 +28,7 @@
 #pragma comment(lib, "winhttp.lib")
 #pragma comment(lib, "wtsapi32.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 REACT_STRUCT(ShellBangListReply)
 struct ShellBangListReply {
@@ -85,7 +85,7 @@ struct ShellState {
 
   void EmitAppEvent(winrt::Microsoft::ReactNative::JSValueObject &&payload) noexcept {
     if (!alive.load()) return;
-    EmitEvent(context, L"ArdiaShell", L"onAppEvent", std::move(payload));
+    EmitEvent(context, L"NillaShell", L"onAppEvent", std::move(payload));
   }
 
   void EmitType(const char *type) noexcept {
@@ -119,7 +119,7 @@ struct ShellState {
   }
 };
 
-constexpr wchar_t WatcherClassName[] = L"ArdiaShellSystemWatcher";
+constexpr wchar_t WatcherClassName[] = L"NillaShellSystemWatcher";
 
 inline LRESULT CALLBACK WatcherProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept {
   if (message == WM_NCCREATE) {
@@ -286,8 +286,8 @@ inline BangListOutcome FetchBangList(std::optional<std::string> etag) noexcept {
   if (path.empty()) path = L"/";
   bool secure = parts.nScheme == INTERNET_SCHEME_HTTPS;
 
-  InternetHandle session{WinHttpOpen(L"Ardia", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0)};
-  if (!session) session.handle = WinHttpOpen(L"Ardia", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+  InternetHandle session{WinHttpOpen(L"Nilla", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0)};
+  if (!session) session.handle = WinHttpOpen(L"Nilla", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
   if (!session) {
     outcome.failure = LastErrorText("WinHttpOpen");
     return outcome;
@@ -382,7 +382,7 @@ inline BangListOutcome FetchBangList(std::optional<std::string> etag) noexcept {
 
 }
 
-REACT_MODULE(ShellModule, L"ArdiaShell")
+REACT_MODULE(ShellModule, L"NillaShell")
 struct ShellModule {
   REACT_INIT(Initialize)
   void Initialize(winrt::Microsoft::ReactNative::ReactContext const &context) noexcept {
@@ -395,7 +395,7 @@ struct ShellModule {
       if (!state->alive.load() || state->watcher) return;
       state->watcher = ShellParts::CreateWatcher(state);
       if (!state->watcher) {
-        LaunchLog::Write(L"warning", L"ArdiaShell: system watcher window not created");
+        LaunchLog::Write(L"warning", L"NillaShell: system watcher window not created");
         return;
       }
       state->sessionRegistered = WTSRegisterSessionNotification(state->watcher, NOTIFY_FOR_THIS_SESSION) != FALSE;
@@ -467,7 +467,7 @@ struct ShellModule {
     std::shared_ptr<ShellParts::ShellState> state = m_state;
     std::wstring wide = Paths::Wide(text);
     RunOnUI(state->context, [state, wide]() noexcept {
-      if (!ShellParts::WriteClipboardText(state->watcher, wide)) LaunchLog::Write(L"warning", L"ArdiaShell.copyText: clipboard not written");
+      if (!ShellParts::WriteClipboardText(state->watcher, wide)) LaunchLog::Write(L"warning", L"NillaShell.copyText: clipboard not written");
     });
     return true;
   }

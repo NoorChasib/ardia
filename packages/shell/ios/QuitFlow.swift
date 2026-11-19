@@ -108,7 +108,7 @@ final class QuitFlow {
       return NSApp.reply(toApplicationShouldTerminate: false)
     }
     guard isSaving else { return }
-    if DocumentStore.flush() { ArdiaChromeWindowHost.recordLaunchLayout() } else { ArdiaChromeWindowHost.forgetLaunchPictures() }
+    if DocumentStore.flush() { NillaChromeWindowHost.recordLaunchLayout() } else { NillaChromeWindowHost.forgetLaunchPictures() }
     quitAfterUpdaterSettles()
   }
 

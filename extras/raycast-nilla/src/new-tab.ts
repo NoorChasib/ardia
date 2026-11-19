@@ -1,6 +1,6 @@
 import { closeMainWindow, type LaunchProps } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
-import { newTab } from "./ardia";
+import { newTab } from "./nilla";
 
 export default async function Command(props: LaunchProps<{ arguments: { query?: string } }>) {
   try {

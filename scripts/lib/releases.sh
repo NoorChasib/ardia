@@ -1,6 +1,6 @@
 REPO="NoorChasib/nilla"
 REPO_URL="https://github.com/$REPO"
-ENGINE_REPO="ardia-browser/ardia"
+ENGINE_REPO="NoorChasib/nilla"
 LATEST_DOWNLOAD_URL="$REPO_URL/releases/latest/download"
 RELEASE_NOTES_URL="${RELEASE_NOTES_URL:-}"
 APPCAST_PY="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/scripts/release/appcast.py"
@@ -24,7 +24,7 @@ apple_version_of() {
 mac_marketing_version() {
   local root
   root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-  sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' "$root/apps/browser/macos/Ardia.xcodeproj/project.pbxproj" | sort -u
+  sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' "$root/apps/browser/macos/Nilla.xcodeproj/project.pbxproj" | sort -u
 }
 
 appcast() { python3 -I "$APPCAST_PY" "$@"; }

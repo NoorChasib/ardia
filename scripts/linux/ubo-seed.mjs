@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { launchArdia } from "../../apps/linux/scripts/acceptance/lib/ardia.mjs";
+import { launchNilla } from "../../apps/linux/scripts/acceptance/lib/nilla.mjs";
 import { connectCdp, evaluate } from "../../apps/linux/scripts/acceptance/lib/cdp.mjs";
 import { until } from "../../apps/linux/scripts/acceptance/lib/util.mjs";
 
@@ -13,7 +13,7 @@ Seeds the packaged uBlock Origin so a new profile filters from its first page.
 Starts chrome on a scratch profile with the blocker in DIR, waits for uBlock
 Origin to fetch and compile its default lists (from the packaged copies when
 offline) and save its engine, and writes that storage to
-DIR/ardia-seed/storage.json. DIR/js/start.js is patched to load the
+DIR/nilla-seed/storage.json. DIR/js/start.js is patched to load the
 seed into an empty profile when the profile's languages select no list the seed
 lacks. Run it on the staged copy package.py makes, never on the vendor copy.
 
@@ -22,11 +22,11 @@ lacks. Run it on the staged copy package.py makes, never on the vendor copy.
   --blocker DIR     the staged uBlock Origin directory to seed
   --timeout-ms N    deadline for uBlock Origin to save its engine (default 240000)`;
 
-export const SEED_PATH = "ardia-seed/storage.json";
+export const SEED_PATH = "nilla-seed/storage.json";
 export const SELFIE_KEYS = ["cache/selfie/staticMain", "cache/selfie/staticNetFilteringEngine", "cache/selfie/staticExtFilteringEngine"];
 
 const START_ANCHOR = "µb.isReadyPromise = (async function start() {\n    try {\n";
-const SEED_LOADER = `const ardiaSeedFromPackage = async ( ) => {
+const SEED_LOADER = `const nillaSeedFromPackage = async ( ) => {
     try {
         const stored = await vAPI.storage.get('version');
         if ( stored instanceof Object && stored.version !== undefined ) { return; }
@@ -52,9 +52,9 @@ const SEED_LOADER = `const ardiaSeedFromPackage = async ( ) => {
 `;
 
 export function patchStart(source) {
-  if (source.includes("const ardiaSeedFromPackage = ")) throw new Error("js/start.js already loads a package seed");
+  if (source.includes("const nillaSeedFromPackage = ")) throw new Error("js/start.js already loads a package seed");
   if (source.split(START_ANCHOR).length !== 2) throw new Error("js/start.js no longer has exactly one start sequence to patch");
-  return source.replace(START_ANCHOR, `${SEED_LOADER}${START_ANCHOR}        await ardiaSeedFromPackage();\n`);
+  return source.replace(START_ANCHOR, `${SEED_LOADER}${START_ANCHOR}        await nillaSeedFromPackage();\n`);
 }
 
 export function defaultLists(assets) {
@@ -111,12 +111,12 @@ export async function seed({ chrome, ui, blocker, timeoutMs = 240000, log = cons
   const startPath = join(blocker, "js/start.js");
   const assets = JSON.parse(await readFile(join(blocker, "assets/assets.json"), "utf8"));
   await writeFile(startPath, patchStart(await readFile(startPath, "utf8")));
-  await rm(join(blocker, "ardia-seed"), { recursive: true, force: true });
-  const scratch = await mkdtemp(join(tmpdir(), "ardia-ubo-seed-"));
+  await rm(join(blocker, "nilla-seed"), { recursive: true, force: true });
+  const scratch = await mkdtemp(join(tmpdir(), "nilla-ubo-seed-"));
   const started = Date.now();
   let app;
   try {
-    app = await launchArdia({
+    app = await launchNilla({
       executable: chrome,
       uiDir: ui,
       scratch,
@@ -139,7 +139,7 @@ export async function seed({ chrome, ui, blocker, timeoutMs = 240000, log = cons
     const problems = seedProblems(storage, assets);
     if (problems.length) throw new Error(`the seed is not the default list selection: ${problems.join("; ")}`);
     const kept = seedStorage(storage, assets);
-    await mkdir(join(blocker, "ardia-seed"), { recursive: true });
+    await mkdir(join(blocker, "nilla-seed"), { recursive: true });
     const text = JSON.stringify({ storage: kept });
     await writeFile(join(blocker, SEED_PATH), text);
     log(`ubo-seed: ${Object.keys(kept).length} keys, ${text.length} bytes, uBlock Origin ${storage.version}, ${Date.now() - started} ms`);

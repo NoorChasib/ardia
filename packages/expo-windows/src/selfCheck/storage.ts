@@ -1,5 +1,5 @@
 import { TurboModuleRegistry } from "react-native";
-import type { ConfigNative, DocumentsNative, KeychainNative, TelemetryLocalNative } from "@ardia/shell";
+import type { ConfigNative, DocumentsNative, KeychainNative, TelemetryLocalNative } from "@nilla/shell";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
@@ -10,10 +10,10 @@ function native<Module>(name: string): Module {
   return requireNativeModule<Module>(name);
 }
 
-const documents = () => native<DocumentsNative>("ArdiaDocuments");
-const config = () => native<ConfigNative>("ArdiaConfig");
-const keychain = () => native<KeychainNative>("ArdiaKeychain");
-const telemetry = () => native<TelemetryLocalNative>("ArdiaTelemetryLocal");
+const documents = () => native<DocumentsNative>("NillaDocuments");
+const config = () => native<ConfigNative>("NillaConfig");
+const keychain = () => native<KeychainNative>("NillaKeychain");
+const telemetry = () => native<TelemetryLocalNative>("NillaTelemetryLocal");
 
 function within<Value>(promise: Promise<Value>, what: string): Promise<Value> {
   return new Promise<Value>((resolve, reject) => {

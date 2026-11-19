@@ -1,14 +1,14 @@
-package com.ardia.browser.android.share
+package com.nilladigital.nilla.android.share
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.ardia.appmodel.SystemLink
-import com.ardia.browser.android.system.SystemDevice
-import com.ardia.browser.android.system.SystemSnapshot
-import com.ardia.browser.android.system.SystemTab
+import com.nilladigital.nilla.appmodel.SystemLink
+import com.nilladigital.nilla.android.system.SystemDevice
+import com.nilladigital.nilla.android.system.SystemSnapshot
+import com.nilladigital.nilla.android.system.SystemTab
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -81,7 +81,7 @@ class ShareSheetModel(
 
     val sendsOnlyToMacs: Boolean get() = sendTargets.all { it.isMac }
 
-    fun openInArdia() {
+    fun openInNilla() {
         val link = page.url?.let { SystemLink.Open(it).uri } ?: page.text?.let { SystemLink.Search(it).uri } ?: return
         if (open(link)) finish() else confirm(Message.CouldNotOpen, succeeded = false)
     }

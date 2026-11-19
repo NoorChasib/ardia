@@ -44,7 +44,7 @@ final class WebKitStores {
   private var resumeHosts: [StoreID: WKWebView] = [:]
   private var states: [StoreID: StoreState] = [:]
 
-  static func isPrivate(_ profile: String) -> Bool { ArdiaHost.isPrivateProfile(profile) }
+  static func isPrivate(_ profile: String) -> Bool { NillaHost.isPrivateProfile(profile) }
 
   private func session(_ name: String) -> PrivateSession {
     if let live = privateSessions[name] { return live }
@@ -55,7 +55,7 @@ final class WebKitStores {
 
   func id(of profile: String) -> StoreID {
     guard Self.isPrivate(profile) else { return .profile(profile) }
-    let name = ArdiaHost.baseProfile(of: profile)
+    let name = NillaHost.baseProfile(of: profile)
     return .privateSession(name: name, token: session(name).token)
   }
 
@@ -68,14 +68,14 @@ final class WebKitStores {
 
   static func storeIdentifier(_ profile: String) -> UUID {
     let scope = LaunchConfig.shared.dataDirectory ?? ""
-    var bytes = Array(SHA256.hash(data: Data("ardia.webkit|\(scope)|\(profile)".utf8)).prefix(16))
+    var bytes = Array(SHA256.hash(data: Data("nilla.webkit|\(scope)|\(profile)".utf8)).prefix(16))
     bytes[6] = (bytes[6] & 0x0F) | 0x50
     bytes[8] = (bytes[8] & 0x3F) | 0x80
     return bytes.withUnsafeBufferPointer { NSUUID(uuidBytes: $0.baseAddress!) as UUID }
   }
 
   func dataStore(for profile: String) -> WKWebsiteDataStore {
-    if Self.isPrivate(profile) { return session(ArdiaHost.baseProfile(of: profile)).store }
+    if Self.isPrivate(profile) { return session(NillaHost.baseProfile(of: profile)).store }
     if let store = persistent[profile] ?? deletedProfiles[profile] { return store }
     let store = WKWebsiteDataStore(forIdentifier: Self.storeIdentifier(profile))
     persistent[profile] = store
@@ -84,7 +84,7 @@ final class WebKitStores {
 
   func liveDataStore(for profile: String, wireKey: String) -> WKWebsiteDataStore? {
     guard Self.isPrivate(profile) else { return wireKey == profile ? dataStore(for: profile) : nil }
-    let name = ArdiaHost.baseProfile(of: profile)
+    let name = NillaHost.baseProfile(of: profile)
     guard let live = privateSessions[name], wireKey == StoreID.privateSession(name: name, token: live.token).wireKey else { return nil }
     return live.store
   }

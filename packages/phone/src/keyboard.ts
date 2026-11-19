@@ -11,7 +11,7 @@ type KeyboardNative = {
   current?(): KeyboardDidChange;
 };
 
-const native = requireOptionalNativeModule<KeyboardNative>("ArdiaPhoneKeyboard");
+const native = requireOptionalNativeModule<KeyboardNative>("NillaPhoneKeyboard");
 
 const none: Subscription = { remove() {} };
 

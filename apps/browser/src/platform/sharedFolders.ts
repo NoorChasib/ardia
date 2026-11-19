@@ -1,6 +1,6 @@
-import { SharedFoldersNative, SyncNative, type SharedFolderOp } from "@ardia/sync";
+import { SharedFoldersNative, SyncNative, type SharedFolderOp } from "@nilla/sync";
 
-export type { SharedFolderOp, SharedListing, SharedListingEntry, SharedListingLevel, SharedLocation } from "@ardia/sync";
+export type { SharedFolderOp, SharedListing, SharedListingEntry, SharedListingLevel, SharedLocation } from "@nilla/sync";
 
 const Native = () => SharedFoldersNative!;
 

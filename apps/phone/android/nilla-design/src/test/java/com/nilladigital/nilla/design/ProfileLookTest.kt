@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -121,8 +121,8 @@ class ProfileLookTest {
     @Test
     fun `the surface tokens are the window tint stops`() {
         val look = ProfileLook.of(ProfileLook.Preset.Blue)
-        assertEquals(ardiaColor(look.windowTintStops(dark = false)[0].hex), look.surface.light)
-        assertEquals(ardiaColor(look.windowTintStops(dark = true)[1].hex), look.surfaceLow.dark)
+        assertEquals(nillaColor(look.windowTintStops(dark = false)[0].hex), look.surface.light)
+        assertEquals(nillaColor(look.windowTintStops(dark = true)[1].hex), look.surfaceLow.dark)
     }
 
     @Test

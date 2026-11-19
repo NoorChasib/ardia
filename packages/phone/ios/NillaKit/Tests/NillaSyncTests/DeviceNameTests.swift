@@ -1,5 +1,5 @@
 import Testing
-@testable import ArdiaSync
+@testable import NillaSync
 
 struct DeviceNameTests {
   @Test func anIPadJoinsSyncAsAnIPad() {

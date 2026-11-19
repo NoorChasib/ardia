@@ -224,7 +224,7 @@ test("each long-press action acts on the press it was chosen from", () => {
   assert.equal((pressPlan(image, "copyLink", false, web) as { url: string }).url, "https://a.example/p");
 });
 
-test("Open in Default Browser hides while Ardia is the default browser", () => {
+test("Open in Default Browser hides while Nilla is the default browser", () => {
   const input = {
     url: "https://example.com/",
     hasPage: true,
@@ -251,7 +251,7 @@ test("the reader's lead image takes the picture's real shape, capped so a tall o
   assert.equal(leadImageAspect(0, 400, 0.75), null);
 });
 
-test("Open in Default Browser is offered only when the system lets Ardia ask and Ardia isn't the default, as main shows it whenever it isn't", () => {
+test("Open in Default Browser is offered only when the system lets Nilla ask and Nilla isn't the default, as main shows it whenever it isn't", () => {
   assert.equal(menuModel(input({ isDefaultBrowser: false, canOfferDefaultBrowser: true })).offersDefaultBrowser, true);
   assert.equal(menuModel(input({ isDefaultBrowser: true, canOfferDefaultBrowser: true })).offersDefaultBrowser, false);
   assert.equal(menuModel(input({ isDefaultBrowser: false, canOfferDefaultBrowser: false })).offersDefaultBrowser, false);

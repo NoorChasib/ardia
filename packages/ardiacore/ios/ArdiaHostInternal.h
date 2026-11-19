@@ -1,14 +1,14 @@
 #import "ArdiaInternal.h"
 #import "ArdiaLaunchSequence.h"
 
-@interface ArdiaBootstrapDelegate : NSObject <NSApplicationDelegate>
+@interface NillaBootstrapDelegate : NSObject <NSApplicationDelegate>
 @property(nonatomic, readonly) NSMutableArray<NSURL *> *urls;
 @end
 
-@interface ArdiaHostEngineDelegate : NSObject <ArdiaCoreEngineDelegate>
+@interface NillaHostEngineDelegate : NSObject <ArdiaCoreEngineDelegate>
 @end
 
-namespace ardia_host {
+namespace nilla_host {
 
 extern id<NSApplicationDelegate> (^gMakeDelegate)(void);
 extern id<NSApplicationDelegate> gAppDelegate;
@@ -22,7 +22,7 @@ NSMutableDictionary<NSString *, void (^)(ArdiaCoreProfile *)> *DeletionsAfterLoa
 NSArray<NSString *> *LoadedDataProfileNames();
 NSString *InstalledDataDirectory();
 bool IsTeamSigned();
-extern ArdiaBootstrapDelegate *gBootstrap;
+extern NillaBootstrapDelegate *gBootstrap;
 extern bool gScratchDataDir;
 extern NSMutableDictionary<NSString *, NSDictionary *> *gInstallPrompts;
 void LinksArrived(NSArray<NSURL *> *urls);

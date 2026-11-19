@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public class FadeLabelModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaFadeLabel")
+    Name("NillaFadeLabel")
 
     View(FadeLabel.self) {
       Prop("text") { (view: FadeLabel, v: String) in view.text = v }
@@ -21,7 +21,7 @@ public class FadeLabelModule: Module {
 
 public class EdgeFadeMaskModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaEdgeFadeMask")
+    Name("NillaEdgeFadeMask")
 
     View(EdgeFadeMask.self) {
       Prop("fadeWidth") { (view: EdgeFadeMask, v: Double) in view.fadeWidth = v }

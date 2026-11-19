@@ -5,8 +5,8 @@ import { shellNativeModules, windows } from "../../test-native/index.ts";
 const { connectCalendar, refreshCalendar, startCalendar, useCalendar } = await import("./calendar.ts");
 const { slowTimersForTests } = await import("../../platform/slowTimers.ts");
 
-const native = shellNativeModules.ArdiaCalendar;
-const app = shellNativeModules.ArdiaApp;
+const native = shellNativeModules.NillaCalendar;
+const app = shellNativeModules.NillaApp;
 const original = { native: { ...native }, openExternalURL: app.openExternalURL };
 const PRIVACY = "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars";
 let opened = [];
@@ -50,7 +50,7 @@ test("Connect when access was already denied opens the Calendars pane instead of
   assert.equal(await connectCalendar(), false);
   assert.equal(asked, 0);
   assert.deepEqual(opened, [PRIVACY]);
-  assert.match(useCalendar.getState().requestError ?? "", /Turn on Ardia/);
+  assert.match(useCalendar.getState().requestError ?? "", /Turn on Nilla/);
 });
 
 test("add-only access opens the Calendars pane and asks for Full Access", async () => {
@@ -75,7 +75,7 @@ test("a request macOS fails shows its error", async () => {
   assert.equal(useCalendar.getState().requesting, false);
 });
 
-test("a request macOS sent to the app that opened Ardia says to reopen Ardia, without opening System Settings", async () => {
+test("a request macOS sent to the app that opened Nilla says to reopen Nilla, without opening System Settings", async () => {
   stage({ status: "notDetermined", responsible: "other" });
   await connectCalendar();
   assert.deepEqual(opened, []);
@@ -87,7 +87,7 @@ test("a launcher-attributed request macOS refused keeps its error and only sugge
   await connectCalendar();
   const message = useCalendar.getState().requestError ?? "";
   assert.match(message, /Missing entitlement/);
-  assert.match(message, /may have checked the app that opened Ardia/);
+  assert.match(message, /may have checked the app that opened Nilla/);
 });
 
 test("a denial just chosen in macOS's prompt explains it but leaves System Settings closed", async () => {
@@ -109,9 +109,9 @@ test("a build whose request resolves a bare boolean still connects", async () =>
 
 test("a request that throws shows its message and ends the busy state", async () => {
   native.authorizationStatus = () => "notDetermined";
-  native.requestAccess = () => Promise.reject(new Error("ArdiaCalendar is unavailable"));
+  native.requestAccess = () => Promise.reject(new Error("NillaCalendar is unavailable"));
   assert.equal(await connectCalendar(), false);
-  assert.match(useCalendar.getState().requestError ?? "", /ArdiaCalendar is unavailable/);
+  assert.match(useCalendar.getState().requestError ?? "", /NillaCalendar is unavailable/);
   assert.equal(useCalendar.getState().requesting, false);
 });
 

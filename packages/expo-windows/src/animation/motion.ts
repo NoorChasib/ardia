@@ -1,4 +1,4 @@
-import type { MotionBurst, MotionNative } from "@ardia/shell";
+import type { MotionBurst, MotionNative } from "@nilla/shell";
 import type { Running as Animation } from "./index";
 
 type Running = Pick<Animation, "__active">;
@@ -21,7 +21,7 @@ let lastId = 0;
 let due = 0;
 let timer: ReturnType<typeof setTimeout> | null = null;
 
-const report = (error: unknown) => console.error("[ardia windows] an animation frame failed", error);
+const report = (error: unknown) => console.error("[nilla windows] an animation frame failed", error);
 
 function runFrame() {
   timer = null;
@@ -86,7 +86,7 @@ function watch(time: number) {
   watching = false;
   if (burst.frames < REPORT_AFTER_FRAMES) return;
   const ended: MotionBurst = { frames: burst.frames, milliseconds: Math.round(time - burst.startedAt), longest: Math.round(burst.longest), long: burst.long };
-  console.log(`[ardia windows] motion ${ended.frames} frames in ${ended.milliseconds} ms, longest ${ended.longest} ms, ${ended.long} long`);
+  console.log(`[nilla windows] motion ${ended.frames} frames in ${ended.milliseconds} ms, longest ${ended.longest} ms, ${ended.long} long`);
   each(burstListeners, (listen) => listen(ended));
 }
 

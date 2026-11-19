@@ -18,7 +18,7 @@ def cli_home(env=None) -> Path:
 
 
 def owned_cli_home(home: Path) -> Path:
-    from ardia_cli import endpoint, upstream
+    from nilla_browser_cli import endpoint, upstream
 
     if not endpoint.LINUX:
         endpoint.own_folder(home, "the CLI home")
@@ -28,7 +28,7 @@ def owned_cli_home(home: Path) -> Path:
 
 
 def recording_home(env) -> Path | None:
-    from ardia_cli import endpoint, telemetry
+    from nilla_browser_cli import endpoint, telemetry
 
     if telemetry.is_dev_build() and not env.get("ARDIA_CLI_HOME"):
         return None
@@ -39,14 +39,14 @@ def recording_home(env) -> Path | None:
 
 
 def open_folder(home: Path) -> int:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     home.mkdir(parents=True, exist_ok=True)
     return paths.open_private(home, FOLDER)
 
 
 def locked(home: Path, change):
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     dir_fd = open_folder(home)
     try:
@@ -82,7 +82,7 @@ def number(value, default: float = 0) -> float:
 
 
 def command_name(call) -> str:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     if call.browse_argv is not None:
         name, _ = telemetry.browse_command(call.browse_argv)

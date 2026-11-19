@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 await import("../../test-native/index.ts");
 const { useBrowser } = await import("../browser/store.ts");
-const { closeBlankLittleArdiaOnEscape, closeLittleArdiaForAppLink } = await import("./actions.ts");
+const { closeBlankLittleNillaOnEscape, closeLittleNillaForAppLink } = await import("./actions.ts");
 const { escapePressed } = await import("../windows/unclaimedEscape.ts");
 const { isWindowClosing } = await import("../windows/closeAnimated.ts");
 
@@ -18,7 +18,7 @@ function windows(url) {
 }
 
 for (const pressedIn of ["page", "window"]) {
-  test(`Escape pressed in the ${pressedIn} closes a Little Ardia window and leaves the main window alone`, () => {
+  test(`Escape pressed in the ${pressedIn} closes a Little Nilla window and leaves the main window alone`, () => {
     const { main, small, mainTab, smallTab } = windows("https://little.example/");
     escapePressed(mainTab, pressedIn);
     assert.equal(gone(main), false);
@@ -29,34 +29,34 @@ for (const pressedIn of ["page", "window"]) {
   });
 }
 
-test("Escape closes the address bar of a Little Ardia page first, and the window on the next press", () => {
+test("Escape closes the address bar of a Little Nilla page first, and the window on the next press", () => {
   const { small, smallTab } = windows("https://little.example/");
   S().openPanel(small, "https://little.example/");
   escapePressed(smallTab, "window");
   assert.equal(gone(small), false);
-  assert.equal(closeBlankLittleArdiaOnEscape(small), false);
+  assert.equal(closeBlankLittleNillaOnEscape(small), false);
   assert.equal(gone(small), false);
   S().closePanel(small);
   escapePressed(smallTab, "window");
   assert.equal(gone(small), true);
 });
 
-test("Escape in a blank Little Ardia's address bar closes the window, and never a main window's", () => {
+test("Escape in a blank Little Nilla's address bar closes the window, and never a main window's", () => {
   const { main, small } = windows(undefined);
   S().openPanel(small, "");
-  assert.equal(closeBlankLittleArdiaOnEscape(main), false);
+  assert.equal(closeBlankLittleNillaOnEscape(main), false);
   assert.equal(gone(main), false);
-  assert.equal(closeBlankLittleArdiaOnEscape(small), true);
+  assert.equal(closeBlankLittleNillaOnEscape(small), true);
   assert.equal(gone(small), true);
 });
 
-test("a page opening another app closes the Little Ardia window it was in, and never a main window", () => {
+test("a page opening another app closes the Little Nilla window it was in, and never a main window", () => {
   const { main, small } = windows("https://zoom.example/j/1");
-  closeLittleArdiaForAppLink(main);
-  closeLittleArdiaForAppLink(null);
+  closeLittleNillaForAppLink(main);
+  closeLittleNillaForAppLink(null);
   assert.equal(gone(main), false);
   assert.equal(gone(small), false);
-  closeLittleArdiaForAppLink(small);
+  closeLittleNillaForAppLink(small);
   assert.equal(gone(small), true);
   assert.equal(gone(main), false);
 });

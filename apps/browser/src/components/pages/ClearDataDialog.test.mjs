@@ -4,7 +4,7 @@ import { mount } from "../../test-hooks.mjs";
 
 const requests = [];
 globalThis.acTestNativeModules = {
-  ArdiaProfiles: {
+  NillaProfiles: {
     call(name, profile, json) {
       assert.equal(name, "clearBrowsingData");
       return new Promise((resolve, reject) => requests.push({ profile, args: JSON.parse(json), resolve, reject }));

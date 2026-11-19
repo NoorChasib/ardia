@@ -58,7 +58,7 @@ jobs:
         run: bun check
       - name: Tests that need no Mac, the browser's aside
         if: ${{ !cancelled() && matrix.part == 'rest' }}
-        run: bun run test:portable:packages --filter=!@ardia/browser
+        run: bun run test:portable:packages --filter=!@nilla/browser
       - name: The tests of the Mac packages that need no Mac
         if: ${{ !cancelled() && matrix.part == 'rest' }}
         run: bun run test:portable:mac

@@ -1,4 +1,4 @@
-import { ArdiaError, ardiaError, type TabGroupColor } from "@ardia/core";
+import { NillaError, nillaError, type TabGroupColor } from "@nilla/core";
 import { requireNativeModule, type EventSubscription } from "expo-modules-core";
 
 export type ImportKind =
@@ -250,7 +250,7 @@ const Native = requireNativeModule<{
   importPasswordsCSV(path: string): Promise<string>;
   chooseImportFile(kind: "safariExport" | "bookmarksHTML" | "passwordsCSV"): Promise<string | null>;
   readDiaTabs(): Promise<string>;
-}>("ArdiaImport");
+}>("NillaImport");
 
 let jobSeq = 0;
 
@@ -259,13 +259,13 @@ async function call<T>(promise: Promise<string | null>): Promise<T> {
     const json = await promise;
     return (json == null ? undefined : JSON.parse(json)) as T;
   } catch (e) {
-    throw ardiaError(e);
+    throw nillaError(e);
   }
 }
 
 async function job<T>(options: ImportOptions, start: (jobId: string) => Promise<string>): Promise<T> {
   const jobId = `import-${++jobSeq}`;
-  if (options.signal?.aborted) throw new ArdiaError("cancelled", "Import cancelled");
+  if (options.signal?.aborted) throw new NillaError("cancelled", "Import cancelled");
   const sub = Native.addListener("onImportEvent", (e) => {
     if (e.jobId !== jobId) return;
     if (e.type === "history") options.onHistoryChunk?.(JSON.parse(e.entries) as ImportedHistoryEntry[]);

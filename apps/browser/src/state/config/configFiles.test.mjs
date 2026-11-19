@@ -187,7 +187,7 @@ test("problems found before any window opens show in the first window that does"
 test("the problem toast names the file once and sums up the rest", () => {
   assert.deepEqual(problemsToast(["themes/demo.json: type.family must be a font name", "themes/demo.json: metrics.rowHeight must be a number from 24 to 56", "themes/demo.json: icons.plus has \"Plus\", which isn't an SF Symbol name"]), {
     title: "themes/demo.json has 3 problems",
-    message: "type.family must be a font name; metrics.rowHeight must be a number from 24 to 56; and 1 more (ardia config check lists them all)",
+    message: "type.family must be a font name; metrics.rowHeight must be a number from 24 to 56; and 1 more (nilla config check lists them all)",
   });
   assert.deepEqual(problemsToast(["themes/demo.json: type.famly isn't a type key (family, mono, scale, sizes, weights)", "themes/demo.json: type.font isn't a type key (family, mono, scale, sizes, weights)", "themes/demo.json: icons isn't a theme key (dark, light)"]).message, "type.famly and type.font aren't type keys (family, mono, scale, sizes, weights); icons isn't a theme key (dark, light)");
   assert.deepEqual(problemsToast(["config.json: tabLayout must be sidebar or top", "themes/demo.json: dark.accent isn't a colour"]), {
@@ -260,7 +260,7 @@ test("restoreSession from the file decides the launch restore, both ways", async
   assert.equal(configRestoreSession(), undefined);
 });
 
-test("a theme's look applies live through the tokens, keeps the last good version, and going back gives Ardia's own look", () => {
+test("a theme's look applies live through the tokens, keeps the last good version, and going back gives Nilla's own look", () => {
   fresh();
   writeConfig({ theme: "roomy" });
   files.set("themes/roomy.json", JSON.stringify({ type: { family: "Avenir Next", sizes: { body: 15 }, weights: { medium: "600" } }, metrics: { rowHeight: 40, radius: { row: 14 } }, icons: { plus: "plus.circle" } }));
@@ -283,7 +283,7 @@ test("a theme's look applies live through the tokens, keeps the last good versio
   assert.equal(layout.rowHeight, 40);
   files.set("themes/roomy.json", JSON.stringify({ metrics: { rowHeight: 80, rowGap: 5 } }));
   reconcileConfig();
-  assert.equal(layout.rowHeight, 34, "an out-of-range value is reported and Ardia's applies");
+  assert.equal(layout.rowHeight, 34, "an out-of-range value is reported and Nilla's applies");
   assert.equal(layout.rowGap, 5);
   assert.ok(warnings.some((w) => w.includes("themes/roomy.json: metrics.rowHeight must be a number from 24 to 56")));
   writeConfig({ theme: null });

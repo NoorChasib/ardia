@@ -13,7 +13,7 @@ const engineCalls = [];
 let installedInPersonal = [];
 
 globalThis.acTestNativeModules = {
-  ArdiaImport: {
+  NillaImport: {
     addListener: () => ({ remove() {} }),
     isBrowserUnlocked: () => true,
     forgetUnlockedKeys() {},
@@ -26,7 +26,7 @@ globalThis.acTestNativeModules = {
         profile: { name: profileId === "Default" ? "Personal" : "Work" },
       }),
   },
-  ArdiaExtensions: {
+  NillaExtensions: {
     addListener: () => ({ remove() {} }),
     call: async (verb, profile) => {
       engineCalls.push(verb);

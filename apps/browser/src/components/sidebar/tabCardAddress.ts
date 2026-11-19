@@ -1,4 +1,4 @@
-import { displayHost, displayUrl, hostOf } from "@ardia/core";
+import { displayHost, displayUrl, hostOf } from "@nilla/core";
 
 export function tabCardAddress(url: string, fullUrl: boolean): string {
   if (!url) return "";

@@ -51,7 +51,7 @@ setup() {
   security find-identity -v -p codesigning "$keychain" | grep -q "Developer ID Application: .*($team)" \
     || die "the keychain has no valid Developer ID Application identity for $team: $(security find-identity -v -p codesigning "$keychain" | tail -1)"
 
-  local profile="$secrets/ardia.provisionprofile"
+  local profile="$secrets/nilla.provisionprofile"
   decode "$MACOS_PROVISIONING_PROFILE" "$profile"
   security cms -D -i "$profile" >/dev/null 2>&1 || die "MACOS_PROVISIONING_PROFILE isn't a base64 provisioning profile"
 

@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -7,7 +7,7 @@ class FadeModule : Module() {
     private fun FadeEdge?.edge(): FadeRamps.Edge? = this?.let { FadeRamps.Edge(it.length.toFloat(), it.floor.toFloat()) }
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneFade")
+        Name("NillaPhoneFade")
 
         View(FadeView::class) {
             Prop("topFade") { view: FadeView, edge: FadeEdge? -> view.top = edge.edge() }

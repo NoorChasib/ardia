@@ -2,12 +2,12 @@ import asyncio
 import json
 from pathlib import Path
 
-from ardia_cli import command_metrics
-from ardia_cli.browse import flowlog, flows, flowurl
-from ardia_cli.browse import shape as shaping
-from ardia_cli.browse.commands import Result
-from ardia_cli.browse.errors import BrowseError, OutcomeUnknown, Usage
-from ardia_cli.browse.limits import seconds_of
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse import flowlog, flows, flowurl
+from nilla_browser_cli.browse import shape as shaping
+from nilla_browser_cli.browse.commands import Result
+from nilla_browser_cli.browse.errors import BrowseError, OutcomeUnknown, Usage
+from nilla_browser_cli.browse.limits import seconds_of
 
 RUN_TIMEOUT = 60.0
 BODY_LIMIT = 8 * 1024 * 1024
@@ -53,7 +53,7 @@ def resolve_params(flow: dict, given: dict) -> dict:
 
 
 def challenge(text: str | None) -> bool:
-    from ardia_cli.browse.readpages import CHALLENGE
+    from nilla_browser_cli.browse.readpages import CHALLENGE
 
     return bool(text) and bool(CHALLENGE.search(text[:CHALLENGE_SCAN]))
 
@@ -89,7 +89,7 @@ def classify(flow: dict, request: dict, answer: dict) -> Outcome:
         if request.get("strippedAuth"):
             return failed(f"HTTP {status}: the recording sent a credential header a flow never keeps", "credential_not_sendable",
                           {"httpStatus": status})
-        return failed(f"HTTP {status}: the session is signed out of {flow['site']} or lacks access. Sign in again in Ardia and rerun",
+        return failed(f"HTTP {status}: the session is signed out of {flow['site']} or lacks access. Sign in again in Nilla and rerun",
                       "auth_expired", {"httpStatus": status})
     if status == 429:
         return failed(f"HTTP 429: {flow['site']} is rate limiting this session; wait before running it again", "rate_limited",
@@ -114,8 +114,8 @@ def classify(flow: dict, request: dict, answer: dict) -> Outcome:
 
 
 async def page_tier(ctx, flow: dict, values: dict, url: str, headers: dict, deadline: float) -> dict:
-    from ardia_cli.browse import readpages, temptabs
-    from ardia_cli.browse.commands import borrowed_tab
+    from nilla_browser_cli.browse import readpages, temptabs
+    from nilla_browser_cli.browse.commands import borrowed_tab
 
     state = ctx.state
     loop = asyncio.get_running_loop()
@@ -208,7 +208,7 @@ def mark(root: Path, flow: dict, verified: bool):
 
 
 def run_text(flow: dict, shaped: dict) -> str:
-    from ardia_cli.browse.commands import render_json
+    from nilla_browser_cli.browse.commands import render_json
 
     if shaped.get("items") is None:
         return f"✓ {flow['name']}\n{render_json(shaped.get('value'))}"

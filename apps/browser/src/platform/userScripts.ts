@@ -1,8 +1,8 @@
-import { nativeModule, type UserScriptsFolder } from "@ardia/shell";
+import { nativeModule, type UserScriptsFolder } from "@nilla/shell";
 
 export type { UserScriptsFolder };
 
-const UserScripts = nativeModule("ArdiaUserScripts");
+const UserScripts = nativeModule("NillaUserScripts");
 
 export const watchUserScripts = (on: boolean) => UserScripts.watch(on);
 export const readUserScripts = () => UserScripts.read();

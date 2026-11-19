@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -7,8 +7,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PageScriptsTest {
-    private val iphoneWeb = File("../ios/ArdiaKit/Sources/ArdiaBrowser/Web")
-    private val assets = File("src/main/assets/ardia-browser")
+    private val iphoneWeb = File("../ios/NillaKit/Sources/NillaBrowser/Web")
+    private val assets = File("src/main/assets/nilla-browser")
 
     private fun swiftScript(file: String, marker: String): List<String> {
         val source = File(iphoneWeb, file).readText()
@@ -30,7 +30,7 @@ class PageScriptsTest {
         assertEquals(iphone.size, android.size)
         val different = iphone.indices.filter { iphone[it] != android[it] }
         assertEquals(1, different.size)
-        assertTrue(iphone[different[0]].contains("window.webkit.messageHandlers.ardiaPage"))
+        assertTrue(iphone[different[0]].contains("window.webkit.messageHandlers.nillaPage"))
         assertTrue(android[different[0]].contains("window.${PageScripts.BRIDGE_NAME}"))
         assertTrue(android[different[0]].contains("\"${PageScripts.NIGHT_SHADE_MESSAGE}\""))
     }

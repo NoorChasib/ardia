@@ -1,5 +1,5 @@
 {
-  "name": "@ardia/sync",
+  "name": "@nilla/sync",
   "version": "0.0.0",
   "private": true,
   "description": "End-to-end-encrypted sync through a folder the user chooses (iCloud Drive, Dropbox, a NAS, a USB drive)",
@@ -9,7 +9,7 @@
   "scripts": {
     "check": "tsc -p .",
     "test:portable": "node ../../apps/phone/scripts/bundle-shared.mjs --check && bun test --parallel --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./src",
-    "test": "swift test --scratch-path \"${TMPDIR:-/tmp}/ardia-sync-swiftpm\" && bun run test:portable"
+    "test": "swift test --scratch-path \"${TMPDIR:-/tmp}/nilla-sync-swiftpm\" && bun run test:portable"
   },
   "peerDependencies": {
     "expo": "*",

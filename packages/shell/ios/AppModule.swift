@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public class AppModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaApp")
+    Name("NillaApp")
     Constant("apiVersion") { () -> Int in 76 }
 
     OnCreate {
@@ -57,7 +57,7 @@ public class AppModule: Module {
       let configuration = "Release"
       #endif
       return [
-        "appName": info["CFBundleName"] as? String ?? "Ardia",
+        "appName": info["CFBundleName"] as? String ?? "Nilla",
         "appVersion": info["CFBundleShortVersionString"] as? String ?? "",
         "appBuild": info["CFBundleVersion"] as? String ?? "",
         "bundleId": Bundle.main.bundleIdentifier ?? "",
@@ -76,9 +76,9 @@ public class AppModule: Module {
         "forceReleaseNotes": config.instanceFlag("releaseNotes"),
         "processStart": Self.processStart as Any,
         "bootTime": Self.bootTime as Any,
-        "launchMarks": ArdiaHost.launchMarks,
-        "launchedHidden": ArdiaHost.launchedHidden as Any,
-        "launchSource": ArdiaHost.launchSource as Any,
+        "launchMarks": NillaHost.launchMarks,
+        "launchedHidden": NillaHost.launchedHidden as Any,
+        "launchSource": NillaHost.launchSource as Any,
         "loadAverage1m": Self.loadAverage1m as Any,
         "inApplicationsFolder": Self.inApplicationsFolder,
         "updatePrewarm": UserDefaults.standard.dictionary(forKey: UpdatePrewarm.lastRunKey) as Any,

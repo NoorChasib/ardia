@@ -3,8 +3,8 @@ import base64
 import unittest
 from types import SimpleNamespace
 
-from ardia_cli.browse import commands
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse import commands
+from nilla_browser_cli.browse.errors import BrowseError
 
 
 def ctx_with(answer):

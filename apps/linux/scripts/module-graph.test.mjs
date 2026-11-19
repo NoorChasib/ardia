@@ -24,7 +24,7 @@ const productionGraph = () => production ??= (async () => {
     logLevel: "error",
     build: { write: false },
     plugins: [{
-      name: "ardia-linux:test-module-graph",
+      name: "nilla-linux:test-module-graph",
       generateBundle() {
         graph = new Map([...this.getModuleIds()].map((id) => [id, this.getModuleInfo(id)]));
       },
@@ -168,12 +168,12 @@ test("production graph uses current Linux adapters and one canonical shared stat
     ["extensions/SidePanel", ["ExtensionSidePanel"]],
     ["bookmarks/BookmarkDialog", ["BookmarkDialog"]],
     ["bookmarks/EditBookmarkDialog", ["EditBookmarkDialog"]],
-    ["littleArdia/LittleArdiaWindow", ["LittleArdiaWindow"]],
+    ["littleNilla/LittleNillaWindow", ["LittleNillaWindow"]],
   ];
   for (const [feature, names] of lazyModules) {
     const original = `${browser}components/${feature}.tsx`;
-    const wrapper = `\0ardia-lazy:${original}`;
-    const eager = `${original}?ardia-eager`;
+    const wrapper = `\0nilla-lazy:${original}`;
+    const eager = `${original}?nilla-eager`;
     assert.ok(graph.has(wrapper), feature);
     assert.ok(graph.has(eager), feature);
     assert.ok(!graph.has(original), `${feature} has no second eager instance`);
@@ -183,7 +183,7 @@ test("production graph uses current Linux adapters and one canonical shared stat
   }
 
   const extensionsPane = graph.get(`${browser}components/settings/panes/ProfileExtensions.tsx`);
-  const lazyOverlays = `\0ardia-lazy:${browser}components/extensions/ExtensionOverlays.tsx`;
+  const lazyOverlays = `\0nilla-lazy:${browser}components/extensions/ExtensionOverlays.tsx`;
   assert.ok(extensionsPane.importedIds.includes(`${linux}SettingsInstallDialog.tsx`), "the Extensions pane hosts its install dialog through the Linux host");
   assert.ok(!extensionsPane.importedIds.includes(lazyOverlays));
   assert.deepEqual(graph.get(`${linux}SettingsInstallDialog.tsx`)?.importers, [`${browser}components/settings/panes/ProfileExtensions.tsx`]);
@@ -271,7 +271,7 @@ test("production SiteConnection replacement reaches the real SiteControls and th
 });
 
 test("the Linux connection wrapper renders unknown honestly and delegates every known state and certificate details", { timeout: 120000 }, async () => {
-  const directory = await mkdtemp(join(tmpdir(), "ardia-site-connection-"));
+  const directory = await mkdtemp(join(tmpdir(), "nilla-site-connection-"));
   const entry = `${root}scripts/.page-state-entry-${process.pid}.tsx`;
   try {
     await writeFile(entry, `import ${JSON.stringify(`${browser}state/browser/store.ts`)};\nimport {createElement} from "react";\nimport {renderToStaticMarkup} from "react-dom/server";\nimport * as linux from ${JSON.stringify(siteConnectionAdapter)};\nimport * as shared from ${JSON.stringify(siteConnection)};\nexport {linux,shared};\nexport const render=(kind,security)=>renderToStaticMarkup(createElement(linux[kind],{security,open:false,onPress:()=>{}}));\n`);

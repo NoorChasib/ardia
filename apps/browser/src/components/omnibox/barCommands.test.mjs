@@ -73,8 +73,8 @@ const ENTRIES = [
     ran: ({ w }) => assert.ok(tabUrls(w).includes("https://chromewebstore.google.com/category/extensions")),
   },
   {
-    id: "newLittleArdia",
-    title: "New Little Ardia Window",
+    id: "newLittleNilla",
+    title: "New Little Nilla Window",
     keywords: ["little arc", "mini window"],
     ran: ({ w }) => assert.equal(Object.values(S().windows).filter((x) => x.kind === "small" && x.id !== w).length, 1),
   },

@@ -1,8 +1,8 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
-import com.ardia.sync.core.RecoveryPhrase
-import com.ardia.sync.core.SyncKeys
-import com.ardia.sync.core.SyncVault
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.core.SyncKeys
+import com.nilladigital.nilla.sync.core.SyncVault
 import java.io.FileNotFoundException
 import java.io.IOException
 import org.junit.Assert.assertArrayEquals

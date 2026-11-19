@@ -45,17 +45,17 @@ test("the first enabled rule that fits answers, and a disabled one is skipped", 
   const work = fresh({
     rules: [
       rule({ enabled: false, from: slackApp, open: "window" }),
-      (w) => rule({ from: slackApp, profileId: w, open: "littleArdia" }),
+      (w) => rule({ from: slackApp, profileId: w, open: "littleNilla" }),
       rule({ from: slackApp, open: "window" }),
     ],
   });
-  assert.equal(verdictOf(decideLink("https://news.example/", SLACK)), `${work}:littleArdia`);
+  assert.equal(verdictOf(decideLink("https://news.example/", SLACK)), `${work}:littleNilla`);
   assert.equal(decideLink("https://news.example/", MAIL), null);
   assert.deepEqual(takeAirTrafficCounts(), counted({ air_traffic_rule_links: 1 }));
 });
 
 test("a site rule takes the host and its subdomains, never a lookalike", () => {
-  const host = rules.siteHost("https://GitHub.com/ardia");
+  const host = rules.siteHost("https://GitHub.com/nilla");
   assert.equal(host, "github.com");
   const work = fresh({ rules: [(w) => rule({ when: { kind: "site", host }, profileId: w })] });
   for (const url of ["https://github.com/", "https://gist.github.com/x", "http://a.b.github.com/"]) assert.equal(verdictOf(decideLink(url, MAIL)), `${work}:tab`, url);
@@ -74,9 +74,9 @@ test("a pattern rule matches as a userscript match pattern", () => {
 
 test("a pattern without a scheme is a wildcard over the link", () => {
   for (const [pattern, hits, misses] of [
-    ["*git*", ["https://github.com/ardia", "https://gitlab.com/", "https://digit.example/"], ["https://example.com/", "https://example.com/git"]],
+    ["*git*", ["https://github.com/nilla", "https://gitlab.com/", "https://digit.example/"], ["https://example.com/", "https://example.com/git"]],
     ["github", ["https://GitHub.com/x", "https://gist.github.com/"], ["https://example.com/"]],
-    ["github.com/ardia/*", ["https://github.com/ardia/x", "http://github.com/ardia/"], ["https://github.com/other/x", "https://evil.example/github.com/ardia/x"]],
+    ["github.com/nilla/*", ["https://github.com/nilla/x", "http://github.com/nilla/"], ["https://github.com/other/x", "https://evil.example/github.com/nilla/x"]],
     ["*.github.com", ["https://gist.github.com/x"], ["https://github.com/x", "https://example.com/?q=a.github.com"]],
     ["*.bücher.de", ["https://shop.bücher.de/", "https://shop.xn--bcher-kva.de/x"], ["https://shop.bucher.de/"]],
     ["bücher.de/*", ["https://bücher.de/a"], ["https://example.com/bücher.de/a"]],
@@ -92,9 +92,9 @@ test("a pattern without a scheme is a wildcard over the link", () => {
 });
 
 test("a rule whose profile was deleted or is private falls through to the next one", () => {
-  const work = fresh({ rules: [(w) => rule({ profileId: w, open: "window" }), rule({ profileId: "incognito:1@default" }), rule({ open: "littleArdia" })] });
+  const work = fresh({ rules: [(w) => rule({ profileId: w, open: "window" }), rule({ profileId: "incognito:1@default" }), rule({ open: "littleNilla" })] });
   S().deleteProfile(work);
-  assert.equal(verdictOf(decideLink("https://a.example/", SLACK)), "last:littleArdia");
+  assert.equal(verdictOf(decideLink("https://a.example/", SLACK)), "last:littleNilla");
   assert.equal(traceLink("https://a.example/", SLACK).index, 2);
 });
 
@@ -109,11 +109,11 @@ test("Settings rules run before hooks.json, which runs before the fallback", () 
 });
 
 test("the fallback answers only links nothing else caught, and a fallback to a deleted profile is the usual routing", () => {
-  const routed = [{ name: "mail-work", on: "link.opening", from: ["com.apple.mail"], route: { open: "littleArdia" } }];
+  const routed = [{ name: "mail-work", on: "link.opening", from: ["com.apple.mail"], route: { open: "littleNilla" } }];
   const work = fresh({ fallback: (w) => ({ profileId: w, open: "window" }), hooks: routed });
   assert.equal(verdictOf(decideLink("https://a.example/", MAIL)), `${work}:window`, "an unapproved route hook is off, so the fallback answers");
   approveRule(approvalFor(useHookRules.getState().hooks[0]).key);
-  assert.equal(verdictOf(decideLink("https://a.example/", MAIL)), "last:littleArdia");
+  assert.equal(verdictOf(decideLink("https://a.example/", MAIL)), "last:littleNilla");
   assert.equal(verdictOf(decideLink("https://a.example/", SLACK)), `${work}:window`);
   S().deleteProfile(work);
   assert.equal(decideLink("https://a.example/", SLACK), null);
@@ -121,12 +121,12 @@ test("the fallback answers only links nothing else caught, and a fallback to a d
 });
 
 test("a program hook that doesn't answer leaves the link to the fallback", async () => {
-  fresh({ fallback: { profileId: null, open: "littleArdia" }, hooks: [{ name: "router", on: "link.opening", run: ["~/bin/route"] }] });
+  fresh({ fallback: { profileId: null, open: "littleNilla" }, hooks: [{ name: "router", on: "link.opening", run: ["~/bin/route"] }] });
   approveRule(approvalFor(useHookRules.getState().hooks[0]).key);
   const trace = traceLink("https://a.example/", MAIL);
   assert.equal(trace.by, "program");
   assert.equal(trace.otherwise.by, "fallback");
-  assert.equal(verdictOf(await decideLink("https://a.example/", MAIL)), "last:littleArdia");
+  assert.equal(verdictOf(await decideLink("https://a.example/", MAIL)), "last:littleNilla");
 });
 
 test("the hold is on while an enabled rule or a fallback exists, and follows every change", () => {
@@ -150,12 +150,12 @@ test("the hold is on while an enabled rule or a fallback exists, and follows eve
 test("Try a Link says what decideLink does, for every kind of answer", () => {
   const work = fresh({
     rules: [(w) => rule({ from: slackApp, when: { kind: "site", host: "github.com" }, profileId: w, open: "window" })],
-    fallback: { profileId: null, open: "littleArdia" },
+    fallback: { profileId: null, open: "littleNilla" },
     hooks: [{ name: "ads", on: "link.opening", match: "https://ads.example/*", drop: true }],
   });
-  S().updateSettings({ openLinksInLittleArdia: false });
+  S().updateSettings({ openLinksInLittleNilla: false });
   const cases = [
-    ["github.com/ardia", SLACK, "rule"],
+    ["github.com/nilla", SLACK, "rule"],
     ["https://ads.example/x", SLACK, "hook"],
     ["https://news.example/", MAIL, "fallback"],
   ];
@@ -166,7 +166,7 @@ test("Try a Link says what decideLink does, for every kind of answer", () => {
     const real = decideLink(preview.url, source);
     assert.deepEqual(preview.trace.verdict, real, typed);
   }
-  const rulePreview = previewLink("github.com/ardia", SLACK);
+  const rulePreview = previewLink("github.com/nilla", SLACK);
   assert.deepEqual([rulePreview.profileName, rulePreview.open, rulePreview.usedLast], ["Work", "window", false]);
   assert.equal(previewLink("https://ads.example/x", SLACK).dropped, true);
   store.setAirTrafficFallback(null);
@@ -214,7 +214,7 @@ test("a rule change that can't be saved leaves the rules and the hold as they we
 test("the saved rules read back, an unversioned file upgrades, and a newer or broken one reads as nothing", () => {
   const config = {
     rules: [rule({ from: slackApp, when: { kind: "site", host: "github.com" }, profileId: "p1", open: "window" }), rule({ enabled: false, when: { kind: "pattern", pattern: "https://*.example.com/*" } })],
-    fallback: { profileId: null, open: "littleArdia" },
+    fallback: { profileId: null, open: "littleNilla" },
   };
   const json = rules.airTrafficJson(config);
   assert.equal(JSON.parse(json).version, rules.AIR_TRAFFIC_VERSION);
@@ -314,7 +314,7 @@ test("a rule whose tab group is gone opens a plain tab in its profile, and a gro
 });
 
 test("a link from another app with a group rule joins the group's copy in the window shown last, and opens its collapsed group", async () => {
-  const { openExternalUrls } = await import("../littleArdia/actions.ts");
+  const { openExternalUrls } = await import("../littleNilla/actions.ts");
   const work = fresh();
   startDecideHooks();
   const first = S().createWindow({ url: "https://inbox.example/", profileId: work });
@@ -390,14 +390,14 @@ test("the routing targets' stamp changes when a profile or one of its tab groups
 });
 
 test("a link from another app lands where its rule says, before any tab exists", async () => {
-  const { openExternalUrls } = await import("../littleArdia/actions.ts");
+  const { openExternalUrls } = await import("../littleNilla/actions.ts");
   const work = fresh({ rules: [(w) => rule({ from: slackApp, when: { kind: "site", host: "github.com" }, profileId: w, open: "tab" })] });
   startDecideHooks();
-  S().updateSettings({ openLinksInLittleArdia: true });
+  S().updateSettings({ openLinksInLittleNilla: true });
   S().createWindow({ url: "https://a.example/" });
-  openExternalUrls(["https://github.com/ardia"], undefined, SLACK);
+  openExternalUrls(["https://github.com/nilla"], undefined, SLACK);
   await new Promise((resolve) => setTimeout(resolve, 20));
-  const tab = Object.values(S().tabs).find((t) => t.url === "https://github.com/ardia");
+  const tab = Object.values(S().tabs).find((t) => t.url === "https://github.com/nilla");
   assert.equal(tab?.profileId, work);
   assert.notEqual(S().windows[tab.windowId].kind, "small");
   assert.equal(store.useAirTraffic.getState().recentApps[0].name, "Slack");

@@ -151,7 +151,7 @@ const olderEngine = (...missing) => {
 
 const NOTIFICATION_CALLS = ["ArdiaApp.notificationPermission", "ArdiaApp.requestNotificationPermission", "ArdiaApp.postNotification", "ArdiaApp.removeNotifications"];
 
-test("Ardia's notifications and the bang list fetch reach the engine that advertises them", async () => {
+test("Nilla's notifications and the bang list fetch reach the engine that advertises them", async () => {
   for (const name of [...NOTIFICATION_CALLS, "ArdiaShell.fetchBangList"]) {
     assert.ok(advertised.includes(name), name);
     const [module, method] = name.split(".");
@@ -212,7 +212,7 @@ test("the bootstrap parser sees capabilities the host appends from its capabilit
   for (const name of advertisedLoops) assert.ok(capabilityArrays.get(name)?.length, `${name} isn't a string array the parser can read`);
 });
 
-test("the ardia command and the user-scripts folder route to the engine that advertises them", async () => {
+test("the nilla-browser command and the user-scripts folder route to the engine that advertises them", async () => {
   for (const name of ["ArdiaCli.installedVersion", "ArdiaCli.install", "ArdiaAutomation.start", "ArdiaAutomation.stop", "ArdiaAutomation.reply", "ArdiaAutomation.broadcast", "ArdiaUserScripts.watch", "ArdiaUserScripts.read", "ArdiaUserScripts.readStatus", "ArdiaUserScripts.writeStatus"]) {
     assert.ok(advertised.includes(name), name);
   }
@@ -507,7 +507,7 @@ function fakeDom() {
       fullscreenElement: null,
       focused: true,
       hasFocus: () => dom.document.focused,
-      querySelector: (selector) => (selector === ".ardia-window" ? frame : null),
+      querySelector: (selector) => (selector === ".nilla-window" ? frame : null),
       getElementById: (id) => head.find((style) => style.id === id) ?? null,
       createElement: () => ({ id: "", textContent: "" }),
       head: { append: (style) => head.push(style) },

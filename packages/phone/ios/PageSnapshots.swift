@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import CryptoKit
 import ExpoModulesCore
 import Foundation

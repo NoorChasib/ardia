@@ -18,7 +18,7 @@ function PagePreview({ windowId, tabId }: { windowId: string; tabId: string }) {
   if (!picture || !uri) return null;
   return (
     <View
-      testID="ardia.tabHoverPreview"
+      testID="nilla.tabHoverPreview"
       accessible
       accessibilityLabel="Page preview"
       style={{ marginTop: TAB_PREVIEW.gap, alignSelf: "stretch", maxHeight: TAB_PREVIEW.maxHeight, borderRadius: TAB_PREVIEW.radius, overflow: "hidden", backgroundColor: TAB_PREVIEW.pageFill }}

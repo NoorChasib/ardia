@@ -1,4 +1,4 @@
-import { canonical, type ScopeState } from "@ardia/sync";
+import { canonical, type ScopeState } from "@nilla/sync";
 import { themeFromRecord } from "../profileAdapters";
 import type { ProfileLink } from "../syncDoc";
 

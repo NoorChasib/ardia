@@ -7,10 +7,10 @@ def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 def repoRoot = new File(projectRoot).getParentFile().getParentFile()
 def nodeResolve = { String expression -> ["node", "--print", expression].execute(null, rootDir).text.trim() }
 def reactNativePackage = nodeResolve("require.resolve('react-native/package.json')")
-def bundleExport = findProperty('ardiaBundleExport')
-def bundleExportRecord = bundleExport ? new File(bundleExport.toString(), ".ardia-bundle.json") : null
+def bundleExport = findProperty('nillaBundleExport')
+def bundleExportRecord = bundleExport ? new File(bundleExport.toString(), ".nilla-bundle.json") : null
 if (bundleExportRecord && !bundleExportRecord.isFile()) {
-    throw new GradleException("-PardiaBundleExport=${bundleExport} is not a folder made by apps/phone/scripts/bundle-export.ts")
+    throw new GradleException("-PnillaBundleExport=${bundleExport} is not a folder made by apps/phone/scripts/bundle-export.ts")
 }
 def bundleProjectRoot = bundleExport ? new File(bundleExport.toString(), "apps/phone").canonicalPath : projectRoot
 def bundleExportCommit = bundleExportRecord ? new groovy.json.JsonSlurper().parse(bundleExportRecord).commit.toString() : null
@@ -27,9 +27,9 @@ react {
     autolinkLibrariesWithApp()
 }
 
-def ardiaLab = findProperty('ardiaLab') == 'true'
-if (ardiaLab != (System.getenv('EXPO_PUBLIC_ARDIA_LAB') == 'true')) {
-    throw new GradleException("-PardiaLab and EXPO_PUBLIC_ARDIA_LAB disagree: build through apps/phone/scripts/gradle-locked, or set both or neither")
+def nillaLab = findProperty('nillaLab') == 'true'
+if (nillaLab != (System.getenv('EXPO_PUBLIC_NILLA_LAB') == 'true')) {
+    throw new GradleException("-PnillaLab and EXPO_PUBLIC_NILLA_LAB disagree: build through apps/phone/scripts/gradle-locked, or set both or neither")
 }
 def bundleGuard = "${projectRoot}/scripts/bundle-guard.ts"
 def runBundleGuard = { List<String> arguments ->
@@ -38,27 +38,27 @@ def runBundleGuard = { List<String> arguments ->
     [process.waitFor(), output]
 }
 def nativeCommit = ["git", "rev-parse", "HEAD"].execute(null, repoRoot).text.trim()
-def ardiaCommit = bundleExportCommit ?: nativeCommit
-def ardiaDirty = bundleExport ? "no" : (runBundleGuard(["dirty"])[1] == "no" ? "no" : "yes")
-def ardiaBundleSource = bundleExport ? "export of the commit" : "working tree"
-def ardiaNative = runBundleGuard(["native"])[1]
-def ardiaReleaseVersion = findProperty('ardiaVersionName') ?: ''
-def ardiaVersionCode = (findProperty('ardiaVersionCode') ?: '2') as int
-if (ardiaReleaseVersion && ardiaLab) throw new GradleException("a release version is for builds without the lab switch: drop -PardiaLab or the version")
+def nillaCommit = bundleExportCommit ?: nativeCommit
+def nillaDirty = bundleExport ? "no" : (runBundleGuard(["dirty"])[1] == "no" ? "no" : "yes")
+def nillaBundleSource = bundleExport ? "export of the commit" : "working tree"
+def nillaNative = runBundleGuard(["native"])[1]
+def nillaReleaseVersion = findProperty('nillaVersionName') ?: ''
+def nillaVersionCode = (findProperty('nillaVersionCode') ?: '2') as int
+if (nillaReleaseVersion && nillaLab) throw new GradleException("a release version is for builds without the lab switch: drop -PnillaLab or the version")
 def bundleGuardState = new File(buildDir, "bundle-guard/state.json")
 tasks.matching { it.name.startsWith('createBundle') && it.name.endsWith('JsAndAssets') }.configureEach { task ->
-    inputs.property('ardiaLab', ardiaLab)
-    inputs.property('ardiaCommit', ardiaCommit)
-    inputs.property('ardiaBundleSource', ardiaBundleSource)
+    inputs.property('nillaLab', nillaLab)
+    inputs.property('nillaCommit', nillaCommit)
+    inputs.property('nillaBundleSource', nillaBundleSource)
     outputs.upToDateWhen { false }
     doFirst {
         if (bundleExport) {
             def recorded = new groovy.json.JsonSlurper().parse(bundleExportRecord).commit.toString()
-            if (recorded != ardiaCommit) throw new GradleException("the bundle export at ${bundleExport} is of ${recorded}, but the build stamped ${ardiaCommit}")
-            logger.lifecycle("bundle-export: bundling ${ardiaCommit} from ${bundleExport}")
+            if (recorded != nillaCommit) throw new GradleException("the bundle export at ${bundleExport} is of ${recorded}, but the build stamped ${nillaCommit}")
+            logger.lifecycle("bundle-export: bundling ${nillaCommit} from ${bundleExport}")
             return
         }
-        def (status, output) = runBundleGuard(["before", "--state", bundleGuardState.absolutePath, "--expect", ardiaCommit])
+        def (status, output) = runBundleGuard(["before", "--state", bundleGuardState.absolutePath, "--expect", nillaCommit])
         logger.lifecycle(output)
         if (status != 0) throw new GradleException(output)
     }
@@ -77,7 +77,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.ardia.browser.android'
+    namespace 'com.nilladigital.nilla.android'
     sourceSets.main.res.srcDirs += "src/main/res-system"
     testOptions {
         unitTests.includeAndroidResources = true
@@ -88,15 +88,15 @@ android {
         applicationId "${nillaIdPrefix}.nilla.android"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode ardiaVersionCode
-        versionName ardiaReleaseVersion ?: "dev"
-        resValue "string", "ardia_release_version", ardiaReleaseVersion
-        resValue "string", "ardia_build_commit", ardiaCommit
-        resValue "string", "ardia_build_dirty", ardiaDirty
-        resValue "string", "ardia_build_source", ardiaBundleSource
-        resValue "string", "ardia_build_native", ardiaNative
-        resValue "bool", "ardia_sync_offered", ardiaLab ? "true" : "false"
-        manifestPlaceholders += [ardiaProfileable: ardiaLab ? "true" : "false", ardiaScreenOrientation: ardiaLab ? "unspecified" : "portrait"]
+        versionCode nillaVersionCode
+        versionName nillaReleaseVersion ?: "dev"
+        resValue "string", "nilla_release_version", nillaReleaseVersion
+        resValue "string", "nilla_build_commit", nillaCommit
+        resValue "string", "nilla_build_dirty", nillaDirty
+        resValue "string", "nilla_build_source", nillaBundleSource
+        resValue "string", "nilla_build_native", nillaNative
+        resValue "bool", "nilla_sync_offered", nillaLab ? "true" : "false"
+        manifestPlaceholders += [nillaProfileable: nillaLab ? "true" : "false", nillaScreenOrientation: nillaLab ? "unspecified" : "portrait"]
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
     signingConfigs {
@@ -124,7 +124,7 @@ android {
             useLegacyPackaging((findProperty('expo.useLegacyPackaging') ?: 'false').toBoolean())
         }
         dex {
-            useLegacyPackaging((findProperty('ardiaCompressDex') ?: 'false').toBoolean())
+            useLegacyPackaging((findProperty('nillaCompressDex') ?: 'false').toBoolean())
         }
     }
     androidResources {
@@ -135,7 +135,7 @@ android {
 dependencies {
     implementation("com.facebook.react:react-android")
     implementation("com.facebook.react:hermes-android")
-    implementation(project(":ardia-design"))
+    implementation(project(":nilla-design"))
     implementation("androidx.glance:glance-appwidget:1.2.0")
     implementation(platform("androidx.compose:compose-bom:2026.06.01"))
     implementation("androidx.compose.material3:material3")

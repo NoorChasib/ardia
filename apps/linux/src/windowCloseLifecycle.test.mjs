@@ -215,9 +215,9 @@ test("a window's departure snapshot is the state the store's own closeWindow set
   const { useBrowser } = await import("../../browser/src/state/browser/store.ts");
   const { windowDeparture } = await import("./windowDeparture.ts");
   useBrowser.getState().hydrate({});
-  const staying = useBrowser.getState().createWindow({ url: "https://staying.ardia.test/" });
-  const leaving = useBrowser.getState().createWindow({ url: "https://leaving.ardia.test/" });
-  useBrowser.setState({ privateSiteMutes: { [leaving]: { "leaving.ardia.test": true }, [staying]: { "staying.ardia.test": true } } });
+  const staying = useBrowser.getState().createWindow({ url: "https://staying.nilla.test/" });
+  const leaving = useBrowser.getState().createWindow({ url: "https://leaving.nilla.test/" });
+  useBrowser.setState({ privateSiteMutes: { [leaving]: { "leaving.nilla.test": true }, [staying]: { "staying.nilla.test": true } } });
   const before = useBrowser.getState();
   const departed = windowDeparture(before, leaving);
   assert.equal(windowDeparture(before, "gone"), before);
@@ -234,9 +234,9 @@ test("a window the store already closed, like the last private window, closes na
   const { useBrowser } = await import("../../browser/src/state/browser/store.ts");
   const { decideLinuxWindowClose } = await import("./windowCloseDecider.ts");
   useBrowser.getState().hydrate({});
-  useBrowser.getState().createWindow({ url: "https://staying.ardia.test/" });
-  const privateWindow = useBrowser.getState().createWindow({ kind: "private", url: "https://one.ardia.test/" });
-  useBrowser.getState().newTab(privateWindow, { url: "https://two.ardia.test/" });
+  useBrowser.getState().createWindow({ url: "https://staying.nilla.test/" });
+  const privateWindow = useBrowser.getState().createWindow({ kind: "private", url: "https://one.nilla.test/" });
+  useBrowser.getState().newTab(privateWindow, { url: "https://two.nilla.test/" });
   useBrowser.getState().closeWindow(privateWindow);
   const { log, coordinator } = harness({ windowId: privateWindow, endsSession: false, decide: decideLinuxWindowClose });
   await coordinator.closeWindow(privateWindow);
@@ -248,9 +248,9 @@ test("a window still in the store keeps its close warning", async () => {
   const { useBrowser } = await import("../../browser/src/state/browser/store.ts");
   const { decideLinuxWindowClose } = await import("./windowCloseDecider.ts");
   useBrowser.getState().hydrate({});
-  useBrowser.getState().createWindow({ url: "https://staying.ardia.test/" });
-  const leaving = useBrowser.getState().createWindow({ url: "https://one.ardia.test/" });
-  useBrowser.getState().newTab(leaving, { url: "https://two.ardia.test/" });
+  useBrowser.getState().createWindow({ url: "https://staying.nilla.test/" });
+  const leaving = useBrowser.getState().createWindow({ url: "https://one.nilla.test/" });
+  useBrowser.getState().newTab(leaving, { url: "https://two.nilla.test/" });
   useBrowser.getState().updateSettings({ warnBeforeClosingWindow: true });
   const asked = [];
   const decided = await decideLinuxWindowClose(leaving, "window", async (options) => { asked.push(options.title); return { confirmed: false, suppressed: false }; });

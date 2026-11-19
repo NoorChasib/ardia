@@ -1,4 +1,4 @@
-import { pageObscuresInsets } from "@ardia/phone-native";
+import { pageObscuresInsets } from "@nilla/phone-native";
 import { createContext, useContext, type ReactNode } from "react";
 import { Platform } from "react-native";
 import { designFor, type Design } from "../../lib/design";

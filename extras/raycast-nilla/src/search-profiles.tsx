@@ -1,6 +1,6 @@
 import { Action, ActionPanel, closeMainWindow, Icon, Keyboard, List } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
-import { newWindow, showProfile, useProfiles } from "./ardia";
+import { newWindow, showProfile, useProfiles } from "./nilla";
 
 export default function Command() {
   const { isLoading, data, error, revalidate } = useProfiles();
@@ -10,8 +10,8 @@ export default function Command() {
       {error ? (
         <List.EmptyView
           icon={Icon.Warning}
-          title="Couldn't read Ardia's profiles"
-          description="Is Ardia running, and may Raycast control it (System Settings › Privacy & Security › Automation)?"
+          title="Couldn't read Nilla's profiles"
+          description="Is Nilla running, and may Raycast control it (System Settings › Privacy & Security › Automation)?"
         />
       ) : (
         <List.EmptyView icon={Icon.PersonCircle} title="No profiles" />

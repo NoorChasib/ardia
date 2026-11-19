@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-using namespace ardia_display;
+using namespace nilla_display;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

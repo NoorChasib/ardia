@@ -14,7 +14,7 @@
 
 #include "VectorGeometry.h"
 
-namespace Ardia {
+namespace Nilla {
 
 REACT_STRUCT(VectorIconElement)
 struct VectorIconElement {
@@ -273,7 +273,7 @@ inline winrt::com_ptr<VectorIconView> VectorIconOf(winrt::Microsoft::ReactNative
 inline void RegisterVectorIconView(winrt::Microsoft::ReactNative::IReactPackageBuilder const &packageBuilder) noexcept {
   try {
     packageBuilder.as<winrt::Microsoft::ReactNative::IReactPackageBuilderFabric>().AddViewComponent(
-        L"ArdiaVectorIcon", [](winrt::Microsoft::ReactNative::IReactViewComponentBuilder const &builder) noexcept {
+        L"NillaVectorIcon", [](winrt::Microsoft::ReactNative::IReactViewComponentBuilder const &builder) noexcept {
           builder.SetCreateProps([](winrt::Microsoft::ReactNative::ViewProps props,
                                     const winrt::Microsoft::ReactNative::IComponentProps &cloneFrom) noexcept {
             return winrt::make<VectorIconProps>(props, cloneFrom);

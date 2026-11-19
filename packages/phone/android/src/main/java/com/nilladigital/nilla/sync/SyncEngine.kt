@@ -1,11 +1,11 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.content.res.AssetManager
-import com.ardia.shared.ScriptEngine
-import com.ardia.shared.SharedScript
-import com.ardia.sync.core.Base32
-import com.ardia.sync.core.SyncKeys
-import com.ardia.sync.core.SyncStorage
+import com.nilladigital.nilla.shared.ScriptEngine
+import com.nilladigital.nilla.shared.SharedScript
+import com.nilladigital.nilla.sync.core.Base32
+import com.nilladigital.nilla.sync.core.SyncKeys
+import com.nilladigital.nilla.sync.core.SyncStorage
 import java.io.File
 import java.util.UUID
 import kotlinx.serialization.Serializable

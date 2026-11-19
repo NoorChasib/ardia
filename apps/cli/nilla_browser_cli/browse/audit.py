@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from ardia_cli.browse.commands import Result, command, current_or_new, navigate, normalize_url, parse
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.commands import Result, command, current_or_new, navigate, normalize_url, parse
+from nilla_browser_cli.browse.errors import BrowseError
 
 AXE_FILE = "axe.min.js"
 RUN = r"""
@@ -30,7 +30,7 @@ def axe_source() -> str:
     for candidate in candidates:
         if candidate.is_file():
             return candidate.read_text(encoding="utf-8")
-    raise BrowseError("axe-core isn't bundled with this ardia command (apps/cli/scripts/build.sh adds ardia_cli/vendor/axe.min.js)")
+    raise BrowseError("axe-core isn't bundled with this nilla command (apps/cli/scripts/build.sh adds nilla_browser_cli/vendor/axe.min.js)")
 
 
 @command("a11y")

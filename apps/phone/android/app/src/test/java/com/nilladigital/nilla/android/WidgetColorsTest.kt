@@ -1,8 +1,8 @@
-package com.ardia.browser.android
+package com.nilladigital.nilla.android
 
 import androidx.compose.ui.graphics.Color
-import com.ardia.browser.android.system.WidgetColors
-import com.ardia.design.ProfileLook
+import com.nilladigital.nilla.android.system.WidgetColors
+import com.nilladigital.nilla.design.ProfileLook
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test

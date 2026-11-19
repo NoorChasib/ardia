@@ -1,6 +1,6 @@
 
 const INSTALL = String.raw`
-const KEY = Symbol.for("ardia.translator");
+const KEY = Symbol.for("nilla.translator");
 if (!window[KEY]) {
   const SKIP = "script,style,noscript,template,code,pre,kbd,samp,var,textarea,input,select,option,svg,math,iframe,[contenteditable]:not([contenteditable=false]),[translate=no],.notranslate";
   const BLOCK = "p,li,dd,dt,td,th,caption,figcaption,blockquote,h1,h2,h3,h4,h5,h6,summary,legend,label,button,div,section,article,aside,header,footer,main,nav,form,fieldset,details,dialog,body";
@@ -216,5 +216,5 @@ if (!window[KEY]) {
 `;
 
 export function translatorCall(op: "sample" | "holds" | "start" | "next" | "apply" | "revert", ...args: unknown[]): string {
-  return `${INSTALL}\npost("result", JSON.stringify(window[Symbol.for("ardia.translator")].${op}(...${JSON.stringify(args)})));`;
+  return `${INSTALL}\npost("result", JSON.stringify(window[Symbol.for("nilla.translator")].${op}(...${JSON.stringify(args)})));`;
 }

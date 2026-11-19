@@ -8,9 +8,9 @@ import shutil
 import time
 from pathlib import Path
 
-from ardia_cli.browse import claims
-from ardia_cli.browse.commands import Result, command, glob_match, need, normalize_url, parse
-from ardia_cli.browse.errors import BrowseError, Gated, Usage
+from nilla_browser_cli.browse import claims
+from nilla_browser_cli.browse.commands import Result, command, glob_match, need, normalize_url, parse
+from nilla_browser_cli.browse.errors import BrowseError, Gated, Usage
 
 BODY_LIMIT = 1024 * 1024
 HAR_BODY_LIMIT = 2 * 1024 * 1024
@@ -117,7 +117,7 @@ RELOAD_SETTLE = 1.5
 @command("network")
 async def cmd_network(ctx, argv):
     if not argv:
-        raise Usage("Usage: ardia browse network route|unroute|requests|request|har ...")
+        raise Usage("Usage: nilla browse network route|unroute|requests|request|har ...")
     action, rest = argv[0], argv[1:]
     if action == "requests":
         return await network_requests(ctx, rest)
@@ -140,8 +140,8 @@ async def network_requests(ctx, argv):
     await activate(ctx, page, "network", page.enable_network)
     ctx.state.leases.add("network")
     if options.get("reload"):
-        from ardia_cli import command_metrics
-        from ardia_cli.browse.commands import navigate
+        from nilla_browser_cli import command_metrics
+        from nilla_browser_cli.browse.commands import navigate
 
         command_metrics.flag("network_reloaded", True)
         await navigate(ctx, page, page.url)
@@ -187,7 +187,7 @@ async def network_request(ctx, argv):
     page = await ctx.state.page()
     record = page.requests.get(args[0])
     if record is None:
-        raise BrowseError(f"No captured request {args[0]}; run `ardia browse network requests` first")
+        raise BrowseError(f"No captured request {args[0]}; run `nilla-browser browse network requests` first")
     detail = request_row(record)
     detail["postData"] = record.get("postData")
     body, encoded = await response_body(page, args[0], BODY_LIMIT)
@@ -215,11 +215,11 @@ async def network_har(ctx, argv):
         ctx.state.extras["har"] = {"target": page.target_id, "since": time.time() * 1000, "mode": mode, "seen": set(page.requests)}
         return Result({"started": True, "content": mode}, "✓ HAR recording started")
     if args[0] != "stop":
-        raise Usage("Usage: ardia browse network har start|stop [path]")
+        raise Usage("Usage: nilla browse network har start|stop [path]")
     har = ctx.state.extras.pop("har", None)
     ctx.state.leases.discard("har")
     if not har:
-        raise BrowseError("No HAR recording is running; start one with `ardia browse network har start`")
+        raise BrowseError("No HAR recording is running; start one with `nilla-browser browse network har start`")
     release_claim(ctx, har["target"], "har")
     entries = []
     total = 0
@@ -250,18 +250,18 @@ async def network_har(ctx, argv):
             "_resourceType": record.get("resourceType"),
             **({"_error": record["failed"]} if record.get("failed") else {}),
         })
-    document = {"log": {"version": "1.2", "creator": {"name": "ardia browse", "version": "1"}, "pages": [], "entries": entries}}
+    document = {"log": {"version": "1.2", "creator": {"name": "nilla browse", "version": "1"}, "pages": [], "entries": entries}}
     path = ctx.path(args[1]) if len(args) > 1 else os.path.join(os.path.dirname(default_dir(ctx)), f"capture-{int(time.time())}.har")
-    from ardia_cli.printable import well_formed
+    from nilla_browser_cli.printable import well_formed
 
     Path(path).write_text(well_formed(json.dumps(document, ensure_ascii=False)), encoding="utf-8")
     shown = args[1] if len(args) > 1 else path
-    note = " (Ardia strips Cookie, Set-Cookie and Authorization headers on the token path)" if not ctx.state.endpoint.explicit else ""
+    note = " (Nilla strips Cookie, Set-Cookie and Authorization headers on the token path)" if not ctx.state.endpoint.explicit else ""
     return Result({"path": shown, "entries": len(entries)}, f"✓ HAR saved to {shown} ({len(entries)} entries){note}")
 
 
 def default_dir(ctx):
-    from ardia_cli.browse.media import default_path
+    from nilla_browser_cli.browse.media import default_path
 
     return default_path(ctx, "png")
 
@@ -270,7 +270,7 @@ async def network_route(ctx, argv):
     options, args = parse(argv, {"--abort": "bool", "--body": "value", "--resource-type": "value", "--status": "value", "--content-type": "value"})
     need(args, 1, "network route <url> [--abort | --body <json>] [--resource-type <csv>]")
     page = await ctx.state.page()
-    from ardia_cli.browse.commands import refuse_on_borrowed
+    from nilla_browser_cli.browse.commands import refuse_on_borrowed
 
     refuse_on_borrowed(ctx, page, "reroute the requests of")
     routes = ctx.state.extras.setdefault("routes", [])
@@ -411,7 +411,7 @@ async def tracing(ctx, argv, kind):
         ctx.state.leases.add("trace")
         return Result({"started": True}, "✓ Profiling started" if kind == "profiler" else "✓ Recording started")
     if args[0] != "stop":
-        raise Usage(f"Usage: ardia browse {kind} start|stop [path]")
+        raise Usage(f"Usage: nilla browse {kind} start|stop [path]")
     record = ctx.state.extras.pop("tracing", None)
     if not record:
         raise BrowseError(f"No {kind} is recording")
@@ -505,7 +505,7 @@ async def cmd_record(ctx, argv):
     if not ffmpeg:
         raise BrowseError("record needs ffmpeg on PATH to encode WebM (brew install ffmpeg)")
     if len(args) > 2:
-        from ardia_cli.browse.commands import current_or_new, navigate
+        from nilla_browser_cli.browse.commands import current_or_new, navigate
 
         page = await current_or_new(ctx)
         await navigate(ctx, page, normalize_url(args[2]))
@@ -597,7 +597,7 @@ async def cmd_stream(ctx, argv):
             await stop_stream(ctx)
         return Result({"enabled": False}, "✓ Streaming disabled")
     if action != "enable":
-        raise Usage("Usage: ardia browse stream enable [--port N] [--input] | disable | status")
+        raise Usage("Usage: nilla browse stream enable [--port N] [--input] | disable | status")
     if stream:
         raise BrowseError(f"Streaming is already on at {stream['url']}")
     page = await ctx.state.page()
@@ -690,7 +690,7 @@ async def start_stream_server(ctx, stream, port):
 
             await asyncio.gather(frames(), inputs())
         except Exception:
-            logging.getLogger("ardia_cli.browse").debug("stream client ended", exc_info=True)
+            logging.getLogger("nilla_browser_cli.browse").debug("stream client ended", exc_info=True)
         finally:
             stream["clients"].discard(connection)
             if waiter in stream["cast"].waiters:

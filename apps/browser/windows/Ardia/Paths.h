@@ -6,7 +6,7 @@
 
 #include <shlobj.h>
 
-namespace Ardia::Paths {
+namespace Nilla::Paths {
 
 inline std::string Utf8(std::wstring_view wide) noexcept {
   if (wide.empty()) return {};

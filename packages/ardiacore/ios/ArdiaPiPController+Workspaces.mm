@@ -3,14 +3,14 @@
 
 #import <objc/runtime.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
 namespace {
 
 const void *const kFloatsOverWorkspacesKey = &kFloatsOverWorkspacesKey;
 
 BOOL FloatsOverWorkspaces(NSWindow *window) {
-  if ([ArdiaPiPController forWindow:window] || objc_getAssociatedObject(window, kFloatsOverWorkspacesKey)) return YES;
+  if ([NillaPiPController forWindow:window] || objc_getAssociatedObject(window, kFloatsOverWorkspacesKey)) return YES;
   if (!IsChromeFloatingWindow(window)) return NO;
   objc_setAssociatedObject(window, kFloatsOverWorkspacesKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   return YES;
@@ -39,7 +39,7 @@ BOOL MarkedToJoinFullScreenSpaces(NSWindow *window) { return objc_getAssociatedO
 void AnswerNonactivatingPanelForMarkedWindows() {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    ardia_runtime::ReplaceMethod(NSWindow.class, @selector(_isNonactivatingPanel), ^id(IMP original) {
+    nilla_runtime::ReplaceMethod(NSWindow.class, @selector(_isNonactivatingPanel), ^id(IMP original) {
       return ^BOOL(NSWindow *window) {
         return MarkedToJoinFullScreenSpaces(window) || ((BOOL (*)(id, SEL))original)(window, @selector(_isNonactivatingPanel));
       };
@@ -48,13 +48,13 @@ void AnswerNonactivatingPanelForMarkedWindows() {
 }
 
 void JoinWhenChromeMakesItFloat(Class windowClass) {
-  ardia_runtime::ReplaceMethod(windowClass, @selector(setCollectionBehavior:), ^id(IMP original) {
+  nilla_runtime::ReplaceMethod(windowClass, @selector(setCollectionBehavior:), ^id(IMP original) {
     return ^(NSWindow *window, NSWindowCollectionBehavior behavior) {
       ((void (*)(id, SEL, NSWindowCollectionBehavior))original)(window, @selector(setCollectionBehavior:), behavior);
       JoinBeforeFirstShown(window);
     };
   });
-  ardia_runtime::ReplaceMethod(windowClass, @selector(setLevel:), ^id(IMP original) {
+  nilla_runtime::ReplaceMethod(windowClass, @selector(setLevel:), ^id(IMP original) {
     return ^(NSWindow *window, NSWindowLevel level) {
       ((void (*)(id, SEL, NSWindowLevel))original)(window, @selector(setLevel:), level);
       JoinBeforeFirstShown(window);
@@ -64,7 +64,7 @@ void JoinWhenChromeMakesItFloat(Class windowClass) {
 
 }
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 BOOL JoinsFullScreenSpaces(NSWindow *window) {
   const NSWindowCollectionBehavior needed =
@@ -91,7 +91,7 @@ void FloatOverActiveSpace(NSWindow *window) {
 
 }
 
-@implementation ArdiaPiPController (Workspaces)
+@implementation NillaPiPController (Workspaces)
 
 + (void)load {
   Class frameless = NSClassFromString(@"NativeWidgetMacFramelessNSWindow");

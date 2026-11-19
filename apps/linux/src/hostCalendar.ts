@@ -1,5 +1,5 @@
 import type { CalendarAuthorization, CalendarNative, CalendarParticipant, SystemCalendar, SystemCalendarEvent } from "../../../packages/shell/src/live";
-import { ardiaHost, hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
+import { nillaHost, hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
 import {
   events as veventsOf,
   ianaName,
@@ -179,7 +179,7 @@ const calendarError = (code: string, message: string) => Object.assign(new Error
 export function createLinuxCalendar(host: ArdiaHost): LinuxCalendar {
   const supported = CALENDAR_CAPABILITIES.every((method) => hostSupports(method, host));
   let status: CalendarAuthorization = !supported ? "restricted" : consentGranted(host) ? "fullAccess" : "notDetermined";
-  let message = supported ? "" : "This Ardia engine was built without the Linux calendar service";
+  let message = supported ? "" : "This Nilla engine was built without the Linux calendar service";
   let known: KnownCalendar[] = [];
   let report: CalendarRefreshReport = { truncatedCalendars: [], truncatedEvents: [], skippedObjects: 0, failedCalendars: [] };
   const invoke = <T>(method: string, args: unknown[]) => invokeHost<T>(`ArdiaCalendar.${method}`, { args }, host);
@@ -269,13 +269,13 @@ export function createLinuxCalendar(host: ArdiaHost): LinuxCalendar {
       }
       report = next;
       if (next.truncatedCalendars.length || next.truncatedEvents.length || next.skippedObjects) {
-        console.warn("[ardia linux] calendar refresh incomplete", next);
+        console.warn("[nilla linux] calendar refresh incomplete", next);
       }
       if (failures.length === wanted.length) {
         const denied = failures.find((f) => f.status === "denied");
-        throw calendarError(denied ? "ERR_CALENDAR_DENIED" : "ERR_CALENDAR_FAILED", (denied ?? failures[0])!.message || "Ardia couldn't read your calendars");
+        throw calendarError(denied ? "ERR_CALENDAR_DENIED" : "ERR_CALENDAR_FAILED", (denied ?? failures[0])!.message || "Nilla couldn't read your calendars");
       }
-      if (failures.length) console.warn("[ardia linux] calendars skipped", failures.map((f) => f.message));
+      if (failures.length) console.warn("[nilla linux] calendars skipped", failures.map((f) => f.message));
       return found.sort((a, b) => a.start - b.start);
     },
   };
@@ -292,7 +292,7 @@ export function linuxCalendar(host: ArdiaHost): LinuxCalendar {
   return calendar;
 }
 
-if (ardiaHost) linuxCalendar(ardiaHost);
+if (nillaHost) linuxCalendar(nillaHost);
 
 export function calendarModuleMethod(host: ArdiaHost, name: string, method: string): ((...args: never[]) => unknown) | undefined {
   if (name !== "ArdiaCalendar") return undefined;

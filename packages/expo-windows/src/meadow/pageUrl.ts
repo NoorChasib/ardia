@@ -1,4 +1,4 @@
-import type { MeadowIntro, MeadowPageConfig } from "@ardia/shaders";
+import type { MeadowIntro, MeadowPageConfig } from "@nilla/shaders";
 import { symbolLayers, symbolNudge } from "../../../demo/src/shims/web/symbols/data";
 import { symbolMarkup, type SymbolWeight } from "../../../demo/src/shims/web/symbols/render";
 import { MEADOW_HANDOFF, MEADOW_INK, MEADOW_PAGE_API, MEADOW_PAGE_CONFIG_ID } from "../../../shaders/src/meadowPage/config";

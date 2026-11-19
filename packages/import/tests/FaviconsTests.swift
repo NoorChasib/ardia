@@ -1,7 +1,7 @@
 import Foundation
 import SQLite3
 import XCTest
-@testable import ArdiaImportCore
+@testable import NillaImportCore
 
 final class FaviconsTests: XCTestCase {
   private var directories: [URL] = []

@@ -137,7 +137,7 @@ test("an open extension popup's outside-click layer over the page keeps the page
   const page = { isConnected: true, parentElement: null, getBoundingClientRect: () => box(190, 47, 763, 1026), contains: (node) => node === page };
   const dismiss = { contains: (node) => node === dismiss };
   let open = true;
-  const s = stage({ width: 953, height: 1080, elementFromPoint: () => (open ? dismiss : {}), querySelector: (selector) => (open && selector === '[data-testid="ardia-extension-popup-dismiss"]' ? dismiss : null) });
+  const s = stage({ width: 953, height: 1080, elementFromPoint: () => (open ? dismiss : {}), querySelector: (selector) => (open && selector === '[data-testid="nilla-extension-popup-dismiss"]' ? dismiss : null) });
   try {
     const updates = [];
     const stop = watchTabViewport(page, () => true, (update) => updates.push(update), cover());
@@ -380,7 +380,7 @@ test("a scroll in the sidebar waits for the next frame; a scroll in something ho
   }
 });
 
-test("an animation inside [data-ardia-paint-motion] keeps no frames alive and its motion events ask for none", () => {
+test("an animation inside [data-nilla-paint-motion] keeps no frames alive and its motion events ask for none", () => {
   const counts = new Map();
   const page = slot(200, counts);
   const painted = { closest: (selector) => (selector === PAINT_MOTION_SELECTOR ? painted : null), contains: () => true };

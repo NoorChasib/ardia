@@ -1,4 +1,4 @@
-import ArdiaSync
+import NillaSync
 import AVFoundation
 import ExpoModulesCore
 import UIKit
@@ -6,7 +6,7 @@ import VisionKit
 
 public final class ScanModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneScan")
+    Name("NillaPhoneScan")
 
     AsyncFunction("permission") { () -> [String: Any] in
       ScanAccess.answer(ScanAccess.status())
@@ -85,7 +85,7 @@ final class ScanView: ExpoView, AVCaptureMetadataOutputObjectsDelegate, DataScan
     didSet { update() }
   }
 
-  private let queue = DispatchQueue(label: "com.ardia.phone.scan")
+  private let queue = DispatchQueue(label: "com.nilladigital.nilla.phone.scan")
   private let preview = AVCaptureVideoPreviewLayer()
   private var session: AVCaptureSession?
   private let judge = SyncCodeJudge()

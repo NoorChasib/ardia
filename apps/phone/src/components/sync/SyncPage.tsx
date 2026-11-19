@@ -200,7 +200,7 @@ export function SyncPage() {
             <ButtonRow title={syncing ? "Syncing…" : "Sync Now"} enabled={!syncing} busy={syncing} onPress={() => void runSyncNow()} />
           </Group>
           {devices.length ? (
-            <Group header="Devices" footer={noReceivers ? "Update Ardia on your Mac to send tabs to it." : null}>
+            <Group header="Devices" footer={noReceivers ? "Update Nilla on your Mac to send tabs to it." : null}>
               {devices.map((device, index) => (
                 <View key={device.id}>
                   <View accessible accessibilityLabel={deviceSeen(device, now) ? `${device.name}, ${deviceSeen(device, now)}` : device.name} style={styles.row}>

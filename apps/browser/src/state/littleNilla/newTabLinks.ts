@@ -2,7 +2,7 @@ import { setLittleArdiaOpensNewTabLinks } from "../../platform/pageOptions";
 
 let started = false;
 
-export function startLittleArdiaNewTabLinks() {
+export function startLittleNillaNewTabLinks() {
   if (started) return;
   started = true;
   void setLittleArdiaOpensNewTabLinks(true);

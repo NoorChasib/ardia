@@ -1,24 +1,24 @@
-import type { FaviconImage } from "@ardia-real/ardiacore";
+import type { FaviconImage } from "@nilla-real/ardiacore";
 import { faviconFor } from "../pages";
 import { provideNativeModule } from "./expo-modules-core";
 
-export * from "@ardia-real/ardiacore";
+export * from "@nilla-real/ardiacore";
 export { devPagerState, pagerState, selectPager, stepPager, SwipeArea, switchPager } from "./web/Pager";
 export { WebView } from "./web/WebView";
 
 const ENGINE_ONLY: Record<string, string[]> = {
-  ArdiaHistory: ["query", "add", "import", "deleteUrls", "watch"],
-  ArdiaBookmarks: ["tree", "apply", "watch"],
-  ArdiaFavicons: ["get", "set"],
-  ArdiaTabs: ["lastTabPolicy"],
-  ArdiaEngine: ["batterySaver", "trimMemory", "openTaskManager", "cliControlStatus", "setCliControl", "setCliActiveTab", "cliTabTargets"],
-  ArdiaExtensions: ["watchActions", "syncState", "syncApply"],
-  ArdiaDownloads: ["settings", "setSettings"],
+  NillaHistory: ["query", "add", "import", "deleteUrls", "watch"],
+  NillaBookmarks: ["tree", "apply", "watch"],
+  NillaFavicons: ["get", "set"],
+  NillaTabs: ["lastTabPolicy"],
+  NillaEngine: ["batterySaver", "trimMemory", "openTaskManager", "cliControlStatus", "setCliControl", "setCliActiveTab", "cliTabTargets"],
+  NillaExtensions: ["watchActions", "syncState", "syncApply"],
+  NillaDownloads: ["settings", "setSettings"],
 };
 const ANSWERS: Record<string, Record<string, unknown>> = {
-  ArdiaTabs: { strips: { rev: 0, cmd: null, strips: [] } },
-  ArdiaExtensions: { list: { extensions: [] } },
-  ArdiaSearch: { engines: { list: { engines: [] } } },
+  NillaTabs: { strips: { rev: 0, cmd: null, strips: [] } },
+  NillaExtensions: { list: { extensions: [] } },
+  NillaSearch: { engines: { list: { engines: [] } } },
 };
 for (const module of new Set([...Object.keys(ENGINE_ONLY), ...Object.keys(ANSWERS)]))
   provideNativeModule(module, {

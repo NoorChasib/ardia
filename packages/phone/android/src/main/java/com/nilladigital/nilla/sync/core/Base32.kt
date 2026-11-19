@@ -1,4 +1,4 @@
-package com.ardia.sync.core
+package com.nilladigital.nilla.sync.core
 
 object Base32 {
     private const val ALPHABET = "abcdefghijklmnopqrstuvwxyz234567"

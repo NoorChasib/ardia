@@ -66,8 +66,8 @@ Help › Report a Problem… (⌥⇧⌘I) and the New Tab check-in banner open i
   and counts `report_send_blocked` (`reason`, `problems`, `kind`). Recording: the app's windows only, 60 s max, web page
   areas blacked out in every frame unless included, watched before sending. Sent screen: the reference, the GitHub
   issue link, "You appear to us as <name>", and the watch end date.
-- Linux never uploads in Layer 1: the engine's report endpoint is compiled in, so `report.send`, `ArdiaReport.upload` and
-  `ArdiaReport.post` stay behind the Layer 1 gate and Linux always opens the issue page.
+- Linux never uploads in Layer 1: the engine's report endpoint is compiled in, so `report.send`, `NillaReport.upload` and
+  `NillaReport.post` stay behind the Layer 1 gate and Linux always opens the issue page.
 
 ## CLI
 

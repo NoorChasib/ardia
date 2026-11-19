@@ -1,4 +1,4 @@
-import type { WindowEvent } from "@ardia-real/shell";
+import type { WindowEvent } from "@nilla-real/shell";
 import type { BrowserState, HydrateData } from "../../browser/src/state/browser/store";
 import type { BrowserWindow, Tab } from "../../browser/src/state/browser/types";
 import type { ArdiaHost } from "./host";

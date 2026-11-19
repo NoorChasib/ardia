@@ -1,9 +1,9 @@
-import { nativeModule, type ControlRequest, type ControlSocketStatus } from "@ardia/shell";
+import { nativeModule, type ControlRequest, type ControlSocketStatus } from "@nilla/shell";
 
 export type { ControlRequest, ControlSocketStatus };
 
-let bound: ReturnType<typeof nativeModule<"ArdiaAutomation">> | null = null;
-const Automation = () => (bound ??= nativeModule("ArdiaAutomation"));
+let bound: ReturnType<typeof nativeModule<"NillaAutomation">> | null = null;
+const Automation = () => (bound ??= nativeModule("NillaAutomation"));
 
 export const startControlSocket = () => Automation().start();
 export const stopControlSocket = () => Automation().stop();

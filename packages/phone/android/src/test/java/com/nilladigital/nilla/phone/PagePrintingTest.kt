@@ -1,18 +1,18 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.graphics.Bitmap
 import android.view.View
 import android.webkit.WebView
 import android.widget.FrameLayout
-import com.ardia.browser.FindResult
-import com.ardia.browser.FullscreenVideo
-import com.ardia.browser.Page
-import com.ardia.browser.PageEvent
-import com.ardia.browser.PageRequest
-import com.ardia.browser.PageState
-import com.ardia.browser.PageTone
-import com.ardia.browser.ReadableContent
+import com.nilladigital.nilla.FindResult
+import com.nilladigital.nilla.FullscreenVideo
+import com.nilladigital.nilla.Page
+import com.nilladigital.nilla.PageEvent
+import com.nilladigital.nilla.PageRequest
+import com.nilladigital.nilla.PageState
+import com.nilladigital.nilla.PageTone
+import com.nilladigital.nilla.ReadableContent
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
@@ -34,7 +34,7 @@ data class LookRgb(val red: Double, val green: Double, val blue: Double) {
 
     val hexString: String get() = "#" + hex.toString(16).uppercase().padStart(6, '0')
 
-    val color: Color get() = ardiaColor(hex)
+    val color: Color get() = nillaColor(hex)
 
     val snapped: LookRgb get() = fromHex(hex)
 
@@ -115,15 +115,15 @@ class ProfileLook internal constructor(
     val isAlwaysDark: Boolean = false,
 ) {
     enum class Preset(val key: String, internal val swatch: Long, @param:StringRes val title: Int) {
-        Plum("plum", 0xC07A98, R.string.ardia_color_plum),
-        Blue("blue", 0x4691C3, R.string.ardia_color_blue),
-        Purple("purple", 0x7873AF, R.string.ardia_color_purple),
-        Pink("pink", 0xD37B8B, R.string.ardia_color_pink),
-        Red("red", 0xC1575C, R.string.ardia_color_red),
-        Orange("orange", 0xD87249, R.string.ardia_color_orange),
-        Yellow("yellow", 0xE3AC38, R.string.ardia_color_yellow),
-        Green("green", 0x3EB489, R.string.ardia_color_green),
-        Neutral("neutral", 0x8E8E93, R.string.ardia_color_neutral),
+        Plum("plum", 0xC07A98, R.string.nilla_color_plum),
+        Blue("blue", 0x4691C3, R.string.nilla_color_blue),
+        Purple("purple", 0x7873AF, R.string.nilla_color_purple),
+        Pink("pink", 0xD37B8B, R.string.nilla_color_pink),
+        Red("red", 0xC1575C, R.string.nilla_color_red),
+        Orange("orange", 0xD87249, R.string.nilla_color_orange),
+        Yellow("yellow", 0xE3AC38, R.string.nilla_color_yellow),
+        Green("green", 0x3EB489, R.string.nilla_color_green),
+        Neutral("neutral", 0x8E8E93, R.string.nilla_color_neutral),
         ;
 
         internal val tint: Long? get() = if (this == Plum) 0xB25B6B else null

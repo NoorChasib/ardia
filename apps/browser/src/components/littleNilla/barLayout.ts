@@ -3,7 +3,7 @@ import { CARD_INSET } from "../../lib/windowLayout";
 import { SMALL_BAR_HEIGHT, SMALL_LIGHTS_CENTER } from "../../state/windows/small";
 import { NAV_CENTER_PAST_ZOOM, SMALL_BAR_BUTTON, SMALL_BAR_GAP, SMALL_FIELD_GAP, SMALL_FIELD_HEIGHT, TRAFFIC_LIGHT_PITCH } from "./tokens";
 
-export type LittleArdiaBarLayout = {
+export type LittleNillaBarLayout = {
   height: number;
   navLeft: number;
   navPitch: number;
@@ -14,7 +14,7 @@ export type LittleArdiaBarLayout = {
   controlsRight: number;
 };
 
-export function littleArdiaBarLayout(chrome: WindowChrome = WINDOW_CHROME): LittleArdiaBarLayout {
+export function littleNillaBarLayout(chrome: WindowChrome = WINDOW_CHROME): LittleNillaBarLayout {
   const height = Math.max(SMALL_BAR_HEIGHT, chrome.titleBarHeight);
   const navLeft = chrome.leadingWidth ? SMALL_LIGHTS_CENTER[0] + 2 * TRAFFIC_LIGHT_PITCH + NAV_CENTER_PAST_ZOOM - SMALL_BAR_BUTTON / 2 : CARD_INSET;
   const navPitch = SMALL_BAR_BUTTON + SMALL_BAR_GAP;

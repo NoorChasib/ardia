@@ -8,7 +8,7 @@ globalThis.fetch = async () => ({ status: 200 });
 let reply = {};
 const requested = [];
 globalThis.acTestNativeModules = {
-  ArdiaImport: {
+  NillaImport: {
     addListener: () => ({ remove() {} }),
     cancelImport() {},
     forgetUnlockedKeys() {},
@@ -179,11 +179,11 @@ test("an Arc import brings its rules, archive, glyph icons and threshold into th
   assert.deepEqual(rules, [
     ["arc-R-meet", "contains", "meet.google.com", null, "tab", true, null],
     ["arc-R-jira", "contains", "jira.example/browse", work, "tab", true, null],
-    ["arc-R-docs", "contains", "https://www.docs.example/", null, "littleArdia", true, null],
-    ["arc-R-cal", "equals", "calendar.example", home, "littleArdia", true, null],
+    ["arc-R-docs", "contains", "https://www.docs.example/", null, "littleNilla", true, null],
+    ["arc-R-cal", "equals", "calendar.example", home, "littleNilla", true, null],
   ]);
   assert.equal(currentAirTraffic().fallback, null);
-  assert.equal(S().settings.openLinksInLittleArdia, false);
+  assert.equal(S().settings.openLinksInLittleNilla, false);
 
   const cleaned = S().cleanedTabs;
   assert.deepEqual(cleaned.map((c) => [c.tab.url, c.tab.profileId, c.tab.customTitle]).reverse(), [
@@ -221,26 +221,26 @@ test("an Arc import brings its rules, archive, glyph icons and threshold into th
   assert.ok(importNow().step.notes.includes("1 archived tab from spaces that didn't come over stayed in Arc."), "the tab from the deleted space still stays behind");
 });
 
-test("a fallback or Little Ardia choice the person made stays, and the done screen says so", async () => {
+test("a fallback or Little Nilla choice the person made stays, and the done screen says so", async () => {
   begin({ routing: { rules: [], skipped: 0, fallback: { kind: "space", spaceId: "s-home", spaceName: "Home" } } });
   setAirTrafficFallback(null);
   S().updateSettings({ cleanUpInactiveTabsAfterMinutes: 12 * 60 });
   await runImport(new Set(["tabs", "linkRules", "archive"]));
   assert.equal(S().settings.cleanUpInactiveTabsAfterMinutes, 12 * 60);
-  assert.equal(currentAirTraffic().fallback, null, "Ardia's usual routing, chosen on purpose, stays");
+  assert.equal(currentAirTraffic().fallback, null, "Nilla's usual routing, chosen on purpose, stays");
   await settle();
   assert.ok(importNow().step.notes.some((n) => n.startsWith("Arc's choice for links from other apps wasn't imported, because")));
   assert.ok(importNow().step.notes.some((n) => n.startsWith("Arc's archive timing wasn't imported")));
 
   begin({ routing: { rules: [], skipped: 0, fallback: { kind: "mostRecent" } } });
-  S().updateSettings({ openLinksInLittleArdia: true });
+  S().updateSettings({ openLinksInLittleNilla: true });
   await runImport(new Set(["linkRules"]));
-  assert.equal(S().settings.openLinksInLittleArdia, true);
+  assert.equal(S().settings.openLinksInLittleNilla, true);
 
   begin({ routing: { rules: [], skipped: 0, fallback: { kind: "space", spaceId: "s-home", spaceName: "Home" } } });
-  S().updateSettings({ openLinksInLittleArdia: false }, { fromSync: true });
+  S().updateSettings({ openLinksInLittleNilla: false }, { fromSync: true });
   await runImport(new Set(["tabs", "linkRules"]));
-  assert.equal(currentAirTraffic().fallback, null, "Little Ardia turned off elsewhere counts as a choice");
+  assert.equal(currentAirTraffic().fallback, null, "Little Nilla turned off elsewhere counts as a choice");
 
   begin({ routing: { rules: [], skipped: 0, fallback: { kind: "space", spaceId: "s-home", spaceName: "Home" } } });
   await runImport(new Set(["tabs", "linkRules"]));
@@ -249,7 +249,7 @@ test("a fallback or Little Ardia choice the person made stays, and the done scre
   begin({ routing: { rules: [], skipped: 0, fallback: { kind: "space", spaceId: "s-gone" } } });
   await runImport(new Set(["linkRules"]));
   assert.equal(currentAirTraffic().fallback, null);
-  assert.equal(S().settings.openLinksInLittleArdia, true, "a default naming a deleted space changes nothing");
+  assert.equal(S().settings.openLinksInLittleNilla, true, "a default naming a deleted space changes nothing");
   await settle();
   assert.ok(importNow().step.notes.some((n) => n.includes("the space it named didn't come over")));
 });
@@ -277,7 +277,7 @@ test("the newest archived tabs that have a profile fill Recently Cleaned, and th
   const notes = importNow().step.notes;
   assert.ok(notes.includes("20 archived tabs stayed in Arc: Recently Cleaned keeps the newest 100 for a week."), JSON.stringify(notes));
   assert.ok(notes.includes("10 archived tabs from spaces that didn't come over stayed in Arc."), JSON.stringify(notes));
-  assert.ok(notes.includes("7 older archived tabs weren't read: Ardia reads Arc's newest 1,500."), JSON.stringify(notes));
+  assert.ok(notes.includes("7 older archived tabs weren't read: Nilla reads Arc's newest 1,500."), JSON.stringify(notes));
 
   useBrowser.setState({ cleanedTabs: S().cleanedTabs.slice(-5) });
   await runImport(new Set(["archive"]));

@@ -2,7 +2,7 @@ import datetime
 import math
 import re
 
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.errors import BrowseError
 
 SET_DIRECTLY = {"date", "time", "datetime-local", "month", "week", "color", "range"}
 FORMATS = {

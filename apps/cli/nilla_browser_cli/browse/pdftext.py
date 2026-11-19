@@ -4,11 +4,11 @@ import os
 import subprocess
 import tempfile
 
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.errors import BrowseError
 
 MAX_BYTES = 40 * 1024 * 1024
 EXTRACT_TIMEOUT = 120
-NO_TEXT = "(this PDF has no text layer, so it is probably scanned pages; look at it with `ardia browse screenshot`)"
+NO_TEXT = "(this PDF has no text layer, so it is probably scanned pages; look at it with `nilla-browser browse screenshot`)"
 JXA = """ObjC.import("PDFKit");
 function run(argv) {
   const doc = $.PDFDocument.alloc.initWithURL($.NSURL.fileURLWithPath(argv[0]));
@@ -45,7 +45,7 @@ async def page_is_pdf(page, frame=None) -> bool:
 def text_from_bytes(data: bytes) -> str:
     if not data.startswith(b"%PDF"):
         raise BrowseError("the document said it was a PDF but isn't one", code="pdf_unreadable")
-    with tempfile.TemporaryDirectory(prefix="ardia-pdf-") as folder:
+    with tempfile.TemporaryDirectory(prefix="nilla-pdf-") as folder:
         path = os.path.join(folder, "document.pdf")
         with open(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "wb") as handle:
             handle.write(data)
@@ -61,7 +61,7 @@ def text_from_bytes(data: bytes) -> str:
 
 
 async def page_text(page) -> str:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     got = await page.call(FETCH, MAX_BYTES, frame=page.main_frame, read=True, timeout=EXTRACT_TIMEOUT)
     if got.get("error"):

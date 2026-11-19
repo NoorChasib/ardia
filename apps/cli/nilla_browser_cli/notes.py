@@ -14,7 +14,7 @@ ACTIONS = ("get", "set", "append", "list", "rm")
 LABEL = r"[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?"
 HOST = re.compile(rf"^(?:{LABEL}(?:\.{LABEL})*|\[[0-9a-f:.]+\])(?::\d{{1,5}})?$")
 DEFAULT_PORTS = {"http": 80, "https": 443}
-USAGE = "Usage: ardia notes [get|set|append|list|rm] [SITE] [TEXT|-]"
+USAGE = "Usage: nilla notes [get|set|append|list|rm] [SITE] [TEXT|-]"
 
 
 @dataclass
@@ -25,7 +25,7 @@ class Request:
 
 
 def browse_errors():
-    from ardia_cli.browse.errors import BrowseError, Usage
+    from nilla_browser_cli.browse.errors import BrowseError, Usage
 
     return BrowseError, Usage
 
@@ -89,21 +89,21 @@ def parse_args(args: list[str]) -> Request:
     action = positional.pop(0) if positional and positional[0] in ACTIONS else "get"
     if action == "list":
         if positional:
-            raise Usage("Usage: ardia notes list")
+            raise Usage("Usage: nilla notes list")
         return Request(action, None)
     if action in ("get", "rm"):
         if len(positional) > 1:
-            raise Usage(f"Usage: ardia notes {action} [SITE]")
+            raise Usage(f"Usage: nilla notes {action} [SITE]")
         return Request(action, site_of(positional[0]) if positional else None)
     if not positional:
-        raise Usage(f"Usage: ardia notes {action} [SITE] TEXT|-  (- reads stdin)")
+        raise Usage(f"Usage: nilla notes {action} [SITE] TEXT|-  (- reads stdin)")
     if len(positional) >= 2 and looks_like_site(positional[0]):
         return Request(action, site_of(positional[0]), " ".join(positional[1:]))
     return Request(action, None, " ".join(positional))
 
 
 def open_folder(root: Path, create: bool) -> int | None:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     try:
         return paths.open_private(root, DIR_NAME, create=create)
@@ -120,7 +120,7 @@ def file_name(site: str) -> str:
 
 
 def read_note(folder: int, site: str) -> str | None:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     try:
         fd = paths.open_private_file(file_name(site), folder, os.O_RDONLY | os.O_NONBLOCK)
@@ -134,14 +134,14 @@ def read_note(folder: int, site: str) -> str | None:
 
 
 def write_note(folder: int, site: str, text: str) -> int:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     BrowseError, _ = browse_errors()
     data = text.encode("utf-8")
     if len(data) > MAX_NOTE:
         raise BrowseError(
             f"Notes for {site} would be {len(data):,} bytes; the limit is {MAX_NOTE // 1024} KB per site. "
-            f"Shorten them (`ardia notes set {site} -` replaces them from stdin)",
+            f"Shorten them (`nilla-browser notes set {site} -` replaces them from stdin)",
             data={"site": site, "bytes": len(data), "limit": MAX_NOTE}, code="notes_too_large",
         )
     name = file_name(site)
@@ -176,9 +176,9 @@ def header(root: Path, url: str | None) -> tuple[str | None, str | None]:
     text = (text or "").strip()
     if not text:
         return site, None
-    shown = text if len(text) <= HEADER_LIMIT else text[:HEADER_LIMIT] + f"… ({len(text) - HEADER_LIMIT} more characters: `ardia notes get {site}`)"
+    shown = text if len(text) <= HEADER_LIMIT else text[:HEADER_LIMIT] + f"… ({len(text) - HEADER_LIMIT} more characters: `nilla-browser notes get {site}`)"
     lines = shown.splitlines() or [""]
-    rendered = [f"# notes for {site} (ardia notes): {lines[0]}"] + [f"# {line}" for line in lines[1:]]
+    rendered = [f"# notes for {site} (nilla notes): {lines[0]}"] + [f"# {line}" for line in lines[1:]]
     return site, "\n".join(rendered)
 
 
@@ -198,18 +198,18 @@ def listing(folder: int) -> list[dict]:
 
 
 def run_request(root: Path, request: Request, page_url: str | None):
-    from ardia_cli.browse.commands import Result
+    from nilla_browser_cli.browse.commands import Result
 
     BrowseError, _ = browse_errors()
     if request.action == "list":
         folder = open_folder(root, create=False)
         rows = [] if folder is None else listing_closing(folder)
         lines = [f"{row['site']}  {row['bytes']} bytes  {row['modified']}" for row in rows]
-        return Result({"notes": rows}, "\n".join(lines) or "No site notes yet (`ardia notes set <site> <text>`)")
+        return Result({"notes": rows}, "\n".join(lines) or "No site notes yet (`nilla-browser notes set <site> <text>`)")
     site = request.site or page_site(page_url)
     if site is None:
         raise BrowseError(
-            f"The session's tab isn't a web page ({page_url or 'no URL'}), so there's no site to default to; name one: `ardia notes {request.action} <host[:port]> …`",
+            f"The session's tab isn't a web page ({page_url or 'no URL'}), so there's no site to default to; name one: `nilla-browser notes {request.action} <host[:port]> …`",
             code="bad_site",
         )
     if request.action == "get":
@@ -221,7 +221,7 @@ def run_request(root: Path, request: Request, page_url: str | None):
     try:
         fcntl.flock(folder, fcntl.LOCK_EX)
         if request.action == "rm":
-            from ardia_cli.browse import paths
+            from nilla_browser_cli.browse import paths
 
             existed = read_note(folder, site) is not None
             paths.unlink_quietly(file_name(site), folder)
@@ -247,6 +247,6 @@ def listing_closing(folder: int) -> list[dict]:
 
 
 def main(argv: list[str]) -> int:
-    from ardia_cli.browse import cli
+    from nilla_browser_cli.browse import cli
 
     return cli.main(["notes", *argv])

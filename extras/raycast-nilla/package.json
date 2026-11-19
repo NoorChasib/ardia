@@ -2,7 +2,7 @@
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "nilla-browser",
   "title": "Nilla",
-  "description": "Search and switch Ardia's tabs and profiles, and open new tabs and windows",
+  "description": "Search and switch Nilla's tabs and profiles, and open new tabs and windows",
   "icon": "icon.png",
   "author": "NoorChasib",
   "contributors": [
@@ -21,22 +21,22 @@
     {
       "name": "search-tabs",
       "title": "Search Tabs",
-      "subtitle": "Ardia",
-      "description": "Search your open tabs in Ardia and switch to one",
+      "subtitle": "Nilla",
+      "description": "Search your open tabs in Nilla and switch to one",
       "mode": "view"
     },
     {
       "name": "search-profiles",
       "title": "Search Profiles",
-      "subtitle": "Ardia",
-      "description": "Search your Ardia profiles and show one in the front window or a new one",
+      "subtitle": "Nilla",
+      "description": "Search your Nilla profiles and show one in the front window or a new one",
       "mode": "view"
     },
     {
       "name": "new-tab",
       "title": "New Tab",
-      "subtitle": "Ardia",
-      "description": "Open a new tab in Ardia's front window, with a URL or a search read as its command bar reads it",
+      "subtitle": "Nilla",
+      "description": "Open a new tab in Nilla's front window, with a URL or a search read as its command bar reads it",
       "mode": "no-view",
       "arguments": [
         {
@@ -50,8 +50,8 @@
     {
       "name": "new-window",
       "title": "New Window",
-      "subtitle": "Ardia",
-      "description": "Open a new Ardia window in the profile you name, or in the default profile",
+      "subtitle": "Nilla",
+      "description": "Open a new Nilla window in the profile you name, or in the default profile",
       "mode": "no-view",
       "arguments": [
         {
@@ -65,8 +65,8 @@
     {
       "name": "new-incognito-window",
       "title": "New Incognito Window",
-      "subtitle": "Ardia",
-      "description": "Open a new incognito window in Ardia",
+      "subtitle": "Nilla",
+      "description": "Open a new incognito window in Nilla",
       "mode": "no-view"
     }
   ],

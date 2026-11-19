@@ -1,6 +1,6 @@
-package com.ardia.settings
+package com.nilladigital.nilla.settings
 
-import com.ardia.sync.SyncJoin
+import com.nilladigital.nilla.sync.SyncJoin
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType

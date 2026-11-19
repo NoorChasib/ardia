@@ -12,7 +12,7 @@ import { setLastTabKeepsWindow } from "../omnibox/newTabBarPolicy";
 import { isUtilityWindowId } from "../settings/settingsWindows";
 import { openingLightsCenter } from "../windows/layout";
 import { createWindowSync, type WindowPort } from "../windows/windowSync";
-import { closeLittleArdiaForAppLink, openExternalUrls } from "../littleArdia/actions";
+import { closeLittleNillaForAppLink, openExternalUrls } from "../littleNilla/actions";
 import { startUnclaimedEscape } from "../windows/unclaimedEscape";
 import { SMALL_LIGHTS_CENTER } from "../windows/small";
 import { runCommand } from "../commands/commands";
@@ -26,7 +26,7 @@ import { startWindowCloseGuard } from "../windows/windowClose";
 import { openLastWindowOrNew } from "../windows/lastWindow";
 import { noteDockReopen } from "../telemetry/usage";
 import { noteWindowReopenedMaximized } from "../telemetry/windowPlacementCounts";
-import { noteLittleArdiaAppHandoff } from "../telemetry/littleArdiaEscapes";
+import { noteLittleNillaAppHandoff } from "../telemetry/littleNillaEscapes";
 import { notePageFocusReturnRequestAfterMenu } from "../telemetry/pageFocusReturns";
 import { startExtensionsBridge } from "../extensions/bridge";
 import { useExtensions } from "../extensions/actions";
@@ -82,11 +82,11 @@ export function startNativeSync() {
       noteDockReopen(e.pastFloating);
       openLastWindowOrNew("dock");
     }
-    if (e.type === "appLinkOpened") closeLittleArdiaForAppLink(e.windowId);
+    if (e.type === "appLinkOpened") closeLittleNillaForAppLink(e.windowId);
     if (e.type === "snapKeyHandedBack") followHandedBack(e.windowId);
     if (e.type === "snapKeyHandedBack" && e.afterMenu) notePageFocusReturnRequestAfterMenu();
-    if (e.type === "littleArdiaReturnedToApp") noteLittleArdiaAppHandoff("returnToApp");
-    if (e.type === "littleArdiaGlobalShortcut") noteLittleArdiaAppHandoff("globalShortcut");
+    if (e.type === "littleNillaReturnedToApp") noteLittleNillaAppHandoff("returnToApp");
+    if (e.type === "littleNillaGlobalShortcut") noteLittleNillaAppHandoff("globalShortcut");
     if (e.type === "quitWarningSuppressed") s.updateSettings({ warnBeforeQuitting: false });
     if (e.type === "willQuit") {
       setQuitting(true);

@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 
 enum class RequestType(internal val bit: Int) {

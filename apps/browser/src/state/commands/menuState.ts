@@ -13,7 +13,7 @@ import type { Bookmarks, BookmarkNode, Tab } from "../browser/types";
 import { isInternalTab } from "../pages/urls";
 import { muteState, muteTitle } from "../tabs/mute";
 import { sidebarMenuState } from "../sidebar/commands";
-import { LITTLE_ARDIA_DISABLED_COMMANDS, PAGE_COMMANDS, PAGE_COMMANDS_OFF_INTERNAL_PAGES, settingChecks, UNAVAILABLE_COMMANDS, WINDOW_COMMANDS } from "../commands/commandCatalog";
+import { LITTLE_NILLA_DISABLED_COMMANDS, PAGE_COMMANDS, PAGE_COMMANDS_OFF_INTERNAL_PAGES, settingChecks, UNAVAILABLE_COMMANDS, WINDOW_COMMANDS } from "../commands/commandCatalog";
 import { extensionMenu } from "../extensions/actions";
 import { menuBarBindings } from "./commandShortcuts";
 import { focusedWindowOf } from "../windows/ui";
@@ -109,7 +109,7 @@ export function menuState(s: BrowserState): MenuState {
     titles.bookmarkPage = "Edit Bookmark…";
   }
 
-  if (!s.settings.openLinksInLittleArdia) titles.toggleOpenLinksInLittleArdia = "Open Links from Other Apps in Little Ardia";
+  if (!s.settings.openLinksInLittleNilla) titles.toggleOpenLinksInLittleNilla = "Open Links from Other Apps in Little Nilla";
   if (!page || !canHideElements(s, page.id)) disabled.push("hideElement", "showHiddenElements");
 
   const sidebar = sidebarMenuState(s, windowId);
@@ -120,8 +120,8 @@ export function menuState(s: BrowserState): MenuState {
     titles.closeTab = "Close Peek";
   }
   if (w?.kind === "small") {
-    disabled.push(...LITTLE_ARDIA_DISABLED_COMMANDS);
-    titles.openFile = "Open in Ardia";
+    disabled.push(...LITTLE_NILLA_DISABLED_COMMANDS);
+    titles.openFile = "Open in Nilla";
   }
 
   const closed = newestClosed(recentlyClosedIn(s, w)).map((c) => ({ id: c.id, title: c.kind === "tab" ? c.tab.title || tabLabel(c.tab) : closedWindowTitle(c) }));

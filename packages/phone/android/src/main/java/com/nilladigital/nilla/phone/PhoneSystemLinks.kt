@@ -1,14 +1,14 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.SearchManager
 import android.content.Intent
 import android.net.Uri
-import com.ardia.appmodel.SystemLink
-import com.ardia.browser.BrowserUrl
+import com.nilladigital.nilla.appmodel.SystemLink
+import com.nilladigital.nilla.BrowserUrl
 
 object PhoneSystemLinks {
-    const val SOURCE_EXTRA = "com.ardia.SOURCE"
-    private const val HANDLED_EXTRA = "com.ardia.phone.LINK_HANDLED"
+    const val SOURCE_EXTRA = "com.nilladigital.nilla.SOURCE"
+    private const val HANDLED_EXTRA = "com.nilladigital.nilla.phone.LINK_HANDLED"
     private const val INBOX_HOST = "inbox"
     private const val QUEUE_LIMIT = 20
 

@@ -8,8 +8,8 @@ enum MainMenu {
   static var profiles = NSMenu(title: "Profiles")
   private static var profilesItem = NSMenuItem(title: "Profiles", action: nil, keyEquivalent: "")
   private static var profilesSeparator = NSMenuItem.separator()
-  private static var littleArdiaInProfile = NSMenu(title: "New Little Ardia Window in Profile")
-  private static var littleArdiaInProfileItem = NSMenuItem(title: "New Little Ardia Window in Profile", action: nil, keyEquivalent: "")
+  private static var littleNillaInProfile = NSMenu(title: "New Little Nilla Window in Profile")
+  private static var littleNillaInProfileItem = NSMenuItem(title: "New Little Nilla Window in Profile", action: nil, keyEquivalent: "")
   private static var bookmarks = NSMenu(title: "Bookmarks")
   private static var bookmarksFixedCount = 0
   private static var bookmarkItems: [NSMenuItem] = []
@@ -25,7 +25,7 @@ enum MainMenu {
     bookmarkToFolder = NSMenu(title: "Add Bookmark to Folder")
     profiles = NSMenu(title: "Profiles")
     profilesSeparator = NSMenuItem.separator()
-    littleArdiaInProfile = NSMenu(title: "New Little Ardia Window in Profile")
+    littleNillaInProfile = NSMenu(title: "New Little Nilla Window in Profile")
 
     func std(_ title: String, _ action: Selector) -> StandardItem { StandardItem(title, action) }
     func sub(_ title: String, _ items: [NSMenuItem], menu: NSMenu? = nil) -> NSMenuItem {
@@ -77,15 +77,15 @@ enum MainMenu {
       quit,
     ])
 
-    littleArdiaInProfileItem = sub("New Little Ardia Window in Profile", [], menu: littleArdiaInProfile)
+    littleNillaInProfileItem = sub("New Little Nilla Window in Profile", [], menu: littleNillaInProfile)
     _ = top("File", [
       cmd(.newTab),
       cmd(.newTabInGroup),
       cmd(.newWindow),
       cmd(.newIncognitoWindow),
-      cmd(.newLittleArdia),
-      littleArdiaInProfileItem,
-      cmd(.toggleOpenLinksInLittleArdia),
+      cmd(.newLittleNilla),
+      littleNillaInProfileItem,
+      cmd(.toggleOpenLinksInLittleNilla),
       cmd(.reopenClosedTab),
       cmd(.reopenClosedWindow),
       cmd(.openFile),
@@ -439,13 +439,13 @@ enum MainMenu {
     let incognito = CommandItem("New Incognito Window", "newIncognitoWindow")
     incognito.windowless = true
     menu.addItem(incognito)
-    let small = CommandItem("New Little Ardia Window", "newLittleArdia")
+    let small = CommandItem("New Little Nilla Window", "newLittleNilla")
     small.windowless = true
     menu.addItem(small)
     if state.profiles.count > 1 {
-      let inProfile = NSMenu(title: "New Little Ardia Window in Profile")
+      let inProfile = NSMenu(title: "New Little Nilla Window in Profile")
       for p in state.profiles {
-        let item = CommandItem(p.title, "newLittleArdia", arg: p.id)
+        let item = CommandItem(p.title, "newLittleNilla", arg: p.id)
         item.windowless = true
         inProfile.addItem(item)
       }
@@ -485,9 +485,9 @@ enum MainMenu {
     profiles.addItem(.separator())
     profiles.addItem(CommandItem(.newProfile))
 
-    littleArdiaInProfile.removeAllItems()
-    littleArdiaInProfileItem.isHidden = state.profiles.count < 2
-    for p in state.profiles { littleArdiaInProfile.addItem(CommandItem(p.title, "newLittleArdia", arg: p.id)) }
+    littleNillaInProfile.removeAllItems()
+    littleNillaInProfileItem.isHidden = state.profiles.count < 2
+    for p in state.profiles { littleNillaInProfile.addItem(CommandItem(p.title, "newLittleNilla", arg: p.id)) }
   }
 
   private static func buildMoveToWindow(_ state: MenuState) {

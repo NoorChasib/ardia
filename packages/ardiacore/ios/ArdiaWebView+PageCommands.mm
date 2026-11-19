@@ -1,10 +1,10 @@
 #import "ArdiaWebViewInternal.h"
 #import "ArdiaRuntime.h"
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
-@implementation ArdiaWebView (PageCommands)
+@implementation NillaWebView (PageCommands)
 
 - (void)emitMedia {
   const BOOL playing = _tab.audible;
@@ -138,11 +138,11 @@ using namespace ardia_runtime;
 }
 
 - (void)downloadFavicon:(NSString *)url name:(NSString *)name completion:(void (^)(NSDictionary<NSString *, id> *))completion {
-  [ArdiaFavicons fetch:url profile:_profile name:name completion:completion];
+  [NillaFavicons fetch:url profile:_profile name:name completion:completion];
 }
 
 - (void)downloadImage:(NSString *)url maxPixels:(NSInteger)maxPixels completion:(void (^)(NSDictionary<NSString *, id> *))completion {
-  [ArdiaFavicons fetch:url profile:_profile name:nil completion:completion];
+  [NillaFavicons fetch:url profile:_profile name:nil completion:completion];
 }
 
 - (void)mediaCommand:(NSString *)action seconds:(double)seconds {

@@ -1,6 +1,6 @@
 import { forwardRef, useCallback, useEffect, useState } from "react";
 import { Animated, Easing, StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from "react-native";
-import type { ActivitySpinnerProps } from "@ardia/shell";
+import type { ActivitySpinnerProps } from "@nilla/shell";
 import { useDark } from "./shared";
 
 const LINE_WIDTH = 1.5;

@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import ExpoModulesCore
 import QuickLook
 import UIKit
@@ -81,7 +81,7 @@ final class DownloadPreviewSource: NSObject, QLPreviewControllerDataSource, QLPr
 
 public final class DownloadsModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneDownloads")
+    Name("NillaPhoneDownloads")
 
     Events("onDownloadEvent")
 

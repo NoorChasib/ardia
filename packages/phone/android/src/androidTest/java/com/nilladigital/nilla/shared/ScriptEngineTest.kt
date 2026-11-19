@@ -1,4 +1,4 @@
-package com.ardia.shared
+package com.nilladigital.nilla.shared
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -18,12 +18,12 @@ class ScriptEngineTest {
             assets,
             listOf(SharedScript.SYNC),
             listOf(
-                "ArdiaSync.__echo = (value) => ({ got: value });",
-                "ArdiaSync.__probe = async (n) => { const listing = await __host.read(JSON.stringify(n)); return { n, listing: JSON.parse(listing) }; };",
-                "ArdiaSync.__fail = async () => { await null; throw new Error('nope'); };",
-                "ArdiaSync.__never = () => new Promise(() => {});",
-                "ArdiaSync.__hostThrows = () => { try { __host.boom(); return 'no'; } catch (e) { return String(e.message); } };",
-                "ArdiaSync.__text = (s) => s + '\\u00e9\\ud83d\\ude00';",
+                "NillaSync.__echo = (value) => ({ got: value });",
+                "NillaSync.__probe = async (n) => { const listing = await __host.read(JSON.stringify(n)); return { n, listing: JSON.parse(listing) }; };",
+                "NillaSync.__fail = async () => { await null; throw new Error('nope'); };",
+                "NillaSync.__never = () => new Promise(() => {});",
+                "NillaSync.__hostThrows = () => { try { __host.boom(); return 'no'; } catch (e) { return String(e.message); } };",
+                "NillaSync.__text = (s) => s + '\\u00e9\\ud83d\\ude00';",
             ),
         ).use { engine ->
             engine.register("read") { args -> "{\"echo\":${args[0]}}" }
@@ -41,7 +41,7 @@ class ScriptEngineTest {
 
     @Test
     fun letInALoopGetsItsOwnBindingInBytecodeAndSource() {
-        ScriptEngine(assets, listOf(SharedScript.SYNC), listOf("ArdiaSync.__loop = () => { const f = []; for (let i = 0; i < 3; i++) f.push(() => i); return f.map((g) => g()); };")).use { engine ->
+        ScriptEngine(assets, listOf(SharedScript.SYNC), listOf("NillaSync.__loop = () => { const f = []; for (let i = 0; i < 3; i++) f.push(() => i); return f.map((g) => g()); };")).use { engine ->
             assertEquals("[0,1,2]", engine.call(SharedScript.SYNC, "__loop"))
         }
     }

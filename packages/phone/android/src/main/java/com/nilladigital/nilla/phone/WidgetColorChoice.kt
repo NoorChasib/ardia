@@ -1,11 +1,11 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 object WidgetColorChoice {
-    private const val PREFERENCES = "ardia-widgets"
+    private const val PREFERENCES = "nilla-widgets"
     private const val KEY = "colorChoice"
 
     @Volatile

@@ -1,4 +1,4 @@
-package com.ardia.sync.core
+package com.nilladigital.nilla.sync.core
 
 import java.nio.ByteBuffer
 import java.security.SecureRandom

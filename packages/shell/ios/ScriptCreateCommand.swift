@@ -1,6 +1,6 @@
 import AppKit
 
-@objc(ArdiaScriptCreateCommand)
+@objc(NillaScriptCreateCommand)
 final class ScriptCreateCommand: NSCreateCommand {
   override func performDefaultImplementation() -> Any? {
     let properties = resolvedKeyDictionary
@@ -21,7 +21,7 @@ final class ScriptCreateCommand: NSCreateCommand {
       }
       return ShellScripting.perform(body) { ($0["tabId"] as? String).flatMap { ScriptTab(id: $0).objectSpecifier } }
     default:
-      setError("Ardia can't make a new \(createClassDescription.className).")
+      setError("Nilla can't make a new \(createClassDescription.className).")
       return nil
     }
   }

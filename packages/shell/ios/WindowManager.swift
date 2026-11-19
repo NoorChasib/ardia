@@ -16,7 +16,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
   private var landingFits: [String: LittleLandingFit] = [:]
   private var unreportedFrames = Set<ObjectIdentifier>()
   private weak var lastPlaced: NSWindow?
-  private static let lastFrameKey = "ArdiaLastWindowFrame"
+  private static let lastFrameKey = "NillaLastWindowFrame"
   private var lastFrame = UserDefaults.standard.string(forKey: WindowManager.lastFrameKey) ?? UserDefaults.standard.string(forKey: "NSWindow Frame BrowserWindow")
   private static let behindTimeout = 1.5
   private static let revealTimeout = 0.6
@@ -92,11 +92,11 @@ final class WindowManager: NSObject, NSWindowDelegate {
     let small = kind == .small
     if kind != .browser && !small { return openAux(id: id, kind: kind, title: title) }
     guard let makeWindow = WindowHost.makeWindow, let makeContentView = WindowHost.makeContentView else { return }
-    if !small, ArdiaChromeWindowHost.takeDismissedAppWindow(id) {
+    if !small, NillaChromeWindowHost.takeDismissedAppWindow(id) {
       ShellEvents.send(.window, ["type": "close", "id": id])
       return
     }
-    if small, let claim, ArdiaChromeWindowHost.takeDismissedAppWindow(claim) {
+    if small, let claim, NillaChromeWindowHost.takeDismissedAppWindow(claim) {
       ShellEvents.send(.window, ["type": "close", "id": id])
       return
     }
@@ -104,7 +104,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
       if options.incognito { chromeWindow.appearance = NSAppearance(named: .darkAqua) }
       let entry = ManagedWindow(id: id, kind: kind, window: chromeWindow)
       let root = makeContentView(id)
-      ArdiaChromeWindowHost.embedRootView(root, in: chromeWindow)
+      NillaChromeWindowHost.embedRootView(root, in: chromeWindow)
       if !chromeWindow.isVisible {
         chromeWindow.alphaValue = 0
         entry.reveal = .waiting(then: [], entrance: small || options.animated ? !small || frame == nil : nil)
@@ -117,7 +117,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
       ChromeWindows.onSwap { [weak self] from, to in self?.adopt(from: from, to: to) }
       observeDelegateNotifications(chromeWindow)
       if small { configureSmall(chromeWindow) }
-      if small { LittleArdiaHandoff.shared.opened(id, linkFrom: options.returnTo) }
+      if small { LittleNillaHandoff.shared.opened(id, linkFrom: options.returnTo) }
       return show(entry, frame: frame, title: title, focus: focus, small: small, smallSize: options.size, smallPointer: options.pointer, behind: behind, display: options.display)
     }
     let window = makeWindow()
@@ -130,7 +130,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     if options.incognito { window.appearance = NSAppearance(named: .darkAqua) }
     if small {
       configureSmall(window)
-      LittleArdiaHandoff.shared.opened(id, linkFrom: options.returnTo)
+      LittleNillaHandoff.shared.opened(id, linkFrom: options.returnTo)
     }
     show(ManagedWindow(id: id, kind: kind, window: window), frame: frame, title: title, focus: focus, small: small, smallSize: options.size, smallPointer: options.pointer, display: options.display)
   }
@@ -152,8 +152,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
       observeFrame(window)
       return reportFrame(window)
     }
-    let summoned = small && focus && smallPointer == nil && LittleArdiaHotKey.shared.takePress() && !NSApp.isActive
-    if summoned { ArdiaChromeWindowHost.floatOverActiveSpace(window) }
+    let summoned = small && focus && smallPointer == nil && LittleNillaHotKey.shared.takePress() && !NSApp.isActive
+    if summoned { NillaChromeWindowHost.floatOverActiveSpace(window) }
     if focus, entry.isWaitingToReveal {
       window.orderFront(nil)
       typeAhead.keyOnReveal = window
@@ -281,7 +281,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     var style: NSWindow.StyleMask = [.titled, .closable, .miniaturizable, .fullSizeContentView]
     if settings { style.insert(.resizable) }
     let window = NSWindow(contentRect: NSRect(origin: .zero, size: design), styleMask: style, backing: .buffered, defer: false)
-    let size = ArdiaChromeWindowHost.windowSize(fromInterface: design, for: window)
+    let size = NillaChromeWindowHost.windowSize(fromInterface: design, for: window)
     window.setAccessibilitySubrole(.dialog)
     window.titlebarAppearsTransparent = true
     window.titleVisibility = .hidden
@@ -293,7 +293,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     controller.view = root
     controller.view.frame = NSRect(origin: .zero, size: size)
     window.contentViewController = controller
-    if settings { ArdiaChromeWindowHost.insetTrafficLights(of: window) }
+    if settings { NillaChromeWindowHost.insetTrafficLights(of: window) }
     InterfaceScale.rootAttached(root)
     window.setContentSize(size)
     window.delegate = self
@@ -306,8 +306,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
       window.setContentSize(size)
       window.setFrameTopLeftPoint(NSPoint(x: window.frame.minX, y: top))
     }
-    ArdiaChromeWindowHost.setInterfaceMinSize(settings ? NSSize(width: 720, height: 480) : design, of: window)
-    ArdiaChromeWindowHost.keepInterfaceContentSize(of: window)
+    NillaChromeWindowHost.setInterfaceMinSize(settings ? NSSize(width: 720, height: 480) : design, of: window)
+    NillaChromeWindowHost.keepInterfaceContentSize(of: window)
     for name in [NSWindow.didMoveNotification, NSWindow.didResizeNotification] {
       NotificationCenter.default.addObserver(self, selector: #selector(auxFrameChanged(_:)), name: name, object: window)
     }
@@ -319,7 +319,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
   private static let auxFrameSaveDelay: TimeInterval = 0.3
 
-  private static func auxFrameName(_ kind: WindowKind) -> String { "Ardia\(kind.rawValue.capitalized)" }
+  private static func auxFrameName(_ kind: WindowKind) -> String { "Nilla\(kind.rawValue.capitalized)" }
 
   @objc private func auxFrameChanged(_ notification: Notification) {
     guard let window = notification.object as? NSWindow else { return }
@@ -334,9 +334,9 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
   private func configureSmall(_ window: NSWindow) {
     window.identifier = NSUserInterfaceItemIdentifier("ardia.window.small")
-    ArdiaChromeWindowHost.float(forWindowManagers: window)
+    NillaChromeWindowHost.float(forWindowManagers: window)
     window.minSize = NSSize(width: 420, height: 300)
-    ArdiaChromeWindowHost.setInterfaceMinSize(window.minSize, of: window)
+    NillaChromeWindowHost.setInterfaceMinSize(window.minSize, of: window)
     window.tabbingMode = .disallowed
     let fullScreenRoles: NSWindow.CollectionBehavior = [.fullScreenPrimary, .fullScreenNone]
     window.collectionBehavior = window.collectionBehavior.subtracting(fullScreenRoles).union([.moveToActiveSpace, .fullScreenAuxiliary])
@@ -362,15 +362,15 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
   func moveToSavedDisplay(_ id: String) {
     guard let entry = managed[id], !entry.window.styleMask.contains(.fullScreen),
-          let screen = ArdiaDisplayIdentity.screen(withIdentifier: entry.display), entry.window.screen !== screen
+          let screen = NillaDisplayIdentity.screen(withIdentifier: entry.display), entry.window.screen !== screen
     else { return }
-    entry.window.setFrame(ArdiaDisplayIdentity.frame(entry.window.frame, on: screen), display: false)
+    entry.window.setFrame(NillaDisplayIdentity.frame(entry.window.frame, on: screen), display: false)
   }
 
   private func place(_ window: NSWindow, frame: CGRect?, display: String? = nil) {
     if let frame {
-      let saved = ArdiaDisplayIdentity.screen(withIdentifier: display)
-      window.setFrame(saved.map { ArdiaDisplayIdentity.frame(frame, on: $0) } ?? frame, display: false)
+      let saved = NillaDisplayIdentity.screen(withIdentifier: display)
+      window.setFrame(saved.map { NillaDisplayIdentity.frame(frame, on: $0) } ?? frame, display: false)
       if let screen = saved ?? window.screen ?? NSScreen.main {
         window.setFrame(window.constrainFrameRect(window.frame, to: screen), display: false)
       }
@@ -391,7 +391,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     flushFrameReport(entry.window)
     if entry.exit != nil { return entry.exit!.append(done) }
     let window = entry.window
-    LittleArdiaHandoff.shared.closing(id, replacedBy: replacement, keyWindow: window.isKeyWindow)
+    LittleNillaHandoff.shared.closing(id, replacedBy: replacement, keyWindow: window.isKeyWindow)
     guard entry.kind.isBrowser, window.isVisible, !window.isMiniaturized, !window.styleMask.contains(.fullScreen), !entry.isWaitingToReveal
     else { return done() }
     entry.exit = [done]
@@ -425,7 +425,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
     }
     guard let entry = managed[id] else { return }
     let window = entry.window
-    guard ArdiaChromeWindowHost.rootView(of: window) != nil else {
+    guard NillaChromeWindowHost.rootView(of: window) != nil else {
       entry.closingFromJS = true
       return window.close()
     }
@@ -436,12 +436,12 @@ final class WindowManager: NSObject, NSWindowDelegate {
     window.orderOut(nil)
     CATransaction.flush()
     forget(entry)
-    ArdiaChromeWindowHost.close(window)
-    DispatchQueue.main.async { ArdiaChromeWindowHost.removeRootView(of: window) }
+    NillaChromeWindowHost.close(window)
+    DispatchQueue.main.async { NillaChromeWindowHost.removeRootView(of: window) }
   }
 
   private func forget(_ entry: ManagedWindow) {
-    LittleArdiaHandoff.shared.forget(entry.id)
+    LittleNillaHandoff.shared.forget(entry.id)
     hostFitSizes[entry.id] = nil
     landingFits.removeValue(forKey: entry.id)?.stop()
     entry.stopWatchingContent()
@@ -464,7 +464,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
   }
 
   private static func identify(_ window: NSWindow, id: String, kind: WindowKind) {
-    if kind == .browser { window.setAccessibilityIdentifier("ardiaBrowserWindow_\(id)") }
+    if kind == .browser { window.setAccessibilityIdentifier("nillaBrowserWindow_\(id)") }
   }
 
   func windowShouldClose(_ sender: NSWindow) -> Bool {
@@ -494,7 +494,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
       ShellEvents.send(.window, ["type": "close", "id": id])
     }
     DispatchQueue.main.async {
-      if ArdiaChromeWindowHost.rootView(of: window) != nil { return ArdiaChromeWindowHost.removeRootView(of: window) }
+      if NillaChromeWindowHost.rootView(of: window) != nil { return NillaChromeWindowHost.removeRootView(of: window) }
       window.contentViewController = nil
     }
   }
@@ -521,9 +521,9 @@ final class WindowManager: NSObject, NSWindowDelegate {
 
   private func sendFullScreen(_ window: NSWindow, id: String, on: Bool) {
     guard isMainWindow(window) else { return }
-    let on = on && !ArdiaChromeWindowHost.windowFullScreenIs(forPage: window)
+    let on = on && !NillaChromeWindowHost.windowFullScreenIs(forPage: window)
     var body: [String: Any] = ["type": "fullScreen", "id": id, "on": on]
-    if on, let display = ArdiaDisplayIdentity.identifier(of: window.screen) { body["display"] = display }
+    if on, let display = NillaDisplayIdentity.identifier(of: window.screen) { body["display"] = display }
     ShellEvents.send(.window, body)
   }
 
@@ -558,7 +558,7 @@ final class WindowManager: NSObject, NSWindowDelegate {
   }
 
   private func relayoutRoot(_ window: NSWindow) {
-    guard let root = ArdiaChromeWindowHost.rootView(of: window) ?? window.contentView else { return }
+    guard let root = NillaChromeWindowHost.rootView(of: window) ?? window.contentView else { return }
     root.needsLayout = true
     for view in root.subviews { view.needsLayout = true }
     root.layoutSubtreeIfNeeded()

@@ -15,9 +15,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import cli, computer, skills, upstream
+from nilla_browser_cli import cli, computer, skills, upstream
 
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 REAL_DOWNLOAD = computer.download
 REAL_CODE_HASH = computer.code_hash
 REAL_VERIFY = computer.verify_app
@@ -130,11 +130,11 @@ class Sandbox(unittest.TestCase):
         return 0
 
     def install_launcher(self) -> Path:
-        ardia = self.cli_home / "current" / "bin" / "ardia"
-        ardia.parent.mkdir(parents=True, exist_ok=True)
-        ardia.write_text("#!/bin/sh\n")
+        nilla = self.cli_home / "current" / "bin" / "ardia"
+        nilla.parent.mkdir(parents=True, exist_ok=True)
+        nilla.write_text("#!/bin/sh\n")
         (self.cli_home / upstream.CLI_HOME_MARK).write_text("")
-        return ardia
+        return nilla
 
     def fake_download(self, url: str, dest: Path) -> None:
         self.downloads.append(url)
@@ -304,7 +304,7 @@ class Passthrough(Sandbox):
         with mock.patch.object(os, "execve") as execve:
             status, _, err = quiet(computer.main, ["mcp"])
         self.assertEqual(status, 1)
-        self.assertIn("ardia computer setup", err)
+        self.assertIn("nilla computer setup", err)
         execve.assert_not_called()
 
     def test_without_setup_other_commands_use_the_bundled_copy(self):
@@ -318,15 +318,15 @@ class Passthrough(Sandbox):
             with mock.patch.object(os, "execve") as execve:
                 status, _, err = quiet(computer.main, [word, "--apply"])
             self.assertEqual(status, 2)
-            self.assertIn("ardia", err)
+            self.assertIn("nilla", err)
             execve.assert_not_called()
 
-    def test_an_outdated_app_ardia_installed_says_so(self):
+    def test_an_outdated_app_nilla_installed_says_so(self):
         app = self.install_fake_app(version="0.0.9")
         computer.save_record({"path": str(app), "version": "0.0.9", "cdhash": fake_code_hash(app)})
         with mock.patch.object(os, "execve"):
             _, _, err = quiet(computer.main, ["list-tools"])
-        self.assertIn("ardia computer setup", err)
+        self.assertIn("nilla computer setup", err)
 
     def test_shared_flags_are_refused(self):
         status, _, err = quiet(cli.main, ["--port", "9", "computer", "list-tools"])
@@ -335,7 +335,7 @@ class Passthrough(Sandbox):
 
     def test_help_mentions_computer(self):
         _, out, _ = quiet(cli.main, ["computer", "--help"])
-        self.assertIn("ardia computer setup", out)
+        self.assertIn("nilla computer setup", out)
         self.assertIn(computer.VERSION, out)
         with self.assertRaises(SystemExit):
             quiet(cli.main, ["--help"])
@@ -370,7 +370,7 @@ class Setup(Sandbox):
         self.assertIn("computer", Path(os.readlink(link)).read_text())
         self.assertEqual([entry.name for entry in self.applications.iterdir()], [computer.APP_NAME])
 
-    def test_never_replaces_an_app_ardia_didnt_install(self):
+    def test_never_replaces_an_app_nilla_didnt_install(self):
         app = make_app(self.dest(), "0.41.3")
         status, out, _ = quiet(computer.setup, ["--no-grant"])
         self.assertEqual(status, 0)
@@ -501,7 +501,7 @@ class Setup(Sandbox):
         self.assertEqual(quiet(computer.refresh)[0], 0)
         record = computer.read_record()
         self.assertEqual((record["state"], record["cdhash"]), ("committed", pending["cdhash"]))
-        self.assertTrue(computer.installed_by_ardia(app))
+        self.assertTrue(computer.installed_by_nilla(app))
         self.assertFalse(computer.needs_recovery())
         self.assertEqual(sorted(entry.name for entry in self.applications.iterdir()), [computer.APP_NAME])
 
@@ -525,7 +525,7 @@ class Setup(Sandbox):
         with mock.patch.object(computer, "LOCK_TIMEOUT_S", 0.2), computer.applications_lock():
             status, _, err = quiet(computer.setup, ["--no-grant"])
         self.assertEqual(status, 1)
-        self.assertIn("another ardia computer setup", err)
+        self.assertIn("another nilla computer setup", err)
         self.assertFalse(self.dest().exists())
 
     def test_refresh_leaves_a_foreign_app_alone(self):
@@ -576,7 +576,7 @@ class Unsupported(Sandbox):
 
 
 class Launcher(Sandbox):
-    def test_the_shim_never_captures_an_ardia_found_on_path(self):
+    def test_the_shim_never_captures_an_nilla_found_on_path(self):
         impostor = self.root / "evil" / "ardia"
         impostor.parent.mkdir()
         impostor.write_text("#!/bin/sh\n")
@@ -584,14 +584,14 @@ class Launcher(Sandbox):
         with mock.patch.dict(os.environ, {"PATH": f"{impostor.parent}:/usr/bin:/bin"}), mock.patch.object(sys, "executable", "/usr/bin/python3"):
             with self.assertRaises(computer.Refused) as caught:
                 computer.link_command()
-        self.assertIn("installed ardia launcher", str(caught.exception))
+        self.assertIn("installed nilla launcher", str(caught.exception))
         self.assertFalse(computer.shim_path().exists())
         self.assertFalse((self.home / "bin" / "cua-driver").exists())
 
     def test_the_shim_runs_the_installed_launcher(self):
-        ardia = self.install_launcher()
+        nilla = self.install_launcher()
         quiet(computer.link_command)
-        self.assertIn(str(ardia), computer.shim_path().read_text())
+        self.assertIn(str(nilla), computer.shim_path().read_text())
 
     def test_a_current_link_pointing_outside_the_cli_home_isnt_trusted(self):
         elsewhere = self.root / "elsewhere"
@@ -614,19 +614,19 @@ class Launcher(Sandbox):
 
 
 class McpConfig(Sandbox):
-    def test_claude_code_and_codex_point_at_ardia_computer_mcp(self):
-        ardia = self.install_launcher()
+    def test_claude_code_and_codex_point_at_nilla_computer_mcp(self):
+        nilla = self.install_launcher()
         _, out, _ = quiet(computer.main, ["mcp-config", "--target", "claude-code"])
         prefix = "claude mcp add-json --scope user cua-driver "
         self.assertTrue(out.startswith(prefix))
         import shlex
 
         entry = json.loads(shlex.split(out[len(prefix):])[0])
-        self.assertEqual(entry, {"command": str(ardia), "args": ["computer", "mcp"]})
+        self.assertEqual(entry, {"command": str(nilla), "args": ["computer", "mcp"]})
         _, out, _ = quiet(computer.main, ["mcp-config", "--target", "codex"])
-        self.assertEqual(shlex.split(out), ["codex", "mcp", "add", "cua-driver", "--", str(ardia), "computer", "mcp"])
+        self.assertEqual(shlex.split(out), ["codex", "mcp", "add", "cua-driver", "--", str(nilla), "computer", "mcp"])
         _, out, _ = quiet(computer.main, ["mcp-config"])
-        self.assertEqual(json.loads(out), {"mcpServers": {"cua-driver": {"command": str(ardia), "args": ["computer", "mcp"]}}})
+        self.assertEqual(json.loads(out), {"mcpServers": {"cua-driver": {"command": str(nilla), "args": ["computer", "mcp"]}}})
 
 
 class CuaSkills(Sandbox):
@@ -643,9 +643,9 @@ class CuaSkills(Sandbox):
         folder = self.cua()
         self.assertEqual(sorted(entry.name for entry in folder.iterdir()), [skills.MARKER, "MACOS.md", "SKILL.md", "WORKFLOW.md"])
         marker = json.loads((folder / skills.MARKER).read_text())
-        self.assertEqual((marker["vendor"], marker["skill"], marker["version"]), ("ardia", "cua-driver", computer.VERSION))
+        self.assertEqual((marker["vendor"], marker["skill"], marker["version"]), ("nilla", "cua-driver", computer.VERSION))
         self.assertIn(f"cua-driver {computer.VERSION}: {folder}", out)
-        ours = json.loads((self.home / ".claude/skills/ardia" / skills.MARKER).read_text())
+        ours = json.loads((self.home / ".claude/skills/nilla" / skills.MARKER).read_text())
         self.assertEqual(ours["companions"], ["cua-driver"])
 
     def test_no_cua_skips_it(self):
@@ -674,7 +674,7 @@ class CuaSkills(Sandbox):
         folder = self.cua()
         folder.mkdir(parents=True)
         (folder / "SKILL.md").write_text("hand made\n")
-        for marker in (None, '{"vendor": "ardia", "files": ["SKILL.md"]}'):
+        for marker in (None, '{"vendor": "nilla", "files": ["SKILL.md"]}'):
             if marker:
                 (folder / skills.MARKER).write_text(marker)
             _, out, _ = quiet(skills.install, ["claude-code"], False)
@@ -706,7 +706,7 @@ class CuaSkills(Sandbox):
 
     def test_refresh_adds_it_once_to_copies_from_before_and_never_brings_back_a_deleted_one(self):
         quiet(skills.install, ["claude-code"], False, False)
-        ours = self.home / ".claude/skills/ardia" / skills.MARKER
+        ours = self.home / ".claude/skills/nilla" / skills.MARKER
         data = json.loads(ours.read_text())
         del data["companions"]
         ours.write_text(json.dumps(data))
@@ -723,8 +723,8 @@ class CuaSkills(Sandbox):
         status, out, _ = quiet(skills.install, ["claude-code"], False)
         self.assertEqual(status, 1)
         self.assertIn(f"error {self.cua()}", out)
-        self.assertTrue((self.home / ".claude/skills/ardia/SKILL.md").is_file())
-        self.assertNotIn("companions", json.loads((self.home / ".claude/skills/ardia" / skills.MARKER).read_text()))
+        self.assertTrue((self.home / ".claude/skills/nilla/SKILL.md").is_file())
+        self.assertNotIn("companions", json.loads((self.home / ".claude/skills/nilla" / skills.MARKER).read_text()))
         self.serve_skills()
         self.assertEqual(quiet(skills.refresh)[0], 0)
         self.assertTrue((self.cua() / "SKILL.md").is_file())
@@ -736,10 +736,10 @@ class CuaSkills(Sandbox):
         self.assertIn("checksum mismatch", out)
         self.assertFalse(self.cua().exists())
 
-    def test_the_ardia_marker_doesnt_claim_a_cua_folder_and_back(self):
+    def test_the_nilla_marker_doesnt_claim_a_cua_folder_and_back(self):
         quiet(skills.install, ["claude-code"], False)
         self.assertIsNone(skills.marked_files(self.cua()))
-        self.assertIsNone(skills.marked_files(self.home / ".claude/skills/ardia", skills.CUA_SKILL))
+        self.assertIsNone(skills.marked_files(self.home / ".claude/skills/nilla", skills.CUA_SKILL))
 
 
 if __name__ == "__main__":

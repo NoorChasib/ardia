@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import WebKit
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 @MainActor
 final class PageLoader: NSObject, WKNavigationDelegate {

@@ -193,8 +193,8 @@ export function startDevHarness() {
     get automation(): typeof import("../../state/automation/approvals") & typeof import("../../state/automation/hookRules") & typeof import("../../state/automation/hookPolicy") & typeof import("../../state/automation/decideSocket") {
       return { ...require("../../state/automation/approvals"), ...require("../../state/automation/hookRules"), ...require("../../state/automation/hookPolicy"), ...require("../../state/automation/decideSocket") };
     },
-    get airTraffic(): typeof import("../../state/airTraffic/store") & typeof import("../../state/airTraffic/preview") & typeof import("../../state/littleArdia/actions") {
-      return { ...require("../../state/airTraffic/store"), ...require("../../state/airTraffic/preview"), ...require("../../state/littleArdia/actions") };
+    get airTraffic(): typeof import("../../state/airTraffic/store") & typeof import("../../state/airTraffic/preview") & typeof import("../../state/littleNilla/actions") {
+      return { ...require("../../state/airTraffic/store"), ...require("../../state/airTraffic/preview"), ...require("../../state/littleNilla/actions") };
     },
   };
   (globalThis as { ac?: typeof ac }).ac = ac;

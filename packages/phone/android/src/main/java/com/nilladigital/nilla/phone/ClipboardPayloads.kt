@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
-import com.ardia.search.ClipboardOffer
-import com.ardia.search.ClipboardOffers
+import com.nilladigital.nilla.search.ClipboardOffer
+import com.nilladigital.nilla.search.ClipboardOffers
 
 object ClipboardPayloads {
     fun offer(context: Context): String? = when (ClipboardOffers.peek(context)) {

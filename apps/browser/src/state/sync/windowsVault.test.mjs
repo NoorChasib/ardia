@@ -12,7 +12,7 @@ const interop = join(repo, "packages/sync/tests/fixtures/windows-interop");
 const manifestOf = (name) => JSON.parse(readFileSync(join(interop, `${name}.json`), "utf8"));
 const hex = (text) => new Uint8Array(Buffer.from(text, "hex"));
 const counts = () => ({ placeholders: 0, busy: 0 });
-const scratch = () => mkdtempSync(join(tmpdir(), "ardia-sync-"));
+const scratch = () => mkdtempSync(join(tmpdir(), "nilla-sync-"));
 const quoted = (text) => [...text.matchAll(/"([a-z ]+)"/g)].flatMap((m) => m[1].trim().split(/\s+/));
 
 test("the Windows host's wordlist is the Mac's", () => {

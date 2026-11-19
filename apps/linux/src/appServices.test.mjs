@@ -8,7 +8,7 @@ import { useReportSheet } from "../../browser/src/state/report/store.ts";
 import { APP_COMMAND_HANDLERS } from "../../browser/src/state/commands/appCommands.ts";
 import { LINUX_REPORT_TEMPLATE, openReport } from "./reportProblem.ts";
 import { APP_LAUNCH_LOCK, APP_LAUNCH_MARK, FRESH_PROFILE_DOCUMENT, LAUNCH_STEPS, LINUX_APP_COMMANDS, UTILITY_APP_COMMANDS, claimAppLaunch, hostLaunchRecord, onboardingAction, recordFreshProfile, runAppCommand, runLaunchServices, serveUtilityCommands, startAppCommands } from "./appServices.ts";
-import { overrideServicesForTests, resetServicesForTests } from "@ardia/core/src/services.testing.ts";
+import { overrideServicesForTests, resetServicesForTests } from "@nilla/core/src/services.testing.ts";
 
 const capabilities = { defaultBrowser: false, launchAtLogin: false, thinScrollBars: false, webkit: false, cliControl: false, cliInstall: false, externalLinks: false, performanceRecording: false, taskManager: false };
 

@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import ArdiaDesign
+@testable import NillaDesign
 
 struct ProfileLookTests {
   static let macWindowTints: [(ProfileLook.Preset, light: [UInt32], dark: [UInt32])] = [

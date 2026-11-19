@@ -6,11 +6,11 @@ import time
 from pathlib import Path
 from urllib.parse import parse_qsl, quote, quote_plus, unquote, unquote_plus, urlsplit, urlunsplit
 
-from ardia_cli.browse import flowlog, flowurl, paths
-from ardia_cli.browse import shape as shaping
-from ardia_cli.browse.commands import Result, command, normalize_url, parse
-from ardia_cli.browse.errors import BrowseError, Usage
-from ardia_cli.browse.flowurl import PARAM, Unsafe, carries, credential_key
+from nilla_browser_cli.browse import flowlog, flowurl, paths
+from nilla_browser_cli.browse import shape as shaping
+from nilla_browser_cli.browse.commands import Result, command, normalize_url, parse
+from nilla_browser_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse.flowurl import PARAM, Unsafe, carries, credential_key
 
 VERSION = 1
 DIR_NAME = "Flows"
@@ -43,7 +43,7 @@ RUN_FLAGS = {"--param": "multi", "--fields": "value", "--where": "multi", "--lim
 SITE_FLAGS = {"--site": "value"}
 READ_ONLY = ("Flows are read-only for now: they keep and send GET requests only, and the answer in that range came from {methods}. "
              "Do this task in the page")
-USAGE = ("Usage: ardia browse flow steps [--all] | save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]\n"
+USAGE = ("Usage: nilla browse flow steps [--all] | save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]\n"
          "  | run <name> [--param k=v] [--fields a,b.c] [--where f=v] [--limit n]\n"
          "  | list [site] | show <name> [--site s] | rm <name> [--site s]")
 
@@ -64,7 +64,7 @@ def slug(text: str) -> str | None:
 
 
 def site_of(url: str) -> str | None:
-    from ardia_cli import notes
+    from nilla_browser_cli import notes
 
     site = notes.page_site(url)
     if site is None:
@@ -260,7 +260,7 @@ def build_flow(name: str, steps: list[dict], given: dict | None = None, output: 
     given = dict(given or {})
     check_name(name)
     if not steps:
-        raise BrowseError("No recorded steps in that range; `ardia browse flow steps --all` lists what this session recorded", code="no_steps")
+        raise BrowseError("No recorded steps in that range; `nilla-browser browse flow steps --all` lists what this session recorded", code="no_steps")
     try:
         start = flowurl.parse(start_url(steps))
     except Unsafe as error:
@@ -394,7 +394,7 @@ def build_flow(name: str, steps: list[dict], given: dict | None = None, output: 
     flow = {
         "version": VERSION, "name": name, "description": " ".join(str(description or "").split())[:MAX_DESCRIPTION] or None, "site": site,
         "origin": start.origin, "startUrl": start_saved or start.origin + "/", "hosts": sorted(hosts),
-        "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "createdBy": {"tool": "ardia browse", "version": tool_version},
+        "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "createdBy": {"tool": "nilla browse", "version": tool_version},
         "params": params, "output": output or default_output(requests), "verified": True, "steps": saved_steps,
     }
     report = {"requests": [{"id": request["id"], "method": request["method"], "url": request["url"], "kind": request["kind"],
@@ -434,7 +434,7 @@ def validate(flow, site: str | None = None, name: str | None = None) -> dict:
     if not isinstance(flow, dict):
         raise invalid("isn't a JSON object")
     if flow.get("version") != VERSION:
-        raise invalid(f"is version {str(flow.get('version'))[:10]!r}; this ardia reads version {VERSION}.")
+        raise invalid(f"is version {str(flow.get('version'))[:10]!r}; this nilla reads version {VERSION}.")
     unknown = sorted(set(flow) - FIELDS)
     missing = [key for key in REQUIRED if key not in flow]
     if unknown or missing:
@@ -493,7 +493,7 @@ def validate(flow, site: str | None = None, name: str | None = None) -> dict:
 
 
 def check_site(site: str) -> str:
-    from ardia_cli import notes
+    from nilla_browser_cli import notes
 
     if not isinstance(site, str) or not notes.HOST.match(site):
         raise Usage(f"{site!r} isn't a site (host[:port])")
@@ -611,7 +611,7 @@ def locate(root: Path, name: str, site: str | None, page_url: str | None) -> str
     if here in found:
         return here
     if not found:
-        raise BrowseError(f"No saved flow named {name} (`ardia browse flow list` lists them)", code="no_flow")
+        raise BrowseError(f"No saved flow named {name} (`nilla-browser browse flow list` lists them)", code="no_flow")
     raise Usage(f"{name} is saved for {', '.join(found)}; pick one with --site <site>")
 
 
@@ -638,7 +638,7 @@ def listing_text(rows: list[dict]) -> str:
         extra = "; ".join(part for part in (f"examples {examples}" if examples else "", f"items: {fields}" if fields else "",
                                              "unverified" if not row["verified"] else "") if part)
         lines.append(f"{row['site']}  {signature_line(row)}" + (f"  [{extra}]" if extra else ""))
-    return "\n".join(lines) or "No saved flows yet (`ardia browse flow save <name>` after doing the task once)"
+    return "\n".join(lines) or "No saved flows yet (`nilla-browser browse flow save <name>` after doing the task once)"
 
 
 def show_text(flow: dict) -> str:
@@ -668,14 +668,14 @@ def run_local(root: Path, args: list[str], page_url: str | None = None) -> Resul
     if action == "show":
         options, positional = parse(args[1:], SITE_FLAGS)
         if not positional:
-            raise Usage("Usage: ardia browse flow show <name> [--site s]")
+            raise Usage("Usage: nilla browse flow show <name> [--site s]")
         site = locate(root, positional[0], options.get("site"), page_url)
         flow = load(root, site, positional[0])
         return Result({"flow": flow}, show_text(flow), page_content=True)
     if action in ("rm", "remove", "delete"):
         options, positional = parse(args[1:], SITE_FLAGS)
         if not positional:
-            raise Usage("Usage: ardia browse flow rm <name> [--site s]")
+            raise Usage("Usage: nilla browse flow rm <name> [--site s]")
         site = locate(root, positional[0], options.get("site"), page_url)
         removed = remove(root, site, positional[0])
         return Result({"site": site, "name": positional[0], "removed": removed},
@@ -688,7 +688,7 @@ def runs_locally(args: list[str]) -> bool:
 
 
 def hint(state, url: str | None) -> str | None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     config = getattr(state, "config", None)
     root = config.get("data_root") if isinstance(config, dict) else None
@@ -706,8 +706,8 @@ def hint(state, url: str | None) -> str | None:
         return None
     shown.add(site)
     command_metrics.flag("flow_hint_shown", True)
-    more = f"; … {len(rows) - HINT_LIMIT} more: `ardia browse flow list {site}`" if len(rows) > HINT_LIMIT else ""
-    return (f"# saved flows for {site} (`ardia browse flow run <name> --param k=v`, `flow show <name>`): "
+    more = f"; … {len(rows) - HINT_LIMIT} more: `nilla-browser browse flow list {site}`" if len(rows) > HINT_LIMIT else ""
+    return (f"# saved flows for {site} (`nilla-browser browse flow run <name> --param k=v`, `flow show <name>`): "
             + "; ".join(signature_line(row, HINT_DESCRIPTION) for row in rows[:HINT_LIMIT]) + more)
 
 
@@ -805,13 +805,13 @@ def save_text(name: str, path: Path, flow: dict, report: dict, secrets=()) -> st
     if report["unkept"]:
         lines.append(f"  not kept: {', '.join(report['unkept'])} requests (flows are read-only)")
     usage = " ".join(f"--param {param['name']}=…" for param in report["params"])
-    lines.append(f"→ ardia browse flow run {name}" + (f" {usage}" if usage else "") + " [--fields a,b] [--where f=v] [--limit n]")
+    lines.append(f"→ nilla browse flow run {name}" + (f" {usage}" if usage else "") + " [--fields a,b] [--where f=v] [--limit n]")
     return "\n".join(lines)
 
 
 @command("flow")
 async def cmd_flow(ctx, argv):
-    from ardia_cli import __version__, command_metrics
+    from nilla_browser_cli import __version__, command_metrics
 
     state = ctx.state
     root = Path(state.config["data_root"])
@@ -824,7 +824,7 @@ async def cmd_flow(ctx, argv):
     if action == "save":
         options, positional = parse(rest, SAVE_FLAGS)
         if len(positional) != 1:
-            raise Usage("Usage: ardia browse flow save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]")
+            raise Usage("Usage: nilla browse flow save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]")
         steps = save_range(log, seq_of(options.get("from"), "--from"), seq_of(options.get("to"), "--to"))
         flow, report = build_flow(positional[0], steps, parse_params(options.get("param")), options.get("output"), options.get("description"), __version__,
                                   log.known_secrets())
@@ -837,11 +837,11 @@ async def cmd_flow(ctx, argv):
         command_metrics.count("flow_params", len(report["params"]))
         return Result({"flow": summary(flow), "path": str(path), **report}, save_text(positional[0], path, flow, report, log.known_secrets()))
     if action == "run":
-        from ardia_cli.browse import flowrun
+        from nilla_browser_cli.browse import flowrun
 
         options, positional = parse(rest, RUN_FLAGS)
         if len(positional) != 1:
-            raise Usage("Usage: ardia browse flow run <name> [--param k=v] [--fields a,b.c] [--where f=v] [--limit n]")
+            raise Usage("Usage: nilla browse flow run <name> [--param k=v] [--fields a,b.c] [--where f=v] [--limit n]")
         page = state.pages.get(state.current) if state.current else None
         site = locate(root, positional[0], options.get("site"), page.url if page else None)
         flow = load(root, site, positional[0])

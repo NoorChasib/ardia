@@ -15,7 +15,7 @@
 #include "SyncPhrase.h"
 #include "SyncSecrets.h"
 
-namespace Ardia::SyncVault {
+namespace Nilla::SyncVault {
 
 using SyncCrypto::Keys;
 using SyncCrypto::WipedBytes;

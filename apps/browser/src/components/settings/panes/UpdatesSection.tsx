@@ -12,9 +12,9 @@ import { useResource } from "../../../state/settings/resources";
 import { UI_LOCALE } from "../../../lib/uiLocale";
 import { Group, Row, SectionHeader } from "../Form";
 import { setting } from "../settingsIndex";
-import { BASED_ON_ARDIA, LEGAL_NOTICE, sourceLinks } from "../../../state/app/legalNotice";
+import { BASED_ON_NILLA, LEGAL_NOTICE, sourceLinks } from "../../../state/app/legalNotice";
 
-const APP = "Ardia";
+const APP = "Nilla";
 
 export function UpdatesSection() {
   const [state, reload] = useResource(updater);
@@ -95,7 +95,7 @@ function VersionDetails({ status }: { status: string | null }) {
         </Text>
       ) : null}
       <Text size="caption" tone="textSecondary" style={DETAIL()}>
-        {`${LEGAL_NOTICE} ${BASED_ON_ARDIA}`}
+        {`${LEGAL_NOTICE} ${BASED_ON_NILLA}`}
       </Text>
       <View style={LINKS}>
         <Button variant="text" look="link" pad="none" title="Source code" onPress={() => openUrls([sourceLinks().source])} />

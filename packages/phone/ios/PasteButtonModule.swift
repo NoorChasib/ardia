@@ -48,7 +48,7 @@ final class PasteButtonView: ExpoView {
 
 public final class PasteButtonModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhonePasteButton")
+    Name("NillaPhonePasteButton")
 
     View(PasteButtonView.self) {
       Events("onPaste")

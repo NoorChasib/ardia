@@ -1,4 +1,4 @@
-import { suggestionKey, type SearchScope } from "@ardia/core";
+import { suggestionKey, type SearchScope } from "@nilla/core";
 import { useEffect, useMemo, type RefObject } from "react";
 import type { TextInput } from "react-native";
 import { fullUrlShown, previewText } from "./barText";

@@ -2,10 +2,10 @@
 set -euo pipefail
 usage='usage: scripts/linux/release.sh <version> [--engine exact|nearest|<dir>] [--out <dir>] [--allow-dirty]
 
-Builds the Linux x64 release of Ardia <version> (a -nightly.<n> version is a
+Builds the Linux x64 release of Nilla <version> (a -nightly.<n> version is a
 nightly), the Linux counterpart of scripts/release.sh: it fetches the engine,
-builds apps/linux/dist and the ardia CLI, prepares uBlock Origin, packages
-Ardia-<version>-linux-x64.tar.xz with lib/ardia/VERSION and the CLI, writes
+builds apps/linux/dist and the nilla CLI, prepares uBlock Origin, packages
+Nilla-<version>-linux-x64.tar.xz with lib/ardia/VERSION and the CLI, writes
 the .sha256 files and provenance.txt, and runs the smoke gate. It never
 publishes: it prints the gh release upload command for the assets.
 
@@ -50,7 +50,7 @@ root=$(cd "$(dirname "$0")/../.." && pwd -P)
 channel=$(channel_of "$version") || exit 1
 cd "$root"
 
-pbx=apps/browser/macos/Ardia.xcodeproj/project.pbxproj
+pbx=apps/browser/macos/Nilla.xcodeproj/project.pbxproj
 project_version=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' "$pbx" | sort -u)
 [ "$project_version" = "$version" ] \
   || die "MARKETING_VERSION is '$project_version', not $version: the Linux release follows the macOS release of the same version"
@@ -78,8 +78,8 @@ node scripts/lib/release-note.mjs "docs/release-notes/$version.md" headline >/de
 release_output_entry() {
   case $1 in
     provenance.txt|ui-build.log|cli-build.log|ubo.log|smoke|smoke-deb|smoke-appimage) return 0 ;;
-    Ardia-*-linux-x64.tar.xz|Ardia-*-linux-x64.tar.xz.sha256) return 0 ;;
-    Ardia-*-linux-x64.deb|Ardia-*-linux-x64.deb.sha256|Ardia-*-linux-x64.AppImage|Ardia-*-linux-x64.AppImage.sha256) return 0 ;;
+    Nilla-*-linux-x64.tar.xz|Nilla-*-linux-x64.tar.xz.sha256) return 0 ;;
+    Nilla-*-linux-x64.deb|Nilla-*-linux-x64.deb.sha256|Nilla-*-linux-x64.AppImage|Nilla-*-linux-x64.AppImage.sha256) return 0 ;;
     ardia-cli-*-linux-x64.tar.gz|ardia-cli-*-linux-x64.tar.gz.sha256|ardia-cli-*-linux-x64.tar.gz.part) return 0 ;;
   esac
   return 1
@@ -98,9 +98,9 @@ if [ -e "$out" ]; then
 fi
 mkdir -p "$out"
 out=$(cd "$out" && pwd -P)
-package_name="Ardia-$version-linux-x64.tar.xz"
-deb_name="Ardia-$version-linux-x64.deb"
-appimage_name="Ardia-$version-linux-x64.AppImage"
+package_name="Nilla-$version-linux-x64.tar.xz"
+deb_name="Nilla-$version-linux-x64.deb"
+appimage_name="Nilla-$version-linux-x64.AppImage"
 cli_name="ardia-cli-$version-linux-x64.tar.gz"
 
 echo "==> Engine ($engine_mode)"
@@ -139,9 +139,9 @@ echo "==> UI (apps/linux/dist)"
 bun run --cwd apps/linux build >"$out/ui-build.log" 2>&1 \
   || { tail -20 "$out/ui-build.log" >&2; die "building apps/linux/dist failed ($out/ui-build.log)"; }
 
-echo "==> ardia CLI"
+echo "==> nilla CLI"
 apps/cli/scripts/build.sh "$version" "$out" --platform linux-x64 >"$out/cli-build.log" 2>&1 \
-  || { tail -20 "$out/cli-build.log" >&2; die "building the ardia CLI failed ($out/cli-build.log)"; }
+  || { tail -20 "$out/cli-build.log" >&2; die "building the nilla CLI failed ($out/cli-build.log)"; }
 [ -f "$out/$cli_name" ] && [ -f "$out/$cli_name.sha256" ] || die "the CLI build left no $cli_name and .sha256 in $out"
 
 echo "==> uBlock Origin"

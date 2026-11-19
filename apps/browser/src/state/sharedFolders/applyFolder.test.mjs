@@ -38,7 +38,7 @@ const rowTitles = (g) => groupEntries(S(), g).map((e) => { const t = S().tabs[e.
 test("a sidebar folder's links are its pinned tabs, named and keyed so page titles and loads never rename a file", () => {
   const { g, a } = sharedWindow();
   const first = round(g, [], remote([]));
-  assert.deepEqual(first.ops.filter((o) => o.op === "write").map((o) => o.path), ["One.webloc", "Two.webloc", ".ardia-folder.json"]);
+  assert.deepEqual(first.ops.filter((o) => o.op === "write").map((o) => o.path), ["One.webloc", "Two.webloc", ".nilla-folder.json"]);
   S().updateTab(a, { title: "One — now loaded with a long title", url: "https://one.example/inbox" });
   const local = localFolder(S(), g, knownNames(first.base));
   assert.deepEqual(local.entries.map((e) => e.name), ["One", "Two"]);

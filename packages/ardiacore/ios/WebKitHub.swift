@@ -4,7 +4,7 @@ import WebKit
 
 final class WebKitHub: NSObject, WKScriptMessageHandler {
   static let shared = WebKitHub()
-  static let world = WKContentWorld.world(name: "ardia")
+  static let world = WKContentWorld.world(name: "nilla")
   static let silenced = LaunchConfig.shared.background && !LaunchConfig.shared.instanceFlag("allowAudio")
 
   let downloads = WebKitDownloads()
@@ -74,7 +74,7 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
     config.websiteDataStore = stores.dataStore(for: profile)
     let controller = WKUserContentController()
     controller.addUserScript(WKUserScript(source: WebKitPageScript.source, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: Self.world))
-    controller.add(self, contentWorld: Self.world, name: "ardia")
+    controller.add(self, contentWorld: Self.world, name: "nilla")
     controller.addUserScript(WKUserScript(source: WebKitPageScript.mediaBridge, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
     if !Self.passkeysEntitled {
       controller.addUserScript(WKUserScript(source: Self.hidePasskeys, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
@@ -185,9 +185,9 @@ final class WebKitHub: NSObject, WKScriptMessageHandler {
 
   func touchStore(_ profile: String, done: @escaping (Bool) -> Void) {
     let cookies = stores.dataStore(for: profile).httpCookieStore
-    let cookie = HTTPCookie(properties: [.name: "ardia-touch", .value: "1", .domain: "ardia.test", .path: "/", .expires: Date().addingTimeInterval(86400)])
+    let cookie = HTTPCookie(properties: [.name: "nilla-touch", .value: "1", .domain: "nilla.test", .path: "/", .expires: Date().addingTimeInterval(86400)])
     cookies.getAllCookies { existing in
-      let touched = existing.contains { $0.name == "ardia-touch" && $0.domain.hasSuffix("ardia.test") }
+      let touched = existing.contains { $0.name == "nilla-touch" && $0.domain.hasSuffix("nilla.test") }
       guard let cookie else { return done(touched) }
       cookies.setCookie(cookie) { done(touched) }
     }

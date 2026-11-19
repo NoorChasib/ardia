@@ -1,4 +1,4 @@
-import type { ThemeBackdropProps, ThemeTexture } from "@ardia/core";
+import type { ThemeBackdropProps, ThemeTexture } from "@nilla/core";
 import { requireNativeModule, requireNativeViewManager } from "expo-modules-core";
 import type { ComponentType } from "react";
 import type { ViewProps } from "react-native";
@@ -22,9 +22,9 @@ export type WindowBackdropProps = ViewProps &
     grainScale?: number;
   };
 
-const NativeBackdrop = requireNativeViewManager<WindowBackdropProps>("ArdiaWindowBackdrop");
+const NativeBackdrop = requireNativeViewManager<WindowBackdropProps>("NillaWindowBackdrop");
 
-const BackdropModule = requireNativeModule<{ holdKeyLook(on: boolean): Promise<void> }>("ArdiaWindowBackdrop");
+const BackdropModule = requireNativeModule<{ holdKeyLook(on: boolean): Promise<void> }>("NillaWindowBackdrop");
 
 export function holdThemedWindowsKeyLook(on: boolean) {
   void BackdropModule.holdKeyLook(on);
@@ -46,7 +46,7 @@ export type PowerUpProps = ViewProps & {
 
 type NativePowerUpProps = Omit<PowerUpProps, "palette" | "halo"> & { palette?: string[]; haloFrame: number[] };
 
-const NativePowerUp = requireNativeViewManager<NativePowerUpProps>("ArdiaPowerUp");
+const NativePowerUp = requireNativeViewManager<NativePowerUpProps>("NillaPowerUp");
 
 export function PowerUp({ palette = "pink", halo = null, ...props }: PowerUpProps) {
   return (
@@ -68,7 +68,7 @@ export type ThemeSwatchProps = ViewProps & {
   angle?: number;
 };
 
-const NativeThemeSwatch = requireNativeViewManager<ThemeSwatchProps>("ArdiaThemeSwatch");
+const NativeThemeSwatch = requireNativeViewManager<ThemeSwatchProps>("NillaThemeSwatch");
 
 export function ThemeSwatch({ grain = 0, padLightness = -1, angle = 135, style, ...props }: ThemeSwatchProps) {
   return <NativeThemeSwatch pointerEvents="none" grain={grain} padLightness={padLightness} angle={angle} style={style} {...props} />;

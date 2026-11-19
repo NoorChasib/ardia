@@ -10,9 +10,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import browsing, cli, endpoint, scripts_store, scripts_test, urlmatch, userscript
-from ardia_cli.scripts_store import Store, StoreError
-from ardia_cli.userscript import Meta, ScriptError, build, parse_meta, url_runs
+from nilla_browser_cli import browsing, cli, endpoint, scripts_store, scripts_test, urlmatch, userscript
+from nilla_browser_cli.scripts_store import Store, StoreError
+from nilla_browser_cli.userscript import Meta, ScriptError, build, parse_meta, url_runs
 
 CHROMIUM_URL_CASES = [
     ("http://*/*", "http://google.com/", True),

@@ -7,7 +7,7 @@ const KEY_FAILED = "The Google Chrome key didn't decrypt any passwords";
 const link = (title, url) => ({ type: "url", title, url });
 
 globalThis.acTestNativeModules = {
-  ArdiaImport: {
+  NillaImport: {
     addListener: () => ({ remove() {} }),
     isBrowserUnlocked: () => true,
     forgetUnlockedKeys() {},

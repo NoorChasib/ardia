@@ -91,7 +91,7 @@ export async function runLegacyImport(deps: ImportDeps): Promise<ImportResult> {
     return { kind: "ready", outcome: await importSteps(deps) };
   } catch (error) {
     const reason: ImportFailure = error instanceof Stop ? error.reason : "write";
-    deps.log(`ardia-legacy failed reason=${reason}`);
+    deps.log(`nilla-legacy failed reason=${reason}`);
     return { kind: "failed", reason };
   }
 }
@@ -228,7 +228,7 @@ async function importInto(deps: ImportDeps, counts: LegacyCounts): Promise<Legac
   const done = receipt as LegacyReceipt | null;
   if (!done) throw new Stop("write");
   deps.log(
-    `ardia-legacy imported tabs=${done.tabs} archive=${done.archive} states=${states} visits=${done.visits} preferences=${done.preferences} ${exclusionCounts(excluded)}`.trim(),
+    `nilla-legacy imported tabs=${done.tabs} archive=${done.archive} states=${states} visits=${done.visits} preferences=${done.preferences} ${exclusionCounts(excluded)}`.trim(),
   );
   return done;
 }
@@ -239,9 +239,9 @@ export async function startWithoutImport(deps: ImportDeps): Promise<boolean> {
     await deps.legacy.startFresh();
     writePreference(deps.db, LEGACY_FRESH_KEY, LEGACY_FRESH_VERSION);
   } catch {
-    deps.log("ardia-legacy start-fresh failed");
+    deps.log("nilla-legacy start-fresh failed");
     return false;
   }
-  deps.log("ardia-legacy started fresh");
+  deps.log("nilla-legacy started fresh");
   return true;
 }

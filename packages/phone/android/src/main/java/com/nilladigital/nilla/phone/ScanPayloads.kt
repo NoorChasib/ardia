@@ -1,6 +1,6 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.settings.ScanVerdict
+import com.nilladigital.nilla.settings.ScanVerdict
 
 object ScanPayloads {
     data class Event(val name: String, val body: Map<String, Any>)

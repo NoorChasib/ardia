@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Usage: node apps/phone/scripts/update-filter-catalog.mjs [<uBO tag>] [--from <assets.json>] [--check] [--help]
-// Writes ArdiaBrowser/Blocking/FilterListCatalog.json from uBlock Origin's assets.json at a release tag (default: the tag
+// Writes NillaBrowser/Blocking/FilterListCatalog.json from uBlock Origin's assets.json at a release tag (default: the tag
 // already in the catalog). The catalog lists every filter list with its group, URLs, default state, languages and update
 // interval. The lists themselves are downloaded on the device. --check exits 1 when the catalog differs from a fresh build.
 
@@ -9,7 +9,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
-const out = join(root, "packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Blocking/FilterListCatalog.json");
+const out = join(root, "packages/phone/ios/NillaKit/Sources/NillaBrowser/Blocking/FilterListCatalog.json");
 const args = process.argv.slice(2);
 
 if (args.includes("--help")) {

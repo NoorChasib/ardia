@@ -4,9 +4,9 @@ import { test } from "node:test";
 import { DEFAULT_SERVICES } from "../../../../packages/core/src/services.ts";
 
 const read = (path) => readFileSync(new URL(`../../../../${path}`, import.meta.url), "utf8");
-const plist = read("apps/browser/macos/Ardia-macOS/Info.plist");
+const plist = read("apps/browser/macos/Nilla-macOS/Info.plist");
 const windows = read("apps/browser/windows/Ardia/UpdateModule.h");
-const android = read("apps/phone/android/app/src/main/java/com/ardia/browser/android/LabNetworkLog.kt");
+const android = read("apps/phone/android/app/src/main/java/com/nilladigital/nilla/android/LabNetworkLog.kt");
 
 const plistString = (key) => {
   const found = plist.match(new RegExp(`<key>${key}</key>\\s*<string>([^<]*)</string>`));

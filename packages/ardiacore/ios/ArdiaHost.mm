@@ -16,9 +16,9 @@
 #include <string>
 #include <vector>
 
-using namespace ardia_host;
+using namespace nilla_host;
 
-namespace ardia_host {
+namespace nilla_host {
 
 id<NSApplicationDelegate> (^gMakeDelegate)(void);
 
@@ -34,13 +34,13 @@ namespace {
 BOOL gMenuShortcutsReady;
 
 void SendReservedShortcuts() {
-  if (!ArdiaLaunchSequence.shared.engineRunning || !gMenuShortcutsReady) return;
+  if (!NillaLaunchSequence.shared.engineRunning || !gMenuShortcutsReady) return;
   [ArdiaCoreEngine reservedShortcutsChanged];
 }
 
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 void WatchReservedShortcuts() {
   static dispatch_once_t once;
@@ -63,7 +63,7 @@ bool IsTeamSigned() {
   return team;
 }
 
-ArdiaBootstrapDelegate *gBootstrap;
+NillaBootstrapDelegate *gBootstrap;
 
 bool gScratchDataDir = false;
 
@@ -77,7 +77,7 @@ NSMutableDictionary<NSString *, NSDictionary *> *gInstallPrompts = [NSMutableDic
 
 }
 
-@implementation ArdiaHost
+@implementation NillaHost
 
 static void (^gQuitCancelledHandler)(void);
 
@@ -95,7 +95,7 @@ static void (^gQuitCancelledHandler)(void);
 }
 
 + (void)replayInstallPrompts {
-  for (NSDictionary *prompt in gInstallPrompts.allValues) [ArdiaEvents emit:@"extensions.installPrompt" data:prompt];
+  for (NSDictionary *prompt in gInstallPrompts.allValues) [NillaEvents emit:@"extensions.installPrompt" data:prompt];
 }
 
 + (void)resolveExtensionInstallPrompt:(NSString *)requestId accepted:(BOOL)accepted {
@@ -116,14 +116,14 @@ static void (^gQuitCancelledHandler)(void);
 }
 
 + (void)deleteProfileData:(NSString *)profile completion:(void (^)(NSArray<NSString *> *))completion {
-  if (ardia_host::IsPrivateProfile(profile)) return completion(@[]);
+  if (nilla_host::IsPrivateProfile(profile)) return completion(@[]);
   ArdiaCoreEngine *engine = ArdiaCoreEngine.sharedEngine;
-  ArdiaCoreProfile *p = ardia_host::LoadedProfile(profile);
+  ArdiaCoreProfile *p = nilla_host::LoadedProfile(profile);
   if (!profile.length || !engine) return completion(@[ @"data" ]);
   [DeletedProfiles() addObject:profile];
   void (^remove)(ArdiaCoreProfile *) = ^(ArdiaCoreProfile *loaded) {
     if (!loaded) {
-      NSString *path = [gDataDirectory stringByAppendingPathComponent:ardia_host::ProfileDirectoryName(profile)];
+      NSString *path = [gDataDirectory stringByAppendingPathComponent:nilla_host::ProfileDirectoryName(profile)];
       [NSFileManager.defaultManager removeItemAtPath:path error:nil];
       return completion([NSFileManager.defaultManager fileExistsAtPath:path] ? @[ @"files" ] : @[]);
     }
@@ -142,14 +142,14 @@ static void (^gQuitCancelledHandler)(void);
 
 + (void)releaseProfile:(NSString *)profile {
   ArdiaCoreEngine *engine = ArdiaCoreEngine.sharedEngine;
-  ArdiaCoreProfile *p = ardia_host::LoadedProfile(profile);
-  if (ardia_host::IsPrivateProfile(profile)) {
+  ArdiaCoreProfile *p = nilla_host::LoadedProfile(profile);
+  if (nilla_host::IsPrivateProfile(profile)) {
     if (profile) [ReleasedPrivateNames() addObject:profile];
     [Profiles() removeObjectForKey:profile];
     NSArray *waiting = ProfileWaiters()[profile];
     [ProfileWaiters() removeObjectForKey:profile];
     for (void (^waiter)(ArdiaCoreProfile *) in waiting) waiter(nil);
-    ardia_host::ForgetPrivateNavigationDownloads(profile);
+    nilla_host::ForgetPrivateNavigationDownloads(profile);
     if ([Profiles().allValues containsObject:p]) return;
   }
   if (p) [engine releaseProfile:p];
@@ -158,17 +158,17 @@ static void (^gQuitCancelledHandler)(void);
 + (NSDictionary<NSString *, id> *)unloadIdleProfile:(NSString *)profile {
   profile = profile ?: @"";
   ArdiaCoreEngine *engine = ArdiaCoreEngine.sharedEngine;
-  ArdiaCoreProfile *p = ardia_host::LoadedProfile(profile);
+  ArdiaCoreProfile *p = nilla_host::LoadedProfile(profile);
   NSDictionary * (^busy)(NSString *) = ^(NSString *heldBy) {
     return @{@"status" : @"busy", @"tabs" : @[], @"heldBy" : heldBy};
   };
   if (!p) return ProfileWaiters()[profile] ? busy(@"profile") : @{@"status" : @"released", @"tabs" : @[]};
-  if (!engine || p.offTheRecord || ardia_host::IsPrivateSessionId(profile) || ardia_host::IsDeletedProfile(profile)) return busy(@"profile");
-  NSMutableArray<ArdiaWebView *> *views = [NSMutableArray array];
+  if (!engine || p.offTheRecord || nilla_host::IsPrivateSessionId(profile) || nilla_host::IsDeletedProfile(profile)) return busy(@"profile");
+  NSMutableArray<NillaWebView *> *views = [NSMutableArray array];
   NSMutableArray<ArdiaCoreTab *> *hosted = [NSMutableArray array];
-  for (ArdiaWindowController *controller in ArdiaWindowController.all) {
+  for (NillaWindowController *controller in NillaWindowController.all) {
     for (ArdiaCoreTab *tab in [controller.coreWindow tabsForProfile:p]) {
-      ArdiaWebView *view = [ArdiaTabRegistry viewForTab:tab];
+      NillaWebView *view = [NillaTabRegistry viewForTab:tab];
       if (!view) return busy(@"tab");
       if (NSString *heldBy = view.keptFromUnloadingBy) return busy(heldBy);
       [views addObject:view];
@@ -177,7 +177,7 @@ static void (^gQuitCancelledHandler)(void);
   }
   if (NSString *heldBy = [engine sleepIdleProfile:p hostedTabs:hosted]) return busy(heldBy);
   NSMutableArray<NSString *> *tabs = [NSMutableArray array];
-  for (ArdiaWebView *view in views) {
+  for (NillaWebView *view in views) {
     NSString *key = view.transferKey;
     if (![view unloadKeepingHistory]) return @{@"status" : @"busy", @"tabs" : tabs, @"heldBy" : @"history"};
     [tabs addObject:key];
@@ -186,16 +186,16 @@ static void (^gQuitCancelledHandler)(void);
 }
 
 + (NSArray<NSString *> *)loadedProfiles {
-  return ardia_host::LoadedDataProfileNames();
+  return nilla_host::LoadedDataProfileNames();
 }
 
 + (BOOL)stopCapture:(NSString *)tabId {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
   return [tab stopCapture];
 }
 
 + (BOOL)showAutofillSuggestions:(NSString *)tabId passwords:(BOOL)passwords {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
   return [tab showAutofillSuggestions:passwords];
 }
 
@@ -217,7 +217,7 @@ static void (^gQuitCancelledHandler)(void);
 }
 
 + (BOOL)devShowBluetoothChooser:(NSString *)tabId unauthorized:(BOOL)unauthorized {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
   return [tab devShowBluetoothChooser:unauthorized];
 }
 
@@ -226,13 +226,13 @@ static void (^gQuitCancelledHandler)(void);
 }
 
 + (BOOL)shareTabInstead:(NSString *)capturerTabId target:(NSString *)targetTabId {
-  ArdiaCoreTab *capturer = ardia_host::TabWithAppTabId(capturerTabId);
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(targetTabId);
+  ArdiaCoreTab *capturer = nilla_host::TabWithAppTabId(capturerTabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(targetTabId);
   return capturer && [tab shareThisTabInsteadFor:capturer];
 }
 
 + (BOOL)showCastDialog:(NSString *)tabId {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
   return [tab showCastDialog];
 }
 
@@ -249,7 +249,7 @@ static void (^gQuitCancelledHandler)(void);
 }
 
 + (void)watchCastRoutes:(NSString *)profileName {
-  ardia_host::WithProfile(profileName, ^(ArdiaCoreProfile *profile) {
+  nilla_host::WithProfile(profileName, ^(ArdiaCoreProfile *profile) {
     [profile watchCastRoutes];
   });
 }
@@ -263,25 +263,25 @@ static void (^gQuitCancelledHandler)(void);
 }
 
 + (NSDictionary *)actionStates:(NSString *)tabId extensions:(NSArray<NSString *> *)ids {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
   return [tab actionStatesForExtensions:ids] ?: @{};
 }
 
 + (NSString *)sidePanelURL:(NSString *)tabId extension:(NSString *)extensionId {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
   return [tab sidePanelURLForExtension:extensionId];
 }
 
 + (BOOL)isPrivateProfile:(NSString *)profile {
-  return ardia_host::IsPrivateProfile(profile);
+  return nilla_host::IsPrivateProfile(profile);
 }
 
 + (NSString *)baseProfileOf:(NSString *)profile {
-  return ardia_host::OriginalProfileName(profile);
+  return nilla_host::OriginalProfileName(profile);
 }
 
 + (int)chromeTabIdOfTab:(NSString *)tabId {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
   return tab ? tab.tabId : -1;
 }
 
@@ -291,7 +291,7 @@ static NSMutableDictionary<NSString *, ArdiaCoreWindow *> *OffscreenWindows() {
 }
 
 static ArdiaCoreWindow *OffscreenWindowFor(ArdiaCoreProfile *profile) {
-  NSString *name = ardia_host::ProfileName(profile);
+  NSString *name = nilla_host::ProfileName(profile);
   ArdiaCoreWindow *window = OffscreenWindows()[name];
   if (window.window) return window;
   window = [[ArdiaCoreWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1280, 800)];
@@ -307,8 +307,8 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
 }
 
 + (void)cliMoveOffscreen:(NSString *)tabId tries:(NSInteger)tries completion:(void (^)(NSDictionary<NSString *, id> *moved))completion {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
-  ArdiaWebView *view = tab ? [ArdiaTabRegistry viewForTab:tab] : nil;
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
+  NillaWebView *view = tab ? [NillaTabRegistry viewForTab:tab] : nil;
   if (!tab || tab.closed || tab.discarded || !view) return completion(OffscreenRefusal(@"That tab has no page loaded."));
   ArdiaCoreWindow *window = OffscreenWindowFor(tab.profile);
   const ArdiaCoreAdoption adoption = window ? [window canAdoptTab:tab] : ArdiaCoreAdoptionRefused;
@@ -318,11 +318,11 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
     });
     return;
   }
-  if (adoption != ArdiaCoreAdoptionAdopted) return completion(OffscreenRefusal(@"Ardia couldn't take that tab off-screen."));
+  if (adoption != ArdiaCoreAdoptionAdopted) return completion(OffscreenRefusal(@"Nilla couldn't take that tab off-screen."));
   if (![view releasePageForOffscreen]) return completion(OffscreenRefusal(@"That tab is shown in a window, so it can't go off-screen."));
   if ([window adoptTab:tab] != ArdiaCoreAdoptionAdopted) {
     [tab close];
-    return completion(OffscreenRefusal(@"Ardia couldn't take that tab off-screen, and closed it."));
+    return completion(OffscreenRefusal(@"Nilla couldn't take that tab off-screen, and closed it."));
   }
   NSView *page = tab.view, *host = window.hostView;
   [page removeFromSuperview];
@@ -339,7 +339,7 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
 
 + (void)cliCloseOffscreenTabs {
   for (ArdiaCoreWindow *window in OffscreenWindows().allValues)
-    for (ArdiaCoreProfile *profile in ardia_host::LoadedProfiles())
+    for (ArdiaCoreProfile *profile in nilla_host::LoadedProfiles())
       for (ArdiaCoreTab *tab in [[window tabsForProfile:profile] copy]) [tab close];
 }
 
@@ -360,8 +360,8 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
   };
   dispatch_group_t pending = dispatch_group_create();
   for (NSString *tabId in tabIds) {
-    ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
-    if (!tab || tab.closed || tab.discarded || [ArdiaTabRegistry viewForTab:tab].awaitsFirstDocument) {
+    ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
+    if (!tab || tab.closed || tab.discarded || [NillaTabRegistry viewForTab:tab].awaitsFirstDocument) {
       record(tabId, nil);
       continue;
     }
@@ -399,7 +399,7 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
       @"height" : @(screen.frame.size.height),
     }];
   }
-  if (ArdiaLaunchConfig.shared.background) return sources;
+  if (NillaLaunchConfig.shared.background) return sources;
   NSArray *windows = CFBridgingRelease(
       CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements, kCGNullWindowID));
   for (NSDictionary *w in windows) {
@@ -423,14 +423,14 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
 }
 
 + (BOOL)screenRecordingAllowed {
-  NSString *answer = [ArdiaLaunchConfig.shared testValue:@"screenRecording"];
+  NSString *answer = [NillaLaunchConfig.shared testValue:@"screenRecording"];
   if (answer.length) return [answer isEqualToString:@"allowed"];
-  if (ArdiaLaunchConfig.shared.background) return NO;
+  if (NillaLaunchConfig.shared.background) return NO;
   return CGPreflightScreenCaptureAccess();
 }
 
 + (BOOL)mayCaptureDesktopSource:(NSString *)sourceId {
-  if (!ArdiaLaunchConfig.shared.background) return YES;
+  if (!NillaLaunchConfig.shared.background) return YES;
   if (![sourceId hasPrefix:@"screen:"] && ![sourceId hasPrefix:@"window:"]) return YES;
   NSLog(@"[ardia] background mode: %@ capture refused, it would ask macOS for Screen Recording", [sourceId componentsSeparatedByString:@":"].firstObject);
   return NO;
@@ -438,7 +438,7 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
 
 + (BOOL)requestScreenRecording {
   if (self.screenRecordingAllowed) return YES;
-  if (ArdiaLaunchConfig.shared.background) {
+  if (NillaLaunchConfig.shared.background) {
     NSLog(@"[ardia] background mode: Screen Recording request not shown");
     return NO;
   }
@@ -449,7 +449,7 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
 }
 
 + (BOOL)isStarted {
-  return ArdiaLaunchSequence.shared.engineRunning;
+  return NillaLaunchSequence.shared.engineRunning;
 }
 
 + (NSString *)dataDirectory {
@@ -457,44 +457,44 @@ static NSDictionary<NSString *, id> *OffscreenRefusal(NSString *reason) {
 }
 
 + (void)beginPressLoop:(NSString *)name {
-  ardia_host::BeginPressLoop(name);
+  nilla_host::BeginPressLoop(name);
 }
 
 + (void)endPressLoop {
-  ardia_host::EndPressLoop();
+  nilla_host::EndPressLoop();
 }
 
 + (void)notePointer:(NSEvent *)event swallowedBy:(NSString *)name {
-  ardia_host::NotePointer(event, name);
+  nilla_host::NotePointer(event, name);
 }
 
 + (NSDictionary<NSString *, id> *)engineInfo {
   ArdiaCoreEngine *engine = ArdiaCoreEngine.sharedEngine;
   NSInteger chromeWindows = 0;
-  for (ArdiaWindowController *c in ArdiaWindowController.all) chromeWindows += c.coreWindow ? 1 : 0;
+  for (NillaWindowController *c in NillaWindowController.all) chromeWindows += c.coreWindow ? 1 : 0;
   return @{
     @"pid" : @(NSProcessInfo.processInfo.processIdentifier),
     @"dataDirectory" : gDataDirectory ?: @"",
     @"engine" : @"ardiacore",
     @"chromiumVersion" : engine.chromiumVersion ?: @"",
     @"liveBrowsers" : @0,
-    @"popupWindows" : @(ardia_host::PopupWindowCount()),
+    @"popupWindows" : @(nilla_host::PopupWindowCount()),
     @"chromeWindows" : @(chromeWindows),
     @"keepAlive" : engine.keepAliveState ?: @"",
     @"pictureInPictureCloses" : engine.pictureInPictureCloses ?: @"",
     @"lastUsedProfile" : engine.defaultProfile.name ?: @"",
-    @"focus" : ardia_host::FocusState(),
+    @"focus" : nilla_host::FocusState(),
   };
 }
 
 + (NSArray<NSDictionary<NSString *, id> *> *)chromeWindows {
   NSMutableArray *list = [NSMutableArray array];
-  for (ArdiaWindowController *c in ArdiaWindowController.all) {
+  for (NillaWindowController *c in NillaWindowController.all) {
     NSWindow *w = c.coreWindow.window;
     if (!w) continue;
     ArdiaCoreProfile *active = c.coreWindow.activeProfile;
     [list addObject:@{
-      @"profile" : ardia_host::ProfileName(active),
+      @"profile" : nilla_host::ProfileName(active),
       @"window" : @(w.windowNumber),
       @"frame" : NSStringFromRect(w.frame),
       @"alpha" : @(w.alphaValue),

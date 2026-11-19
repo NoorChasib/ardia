@@ -5,7 +5,7 @@ import * as bundledList from "../../../../../packages/core/src/bangList.ts";
 import { bangListServer, docs, heldSaves } from "../../test-native/index.ts";
 
 globalThis.require = (id) => {
-  assert.equal(id, "@ardia/core/src/bangList.ts");
+  assert.equal(id, "@nilla/core/src/bangList.ts");
   return bundledList;
 };
 const { bangStatus, bangsFor, createBangSubmitter, loadBangs, mayBeBang, refreshBangs, refreshBangsOnce, resetBangsForTests } = await import("./bangs.ts");
@@ -158,7 +158,7 @@ test("a new list and its ETag are saved as one document, replace the table and c
   assert.equal((await refreshBangs()).result, "updated");
   assert.equal(bangsFor("!").get("new7")?.template, "https://new7.example/?q={searchTerms}");
   assert.equal(bangsFor("!").get("gh")?.name, "new gh");
-  assert.ok(docs.get("bangs.txt").startsWith('ardia-bangs 1\t"v2"\n'));
+  assert.ok(docs.get("bangs.txt").startsWith('nilla-bangs 1\t"v2"\n'));
   resetBangsForTests();
   assert.equal((await loadBangs()).get("new7")?.name, "new 7");
   assert.equal(bangStatus().source, "stored");
@@ -191,7 +191,7 @@ test("a failed, invalid or incomplete response keeps the last good list, and wai
     assert.equal((await refreshBangs()).result, "failed");
     assert.equal(calls.length, 1);
     assert.equal(bangsFor("!").get("good3")?.name, "good 3");
-    assert.ok(docs.get("bangs.txt").startsWith('ardia-bangs 1\t"good"\n'));
+    assert.ok(docs.get("bangs.txt").startsWith('nilla-bangs 1\t"good"\n'));
     assert.equal((await refreshBangs()).result, "fresh");
     resetBangsForTests();
     assert.equal((await loadBangs()).get("good3")?.name, "good 3");
@@ -200,7 +200,7 @@ test("a failed, invalid or incomplete response keeps the last good list, and wai
 
 test("a corrupt stored list falls back to the bundled one", async () => {
   const broken = Array.from({ length: 1200 }, (_, i) => `bad${i}\tBroken\thttps://bad host/`).join("\n");
-  for (const doc of [bangDocument('"x"', broken), "garbage", `ardia-bangs 1\t"x"\n${"a\tb\tc.example/{s}\n".repeat(10)}`]) {
+  for (const doc of [bangDocument('"x"', broken), "garbage", `nilla-bangs 1\t"x"\n${"a\tb\tc.example/{s}\n".repeat(10)}`]) {
     resetBangsForTests();
     docs.set("bangs.txt", doc);
     assert.equal((await loadBangs()).get("gh")?.name, "GitHub");

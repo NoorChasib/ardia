@@ -1,16 +1,16 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
-import com.ardia.blocking.BlockingCategory
-import com.ardia.blocking.BlockingSettings
-import com.ardia.blocking.ContentBlocker
-import com.ardia.blocking.ContentBlockerState
-import com.ardia.blocking.FilterListState
-import com.ardia.blocking.FilterLists
-import com.ardia.blocking.FilterListsState
-import com.ardia.blocking.HttpFilterListDownloader
-import com.ardia.blocking.SharedPreferencesBlockingStore
-import com.ardia.browser.PageFilter
+import com.nilladigital.nilla.blocking.BlockingCategory
+import com.nilladigital.nilla.blocking.BlockingSettings
+import com.nilladigital.nilla.blocking.ContentBlocker
+import com.nilladigital.nilla.blocking.ContentBlockerState
+import com.nilladigital.nilla.blocking.FilterListState
+import com.nilladigital.nilla.blocking.FilterLists
+import com.nilladigital.nilla.blocking.FilterListsState
+import com.nilladigital.nilla.blocking.HttpFilterListDownloader
+import com.nilladigital.nilla.blocking.SharedPreferencesBlockingStore
+import com.nilladigital.nilla.PageFilter
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -125,14 +125,14 @@ class PhoneBlocking(context: Context) {
     }
 
     companion object {
-        const val PREFERENCES = "ardia-blocking"
+        const val PREFERENCES = "nilla-blocking"
         private const val FOLDER = "Blocking"
         private const val KEY_ENABLED = "blocking.enabled"
     }
 }
 
 private class EnginePageFilter(
-    private val filter: com.ardia.blocking.PageFilter,
+    private val filter: com.nilladigital.nilla.blocking.PageFilter,
     private val isOn: () -> Boolean,
 ) : PageFilter {
     override fun blocks(requestUrl: String, pageUrl: String?, isMainFrame: Boolean): Boolean =

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, type RefObject } from "react";
 import type { View } from "react-native";
-import type { DropUpdate, DroppedItem, FileDropAreaProps } from "@ardia/shell";
+import type { DropUpdate, DroppedItem, FileDropAreaProps } from "@nilla/shell";
 import type { Fiber } from "../fiber";
 import { requireNativeModule } from "../modules";
 import type { FileDropModule } from "../nativeModuleTypes";
@@ -18,7 +18,7 @@ type AreaEntry = { windowId: string; measure: () => void; deliver: (update: Drop
 const MOST_ANCESTORS = 4096;
 const ACCEPTS: readonly DropAccepts[] = ["links", "linksAndText", "extensionPackages"];
 
-const fileDrop = () => requireNativeModule<Pick<FileDropModule, "setDropArea" | "removeDropArea" | "addListener">>("ArdiaFileDrop");
+const fileDrop = () => requireNativeModule<Pick<FileDropModule, "setDropArea" | "removeDropArea" | "addListener">>("NillaFileDrop");
 
 const areas = new Map<string, AreaEntry>();
 const windowIdsByRoot = new Map<number, string>();

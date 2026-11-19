@@ -1,4 +1,4 @@
-package com.ardia.browser.android.system
+package com.nilladigital.nilla.android.system
 
 import android.annotation.SuppressLint
 import android.app.PendingIntent
@@ -6,8 +6,8 @@ import android.content.Intent
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
-import com.ardia.appmodel.SystemLink
-import com.ardia.browser.android.SystemIntents
+import com.nilladigital.nilla.appmodel.SystemLink
+import com.nilladigital.nilla.android.SystemIntents
 
 class SearchTileService : TileService() {
     override fun onStartListening() {

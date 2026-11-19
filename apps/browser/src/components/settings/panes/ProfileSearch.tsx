@@ -1,4 +1,4 @@
-import { engineHost, type SearchEngine } from "@ardia/core";
+import { engineHost, type SearchEngine } from "@nilla/core";
 import { Box, Button, Checkbox, DialogActions, DialogTitle, PopUp, Sheet, space, Symbol, Text, TextField } from "../../ui";
 import { useState } from "react";
 import { View } from "react-native";
@@ -89,7 +89,7 @@ export function OtherEnginesPage({ profileId }: { profileId: string }) {
 
       {fromExtensions.length > 0 && (
         <>
-          <SectionHeader title="From extensions" description="Some extensions can add search engines to Ardia." />
+          <SectionHeader title="From extensions" description="Some extensions can add search engines to Nilla." />
           <Group>
             {fromExtensions.map((e) => (
               <EngineRow key={e.id} engine={e} selected={selectedId === e.id} locked={locked} />

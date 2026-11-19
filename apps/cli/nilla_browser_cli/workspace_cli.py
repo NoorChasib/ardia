@@ -1,22 +1,22 @@
 import json
 import sys
 
-from ardia_cli import control
-from ardia_cli.control import MethodError, Unreachable
-from ardia_cli.endpoint import DATA_DIR_HELP
-from ardia_cli.printable import complain, say, shown
+from nilla_browser_cli import control
+from nilla_browser_cli.control import MethodError, Unreachable
+from nilla_browser_cli.endpoint import DATA_DIR_HELP
+from nilla_browser_cli.printable import complain, say, shown
 
 APPLY_TIMEOUT = 120.0
 TINTS = ("grey", "blue", "red", "yellow", "green", "pink", "purple", "cyan", "orange")
 COLORS = ("neutral", "none", *TINTS)
 COLOR_HELP = f"{', '.join(TINTS)}; neutral (the default: a box only under the pointer) or none (no box)"
-ICON_HELP = "an emoji from Ardia's icon picker (🚀), symbol:<SF Symbol name> (symbol:star), or none"
+ICON_HELP = "an emoji from Nilla's icon picker (🚀), symbol:<SF Symbol name> (symbol:star), or none"
 EXIT_STATUS = """\
 Exit status: 0 done, 1 refused, a bad request or a target that isn't there (nothing after the failing operation
-ran), 2 Ardia can't be reached (or the connection dropped after the request went out, so it may or may not have run).
+ran), 2 Nilla can't be reached (or the connection dropped after the request went out, so it may or may not have run).
 """
 TABS_DESCRIPTION = f"""\
-List and organize Ardia's tabs: the same actions as the sidebar, through the app's own store, so pins, groups and
+List and organize Nilla's tabs: the same actions as the sidebar, through the app's own store, so pins, groups and
 sync behave exactly as when you do it by hand. Nothing here changes which tab a window shows unless you ask
 (tabs open --activate, tabs activate) or close the tab it shows. Private windows are never reachable.
 
@@ -30,20 +30,20 @@ running in process N. With --json each tab gets "pid", "cpu" and "memory" (bytes
 no process. Tabs that share a process show that process's numbers. The first --usage in a while takes about 2 s,
 since CPU is measured over time.
 
-Ids: tab-… for tabs, g-… for groups, w-… for windows (ardia tabs shows them). --group takes a group's id or its
+Ids: tab-… for tabs, g-… for groups, w-… for windows (nilla tabs shows them). --group takes a group's id or its
 name (case-insensitive, in that window; an exact id wins, and a name two groups share is refused with their ids).
 --before and --after take a tab or a group id.
 
 {EXIT_STATUS}
 Examples:
-  ardia tabs --json
-  ardia tabs --usage
-  ardia tabs --pid 61234
-  ardia tabs open https://example.com news.ycombinator.com --group Work
-  ardia tabs move tab-1 tab-2 --group Work
-  ardia tabs move tab-3 --top
-  ardia tabs pin tab-4 --row
-  ardia tabs sleep tab-5 tab-6
+  nilla-browser tabs --json
+  nilla-browser tabs --usage
+  nilla-browser tabs --pid 61234
+  nilla-browser tabs open https://example.com news.ycombinator.com --group Work
+  nilla-browser tabs move tab-1 tab-2 --group Work
+  nilla-browser tabs move tab-3 --top
+  nilla-browser tabs pin tab-4 --row
+  nilla-browser tabs sleep tab-5 tab-6
 """
 GROUPS_DESCRIPTION = f"""\
 List and organize tab groups: create (around tabs you name, URLs you open, or one new tab), rename, set the icon,
@@ -56,11 +56,11 @@ id wins, and a name two groups share is refused with their ids.
 
 {EXIT_STATUS}
 Examples:
-  ardia groups create tab-1 tab-2 --name Work --icon 🚀 --color blue
-  ardia groups create --parent Work --url https://a.example --url https://b.example --name Reading
-  ardia groups update Work --collapse --icon symbol:briefcase
-  ardia groups move Reading --parent Projects
-  ardia groups ungroup Imported
+  nilla-browser groups create tab-1 tab-2 --name Work --icon 🚀 --color blue
+  nilla-browser groups create --parent Work --url https://a.example --url https://b.example --name Reading
+  nilla-browser groups update Work --collapse --icon symbol:briefcase
+  nilla-browser groups move Reading --parent Projects
+  nilla-browser groups ungroup Imported
 """
 APPLY_DESCRIPTION = f"""\
 Apply several tab and group operations in one call, in order, without touching the tab each window shows. Reads
@@ -74,7 +74,7 @@ group.ungroup, group.close, group.delete.
 
 {EXIT_STATUS}
 Example:
-  ardia apply <<'EOF'
+  nilla-browser apply <<'EOF'
   [{{"op": "group.create", "urls": ["https://a.example", "https://b.example"], "name": "Research", "pinned": false}},
    {{"op": "group.create", "parent": "$0", "tabs": ["tab-7"], "name": "Papers", "icon": "📚"}},
    {{"op": "group.update", "group": "$1", "collapsed": true}}]
@@ -140,7 +140,7 @@ def add_parsers(commands, formatter):
     rename.add_argument("name", nargs="?", metavar="NAME", help="the name")
     icon = common(verbs.add_parser("icon", help="set a tab's icon (no ICON resets it)", description="Set a tab's icon, as Change Icon… does; without ICON, the site's icon comes back."))
     icon.add_argument("id", metavar="ID", help="a tab id")
-    icon.add_argument("icon", nargs="?", metavar="ICON", help="an emoji from Ardia's icon picker, symbol:<SF Symbol name>, or none (a pinned row: its title alone)")
+    icon.add_argument("icon", nargs="?", metavar="ICON", help="an emoji from Nilla's icon picker, symbol:<SF Symbol name>, or none (a pinned row: its title alone)")
 
     groups = common(commands.add_parser("groups", help="list and organize tab groups", description=GROUPS_DESCRIPTION, formatter_class=formatter), "print JSON")
     groups.add_argument("--window", metavar="ID", help="only this window")
@@ -284,7 +284,7 @@ def group_op(args) -> dict:
 
 
 def note_error(code) -> None:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     telemetry.note_error_code(code)
 
@@ -292,14 +292,14 @@ def note_error(code) -> None:
 def method_failed(command: str, error: MethodError) -> int:
     note_error(error.code)
     if error.code == "unknown_method":
-        complain(f"ardia {command}: this Ardia doesn't know {command} yet; update Ardia")
+        complain(f"nilla {command}: this Nilla doesn't know {command} yet; update Nilla")
     else:
-        complain(f"ardia {command}: {error.message}")
+        complain(f"nilla {command}: {error.message}")
     return 1
 
 
 def apply_ops(args, command: str, ops: list) -> int:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     telemetry.note_count("batch_steps", len(ops))
     try:
@@ -307,7 +307,7 @@ def apply_ops(args, command: str, ops: list) -> int:
     except Unreachable as error:
         error.noted()
         if error.sent:
-            complain(f"ardia {command}: the connection dropped after the request went out, so it may or may not have run ({error})")
+            complain(f"nilla {command}: the connection dropped after the request went out, so it may or may not have run ({error})")
         else:
             complain(f"ardia: {error}")
         return 2
@@ -326,7 +326,7 @@ def apply_ops(args, command: str, ops: list) -> int:
         message = error.get("message") if isinstance(error, dict) else "it failed"
         ran = reply.get("applied", 0)
         tail = f" ({ran} of {len(ops)} operations ran)" if len(ops) > 1 else ""
-        complain(f"ardia {command}: {message}{tail}")
+        complain(f"nilla {command}: {message}{tail}")
         return 1
     return 0
 
@@ -374,7 +374,7 @@ def cmd_tabs(args) -> int:
         try:
             op = tab_op(args)
         except ValueError as error:
-            complain(f"ardia tabs {args.tabs_command}: {error}")
+            complain(f"nilla tabs {args.tabs_command}: {error}")
             return 1
         return apply_ops(args, f"tabs {args.tabs_command}", [op])
     tree = read_workspace(args, "tabs")
@@ -399,7 +399,7 @@ def cmd_groups(args) -> int:
         try:
             op = group_op(args)
         except ValueError as error:
-            complain(f"ardia groups {args.groups_command}: {error}")
+            complain(f"nilla groups {args.groups_command}: {error}")
             return 1
         return apply_ops(args, f"groups {args.groups_command}", [op])
     tree = read_workspace(args, "groups")
@@ -419,14 +419,14 @@ def cmd_apply(args) -> int:
         text = sys.stdin.read() if args.file in (None, "-") else open(args.file, encoding="utf-8").read()
         doc = json.loads(text)
     except OSError as error:
-        complain(f"ardia apply: {args.file}: {error.strerror or error}")
+        complain(f"nilla apply: {args.file}: {error.strerror or error}")
         return 1
     except ValueError as error:
-        complain(f"ardia apply: that isn't JSON ({error})")
+        complain(f"nilla apply: that isn't JSON ({error})")
         return 1
     ops = doc.get("ops") if isinstance(doc, dict) else doc
     if not isinstance(ops, list) or not ops:
-        complain('ardia apply: give a list of operations, or {"ops": [...]}')
+        complain('nilla apply: give a list of operations, or {"ops": [...]}')
         return 1
     return apply_ops(args, "apply", ops)
 
@@ -445,7 +445,7 @@ def read_workspace(args, command: str):
     except MethodError as error:
         if usage and error.code == "bad_request" and "not usage" in error.message:
             note_error("unknown_method")
-            complain(f"ardia {command}: this Ardia doesn't know --usage and --pid yet; update Ardia")
+            complain(f"nilla {command}: this Nilla doesn't know --usage and --pid yet; update Nilla")
             return 1
         return method_failed(command, error)
 
@@ -473,18 +473,18 @@ def print_usage(tabs: list) -> None:
     for tab in tabs:
         say(usage_line(tab))
     if tabs and not any(isinstance(tab.get("pid"), int) for tab in tabs) and any(tab.get("memory") is not None for tab in tabs):
-        say("(this Ardia doesn't report process ids yet, only CPU and memory; update Ardia for the PID column)")
+        say("(this Nilla doesn't report process ids yet, only CPU and memory; update Nilla for the PID column)")
 
 
 def print_process_tabs(args, tabs: list) -> int:
     if not any(isinstance(tab.get("pid"), int) for tab in tabs):
         note_error("no_pid")
-        complain("ardia tabs: this Ardia doesn't report tab process ids yet; update Ardia (ardia tabs --usage still shows CPU and memory)")
+        complain("nilla tabs: this Nilla doesn't report tab process ids yet; update Nilla (nilla tabs --usage still shows CPU and memory)")
         return 1
     found = by_heat([tab for tab in tabs if tab.get("pid") == args.pid])
     if not found:
         note_error("no_tab")
-        complain(f"ardia tabs: no tab runs in process {args.pid}; it may be Ardia itself, its GPU or a utility process, an extension, or a frame of another site (ardia tabs --usage lists every tab's process)")
+        complain(f"nilla tabs: no tab runs in process {args.pid}; it may be Nilla itself, its GPU or a utility process, an extension, or a frame of another site (nilla tabs --usage lists every tab's process)")
         return 1
     if args.json:
         say(json.dumps(found, indent=2, ensure_ascii=False))
@@ -578,5 +578,5 @@ def run(args, parser) -> int:
     try:
         return handler(args)
     except KeyboardInterrupt:
-        complain(f"ardia {args.command}: interrupted")
+        complain(f"nilla {args.command}: interrupted")
         return 130

@@ -1,13 +1,13 @@
-package com.ardia.browser.android
+package com.nilladigital.nilla.android
 
 import android.app.Application
 import android.content.res.Configuration
-import com.ardia.phone.PhoneLab
-import com.ardia.phone.PhoneSync
-import com.ardia.phone.SyncOffer
-import com.ardia.phone.UpgradeGate
-import com.ardia.sync.SyncController
-import com.ardia.sync.SyncControllerOwner
+import com.nilladigital.nilla.phone.PhoneLab
+import com.nilladigital.nilla.phone.PhoneSync
+import com.nilladigital.nilla.phone.SyncOffer
+import com.nilladigital.nilla.phone.UpgradeGate
+import com.nilladigital.nilla.sync.SyncController
+import com.nilladigital.nilla.sync.SyncControllerOwner
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -34,7 +34,7 @@ class MainApplication : Application(), ReactApplication, SyncControllerOwner {
             ReleaseLevel.valueOf(BuildConfig.REACT_NATIVE_RELEASE_LEVEL.uppercase())
         }.getOrDefault(ReleaseLevel.STABLE)
         if (PhoneLab.isOn) {
-            android.util.Log.i("PAGELAB", "PAGELAB build ${getString(R.string.ardia_build_commit)} dirty: ${getString(R.string.ardia_build_dirty)} from the ${getString(R.string.ardia_build_source)}; native ${getString(R.string.ardia_build_native)}")
+            android.util.Log.i("PAGELAB", "PAGELAB build ${getString(R.string.nilla_build_commit)} dirty: ${getString(R.string.nilla_build_dirty)} from the ${getString(R.string.nilla_build_source)}; native ${getString(R.string.nilla_build_native)}")
         }
         UpgradeGate.install(this)
         SyncOffer.retireBackground(this)

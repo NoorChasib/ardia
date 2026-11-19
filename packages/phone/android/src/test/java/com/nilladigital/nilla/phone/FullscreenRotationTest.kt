@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.view.View
-import com.ardia.browser.FullscreenVideo
+import com.nilladigital.nilla.FullscreenVideo
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith

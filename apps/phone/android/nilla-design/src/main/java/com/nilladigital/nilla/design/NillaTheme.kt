@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import android.app.UiModeManager
 import android.content.Context
@@ -18,9 +18,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-object ArdiaThemeState {
+object NillaThemeState {
     val isDark: Boolean
-        @Composable @ReadOnlyComposable get() = LocalArdiaDarkTheme.current
+        @Composable @ReadOnlyComposable get() = LocalNillaDarkTheme.current
 
     val reduceMotion: Boolean
         @Composable @ReadOnlyComposable get() = LocalReduceMotion.current
@@ -30,7 +30,7 @@ object ArdiaThemeState {
 
     @Composable
     @ReadOnlyComposable
-    fun motion(full: ArdiaMotion, reduced: ArdiaMotion = Motion.reducedFade): ArdiaMotion = if (LocalReduceMotion.current) reduced else full
+    fun motion(full: NillaMotion, reduced: NillaMotion = Motion.reducedFade): NillaMotion = if (LocalReduceMotion.current) reduced else full
 }
 
 object SystemAccessibility {
@@ -45,7 +45,7 @@ object SystemAccessibility {
 }
 
 @Composable
-fun ArdiaTheme(
+fun NillaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     look: ProfileLook = ProfileLook.plum,
     reduceMotion: Boolean? = null,
@@ -56,37 +56,37 @@ fun ArdiaTheme(
     val context = LocalContext.current
     val systemReduceMotion = remember(context) { SystemAccessibility.reduceMotion(context) }
     val systemContrast = remember(context) { SystemAccessibility.increasedContrast(context) }
-    val colors = remember(darkTheme, look) { ArdiaMaterial.colorScheme(darkTheme, look) }
+    val colors = remember(darkTheme, look) { NillaMaterial.colorScheme(darkTheme, look) }
     CompositionLocalProvider(
-        LocalArdiaDarkTheme provides darkTheme,
+        LocalNillaDarkTheme provides darkTheme,
         LocalProfileLook provides look,
         LocalReduceMotion provides (reduceMotion ?: systemReduceMotion),
         LocalReduceTransparency provides reduceTransparency,
         LocalIncreasedContrast provides (increasedContrast ?: systemContrast),
     ) {
-        MaterialTheme(colorScheme = colors, typography = ArdiaMaterial.typography) {
+        MaterialTheme(colorScheme = colors, typography = NillaMaterial.typography) {
             CompositionLocalProvider(LocalContentColor provides SystemPalette.label.resolve(darkTheme), content = content)
         }
     }
 }
 
-object ArdiaMaterial {
+object NillaMaterial {
     val typography = Typography(
-        displayLarge = ArdiaType.largeTitle,
-        displayMedium = ArdiaType.largeTitle,
-        displaySmall = ArdiaType.title,
-        headlineLarge = ArdiaType.title,
-        headlineMedium = ArdiaType.title2,
-        headlineSmall = ArdiaType.title3,
-        titleLarge = ArdiaType.title2.bold,
-        titleMedium = ArdiaType.headline,
-        titleSmall = ArdiaType.subheadline.semibold,
-        bodyLarge = ArdiaType.body,
-        bodyMedium = ArdiaType.subheadline,
-        bodySmall = ArdiaType.footnote,
-        labelLarge = ArdiaType.subheadline.semibold,
-        labelMedium = ArdiaType.caption.semibold,
-        labelSmall = ArdiaType.caption2,
+        displayLarge = NillaType.largeTitle,
+        displayMedium = NillaType.largeTitle,
+        displaySmall = NillaType.title,
+        headlineLarge = NillaType.title,
+        headlineMedium = NillaType.title2,
+        headlineSmall = NillaType.title3,
+        titleLarge = NillaType.title2.bold,
+        titleMedium = NillaType.headline,
+        titleSmall = NillaType.subheadline.semibold,
+        bodyLarge = NillaType.body,
+        bodyMedium = NillaType.subheadline,
+        bodySmall = NillaType.footnote,
+        labelLarge = NillaType.subheadline.semibold,
+        labelMedium = NillaType.caption.semibold,
+        labelSmall = NillaType.caption2,
     )
 
     fun colorScheme(dark: Boolean, look: ProfileLook = ProfileLook.plum): ColorScheme {

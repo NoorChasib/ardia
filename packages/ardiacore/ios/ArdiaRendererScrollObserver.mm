@@ -2,14 +2,14 @@
 
 #import <objc/runtime.h>
 
-using namespace ardia_swipe;
+using namespace nilla_swipe;
 
-@interface ArdiaRendererScroll ()
+@interface NillaRendererScroll ()
 - (void)acked:(ArdiaCorePageScrollAck)ack consumed:(BOOL)consumed;
 - (void)overscrolledAllowingHorizontal:(BOOL)allowed;
 @end
 
-@implementation ArdiaRendererScroll
+@implementation NillaRendererScroll
 
 - (void)reset {
   _scroll = RendererScroll::AwaitingBegin;
@@ -32,20 +32,20 @@ using namespace ardia_swipe;
 
 @end
 
-@interface ArdiaRendererScrollAcks : NSObject <ArdiaCorePageScrollObserver>
+@interface NillaRendererScrollAcks : NSObject <ArdiaCorePageScrollObserver>
 @end
 
 namespace {
 
 const void *const kRendererScrollKey = &kRendererScrollKey;
 
-ArdiaRendererScroll *ExistingScroll(NSView *page) {
+NillaRendererScroll *ExistingScroll(NSView *page) {
   return objc_getAssociatedObject(page, kRendererScrollKey);
 }
 
 }
 
-@implementation ArdiaRendererScrollAcks
+@implementation NillaRendererScrollAcks
 
 - (void)pageView:(NSView *)view ackedScroll:(ArdiaCorePageScrollAck)ack consumed:(BOOL)consumed {
   if (gTrace) [gTrace addObject:@{@"ack" : @"gesture", @"kind" : ack == ArdiaCorePageScrollAckBegin ? @"begin" : @"update", @"consumed" : @(consumed)}];
@@ -59,7 +59,7 @@ ArdiaRendererScroll *ExistingScroll(NSView *page) {
 
 @end
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 NSView *PageViewOf(NSView *hit) {
   for (NSView *v = hit; v; v = v.superview)
@@ -67,18 +67,18 @@ NSView *PageViewOf(NSView *hit) {
   return nil;
 }
 
-ArdiaRendererScroll *RendererScrollFor(NSView *hit) {
-  static ArdiaRendererScrollAcks *acks;
+NillaRendererScroll *RendererScrollFor(NSView *hit) {
+  static NillaRendererScrollAcks *acks;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    acks = [ArdiaRendererScrollAcks new];
+    acks = [NillaRendererScrollAcks new];
     [ArdiaCorePageView setScrollObserver:acks];
   });
   NSView *page = PageViewOf(hit);
   if (!page || ![ArdiaCorePageView takeSwipes:page]) return nil;
-  ArdiaRendererScroll *scroll = ExistingScroll(page);
+  NillaRendererScroll *scroll = ExistingScroll(page);
   if (!scroll) {
-    scroll = [ArdiaRendererScroll new];
+    scroll = [NillaRendererScroll new];
     objc_setAssociatedObject(page, kRendererScrollKey, scroll, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   }
   return scroll;

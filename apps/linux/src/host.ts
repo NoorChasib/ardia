@@ -38,19 +38,19 @@ declare global {
   }
 }
 
-export const ardiaHost = typeof window === "undefined" ? undefined : gateHost(window.__ardiaHost);
+export const nillaHost = typeof window === "undefined" ? undefined : gateHost(window.__ardiaHost);
 
-export function hostProfile(profile: string | undefined, host: ArdiaHost = ardiaHost!) {
+export function hostProfile(profile: string | undefined, host: ArdiaHost = nillaHost!) {
   return profile || host.bootstrap.profileId;
 }
 
-export function invokeHost<T = unknown>(method: string, args: Record<string, unknown>, host: ArdiaHost = ardiaHost!): Promise<T> {
-  if (!host) return Promise.reject(new Error(`Ardia host unavailable: ${method}`));
+export function invokeHost<T = unknown>(method: string, args: Record<string, unknown>, host: ArdiaHost = nillaHost!): Promise<T> {
+  if (!host) return Promise.reject(new Error(`Nilla host unavailable: ${method}`));
   if (isGatedForAnyHost(method)) return Promise.reject(gatedError(method));
   return Promise.resolve().then(() => host.invoke(method, args)) as Promise<T>;
 }
 
-export function hostSupports(method: string, host: ArdiaHost = ardiaHost!) {
+export function hostSupports(method: string, host: ArdiaHost = nillaHost!) {
   return !isGatedForAnyHost(method) && !!host?.bootstrap.capabilities?.includes(method);
 }
 
@@ -58,13 +58,13 @@ export type HostRect = { x: number; y: number; width: number; height: number };
 export type HostInputRegions = { pages: HostRect[]; overlays: HostRect[] };
 export const INPUT_REGIONS_METHOD = "shell.inputRegions";
 
-export function hostModuleMethod(module: string, method: string, host: ArdiaHost = ardiaHost!) {
+export function hostModuleMethod(module: string, method: string, host: ArdiaHost = nillaHost!) {
   const name = `${module}.${method}`;
   return (...args: unknown[]) => (isGatedForAnyHost(name) ? Promise.reject(gatedError(name)) : invokeHost(name, { args }, host));
 }
 
-export function callHost(name: string, profile: string, args: string | null, host: ArdiaHost = ardiaHost!) {
-  if (!host) return Promise.reject(new Error(`Ardia host unavailable: ${name}`));
+export function callHost(name: string, profile: string, args: string | null, host: ArdiaHost = nillaHost!) {
+  if (!host) return Promise.reject(new Error(`Nilla host unavailable: ${name}`));
   if (isGatedForAnyHost(name)) return Promise.reject(gatedError(name));
   if (typeof profile !== "string") return Promise.reject(Object.assign(new Error("Profile must be a string"), { code: "ERR_ENGINE" }));
   return Promise.resolve().then(() => host.call(name, hostProfile(profile, host), args)).then((reply) => {
@@ -79,5 +79,5 @@ export function callHost(name: string, profile: string, args: string | null, hos
 }
 
 export function reportHostError(error: unknown) {
-  console.error("[ardia host]", error);
+  console.error("[nilla host]", error);
 }

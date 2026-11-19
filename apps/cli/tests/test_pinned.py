@@ -12,7 +12,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import browsing, endpoint
+from nilla_browser_cli import browsing, endpoint
 from test_linux import write_control
 
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "linux-session.json"
@@ -23,7 +23,7 @@ def row(title, url, pinned_url, kind, folder, profile, parked=False):
 
 
 EXPECTED = [
-    row("https://git.example/ardia", "https://git.example/ardia", "https://git.example/ardia", "pinned", None, "Work"),
+    row("https://git.example/nilla", "https://git.example/nilla", "https://git.example/nilla", "pinned", None, "Work"),
     row("Todo", "https://todo.example/today", "https://todo.example/", "pinned", None, "Personal"),
     row("Inbox", "https://mail.example/inbox", "https://mail.example/", "favorite", None, "Personal"),
     row("Music", "https://music.example/", "https://music.example/", "favorite", "Fun", "Personal"),
@@ -73,7 +73,7 @@ def macos_session(legacy: bool = False) -> dict:
 
 class LinuxPinned(unittest.TestCase):
     def setUp(self):
-        self.root = Path(tempfile.mkdtemp(prefix="ardia-pinned-test-")).resolve()
+        self.root = Path(tempfile.mkdtemp(prefix="nilla-pinned-test-")).resolve()
         self.addCleanup(shutil.rmtree, self.root, True)
         patch = mock.patch.object(endpoint, "LINUX", True)
         patch.start()
@@ -81,9 +81,9 @@ class LinuxPinned(unittest.TestCase):
         write_control(self.root)
 
     def place(self, session, folder: str = "Default") -> Path:
-        ardia = self.root / folder / "Ardia"
-        ardia.mkdir(parents=True, exist_ok=True)
-        path = ardia / "linux-session.json"
+        nilla = self.root / folder / "Nilla"
+        nilla.mkdir(parents=True, exist_ok=True)
+        path = nilla / "linux-session.json"
         path.write_text(session if isinstance(session, str) else json.dumps(session))
         return path
 
@@ -105,7 +105,7 @@ class LinuxPinned(unittest.TestCase):
 
     def test_no_session_yet_is_empty(self):
         self.assertEqual(browsing.pinned(self.root), [])
-        (self.root / "Default" / "Ardia").mkdir(parents=True)
+        (self.root / "Default" / "Nilla").mkdir(parents=True)
         self.assertEqual(browsing.pinned(self.root), [])
         self.place([1, 2])
         self.assertEqual(browsing.pinned(self.root), [])
@@ -131,10 +131,10 @@ class LinuxPinned(unittest.TestCase):
         path.unlink()
         shutil.rmtree(self.root / "Default")
         (self.root / "real").mkdir()
-        (self.root / "real" / "Ardia").mkdir()
-        (self.root / "real" / "Ardia" / "linux-session.json").write_text(json.dumps(linux_session()))
+        (self.root / "real" / "Nilla").mkdir()
+        (self.root / "real" / "Nilla" / "linux-session.json").write_text(json.dumps(linux_session()))
         (self.root / "Default").mkdir()
-        (self.root / "Default" / "Ardia").symlink_to(self.root / "real" / "Ardia")
+        (self.root / "Default" / "Nilla").symlink_to(self.root / "real" / "Nilla")
         with self.assertRaisesRegex(browsing.BrowsingDataError, "can't read"):
             browsing.pinned(self.root)
 
@@ -205,7 +205,7 @@ class LinuxPinned(unittest.TestCase):
 
 class MacosPinned(unittest.TestCase):
     def setUp(self):
-        self.root = Path(tempfile.mkdtemp(prefix="ardia-pinned-test-")).resolve()
+        self.root = Path(tempfile.mkdtemp(prefix="nilla-pinned-test-")).resolve()
         self.addCleanup(shutil.rmtree, self.root, True)
         patch = mock.patch.object(endpoint, "LINUX", False)
         patch.start()
@@ -228,9 +228,9 @@ class MacosPinned(unittest.TestCase):
             self.assertEqual(browsing.pinned(self.root), [], version)
 
     def test_ignores_the_linux_session_on_macos(self):
-        ardia = self.root / "Default" / "Ardia"
-        ardia.mkdir(parents=True)
-        (ardia / "linux-session.json").write_text(json.dumps(linux_session()))
+        nilla = self.root / "Default" / "Nilla"
+        nilla.mkdir(parents=True)
+        (nilla / "linux-session.json").write_text(json.dumps(linux_session()))
         self.assertEqual(browsing.pinned(self.root), [])
 
 

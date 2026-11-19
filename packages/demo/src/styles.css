@@ -22,7 +22,7 @@ textarea:focus,
   outline: none;
 }
 
-.ardia-desktop {
+.nilla-desktop {
   position: fixed;
   inset: 0;
   display: flex;
@@ -34,7 +34,7 @@ textarea:focus,
     #262a33;
 }
 
-.ardia-window {
+.nilla-window {
   position: relative;
   display: flex;
   width: calc(100% - 32px);
@@ -47,16 +47,16 @@ textarea:focus,
     0 22px 70px rgba(0, 0, 0, 0.45);
 }
 
-.ardia-desktop.with-controls {
+.nilla-desktop.with-controls {
   flex-direction: column;
   gap: 12px;
 }
 
-.ardia-desktop.with-controls .ardia-window {
+.nilla-desktop.with-controls .nilla-window {
   height: calc(100% - 32px - 42px);
 }
 
-.ardia-customize {
+.nilla-customize {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,8 +66,8 @@ textarea:focus,
   user-select: none;
 }
 
-.ardia-customize-button,
-.ardia-customize-copy {
+.nilla-customize-button,
+.nilla-customize-copy {
   height: 28px;
   padding: 0 14px;
   border: 0;
@@ -80,26 +80,26 @@ textarea:focus,
   transition: background-color 120ms, opacity 120ms;
 }
 
-.ardia-customize-copy {
+.nilla-customize-copy {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
   font-weight: 500;
 }
 
-.ardia-customize-button:hover:not(:disabled) {
+.nilla-customize-button:hover:not(:disabled) {
   background: #fff;
 }
 
-.ardia-customize-copy:hover {
+.nilla-customize-copy:hover {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.ardia-customize-button:disabled {
+.nilla-customize-button:disabled {
   opacity: 0.45;
   cursor: default;
 }
 
-.ardia-customize-code {
+.nilla-customize-code {
   padding: 5px 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.07);
@@ -109,18 +109,18 @@ textarea:focus,
   user-select: all;
 }
 
-.ardia-customize-button:focus-visible,
-.ardia-customize-copy:focus-visible {
+.nilla-customize-button:focus-visible,
+.nilla-customize-copy:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.6);
   outline-offset: 1px;
 }
 
-.ardia-window > div:first-child {
+.nilla-window > div:first-child {
   flex: 1;
   display: flex;
 }
 
-.ardia-menu {
+.nilla-menu {
   position: fixed;
   z-index: 10000;
   padding: 5px;
@@ -136,7 +136,7 @@ textarea:focus,
   user-select: none;
 }
 
-.ardia-menu-item {
+.nilla-menu-item {
   position: relative;
   display: flex;
   align-items: center;
@@ -146,47 +146,47 @@ textarea:focus,
   cursor: default;
 }
 
-.ardia-menu-item:hover:not(.disabled) {
+.nilla-menu-item:hover:not(.disabled) {
   background: #0a63e0;
   color: #fff;
 }
 
-.ardia-menu-item.disabled {
+.nilla-menu-item.disabled {
   color: rgba(0, 0, 0, 0.3);
 }
 
-.ardia-menu-check {
+.nilla-menu-check {
   width: 14px;
   font-size: 11px;
 }
 
-.ardia-menu-swatch {
+.nilla-menu-swatch {
   width: 10px;
   height: 10px;
   border-radius: 5px;
   margin-right: 7px;
 }
 
-.ardia-menu-title {
+.nilla-menu-title {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ardia-menu-key {
+.nilla-menu-key {
   margin-left: 16px;
   opacity: 0.55;
   font-size: 12px;
 }
 
-.ardia-menu-separator {
+.nilla-menu-separator {
   height: 1px;
   margin: 5px 8px;
   background: rgba(0, 0, 0, 0.1);
 }
 
-.ardia-menu.dark {
+.nilla-menu.dark {
   background: rgba(40, 40, 40, 0.78);
   color: #ffffff;
   box-shadow:
@@ -194,11 +194,11 @@ textarea:focus,
     0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
-.ardia-menu.dark .ardia-menu-item.disabled {
+.nilla-menu.dark .nilla-menu-item.disabled {
   color: rgba(255, 255, 255, 0.3);
 }
 
-.ardia-menu.dark .ardia-menu-separator {
+.nilla-menu.dark .nilla-menu-separator {
   background: rgba(255, 255, 255, 0.12);
 }
 
@@ -207,11 +207,11 @@ html.embed body {
   background: transparent;
 }
 
-.ardia-desktop.embed {
+.nilla-desktop.embed {
   background: transparent;
 }
 
-.ardia-desktop.embed .ardia-window {
+.nilla-desktop.embed .nilla-window {
   width: 100%;
   height: 100%;
   box-shadow:
@@ -219,7 +219,7 @@ html.embed body {
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.25);
 }
 
-.ardia-nudge {
+.nilla-nudge {
   position: fixed;
   top: 0;
   left: 0;
@@ -229,17 +229,17 @@ html.embed body {
   filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.3));
 }
 
-.ardia-nudge svg {
+.nilla-nudge svg {
   display: block;
   transform-origin: 5px 3px;
   transition: transform 120ms ease-out;
 }
 
-.ardia-nudge.pressed svg {
+.nilla-nudge.pressed svg {
   transform: scale(0.84);
 }
 
-.ardia-nudge-ring {
+.nilla-nudge-ring {
   position: absolute;
   top: -15px;
   left: -14px;
@@ -251,11 +251,11 @@ html.embed body {
   transform: scale(0.3);
 }
 
-.ardia-nudge.pressed .ardia-nudge-ring {
-  animation: ardia-nudge-ring 520ms ease-out forwards;
+.nilla-nudge.pressed .nilla-nudge-ring {
+  animation: nilla-nudge-ring 520ms ease-out forwards;
 }
 
-@keyframes ardia-nudge-ring {
+@keyframes nilla-nudge-ring {
   0% {
     opacity: 1;
     transform: scale(0.3);

@@ -1,4 +1,4 @@
-import ArdiaSyncCore
+import NillaSyncCore
 import Foundation
 
 struct SyncMeta: Codable, Equatable, Sendable {

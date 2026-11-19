@@ -9,9 +9,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import telemetry
-from ardia_cli.browse import actions, client, commands, daemon, limits
-from ardia_cli.browse.errors import BrowseError, Gated, OutcomeUnknown, Unreachable
+from nilla_browser_cli import telemetry
+from nilla_browser_cli.browse import actions, client, commands, daemon, limits
+from nilla_browser_cli.browse.errors import BrowseError, Gated, OutcomeUnknown, Unreachable
 from tests.test_browse_review import make_daemon
 
 
@@ -202,7 +202,7 @@ class CommandsAreBounded(unittest.TestCase):
     def test_an_eval_that_runs_long_keeps_its_outcome_unknown(self):
         state = SimpleNamespace(page=mock.AsyncMock(return_value=SimpleNamespace(frames={}, main_frame=None)))
         ctx = commands.Ctx(state, {}, "/", {}, None, "eval")
-        timed_out = OutcomeUnknown("`Runtime.evaluate`", "Ardia didn't answer Runtime.evaluate in 60s after it was sent")
+        timed_out = OutcomeUnknown("`Runtime.evaluate`", "Nilla didn't answer Runtime.evaluate in 60s after it was sent")
         with mock.patch.object(commands, "evaluate_main", mock.AsyncMock(side_effect=timed_out)):
             with self.assertRaises(OutcomeUnknown) as raised:
                 run(commands.cmd_eval(ctx, ["1", "--timeout", "2s"]))
@@ -262,7 +262,7 @@ class ZeroViewport(unittest.TestCase):
             run(actions.laid_out(page))
         self.assertEqual(caught.exception.code, "no_viewport")
         self.assertIn("no size yet (0×0", caught.exception.message)
-        self.assertIn("ardia browse tab t4 --show", caught.exception.message)
+        self.assertIn("nilla browse tab t4 --show", caught.exception.message)
 
     def test_a_viewport_the_session_set_itself_is_left_alone(self):
         page = ViewportPage([0], gated=False)
@@ -281,7 +281,7 @@ class TextareaFill(unittest.TestCase):
                 return "L"
 
             async def call(self, function, *args, **kwargs):
-                if "ardiaBrowse.info" in function:
+                if "nillaBrowse.info" in function:
                     return {"tag": tag, "type": "text" if tag == "input" else None, "editable": True, "disabled": False, "value": ""}
                 return True
 

@@ -5,7 +5,7 @@ type HighContrastShell = {
   addListener?: (eventName: "onAppEvent", listener: (event: { type?: string; on?: unknown } | null) => void) => EventSubscription;
 };
 
-const shell = () => requireNativeModule<HighContrastShell>("ArdiaShell");
+const shell = () => requireNativeModule<HighContrastShell>("NillaShell");
 
 export const highContrastOn = (): Promise<boolean> =>
   Promise.resolve(shell().isHighContrast?.() ?? false).then(

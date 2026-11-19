@@ -8,9 +8,9 @@
 #include "PageCapture.h"
 #include "WindowManager.h"
 
-namespace Ardia {
+namespace Nilla {
 
-REACT_MODULE(WindowsModule, L"ArdiaAppWindows")
+REACT_MODULE(WindowsModule, L"NillaAppWindows")
 struct WindowsModule {
   using Promise = winrt::Microsoft::ReactNative::ReactPromise<void>;
   using JSValue = winrt::Microsoft::ReactNative::JSValue;

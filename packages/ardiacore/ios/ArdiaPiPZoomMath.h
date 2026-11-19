@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace ardia_pip_zoom {
+namespace nilla_pip_zoom {
 
 struct Rect {
   double x, y, w, h;

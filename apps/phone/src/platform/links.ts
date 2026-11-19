@@ -1,4 +1,4 @@
-import { system, type SystemLink } from "@ardia/phone-native";
+import { system, type SystemLink } from "@nilla/phone-native";
 
 export type { SystemLink };
 

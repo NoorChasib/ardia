@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.graphics.Bitmap
-import com.ardia.browser.PageCapture
+import com.nilladigital.nilla.PageCapture
 import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.CoroutineScope
@@ -199,7 +199,7 @@ class PageSnapshots(
         folder.listFiles { file -> file.name.startsWith("$stem-") && file.name.endsWith(".jpg") && file != keep }?.toList().orEmpty()
 
     companion object {
-        private val writes: java.util.concurrent.ExecutorService = java.util.concurrent.Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "ardia-snapshot-writes") }
+        private val writes: java.util.concurrent.ExecutorService = java.util.concurrent.Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "nilla-snapshot-writes") }
         private const val SAVED_FOLDER = "PageSnapshots"
         private const val PRIVATE_FOLDER = "PrivatePageSnapshots"
         private val safeId = Regex("[A-Za-z0-9_]{1,64}")

@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import org.junit.After
@@ -35,7 +35,7 @@ class LookSwitchTest {
 
     @Test
     fun withTheLookOffEachViewDrawsOneFlatColour() {
-        val look = com.ardia.design.ProfileLook.of("plum")
+        val look = com.nilladigital.nilla.design.ProfileLook.of("plum")
         assertEquals(look.deckBase(false).first(), LookSwitch.flatDeck(look, dark = false))
         assertEquals(look.backdropColors(true, true).first(), LookSwitch.flatBackdrop(look, dark = true, themed = true))
     }

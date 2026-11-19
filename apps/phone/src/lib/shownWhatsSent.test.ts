@@ -28,8 +28,8 @@ test("where sync isn't offered, Clear Browsing Data, About and the licences drop
   selectCopy("android", false);
   assert.equal(copy().historyClears, "History clears from this phone.");
   assert.equal(copy().privacy, "No accounts. Your data stays on this phone.");
-  assert.equal(copy().ardiaCredit, "This app.");
+  assert.equal(copy().nillaCredit, "This app.");
   selectCopy("android", true);
   assert.match(copy().historyClears, /Mac/);
-  assert.match(copy().ardiaCredit, /Mac browser/);
+  assert.match(copy().nillaCredit, /Mac browser/);
 });

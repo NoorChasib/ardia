@@ -53,7 +53,7 @@ took hours. When the Chromium version moves, take the new versions from a full `
 
 ## On a Linux host
 
-Windows engines are built on a Boat VM, which runs the idle-stop watchdog like every VM: `ardia-linux` (`bx_x7n4g59u`,
+Windows engines are built on a Boat VM, which runs the idle-stop watchdog like every VM: `nilla-linux` (`bx_x7n4g59u`,
 xlarge: 16 vCPU, 32 GB, 294 GB, Ubuntu 24.04). x64 and arm64 each need their own tree (about 85 GB with one out dir), so
 to build both at once take a second xlarge VM for the other CPU, give it the watchdog, and delete it once the engine is
 published. The toolchain, the Helium checkouts and the trees stay on the VMs; nothing from Microsoft's packages leaves
@@ -63,7 +63,7 @@ Once per VM:
 
 ```
 sudo apt-get install -y msitools librsvg2-bin python3-pil git curl unzip zip patch fuse3
-git clone https://github.com/ardia-browser/ardia.git ~/winengine/repo   # at the commit to build
+git clone https://github.com/NoorChasib/nilla.git ~/winengine/repo   # at the commit to build
 export AC_CHROMIUM_BUILD=~/chromium-build-win AC_LOCK_ROOT=~/winengine/lock WIN_CPU=x64   # or arm64
 E=~/winengine/repo/scripts/windows/engine
 for repo in helium-chromium:helium helium-windows:helium-windows; do
@@ -200,7 +200,7 @@ Resources: Helium's (its icons made with `sips`), then `ardia_resources.txt` as 
 `ardia_resources_win.txt`: the app's `Ardia.ico` as `chrome/app/theme/chromium/win/chromium.ico`. helium-windows'
 generated `.ico` files aren't made; ours replaces the app icon and Chromium's document icons stay.
 
-On the Windows tree (2026-11-10): `pins` and `guard` pass, 356 patches applied with no fuzz, 16 skipped; the uBlock patches go in without the omitted downloads' files, as on the Mac; `namesub` changed 2168 files; 56 Helium resources, 34 Ardia ones and the Windows icon. 2 min 51 s in all.
+On the Windows tree (2026-11-10): `pins` and `guard` pass, 356 patches applied with no fuzz, 16 skipped; the uBlock patches go in without the omitted downloads' files, as on the Mac; `namesub` changed 2168 files; 56 Helium resources, 34 Nilla ones and the Windows icon. 2 min 51 s in all.
 
 ## Our series on Windows
 
@@ -216,7 +216,7 @@ The layers:
   copy `series_win.py layer` makes: the Mac sources with `ardia-layer-win.patch` (UTF-8 paths, and Windows absolute
   paths accepted where the Mac checks for a leading `/`), Windows stand-ins for the two
   POSIX-only files, and a build file generated from the shared one: its shared sources less `.mm` and `pip/`, and from
-  its Mac block the portable files in `WINDOWS_FROM_MAC_BLOCK` (`ac_reauth.cc`). The Ardia logos it replaces are
+  its Mac block the portable files in `WINDOWS_FROM_MAC_BLOCK` (`ac_reauth.cc`). The Nilla logos it replaces are
   OS-neutral and give the Windows build its branding.
 - `series_win.py layer` also copies `//ardia/win` into the tree, with `EngineApi.h` from the app and a generated table
   of the `ac_*` exports, made only from the sources Windows compiles.
@@ -318,7 +318,7 @@ a Windows build needs.
 | `chromium-win-hosted-browser-windows.patch` | applies (Windows only, `series-win`) | Windows only | The hooks `//ardia/win` sets: every normal browser window is page only with a frameless frame view, and the app's main parts join the browser's |
 | `chromium-win-child-window-activation.patch` | applies (Windows only, `series-win`) | Windows only | Lets a browser window that is a child window take activation; unused since hosted windows are top-level, harmless |
 | `chromium-win-app-in-browser-process.patch` | applies (Windows only, `series-win`) | Windows only | `chrome.dll` links `//ardia/win` and calls it before Chrome's main and after it: with `ArdiaApp.dll` beside the launcher the browser process runs the app, and ends as soon as Chromium's shutdown returns, without running exit handlers (#1706) |
-| `chromium-win-install-names.patch` | applies (Windows only, `series-win`) | Windows only | The install is named Ardia (`%LOCALAPPDATA%\Ardia\User Data`), and `ARDIA_DATA_DIR` moves Chromium's data |
+| `chromium-win-install-names.patch` | applies (Windows only, `series-win`) | Windows only | The install is named Nilla (`%LOCALAPPDATA%\Ardia\User Data`), and `ARDIA_DATA_DIR` moves Chromium's data |
 | `chromium-win-hosted-page-fills-window.patch` | applies (Windows only, `series-win`) | Windows only | A hosted window has no rounded page frame or insets: the page fills it |
 | `chromium-win-hosted-no-browser-shortcuts.patch` | applies (Windows only, `series-win`) | Windows only | Chrome's own accelerators are off in hosted windows, so Ctrl+L and the rest reach the app |
 | `chromium-win-relaunch-to-app.patch` | applies (Windows only, `series-win`) | Windows only | A second launch's command line goes to `//ardia/win` instead of Chrome's startup, which would open nothing under `--no-startup-window` |

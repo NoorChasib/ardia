@@ -12,7 +12,7 @@ const folder = new Map();
 let heldScope = null;
 let releaseRead = null;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => "devC",
     deviceName: () => "Test Mac",
     createPhrase: async () => true,
@@ -88,7 +88,7 @@ test("known issue, expected for now: a theme picked while a pull reads is replac
   setProfileTheme("default", THEME_C, engine.adoptProfileTheme);
   releaseRead();
   await cycle;
-  assert.deepEqual(S().profiles.default.theme, THEME_B, "documented in ~/ardia-scratch/slop-audit/sync-known-issues.md: the pick is overwritten until picks get durable stamps");
+  assert.deepEqual(S().profiles.default.theme, THEME_B, "documented in ~/nilla-scratch/slop-audit/sync-known-issues.md: the pick is overwritten until picks get durable stamps");
 });
 
 test("a profile's own theme that was never picked still gives way to a theme that arrives in a pull", async () => {

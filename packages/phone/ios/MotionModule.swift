@@ -46,7 +46,7 @@ final class MotionView: ExpoView {
 
 public final class MotionModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneMotion")
+    Name("NillaPhoneMotion")
 
     Constant("runsInRenderServer") { true }
 

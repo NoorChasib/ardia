@@ -1,6 +1,6 @@
 import AppKit
 
-@objc(ArdiaScriptWindow)
+@objc(NillaScriptWindow)
 final class ScriptWindow: NSObject {
   @objc let uniqueID: String
 

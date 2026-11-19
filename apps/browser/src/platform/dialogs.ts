@@ -1,6 +1,6 @@
-import { nativeModule, type ConfirmOptions, type PromptOptions } from "@ardia/shell";
+import { nativeModule, type ConfirmOptions, type PromptOptions } from "@nilla/shell";
 
-const Dialogs = nativeModule("ArdiaDialogs");
+const Dialogs = nativeModule("NillaDialogs");
 
 export const confirm = (options: ConfirmOptions) => Dialogs.confirm(options);
 export const prompt = (options: PromptOptions) => Dialogs.prompt(options);

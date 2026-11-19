@@ -1,14 +1,14 @@
 import AppIntents
-import ArdiaBrowser
-import ArdiaDesign
-internal import ArdiaPhoneNative
+import NillaBrowser
+import NillaDesign
+internal import NillaPhoneNative
 import CoreSpotlight
 import Foundation
 import SQLite3
 
-struct SearchWithArdiaIntent: AppIntent {
-  static let title: LocalizedStringResource = "Search with Ardia"
-  static let description = IntentDescription("Searches the web in Ardia, or opens Ardia ready to type.")
+struct SearchWithNillaIntent: AppIntent {
+  static let title: LocalizedStringResource = "Search with Nilla"
+  static let description = IntentDescription("Searches the web in Nilla, or opens Nilla ready to type.")
   static let supportedModes: IntentModes = .foreground
 
   @Parameter(title: "Search", requestValueDialog: "What do you want to search for?")
@@ -27,7 +27,7 @@ struct SearchWithArdiaIntent: AppIntent {
 
 struct VoiceSearchIntent: AppIntent {
   static let title: LocalizedStringResource = "Voice Search"
-  static let description = IntentDescription("Opens Ardia and starts listening for your search.")
+  static let description = IntentDescription("Opens Nilla and starts listening for your search.")
   static let supportedModes: IntentModes = .foreground
 
   @MainActor
@@ -49,16 +49,16 @@ struct NewIncognitoTabIntent: AppIntent {
   }
 }
 
-struct OpenURLInArdiaIntent: AppIntent {
-  static let title: LocalizedStringResource = "Open in Ardia"
-  static let description = IntentDescription("Opens a web page in a new tab in Ardia.")
+struct OpenURLInNillaIntent: AppIntent {
+  static let title: LocalizedStringResource = "Open in Nilla"
+  static let description = IntentDescription("Opens a web page in a new tab in Nilla.")
   static let supportedModes: IntentModes = .foreground
 
   @Parameter(title: "URL")
   var url: URL
 
   static var parameterSummary: some ParameterSummary {
-    Summary("Open \(\.$url) in Ardia")
+    Summary("Open \(\.$url) in Nilla")
   }
 
   @MainActor
@@ -73,7 +73,7 @@ struct OpenURLInArdiaIntent: AppIntent {
 
 struct OpenMacTabsIntent: AppIntent {
   static let title: LocalizedStringResource = "Open Synced Tabs"
-  static let description = IntentDescription("Shows the tabs, pinned tabs and Spaces synced from Ardia on your computer.")
+  static let description = IntentDescription("Shows the tabs, pinned tabs and Spaces synced from Nilla on your computer.")
   static let supportedModes: IntentModes = .foreground
 
   @MainActor
@@ -125,18 +125,18 @@ enum IntentFailure: Error, CustomLocalizedStringResourceConvertible {
 
   var localizedStringResource: LocalizedStringResource {
     switch self {
-    case .notWebPage: "Ardia opens web pages that start with http or https."
+    case .notWebPage: "Nilla opens web pages that start with http or https."
     case .tabGone: "That tab isn’t open anymore."
     }
   }
 }
 
-struct ArdiaShortcuts: AppShortcutsProvider {
+struct NillaShortcuts: AppShortcutsProvider {
   static let shortcutTileColor: ShortcutTileColor = .navy
 
   static var appShortcuts: [AppShortcut] {
     AppShortcut(
-      intent: SearchWithArdiaIntent(),
+      intent: SearchWithNillaIntent(),
       phrases: [
         "Search with \(.applicationName)",
         "Start a Search with \(.applicationName)",
@@ -334,7 +334,7 @@ struct TabEntityQuery: EntityStringQuery {
 
 struct OpenTabIntent: OpenIntent {
   static let title: LocalizedStringResource = "Open Tab"
-  static let description = IntentDescription("Switches to one of your tabs in Ardia, or brings an archived tab back.")
+  static let description = IntentDescription("Switches to one of your tabs in Nilla, or brings an archived tab back.")
   static let supportedModes: IntentModes = .foreground
 
   @Parameter(title: "Tab")
@@ -396,7 +396,7 @@ final class SpotlightIndexer {
     }
     defaults.set(current, forKey: Self.fingerprintsKey)
     if !changed.isEmpty || !removed.isEmpty {
-      ArdiaShortcuts.updateAppShortcutParameters()
+      NillaShortcuts.updateAppShortcutParameters()
     }
   }
 

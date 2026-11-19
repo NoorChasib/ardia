@@ -1,4 +1,4 @@
-declare module "@ardia-site/meadow/scene" {
+declare module "@nilla-site/meadow/scene" {
   export interface MeadowOptions {
     canvas: HTMLCanvasElement;
     hero: HTMLElement;
@@ -14,12 +14,12 @@ declare module "@ardia-site/meadow/scene" {
   export function createMeadow(options: MeadowOptions): Meadow | null;
 }
 
-declare module "@ardia-site/meadow/clock" {
+declare module "@nilla-site/meadow/clock" {
   export function startSunrise(hero: HTMLElement): void;
   export function resetSunrise(): void;
 }
 
-declare module "@ardia-site/meadow/cycle" {
+declare module "@nilla-site/meadow/cycle" {
   export const CYCLE_STOPS: number[];
   export const MOON_RANGE: [number, number];
   export const SUNRISE_FROM: number;

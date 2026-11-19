@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { displayHost } from "@ardia/core";
+import { displayHost } from "@nilla/core";
 import { Button, MenuRow, MenuSeparator, PANEL, PanelHeader, Popover, POPOVER_WIDTH, usePopoverPresence } from "../ui";
 import { Favicon } from "../favicon/Favicon";
 import { useTab } from "../../state/browser/hooks";

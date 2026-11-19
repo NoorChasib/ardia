@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import com.ardia.browser.NightShadeMode
+import com.nilladigital.nilla.NightShadeMode
 import java.io.File
 import java.security.MessageDigest
 import java.sql.Connection
@@ -59,7 +59,7 @@ class PhoneLegacyTest {
         UpgradeGate.forgetForTests()
     }
 
-    private fun targets() = listOf(app.getSharedPreferences(PhoneBlocking.PREFERENCES, Context.MODE_PRIVATE), app.getSharedPreferences("ardia-site-preferences", Context.MODE_PRIVATE))
+    private fun targets() = listOf(app.getSharedPreferences(PhoneBlocking.PREFERENCES, Context.MODE_PRIVATE), app.getSharedPreferences("nilla-site-preferences", Context.MODE_PRIVATE))
 
     private fun composeStore(version: Int = 1, schema: List<String> = COMPOSE_SCHEMA, seed: (Connection) -> Unit = ::seedRows) {
         val scratch = kotlin.io.path.createTempDirectory("compose-store").toFile()
@@ -84,7 +84,7 @@ class PhoneLegacyTest {
     private fun seedRows(connection: Connection) {
         connection.insertTab(selectedId, "https://news.example/today", lastActive = 3_000, position = 2.0, snapshot = "$selectedId.jpg", favicon = "https://news.example/favicon.ico", theme = "#112233", state = state)
         connection.insertTab(otherId, "https://docs.example/", lastActive = 2_000, position = 1.0, snapshot = "not-an-image.jpg", received = "mac-key" to "Shivam's Mac")
-        connection.insertTab(traversalId, "https://far.example/", lastActive = 1_000, position = 3.0, snapshot = "../../shared_prefs/ardia.browser.xml")
+        connection.insertTab(traversalId, "https://far.example/", lastActive = 1_000, position = 3.0, snapshot = "../../shared_prefs/nilla.browser.xml")
         connection.insertTab(archivedId, "https://old.example/", lastActive = 500, position = 0.5, archived = 900, snapshot = "$archivedId.jpg", state = archivedState)
         for (index in 1..3) {
             connection.prepareStatement("INSERT INTO visits (url, title, visitedAt, profileSyncId, transition) VALUES (?, ?, ?, ?, ?)").use {
@@ -149,7 +149,7 @@ class PhoneLegacyTest {
             .put("docs.example", JSONObject().put("appLinks", "app").put("desktopSite", true))
             .put("ads.example", JSONObject().put("blockersOff", true).put("nightShade", "disabled"))
         composePreferences(
-            "ardia.browser",
+            "nilla.browser",
             """
             |    <string name="tabs.autoArchiveInterval">week</string>
             |    <string name="browsing.nightShade">automatic</string>
@@ -163,7 +163,7 @@ class PhoneLegacyTest {
             |""".trimMargin(),
         )
         composePreferences(
-            "ardia.blocking",
+            "nilla.blocking",
             """
             |    <boolean name="blocking.ads" value="false" />
             |    <string name="blocking.exemptHosts">[&quot;bank.example&quot;]</string>
@@ -197,7 +197,7 @@ class PhoneLegacyTest {
 
     private fun sourceFingerprint(): Map<String, String> =
         (listOf(File(data, "databases"), File(data, "shared_prefs"), File(app.cacheDir, "TabSnapshots")))
-            .flatMap { folder -> folder.walkTopDown().filter { it.isFile && !it.name.startsWith("ardia-") }.toList() }
+            .flatMap { folder -> folder.walkTopDown().filter { it.isFile && !it.name.startsWith("nilla-") }.toList() }
             .associate { it.relativeTo(data).path to MessageDigest.getInstance("SHA-256").digest(it.readBytes()).joinToString("") { b -> "%02x".format(b) } }
 
     private fun targetState(): Map<String, Any?> = buildMap {
@@ -327,17 +327,17 @@ class PhoneLegacyTest {
         val blocking = app.getSharedPreferences(PhoneBlocking.PREFERENCES, Context.MODE_PRIVATE)
         assertEquals(false, blocking.getBoolean("blocking.ads", true))
         assertEquals("[\"ads.example\",\"bank.example\"]", blocking.getString("blocking.exemptHosts", null))
-        assertTrue(com.ardia.blocking.BlockingSettings(com.ardia.blocking.SharedPreferencesBlockingStore(blocking)).isExempt("www.ads.example"))
+        assertTrue(com.nilladigital.nilla.blocking.BlockingSettings(com.nilladigital.nilla.blocking.SharedPreferencesBlockingStore(blocking)).isExempt("www.ads.example"))
         assertEquals("[\"easylist\",\"ublock-privacy\"]", blocking.getString("filters.selection", null))
         assertEquals("||tracker.example^", blocking.getString("filters.myFilters", null))
-        val sites = PhoneSitePreferences(app.getSharedPreferences("ardia-site-preferences", Context.MODE_PRIVATE))
+        val sites = PhoneSitePreferences(app.getSharedPreferences("nilla-site-preferences", Context.MODE_PRIVATE))
         assertEquals(NightShadeMode.Automatic, sites.defaultNightShade)
         assertTrue(sites.defaultOpensLinksInApps)
         assertEquals(1.25, sites.pageZoom("news.example", false)!!, 0.0)
         assertEquals(NightShadeMode.Always, sites.siteNightShade("news.example", false))
         assertEquals(NightShadeMode.Disabled, sites.siteNightShade("ads.example", false))
         assertEquals(true, sites.siteOpensLinksInApps("docs.example"))
-        val raw = app.getSharedPreferences("ardia-site-preferences", Context.MODE_PRIVATE)
+        val raw = app.getSharedPreferences("nilla-site-preferences", Context.MODE_PRIVATE)
         assertEquals(true, sites.desktopSite("www.docs.example", false))
         assertEquals(null, sites.desktopSite("news.example", false))
         assertFalse(raw.contains("blockersOff.sites"))
@@ -418,7 +418,7 @@ class PhoneLegacyTest {
         assertEquals("the old blocking settings are kept", false, blocking.getBoolean("blocking.ads", true))
         assertEquals("||tracker.example^", blocking.getString("filters.myFilters", null))
         assertEquals("[\"ads.example\",\"bank.example\"]", blocking.getString("blocking.exemptHosts", null))
-        val sites = PhoneSitePreferences(app.getSharedPreferences("ardia-site-preferences", Context.MODE_PRIVATE))
+        val sites = PhoneSitePreferences(app.getSharedPreferences("nilla-site-preferences", Context.MODE_PRIVATE))
         assertEquals(1.25, sites.pageZoom("news.example", false)!!, 0.0)
         assertEquals("no thumbnails without an import", null, File(app.filesDir, "PageSnapshots").list()?.takeIf { it.isNotEmpty() })
         UpgradeGate.forgetForTests()
@@ -437,7 +437,7 @@ class PhoneLegacyTest {
     @Test
     fun startingFreshWithUnreadableSettingsCarriesOnWithDefaultsForThatFileOnly() {
         composeApp()
-        File(data, "shared_prefs/ardia.blocking.xml").writeText("not xml at all")
+        File(data, "shared_prefs/nilla.blocking.xml").writeText("not xml at all")
         var syncs = 0
         legacy().startFresh { syncs += 1 }
         assertEquals(1, syncs)
@@ -445,9 +445,9 @@ class PhoneLegacyTest {
         assertFalse(UpgradeGate.pending(app))
         val blocking = app.getSharedPreferences(PhoneBlocking.PREFERENCES, Context.MODE_PRIVATE).all
         assertEquals("only the per-site file's blockers-off host, nothing from the unreadable file", mapOf("blocking.exemptHosts" to "[\"ads.example\"]"), blocking)
-        val sites = PhoneSitePreferences(app.getSharedPreferences("ardia-site-preferences", Context.MODE_PRIVATE))
+        val sites = PhoneSitePreferences(app.getSharedPreferences("nilla-site-preferences", Context.MODE_PRIVATE))
         assertEquals("the readable file still comes over", 1.25, sites.pageZoom("news.example", false)!!, 0.0)
-        assertEquals("not xml at all", File(data, "shared_prefs/ardia.blocking.xml").readText())
+        assertEquals("not xml at all", File(data, "shared_prefs/nilla.blocking.xml").readText())
     }
 
     @Test

@@ -1,12 +1,12 @@
 import { hostCall, leaveOffersFromUnheard, onEngineTopic } from "../engine/host";
 import { showStepsOf, traceShowsOf } from "../engine/showTrace";
-import type { WindowsNative } from "@ardia/shell";
-import { isPopupWindowId } from "@ardia/shell/src/windows.ts";
+import type { WindowsNative } from "@nilla/shell";
+import { isPopupWindowId } from "@nilla/shell/src/windows.ts";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
 const POPUP_WINDOW_GONE_MS = 3000;
-const popupWindows = async () => (await requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows").windowIds()).filter((id) => isPopupWindowId(id));
+const popupWindows = async () => (await requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows").windowIds()).filter((id) => isPopupWindowId(id));
 
 async function popupWindowsGone(before: readonly string[], withinMs: number) {
   const began = Date.now();
@@ -22,7 +22,7 @@ export const pagePopupCheck = (pageKey: string, firstWindow: () => Promise<strin
   async run() {
     const windowId = await firstWindow();
     await hostCall("tab.show", { key: pageKey, visible: true, unit: "px", x: 40, y: 60, width: 300, height: 240 }, windowId);
-    const popupName = "ardia-self-check-popup";
+    const popupName = "nilla-self-check-popup";
     const opened = new Promise<Record<string, unknown>>((resolve, reject) => {
       const watching = onEngineTopic("tab.opened", (event: Record<string, unknown>) => {
         if (event.opener !== pageKey) return;
@@ -41,7 +41,7 @@ export const pagePopupCheck = (pageKey: string, firstWindow: () => Promise<strin
     };
     const popupsBefore = await popupWindows();
     try {
-      const before = await evaluate(`window.ardiaHiddenSeen = false; document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "visible") window.ardiaHiddenSeen = true; }); post("result", JSON.stringify(document.visibilityState));`);
+      const before = await evaluate(`window.nillaHiddenSeen = false; document.addEventListener("visibilitychange", () => { if (document.visibilityState !== "visible") window.nillaHiddenSeen = true; }); post("result", JSON.stringify(document.visibilityState));`);
       expectEqual(before, "visible", "the opener page before its pop-up opens");
       const asked = await evaluate(`post("result", JSON.stringify(!!window.open("about:blank", "${popupName}", "width=420,height=360,left=600,top=400")));`, true);
       expectEqual(asked, true, "window.open with a click returns a window");
@@ -66,7 +66,7 @@ export const pagePopupCheck = (pageKey: string, firstWindow: () => Promise<strin
         `const w = window.open("", "${popupName}"); const linked = !!w && w.opener === window; if (w) w.close(); setTimeout(() => post("result", JSON.stringify({ linked, closed: !!w && w.closed })), 1500);`,
       );
       expectEqual(
-        await evaluate(`post("result", JSON.stringify({ hiddenSeen: window.ardiaHiddenSeen === true, now: document.visibilityState }));`),
+        await evaluate(`post("result", JSON.stringify({ hiddenSeen: window.nillaHiddenSeen === true, now: document.visibilityState }));`),
         { hiddenSeen: false, now: "visible" },
         "the opener page stays the visible tab of its window while its pop-up waits for the app and after",
       );
@@ -109,7 +109,7 @@ export const pagePopupShowLoop = (pageKey: string): Check => ({
     traceShowsOf((key) => key.startsWith("popup:"));
     try {
       for (let round = 0; round < LOOP_ROUNDS; round++) {
-        const name = `ardia-self-check-loop-${round}`;
+        const name = `nilla-self-check-loop-${round}`;
         await evaluateIn(pageKey, `post("result", JSON.stringify(!!window.open("about:blank", "${name}", "width=360,height=280,left=220,top=160")));`, true);
         const tab = await newPopupTab(seen, Date.now() + SHOW_MS);
         if (!tab) failures.push(`round ${round}: no pop-up tab within ${SHOW_MS} ms`);
@@ -131,7 +131,7 @@ const UNHEARD_OFFER_WAIT_MS = 9000;
 export const unheardOfferCheck = (pageKey: string): Check => ({
   name: "engine: a tab a page opens that the app never hears of is closed after the deadline, while its opener's window stays",
   async run() {
-    const name = "ardia-self-check-unheard";
+    const name = "nilla-self-check-unheard";
     leaveOffersFromUnheard(pageKey);
     try {
       expectEqual(await evaluateIn(pageKey, `post("result", JSON.stringify(!!window.open("about:blank", "${name}", "width=320,height=240")));`, true), true, "window.open with a click returns a window");

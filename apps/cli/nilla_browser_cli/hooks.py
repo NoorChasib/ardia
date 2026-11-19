@@ -10,8 +10,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ardia_cli import control, endpoint, upstream, urlmatch
-from ardia_cli.printable import well_formed
+from nilla_browser_cli import control, endpoint, upstream, urlmatch
+from nilla_browser_cli.printable import well_formed
 
 HOOKS_FILE = "hooks.json"
 LABEL = "com.nilladigital.nilla.hooks"
@@ -42,7 +42,7 @@ HOOK_KEYS = (
 RULE_KEYS = {"rewrite": "tab.opening", "cancel": "tab.opening", "route": "link.opening", "drop": "link.opening", "folder": "download.deciding", "permission": "permission.requested"}
 FILTER_KEYS = {"from": "link.opening", "kinds": "permission.requested"}
 DAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
-OPEN_MODES = ("tab", "littleArdia", "window")
+OPEN_MODES = ("tab", "littleNilla", "window")
 MIN_IDLE = 60
 MAX_HOOKS = 200
 MAX_REWRITES = 50
@@ -139,7 +139,7 @@ class Hook:
     def action(self) -> str:
         if self.rules:
             keys = [k for k in RULE_KEYS if k in self.definition()]
-            return f"answers in Ardia ({', '.join(keys)})"
+            return f"answers in Nilla ({', '.join(keys)})"
         if self.command:
             return f"command {self.command}" + (f":{self.arg}" if self.arg else "")
         tail = "" if self.decide or self.omnibox is not None else f"  timeout {self.timeout:g}s"
@@ -191,7 +191,7 @@ def check_timeout(value) -> float:
 
 
 def check_hook_events(names) -> list[str]:
-    from ardia_cli.schema_check import did_you_mean
+    from nilla_browser_cli.schema_check import did_you_mean
 
     names = list(names)
     known = control.EVENTS + control.DECIDE_EVENTS
@@ -283,7 +283,7 @@ def _check_rules(item: dict, decide: str) -> None:
     if "route" in item:
         route = item["route"]
         if not isinstance(route, dict) or set(route) - {"profile", "open"} or not route:
-            raise ValueError('route is {"profile"?: name, "open"?: "tab" | "littleArdia" | "window"}')
+            raise ValueError('route is {"profile"?: name, "open"?: "tab" | "littleNilla" | "window"}')
         if "profile" in route and (not isinstance(route["profile"], str) or not route["profile"]):
             raise ValueError("route.profile must be a profile name or id")
         if "open" in route and route["open"] not in OPEN_MODES:
@@ -317,7 +317,7 @@ def _check_omnibox(value) -> dict:
 
 
 def hook_from(item: dict) -> Hook:
-    from ardia_cli.schema_check import did_you_mean
+    from nilla_browser_cli.schema_check import did_you_mean
 
     name = item["name"]
     unknown = [k for k in item if k not in HOOK_KEYS]
@@ -415,7 +415,7 @@ def hook_from(item: dict) -> Hook:
 
 
 def parse_hooks(text: str) -> list[Hook]:
-    from ardia_cli import config_files
+    from nilla_browser_cli import config_files
 
     try:
         document = config_files.parse_json(text)
@@ -452,7 +452,7 @@ def parse_hooks(text: str) -> list[Hook]:
 
 
 def read_hooks(path: Path) -> list[Hook]:
-    from ardia_cli import config_files
+    from nilla_browser_cli import config_files
 
     try:
         text = config_files.read_text(path)
@@ -521,7 +521,7 @@ class Log:
                 self._open()
             os.write(self._fd, data)
         except OSError as error:
-            sys.stderr.write(f"ardia hooks: can't write {self.path}: {error.strerror or error}\n{line}")
+            sys.stderr.write(f"nilla hooks: can't write {self.path}: {error.strerror or error}\n{line}")
 
     def close(self) -> None:
         if self._fd is not None:
@@ -705,7 +705,7 @@ class HookRunner:
             self.task.cancel()
 
 
-LAUNCH_STATE = "ArdiaHooks.state.json"
+LAUNCH_STATE = "NillaHooks.state.json"
 LAUNCH_SEEN_CAP = 200
 
 
@@ -771,7 +771,7 @@ class CommandRunner:
     async def _run(self, event: dict) -> None:
         connection = self.service.connection
         if connection is None or connection.closed:
-            self.log.write(f"hook {self.hook.name}: Ardia isn't connected; {self.hook.command} didn't run")
+            self.log.write(f"hook {self.hook.name}: Nilla isn't connected; {self.hook.command} didn't run")
             return
         data = event.get("data") if isinstance(event.get("data"), dict) else {}
         params = {"command": self.hook.command}
@@ -799,8 +799,8 @@ class CommandRunner:
 
 class Service:
     def __init__(self, socket_path: Path, log: Log, capture: bool, connect=None, backoff_start=None, backoff_max=None, state_path=None):
-        from ardia_cli.hook_decide import Decider
-        from ardia_cli.hook_schedule import Scheduler
+        from nilla_browser_cli.hook_decide import Decider
+        from nilla_browser_cli.hook_schedule import Scheduler
 
         self.socket_path = socket_path
         self.log = log
@@ -863,7 +863,7 @@ class Service:
     def dispatch(self, event: dict) -> None:
         dropped = event.get("dropped")
         if isinstance(dropped, int) and not isinstance(dropped, bool) and dropped > 0:
-            self.log.write(f"warning: Ardia dropped {dropped} event{'s' if dropped != 1 else ''} before this one because the runner fell behind")
+            self.log.write(f"warning: Nilla dropped {dropped} event{'s' if dropped != 1 else ''} before this one because the runner fell behind")
         launch = event.get("data", {}).get("launchId") if event.get("event") == "app.launched" and isinstance(event.get("data"), dict) else None
         for runner in list(self.runners.values()):
             hook = runner.hook
@@ -907,14 +907,14 @@ class Service:
             reported = None
             self.connections += 1
             gap = " (events in between may have been missed)" if self.connections > 1 else ""
-            self.log.write(f"connected to Ardia {connection.info.get('version', '')}".rstrip() + gap)
+            self.log.write(f"connected to Nilla {connection.info.get('version', '')}".rstrip() + gap)
             self.connection = connection
             try:
                 await self._serve(connection)
             except control.Unreachable as error:
-                self.log.write(f"lost Ardia: {error}")
+                self.log.write(f"lost Nilla: {error}")
             except control.MethodError as error:
-                self.log.write(f"Ardia refused the subscription ({error.code}: {error.message}); retrying")
+                self.log.write(f"Nilla refused the subscription ({error.code}: {error.message}); retrying")
                 await asyncio.sleep(delay)
                 delay = min(delay * 2, self.backoff_max)
             finally:
@@ -945,7 +945,7 @@ class Service:
             served = reply.get("served", []) if isinstance(reply, dict) else []
             missing = [h.name for h in self.hooks.values() if h.served and h.name not in served]
             if missing:
-                self.log.write(f"Ardia doesn't take these hooks from this runner yet (not in its hooks.json, or changed): {', '.join(missing)}")
+                self.log.write(f"Nilla doesn't take these hooks from this runner yet (not in its hooks.json, or changed): {', '.join(missing)}")
         await self._load_scopes(connection)
 
     async def _serve(self, connection) -> None:
@@ -1027,7 +1027,7 @@ class AgentPaths:
     linux: bool = False
     config_home: Path | None = None
     state_home: Path | None = None
-    ardia_config_home: Path | None = None
+    nilla_config_home: Path | None = None
 
     @property
     def agents(self) -> Path:
@@ -1077,7 +1077,7 @@ class AgentPaths:
 
 
 def agent_paths(linux: bool | None = None) -> AgentPaths:
-    from ardia_cli import usage
+    from nilla_browser_cli import usage
 
     home = Path.home()
     if endpoint.LINUX if linux is None else linux:
@@ -1148,11 +1148,11 @@ def systemd_quote(value: str, expands_variables: bool = True) -> str:
 def service_unit(paths: AgentPaths, path_env: str | None) -> str:
     command = " ".join(systemd_quote(part) for part in (str(paths.launcher), "hooks", "run", "--log", str(paths.log)))
     pinned = [f"PATH={path_env or DEFAULT_PATH}", "ARDIA_DATA_DIR="]
-    if paths.ardia_config_home is not None:
-        pinned.append(f"ARDIA_CONFIG_HOME={paths.ardia_config_home}")
+    if paths.nilla_config_home is not None:
+        pinned.append(f"ARDIA_CONFIG_HOME={paths.nilla_config_home}")
     environment = " ".join(systemd_quote(item, expands_variables=False) for item in pinned)
     return f"""[Unit]
-Description=Ardia hooks (ardia hooks run)
+Description=Nilla hooks (nilla hooks run)
 StartLimitIntervalSec=0
 
 [Service]

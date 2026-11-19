@@ -1,11 +1,11 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.Context
 import android.print.PrintAttributes
 import android.print.PrintManager
-import com.ardia.browser.BrowserUrl
-import com.ardia.browser.Page
+import com.nilladigital.nilla.BrowserUrl
+import com.nilladigital.nilla.Page
 
 internal object PagePrinting {
     fun jobName(title: String, address: String): String = title.trim().ifEmpty { BrowserUrl.rawHost(address) ?: address }

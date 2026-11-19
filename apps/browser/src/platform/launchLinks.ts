@@ -1,3 +1,3 @@
-import type { LaunchLinksNative } from "@ardia/shell";
+import type { LaunchLinksNative } from "@nilla/shell";
 
 export const launchLinks: LaunchLinksNative = { takeOpenedAtLaunch: () => 0 };

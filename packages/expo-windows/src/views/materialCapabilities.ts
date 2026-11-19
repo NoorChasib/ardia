@@ -25,7 +25,7 @@ export function materialCapabilities(): MaterialCapabilities | null {
   if (capabilities !== undefined) return capabilities;
   capabilities = null;
   try {
-    const native = TurboModuleRegistry.get<TurboModule & MaterialsNative>("ArdiaMaterials");
+    const native = TurboModuleRegistry.get<TurboModule & MaterialsNative>("NillaMaterials");
     const answer = native?.capabilities?.();
     if (answer && typeof answer === "object" && typeof answer.build === "number") capabilities = answer;
   } catch {
@@ -43,7 +43,7 @@ export const nativeGradient = () => materialCapabilities()?.gradient === true;
 export function gradientDrawsNow(): boolean {
   if (!nativeGradient()) return false;
   try {
-    const native = TurboModuleRegistry.get<TurboModule & MaterialsNative>("ArdiaMaterials");
+    const native = TurboModuleRegistry.get<TurboModule & MaterialsNative>("NillaMaterials");
     const draws = native?.capabilities?.().gradient === true;
     if (!draws && capabilities) capabilities = { ...capabilities, gradient: false };
     return draws;
@@ -52,7 +52,7 @@ export function gradientDrawsNow(): boolean {
   }
 }
 
-export const GRADIENT_FAILED_EVENT = "ArdiaMaterials:gradientFailed";
+export const GRADIENT_FAILED_EVENT = "NillaMaterials:gradientFailed";
 
 const failureListeners = new Set<() => void>();
 let failures: EmitterSubscription | null = null;

@@ -1,5 +1,5 @@
-import ArdiaShared
-import ArdiaSync
+import NillaShared
+import NillaSync
 import Foundation
 
 public actor Omnibox {

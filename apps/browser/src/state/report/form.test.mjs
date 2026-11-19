@@ -15,7 +15,7 @@ const context = (patch = {}) => ({
   arch: "arm64",
   pageAddress: "https://news.example.test/release-notes?ref=x",
   sharing: false,
-  diagnostics: { system: { app: "Ardia 0.2.47" } },
+  diagnostics: { system: { app: "Nilla 0.2.47" } },
   files: [],
   ...patch,
 });

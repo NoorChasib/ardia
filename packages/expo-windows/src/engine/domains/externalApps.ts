@@ -1,5 +1,5 @@
 import type { ExternalAppAllowance, ExternalAppRequest } from "@ardia/ardiacore";
-import type { DocumentsNative, ExternalAppCountsNative, ExternalAppLaunches } from "@ardia/shell";
+import type { DocumentsNative, ExternalAppCountsNative, ExternalAppLaunches } from "@nilla/shell";
 import type { ExternalAppsModule, ExternalHandler } from "../../nativeModuleTypes";
 import { callError, isFields, isPrivateProfile, ok, type Engine, type Fields, type Handlers } from "./calling";
 

@@ -2,7 +2,7 @@ import { useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNod
 import { View, type ViewProps, type ViewStyle } from "react-native";
 import { useBrowser } from "../../../../browser/src/state/browser/store";
 import { useScopedTheme } from "../../../../browser/src/components/ui/theme";
-import { ardiaHost, hostModuleMethod, hostSupports, reportHostError } from "../../host";
+import { nillaHost, hostModuleMethod, hostSupports, reportHostError } from "../../host";
 import { shellOverPages, useInputRegion } from "../../shellAbove";
 import { GlassInside, GlassOptIn, useGlassSurface, useVisualEffectMark } from "../../shellGlass";
 import { watchPageFocus } from "../../pageFocus";
@@ -269,7 +269,7 @@ export function ContextMenuArea({ onContextMenu, captureDescendants: _capture, .
   );
 }
 
-const COMMAND_PANEL_FRAME = '[data-testid="ardia-command-panel"]';
+const COMMAND_PANEL_FRAME = '[data-testid="nilla-command-panel"]';
 
 export function OutsidePressArea({ onOutsidePress, ...props }: ViewProps & { onOutsidePress?: (event: { nativeEvent: { timestamp?: number } }) => void; children?: ReactNode }) {
   const node = useRef<HTMLElement | null>(null);
@@ -299,7 +299,7 @@ export function OutsidePressArea({ onOutsidePress, ...props }: ViewProps & { onO
   );
 }
 
-const windowDragHost = (): WindowDragHost | null => ardiaHost && WINDOW_DRAG_ROUTES.every((route) => hostSupports(route)) ? {
+const windowDragHost = (): WindowDragHost | null => nillaHost && WINDOW_DRAG_ROUTES.every((route) => hostSupports(route)) ? {
   move: () => hostModuleMethod("ArdiaShell", "startWindowMove")(),
   doubleClick: () => hostModuleMethod("ArdiaShell", "captionDoubleClick")(),
 } : null;

@@ -13,14 +13,14 @@
 #include <initializer_list>
 #include <vector>
 
-using namespace ardia_runtime;
+using namespace nilla_runtime;
 
-namespace ardia_host {
+namespace nilla_host {
 
 namespace {
 
 NSString *LogPath() {
-  return [ArdiaLaunchConfig.shared.dataDirectory stringByAppendingPathComponent:@"activation.log"];
+  return [NillaLaunchConfig.shared.dataDirectory stringByAppendingPathComponent:@"activation.log"];
 }
 
 void Log(NSString *what, NSArray<NSString *> *stack) {
@@ -40,7 +40,7 @@ void Log(NSString *what, NSArray<NSString *> *stack) {
 }
 
 void LogLater(NSString *what, NSArray<NSNumber *> *addresses) {
-  static dispatch_queue_t queue = dispatch_queue_create("ardia.activation-log", DISPATCH_QUEUE_SERIAL);
+  static dispatch_queue_t queue = dispatch_queue_create("nilla.activation-log", DISPATCH_QUEUE_SERIAL);
   dispatch_async(queue, ^{
     std::vector<void *> frames;
     for (NSNumber *address in addresses) frames.push_back((void *)address.unsignedLongValue);
@@ -72,7 +72,7 @@ void ObserveActivation() {
 const void *kPicksKey = &kPicksKey;
 
 NSArray<NSURL *> *TakePicks() {
-  NSString *dir = ArdiaLaunchConfig.shared.dataDirectory;
+  NSString *dir = NillaLaunchConfig.shared.dataDirectory;
   if (!dir) return nil;
   NSString *path = [dir stringByAppendingPathComponent:@"file-chooser.txt"];
   NSString *text = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
@@ -233,7 +233,7 @@ void InterceptAlerts() {
 }
 
 bool Background() {
-  return ArdiaLaunchConfig.shared.background;
+  return NillaLaunchConfig.shared.background;
 }
 
 namespace {

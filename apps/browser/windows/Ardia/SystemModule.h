@@ -23,7 +23,7 @@
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "uuid.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 namespace SystemShell {
 
@@ -194,7 +194,7 @@ inline winrt::Microsoft::ReactNative::JSValue OptionalString(std::optional<std::
 
 }
 
-REACT_MODULE(SystemModule, L"ArdiaSystem")
+REACT_MODULE(SystemModule, L"NillaSystem")
 struct SystemModule {
   REACT_CONSTANT(backgroundInstance)
   const bool backgroundInstance = AppLaunch::Background();
@@ -207,10 +207,10 @@ struct SystemModule {
   REACT_METHOD(setAsDefaultBrowser)
   void setAsDefaultBrowser(winrt::Microsoft::ReactNative::ReactPromise<bool> promise) noexcept {
     if (AppLaunch::Background()) {
-      AppLaunch::Note(L"ArdiaSystem: background instance, not setting the default browser");
+      AppLaunch::Note(L"NillaSystem: background instance, not setting the default browser");
       return promise.Resolve(false);
     }
-    AppLaunch::Note(L"ArdiaSystem: setting the default browser isn't supported in this development build of Nilla");
+    AppLaunch::Note(L"NillaSystem: setting the default browser isn't supported in this development build of Nilla");
     promise.Resolve(false);
   }
 
@@ -236,10 +236,10 @@ struct SystemModule {
   REACT_METHOD(setLaunchAtLogin)
   void setLaunchAtLogin(bool, winrt::Microsoft::ReactNative::ReactPromise<void> promise) noexcept {
     if (AppLaunch::Background()) {
-      AppLaunch::Note(L"ArdiaSystem: background instance, not changing launch at login");
+      AppLaunch::Note(L"NillaSystem: background instance, not changing launch at login");
       return promise.Resolve();
     }
-    AppLaunch::Note(L"ArdiaSystem: launch at login isn't supported in this development build of Nilla");
+    AppLaunch::Note(L"NillaSystem: launch at login isn't supported in this development build of Nilla");
     promise.Reject("Launch at login isn't supported in this development build of Nilla");
   }
 
@@ -253,7 +253,7 @@ struct SystemModule {
     std::wstring target = SystemShell::NativePath(path);
     if (!SystemShell::Exists(target)) return promise.Resolve(false);
     if (AppLaunch::Background()) {
-      AppLaunch::Note(L"ArdiaSystem: background instance, not opening " + target);
+      AppLaunch::Note(L"NillaSystem: background instance, not opening " + target);
       return promise.Resolve(true);
     }
     if (!AppShell::RunOnShellThread([target, promise]() noexcept { promise.Resolve(AppShell::Execute(target)); })) promise.Resolve(false);
@@ -264,7 +264,7 @@ struct SystemModule {
     std::wstring target = SystemShell::NativePath(path);
     if (!SystemShell::Exists(target)) return promise.Resolve(false);
     if (AppLaunch::Background()) {
-      AppLaunch::Note(L"ArdiaSystem: background instance, not revealing " + target);
+      AppLaunch::Note(L"NillaSystem: background instance, not revealing " + target);
       return promise.Resolve(true);
     }
     if (!AppShell::RunOnShellThread([target, promise]() noexcept { promise.Resolve(SystemShell::Reveal(target)); })) promise.Resolve(false);

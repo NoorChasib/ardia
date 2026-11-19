@@ -84,7 +84,7 @@ final class FocusHandoff {
       outcomes.add("superseded")
     }
     if let page = focused as? NSView, Self.isPage(page) {
-      ArdiaWebView.keepOutgoingFocus(from: page)
+      NillaWebView.keepOutgoingFocus(from: page)
       gate.resigned = page
       window.makeFirstResponder(nil)
     }
@@ -339,7 +339,7 @@ final class FocusHandoff {
     afterPendingUI { [weak self, weak window] in
       guard let self, let window, window.isKeyWindow, Self.unfocused(window), self.gates[ObjectIdentifier(window)] == nil else { return }
       self.note("refocus page")
-      ArdiaWebView.focusVisiblePage(in: window)
+      NillaWebView.focusVisiblePage(in: window)
     }
   }
 
@@ -352,7 +352,7 @@ final class FocusHandoff {
     gate.timer?.cancel()
     gate.watches.forEach { ($0 as? NSKeyValueObservation)?.invalidate() ?? NotificationCenter.default.removeObserver($0) }
     gate.watches = []
-    if let resigned = gate.resigned { ArdiaWebView.endOutgoingFocus(from: resigned) }
+    if let resigned = gate.resigned { NillaWebView.endOutgoingFocus(from: resigned) }
   }
 
   private func gate(of id: Int) -> Gate? {

@@ -1,7 +1,7 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.settings.QrDecoder
-import com.ardia.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.settings.QrDecoder
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter

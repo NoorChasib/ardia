@@ -42,13 +42,13 @@ test("a host that advertises a system backend is called through instead of being
 test("Linux capabilities come from the host contract, and WebKit is never offered", () => {
   assert.deepEqual(linuxCapabilities(fakeHost().host), {
     defaultBrowser: false, launchAtLogin: false, thinScrollBars: false, webkit: false, cliControl: false, cliInstall: false, userScripts: false, externalLinks: false, performanceRecording: false, taskManager: false, videoUpscaling: false,
-    commandScrollZoom: false, littleArdiaNewTabLinks: false, peekOtherSites: false, popupsOpenAsTabs: false, haptics: false, linksFromOtherApps: false, dictation: false, fullScreen: false, pageEdits: false,
+    commandScrollZoom: false, littleNillaNewTabLinks: false, peekOtherSites: false, popupsOpenAsTabs: false, haptics: false, linksFromOtherApps: false, dictation: false, fullScreen: false, pageEdits: false,
     unloadIdleProfiles: false, hiddenElements: false, blockAutoplayEverywhere: false, pagePictures: false, tabMemory: false,
   });
   const full = linuxCapabilities(fakeHost(["ArdiaSystem.isDefaultBrowser", "ArdiaSystem.setAsDefaultBrowser", "ArdiaSystem.launchAtLoginStatus", "ArdiaSystem.setLaunchAtLogin", "ArdiaSystem.setThinScrollBars", "engine.beginTracing", "engine.endTracing", "engine.isTracing", "engine.openTaskManager", "ArdiaApp.openExternalURL"]).host);
-  assert.deepEqual(full, { defaultBrowser: true, launchAtLogin: true, thinScrollBars: true, webkit: false, cliControl: false, cliInstall: false, userScripts: false, externalLinks: true, performanceRecording: true, taskManager: true, videoUpscaling: false, commandScrollZoom: false, littleArdiaNewTabLinks: false, peekOtherSites: false, popupsOpenAsTabs: false, haptics: false, linksFromOtherApps: false, dictation: false, fullScreen: false, pageEdits: false, unloadIdleProfiles: false, hiddenElements: false, blockAutoplayEverywhere: false, pagePictures: false, tabMemory: false });
+  assert.deepEqual(full, { defaultBrowser: true, launchAtLogin: true, thinScrollBars: true, webkit: false, cliControl: false, cliInstall: false, userScripts: false, externalLinks: true, performanceRecording: true, taskManager: true, videoUpscaling: false, commandScrollZoom: false, littleNillaNewTabLinks: false, peekOtherSites: false, popupsOpenAsTabs: false, haptics: false, linksFromOtherApps: false, dictation: false, fullScreen: false, pageEdits: false, unloadIdleProfiles: false, hiddenElements: false, blockAutoplayEverywhere: false, pagePictures: false, tabMemory: false });
   const routed = linuxCapabilities(fakeHost(["webView.setCommandScrollZoom", "webView.setLittleArdiaOpensNewTabLinks", "webView.setPeekOtherSiteTabs", "ArdiaSystem.hapticTick", LINKS_FROM_OTHER_APPS, DICTATION_METHOD]).host);
-  assert.deepEqual([routed.commandScrollZoom, routed.littleArdiaNewTabLinks, routed.peekOtherSites, routed.haptics, routed.linksFromOtherApps, routed.dictation], [true, true, true, true, true, true]);
+  assert.deepEqual([routed.commandScrollZoom, routed.littleNillaNewTabLinks, routed.peekOtherSites, routed.haptics, routed.linksFromOtherApps, routed.dictation], [true, true, true, true, true, true]);
   assert.equal(linuxCapabilities(undefined).taskManager, false);
 });
 
@@ -61,22 +61,22 @@ test("the command bar's Dictate button follows the dictation capability: off whi
 });
 
 test("unavailable choices map to exact settings ids and the Web engine rows", () => {
-  const ids = ["general.defaultBrowser", "general.openAtLogin", "general.askBefore", "advanced.pageEngine", "advanced.websiteEngines", "profiles.otherEngines", "advanced.ardiaCommand", "advanced.compactCliPill", "advanced.showFullUrl", "tabs.videoUpscaling", "tabs.autoPictureInPicture", "tabs.showPagePreviewInTabHoverMenu", "tabs.showMemoryInTabHoverMenu"];
-  const unrouted = ["tabs.openLinksInLittleArdia", "tabs.appLinksFirst", "tabs.peekLinksToOtherSites", "tabs.popupsOpenAsTabs"];
+  const ids = ["general.defaultBrowser", "general.openAtLogin", "general.askBefore", "advanced.pageEngine", "advanced.websiteEngines", "profiles.otherEngines", "advanced.nillaCommand", "advanced.compactCliPill", "advanced.showFullUrl", "tabs.videoUpscaling", "tabs.autoPictureInPicture", "tabs.showPagePreviewInTabHoverMenu", "tabs.showMemoryInTabHoverMenu"];
+  const unrouted = ["tabs.openLinksInLittleNilla", "tabs.appLinksFirst", "tabs.peekLinksToOtherSites", "tabs.popupsOpenAsTabs"];
   const routedRows = { peekOtherSites: true, popupsOpenAsTabs: true, linksFromOtherApps: true };
   const webEngine = ["advanced.pageEngine", "advanced.websiteEngines"];
   const none = linuxCapabilities(fakeHost().host);
-  assert.deepEqual([...unavailableSettingIds(none, ids)].sort(), [...unrouted, ...webEngine, "advanced.ardiaCommand", "advanced.compactCliPill", "general.autoUpdate", "general.defaultBrowser", "general.openAtLogin", "tabs.videoUpscaling", "tabs.showPagePreviewInTabHoverMenu", "tabs.showMemoryInTabHoverMenu"].sort());
-  for (const [capability, rows] of Object.entries({ peekOtherSites: ["tabs.peekLinksToOtherSites"], popupsOpenAsTabs: ["tabs.popupsOpenAsTabs"], linksFromOtherApps: ["tabs.openLinksInLittleArdia", "tabs.appLinksFirst"] })) {
+  assert.deepEqual([...unavailableSettingIds(none, ids)].sort(), [...unrouted, ...webEngine, "advanced.nillaCommand", "advanced.compactCliPill", "general.autoUpdate", "general.defaultBrowser", "general.openAtLogin", "tabs.videoUpscaling", "tabs.showPagePreviewInTabHoverMenu", "tabs.showMemoryInTabHoverMenu"].sort());
+  for (const [capability, rows] of Object.entries({ peekOtherSites: ["tabs.peekLinksToOtherSites"], popupsOpenAsTabs: ["tabs.popupsOpenAsTabs"], linksFromOtherApps: ["tabs.openLinksInLittleNilla", "tabs.appLinksFirst"] })) {
     const shown = unavailableSettingIds({ ...none, [capability]: true }, ids);
     assert.deepEqual(unrouted.filter((id) => !shown.has(id)), rows, capability);
   }
   assert.deepEqual([...unavailableSettingIds({ ...none, webkit: true }, ids)].filter((id) => webEngine.includes(id)), []);
   assert.deepEqual([...unavailableSettingIds(none, ["general.defaultBrowser"])].filter((id) => webEngine.includes(id)), []);
   assert.deepEqual([...unavailableSettingIds({ ...none, defaultBrowser: true, launchAtLogin: true, cliControl: true, cliInstall: true, videoUpscaling: true, pagePictures: true, tabMemory: true, ...routedRows }, ids)].sort(), [...webEngine, "general.autoUpdate"]);
-  const cliRows = (capabilities) => [...unavailableSettingIds(capabilities, ids)].filter((id) => id === "advanced.ardiaCommand" || id === "advanced.compactCliPill").sort();
+  const cliRows = (capabilities) => [...unavailableSettingIds(capabilities, ids)].filter((id) => id === "advanced.nillaCommand" || id === "advanced.compactCliPill").sort();
   assert.deepEqual(cliRows({ ...none, cliControl: true }), []);
-  assert.deepEqual(cliRows({ ...none, cliInstall: true }), ["advanced.ardiaCommand", "advanced.compactCliPill"]);
+  assert.deepEqual(cliRows({ ...none, cliInstall: true }), ["advanced.nillaCommand", "advanced.compactCliPill"]);
 });
 
 test("the hover card's memory row follows the engine's task list and its page preview row follows page captures", () => {
@@ -89,7 +89,7 @@ test("the hover card's memory row follows the engine's task list and its page pr
   assert.equal(linuxCapabilities(fakeHost([TAB_MEMORY_CALL]).host).tabMemory, true);
 });
 
-test("the ardia command's rows follow the engine: every control and install method, or the rows stay hidden", () => {
+test("the nilla-browser command's rows follow the engine: every control and install method, or the rows stay hidden", () => {
   assert.equal(linuxCapabilities(fakeHost([...CLI_CONTROL_METHODS]).host).cliControl, true);
   assert.equal(linuxCapabilities(fakeHost([...CLI_INSTALL_METHODS]).host).cliInstall, true);
   for (const missing of CLI_CONTROL_METHODS) {
@@ -121,7 +121,7 @@ function cliHost(capabilities, installedVersion) {
   };
 }
 
-test("the installed ardia version answers synchronously from the bootstrap, then from the host's refresh, installs and announcements", async () => {
+test("the installed nilla version answers synchronously from the bootstrap, then from the host's refresh, installs and announcements", async () => {
   const { host, invoked, emit } = cliHost([...CLI_INSTALL_METHODS], "0.2.43");
   const installedVersion = resolveHostModule(host, "ArdiaCli", "installedVersion");
   assert.equal(installedVersion(), "0.2.43");
@@ -138,7 +138,7 @@ test("the installed ardia version answers synchronously from the bootstrap, then
   assert.equal(invoked.filter(([method]) => method === "ArdiaCli.installedVersion").length, 1);
 });
 
-test("an engine without the ardia command keeps the old answers and never reaches the host", async () => {
+test("an engine without the nilla-browser command keeps the old answers and never reaches the host", async () => {
   const { host, invoked } = cliHost([]);
   assert.equal(resolveHostModule(host, "ArdiaCli", "installedVersion")(), null);
   assert.equal((await resolveHostModule(host, "ArdiaCli", "install")().catch((error) => error)).code, "ERR_UNAVAILABLE");
@@ -349,7 +349,7 @@ test("a notification permission failure other than Linux's unavailable answer st
 
 test("casting answers with an explicit unavailable state instead of a silent rejection", async () => {
   useBrowser.getState().hydrate({});
-  const windowId = useBrowser.getState().createWindow({ url: "https://cast.ardia.test/" });
+  const windowId = useBrowser.getState().createWindow({ url: "https://cast.nilla.test/" });
   const tabId = useBrowser.getState().windows[windowId].tabIds[0];
   useToasts.setState({ toasts: {} });
   assert.equal(await linuxMediaCall("showCastDialog", JSON.stringify({ tabId })), "false");

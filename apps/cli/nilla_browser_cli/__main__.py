@@ -17,7 +17,7 @@ def take_lease() -> str | None:
 
 lease = take_lease()
 try:
-    from ardia_cli.cli import main
+    from nilla_browser_cli.cli import main
 
     status = main()
 finally:

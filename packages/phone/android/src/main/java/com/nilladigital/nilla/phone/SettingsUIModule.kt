@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -47,23 +47,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import com.ardia.design.AppIconPreview
-import com.ardia.design.ArdiaSymbols
-import com.ardia.design.ArdiaType
-import com.ardia.design.ColorSwatch
-import com.ardia.design.LocalArdiaDarkTheme
-import com.ardia.design.Motion
-import com.ardia.design.Palette
-import com.ardia.design.ProfileLook
-import com.ardia.design.SettingsHero
-import com.ardia.design.SettingsIconTile
-import com.ardia.design.SettingsRowLabel
-import com.ardia.design.SettingsTile
-import com.ardia.design.SettingsTint
-import com.ardia.design.SetupStepProgress
-import com.ardia.design.SetupStepRow
-import com.ardia.design.SystemPalette
-import com.ardia.design.profileBackdrop
+import com.nilladigital.nilla.design.AppIconPreview
+import com.nilladigital.nilla.design.NillaSymbols
+import com.nilladigital.nilla.design.NillaType
+import com.nilladigital.nilla.design.ColorSwatch
+import com.nilladigital.nilla.design.LocalNillaDarkTheme
+import com.nilladigital.nilla.design.Motion
+import com.nilladigital.nilla.design.Palette
+import com.nilladigital.nilla.design.ProfileLook
+import com.nilladigital.nilla.design.SettingsHero
+import com.nilladigital.nilla.design.SettingsIconTile
+import com.nilladigital.nilla.design.SettingsRowLabel
+import com.nilladigital.nilla.design.SettingsTile
+import com.nilladigital.nilla.design.SettingsTint
+import com.nilladigital.nilla.design.SetupStepProgress
+import com.nilladigital.nilla.design.SetupStepRow
+import com.nilladigital.nilla.design.SystemPalette
+import com.nilladigital.nilla.design.profileBackdrop
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.records.Field
 import expo.modules.kotlin.records.Record
@@ -230,7 +230,7 @@ private fun FilterTextEditorFace(text: String, modifier: Modifier, onChange: (St
 
 @Composable
 private fun Themed(content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalArdiaDarkTheme provides isSystemInDarkTheme(), content = content)
+    CompositionLocalProvider(LocalNillaDarkTheme provides isSystemInDarkTheme(), content = content)
 }
 
 @Composable
@@ -240,8 +240,8 @@ private fun FunctionalComposableScope.applied(modifiers: ModifierList): Modifier
 @Composable
 private fun CheckmarkLabel(title: String, isChecked: Boolean, modifier: Modifier) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, style = ArdiaType.body, color = SystemPalette.label.current, modifier = Modifier.weight(1f))
-        if (isChecked) Icon(ArdiaSymbols.checkmark, null, Modifier.size(18.dp), tint = Palette.formAccent.current) else Spacer(Modifier.size(18.dp))
+        Text(title, style = NillaType.body, color = SystemPalette.label.current, modifier = Modifier.weight(1f))
+        if (isChecked) Icon(NillaSymbols.checkmark, null, Modifier.size(18.dp), tint = Palette.formAccent.current) else Spacer(Modifier.size(18.dp))
     }
 }
 
@@ -264,7 +264,7 @@ internal object SettingsSurfaces {
 }
 
 internal object SettingsUIModifiers {
-    val names = listOf("ardia.navigationBarBackButtonHidden", "ardia.minListRowHeight", "ardia.spaceBackdrop", "ardia.settingsChrome", "ardia.settingsPage", "ardia.chromeSurface", "ardia.settingsSwitchStyle", "ardia.pressableStyle", "ardia.legibleInk", "ardia.profileLook", "ardia.contentMargins")
+    val names = listOf("nilla.navigationBarBackButtonHidden", "nilla.minListRowHeight", "nilla.spaceBackdrop", "nilla.settingsChrome", "nilla.settingsPage", "nilla.chromeSurface", "nilla.settingsSwitchStyle", "nilla.pressableStyle", "nilla.legibleInk", "nilla.profileLook", "nilla.contentMargins")
 
     private fun ModifierType.text(key: String): String? = runCatching { get(key)?.takeUnless { it.isNull }?.asString() }.getOrNull()
 
@@ -277,18 +277,18 @@ internal object SettingsUIModifiers {
     }.getOrNull()
 
     fun register() {
-        ModifierRegistry.register("ardia.navigationBarBackButtonHidden") { _, _, _, _ -> Modifier }
-        ModifierRegistry.register("ardia.minListRowHeight") { _, _, _, _ -> Modifier }
-        ModifierRegistry.register("ardia.spaceBackdrop") { params, _, _, _ ->
+        ModifierRegistry.register("nilla.navigationBarBackButtonHidden") { _, _, _, _ -> Modifier }
+        ModifierRegistry.register("nilla.minListRowHeight") { _, _, _, _ -> Modifier }
+        ModifierRegistry.register("nilla.spaceBackdrop") { params, _, _, _ ->
             val dark = isSystemInDarkTheme()
             Modifier.spaceBackdrop(SpaceRules.tones(params.text("color"), params.texts("themeColors").orEmpty(), params.texts("themeDarkColors"), dark, increasedContrast = false), dark)
         }
-        ModifierRegistry.register("ardia.settingsChrome") { _, _, _, _ ->
+        ModifierRegistry.register("nilla.settingsChrome") { _, _, _, _ ->
             val dark = isSystemInDarkTheme()
             Modifier.profileBackdrop(SettingsLook.look, dark)
         }
-        ModifierRegistry.register("ardia.settingsPage") { _, _, _, _ -> Modifier }
-        ModifierRegistry.register("ardia.chromeSurface") { params, _, _, _ ->
+        ModifierRegistry.register("nilla.settingsPage") { _, _, _, _ -> Modifier }
+        ModifierRegistry.register("nilla.chromeSurface") { params, _, _, _ ->
             val shape = SettingsSurfaces.shape(params.text("shape") ?: "capsule", params.number("cornerRadius") ?: 0.0)
             val dark = isSystemInDarkTheme()
             val look = SettingsLook.look
@@ -296,8 +296,8 @@ internal object SettingsUIModifiers {
             val stroke = (if (dark) Color.White else Color.Black).copy(alpha = 0.12f)
             Modifier.clip(shape).background(fill, shape).border(0.5.dp, stroke, shape)
         }
-        ModifierRegistry.register("ardia.settingsSwitchStyle") { _, _, _, _ -> Modifier }
-        ModifierRegistry.register("ardia.pressableStyle") { _, _, _, _ ->
+        ModifierRegistry.register("nilla.settingsSwitchStyle") { _, _, _, _ -> Modifier }
+        ModifierRegistry.register("nilla.pressableStyle") { _, _, _, _ ->
             var pressed by remember { mutableStateOf(false) }
             val scale by animateFloatAsState(if (pressed) 0.94f else 1f, Motion.press.spec(), label = "pressable")
             Modifier
@@ -314,9 +314,9 @@ internal object SettingsUIModifiers {
                     }
                 }
         }
-        ModifierRegistry.register("ardia.legibleInk") { _, _, _, _ -> Modifier }
-        ModifierRegistry.register("ardia.contentMargins") { _, _, _, _ -> Modifier }
-        ModifierRegistry.register("ardia.profileLook") { params, _, _, _ ->
+        ModifierRegistry.register("nilla.legibleInk") { _, _, _, _ -> Modifier }
+        ModifierRegistry.register("nilla.contentMargins") { _, _, _, _ -> Modifier }
+        ModifierRegistry.register("nilla.profileLook") { params, _, _, _ ->
             val look = ProfileLook.of(params.text("color"), params.texts("themeColors").orEmpty(), params.texts("darkThemeColors"))
             val glass = params.flag("usesGlass") ?: true
             SideEffect {
@@ -332,7 +332,7 @@ internal object SettingsUIModifiers {
 
 class SettingsUIModule : Module() {
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneSettingsUI")
+        Name("NillaPhoneSettingsUI")
 
         OnCreate { SettingsUIModifiers.register() }
 

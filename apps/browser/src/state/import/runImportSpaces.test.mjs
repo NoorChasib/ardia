@@ -8,7 +8,7 @@ globalThis.fetch = async () => ({ status: 200 });
 let spaces = [];
 let whenNativeDone = () => {};
 globalThis.acTestNativeModules = {
-  ArdiaImport: {
+  NillaImport: {
     addListener: () => ({ remove() {} }),
     cancelImport() {},
     forgetUnlockedKeys() {},

@@ -1,12 +1,12 @@
-import type { DialogsNative, ShellNative } from "@ardia/shell";
+import type { DialogsNative, ShellNative } from "@nilla/shell";
 import type { NotificationsModule } from "../nativeModuleTypes";
 import { TurboModuleRegistry } from "react-native";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
-const shell = () => requireNativeModule<ShellNative>("ArdiaShell");
-const dialogs = () => requireNativeModule<DialogsNative>("ArdiaDialogs");
-const notifications = () => requireNativeModule<NotificationsModule>("ArdiaNotifications");
+const shell = () => requireNativeModule<ShellNative>("NillaShell");
+const dialogs = () => requireNativeModule<DialogsNative>("NillaDialogs");
+const notifications = () => requireNativeModule<NotificationsModule>("NillaNotifications");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function waitFor(condition: () => boolean, ms: number) {
@@ -18,7 +18,7 @@ export const checks: Check[] = [
   {
     name: "shell: the shell, dialogs and notifications modules are native",
     run() {
-      for (const name of ["ArdiaShell", "ArdiaDialogs", "ArdiaNotifications"]) expectTrue(TurboModuleRegistry.get(name), `${name} has no native module`);
+      for (const name of ["NillaShell", "NillaDialogs", "NillaNotifications"]) expectTrue(TurboModuleRegistry.get(name), `${name} has no native module`);
     },
   },
   {
@@ -49,7 +49,7 @@ export const checks: Check[] = [
   {
     name: "shell: copied text reads back from the clipboard",
     async run() {
-      const text = `ardia self-check ${Date.now()} ✓ ünïcödé 日本語 🚀`;
+      const text = `nilla self-check ${Date.now()} ✓ ünïcödé 日本語 🚀`;
       shell().copyText(text);
       expectEqual(await shell().readText(), text, "clipboard text");
     },

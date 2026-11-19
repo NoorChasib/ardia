@@ -21,7 +21,7 @@ final class FolderIconView: ExpoView {
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
     wantsLayer = true
-    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .ArdiaInterfaceScaleDidChange, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .NillaInterfaceScaleDidChange, object: nil)
   }
 
   @objc private func interfaceScaleDidChange() {

@@ -4,7 +4,7 @@ import ExpoModulesCore
 
 public class ContextMenuAreaModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaContextMenuArea")
+    Name("NillaContextMenuArea")
 
     View(ContextMenuArea.self) {
       Events("onContextMenu")

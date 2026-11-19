@@ -1,4 +1,4 @@
-package com.ardia.appmodel
+package com.nilladigital.nilla.appmodel
 
 import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
@@ -8,11 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import com.ardia.browser.DownloadOutcome
-import com.ardia.browser.DownloadProgress
-import com.ardia.browser.PageEngine
-import com.ardia.browser.PageDownload
-import com.ardia.browser.SystemDownloads
+import com.nilladigital.nilla.DownloadOutcome
+import com.nilladigital.nilla.DownloadProgress
+import com.nilladigital.nilla.PageEngine
+import com.nilladigital.nilla.PageDownload
+import com.nilladigital.nilla.SystemDownloads
 import java.util.Locale
 import kotlinx.coroutines.flow.Flow
 

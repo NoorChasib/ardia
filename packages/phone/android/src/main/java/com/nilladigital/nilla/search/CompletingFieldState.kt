@@ -1,4 +1,4 @@
-package com.ardia.search
+package com.nilladigital.nilla.search
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -6,8 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import com.ardia.store.CompletionOffer
-import com.ardia.store.InlineCompletionEditor
+import com.nilladigital.nilla.store.CompletionOffer
+import com.nilladigital.nilla.store.InlineCompletionEditor
 
 @Stable
 class CompletingFieldState(initial: String = "", selectsAll: Boolean = false) {

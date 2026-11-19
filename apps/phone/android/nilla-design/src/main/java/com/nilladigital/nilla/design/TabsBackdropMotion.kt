@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 object TabsBackdropMotion {
     const val SLOW_LOOP_MILLIS = 10_000

@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import android.content.Context
 import android.util.Log
@@ -29,7 +29,7 @@ class BlockingOnDeviceTest {
 
     @Test
     fun settingsPersistInSharedPreferences() {
-        val preferences = context.getSharedPreferences("ardia-blocking-test", Context.MODE_PRIVATE)
+        val preferences = context.getSharedPreferences("nilla-blocking-test", Context.MODE_PRIVATE)
         preferences.edit().clear().commit()
         val settings = BlockingSettings(SharedPreferencesBlockingStore(preferences))
         settings.blocksTrackers = false
@@ -42,7 +42,7 @@ class BlockingOnDeviceTest {
 
     @Test
     fun matchingOnTheDeviceStaysFast() = runBlocking {
-        val directory = File(context.cacheDir, "ardia-blocking-speed").apply { deleteRecursively() }
+        val directory = File(context.cacheDir, "nilla-blocking-speed").apply { deleteRecursively() }
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         try {
             val store = InMemoryBlockingStore()
@@ -58,7 +58,7 @@ class BlockingOnDeviceTest {
             val start = System.nanoTime()
             repeat(runs) { blocker.blocks(urls[it % urls.size], "https://www.theguardian.com/", false) }
             val micros = (System.nanoTime() - start) / runs / 1000.0
-            Log.i("ArdiaTiming", "blocking seeds: %.2f us per request".format(micros))
+            Log.i("NillaTiming", "blocking seeds: %.2f us per request".format(micros))
             assertTrue(micros < 50)
         } finally {
             scope.cancel()

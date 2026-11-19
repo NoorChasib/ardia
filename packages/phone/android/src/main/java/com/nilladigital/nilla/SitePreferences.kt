@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 interface SitePreferences {
     fun nightShade(host: String?, isPrivate: Boolean): NightShadeMode

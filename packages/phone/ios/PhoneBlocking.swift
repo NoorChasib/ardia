@@ -1,9 +1,9 @@
-import ArdiaBrowser
+import NillaBrowser
 import Foundation
 
 enum PhoneBlocking {
   static let directory = URL.cachesDirectory.appending(path: "Blocking", directoryHint: .isDirectory)
-  static let demoFiltersDirectory = URL.temporaryDirectory.appending(path: "ArdiaDemoFilters", directoryHint: .isDirectory)
+  static let demoFiltersDirectory = URL.temporaryDirectory.appending(path: "NillaDemoFilters", directoryHint: .isDirectory)
 
   @MainActor
   static func filterLists(isDemo: Bool, defaults: UserDefaults, demoDirectory: URL = demoFiltersDirectory) -> FilterLists? {

@@ -1,4 +1,4 @@
-@testable import ArdiaDesign
+@testable import NillaDesign
 import SwiftUI
 import Testing
 

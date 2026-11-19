@@ -14,9 +14,9 @@
 
 #pragma comment(lib, "shell32.lib")
 
-namespace Ardia {
+namespace Nilla {
 
-REACT_MODULE(NotificationsModule, L"ArdiaNotifications")
+REACT_MODULE(NotificationsModule, L"NillaNotifications")
 struct NotificationsModule {
   REACT_INIT(Initialize)
   void Initialize(winrt::Microsoft::ReactNative::ReactContext const &context) noexcept {
@@ -58,7 +58,7 @@ struct NotificationsModule {
   REACT_METHOD(openNotificationSettings)
   void openNotificationSettings(winrt::Microsoft::ReactNative::ReactPromise<void> promise) noexcept {
     if (AppLaunch::Background()) {
-      LaunchLog::Write(L"info", L"ArdiaNotifications.openNotificationSettings (not shown): ms-settings:notifications");
+      LaunchLog::Write(L"info", L"NillaNotifications.openNotificationSettings (not shown): ms-settings:notifications");
       promise.Resolve();
       return;
     }

@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaTransferLedger : NSObject
+@interface NillaTransferLedger : NSObject
 
 - (NSInteger)prepare:(NSString *)key;
 - (NSInteger)holdForReload:(NSString *)key;

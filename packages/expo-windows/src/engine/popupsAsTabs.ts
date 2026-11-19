@@ -1,9 +1,9 @@
 import type { OpenWindowRequest } from "@ardia/ardiacore";
-import type { OpenWindowOptions, WindowEvent } from "@ardia/shell";
+import type { OpenWindowOptions, WindowEvent } from "@nilla/shell";
 import { addNativeListener, type EventSubscription } from "../events";
 import { requestHost, type RequestPage } from "./requestHosts";
 
-const littleArdiaWindows = new Set<string>();
+const littleNillaWindows = new Set<string>();
 let popupsOpenAsTabs = false;
 let windowCloses: EventSubscription | null = null;
 
@@ -12,15 +12,15 @@ export function setPopupsOpenAsTabs(enabled: boolean) {
 }
 
 export function noteAppWindow(windowId: string, kind: OpenWindowOptions["kind"]) {
-  if (kind !== "small") return void littleArdiaWindows.delete(windowId);
-  littleArdiaWindows.add(windowId);
-  windowCloses ??= addNativeListener("ArdiaAppWindows", "onWindowEvent", (payload) => {
+  if (kind !== "small") return void littleNillaWindows.delete(windowId);
+  littleNillaWindows.add(windowId);
+  windowCloses ??= addNativeListener("NillaAppWindows", "onWindowEvent", (payload) => {
     const event = payload as WindowEvent | null;
-    if (event?.type === "close") littleArdiaWindows.delete(event.id);
+    if (event?.type === "close") littleNillaWindows.delete(event.id);
   });
 }
 
-const takesPopupsAsTabs = (page: RequestPage) => popupsOpenAsTabs && !littleArdiaWindows.has(page.windowId);
+const takesPopupsAsTabs = (page: RequestPage) => popupsOpenAsTabs && !littleNillaWindows.has(page.windowId);
 
 export function handPopupAsTab<Candidate extends RequestPage>(opener: Candidate | undefined, request: OpenWindowRequest, all: Iterable<Candidate>): boolean {
   if (!opener || !takesPopupsAsTabs(opener)) return false;

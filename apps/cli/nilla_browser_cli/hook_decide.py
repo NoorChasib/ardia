@@ -58,13 +58,13 @@ class Decider:
             return
         revision, hook = entry
         if revision != message.get("revision"):
-            self.log.write(f"warning: hook {hook.name}: Ardia asked for a revision this runner didn't register; it uses its default")
+            self.log.write(f"warning: hook {hook.name}: Nilla asked for a revision this runner didn't register; it uses its default")
             return
         if not hook.served:
             return
         if self.busy(hook.name):
             self.skipped += 1
-            self.log.write(f"warning: hook {hook.name}: too many decisions at once; Ardia uses its default for this one")
+            self.log.write(f"warning: hook {hook.name}: too many decisions at once; Nilla uses its default for this one")
             return
         task = asyncio.ensure_future(self._run(ident, hook, message, connection))
         self.running[ident] = (hook.name, task)
@@ -76,7 +76,7 @@ class Decider:
             entry[1].cancel()
 
     async def _run(self, ident: str, hook, message: dict, connection) -> None:
-        from ardia_cli.hooks import program_argv
+        from nilla_browser_cli.hooks import program_argv
 
         deadline = message.get("deadline")
         seconds = min(max(float(deadline) / 1000 if isinstance(deadline, (int, float)) and not isinstance(deadline, bool) else 0.25, 0.05), MAX_DEADLINE)
@@ -101,14 +101,14 @@ class Decider:
             output = await asyncio.wait_for(self._exchange(process, payload), max(seconds - MARGIN, 0.01))
         except asyncio.TimeoutError:
             self._kill(process)
-            self.log.write(f"hook {hook.name}: no answer in {seconds * 1000:.0f} ms; Ardia used its default")
+            self.log.write(f"hook {hook.name}: no answer in {seconds * 1000:.0f} ms; Nilla used its default")
             return
         except asyncio.CancelledError:
             self._kill(process)
             raise
         answer = parse_answer(output)
         if answer is None and output.strip():
-            self.log.write(f"hook {hook.name}: the answer isn't a JSON object or list; Ardia used its default")
+            self.log.write(f"hook {hook.name}: the answer isn't a JSON object or list; Nilla used its default")
         if await connection.answer(ident, answer):
             self.answered += 1
 

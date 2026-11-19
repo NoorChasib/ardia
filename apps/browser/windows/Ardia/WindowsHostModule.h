@@ -12,7 +12,7 @@
 #include "Paths.h"
 #include "PointerLatch.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace LaunchArguments {
 
@@ -79,7 +79,7 @@ inline bool Active() noexcept {
 
 }
 
-REACT_MODULE(WindowsHostModule, L"ArdiaWindowsHost")
+REACT_MODULE(WindowsHostModule, L"NillaWindowsHost")
 struct WindowsHostModule {
   static constexpr double kAwaySeconds = 3600;
 

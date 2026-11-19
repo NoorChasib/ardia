@@ -9,10 +9,10 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="nilla://search"
-            android:targetClass="com.ardia.browser.android.system.ShortcutActivity"
+            android:targetClass="com.nilladigital.nilla.android.system.ShortcutActivity"
             android:targetPackage="com.nilladigital.nilla.android">
             <extra
-                android:name="com.ardia.SOURCE"
+                android:name="com.nilladigital.nilla.SOURCE"
                 android:value="shortcut" />
         </intent>
     </shortcut>
@@ -25,10 +25,10 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="nilla://voice"
-            android:targetClass="com.ardia.browser.android.system.ShortcutActivity"
+            android:targetClass="com.nilladigital.nilla.android.system.ShortcutActivity"
             android:targetPackage="com.nilladigital.nilla.android">
             <extra
-                android:name="com.ardia.SOURCE"
+                android:name="com.nilladigital.nilla.SOURCE"
                 android:value="shortcut" />
         </intent>
     </shortcut>
@@ -41,26 +41,26 @@
         <intent
             android:action="android.intent.action.VIEW"
             android:data="nilla://incognito"
-            android:targetClass="com.ardia.browser.android.system.ShortcutActivity"
+            android:targetClass="com.nilladigital.nilla.android.system.ShortcutActivity"
             android:targetPackage="com.nilladigital.nilla.android">
             <extra
-                android:name="com.ardia.SOURCE"
+                android:name="com.nilladigital.nilla.SOURCE"
                 android:value="shortcut" />
         </intent>
     </shortcut>
     <shortcut
         android:shortcutId="mac-tabs"
-        android:enabled="@bool/ardia_sync_offered"
+        android:enabled="@bool/nilla_sync_offered"
         android:icon="@drawable/shortcut_mac_tabs"
         android:shortcutShortLabel="@string/shortcut_mac_tabs_short"
         android:shortcutLongLabel="@string/shortcut_mac_tabs">
         <intent
             android:action="android.intent.action.VIEW"
             android:data="nilla://mac-tabs"
-            android:targetClass="com.ardia.browser.android.system.ShortcutActivity"
+            android:targetClass="com.nilladigital.nilla.android.system.ShortcutActivity"
             android:targetPackage="com.nilladigital.nilla.android">
             <extra
-                android:name="com.ardia.SOURCE"
+                android:name="com.nilladigital.nilla.SOURCE"
                 android:value="shortcut" />
         </intent>
     </shortcut>

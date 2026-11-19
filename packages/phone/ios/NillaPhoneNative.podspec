@@ -3,12 +3,12 @@ require 'json'
 package = JSON.parse(File.read(File.join(__dir__, '..', 'package.json')))
 
 Pod::Spec.new do |s|
-  s.name           = 'ArdiaPhoneNative'
+  s.name           = 'NillaPhoneNative'
   s.version        = '0.0.0'
   s.summary        = package['description']
   s.description    = package['description']
   s.license        = 'Apache-2.0'
-  s.author         = 'Ardia'
+  s.author         = 'Nilla'
   s.homepage       = 'https://ardia.dev'
   s.platforms      = { :ios => '27.0' }
   s.swift_version  = '5.9'

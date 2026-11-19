@@ -45,7 +45,7 @@ function settledInPopup(payload: unknown): boolean {
 }
 
 export function listenedOnWindows(module: string, event: string, listener: Listener): Listener {
-  if (module !== "ArdiaMenus" || event !== "onCommand") return listener;
+  if (module !== "NillaMenus" || event !== "onCommand") return listener;
   return (payload) => {
     if (!settledInPopup(payload)) listener(payload);
   };

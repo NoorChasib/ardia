@@ -8,7 +8,7 @@ import scheduler
 from scheduler import Scheduler
 
 TASKS = ["calendar", "expenses", "research", "booking", "shop", "grid", "kanban", "multitab"]
-CONTENDERS = [{"id": "ardia-claude", "kind": "ardia"}, {"id": "ardia-codex", "kind": "ardia"},
+CONTENDERS = [{"id": "nilla-claude", "kind": "nilla"}, {"id": "nilla-codex", "kind": "nilla"},
               {"id": "aside-opus", "kind": "aside"}, {"id": "aside-sol", "kind": "aside"}]
 REALISM_TASKS = ["expenses", "kanban", "bulk"]
 REALISM_CONTENDERS = CONTENDERS + [{"id": f"{side}-{agent}", "kind": side}
@@ -157,10 +157,10 @@ class SchedulerTest(unittest.TestCase):
         starts = [e[2] for e in log if e[0] == "start"]
         self.assertEqual(starts.count("shop--ardia-claude--r1"), 2)
         self.assertEqual(starts.count(limited), 2)
-        self.assertEqual(s.cap("ardia-codex"), 1)
+        self.assertEqual(s.cap("nilla-codex"), 1)
         retried_at = next(e[1] for e in log if e[0] == "retry" and e[2] == limited)
         for running in overlapping([e for e in log if e[1] > retried_at]):
-            self.assertLessEqual(sum(1 for e in running if e[5] == "ardia-codex"), 1)
+            self.assertLessEqual(sum(1 for e in running if e[5] == "nilla-codex"), 1)
 
     def test_contenders_progress_together(self):
         _, items, log = simulate(7)

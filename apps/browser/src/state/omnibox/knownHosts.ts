@@ -1,4 +1,4 @@
-import { hostOf } from "@ardia/core";
+import { hostOf } from "@nilla/core";
 import type { BrowserState } from "../browser/store";
 import type { HistoryEntry } from "../browser/types";
 import { NO_HISTORY, suggestionHistoryOf } from "../history/history";

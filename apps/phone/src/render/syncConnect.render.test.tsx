@@ -3,8 +3,8 @@ import { pressButton, renderSurface, textOf, unmount } from "../../test/render/h
 
 const picks = { picked: 0, forgotten: [] as string[] };
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual("@nilla/phone-native");
   return {
     ...actual,
     sync: {

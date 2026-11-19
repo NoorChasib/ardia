@@ -5,7 +5,7 @@ import { DeviceEventEmitter, turboModules } from "../test-native/reactNative.ts"
 const calls = [];
 const openIds = new Set();
 
-turboModules.ArdiaEngineHost = {
+turboModules.NillaEngineHost = {
   available: () => true,
   hostCall: async (verb, argsJson, windowId) => {
     calls.push({ verb, args: JSON.parse(argsJson), windowId });
@@ -17,12 +17,12 @@ turboModules.ArdiaEngineHost = {
 
 const closeRequests = [];
 
-turboModules.ArdiaAppWindows = {
+turboModules.NillaAppWindows = {
   openWindow: async (id) => void openIds.add(id),
   requestClose: async (id) => void closeRequests.push(id),
   closeWindow: async (id) => {
     openIds.delete(id);
-    DeviceEventEmitter.emit("ArdiaAppWindows:onWindowEvent", { type: "close", id });
+    DeviceEventEmitter.emit("NillaAppWindows:onWindowEvent", { type: "close", id });
   },
   windowFrame: async (id) => (id === "main" ? [100, 50, 1200, 800] : null),
   windowIds: async () => [...openIds],
@@ -39,7 +39,7 @@ const settle = async () => {
 
 async function openPopup(adopt) {
   const before = new Set(openIds);
-  DeviceEventEmitter.emit("ArdiaEngineHost:event", {
+  DeviceEventEmitter.emit("NillaEngineHost:event", {
     topic: "tab.opened",
     json: JSON.stringify({ adopt, url: "https://auth.example/login", foreground: true, window: true, opener: "main-page", profile: "p-work", fromClick: false, popup: {} }),
   });
@@ -58,9 +58,9 @@ test("a page shortcut in a pop-up acts on the pop-up's own page, never on the ma
   await settle();
   const popup = await openPopup("ardiacore:40");
   const reached = [];
-  const listener = listenedOnWindows("ArdiaMenus", "onCommand", (event) => reached.push(event));
+  const listener = listenedOnWindows("NillaMenus", "onCommand", (event) => reached.push(event));
   const second = [];
-  const alsoListening = listenedOnWindows("ArdiaMenus", "onCommand", (event) => second.push(event));
+  const alsoListening = listenedOnWindows("NillaMenus", "onCommand", (event) => second.push(event));
   const expected = [
     ["reload", null, { method: "reload" }],
     ["forceReload", null, { method: "forceReload" }],
@@ -101,7 +101,7 @@ test("an app shortcut in a pop-up is refused: nothing runs and the main window n
   const popup = await openPopup("ardiacore:41");
   const before = calls.length;
   const reached = [];
-  const listener = listenedOnWindows("ArdiaMenus", "onCommand", (event) => reached.push(event));
+  const listener = listenedOnWindows("NillaMenus", "onCommand", (event) => reached.push(event));
   for (const command of ["focusCommandBar", "closeAllTabs", "newTab", "findInPage", "findNext", "toggleSidebar", "selectTab", "copyUrl", "viewSource", "reopenClosedTab"])
     listener({ command, arg: command === "selectTab" ? "1" : null, windowId: popup.windowId, focusGeneration: null });
   await settle();
@@ -116,7 +116,7 @@ test("close tab in a pop-up asks to close the pop-up as a window close does, and
   await settle();
   const popup = await openPopup("ardiacore:42");
   const reached = [];
-  const listener = listenedOnWindows("ArdiaMenus", "onCommand", (event) => reached.push(event.command));
+  const listener = listenedOnWindows("NillaMenus", "onCommand", (event) => reached.push(event.command));
   listener({ command: "reload", arg: null, windowId: "main", focusGeneration: null });
   listener({ command: "menu.pick", arg: "x", windowId: popup.windowId });
   listener({ command: "reload", arg: null, windowId: null });
@@ -124,12 +124,12 @@ test("close tab in a pop-up asks to close the pop-up as a window close does, and
   await settle();
   assert.deepEqual(reached, ["reload", "menu.pick", "reload"]);
   assert.deepEqual(closeRequests, [popup.windowId], "the pop-up's close goes through the same request as its close button, so the quit question can be asked");
-  await turboModules.ArdiaAppWindows.closeWindow(popup.windowId);
+  await turboModules.NillaAppWindows.closeWindow(popup.windowId);
   await settle();
   assert.equal(popupWindowInfo(popup.windowId), null, "the pop-up closed");
   const other = [];
   const untouched = (event) => other.push(event);
-  assert.equal(listenedOnWindows("ArdiaAppWindows", "onWindowEvent", untouched), untouched, "other modules' events are not wrapped");
+  assert.equal(listenedOnWindows("NillaAppWindows", "onWindowEvent", untouched), untouched, "other modules' events are not wrapped");
   popup.unmount();
   unmountMain();
 });

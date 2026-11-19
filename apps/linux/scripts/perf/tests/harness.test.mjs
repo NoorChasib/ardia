@@ -14,7 +14,7 @@ import { buildNoise, buildReport, mannWhitney } from "../lib/report.mjs";
 import { DEFAULT_OUT, ENGINE_STORE, LINUX_BRIDGE, REPO_ROOT, contentBlockerProblem } from "../lib/util.mjs";
 
 let root;
-before(async () => { root = await mkdtemp(join(tmpdir(), "ardia-linux-bench-")); });
+before(async () => { root = await mkdtemp(join(tmpdir(), "nilla-linux-bench-")); });
 after(() => rm(root, { recursive: true, force: true }));
 
 describe("options", () => {

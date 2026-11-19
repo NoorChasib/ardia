@@ -1,4 +1,4 @@
-package com.ardia.browser.android.share
+package com.nilladigital.nilla.android.share
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
@@ -12,14 +12,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.ardia.browser.android.MainActivity
-import com.ardia.browser.android.system.SystemDevice
-import com.ardia.browser.android.system.SystemStore
-import com.ardia.design.ArdiaTheme
-import com.ardia.phone.PhoneBrowsingSource
-import com.ardia.phone.ShareSends
-import com.ardia.phone.SyncOffer
-import com.ardia.phone.UsageConsent
+import com.nilladigital.nilla.android.MainActivity
+import com.nilladigital.nilla.android.system.SystemDevice
+import com.nilladigital.nilla.android.system.SystemStore
+import com.nilladigital.nilla.design.NillaTheme
+import com.nilladigital.nilla.phone.PhoneBrowsingSource
+import com.nilladigital.nilla.phone.ShareSends
+import com.nilladigital.nilla.phone.SyncOffer
+import com.nilladigital.nilla.phone.UsageConsent
 import java.lang.ref.WeakReference
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +51,7 @@ class PhoneShareActivity : ComponentActivity() {
             syncOffered = SyncOffer.isOffered,
         ).also { session.model = it }
         setContent {
-            ArdiaTheme(darkTheme = isSystemInDarkTheme(), look = snapshot.look) {
+            NillaTheme(darkTheme = isSystemInDarkTheme(), look = snapshot.look) {
                 ShareSheetView(model)
             }
         }

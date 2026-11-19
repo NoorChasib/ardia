@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.res.AssetManager
-import com.ardia.shared.ScriptEngine
-import com.ardia.shared.SharedScript
+import com.nilladigital.nilla.shared.ScriptEngine
+import com.nilladigital.nilla.shared.SharedScript
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -31,5 +31,5 @@ internal object SyncRuntimeChecks {
         return compare(actual, expected)
     }
 
-    private const val EXPECTED_ASSET = "ardia-sync-checks.json"
+    private const val EXPECTED_ASSET = "nilla-sync-checks.json"
 }

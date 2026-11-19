@@ -23,7 +23,7 @@
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "credui.lib")
 
-namespace Ardia::SyncSecrets {
+namespace Nilla::SyncSecrets {
 
 using SyncCrypto::WipedBytes;
 
@@ -174,7 +174,7 @@ inline bool AskPassword(HWND owner, std::wstring const &message) noexcept {
   CREDUI_INFOW info{};
   info.cbSize = sizeof(info);
   info.hwndParent = owner;
-  info.pszCaptionText = L"Ardia";
+  info.pszCaptionText = L"Nilla";
   info.pszMessageText = message.c_str();
   ULONG package = 0;
   LPVOID answer = nullptr;
@@ -253,7 +253,7 @@ class OwnerCheck {
       LaunchLog::Write(L"sync", std::wstring{L"device owner check in a hidden test instance, no prompt: "} + (granted ? L"granted" : L"denied"));
       return granted;
     }
-    std::wstring message = L"Ardia wants to " + reason + L".";
+    std::wstring message = L"Nilla wants to " + reason + L".";
     if (OwnerParts::HelloAvailable()) {
       if (std::optional<bool> answer = OwnerParts::AskHello(owner, message)) return *answer;
     }

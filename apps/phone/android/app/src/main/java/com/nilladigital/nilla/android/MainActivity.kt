@@ -1,17 +1,17 @@
-package com.ardia.browser.android
+package com.nilladigital.nilla.android
 
 import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
-import com.ardia.phone.FirstScreenDrawn
-import com.ardia.phone.InsetHold
-import com.ardia.phone.InsetsLab
-import com.ardia.phone.JsProfiler
-import com.ardia.phone.LookBudget
-import com.ardia.phone.PhoneSystemLinks
-import com.ardia.phone.ReactBack
-import com.ardia.phone.RestorableState
-import com.ardia.phone.SystemBars
+import com.nilladigital.nilla.phone.FirstScreenDrawn
+import com.nilladigital.nilla.phone.InsetHold
+import com.nilladigital.nilla.phone.InsetsLab
+import com.nilladigital.nilla.phone.JsProfiler
+import com.nilladigital.nilla.phone.LookBudget
+import com.nilladigital.nilla.phone.PhoneSystemLinks
+import com.nilladigital.nilla.phone.ReactBack
+import com.nilladigital.nilla.phone.RestorableState
+import com.nilladigital.nilla.phone.SystemBars
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled

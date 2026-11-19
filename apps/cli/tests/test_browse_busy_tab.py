@@ -2,7 +2,7 @@ import time
 import unittest
 from types import SimpleNamespace
 
-from ardia_cli.browse.daemon import Daemon
+from nilla_browser_cli.browse.daemon import Daemon
 
 
 class BusyOnStuckTab(unittest.TestCase):

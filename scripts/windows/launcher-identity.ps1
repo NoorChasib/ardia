@@ -13,7 +13,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-public static class ArdiaLauncherIdentity {
+public static class NillaLauncherIdentity {
   const int RT_ICON = 3;
   const int RT_GROUP_ICON = 14;
   const int RT_VERSION = 16;
@@ -253,24 +253,24 @@ public static class ArdiaLauncherIdentity {
 "@
 
 $wanted = [ordered]@{
-  CompanyName = "Ardia"
-  CompanyShortName = "Ardia"
-  FileDescription = "Ardia"
-  ProductName = "Ardia"
-  ProductShortName = "Ardia"
-  InternalName = "Ardia"
-  OriginalFilename = "Ardia.exe"
-  LegalCopyright = "Ardia, built on Chromium. Copyright The Chromium Authors and Ardia's contributors."
+  CompanyName = "Nilla"
+  CompanyShortName = "Nilla"
+  FileDescription = "Nilla"
+  ProductName = "Nilla"
+  ProductShortName = "Nilla"
+  InternalName = "Nilla"
+  OriginalFilename = "Nilla.exe"
+  LegalCopyright = "Nilla, built on Chromium. Copyright The Chromium Authors and Ardia's contributors."
 }
 
 function Get-Mismatches($reading, $images) {
   $problems = @()
   if (-not $reading.First) { $problems += "it has no icon group" }
-  elseif (-not [ArdiaLauncherIdentity]::SameImages($reading.First.Images, $images)) {
+  elseif (-not [NillaLauncherIdentity]::SameImages($reading.First.Images, $images)) {
     $label = if ($reading.First.Name) { $reading.First.Name } else { "#$($reading.First.Id)" }
     $problems += "its first icon group ($label) is not Ardia.ico"
   }
-  $strings = [ArdiaLauncherIdentity]::VersionStrings($reading.Version)
+  $strings = [NillaLauncherIdentity]::VersionStrings($reading.Version)
   if ($strings.Count -eq 0) { $problems += "it has no version strings" }
   foreach ($key in $wanted.Keys) {
     if ($strings.ContainsKey($key) -and $strings[$key] -ne $wanted[$key]) { $problems += "its $key is '$($strings[$key])'" }
@@ -282,30 +282,30 @@ function Get-Mismatches($reading, $images) {
 if (-not (Test-Path -LiteralPath $Icon -PathType Leaf)) { throw "'$Icon' does not exist" }
 if (-not (Test-Path -LiteralPath $To -PathType Leaf)) { throw "'$To' does not exist" }
 $target = (Resolve-Path -LiteralPath $To).Path
-$images = [ArdiaLauncherIdentity]::ReadIco((Resolve-Path -LiteralPath $Icon).Path)
-$reading = [ArdiaLauncherIdentity]::Read($target)
+$images = [NillaLauncherIdentity]::ReadIco((Resolve-Path -LiteralPath $Icon).Path)
+$reading = [NillaLauncherIdentity]::Read($target)
 $before = @(Get-Mismatches $reading $images)
 
 if ($Check) {
-  if ($before.Count) { Write-Host "launcher-identity: $target is not Ardia's: $($before -join '; ')"; exit 1 }
-  Write-Host "launcher-identity: $target carries Ardia's icon ($($images.Count) images) and name"
+  if ($before.Count) { Write-Host "launcher-identity: $target is not Nilla's: $($before -join '; ')"; exit 1 }
+  Write-Host "launcher-identity: $target carries Nilla's icon ($($images.Count) images) and name"
   exit 0
 }
 
 if ($before.Count -eq 0) {
-  Write-Host "launcher-identity: $target already carries Ardia's icon and name"
+  Write-Host "launcher-identity: $target already carries Nilla's icon and name"
   exit 0
 }
 
-$iconRight = $reading.First -and [ArdiaLauncherIdentity]::SameImages($reading.First.Images, $images)
+$iconRight = $reading.First -and [NillaLauncherIdentity]::SameImages($reading.First.Images, $images)
 $newImages = if ($iconRight) { $null } else { $images }
 $replacements = New-Object 'System.Collections.Generic.Dictionary[string,string]'
 foreach ($key in $wanted.Keys) { $replacements[$key] = $wanted[$key] }
-$newVersion = if ($reading.Version) { [ArdiaLauncherIdentity]::WithStrings($reading.Version, $replacements) } else { $null }
-[ArdiaLauncherIdentity]::Write($target, $reading, $newImages, $newVersion)
+$newVersion = if ($reading.Version) { [NillaLauncherIdentity]::WithStrings($reading.Version, $replacements) } else { $null }
+[NillaLauncherIdentity]::Write($target, $reading, $newImages, $newVersion)
 
-$after = @(Get-Mismatches ([ArdiaLauncherIdentity]::Read($target)) $images)
+$after = @(Get-Mismatches ([NillaLauncherIdentity]::Read($target)) $images)
 if ($after.Count) { Write-Host "launcher-identity: wrote $target but it still differs: $($after -join '; ')"; exit 1 }
 $fixed = $before -join "; "
-Write-Host "launcher-identity: $target now carries Ardia's icon and name (was: $fixed)"
+Write-Host "launcher-identity: $target now carries Nilla's icon and name (was: $fixed)"
 exit 0

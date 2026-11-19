@@ -17,12 +17,12 @@ import { linkGate, type LinkGateResult, type LinkRouteChoice, type LinkSourceInf
 import { externalLinkOpen, type ExternalLinkOpen } from "./externalLinkOpen";
 import { noteExternalLink } from "../telemetry/usage";
 import { openInRouteGroup } from "../airTraffic/openAt";
-import { noteLittleArdiaAppHandoff, noteLittleArdiaEscapeClose, type EscapePressedIn } from "../telemetry/littleArdiaEscapes";
+import { noteLittleNillaAppHandoff, noteLittleNillaEscapeClose, type EscapePressedIn } from "../telemetry/littleNillaEscapes";
 import { askBeforeQuitting, quitWarningMayAsk } from "../windows/quitWarning";
 
 const store = () => useBrowser.getState();
 
-export function openLittleArdia(url?: string, profileId?: string, adoptId?: AdoptId, linkPointer?: [number, number], linkApp?: string): string {
+export function openLittleNilla(url?: string, profileId?: string, adoptId?: AdoptId, linkPointer?: [number, number], linkApp?: string): string {
   const id = store().createWindow({ kind: "small", url, profileId, adoptId, linkPointer, linkApp });
   if (!url) store().openPanel(id, "");
   return id;
@@ -58,24 +58,24 @@ export function openExternalUrls(given: string[], pointer?: [number, number], so
 function openRoutedUrl(url: string, route: LinkRouteChoice, pointer?: [number, number], app?: string) {
   const profileId = route.profileId ?? lastActiveProfile(store());
   if (route.windowId && store().windows[route.windowId]) {
-    noteExternalLink("tab", store().settings.openLinksInLittleArdia);
+    noteExternalLink("tab", store().settings.openLinksInLittleNilla);
     store().newTab(route.windowId, { url, profileId, gated: true });
     return focus(route.windowId);
   }
   if (route.groupKey) {
-    noteExternalLink("tab", store().settings.openLinksInLittleArdia);
+    noteExternalLink("tab", store().settings.openLinksInLittleNilla);
     return openInRouteGroup(url, profileId, route.groupKey);
   }
   const open = decideExternal([url], route.open);
-  if (open === "littleArdia") return void openLittleArdia(url, profileId, undefined, pointer, app);
+  if (open === "littleNilla") return void openLittleNilla(url, profileId, undefined, pointer, app);
   if (open === "window") return focus(openWindow({ url, profileId }));
   openLinksInMainWindow([url], profileId, [undefined], true);
 }
 
 function decideExternal(urls: string[], ruled: ExternalLinkOpen | null = null): ExternalLinkOpen {
-  const on = store().settings.openLinksInLittleArdia;
+  const on = store().settings.openLinksInLittleNilla;
   const open = externalLinkOpen(on, urls, ruled);
-  noteExternalLink(open === "littleArdia" ? "littleArdia" : "tab", on);
+  noteExternalLink(open === "littleNilla" ? "littleNilla" : "tab", on);
   return open;
 }
 
@@ -103,7 +103,7 @@ function openRoutedUrls(urls: string[], route: LinkRoute, pointer?: [number, num
 function openUrlsFromApps(urls: string[], routed: RoutedLinks, pointer?: [number, number], gated = false, app?: string) {
   const [url] = urls;
   const profileId = routed.profileId ?? lastActiveProfile(store());
-  if (decideExternal(urls) === "littleArdia" && url) return void openLittleArdia(url, profileId, asAdoptId(routed.adoptIds[0]), pointer, app);
+  if (decideExternal(urls) === "littleNilla" && url) return void openLittleNilla(url, profileId, asAdoptId(routed.adoptIds[0]), pointer, app);
   openLinksInMainWindow(urls, profileId, routed.adoptIds, gated);
 }
 
@@ -144,7 +144,7 @@ export function openInMainWindow(windowId: string) {
   if (moved) focus(moved);
 }
 
-export function moveLittleArdiaToProfile(windowId: string, profileId: string) {
+export function moveLittleNillaToProfile(windowId: string, profileId: string) {
   const s = store();
   const w = s.windows[windowId];
   if (!w || !isSmall(s, windowId) || isWindowClosing(windowId) || !s.profiles[profileId] || w.profileId === profileId) return;
@@ -160,15 +160,15 @@ export function moveLittleArdiaToProfile(windowId: string, profileId: string) {
   });
 }
 
-export function cycleLittleArdiaProfile(windowId: string, delta: 1 | -1) {
+export function cycleLittleNillaProfile(windowId: string, delta: 1 | -1) {
   const s = store();
   const w = s.windows[windowId];
   if (!w || s.profileOrder.length < 2) return;
   const i = s.profileOrder.indexOf(w.profileId);
-  moveLittleArdiaToProfile(windowId, s.profileOrder[(i + delta + s.profileOrder.length) % s.profileOrder.length]!);
+  moveLittleNillaToProfile(windowId, s.profileOrder[(i + delta + s.profileOrder.length) % s.profileOrder.length]!);
 }
 
-export async function openLittleArdiaProfileMenu(windowId: string) {
+export async function openLittleNillaProfileMenu(windowId: string) {
   const s = store();
   const current = s.windows[windowId]?.profileId;
   const choice = await showMenu(
@@ -180,10 +180,10 @@ export async function openLittleArdiaProfileMenu(windowId: string) {
       ...menuShortcut(`switchProfile:${id}`, s),
     })),
   );
-  if (choice) moveLittleArdiaToProfile(windowId, choice);
+  if (choice) moveLittleNillaToProfile(windowId, choice);
 }
 
-export function closeLittleArdia(windowId: string) {
+export function closeLittleNilla(windowId: string) {
   if (!isSmall(store(), windowId)) return;
   if (!quitWarningMayAsk()) return closeWindowAnimated(windowId);
   void askBeforeQuitting(windowId).then((answer) => {
@@ -191,27 +191,27 @@ export function closeLittleArdia(windowId: string) {
   });
 }
 
-export function closeLittleArdiaForAppLink(windowId: string | null) {
+export function closeLittleNillaForAppLink(windowId: string | null) {
   if (!windowId || !isSmall(store(), windowId) || isWindowClosing(windowId)) return;
-  noteLittleArdiaAppHandoff("appLinkClose");
-  closeLittleArdia(windowId);
+  noteLittleNillaAppHandoff("appLinkClose");
+  closeLittleNilla(windowId);
 }
 
-export function closeLittleArdiaOnEscape(tabId: string, pressedIn: EscapePressedIn = "page") {
+export function closeLittleNillaOnEscape(tabId: string, pressedIn: EscapePressedIn = "page") {
   const s = store();
   const tab = s.tabs[tabId];
   if (!tab || !isSmall(s, tab.windowId) || isWindowClosing(tab.windowId) || s.find[tabId]?.open || s.windowUi[tab.windowId]?.panel.open) return;
-  noteLittleArdiaEscapeClose(pressedIn);
-  closeLittleArdia(tab.windowId);
+  noteLittleNillaEscapeClose(pressedIn);
+  closeLittleNilla(tab.windowId);
 }
 
-export function closeBlankLittleArdiaOnEscape(windowId: string): boolean {
+export function closeBlankLittleNillaOnEscape(windowId: string): boolean {
   const s = store();
   if (!isSmall(s, windowId) || isWindowClosing(windowId)) return false;
   const tabId = activeTabId(s, windowId);
   const tab = tabId ? s.tabs[tabId] : undefined;
   if (tab && (tab.url || navigationOf(tab))) return false;
-  noteLittleArdiaEscapeClose("blankBar");
-  closeLittleArdia(windowId);
+  noteLittleNillaEscapeClose("blankBar");
+  closeLittleNilla(windowId);
   return true;
 }

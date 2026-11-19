@@ -9,7 +9,7 @@ export const WINDOWS_KEYS: Readonly<Record<string, readonly (string | null)[]>> 
   newTabInGroup: ["Ctrl+Alt+T", null],
   newWindow: ["Ctrl+N"],
   newIncognitoWindow: ["Ctrl+Shift+N"],
-  newLittleArdia: ["Ctrl+Alt+N"],
+  newLittleNilla: ["Ctrl+Alt+N"],
   reopenClosedTab: ["Ctrl+Shift+T"],
   openFile: ["Ctrl+O"],
   focusCommandBar: ["Ctrl+L", null, "Alt+D"],

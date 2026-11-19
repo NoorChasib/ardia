@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.io.File
 import java.nio.file.Files
@@ -11,7 +11,7 @@ import kotlinx.coroutines.cancel
 internal const val ALL_CATEGORIES_MASK = 1 or 2 or 4 or BlockingSettings.OWNER_BIT
 
 internal fun resource(name: String): String =
-    requireNotNull(TestSupport::class.java.getResourceAsStream("/com/ardia/blocking/$name")) { "missing $name" }
+    requireNotNull(TestSupport::class.java.getResourceAsStream("/com/nilladigital/nilla/blocking/$name")) { "missing $name" }
         .bufferedReader().use { it.readText() }
 
 internal fun engineOf(vararg lists: Pair<String, BlockingCategory?>, mine: String? = null): FilterEngine {
@@ -50,7 +50,7 @@ internal fun FilterEngine.HidingCss.selectors(): Set<String> =
 internal class TestSupport
 
 internal class TempDirectory : AutoCloseable {
-    val file: File = Files.createTempDirectory("ardia-blocking").toFile()
+    val file: File = Files.createTempDirectory("nilla-blocking").toFile()
 
     override fun close() {
         file.deleteRecursively()

@@ -25,7 +25,7 @@
 #include "SyncCrypto.h"
 #include "SyncLogins.h"
 
-namespace Ardia::SyncSystem {
+namespace Nilla::SyncSystem {
 
 using SyncCrypto::WipedString;
 using Answer = std::function<void(std::shared_ptr<WipedString>)>;

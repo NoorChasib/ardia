@@ -1,5 +1,5 @@
-export const TELEMETRY_LOCK = "ardia.linux.telemetry";
-export const TELEMETRY_CHANNEL = "ardia.linux.telemetry";
+export const TELEMETRY_LOCK = "nilla.linux.telemetry";
+export const TELEMETRY_CHANNEL = "nilla.linux.telemetry";
 const MAX_HELD = 500;
 const MAX_ANSWERS = 100;
 

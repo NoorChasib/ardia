@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import java.io.File
@@ -39,7 +39,7 @@ object UpgradeGate {
     private const val OUTCOME_IMPORTED = "imported"
     private const val OUTCOME_STARTED_FRESH = "startedFresh"
     const val RECEIPT_VERSION = 1
-    val SOURCE_FILES = listOf("databases/browser.db", "shared_prefs/ardia.browser.xml", "shared_prefs/ardia.blocking.xml", "shared_prefs/ardia.reader.xml")
+    val SOURCE_FILES = listOf("databases/browser.db", "shared_prefs/nilla.browser.xml", "shared_prefs/nilla.blocking.xml", "shared_prefs/ardia.reader.xml")
 
     @Volatile
     private var known: Boolean? = null

@@ -33,8 +33,8 @@ export function linuxUpdaterFor(host: ArdiaHost): LinuxUpdater {
     refresh: refreshDocument,
     ask: (release, current) =>
       confirm({
-        title: `Ardia ${release.version} is available`,
-        message: `You have Ardia ${current}. Ardia on Linux doesn't update itself: download the new package from its release page.`,
+        title: `Nilla ${release.version} is available`,
+        message: `You have Nilla ${current}. Nilla on Linux doesn't update itself: download the new package from its release page.`,
         confirmTitle: "Open Release Page",
         cancelTitle: "Later",
         windowId,
@@ -43,7 +43,7 @@ export function linuxUpdaterFor(host: ArdiaHost): LinuxUpdater {
       if (browserWindow) showToast(windowId, title, message, { icon: "arrow.down.circle" });
     },
     offer: (release) =>
-      showToast(windowId, `Ardia ${release.version} is available`, "Download it from its release page.", {
+      showToast(windowId, `Nilla ${release.version} is available`, "Download it from its release page.", {
         icon: "arrow.down.circle",
         sticky: true,
         action: { title: "View", run: () => (noteUpdatePageOpened(), open(release.url)) },

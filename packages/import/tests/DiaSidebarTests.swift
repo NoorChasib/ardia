@@ -1,7 +1,7 @@
 import Foundation
 import SQLite3
 import XCTest
-@testable import ArdiaImportCore
+@testable import NillaImportCore
 
 final class DiaSidebarTests: XCTestCase {
   let profile = Fixtures.support("Dia/User Data/Default")
@@ -40,7 +40,7 @@ final class DiaSidebarTests: XCTestCase {
   }
 
   func testWithoutItsWALTheFileReadsAsItWasBeforeTheEdit() throws {
-    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("ardia-dia-\(UUID().uuidString)", isDirectory: true)
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("nilla-dia-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: dir) }
     try FileManager.default.copyItem(at: file, to: dir.appendingPathComponent("tabs.db"))
@@ -49,7 +49,7 @@ final class DiaSidebarTests: XCTestCase {
   }
 
   func testATornWALFrameEndsTheFoldAtTheLastGoodCommit() throws {
-    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("ardia-dia-\(UUID().uuidString)", isDirectory: true)
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("nilla-dia-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: dir) }
     try FileManager.default.copyItem(at: file, to: dir.appendingPathComponent("tabs.db"))
@@ -61,7 +61,7 @@ final class DiaSidebarTests: XCTestCase {
   }
 
   func scratch(wal: Bool) throws -> URL {
-    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("ardia-dia-\(UUID().uuidString)", isDirectory: true)
+    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("nilla-dia-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     addTeardownBlock { try? FileManager.default.removeItem(at: dir) }
     try FileManager.default.copyItem(at: file, to: dir.appendingPathComponent("tabs.db"))
@@ -161,7 +161,7 @@ final class DiaSidebarTests: XCTestCase {
   }
 
   func checkpointed() throws -> Data {
-    let path = FileManager.default.temporaryDirectory.appendingPathComponent("ardia-dia-\(UUID().uuidString).db").path
+    let path = FileManager.default.temporaryDirectory.appendingPathComponent("nilla-dia-\(UUID().uuidString).db").path
     defer { try? FileManager.default.removeItem(atPath: path) }
     try DiaDatabase.decrypt(file, key: key).write(to: URL(fileURLWithPath: path))
     var db: OpaquePointer?

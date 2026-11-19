@@ -27,7 +27,7 @@ export function androidVersion(release: string): AndroidVersion {
 }
 
 export function macMarketingVersion(root: string): string {
-  const project = readFileSync(path.join(root, "apps/browser/macos/Ardia.xcodeproj/project.pbxproj"), "utf8");
+  const project = readFileSync(path.join(root, "apps/browser/macos/Nilla.xcodeproj/project.pbxproj"), "utf8");
   const versions = [...new Set([...project.matchAll(/MARKETING_VERSION = "?([^";]*)"?;/g)].map((found) => found[1] ?? ""))];
   const [only] = versions;
   if (versions.length !== 1 || !only) throw new Error(`the Mac app's project has ${versions.length === 0 ? "no" : "more than one"} MARKETING_VERSION: ${versions.join(" ")}`);

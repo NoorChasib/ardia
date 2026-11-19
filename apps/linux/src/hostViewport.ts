@@ -6,8 +6,8 @@ export type { TabViewport };
 
 type Bounds = TabViewport["rect"];
 
-const EXTENSION_POPUP_DISMISS = '[data-testid="ardia-extension-popup-dismiss"]';
-export const STACKED_PAGE = `[${PAGE_STACK_ATTRIBUTE}] [data-ardia-native-tab]`;
+const EXTENSION_POPUP_DISMISS = '[data-testid="nilla-extension-popup-dismiss"]';
+export const STACKED_PAGE = `[${PAGE_STACK_ATTRIBUTE}] [data-nilla-native-tab]`;
 const MOTION_EVENTS = ["transitionrun", "transitionend", "transitioncancel", "animationstart", "animationend", "animationcancel"] as const;
 
 export type OverlayCover = { overlayAt: (x: number, y: number) => boolean; overlayElements: () => readonly Element[]; overlayRects?: () => readonly Bounds[] };

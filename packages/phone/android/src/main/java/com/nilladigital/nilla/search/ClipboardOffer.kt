@@ -1,4 +1,4 @@
-package com.ardia.search
+package com.nilladigital.nilla.search
 
 import android.content.ClipDescription
 import android.content.ClipboardManager

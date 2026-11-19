@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 import Testing
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 @MainActor
 @Suite struct TabSpacesTests {
@@ -131,9 +131,9 @@ import Testing
   }
 
   @Test func reopeningAStoreKeepsEachTabInItsSpace() throws {
-    let directory = URL.temporaryDirectory.appending(path: "ardia-spaces-\(UUID().uuidString)", directoryHint: .isDirectory)
+    let directory = URL.temporaryDirectory.appending(path: "nilla-spaces-\(UUID().uuidString)", directoryHint: .isDirectory)
     defer { try? FileManager.default.removeItem(at: directory) }
-    let suite = "ardia.tests.\(UUID().uuidString)"
+    let suite = "nilla.tests.\(UUID().uuidString)"
     let defaults = UserDefaults(suiteName: suite)!
     defer { defaults.removePersistentDomain(forName: suite) }
     do {

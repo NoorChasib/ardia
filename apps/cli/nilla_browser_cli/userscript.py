@@ -9,13 +9,13 @@ import tempfile
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from ardia_cli import urlmatch
+from nilla_browser_cli import urlmatch
 
 RUN_AT = ("document-start", "document-end", "document-idle")
 INJECT_INTO = {"page": "MAIN", "auto": "MAIN", "content": "ISOLATED"}
 INCLUDE_MATCHES = ["*://*/*"]
 SOURCE_EXTENSIONS = (".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".css")
-SOURCE_URL_PREFIX = "ardia-userscript:///"
+SOURCE_URL_PREFIX = "nilla-userscript:///"
 CHROME_TARGET = "chrome130"
 ESBUILD_PACKAGE = "linux-x64" if sys.platform.startswith("linux") else "darwin-arm64"
 _HEADER = re.compile(r"^\s*//\s*==UserScript==\s*$")
@@ -106,7 +106,7 @@ def parse_meta(source: str, filename: str) -> Meta:
             meta.warnings.append(f"@{key} {value} is ignored: import the code instead (esbuild bundles relative imports)")
     for grant in grants:
         if grant != "none":
-            meta.warnings.append(f"@grant {grant} is ignored: Ardia runs userscripts without GM_* APIs")
+            meta.warnings.append(f"@grant {grant} is ignored: Nilla runs userscripts without GM_* APIs")
     if not meta.matches and not meta.includes:
         meta.warnings.append("no @match or @include: the script runs nowhere")
     return meta
@@ -233,7 +233,7 @@ class Build:
 
 
 def forbidden_roots(data_dirs) -> list[Path]:
-    from ardia_cli.endpoint import INSTALLED_DATA_DIR
+    from nilla_browser_cli.endpoint import INSTALLED_DATA_DIR
 
     roots = [INSTALLED_DATA_DIR, *data_dirs]
     if os.environ.get("ARDIA_DATA_DIR"):
@@ -262,7 +262,7 @@ def lineage(path: Path) -> list[tuple[int, int] | None]:
 def check_file(real: Path, forbidden: set, label: str) -> list:
     chain = lineage(real)
     if any(item in forbidden for item in chain if item):
-        raise ScriptError(f"refusing to bundle {real}: it's in Ardia's data folder")
+        raise ScriptError(f"refusing to bundle {real}: it's in Nilla's data folder")
     try:
         info = os.stat(real)
     except OSError as error:
@@ -306,11 +306,11 @@ def build(path: str | Path, sourcemap: bool = False, data_dirs=()) -> Build:
     meta = parse_meta(source, path.name)
     esbuild = find_esbuild()
     if not esbuild:
-        hint = "reinstall the ardia command" if installed() else "run bun install, or put esbuild on PATH"
+        hint = "reinstall the nilla-browser command" if installed() else "run bun install, or put esbuild on PATH"
         raise ScriptError(f"esbuild isn't available: {hint}")
     entry = Path(os.path.realpath(path))
     check_file(entry, {item for item in (identity(root) for root in forbidden_roots(data_dirs)) if item}, "a script")
-    with tempfile.TemporaryDirectory(prefix="ardia-script-") as work:
+    with tempfile.TemporaryDirectory(prefix="nilla-script-") as work:
         out = Path(work) / "script.js"
         metafile = Path(work) / "meta.json"
         command = [

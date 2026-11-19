@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.net.IDN
 
@@ -63,7 +63,7 @@ internal class PublicSuffixes private constructor(
             val rules = LongHashSet(16384)
             val wildcards = LongHashSet(512)
             val exceptions = LongHashSet(32)
-            val stream = PublicSuffixes::class.java.getResourceAsStream("/com/ardia/blocking/public_suffix_list.dat")
+            val stream = PublicSuffixes::class.java.getResourceAsStream("/com/nilladigital/nilla/blocking/public_suffix_list.dat")
             stream?.bufferedReader(Charsets.UTF_8)?.useLines { lines ->
                 for (raw in lines) {
                     val line = raw.trim()

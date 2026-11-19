@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, field
 
-from ardia_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse.errors import BrowseError, Usage
 
 FIELD_SAMPLE = 50
 MAX_LISTED_FIELDS = 60

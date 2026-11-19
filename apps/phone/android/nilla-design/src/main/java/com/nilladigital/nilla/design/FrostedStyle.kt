@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import android.os.Build
 import androidx.compose.runtime.Immutable
@@ -30,27 +30,27 @@ data class FrostedStyle(
         val bar = FrostedStyle(
             blurRadius = 24.dp,
             saturation = 1.8f,
-            tint = adaptive(ardiaColor(0xFFFFFF, 0.3f), ardiaColor(0x1C1C1E, 0.38f)),
-            fallback = adaptive(ardiaColor(0xF7F7F9, 0.94f), ardiaColor(0x1C1C1E, 0.94f)),
+            tint = adaptive(nillaColor(0xFFFFFF, 0.3f), nillaColor(0x1C1C1E, 0.38f)),
+            fallback = adaptive(nillaColor(0xF7F7F9, 0.94f), nillaColor(0x1C1C1E, 0.94f)),
         )
         val sheet = FrostedStyle(
             blurRadius = 30.dp,
             saturation = 1.8f,
-            tint = adaptive(ardiaColor(0xFFFFFF, 0.62f), ardiaColor(0x1C1C1E, 0.64f)),
-            fallback = adaptive(ardiaColor(0xF2F2F7, 0.97f), ardiaColor(0x1C1C1E, 0.97f)),
+            tint = adaptive(nillaColor(0xFFFFFF, 0.62f), nillaColor(0x1C1C1E, 0.64f)),
+            fallback = adaptive(nillaColor(0xF2F2F7, 0.97f), nillaColor(0x1C1C1E, 0.97f)),
         )
         val glass = FrostedStyle(
             blurRadius = 12.dp,
             saturation = 1.5f,
-            tint = adaptive(ardiaColor(0xFFFFFF, 0.45f), ardiaColor(0xFFFFFF, 0.1f)),
-            fallback = adaptive(ardiaColor(0xFFFFFF, 0.82f), ardiaColor(0x3A3A3C, 0.82f)),
+            tint = adaptive(nillaColor(0xFFFFFF, 0.45f), nillaColor(0xFFFFFF, 0.1f)),
+            fallback = adaptive(nillaColor(0xFFFFFF, 0.82f), nillaColor(0x3A3A3C, 0.82f)),
             edge = adaptive(Color.Black.copy(alpha = 0.06f), Color.White.copy(alpha = 0.1f)),
         )
         val thin = FrostedStyle(
             blurRadius = 20.dp,
             saturation = 1.6f,
-            tint = adaptive(ardiaColor(0xFFFFFF, 0.18f), ardiaColor(0x000000, 0.22f)),
-            fallback = adaptive(ardiaColor(0xF2F2F7, 0.9f), ardiaColor(0x1C1C1E, 0.9f)),
+            tint = adaptive(nillaColor(0xFFFFFF, 0.18f), nillaColor(0x000000, 0.22f)),
+            fallback = adaptive(nillaColor(0xF2F2F7, 0.9f), nillaColor(0x1C1C1E, 0.9f)),
         )
     }
 }

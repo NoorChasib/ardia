@@ -2,12 +2,12 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-extern NSNotificationName const ArdiaInterfaceScaleDidChange;
-extern NSNotificationName const ArdiaInterfaceScaleRootDidAttach;
-extern NSNotificationName const ArdiaInterfaceScaleDidSettle;
+extern NSNotificationName const NillaInterfaceScaleDidChange;
+extern NSNotificationName const NillaInterfaceScaleRootDidAttach;
+extern NSNotificationName const NillaInterfaceScaleDidSettle;
 
 NS_SWIFT_NAME(InterfaceScale)
-@interface ArdiaInterfaceScale : NSObject
+@interface NillaInterfaceScale : NSObject
 
 @property(class, nonatomic) CGFloat scale;
 @property(class, nonatomic, readonly) CGFloat minimum;

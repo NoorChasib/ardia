@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import ArdiaSyncCore
+@testable import NillaSyncCore
 
 final class SharedFolderDirectoryTests: XCTestCase {
   private var scratch: URL!
@@ -48,13 +48,13 @@ final class SharedFolderDirectoryTests: XCTestCase {
 
     for change in [
       ["op": "delete", "path": "Linked/Secret.webloc", "expect": "https://outside.example/"],
-      ["op": "write", "path": "Linked/.ardia-folder.json", "text": "{}", "create": false],
+      ["op": "write", "path": "Linked/.nilla-folder.json", "text": "{}", "create": false],
       ["op": "delete", "path": "Alias.webloc", "expect": "https://outside.example/"],
     ] as [[String: Any]] {
       XCTAssertThrowsError(try directory.apply(json: try ops([change])))
     }
     XCTAssertTrue(fm.fileExists(atPath: outside.appendingPathComponent("Secret.webloc").path))
-    XCTAssertFalse(fm.fileExists(atPath: outside.appendingPathComponent(".ardia-folder.json").path))
+    XCTAssertFalse(fm.fileExists(atPath: outside.appendingPathComponent(".nilla-folder.json").path))
   }
 
   func testDeletingALinkNeverRemovesADirectoryOrAChangedLink() throws {
@@ -113,7 +113,7 @@ final class SharedFolderDirectoryTests: XCTestCase {
   func testOversizedFilesAreHeldWithoutBeingRead() throws {
     let root = try folder("root")
     fm.createFile(atPath: root.appendingPathComponent("Big.webloc").path, contents: Data(count: 2_000_000))
-    fm.createFile(atPath: root.appendingPathComponent(".ardia-folder.json").path, contents: Data(count: 3_000_000))
+    fm.createFile(atPath: root.appendingPathComponent(".nilla-folder.json").path, contents: Data(count: 3_000_000))
     let listing = SharedFolderDirectory(root: root).read()
     let level = listing["root"] as? [String: Any]
     XCTAssertEqual(entries(listing).first?["kind"] as? String, "pending")
@@ -163,10 +163,10 @@ final class SharedFolderDirectoryTests: XCTestCase {
   func testAFolderWithAnUnknownEntryKeepsItsOrderFile() throws {
     let root = try folder("root")
     let sub = try folder("root/Sub")
-    try "{\"version\":1,\"order\":[\"Note.txt\"]}".write(to: sub.appendingPathComponent(".ardia-folder.json"), atomically: true, encoding: .utf8)
+    try "{\"version\":1,\"order\":[\"Note.txt\"]}".write(to: sub.appendingPathComponent(".nilla-folder.json"), atomically: true, encoding: .utf8)
     try "keep".write(to: sub.appendingPathComponent("Note.txt"), atomically: true, encoding: .utf8)
     _ = try SharedFolderDirectory(root: root).apply(json: try ops([["op": "rmdir", "path": "Sub"]]))
-    XCTAssertTrue(fm.fileExists(atPath: sub.appendingPathComponent(".ardia-folder.json").path))
+    XCTAssertTrue(fm.fileExists(atPath: sub.appendingPathComponent(".nilla-folder.json").path))
     try fm.removeItem(at: sub.appendingPathComponent("Note.txt"))
     _ = try SharedFolderDirectory(root: root).apply(json: try ops([["op": "rmdir", "path": "Sub"]]))
     XCTAssertFalse(fm.fileExists(atPath: sub.path))

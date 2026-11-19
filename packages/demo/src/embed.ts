@@ -10,7 +10,7 @@ const PREWARM_WAIT_MS = 3000;
 const whenIdle = (run: () => void) =>
   "requestIdleCallback" in window ? requestIdleCallback(run, { timeout: PREWARM_WAIT_MS }) : setTimeout(run, PREWARM_WAIT_MS);
 
-type Inbound = { type: "ardia-demo:customize" } | { type: "ardia-demo:hello" } | { type: "ardia-demo:nudge" };
+type Inbound = { type: "nilla-demo:customize" } | { type: "nilla-demo:hello" } | { type: "nilla-demo:nudge" };
 
 function guardFocus(engaged: () => boolean) {
   const focus = HTMLElement.prototype.focus;
@@ -44,35 +44,35 @@ export function startEmbed() {
     if (engaged) return;
     engaged = true;
     nudge.abort();
-    post({ type: "ardia-demo:engaged" });
+    post({ type: "nilla-demo:engaged" });
   };
   guardFocus(() => engaged);
   addEventListener("pointerdown", engage, { capture: true });
   addEventListener("keydown", engage, { capture: true });
 
   let state: CustomizeState = { active: false, code: null };
-  const publish = () => post({ type: "ardia-demo:customize-state", ...state });
+  const publish = () => post({ type: "nilla-demo:customize-state", ...state });
   watchCustomize((next) => {
     state = next;
     publish();
   });
 
-  addEventListener(APP_DOWNLOAD_EVENT, () => post({ type: "ardia-demo:download" }));
+  addEventListener(APP_DOWNLOAD_EVENT, () => post({ type: "nilla-demo:download" }));
 
   addEventListener("message", (event: MessageEvent<Inbound>) => {
     if (event.source !== host || event.origin !== origin || !event.data || typeof event.data !== "object") return;
-    if (event.data.type === "ardia-demo:hello") {
+    if (event.data.type === "nilla-demo:hello") {
       publish();
-      if (ready) post({ type: "ardia-demo:ready" });
+      if (ready) post({ type: "nilla-demo:ready" });
       return;
     }
-    if (event.data.type === "ardia-demo:nudge") {
+    if (event.data.type === "nilla-demo:nudge") {
       if (engaged || nudged) return;
       nudged = true;
       void playNudge(nudge.signal);
       return;
     }
-    if (event.data.type === "ardia-demo:customize") {
+    if (event.data.type === "nilla-demo:customize") {
       engage();
       startCustomize();
     }
@@ -82,7 +82,7 @@ export function startEmbed() {
     requestAnimationFrame(() => {
       ready = true;
       publish();
-      post({ type: "ardia-demo:ready" });
+      post({ type: "nilla-demo:ready" });
       if (!prefersReducedMotion()) whenIdle(() => prewarmSurfaces([powerUpFragment]));
     }),
   );

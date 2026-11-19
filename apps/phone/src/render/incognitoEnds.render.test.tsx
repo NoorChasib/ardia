@@ -1,7 +1,7 @@
 const mockEnded = { closed: [] as string[] };
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual("@nilla/phone-native");
   return {
     ...actual,
     closePage: async (id: string) => void mockEnded.closed.push(id),

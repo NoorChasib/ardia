@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import ArdiaSync
+@testable import NillaSync
 
 @Suite struct SyncedDeviceDetailTests {
   let now = Date(timeIntervalSince1970: 1_800_000_000)

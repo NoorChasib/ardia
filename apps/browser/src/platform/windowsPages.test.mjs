@@ -6,7 +6,7 @@ const calls = [];
 let refuseCreates = 0;
 let createGate = null;
 
-turboModules.ArdiaEngineHost = {
+turboModules.NillaEngineHost = {
   available: () => true,
   hostCall: async (verb, argsJson, windowId) => {
     const args = JSON.parse(argsJson);
@@ -27,7 +27,7 @@ turboModules.ArdiaEngineHost = {
 const { mountPage, callPage, releasePage, showPage } = await import("../../../../packages/expo-windows/src/engine/pages.ts");
 const { holdPrivateSession, privateWindowShown, releaseProfile } = await import("../../../../packages/expo-windows/src/engine/privateWindows.ts");
 
-const emitTopic = (topic, payload) => DeviceEventEmitter.emit("ArdiaEngineHost:event", { topic, json: JSON.stringify(payload) });
+const emitTopic = (topic, payload) => DeviceEventEmitter.emit("NillaEngineHost:event", { topic, json: JSON.stringify(payload) });
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 const creates = (key) => calls.filter((call) => call.verb === "tab.create" && call.args.key === key).length;
 const shows = (key) => calls.filter((call) => call.verb === "tab.show" && call.args.key === key);

@@ -139,7 +139,7 @@ export function problemsToast(problems: readonly string[]): { title: string; mes
   const lines = groupedUnknownKeys(problems.map((problem) => (file ? problem.slice(file.length + 2) : problem)));
   const rest = lines.length - PROBLEMS_SHOWN;
   const shown = lines.slice(0, PROBLEMS_SHOWN).join("; ");
-  return { title, message: rest > 0 ? `${shown}; and ${rest} more (ardia config check lists them all)` : shown };
+  return { title, message: rest > 0 ? `${shown}; and ${rest} more (nilla config check lists them all)` : shown };
 }
 
 function showProblems() {

@@ -20,7 +20,7 @@ const cliOnWindows = new URL("./cliOnWindows.virtual.mjs", import.meta.url).href
 const cliOnWindowsSource = `
 import { requireNativeModule as onWindows } from ${JSON.stringify(windowsModules)};
 import { requireNativeModule as fake } from ${JSON.stringify(fakeModules)};
-export const requireNativeModule = (name) => (name === "ArdiaCli" ? onWindows(name) : fake(name));
+export const requireNativeModule = (name) => (name === "NillaCli" ? onWindows(name) : fake(name));
 `;
 registerHooks({
   resolve(specifier, context, next) {
@@ -62,7 +62,7 @@ test("8 s after launch on Windows no install is tried, so nothing rejects and no
   assert.equal(cli.useCli.getState().installing, null);
 });
 
-test("Install in Settings says the ardia command isn't offered on Windows and doesn't stick on Installing", async () => {
+test("Install in Settings says the nilla-browser command isn't offered on Windows and doesn't stick on Installing", async () => {
   const result = await cli.installCliInBackground("settings");
   assert.equal(result.ok, false);
   assert.match(result.error ?? "", /isn't offered on Windows/);

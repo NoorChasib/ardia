@@ -14,9 +14,9 @@
 
 namespace {
 
-NSString *const kMovedDefault = @"ArdiaMovedDownloads";
-NSString *const kStagingPrefix = @".ardia-moving-";
-NSString *const kJournalDefault = @"ArdiaDownloadMoveJournal";
+NSString *const kMovedDefault = @"NillaMovedDownloads";
+NSString *const kStagingPrefix = @".nilla-moving-";
+NSString *const kJournalDefault = @"NillaDownloadMoveJournal";
 constexpr NSUInteger kMaxMoved = 200;
 constexpr NSUInteger kMaxRecords = 1000;
 constexpr int kMaxCollisions = 999;
@@ -176,7 +176,7 @@ int OpenOwnStaging(int source, NSString *name) {
 
 }
 
-@implementation ArdiaDownloadMover {
+@implementation NillaDownloadMover {
   os_unfair_lock _lock;
   NSString *_home;
   NSUserDefaults *_defaults;
@@ -188,13 +188,13 @@ int OpenOwnStaging(int source, NSString *name) {
   NSMutableSet<NSString *> *_inFlight;
 }
 
-+ (ArdiaDownloadMover *)shared {
-  static ArdiaDownloadMover *mover;
++ (NillaDownloadMover *)shared {
+  static NillaDownloadMover *mover;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
     const struct passwd *user = getpwuid(getuid());
     NSString *home = user && user->pw_dir ? @(user->pw_dir) : NSHomeDirectory();
-    mover = [[ArdiaDownloadMover alloc] initWithHome:home defaults:NSUserDefaults.standardUserDefaults];
+    mover = [[NillaDownloadMover alloc] initWithHome:home defaults:NSUserDefaults.standardUserDefaults];
   });
   return mover;
 }
@@ -419,7 +419,7 @@ int OpenOwnStaging(int source, NSString *name) {
     return giveBack(@"changed");
   [self step:@"verified" staging:staging.get()];
 
-  NSString *safe = [ArdiaDownloadMover safeFileName:sourceName];
+  NSString *safe = [NillaDownloadMover safeFileName:sourceName];
   NSString *placed = nil;
   for (int n = 0; n <= kMaxCollisions && !placed; n++) {
     NSString *candidate = n ? NameWithSuffix(safe, [NSString stringWithFormat:@" (%d)", n]) : safe;

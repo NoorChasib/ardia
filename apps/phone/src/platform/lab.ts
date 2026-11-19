@@ -1,8 +1,8 @@
-import { labLog, lookLab } from "@ardia/phone-native";
+import { labLog, lookLab } from "@nilla/phone-native";
 
 export { labLog };
 
-export const isLabBuild = process.env.EXPO_PUBLIC_ARDIA_LAB === "true";
+export const isLabBuild = process.env.EXPO_PUBLIC_NILLA_LAB === "true";
 
 let tracing = isLabBuild;
 let traceSink: (line: string) => void = labLog;

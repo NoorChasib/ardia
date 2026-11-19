@@ -1,5 +1,5 @@
 import AppIntents
-import ArdiaDesign
+import NillaDesign
 import SwiftUI
 import WidgetKit
 

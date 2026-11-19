@@ -1,4 +1,4 @@
-package com.ardia.browser.android.share
+package com.nilladigital.nilla.android.share
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
@@ -53,24 +53,24 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.ardia.browser.android.R
-import com.ardia.browser.android.system.SystemDevice
-import com.ardia.design.ArdiaLogoMark
-import com.ardia.design.ArdiaSymbols
-import com.ardia.design.ArdiaThemeState
-import com.ardia.design.ArdiaType
-import com.ardia.design.BrowsePalette
-import com.ardia.design.LocalReduceMotion
-import com.ardia.design.Motion
-import com.ardia.design.Palette
-import com.ardia.design.Radius
-import com.ardia.design.Spacing
-import com.ardia.design.adaptive
-import com.ardia.design.ardiaColor
-import com.ardia.design.semibold
+import com.nilladigital.nilla.android.R
+import com.nilladigital.nilla.android.system.SystemDevice
+import com.nilladigital.nilla.design.NillaLogoMark
+import com.nilladigital.nilla.design.NillaSymbols
+import com.nilladigital.nilla.design.NillaThemeState
+import com.nilladigital.nilla.design.NillaType
+import com.nilladigital.nilla.design.BrowsePalette
+import com.nilladigital.nilla.design.LocalReduceMotion
+import com.nilladigital.nilla.design.Motion
+import com.nilladigital.nilla.design.Palette
+import com.nilladigital.nilla.design.Radius
+import com.nilladigital.nilla.design.Spacing
+import com.nilladigital.nilla.design.adaptive
+import com.nilladigital.nilla.design.nillaColor
+import com.nilladigital.nilla.design.semibold
 
 object SharePalette {
-    val group = adaptive(Color.White, ardiaColor(0x2C2C2E))
+    val group = adaptive(Color.White, nillaColor(0x2C2C2E))
     val scrim = Color.Black.copy(alpha = 0.32f)
     val rowPressed = adaptive(Color.Black.copy(alpha = 0.05f), Color.White.copy(alpha = 0.08f))
 }
@@ -111,7 +111,7 @@ fun ShareSheetView(model: ShareSheetModel) {
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .padding(top = Spacing.section * 2)
                     .clip(RoundedCornerShape(topStart = Radius.sheet, topEnd = Radius.sheet))
-                    .background(ArdiaThemeState.look.surface.current)
+                    .background(NillaThemeState.look.surface.current)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
                     .verticalScroll(rememberScrollState())
                     .windowInsetsPadding(WindowInsets.navigationBars)
@@ -144,17 +144,17 @@ fun ShareSheetView(model: ShareSheetModel) {
 @Composable
 private fun ShareHeader(model: ShareSheetModel) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
-        ArdiaLogoMark(Modifier.size(width = 40.dp, height = 32.dp))
+        NillaLogoMark(Modifier.size(width = 40.dp, height = 32.dp))
         Column(Modifier.weight(1f)) {
             Text(
                 model.page.displayTitle.ifEmpty { stringResource(R.string.app_name) },
-                style = ArdiaType.headline,
+                style = NillaType.headline,
                 color = BrowsePalette.foregroundPrimary.current,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
             model.page.host?.let {
-                Text(it, style = ArdiaType.subheadline, color = BrowsePalette.foregroundSecondary.current, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(it, style = NillaType.subheadline, color = BrowsePalette.foregroundSecondary.current, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         val close = stringResource(R.string.share_close)
@@ -167,7 +167,7 @@ private fun ShareHeader(model: ShareSheetModel) {
                 .testTag(ShareTags.CLOSE),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(ArdiaSymbols.xmark, contentDescription = close, modifier = Modifier.size(14.dp), tint = BrowsePalette.foregroundSecondary.current)
+            Icon(NillaSymbols.xmark, contentDescription = close, modifier = Modifier.size(14.dp), tint = BrowsePalette.foregroundSecondary.current)
         }
     }
 }
@@ -177,10 +177,10 @@ private fun ShareActions(model: ShareSheetModel) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
         ShareGroup {
             ShareRow(
-                title = stringResource(if (model.opensPage) R.string.share_open_in_ardia else R.string.share_search_in_ardia),
-                icon = if (model.opensPage) ArdiaSymbols.arrowUpForwardAppFill else ArdiaSymbols.magnifyingglass,
+                title = stringResource(if (model.opensPage) R.string.share_open_in_nilla else R.string.share_search_in_nilla),
+                icon = if (model.opensPage) NillaSymbols.arrowUpForwardAppFill else NillaSymbols.magnifyingglass,
                 modifier = Modifier.testTag(ShareTags.OPEN),
-                onClick = model::openInArdia,
+                onClick = model::openInNilla,
             )
         }
         val targets = model.sendTargets
@@ -188,7 +188,7 @@ private fun ShareActions(model: ShareSheetModel) {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.tight)) {
                 Text(
                     stringResource(if (model.sendsOnlyToMacs) R.string.share_send_to_your_mac else R.string.share_send_to_your_devices),
-                    style = ArdiaType.footnote.semibold,
+                    style = NillaType.footnote.semibold,
                     color = BrowsePalette.foregroundSecondary.current,
                     modifier = Modifier.padding(start = Spacing.page).semantics { heading() },
                 )
@@ -202,7 +202,7 @@ private fun ShareActions(model: ShareSheetModel) {
         } else if (model.offersSyncHint) {
             Text(
                 stringResource(R.string.share_sync_hint),
-                style = ArdiaType.footnote,
+                style = NillaType.footnote,
                 color = BrowsePalette.foregroundSecondary.current,
                 modifier = Modifier.padding(horizontal = Spacing.page),
             )
@@ -210,7 +210,7 @@ private fun ShareActions(model: ShareSheetModel) {
     }
 }
 
-private fun deviceIcon(device: SystemDevice): ImageVector = if (device.isMac) ArdiaSymbols.laptopcomputer else ArdiaSymbols.iphone
+private fun deviceIcon(device: SystemDevice): ImageVector = if (device.isMac) NillaSymbols.laptopcomputer else NillaSymbols.iphone
 
 object ShareRowLayout {
     val tile = 30.dp
@@ -239,14 +239,14 @@ private fun ShareRow(title: String, icon: ImageVector, modifier: Modifier = Modi
             Icon(icon, contentDescription = null, modifier = Modifier.size(15.dp), tint = Color.White)
         }
         Spacer(Modifier.width(Spacing.small))
-        Text(title, style = ArdiaType.body, color = BrowsePalette.foregroundPrimary.current, modifier = Modifier.weight(1f))
+        Text(title, style = NillaType.body, color = BrowsePalette.foregroundPrimary.current, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
 private fun NothingToShare() {
     Box(Modifier.fillMaxWidth().heightIn(min = 120.dp), contentAlignment = Alignment.Center) {
-        Text(stringResource(R.string.share_nothing), style = ArdiaType.body, color = BrowsePalette.foregroundSecondary.current, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.share_nothing), style = NillaType.body, color = BrowsePalette.foregroundSecondary.current, textAlign = TextAlign.Center)
     }
 }
 
@@ -263,11 +263,11 @@ private fun Confirmation(phase: ShareSheetModel.Phase.Done) {
         verticalArrangement = Arrangement.spacedBy(Spacing.small, Alignment.CenterVertically),
     ) {
         Icon(
-            if (phase.succeeded) ArdiaSymbols.checkmarkCircleFill else ArdiaSymbols.exclamationmarkTriangleFill,
+            if (phase.succeeded) NillaSymbols.checkmarkCircleFill else NillaSymbols.exclamationmarkTriangleFill,
             contentDescription = null,
             modifier = Modifier.size(44.dp),
             tint = if (phase.succeeded) Palette.success.current else BrowsePalette.findError,
         )
-        Text(message, style = ArdiaType.headline, color = BrowsePalette.foregroundPrimary.current, textAlign = TextAlign.Center)
+        Text(message, style = NillaType.headline, color = BrowsePalette.foregroundPrimary.current, textAlign = TextAlign.Center)
     }
 }

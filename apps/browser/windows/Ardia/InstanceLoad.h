@@ -7,7 +7,7 @@
 #include "Host.h"
 #include "LaunchLog.h"
 
-namespace Ardia {
+namespace Nilla {
 
 struct InstanceLoad {
   bool loaded = false;

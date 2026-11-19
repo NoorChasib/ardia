@@ -21,7 +21,7 @@ public struct ReadableContent: Codable, Equatable, Sendable {
 
   public var text: String { paragraphs.joined(separator: "\n\n") }
 
-  @MainActor static let world = WKContentWorld.world(name: "ArdiaReader")
+  @MainActor static let world = WKContentWorld.world(name: "NillaReader")
 
   @MainActor
   public static func extract(from webView: WKWebView) async throws -> ReadableContent {

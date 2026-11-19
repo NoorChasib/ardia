@@ -1,4 +1,4 @@
-import type * as ImportApi from "@ardia/import";
+import type * as ImportApi from "@nilla/import";
 
 export type {
   ArcArchive,
@@ -21,8 +21,8 @@ export type {
   SafariExport,
   SpaceSuggestion,
   SpaceSummary,
-} from "@ardia/import";
+} from "@nilla/import";
 
 let api: typeof ImportApi | undefined;
 
-export const importModule = (): typeof ImportApi => (api ??= require("@ardia/import") as typeof ImportApi);
+export const importModule = (): typeof ImportApi => (api ??= require("@nilla/import") as typeof ImportApi);

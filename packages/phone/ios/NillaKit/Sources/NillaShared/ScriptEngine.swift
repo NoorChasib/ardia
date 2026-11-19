@@ -7,12 +7,12 @@ public struct ScriptError: Error, CustomStringConvertible, Sendable {
 }
 
 public enum SharedScript: String, Sendable {
-  case sync = "ardia-sync"
-  case core = "ardia-core"
+  case sync = "nilla-sync"
+  case core = "nilla-core"
 
   var global: String {
     switch self {
-    case .sync: "ArdiaSync"
+    case .sync: "NillaSync"
     case .core: "ArdiaCore"
     }
   }

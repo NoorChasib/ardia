@@ -18,7 +18,7 @@
 #include "SyncVault.h"
 #include "WindowManager.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace SyncModuleParts {
 
@@ -71,7 +71,7 @@ inline void RemoveTemporaryKits() noexcept {
 
 }
 
-REACT_MODULE(SyncModule, L"ArdiaWindowsSync")
+REACT_MODULE(SyncModule, L"NillaWindowsSync")
 struct SyncModule {
   REACT_INIT(Initialize)
   void Initialize(winrt::Microsoft::ReactNative::ReactContext const &context) noexcept {

@@ -1,4 +1,4 @@
-import { labLog, legacyImport, legacyLab } from "@ardia/phone-native";
+import { labLog, legacyImport, legacyLab } from "@nilla/phone-native";
 import { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 

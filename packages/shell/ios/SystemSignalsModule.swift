@@ -5,7 +5,7 @@ import ExpoModulesCore
 final class IdleWatch {
   private static let anyInput = CGEventType(rawValue: UInt32.max)!
 
-  private let queue = DispatchQueue(label: "dev.ardia.idle-watch", qos: .utility)
+  private let queue = DispatchQueue(label: "com.nilladigital.nilla.idle-watch", qos: .utility)
   private var timer: DispatchSourceTimer?
   private var idleByThreshold: [Double: Bool] = [:]
   private let onChange: (Double, Bool) -> Void
@@ -75,7 +75,7 @@ public class SystemSignalsModule: Module {
   }
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaSystemSignals")
+    Name("NillaSystemSignals")
     Events(Self.event)
 
     OnCreate {
@@ -93,16 +93,16 @@ public class SystemSignalsModule: Module {
       self.lifetime.run { self.idle.watch(thresholds) }
     }
 
-    Function("holdsIncomingLinks") { () -> Bool in ArdiaHost.holdsIncomingLinks }
+    Function("holdsIncomingLinks") { () -> Bool in NillaHost.holdsIncomingLinks }
 
-    Function("setHoldIncomingLinks") { (hold: Bool, hooksStamp: String?) in ArdiaHost.setHoldIncomingLinks(hold, hooksStamp: hooksStamp) }
+    Function("setHoldIncomingLinks") { (hold: Bool, hooksStamp: String?) in NillaHost.setHoldIncomingLinks(hold, hooksStamp: hooksStamp) }
 
-    Function("setApprovedDownloadFolders") { (folders: [String]) in ArdiaDownloadMover.shared.setApprovedFolders(folders) }
+    Function("setApprovedDownloadFolders") { (folders: [String]) in NillaDownloadMover.shared.setApprovedFolders(folders) }
 
     AsyncFunction("moveCompletedDownload") { (path: String, folder: String) -> [String: Any] in
-      var result = ArdiaDownloadMover.shared.moveDownload(at: path, toFolder: folder)
+      var result = NillaDownloadMover.shared.moveDownload(at: path, toFolder: folder)
       if let event = result.removeValue(forKey: "event") as? [String: Any] {
-        DispatchQueue.main.async { ArdiaEvents.emit("downloads.changed", data: event) }
+        DispatchQueue.main.async { NillaEvents.emit("downloads.changed", data: event) }
       }
       return result
     }.runOnQueue(DispatchQueue.global(qos: .userInitiated))

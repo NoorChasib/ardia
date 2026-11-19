@@ -112,7 +112,7 @@ test("a request for a tab this window does not show is ignored", () => {
 
 test("the external app answer goes to the engine with its id, and only once", async () => {
   calls.length = 0;
-  const request = { id: "x1", url: "ardiatest://hello", scheme: "ardiatest", origin: "https://app.test", app: "Test", appPath: null, icon: null, title: "Open “Test”?", message: "https://app.test wants to open this application.", remember: "Always allow" };
+  const request = { id: "x1", url: "nillatest://hello", scheme: "nillatest", origin: "https://app.test", app: "Test", appPath: null, icon: null, title: "Open “Test”?", message: "https://app.test wants to open this application.", remember: "Always allow" };
   patchPage("tab-d", { externalApp: request });
   prompts.answerExternalApp("tab-d", true, true);
   prompts.answerExternalApp("tab-d", true, true);
@@ -123,11 +123,11 @@ test("the external app answer goes to the engine with its id, and only once", as
 
 test("remembered external apps are read and removed through the engine routes", async () => {
   calls.length = 0;
-  replies.set("permissions.externalAppAllowances", [{ origin: "https://app.test", scheme: "ardiatest", app: "Test", icon: null }]);
-  assert.deepEqual(await sites.getExternalAppAllowances("default"), [{ origin: "https://app.test", scheme: "ardiatest", app: "Test", icon: null }]);
-  await sites.removeExternalAppAllowance("default", "https://app.test", "ardiatest");
+  replies.set("permissions.externalAppAllowances", [{ origin: "https://app.test", scheme: "nillatest", app: "Test", icon: null }]);
+  assert.deepEqual(await sites.getExternalAppAllowances("default"), [{ origin: "https://app.test", scheme: "nillatest", app: "Test", icon: null }]);
+  await sites.removeExternalAppAllowance("default", "https://app.test", "nillatest");
   assert.deepEqual(calls.map(({ name, args }) => [name, args]), [
     ["permissions.externalAppAllowances", {}],
-    ["permissions.removeExternalAppAllowance", { origin: "https://app.test", scheme: "ardiatest" }],
+    ["permissions.removeExternalAppAllowance", { origin: "https://app.test", scheme: "nillatest" }],
   ]);
 });

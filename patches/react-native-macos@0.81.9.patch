@@ -7,7 +7,7 @@ index 1ae22ed66776941c33b2c0a78038b2b997506aa7..632a0f284e88e2d3034f3eeb50cf2acf
          inputRef.current,
          mostRecentEventCount,
 -        text,
-+        nativeUpdate.text ?? null, // [Ardia: only a value JS changed is text to set; a selection-only update sent the value too, and native takes command text as meant, so it replaced an input method's marked text Ardia]
++        nativeUpdate.text ?? null, // [Nilla: only a value JS changed is text to set; a selection-only update sent the value too, and native takes command text as meant, so it replaced an input method's marked text Nilla]
          selection?.start ?? -1,
          selection?.end ?? -1,
        );
@@ -20,9 +20,9 @@ index 879e36bc2483226756011b21948f2dd1760d7cf8..bc861ed4b95cbcf7cd787cf9a8d7e47a
  #import <React/UIView+React.h>
  
 +#if TARGET_OS_OSX // [macOS
-+// [Ardia: an image is decoded for the view's own backing density, which includes the interface size its root is drawn
-+// at, and loads again when that size changes. Ardia]
-+static CGFloat ArdiaBackingDensity(NSView *view)
++// [Nilla: an image is decoded for the view's own backing density, which includes the interface size its root is drawn
++// at, and loads again when that size changes. Nilla]
++static CGFloat NillaBackingDensity(NSView *view)
 +{
 +  return view.window != nil ? [view convertSizeToBacking:NSMakeSize(1, 1)].width : [NSScreen mainScreen].backingScaleFactor;
 +}
@@ -37,9 +37,9 @@ index 879e36bc2483226756011b21948f2dd1760d7cf8..bc861ed4b95cbcf7cd787cf9a8d7e47a
  
 +#if TARGET_OS_OSX // [macOS
 +    [[NSNotificationCenter defaultCenter] addObserver:self
-+                                             selector:@selector(ardia_interfaceScaleDidChange:)
-+                                                 name:@"ArdiaInterfaceScaleDidChange"
-+                                               object:nil]; // [Ardia]
++                                             selector:@selector(nilla_interfaceScaleDidChange:)
++                                                 name:@"NillaInterfaceScaleDidChange"
++                                               object:nil]; // [Nilla]
 +#endif // macOS]
  #if !TARGET_OS_OSX // [macOS]
      NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
@@ -49,7 +49,7 @@ index 879e36bc2483226756011b21948f2dd1760d7cf8..bc861ed4b95cbcf7cd787cf9a8d7e47a
    } else if (_resizeMode == RCTResizeModeCover) {
      if (!NSEqualSizes(self.bounds.size, NSZeroSize)) {
 -      image = RCTFillImagePreservingAspectRatio(image, self.bounds.size, self.window.backingScaleFactor ?: 1.0);
-+      image = RCTFillImagePreservingAspectRatio(image, self.bounds.size, self.window != nil ? ArdiaBackingDensity(self) : 1.0); // [Ardia]
++      image = RCTFillImagePreservingAspectRatio(image, self.bounds.size, self.window != nil ? NillaBackingDensity(self) : 1.0); // [Nilla]
      }
  #endif // macOS]
    } else if (!UIEdgeInsetsEqualToEdgeInsets(UIEdgeInsetsZero, _capInsets)) {
@@ -58,7 +58,7 @@ index 879e36bc2483226756011b21948f2dd1760d7cf8..bc861ed4b95cbcf7cd787cf9a8d7e47a
    const CGFloat scale = RCTScreenScale();
  #else // [macOS
 -  const CGFloat scale = self.window != nil ? self.window.backingScaleFactor : [NSScreen mainScreen].backingScaleFactor;
-+  const CGFloat scale = ArdiaBackingDensity(self); // [Ardia]
++  const CGFloat scale = NillaBackingDensity(self); // [Nilla]
  #endif // macOS]
    const CGFloat targetImagePixels = size.width * size.height * scale * scale;
  
@@ -67,7 +67,7 @@ index 879e36bc2483226756011b21948f2dd1760d7cf8..bc861ed4b95cbcf7cd787cf9a8d7e47a
      CGFloat imageScale = RCTScreenScale();
  #else // [macOS
 -    CGFloat imageScale = self.window != nil ? self.window.backingScaleFactor : [NSScreen mainScreen].backingScaleFactor;
-+    CGFloat imageScale = ArdiaBackingDensity(self); // [Ardia]
++    CGFloat imageScale = NillaBackingDensity(self); // [Nilla]
  #endif // macOS]
      if (!UIEdgeInsetsEqualToEdgeInsets(_capInsets, UIEdgeInsetsZero)) {
        // Don't resize images that use capInsets
@@ -76,7 +76,7 @@ index 879e36bc2483226756011b21948f2dd1760d7cf8..bc861ed4b95cbcf7cd787cf9a8d7e47a
  #else // [macOS
      CGSize idealSize = RCTTargetSize(
 -        imageSize, imageScale, frame.size, RCTScreenScale(), RCTResizeModeFromUIViewContentMode(_imageView.contentMode), YES);
-+        imageSize, imageScale, frame.size, ArdiaBackingDensity(self), RCTResizeModeFromUIViewContentMode(_imageView.contentMode), YES); // [Ardia]
++        imageSize, imageScale, frame.size, NillaBackingDensity(self), RCTResizeModeFromUIViewContentMode(_imageView.contentMode), YES); // [Nilla]
  #endif // macOS]
  
      // Don't reload if the current image or target image size is close enough
@@ -84,18 +84,18 @@ index 879e36bc2483226756011b21948f2dd1760d7cf8..bc861ed4b95cbcf7cd787cf9a8d7e47a
  #if TARGET_OS_OSX // [macOS
  - (void)viewDidChangeBackingProperties
  {
-+  [super viewDidChangeBackingProperties]; // [Ardia]
++  [super viewDidChangeBackingProperties]; // [Nilla]
    [self reloadImage];
  }
 +
-+// [Ardia
-+- (void)ardia_interfaceScaleDidChange:(__unused NSNotification *)notification
++// [Nilla
++- (void)nilla_interfaceScaleDidChange:(__unused NSNotification *)notification
 +{
 +  if (self.window != nil) {
 +    [self reloadImage];
 +  }
 +}
-+// Ardia]
++// Nilla]
    
  - (RCTPlatformView *)reactAccessibilityElement
  {
@@ -112,7 +112,7 @@ index a413a2888789daa1a4230e301ec21af5ec203488..857bd369ad19670a96f80aa08423c3b4
 -@property (nonatomic, copy) RCTURLRequestIncrementalDataBlock incrementalDataBlock;
 -@property (nonatomic, copy) RCTURLRequestResponseBlock responseBlock;
 -@property (nonatomic, copy) RCTURLRequestProgressBlock uploadProgressBlock;
-+// [Ardia: atomic, as a cancel on the caller's queue clears them while the handler's queue reads them Ardia]
++// [Nilla: atomic, as a cancel on the caller's queue clears them while the handler's queue reads them Nilla]
 +@property (atomic, copy) RCTURLRequestCompletionBlock completionBlock;
 +@property (atomic, copy) RCTURLRequestProgressBlock downloadProgressBlock;
 +@property (atomic, copy) RCTURLRequestIncrementalDataBlock incrementalDataBlock;
@@ -129,8 +129,8 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
    std::mutex _mutex;
    std::atomic<RCTNetworkTaskStatus> _atomicStatus;
    RCTNetworkTask *_selfReference;
-+  std::mutex _selfReferenceMutex; // [Ardia]
-+  std::atomic<bool> _cancelled; // [Ardia]
++  std::mutex _selfReferenceMutex; // [Nilla]
++  std::atomic<bool> _cancelled; // [Nilla]
  }
  
  static auto currentRequestId = std::atomic<NSUInteger>(0);
@@ -144,29 +144,29 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
 -  _incrementalDataBlock = nil;
 -  _responseBlock = nil;
 -  _uploadProgressBlock = nil;
-+  self.completionBlock = nil; // [Ardia: through the atomic setters, see the header Ardia]
++  self.completionBlock = nil; // [Nilla: through the atomic setters, see the header Nilla]
 +  self.downloadProgressBlock = nil;
 +  self.incrementalDataBlock = nil;
 +  self.responseBlock = nil;
 +  self.uploadProgressBlock = nil;
    _requestToken = nil;
-+  // [Ardia: last, as it can be the task's last reference, and under the lock start takes it with
++  // [Nilla: last, as it can be the task's last reference, and under the lock start takes it with
 +  NS_VALID_UNTIL_END_OF_SCOPE RCTNetworkTask *selfReference;
 +  {
 +    std::lock_guard<std::mutex> lock(_selfReferenceMutex);
 +    selfReference = _selfReference;
 +    _selfReference = nil;
 +  }
-+  // Ardia]
++  // Nilla]
 +}
 +
-+// [Ardia: only the first of cancel, an error and completion finishes the task, so a cancel racing a completion never
++// [Nilla: only the first of cancel, an error and completion finishes the task, so a cancel racing a completion never
 +// invalidates it twice (releasing _selfReference twice) and a cancelled task never calls its completion block
 +- (BOOL)finishOnce
 +{
 +  return _atomicStatus.exchange(RCTNetworkTaskFinished) != RCTNetworkTaskFinished;
  }
-+// Ardia]
++// Nilla]
  
  - (void)dispatchCallback:(dispatch_block_t)callback
  {
@@ -175,7 +175,7 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
  - (void)start
  {
 -  if (_atomicStatus != RCTNetworkTaskPending) {
-+  // [Ardia: running and retained before the handler can call back, as a fast one (data: URIs) finishes the task
++  // [Nilla: running and retained before the handler can call back, as a fast one (data: URIs) finishes the task
 +  // before sendRequest: returns, and only from pending, so a finished task never runs again; a cancel that came
 +  // before the token was published couldn't cancel the request, so start does
 +  BOOL started;
@@ -202,16 +202,16 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
 +  if ([self validateRequestToken:token] && _cancelled && [_handler respondsToSelector:@selector(cancelRequest:)]) {
 +    [_handler cancelRequest:token];
    }
-+  // Ardia]
++  // Nilla]
  }
  
  - (void)cancel
  {
 -  if (_atomicStatus.exchange(RCTNetworkTaskFinished) == RCTNetworkTaskFinished) {
-+  if (![self finishOnce]) { // [Ardia]
++  if (![self finishOnce]) { // [Nilla]
      return;
    }
-+  _cancelled = true; // [Ardia]
++  _cancelled = true; // [Nilla]
  
    id token = _requestToken;
    if (token && [_handler respondsToSelector:@selector(cancelRequest:)]) {
@@ -223,8 +223,8 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
 -    _atomicStatus = RCTNetworkTaskFinished;
 -    if (_completionBlock) {
 -      RCTURLRequestCompletionBlock completionBlock = _completionBlock;
-+  if (!valid && [self finishOnce]) { // [Ardia]
-+    RCTURLRequestCompletionBlock completionBlock = self.completionBlock; // [Ardia]
++  if (!valid && [self finishOnce]) { // [Nilla]
++    RCTURLRequestCompletionBlock completionBlock = self.completionBlock; // [Nilla]
 +    if (completionBlock) {
        [self dispatchCallback:^{
          completionBlock(self->_response, nil, RCTErrorWithMessage(@"Invalid request token."));
@@ -235,7 +235,7 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
  
 -  if (_uploadProgressBlock) {
 -    RCTURLRequestProgressBlock uploadProgressBlock = _uploadProgressBlock;
-+  RCTURLRequestProgressBlock uploadProgressBlock = self.uploadProgressBlock; // [Ardia]
++  RCTURLRequestProgressBlock uploadProgressBlock = self.uploadProgressBlock; // [Nilla]
 +  if (uploadProgressBlock) {
      int64_t length = _request.HTTPBody.length;
      [self dispatchCallback:^{
@@ -246,7 +246,7 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
    _response = response;
 -  if (_responseBlock) {
 -    RCTURLRequestResponseBlock responseBlock = _responseBlock;
-+  RCTURLRequestResponseBlock responseBlock = self.responseBlock; // [Ardia]
++  RCTURLRequestResponseBlock responseBlock = self.responseBlock; // [Nilla]
 +  if (responseBlock) {
      [self dispatchCallback:^{
        responseBlock(response);
@@ -258,10 +258,10 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
 -      _atomicStatus = RCTNetworkTaskFinished;
 -      if (_completionBlock) {
 -        RCTURLRequestCompletionBlock completionBlock = _completionBlock;
-+      if (![self finishOnce]) { // [Ardia]
++      if (![self finishOnce]) { // [Nilla]
 +        return;
 +      }
-+      RCTURLRequestCompletionBlock completionBlock = self.completionBlock; // [Ardia]
++      RCTURLRequestCompletionBlock completionBlock = self.completionBlock; // [Nilla]
 +      if (completionBlock) {
          [self dispatchCallback:^{
            completionBlock(
@@ -272,7 +272,7 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
  
 -  if (_incrementalDataBlock) {
 -    RCTURLRequestIncrementalDataBlock incrementalDataBlock = _incrementalDataBlock;
-+  RCTURLRequestIncrementalDataBlock incrementalDataBlock = self.incrementalDataBlock; // [Ardia]
++  RCTURLRequestIncrementalDataBlock incrementalDataBlock = self.incrementalDataBlock; // [Nilla]
 +  if (incrementalDataBlock) {
      [self dispatchCallback:^{
        incrementalDataBlock(data, length, total);
@@ -280,7 +280,7 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
    }
 -  if (_downloadProgressBlock) {
 -    RCTURLRequestProgressBlock downloadProgressBlock = _downloadProgressBlock;
-+  RCTURLRequestProgressBlock downloadProgressBlock = self.downloadProgressBlock; // [Ardia]
++  RCTURLRequestProgressBlock downloadProgressBlock = self.downloadProgressBlock; // [Nilla]
 +  if (downloadProgressBlock) {
      [self dispatchCallback:^{
        downloadProgressBlock(length, total);
@@ -292,10 +292,10 @@ index a82671b7c87fae1e390cc6a292bd91611ca40584..13effa264ea260263dcf9ae7cd5e80bc
 -  _atomicStatus = RCTNetworkTaskFinished;
 -  if (_completionBlock) {
 -    RCTURLRequestCompletionBlock completionBlock = _completionBlock;
-+  if (![self finishOnce]) { // [Ardia]
++  if (![self finishOnce]) { // [Nilla]
 +    return;
 +  }
-+  RCTURLRequestCompletionBlock completionBlock = self.completionBlock; // [Ardia]
++  RCTURLRequestCompletionBlock completionBlock = self.completionBlock; // [Nilla]
 +  if (completionBlock) {
      NSData *dataCopy = nil;
      {
@@ -308,7 +308,7 @@ index bbee6d1e1865359b350da78b745c6c0061a2dc5d..c645bfead1814173bef35608504aa5ec
  }
  
  const getTouchFromPressEvent = (event: GestureResponderEvent) => {
-+  // [Ardia: the touch this event is about comes first. `touches` also lists every other button still held, or one whose mouse up a menu took, and its button decided whether this press counted
++  // [Nilla: the touch this event is about comes first. `touches` also lists every other button still held, or one whose mouse up a menu took, and its button decided whether this press counted
    const {changedTouches, touches} = event.nativeEvent;
  
 -  if (touches != null && touches.length > 0) {
@@ -321,7 +321,7 @@ index bbee6d1e1865359b350da78b745c6c0061a2dc5d..c645bfead1814173bef35608504aa5ec
 +    return touches[0];
 +  }
    return event.nativeEvent;
-+  // Ardia]
++  // Nilla]
  };
  
  function convertPointerEventToMouseEvent(input: PointerEvent): MouseEvent {
@@ -333,8 +333,8 @@ index 18bbe64f657a36596563b3eb6d135284e28c674a..a4046a33e13d35cac155e306f368e04e
  
  static void *TextFieldSelectionObservingContext = &TextFieldSelectionObservingContext;
  
-+#if TARGET_OS_OSX // [Ardia: Return, Escape, Tab and Backspace reach a field as commands, never as key equivalents, so keyDownEvents asking for them went unheard; Backspace only from an empty field, so a delete the editor can do is never swallowed
-+static BOOL ArdiaCommandKeyHandledByJS(id<RCTBackedTextInputDelegate> textInputDelegate, NSTextView *editor, SEL commandSelector)
++#if TARGET_OS_OSX // [Nilla: Return, Escape, Tab and Backspace reach a field as commands, never as key equivalents, so keyDownEvents asking for them went unheard; Backspace only from an empty field, so a delete the editor can do is never swallowed
++static BOOL NillaCommandKeyHandledByJS(id<RCTBackedTextInputDelegate> textInputDelegate, NSTextView *editor, SEL commandSelector)
 +{
 +  NSString *key = commandSelector == @selector(cancelOperation:) ? @"Escape"
 +      : commandSelector == @selector(insertNewline:) || commandSelector == @selector(insertNewlineIgnoringFieldEditor:) ? @"Enter"
@@ -350,7 +350,7 @@ index 18bbe64f657a36596563b3eb6d135284e28c674a..a4046a33e13d35cac155e306f368e04e
 +  }
 +  return ![textInputDelegate textInputShouldHandleKeyEvent:event];
 +}
-+#endif // Ardia]
++#endif // Nilla]
 +
  #if !TARGET_OS_OSX // [macOS]
  @interface RCTBackedTextFieldDelegateAdapter () <UITextFieldDelegate, UITextDropDelegate>
@@ -359,7 +359,7 @@ index 18bbe64f657a36596563b3eb6d135284e28c674a..a4046a33e13d35cac155e306f368e04e
  - (BOOL)control:(NSControl *)control textView:(NSTextView *)fieldEditor doCommandBySelector:(SEL)commandSelector
  {
    id<RCTBackedTextInputDelegate> textInputDelegate = [_backedTextInputView textInputDelegate];
-+  if (ArdiaCommandKeyHandledByJS(textInputDelegate, fieldEditor, commandSelector)) { // [Ardia]
++  if (NillaCommandKeyHandledByJS(textInputDelegate, fieldEditor, commandSelector)) { // [Nilla]
 +    return YES;
 +  }
    BOOL commandHandled = NO;
@@ -369,7 +369,7 @@ index 18bbe64f657a36596563b3eb6d135284e28c674a..a4046a33e13d35cac155e306f368e04e
  {
    BOOL commandHandled = NO;
    id<RCTBackedTextInputDelegate> textInputDelegate = [_backedTextInputView textInputDelegate];
-+  if (ArdiaCommandKeyHandledByJS(textInputDelegate, textView, commandSelector)) { // [Ardia]
++  if (NillaCommandKeyHandledByJS(textInputDelegate, textView, commandSelector)) { // [Nilla]
 +    return YES;
 +  }
    // enter/return
@@ -383,9 +383,9 @@ index bcaa6add683bab6a3b4e86cc091c9cadb9f22970..c295eff3cbde856de41c67064d684894
  @property (nonatomic, strong, nullable) NSNumber *maxLength;
  @property (nonatomic, copy, nullable) NSAttributedString *attributedText;
  @property (nonatomic, copy) NSString *predictedText; // [macOS]
-+#if TARGET_OS_OSX // [Ardia
++#if TARGET_OS_OSX // [Nilla
 +- (void)replaceMarkedTextWithText:(NSString *)text;
-+#endif // Ardia]
++#endif // Nilla]
  @property (nonatomic, copy) NSString *inputAccessoryViewID;
  #if !TARGET_OS_OSX // [macOS]
  @property (nonatomic, strong) NSString *inputAccessoryViewButtonLabel;
@@ -397,16 +397,16 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
  #if TARGET_OS_OSX // [macOS avoids duplicating effects of textInputDid(Begin|End)Editing calls
    BOOL _isCurrentlyEditing;
  #endif // macOS]
-+#if TARGET_OS_OSX // [Ardia: the edit in progress (counted), and whether a click began it with its focus props to come
++#if TARGET_OS_OSX // [Nilla: the edit in progress (counted), and whether a click began it with its focus props to come
 +  NSUInteger _editSession;
 +  BOOL _clickFocused;
-+#endif // Ardia]
-+  __weak NSUndoManager *_undoManagerWithActions; // [Ardia: where its text undos are, so they go when it does Ardia]
-+#if TARGET_OS_OSX // [Ardia: the text JS last heard in onChange or set, so its echo can't end an input method's composition, whether text is coming from an undo or a JS command rather than a re-render, and whether text from JS is replacing marked text
++#endif // Nilla]
++  __weak NSUndoManager *_undoManagerWithActions; // [Nilla: where its text undos are, so they go when it does Nilla]
++#if TARGET_OS_OSX // [Nilla: the text JS last heard in onChange or set, so its echo can't end an input method's composition, whether text is coming from an undo or a JS command rather than a re-render, and whether text from JS is replacing marked text
 +  NSString *_textKnownToJS;
 +  BOOL _bypassingEchoCheck;
 +  BOOL _replacingMarkedText;
-+#endif // Ardia]
++#endif // Nilla]
  }
  
  #if !TARGET_OS_OSX // [macOS]
@@ -414,10 +414,10 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
  }
  #endif // [macOS]
  
-+- (void)dealloc // [Ardia]
++- (void)dealloc // [Nilla]
 +{
 +  [_undoManagerWithActions removeAllActionsWithTarget:self];
-+} // Ardia]
++} // Nilla]
 +
  - (instancetype)initWithBridge:(RCTBridge *)bridge
  {
@@ -426,12 +426,12 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
  
    textNeedsUpdate = ([self textOf:attributedTextCopy equals:backedTextInputViewTextCopy] == NO);
  
-+#if TARGET_OS_OSX // [Ardia: while an input method holds marked text, a re-render restating the text JS already knows is an echo and is dropped: Korean commits a syllable and marks the next consonant in one keystroke, JS only heard the committed syllable, and setting that unmarked the consonant and reset the composition (3-set typing came out as loose letters, #863). Other text from a re-render, and any text from a JS command (clear(), a controlled value JS changed) or an undo, replaces the field, and AppKit ends the composition as it does
++#if TARGET_OS_OSX // [Nilla: while an input method holds marked text, a re-render restating the text JS already knows is an echo and is dropped: Korean commits a syllable and marks the next consonant in one keystroke, JS only heard the committed syllable, and setting that unmarked the consonant and reset the composition (3-set typing came out as loose letters, #863). Other text from a re-render, and any text from a JS command (clear(), a controlled value JS changed) or an undo, replaces the field, and AppKit ends the composition as it does
 +  if (textNeedsUpdate && !_bypassingEchoCheck && [self.backedTextInputView hasMarkedText] &&
 +      [attributedTextCopy.string isEqualToString:_textKnownToJS ?: @""]) {
 +    return;
 +  }
-+#endif // Ardia]
++#endif // Nilla]
 +
    if ((eventLag == 0 || self.backedTextInputView.ghostTextChanging) && textNeedsUpdate) { // [macOS]
  #if !TARGET_OS_OSX // [macOS]
@@ -441,34 +441,34 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
        // If something goes wrong when trying to remove it, just stick with oldAttributedText.
        NSAttributedString *oldAttributedTextWithoutGhostText = [self removingGhostTextFromString:oldAttributedText strict:YES] ?: oldAttributedText;
 -      [self.backedTextInputView.undoManager registerUndoWithTarget:self handler:^(RCTBaseTextInputView *strongSelf) {
-+      // [Ardia: an undo manager doesn't retain its targets, and the window's outlives this view: ⌘Z after the view
++      // [Nilla: an undo manager doesn't retain its targets, and the window's outlives this view: ⌘Z after the view
 +      // was gone ran a dead object's undo (a crash after the command bar closed)
 +      NSUndoManager *undoManager = self.backedTextInputView.undoManager;
 +      if (_undoManagerWithActions && _undoManagerWithActions != undoManager) {
 +        [_undoManagerWithActions removeAllActionsWithTarget:self];
 +      }
 +      _undoManagerWithActions = undoManager;
-+      // Ardia]
++      // Nilla]
 +      [undoManager registerUndoWithTarget:self handler:^(RCTBaseTextInputView *strongSelf) {
-+#if TARGET_OS_OSX // [Ardia
++#if TARGET_OS_OSX // [Nilla
 +        strongSelf->_bypassingEchoCheck = YES;
-+#endif // Ardia]
++#endif // Nilla]
          strongSelf.attributedText = oldAttributedTextWithoutGhostText;
-+#if TARGET_OS_OSX // [Ardia
++#if TARGET_OS_OSX // [Nilla
 +        strongSelf->_bypassingEchoCheck = NO;
-+#endif // Ardia]
++#endif // Nilla]
          [strongSelf textInputDidChange];
        }];
      }
  
-+#if TARGET_OS_OSX // [Ardia: AppKit commits the marked text before it takes the new text, and that commit's onChange reached JS after the replacement and put the composed text back over a clear
++#if TARGET_OS_OSX // [Nilla: AppKit commits the marked text before it takes the new text, and that commit's onChange reached JS after the replacement and put the composed text back over a clear
 +    _replacingMarkedText = [self.backedTextInputView hasMarkedText];
-+#endif // Ardia]
++#endif // Nilla]
      self.backedTextInputView.attributedText = attributedText;
-+#if TARGET_OS_OSX // [Ardia
++#if TARGET_OS_OSX // [Nilla
 +    _replacingMarkedText = NO;
 +    _textKnownToJS = [attributedText.string copy];
-+#endif // Ardia]
++#endif // Nilla]
  
  #if !TARGET_OS_OSX // [macOS]
      if (selection.empty) {
@@ -476,14 +476,14 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
    }
  }
  
-+#if TARGET_OS_OSX // [Ardia: a JS command's text is meant, so it replaces marked text even when it restates what JS knew (clear() while composing in an empty field)
++#if TARGET_OS_OSX // [Nilla: a JS command's text is meant, so it replaces marked text even when it restates what JS knew (clear() while composing in an empty field)
 +- (void)replaceMarkedTextWithText:(NSString *)text
 +{
 +  _bypassingEchoCheck = YES;
 +  self.attributedText = [[NSAttributedString alloc] initWithString:text attributes:self.textAttributes.effectiveTextAttributes ?: @{}];
 +  _bypassingEchoCheck = NO;
 +}
-+#endif // Ardia]
++#endif // Nilla]
 +
  - (void)setSelectionStart:(NSInteger)start selectionEnd:(NSInteger)end
  {
@@ -492,9 +492,9 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
      [self.backedTextInputView setSelectedTextRange:range notifyDelegate:NO];
    }
  #else // [macOS
-+  if (start < 0 || end < 0) { // [Ardia: setTextAndSelection sends -1 when JS sets text without a selection; as a range it moved the caret, which also ended an input method's composition
++  if (start < 0 || end < 0) { // [Nilla: setTextAndSelection sends -1 when JS sets text without a selection; as a range it moved the caret, which also ended an input method's composition
 +    return;
-+  } // Ardia]
++  } // Nilla]
    NSInteger startPosition = MIN(start, end);
    NSInteger endPosition = MAX(start, end);
    [self.backedTextInputView setSelectedTextRange:NSMakeRange(startPosition, endPosition - startPosition) notifyDelegate:NO];
@@ -502,11 +502,11 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
      return;
    }
    _isCurrentlyEditing = YES;
-+  // [Ardia
++  // [Nilla
 +  _editSession++;
 +  NSEventType began = NSApp.currentEvent.type;
 +  _clickFocused = began == NSEventTypeLeftMouseDown || began == NSEventTypeRightMouseDown || began == NSEventTypeOtherMouseDown;
-+  // Ardia]
++  // Nilla]
  #endif // macOS]
    
    [_eventDispatcher sendTextEventWithType:RCTTextEventTypeFocus
@@ -514,11 +514,11 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
  
  - (void)textInputDidChange
  {
-+#if TARGET_OS_OSX // [Ardia
++#if TARGET_OS_OSX // [Nilla
 +  if (_replacingMarkedText) {
 +    return;
 +  }
-+#endif // Ardia]
++#endif // Nilla]
    [self updateLocalData];
  
    id<RCTBackedTextInputViewProtocol> backedTextInputView = self.backedTextInputView;
@@ -526,9 +526,9 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
    if (!self.backedTextInputView.ghostTextChanging) { // [macOS]
      _nativeEventCount++;
  
-+#if TARGET_OS_OSX // [Ardia
++#if TARGET_OS_OSX // [Nilla
 +    _textKnownToJS = _onChange ? [self.attributedText.string copy] : nil;
-+#endif // Ardia]
++#endif // Nilla]
      if (_onChange) {
        _onChange(@{
          @"text" : [self.attributedText.string copy],
@@ -536,7 +536,7 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
  
  #pragma mark - Focus Control
  
-+#if TARGET_OS_OSX // [Ardia
++#if TARGET_OS_OSX // [Nilla
 +// Being edited: its window's first responder is the field editor (single line) or the view itself (multiline).
 +- (BOOL)ac_isEditing
 +{
@@ -558,11 +558,11 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
 +    [self.backedTextInputView selectAll:nil];
 +  }
 +}
-+#endif // Ardia]
++#endif // Nilla]
 +
  - (void)reactFocus
  {
-+#if TARGET_OS_OSX // [Ardia: focus() on a field already being edited leaves the edit as it is. A press in a TextInput
++#if TARGET_OS_OSX // [Nilla: focus() on a field already being edited leaves the edit as it is. A press in a TextInput
 +  // calls focus() (TextInput.js skips its "already focused" check on macOS), and making an editing NSTextField first
 +  // responder again ends its edit (a blur), starts a new one and selects all: a click in the command bar closed it.
 +  // A field a click just focused (AppKit, on mouse-down) gets its focus props once, after that click: run inside the
@@ -578,7 +578,7 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
 +    }
 +    return;
 +  }
-+#endif // Ardia]
++#endif // Nilla]
    [self.backedTextInputView reactFocus];
  
    if (_clearTextOnFocus) {
@@ -586,9 +586,9 @@ index cac171e70c9fa225cdec45b205086342a0d50f06..a0d75d7f127c1da4758dcfcdd119513d
      [self.backedTextInputView setSelectedTextRange:NSMakeRange(NSNotFound, 0) notifyDelegate:NO];
  #endif // macOS]
    }
-+#if TARGET_OS_OSX // [Ardia: applied here
++#if TARGET_OS_OSX // [Nilla: applied here
 +  _clickFocused = NO;
-+#endif // Ardia]
++#endif // Nilla]
  }
  
  - (void)reactBlur
@@ -600,11 +600,11 @@ index fac5699dedeaaa35bb22b8f8d5d96a3817ca92b1..692ea640ba83db5b0bfe3fc1a24fda68
      if (eventLag != 0) {
        return;
      }
-+#if TARGET_OS_OSX // [Ardia: before the selection below, which would commit an input method's marked text, and before the shadow view's echo rule sees this text
++#if TARGET_OS_OSX // [Nilla: before the selection below, which would commit an input method's marked text, and before the shadow view's echo rule sees this text
 +    if (value && [view.backedTextInputView hasMarkedText]) {
 +      [view replaceMarkedTextWithText:value];
 +    }
-+#endif // Ardia]
++#endif // Nilla]
      RCTExecuteOnUIManagerQueue(^{
        RCTBaseTextInputShadowView *shadowView =
            (RCTBaseTextInputShadowView *)[self.bridge.uiManager shadowViewForReactTag:viewTag];
@@ -616,13 +616,13 @@ index 386405335b411e70a82909033febc7dd5b4adabe..2b8d3d5576b83c20e6387c189943e172
  
  RCT_REMAP_OSX_VIEW_PROPERTY(secureTextEntry, useSecureTextField, BOOL) // [macOS]
  
-+#if TARGET_OS_OSX // [Ardia: pastedTypes reached only multiline fields
++#if TARGET_OS_OSX // [Nilla: pastedTypes reached only multiline fields
 +RCT_CUSTOM_VIEW_PROPERTY(pastedTypes, NSArray<NSPasteboardType>*, RCTSinglelineTextInputView)
 +{
 +  NSArray<NSPasteboardType> *types = json ? [RCTConvert NSPasteboardTypeArray:json] : nil;
 +  [view.backedTextInputView setReadablePasteBoardTypes:types];
 +}
-+#endif // Ardia]
++#endif // Nilla]
 +
  @end
 diff --git a/Libraries/Text/TextInput/Singleline/RCTUITextField.mm b/Libraries/Text/TextInput/Singleline/RCTUITextField.mm
@@ -633,7 +633,7 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
  
  #if TARGET_OS_OSX // [macOS
  
-+// [Ardia: a single-line field given pastedTypes pastes only those as plain text, with line breaks folded the way
++// [Nilla: a single-line field given pastedTypes pastes only those as plain text, with line breaks folded the way
 +// Chrome's omnibox folds them (OmniboxView::SanitizeTextForPaste): leading and trailing whitespace goes, and a
 +// whitespace run holding a line break becomes one space when the text has other spaces (prose), or nothing when it
 +// doesn't (a URL wrapped over lines). A rich paste instead took the source's look, and a link copied with its title
@@ -722,7 +722,7 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
 +  }
 +  if (!text) {
 +    NSArray<NSPasteboardType> *offered = pasteboard.types ?: @[];
-+    [NSNotificationCenter.defaultCenter postNotificationName:@"ArdiaPasteboardTextMissing"
++    [NSNotificationCenter.defaultCenter postNotificationName:@"NillaPasteboardTextMissing"
 +                                                      object:nil
 +                                                    userInfo:@{@"types" : offered}];
 +    NSBeep();
@@ -741,11 +741,11 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
 +}
 +
 +@end
-+// Ardia]
++// Nilla]
 +
  @interface RCTUITextFieldCell : NSTextFieldCell
  
-+@property (nonatomic, copy, nullable) NSArray<NSPasteboardType> *pasteTypes; // [Ardia Ardia]
++@property (nonatomic, copy, nullable) NSArray<NSPasteboardType> *pasteTypes; // [Nilla Nilla]
  @property (nonatomic, assign) UIEdgeInsets textContainerInset;
  @property (nonatomic, getter=isAutomaticTextReplacementEnabled) BOOL automaticTextReplacementEnabled;
  @property (nonatomic, getter=isAutomaticSpellingCorrectionEnabled) BOOL automaticSpellingCorrectionEnabled;
@@ -755,10 +755,10 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
  
 -@implementation RCTUITextFieldCell
 +@implementation RCTUITextFieldCell {
-+  RCTUIPlainPasteFieldEditor *_plainPasteEditor; // [Ardia Ardia]
++  RCTUIPlainPasteFieldEditor *_plainPasteEditor; // [Nilla Nilla]
 +}
 +
-+- (void)setPasteTypes:(NSArray<NSPasteboardType> *)pasteTypes // [Ardia
++- (void)setPasteTypes:(NSArray<NSPasteboardType> *)pasteTypes // [Nilla
 +{
 +  _pasteTypes = [pasteTypes copy];
 +  _plainPasteEditor.pasteTypes = _pasteTypes;
@@ -772,11 +772,11 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
 +  if (!_plainPasteEditor) {
 +    _plainPasteEditor = [[RCTUIPlainPasteFieldEditor alloc] initWithFrame:NSZeroRect];
 +    _plainPasteEditor.fieldEditor = YES;
-+    _plainPasteEditor.allowsUndo = YES; // [Ardia: AppKit's shared field editor has allowsUndo on and a bare NSTextView doesn't, which left Edit's Undo and Redo disabled while the bar had focus Ardia]
++    _plainPasteEditor.allowsUndo = YES; // [Nilla: AppKit's shared field editor has allowsUndo on and a bare NSTextView doesn't, which left Edit's Undo and Redo disabled while the bar had focus Nilla]
 +    _plainPasteEditor.pasteTypes = _pasteTypes;
 +  }
 +  return _plainPasteEditor;
-+} // Ardia]
++} // Nilla]
  
  - (NSRect)titleRectForBounds:(NSRect)rect
  {
@@ -784,10 +784,10 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
  	return ((NSTextView *)self.currentEditor).validAttributesForMarkedText ?: @[];
  }
  
-+- (NSTextInputContext *)inputContext // [Ardia
++- (NSTextInputContext *)inputContext // [Nilla
 +{
 +  return self.currentEditor.inputContext;
-+} // Ardia]
++} // Nilla]
 +
  #endif // macOS]
  
@@ -796,9 +796,9 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
  #if !TARGET_OS_OSX // [macOS]
    [super setPlaceholder:placeholder];
  #else // [macOS
-+  _isUpdatingPlaceholderText = YES; // [Ardia: AppKit ends and restarts the edit of an empty field whose placeholder changes, so this needs the same guard as _updatePlaceholder: unguarded, React Native reported a blur, and the real blur after it went unheard (Backspace out of site search closed the command bar) Ardia]
++  _isUpdatingPlaceholderText = YES; // [Nilla: AppKit ends and restarts the edit of an empty field whose placeholder changes, so this needs the same guard as _updatePlaceholder: unguarded, React Native reported a blur, and the real blur after it went unheard (Backspace out of site search closed the command bar) Nilla]
    [super setPlaceholderString:placeholder];
-+  _isUpdatingPlaceholderText = NO; // [Ardia]
++  _isUpdatingPlaceholderText = NO; // [Nilla]
  #endif // macOS]
    [self _updatePlaceholder];
  }
@@ -807,7 +807,7 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
    self.placeholderAttributedString = [[NSAttributedString alloc] initWithString:self.placeholder ?: @""
  																	 attributes:[self _placeholderTextAttributes]];
 +  NSTextView *editor = (NSTextView *)self.currentEditor;
-+  if (editor) { // [Ardia: the field editor keeps the placeholder it was set up with while it holds text, so a colour change (dark to light) left the old one, invisible, once the field was emptied. Setting it up again also paints its text and typing attributes in the cell's textColor (the system one, not this field's), so they are put back as they were Ardia]
++  if (editor) { // [Nilla: the field editor keeps the placeholder it was set up with while it holds text, so a colour change (dark to light) left the old one, invisible, once the field was emptied. Setting it up again also paints its text and typing attributes in the cell's textColor (the system one, not this field's), so they are put back as they were Nilla]
 +    NSAttributedString *shown = [editor.textStorage copy];
 +    NSDictionary<NSAttributedStringKey, id> *typing = editor.typingAttributes;
 +    [self.cell setUpFieldEditorAttributes:editor];
@@ -819,7 +819,7 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
 +                           }];
 +    [editor.textStorage endEditing];
 +    editor.typingAttributes = typing;
-+  } // [Ardia]
++  } // [Nilla]
    _isUpdatingPlaceholderText = NO;
  #endif // macOS]
  }
@@ -827,9 +827,9 @@ index 137d0ee9f51616ea27c397a8bf595fe2c0ff5e91..e1aa90fad6778d47dc55dc39aa4c6e36
  - (void)setReadablePasteBoardTypes:(NSArray<NSPasteboardType> *)readablePasteboardTypes
  {
    _readablePasteboardTypes = readablePasteboardTypes;
-+  if ([self.cell isKindOfClass:RCTUITextFieldCell.class]) { // [Ardia
++  if ([self.cell isKindOfClass:RCTUITextFieldCell.class]) { // [Nilla
 +    ((RCTUITextFieldCell *)self.cell).pasteTypes = readablePasteboardTypes;
-+  } // Ardia]
++  } // Nilla]
  }
  #endif // macOS]
  
@@ -912,7 +912,7 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
  
  #import "RCTTouchHandler.h"
  
-+#import <stdatomic.h> // [Ardia]
++#import <stdatomic.h> // [Nilla]
 +
  #if !TARGET_OS_OSX // [macOS]
  #import <UIKit/UIGestureRecognizerSubclass.h>
@@ -921,9 +921,9 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
      _reactTouches = [NSMutableArray new];
      _touchViews = [NSMutableArray new];
  
-+#if TARGET_OS_OSX // [Ardia: a menu's tracking loop takes every mouse up from here on
-+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(ardia_menuDidBeginTracking:) name:NSMenuDidBeginTrackingNotification object:nil];
-+#endif // Ardia]
++#if TARGET_OS_OSX // [Nilla: a menu's tracking loop takes every mouse up from here on
++    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(nilla_menuDidBeginTracking:) name:NSMenuDidBeginTrackingNotification object:nil];
++#endif // Nilla]
 +
  #if !TARGET_OS_OSX // [macOS]
      // `cancelsTouchesInView` and `delaysTouches*` are needed in order to be used as a top level
@@ -932,8 +932,8 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
  
  #pragma mark - Bookkeeping for touch indices
  
-+#if TARGET_OS_OSX // [Ardia: a mouse down and its drags and up share an event number, but each button counts on its own and synthesized events all carry 0, so a match also needs the same button and an index not matched yet; two touches mapped to one index sent JS a null touch (getTouchIdentifier, a fatal error)
-+static NSInteger ArdiaMouseButton(NSEvent *event)
++#if TARGET_OS_OSX // [Nilla: a mouse down and its drags and up share an event number, but each button counts on its own and synthesized events all carry 0, so a match also needs the same button and an index not matched yet; two touches mapped to one index sent JS a null touch (getTouchIdentifier, a fatal error)
++static NSInteger NillaMouseButton(NSEvent *event)
 +{
 +  switch (event.type) {
 +    case NSEventTypeLeftMouseDown:
@@ -949,73 +949,73 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
 +  }
 +}
 +
-+- (NSInteger)ardia_indexOfNativeTouch:(NSEvent *)touch excluding:(NSIndexSet *)taken
++- (NSInteger)nilla_indexOfNativeTouch:(NSEvent *)touch excluding:(NSIndexSet *)taken
 +{
 +  NSUInteger same = [_nativeTouches indexOfObject:touch];
 +  if (same != NSNotFound && ![taken containsIndex:same]) {
 +    return same;
 +  }
-+  NSInteger button = ArdiaMouseButton(touch);
++  NSInteger button = NillaMouseButton(touch);
 +  return [_nativeTouches indexOfObjectPassingTest:^BOOL(NSEvent *event, NSUInteger idx, __unused BOOL *stop) {
-+    return ![taken containsIndex:idx] && touch.eventNumber == event.eventNumber && ArdiaMouseButton(event) == button;
++    return ![taken containsIndex:idx] && touch.eventNumber == event.eventNumber && NillaMouseButton(event) == button;
 +  }];
 +}
-+#endif // Ardia]
++#endif // Nilla]
 +
-+#if TARGET_OS_OSX // [Ardia: a mouse has one of each button, so a recorded touch whose button goes down again lost its mouse up to a menu or a drag session that tracked it. Its React responder would keep every later press, so the next click did nothing; it is cancelled before the new touch is recorded. Another button's touch is never judged here: only the event stream says whether it ended, and a view that opens a menu on a press, whose tracking takes the mouse up, releases that one press itself
-+static _Atomic(NSUInteger) ArdiaTouchesCancelledWithoutRelease = 0;
++#if TARGET_OS_OSX // [Nilla: a mouse has one of each button, so a recorded touch whose button goes down again lost its mouse up to a menu or a drag session that tracked it. Its React responder would keep every later press, so the next click did nothing; it is cancelled before the new touch is recorded. Another button's touch is never judged here: only the event stream says whether it ended, and a view that opens a menu on a press, whose tracking takes the mouse up, releases that one press itself
++static _Atomic(NSUInteger) NillaTouchesCancelledWithoutRelease = 0;
 +
-++ (NSUInteger)ardia_touchesCancelledWithoutRelease
+++ (NSUInteger)nilla_touchesCancelledWithoutRelease
 +{
-+  return atomic_load(&ArdiaTouchesCancelledWithoutRelease);
++  return atomic_load(&NillaTouchesCancelledWithoutRelease);
 +}
 +
-+- (void)ardia_cancelTouchesWithoutReleaseBeforeMouseDown:(NSEvent *)down
++- (void)nilla_cancelTouchesWithoutReleaseBeforeMouseDown:(NSEvent *)down
 +{
 +  if (_nativeTouches.count == 0) {
 +    return;
 +  }
-+  NSInteger button = ArdiaMouseButton(down);
++  NSInteger button = NillaMouseButton(down);
 +  NSMutableSet<NSEvent *> *lost = [NSMutableSet new];
 +  for (NSEvent *touch in _nativeTouches) {
 +    BOOL sameDown = touch == down || (touch.eventNumber == down.eventNumber && down.eventNumber != 0);
-+    if (!sameDown && ArdiaMouseButton(touch) == button) {
++    if (!sameDown && NillaMouseButton(touch) == button) {
 +      [lost addObject:touch];
 +    }
 +  }
 +  if (lost.count == 0) {
 +    return;
 +  }
-+  atomic_fetch_add(&ArdiaTouchesCancelledWithoutRelease, lost.count);
++  atomic_fetch_add(&NillaTouchesCancelledWithoutRelease, lost.count);
 +  [self _updateAndDispatchTouches:lost eventName:@"touchCancel"];
 +  [self _recordRemovedTouches:lost];
 +}
 +
-+- (void)ardia_menuDidBeginTracking:(__unused NSNotification *)notification
++- (void)nilla_menuDidBeginTracking:(__unused NSNotification *)notification
 +{
 +  if (_nativeTouches.count == 0) {
 +    return;
 +  }
 +  NSSet<NSEvent *> *tracked = [_nativeTouches.set copy];
-+  atomic_fetch_add(&ArdiaTouchesCancelledWithoutRelease, tracked.count);
++  atomic_fetch_add(&NillaTouchesCancelledWithoutRelease, tracked.count);
 +  [self _updateAndDispatchTouches:tracked eventName:@"touchCancel"];
 +  [self _recordRemovedTouches:tracked];
 +  self.state = UIGestureRecognizerStateCancelled;
 +}
 +
-+- (BOOL)ardia_recordsAnyOf:(NSSet<NSEvent *> *)touches
++- (BOOL)nilla_recordsAnyOf:(NSSet<NSEvent *> *)touches
 +{
 +  for (NSEvent *touch in touches) {
-+    if ([self ardia_indexOfNativeTouch:touch excluding:[NSIndexSet new]] != NSNotFound) {
++    if ([self nilla_indexOfNativeTouch:touch excluding:[NSIndexSet new]] != NSNotFound) {
 +      return YES;
 +    }
 +  }
 +  return NO;
 +}
 +
-+- (void)ardia_finishTouches:(NSSet<NSEvent *> *)touches eventName:(NSString *)eventName state:(NSGestureRecognizerState)finished
++- (void)nilla_finishTouches:(NSSet<NSEvent *> *)touches eventName:(NSString *)eventName state:(NSGestureRecognizerState)finished
 +{
-+  BOOL recorded = [self ardia_recordsAnyOf:touches];
++  BOOL recorded = [self nilla_recordsAnyOf:touches];
 +  [self _updateAndDispatchTouches:touches eventName:eventName];
 +  [self _recordRemovedTouches:touches];
 +  if (_nativeTouches.count == 0) {
@@ -1025,12 +1025,12 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
 +  }
 +}
 +
-+- (void)ardia_releaseTouchForMenuWithEvent:(NSEvent *)press
++- (void)nilla_releaseTouchForMenuWithEvent:(NSEvent *)press
 +{
-+  if ([self ardia_indexOfNativeTouch:press excluding:[NSIndexSet new]] == NSNotFound) {
++  if ([self nilla_indexOfNativeTouch:press excluding:[NSIndexSet new]] == NSNotFound) {
 +    return;
 +  }
-+  BOOL primary = ArdiaMouseButton(press) == 0;
++  BOOL primary = NillaMouseButton(press) == 0;
 +  NSSet<NSEvent *> *touch = [NSSet setWithObject:press];
 +  [self _updateAndDispatchTouches:touch eventName:primary ? @"touchCancel" : @"touchEnd"];
 +  [self _recordRemovedTouches:touch];
@@ -1038,7 +1038,7 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
 +    self.state = primary ? UIGestureRecognizerStateCancelled : UIGestureRecognizerStateEnded;
 +  }
 +}
-+#endif // Ardia]
++#endif // Nilla]
 +
  - (void)_recordNewTouches:(NSSet *)touches
  {
@@ -1047,13 +1047,13 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
    for (NSEvent *touch in touches) {
  #endif // macOS]
  
-+#if !TARGET_OS_OSX // [Ardia: AppKit can hand the same mouse down over twice; recording it again put a second React touch behind one native touch
++#if !TARGET_OS_OSX // [Nilla: AppKit can hand the same mouse down over twice; recording it again put a second React touch behind one native touch
      RCTAssert(![_nativeTouches containsObject:touch], @"Touch is already recorded. This is a critical bug.");
 +#else
 +    if ([_nativeTouches containsObject:touch]) {
 +      continue;
 +    }
-+#endif // Ardia]
++#endif // Nilla]
  
      // Find closest React-managed touchable view
      
@@ -1065,27 +1065,27 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
 -      NSInteger index = [_nativeTouches indexOfObjectPassingTest:^BOOL(NSEvent *event, __unused NSUInteger idx, __unused BOOL *stop) {
 -        return touch.eventNumber == event.eventNumber;
 -      }];
-+  NSMutableIndexSet *removed = [NSMutableIndexSet new]; // [Ardia]
++  NSMutableIndexSet *removed = [NSMutableIndexSet new]; // [Nilla]
 +  for (NSEvent *touch in touches) {
-+    NSInteger index = [self ardia_indexOfNativeTouch:touch excluding:removed]; // [Ardia]
++    NSInteger index = [self nilla_indexOfNativeTouch:touch excluding:removed]; // [Nilla]
  #endif // macOS]
      if (index == NSNotFound) {
        continue;
      }
  
-+#if !TARGET_OS_OSX // [Ardia]
++#if !TARGET_OS_OSX // [Nilla]
      [_touchViews removeObjectAtIndex:index];
      [_nativeTouches removeObjectAtIndex:index];
      [_reactTouches removeObjectAtIndex:index];
 +#else
 +    [removed addIndex:index];
-+#endif // Ardia]
++#endif // Nilla]
    }
-+#if TARGET_OS_OSX // [Ardia]
++#if TARGET_OS_OSX // [Nilla]
 +  [_touchViews removeObjectsAtIndexes:removed];
 +  [_nativeTouches removeObjectsAtIndexes:removed];
 +  [_reactTouches removeObjectsAtIndexes:removed];
-+#endif // Ardia]
++#endif // Nilla]
  }
  
  - (void)_updateReactTouchAtIndex:(NSInteger)touchIndex
@@ -1093,20 +1093,20 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
    for (UITouch *touch in touches) {
      NSInteger index = [_nativeTouches indexOfObject:touch];
  #else // [macOS
-+  NSMutableIndexSet *taken = [NSMutableIndexSet new]; // [Ardia]
++  NSMutableIndexSet *taken = [NSMutableIndexSet new]; // [Nilla]
    for (NSEvent *touch in touches) {
 -    NSInteger index = [_nativeTouches indexOfObjectPassingTest:^BOOL(NSEvent *event, __unused NSUInteger idx, __unused BOOL *stop) {
 -      return touch.eventNumber == event.eventNumber;
 -    }];
-+    NSInteger index = [self ardia_indexOfNativeTouch:touch excluding:taken]; // [Ardia]
++    NSInteger index = [self nilla_indexOfNativeTouch:touch excluding:taken]; // [Nilla]
  #endif // macOS]
      
      if (index == NSNotFound) {
        continue;
      }
-+#if TARGET_OS_OSX // [Ardia]
++#if TARGET_OS_OSX // [Nilla]
 +    [taken addIndex:index];
-+#endif // Ardia]
++#endif // Nilla]
      
  #if TARGET_OS_OSX // [macOS
      _nativeTouches[index] = touch;
@@ -1114,9 +1114,9 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
  
  - (void)interactionsEnded:(NSSet *)touches withEvent:(UIEvent*)event // [macOS]
  {
-+#if TARGET_OS_OSX // [Ardia: a mouse up ends the gesture only when no other button's touch is still recorded, and one that matches no touch leaves a gesture in progress alone; ending it reset the recognizer, which cancelled the press still held
-+  [self ardia_finishTouches:touches eventName:@"touchEnd" state:UIGestureRecognizerStateEnded];
-+#else // Ardia]
++#if TARGET_OS_OSX // [Nilla: a mouse up ends the gesture only when no other button's touch is still recorded, and one that matches no touch leaves a gesture in progress alone; ending it reset the recognizer, which cancelled the press still held
++  [self nilla_finishTouches:touches eventName:@"touchEnd" state:UIGestureRecognizerStateEnded];
++#else // Nilla]
    [self _updateAndDispatchTouches:touches eventName:@"touchEnd"];
 -#if !TARGET_OS_OSX // [macOS]
    if (RCTAllTouchesAreCancelledOrEnded(event.allTouches)) {
@@ -1134,9 +1134,9 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
  
  - (void)interactionsCancelled:(NSSet *)touches withEvent:(UIEvent*)event // [macOS]
  {
-+#if TARGET_OS_OSX // [Ardia]
-+  [self ardia_finishTouches:touches eventName:@"touchCancel" state:UIGestureRecognizerStateCancelled];
-+#else // Ardia]
++#if TARGET_OS_OSX // [Nilla]
++  [self nilla_finishTouches:touches eventName:@"touchCancel" state:UIGestureRecognizerStateCancelled];
++#else // Nilla]
    [self _updateAndDispatchTouches:touches eventName:@"touchCancel"];
 -#if !TARGET_OS_OSX // [macOS]
    if (RCTAllTouchesAreCancelledOrEnded(event.allTouches)) {
@@ -1158,7 +1158,7 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
  - (void)mouseDown:(NSEvent *)event
  {
    [super mouseDown:event];
-+  [self ardia_cancelTouchesWithoutReleaseBeforeMouseDown:event]; // [Ardia]
++  [self nilla_cancelTouchesWithoutReleaseBeforeMouseDown:event]; // [Nilla]
    [self interactionsBegan:[NSSet setWithObject:event]];
    // [macOS
    if (_shouldSendMouseUpOnSystemBehalf) {
@@ -1166,7 +1166,7 @@ index b85ee3dd203f88bf2daaa47e912031ea200ff910..fdd49042170be0c7850fea3ea8550c32
  - (void)rightMouseDown:(NSEvent *)event
  {
    [super rightMouseDown:event];
-+  [self ardia_cancelTouchesWithoutReleaseBeforeMouseDown:event]; // [Ardia]
++  [self nilla_cancelTouchesWithoutReleaseBeforeMouseDown:event]; // [Nilla]
    [self interactionsBegan:[NSSet setWithObject:event]];
  }
    
@@ -1178,7 +1178,7 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
  #import <React/RCTAssert.h>
  
  #import <objc/runtime.h>
-+#import <React/UIView+React.h> // [Ardia]
++#import <React/UIView+React.h> // [Nilla]
  
  #import <CoreImage/CIFilter.h>
  #import <CoreImage/CIVector.h>
@@ -1186,7 +1186,7 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
    return RCTUIViewCommonInit([super initWithCoder:coder]);
  }
  
-+// [Ardia
++// [Nilla
 +static BOOL RCTUIViewLeavesAutoLayout(RCTUIView *view, NSView *superview)
 +{
 +  if (view.reactTag == nil || view.autoresizingMask != NSViewNotSizable) {
@@ -1222,7 +1222,7 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
 +    self.translatesAutoresizingMaskIntoConstraints = YES;
 +  }
 +}
-+// Ardia]
++// Nilla]
 +
  - (BOOL)acceptsFirstMouse:(NSEvent *)event
  {
@@ -1232,7 +1232,7 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
  }
  
 -- (void)setTransform3D:(CATransform3D)transform3D
-+// [Ardia: the layer transform for transform3D at the view's current size. On macOS, layer.anchorPoint is
++// [Nilla: the layer transform for transform3D at the view's current size. On macOS, layer.anchorPoint is
 +// {0, 0} instead of {0.5, 0.5} as on iOS, so the transform is moved to apply from the view's center; that depends
 +// on the size, so it's worked out again each time it's applied.
 +static CATransform3D RCTUIViewLayerTransform(RCTUIView *view)
@@ -1285,7 +1285,7 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
 +    RCTUIViewApplyTransform3D(self);
 +  }
  }
-+// Ardia]
++// Nilla]
  
  - (NSView *)hitTest:(NSPoint)point
  {
@@ -1294,11 +1294,11 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
      localPoint = [self.layer convertPoint:point fromLayer:self.layer.superlayer];
    } else {
 -    localPoint = point;
-+    // [Ardia: a view React Native just mounted has no layer in the tree until AppKit's next display pass; hit-testing
++    // [Nilla: a view React Native just mounted has no layer in the tree until AppKit's next display pass; hit-testing
 +    // the superview's point as a local one put it at its superview's origin for those frames (a new sidebar hover card
 +    // took clicks meant for the pinned tiles). Its frame says where it is.
 +    localPoint = self.superview != nil ? [self convertPoint:point fromView:self.superview] : point;
-+    // Ardia]
++    // Nilla]
    }
    return [self hitTest:localPoint withEvent:nil];
  }
@@ -1309,7 +1309,7 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
 -  if (_hasCustomTransform3D && !CATransform3DEqualToTransform(layer.transform, _transform3D)) {
 -    layer.transform = _transform3D;
 +  if (_hasCustomTransform3D) {
-+    RCTUIViewApplyTransform3D(self); // [Ardia]
++    RCTUIViewApplyTransform3D(self); // [Nilla]
    }
  
    if (_respondsToDisplayLayer) {
@@ -1317,12 +1317,12 @@ index a37a1c106a04752c1baeb6dd2170402ce5f34f71..4b0fa1207d50724979fdb0122a4a88ee
    return self;
  }
  
-+// [Ardia: hit testing passes to the React view that holds the image.
++// [Nilla: hit testing passes to the React view that holds the image.
 +- (NSView *)hitTest:(NSPoint)point
 +{
 +  return nil;
 +}
-+// Ardia]
++// Nilla]
 +
  - (void)setContentMode:(UIViewContentMode)contentMode
  {
@@ -1335,9 +1335,9 @@ index 829eeea724bbb5da5e6307972d3c316b26686773..c357ee3cd905cc4f86fdc538277226c9
  
  - (void)sendEvent:(id<RCTEvent>)event
  {
-+  if (event == nil) { // [Ardia: a nil event queued an empty slot that crashed the JS thread Ardia]
++  if (event == nil) { // [Nilla: a nil event queued an empty slot that crashed the JS thread Nilla]
 +    return;
-+  } // [Ardia]
++  } // [Nilla]
    [self notifyObserversOfEvent:event];
  
    [_eventQueueLock lock];
@@ -1363,12 +1363,12 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
 +#if !TARGET_OS_OSX // [macOS]
 +static const NSTimeInterval kMinimumSleepInterval = 1;
 +#else // [macOS
-+// [Ardia: sleep on an NSTimer whenever the next timer is more than two frames out, not a second. The display
++// [Nilla: sleep on an NSTimer whenever the next timer is more than two frames out, not a second. The display
 +// link wakes the JS thread every frame (120 times a second on ProMotion), so an app with a few timers a second kept it
 +// running much of the time at idle. The NSTimer fires at the target; the display link stays for what is due within a
 +// couple of frames (requestAnimationFrame, short timeouts).
 +static const NSTimeInterval kMinimumSleepInterval = 2 * kFrameDuration;
-+// Ardia]
++// Nilla]
 +#endif // macOS]
 +
  @interface _RCTTimer : NSObject
@@ -1379,10 +1379,10 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
    BOOL _inBackground;
    id<RCTTimingDelegate> _timingDelegate;
 +#if TARGET_OS_OSX // [macOS]
-+  // [Ardia: whether NSApp is hidden (written on the main thread), and the run loop timers are created on (JS).
++  // [Nilla: whether NSApp is hidden (written on the main thread), and the run loop timers are created on (JS).
 +  std::atomic<bool> _appHidden;
 +  NSRunLoop *_timingRunLoop;
-+  // Ardia]
++  // Nilla]
 +#endif // macOS]
  }
  
@@ -1397,7 +1397,7 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
        [self appDidMoveToBackground];
      }
 +#else // [macOS
-+    // [Ardia: background only while the app is hidden. This read `![NSApp isHidden]`, so a visible app went to
++    // [Nilla: background only while the app is hidden. This read `![NSApp isHidden]`, so a visible app went to
 +    // background at launch and never came back: the display link stopped and every timer, requestAnimationFrame
 +    // included, ran off a one-shot NSTimer, as fast as JS asked (about 1000 frames a second). Observed here, on the
 +    // main thread with the first read, so no hide or unhide falls between them.
@@ -1408,7 +1408,7 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
 +                                                 object:nil];
 +    }
 +    [self appHiddenDidChange];
-+    // Ardia]
++    // Nilla]
 +#endif
    });
  
@@ -1418,7 +1418,7 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
  }
  
 +#if TARGET_OS_OSX // [macOS]
-+// [Ardia: AppKit tells the main thread; the timing thread (JS) switches, where the display link calls in and the
++// [Nilla: AppKit tells the main thread; the timing thread (JS) switches, where the display link calls in and the
 +// sleep timer must live (on the main run loop, default mode only, a menu or a live resize would hold every timer). It
 +// reads the latest state whenever it switches, so a late or repeated nudge can't leave it stale; before the first
 +// timer there's nothing to nudge, and the first createTimer catches up.
@@ -1457,7 +1457,7 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
 +    [self appDidMoveToForeground];
 +  }
 +}
-+// Ardia]
++// Nilla]
 +#endif // [macOS]
 +
  - (void)dealloc
@@ -1468,12 +1468,12 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
  - (void)scheduleSleepTimer:(NSDate *)sleepTarget
  {
 +#if TARGET_OS_OSX // [macOS]
-+  // [Ardia: a hidden app keeps running, with no display link to pace it: a frame apart at least, or a
++  // [Nilla: a hidden app keeps running, with no display link to pace it: a frame apart at least, or a
 +  // requestAnimationFrame loop comes back as fast as the run loop turns.
 +  if (_inBackground) {
 +    sleepTarget = [sleepTarget laterDate:[NSDate dateWithTimeIntervalSinceNow:kFrameDuration]];
 +  }
-+  // Ardia]
++  // Nilla]
 +#endif // [macOS]
    @synchronized(self) {
      if (!_sleepTimer || !_sleepTimer.valid) {
@@ -1488,20 +1488,20 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
      // Immediately dispatch frame, so we don't have to wait on the displaylink.
      [self didUpdateFrame:nil];
 +#else // [macOS
-+    // [Ardia: fire what's due without waking the display link for it, then sleep until the next timer, or start
++    // [Nilla: fire what's due without waking the display link for it, then sleep until the next timer, or start
 +    // the display link if that one is due within a couple of frames (a timer's callback that asks for a frame starts
 +    // it from createTimer).
 +    [self didUpdateFrame:nil];
 +    if (_paused && !_inBackground) {
 +      [self sleepOrStartTimers];
 +    }
-+    // Ardia]
++    // Nilla]
 +#endif // macOS]
 +  }
 +}
 +
 +#if TARGET_OS_OSX // [macOS]
-+// [Ardia
++// [Nilla
 +- (void)sleepOrStartTimers
 +{
 +  NSDate *next = nil;
@@ -1516,7 +1516,7 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
 +    [self scheduleSleepTimer:next];
    }
  }
-+// Ardia]
++// Nilla]
 +#endif // macOS]
  
  /**
@@ -1526,7 +1526,7 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
                          repeats:(BOOL)repeats
  {
 +#if TARGET_OS_OSX // [macOS]
-+  [self syncWithAppHidden]; // [Ardia]
++  [self syncWithAppHidden]; // [Nilla]
 +#endif // macOS]
    NSTimeInterval jsSchedulingOverhead = MAX(-jsSchedulingTime.timeIntervalSinceNow, 0);
  
@@ -1536,7 +1536,7 @@ index 3edcc9670a8ccb5eef44524e78445117d2416ed8..1f7951f616996941706f11b380c12051
  RCT_EXPORT_METHOD(setSendIdleEvents : (BOOL)sendIdleEvents)
  {
 +#if TARGET_OS_OSX // [macOS]
-+  [self syncWithAppHidden]; // [Ardia]
++  [self syncWithAppHidden]; // [Nilla]
 +#endif // macOS]
    _sendIdleEvents = sendIdleEvents;
    if (sendIdleEvents) {
@@ -1549,8 +1549,8 @@ index 7f1aeff436b8a51514254b72d1fb1fd1ee3b1553..73a9a9893d6700ebcbd7bdfc963116cf
  
  #import "RCTUIManager.h"
  
-+#import <deque> // [Ardia]
-+#import <mutex> // [Ardia]
++#import <deque> // [Nilla]
++#import <mutex> // [Nilla]
 +
  #import <AVFoundation/AVFoundation.h>
  #import <React/RCTSurfacePresenterStub.h>
@@ -1560,13 +1560,13 @@ index 7f1aeff436b8a51514254b72d1fb1fd1ee3b1553..73a9a9893d6700ebcbd7bdfc963116cf
    // Keyed by viewName
    NSMutableDictionary *_componentDataByName;
 +
-+  // [Ardia
++  // [Nilla
 +  std::mutex _mainQueueMountsLock;
 +  std::deque<std::pair<uint64_t, dispatch_block_t>> _mainQueueMounts;
 +  uint64_t _lastMainQueueMount;
 +  uint64_t _mainQueueMountsTarget;
 +  BOOL _drainingMainQueueMounts;
-+  // Ardia]
++  // Nilla]
  }
  
  @synthesize bridge = _bridge;
@@ -1575,7 +1575,7 @@ index 7f1aeff436b8a51514254b72d1fb1fd1ee3b1553..73a9a9893d6700ebcbd7bdfc963116cf
    // Execute the previously queued UI blocks
    RCTProfileBeginFlowEvent();
 -  RCTExecuteOnMainQueue(^{
-+  // [Ardia: mounts land in layout order: a live-resize layout on the main thread mounts every older queued mount first.
++  // [Nilla: mounts land in layout order: a live-resize layout on the main thread mounts every older queued mount first.
 +  const uint64_t mount = [self enqueueMainQueueMount:^{
      RCTProfileEndFlowEvent();
      RCT_PROFILE_BEGIN_EVENT(RCTProfileTagAlways, @"-[UIManager flushUIBlocks]", (@{
@@ -1626,7 +1626,7 @@ index 7f1aeff436b8a51514254b72d1fb1fd1ee3b1553..73a9a9893d6700ebcbd7bdfc963116cf
 +  } @finally {
 +    _drainingMainQueueMounts = NO;
 +  }
-+  // Ardia]
++  // Nilla]
  }
  
  - (void)setNeedsLayout
@@ -1639,9 +1639,9 @@ index 7f1aeff436b8a51514254b72d1fb1fd1ee3b1553..73a9a9893d6700ebcbd7bdfc963116cf
 -    //The macOS default coordinate system has its origin at the lower left of the drawing area, so we need to flip the y-axis coordinate.
 -    windowFrame.origin.y = view.window.contentView.frame.size.height - windowFrame.origin.y - windowFrame.size.height;
 -#endif // macOS]
-+    // [Ardia: the answer is in the owning React root's points from its top left, like every other number JS has. A
++    // [Nilla: the answer is in the owning React root's points from its top left, like every other number JS has. A
 +    // window whose root is drawn at an interface size keeps root bounds = frame / scale, so window points would be
-+    // scaled while layout and touches are not. A view outside any root keeps the window answer. Ardia]
++    // scaled while layout and touches are not. A view outside any root keeps the window answer. Nilla]
 +    RCTPlatformView *rootView = view;
 +    while (rootView.superview && ![rootView isReactRootView]) {
 +      rootView = rootView.superview;
@@ -1672,23 +1672,23 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
  }
  
 +#if TARGET_OS_OSX // [macOS
-+// [Ardia: hover follows layout. AppKit sends mouseEntered/mouseExited only when the pointer moves, so a view that
++// [Nilla: hover follows layout. AppKit sends mouseEntered/mouseExited only when the pointer moves, so a view that
 +// lays out or scrolls under a still pointer (the next sidebar row after a close) kept its old hover state. Every view
 +// with hover handlers is kept here; layout and scrolling mark hover dirty, and one coalesced check on the main queue,
 +// after the layout that asked for it, compares the pointer with their frames.
-+// Dev-only overrides stand in for the pointer and the mouse buttons in hidden test instances. Ardia]
-+static NSHashTable *ArdiaHoverViews;
-+static BOOL ArdiaHoverDirty;
-+static BOOL ArdiaHoverHeld;
-+static BOOL ArdiaHoverInstalled;
-+// [Ardia: how many views remove their clipped subviews. While none does, a scroll view skips the walk over its whole
-+// subtree that only they need, on every scroll event. Ardia]
-+static NSInteger ArdiaClippingViews;
-+// [Ardia: set while a window dispatches a scroll wheel event (its routing hit test and the walk up to the scroll view),
-+// and only then. Ardia]
-+static BOOL ArdiaRoutingWheel;
++// Dev-only overrides stand in for the pointer and the mouse buttons in hidden test instances. Nilla]
++static NSHashTable *NillaHoverViews;
++static BOOL NillaHoverDirty;
++static BOOL NillaHoverHeld;
++static BOOL NillaHoverInstalled;
++// [Nilla: how many views remove their clipped subviews. While none does, a scroll view skips the walk over its whole
++// subtree that only they need, on every scroll event. Nilla]
++static NSInteger NillaClippingViews;
++// [Nilla: set while a window dispatches a scroll wheel event (its routing hit test and the walk up to the scroll view),
++// and only then. Nilla]
++static BOOL NillaRoutingWheel;
 +
-+__attribute__((constructor)) static void ArdiaWatchWheelRouting(void)
++__attribute__((constructor)) static void NillaWatchWheelRouting(void)
 +{
 +  Method method = class_getInstanceMethod([NSWindow class], @selector(sendEvent:));
 +  if (method == NULL) {
@@ -1696,33 +1696,33 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +  }
 +  IMP original = method_getImplementation(method);
 +  method_setImplementation(method, imp_implementationWithBlock(^(NSWindow *window, NSEvent *event) {
-+    BOOL outer = ArdiaRoutingWheel;
-+    ArdiaRoutingWheel = event.type == NSEventTypeScrollWheel;
++    BOOL outer = NillaRoutingWheel;
++    NillaRoutingWheel = event.type == NSEventTypeScrollWheel;
 +    @try {
 +      ((void (*)(id, SEL, NSEvent *))original)(window, @selector(sendEvent:), event);
 +    } @finally {
-+      ArdiaRoutingWheel = outer;
++      NillaRoutingWheel = outer;
 +    }
 +  }));
 +}
 +#if DEBUG
-+static NSValue *ArdiaPointerOverride;
-+static NSNumber *ArdiaButtonsOverride;
-+static NSInteger ArdiaHoverPasses;
-+static NSMutableArray *ArdiaHoverLog;
++static NSValue *NillaPointerOverride;
++static NSNumber *NillaButtonsOverride;
++static NSInteger NillaHoverPasses;
++static NSMutableArray *NillaHoverLog;
 +#endif
 +#endif // macOS]
 +
 +#if TARGET_OS_OSX // [macOS
-+// [Ardia: a border image is drawn at the view's own backing density, which includes the interface size its root is
-+// drawn at, and is drawn again when that size changes; an ancestor's bounds change never reaches the view itself. Ardia]
-+static NSHashTable<RCTView *> *ArdiaBorderImageViews(void)
++// [Nilla: a border image is drawn at the view's own backing density, which includes the interface size its root is
++// drawn at, and is drawn again when that size changes; an ancestor's bounds change never reaches the view itself. Nilla]
++static NSHashTable<RCTView *> *NillaBorderImageViews(void)
 +{
 +  static NSHashTable<RCTView *> *views;
 +  static dispatch_once_t once;
 +  dispatch_once(&once, ^{
 +    views = [NSHashTable weakObjectsHashTable];
-+    [[NSNotificationCenter defaultCenter] addObserverForName:@"ArdiaInterfaceScaleDidChange"
++    [[NSNotificationCenter defaultCenter] addObserverForName:@"NillaInterfaceScaleDidChange"
 +                                                      object:nil
 +                                                       queue:[NSOperationQueue mainQueue]
 +                                                  usingBlock:^(__unused NSNotification *notification) {
@@ -1742,7 +1742,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    NSTrackingArea *_trackingArea;
    BOOL _hasMouseOver;
    BOOL _mouseDownCanMoveWindow;
-+  // [Ardia: the clip view whose bounds changes this view observes, if any (viewDidMoveToWindow). Ardia]
++  // [Nilla: the clip view whose bounds changes this view observes, if any (viewDidMoveToWindow). Nilla]
 +  __weak NSClipView *_observedClipView;
 +  BOOL _observesBounds;
  #endif // macOS]
@@ -1753,10 +1753,10 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    RCTPlatformView *hitSubview = nil; // [macOS]
    BOOL isPointInside = [self pointInside:point withEvent:event];
 +#if TARGET_OS_OSX // [macOS
-+  // [Ardia: routing a scroll wheel event only needs the scroll view under the pointer, so its hit test skips views that
++  // [Nilla: routing a scroll wheel event only needs the scroll view under the pointer, so its hit test skips views that
 +  // don't contain the point, with all their subviews, as AppKit's own does. The full walk visited every view of every
-+  // row (a 300-tab sidebar: thousands) once to route each wheel event and again to pass it up to its scroll view. Ardia]
-+  if (!isPointInside && ArdiaRoutingWheel) {
++  // row (a 300-tab sidebar: thousands) once to route each wheel event and again to pass it up to its scroll view. Nilla]
++  if (!isPointInside && NillaRoutingWheel) {
 +    return nil;
 +  }
 +#endif // macOS]
@@ -1768,7 +1768,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    // both of which would not cause the mouseExited to be invoked.
  
 -  if ([self window] == nil) {
-+  // [Ardia: one registration per view. AppKit calls this again whenever a view already in the window is
++  // [Nilla: one registration per view. AppKit calls this again whenever a view already in the window is
 +  // re-added (didUpdateReactSubviews re-adds every subview each time a container's children change), and each call
 +  // added another observer: a long-lived row in a scroll view piled up dozens, every removal scans them all, so
 +  // each view leaving the window cost a little more the longer the app ran (profile switches, which mount and unmount
@@ -1792,15 +1792,15 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +    _observesBounds = YES;
 +    _observedClipView = clipView;
    }
-+  // Ardia]
++  // Nilla]
  
    [self reactViewDidMoveToWindow]; // [macOS] Github#1412
  
    [super viewDidMoveToWindow];
  }
  
-+// [Ardia: hover follows layout: a scroll goes through the same check as everything else, so a row under a window
-+// that covers the pointer isn't entered (the old rule looked at bounds alone). Ardia]
++// [Nilla: hover follows layout: a scroll goes through the same check as everything else, so a row under a window
++// that covers the pointer isn't entered (the old rule looked at bounds alone). Nilla]
  - (void)viewBoundsChanged:(NSNotification*)__unused inNotif
  {
 -  // When an enclosing scrollview is scrolled using the scrollWheel or trackpad,
@@ -1838,7 +1838,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 -                     additionalData:nil];
 -    }
 -  }
-+  [RCTView ardia_markHoverDirty];
++  [RCTView nilla_markHoverDirty];
  }
  #endif // macOS]
  
@@ -1848,7 +1848,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    }
 +#if TARGET_OS_OSX // [macOS
 +  if (removeClippedSubviews != _removeClippedSubviews) {
-+    ArdiaClippingViews += removeClippedSubviews ? 1 : -1;
++    NillaClippingViews += removeClippedSubviews ? 1 : -1;
 +  }
 +#endif // macOS]
    _removeClippedSubviews = removeClippedSubviews;
@@ -1858,20 +1858,20 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +- (void)dealloc
 +{
 +  if (_removeClippedSubviews) {
-+    ArdiaClippingViews--;
++    NillaClippingViews--;
 +  }
 +}
 +
-++ (BOOL)ardia_anyRemovesClippedSubviews
+++ (BOOL)nilla_anyRemovesClippedSubviews
 +{
-+  return ArdiaClippingViews > 0;
++  return NillaClippingViews > 0;
 +}
 +#endif // macOS]
 +
  - (void)didUpdateReactSubviews
  {
 +#if TARGET_OS_OSX // [macOS
-+  [RCTView ardia_markHoverDirty]; // [Ardia: hover follows layout. Ardia]
++  [RCTView nilla_markHoverDirty]; // [Nilla: hover follows layout. Nilla]
 +#endif // macOS]
    if (_removeClippedSubviews) {
      [self updateClippedSubviews];
@@ -1881,7 +1881,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    // TODO: detect up-front if re-rendering is necessary
    CGSize oldSize = self.bounds.size;
 +#if TARGET_OS_OSX // [macOS
-+  CGRect oldFrame = self.frame; // [Ardia: hover follows layout. Ardia]
++  CGRect oldFrame = self.frame; // [Nilla: hover follows layout. Nilla]
 +#endif // macOS]
    [super reactSetFrame:frame];
    if (!CGSizeEqualToSize(self.bounds.size, oldSize)) {
@@ -1889,7 +1889,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    }
 +#if TARGET_OS_OSX // [macOS
 +  if (!CGRectEqualToRect(self.frame, oldFrame)) {
-+    [RCTView ardia_markHoverDirty]; // [Ardia: hover follows layout. Ardia]
++    [RCTView nilla_markHoverDirty]; // [Nilla: hover follows layout. Nilla]
 +  }
 +#endif // macOS]
 +}
@@ -1898,14 +1898,14 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +- (void)viewDidChangeBackingProperties
 +{
 +  [super viewDidChangeBackingProperties];
-+  if ([ArdiaBorderImageViews() containsObject:self]) { // [Ardia: a border image follows the new backing density. Ardia]
++  if ([NillaBorderImageViews() containsObject:self]) { // [Nilla: a border image follows the new backing density. Nilla]
 +    [self.layer setNeedsDisplay];
 +  }
 +}
 +
-+// [Ardia: displayLayer is the only place that copies clipsToBounds to the layer, and nothing asked for one when
++// [Nilla: displayLayer is the only place that copies clipsToBounds to the layer, and nothing asked for one when
 +// overflow changed. A view that stopped clipping at the same size (a group's rows once its fold animation ends)
-+// kept masking its children, which cut the selected row's glow. Ardia]
++// kept masking its children, which cut the selected row's glow. Nilla]
 +- (void)setClipsToBounds:(BOOL)clipsToBounds
 +{
 +  if (clipsToBounds == self.clipsToBounds) {
@@ -1933,8 +1933,8 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 -  }
 -  [layer setTransform:transform];
 -#endif // macOS]
-+  // [Ardia: the anchor point compensation that was here moved to -[RCTUIView setTransform3D:], which
-+  // UIView+React's updateTransform now goes through; doing it here as well applied it twice. Ardia]
++  // [Nilla: the anchor point compensation that was here moved to -[RCTUIView setTransform3D:], which
++  // UIView+React's updateTransform now goes through; doing it here as well applied it twice. Nilla]
  
    if (useIOSBorderRendering) {
      layer.cornerRadius = cornerRadii.topLeftHorizontal;
@@ -1943,10 +1943,10 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    layer.contentsScale = image.scale;
  #else // [macOS
 -  CGFloat scaleFactor = self.window.backingScaleFactor;
-+  CGFloat scaleFactor = self.window != nil ? [self convertSizeToBacking:NSMakeSize(1, 1)].width : 0; // [Ardia]
++  CGFloat scaleFactor = self.window != nil ? [self convertSizeToBacking:NSMakeSize(1, 1)].width : 0; // [Nilla]
    layer.contents = [image layerContentsForContentsScale:scaleFactor];
    layer.contentsScale = scaleFactor;
-+  [ArdiaBorderImageViews() addObject:self]; // [Ardia]
++  [NillaBorderImageViews() addObject:self]; // [Nilla]
  #endif // macOS]
    layer.needsDisplayOnBoundsChange = YES;
    layer.magnificationFilter = kCAFilterNearest;
@@ -1954,8 +1954,8 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
  	return [self focusable] || [super acceptsFirstResponder];
  }
  
-+// [Ardia: AppKit asks for tracking areas only when a view's geometry changes, so handlers set on a view already
-+// laid out (a peek panel getting onMouseLeave as it comes out) had none, and its pointer never left. Ardia]
++// [Nilla: AppKit asks for tracking areas only when a view's geometry changes, so handlers set on a view already
++// laid out (a peek panel getting onMouseLeave as it comes out) had none, and its pointer never left. Nilla]
 +- (void)setOnMouseEnter:(RCTDirectEventBlock)onMouseEnter
 +{
 +  _onMouseEnter = [onMouseEnter copy];
@@ -1975,15 +1975,15 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    if (!wouldRecreateIdenticalTrackingArea) {
      if (_trackingArea) {
        [self removeTrackingArea:_trackingArea];
-+      // [Ardia: forget it too. Kept, a view that lost its hover handlers and got them back with the same bounds
++      // [Nilla: forget it too. Kept, a view that lost its hover handlers and got them back with the same bounds
 +      // counted the removed area as "identical" and never added one again: no mouseEntered/mouseExited from then on
-+      // (the sidebar's peek panel stayed out after its first peek). Ardia]
++      // (the sidebar's peek panel stayed out after its first peek). Nilla]
 +      _trackingArea = nil;
-+      // [Ardia: and what it knew, once its handlers are gone: a view that is under the pointer when it loses its
++      // [Nilla: and what it knew, once its handlers are gone: a view that is under the pointer when it loses its
 +      // handlers never hears it leave, and its next scroll (viewBoundsChanged:) would send a leave for it. A view that
 +      // keeps its handlers keeps it: its area is only being resized, and forgetting it there meant a hovered view whose
 +      // size changed under the pointer (the sidebar's New Tab row as a new tab slides in) never got its leave and
-+      // stayed highlighted. Ardia]
++      // stayed highlighted. Nilla]
 +      if (!hasMouseHoverEvent) {
 +        _hasMouseOver = NO;
 +      }
@@ -1998,83 +1998,83 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
                                                    userInfo:nil];
        [self addTrackingArea:_trackingArea];
 +      if (_hasMouseOver) {
-+        [RCTView ardia_markHoverDirty]; // [Ardia: hover follows layout: the resized view may have left the pointer. Ardia]
++        [RCTView nilla_markHoverDirty]; // [Nilla: hover follows layout: the resized view may have left the pointer. Nilla]
 +      }
      }
    }
  
-+  // [Ardia: hover follows layout: the views the check looks at. Ardia]
++  // [Nilla: hover follows layout: the views the check looks at. Nilla]
 +  if (hasMouseHoverEvent) {
-+    if (ArdiaHoverViews == nil) {
-+      ArdiaHoverViews = [NSHashTable weakObjectsHashTable];
++    if (NillaHoverViews == nil) {
++      NillaHoverViews = [NSHashTable weakObjectsHashTable];
 +    }
-+    [ArdiaHoverViews addObject:self];
++    [NillaHoverViews addObject:self];
 +  } else {
-+    [ArdiaHoverViews removeObject:self];
++    [NillaHoverViews removeObject:self];
 +  }
 +
    [super updateTrackingAreas];
  }
  
-+// [Ardia: hover follows layout. The check: the pointer (or the dev override) against the visible frame of each view
++// [Nilla: hover follows layout. The check: the pointer (or the dev override) against the visible frame of each view
 +// with hover handlers, in the window frontmost under the pointer, as AppKit's tracking areas would see it once the
 +// pointer moved. Frames, not layer transforms: hover follows where a view is laid out, where its clicks land, while an
 +// animation still slides it there. All leaves go out before any enter, innermost first, then the enters, outermost
 +// first, so a row taking another's place under the pointer isn't left by a late leave. Enters wait while a mouse
-+// button is down, as AppKit's do. Ardia]
-++ (void)ardia_markHoverDirty
++// button is down, as AppKit's do. Nilla]
+++ (void)nilla_markHoverDirty
 +{
-+  if (ArdiaHoverDirty || ArdiaHoverViews.count == 0) {
++  if (NillaHoverDirty || NillaHoverViews.count == 0) {
 +    return;
 +  }
-+  ArdiaHoverDirty = YES;
-+  if (!ArdiaHoverInstalled) {
-+    ArdiaHoverInstalled = YES;
++  NillaHoverDirty = YES;
++  if (!NillaHoverInstalled) {
++    NillaHoverInstalled = YES;
 +    NSEventMask hoverEvents = NSEventMaskLeftMouseDragged | NSEventMaskRightMouseDragged | NSEventMaskOtherMouseDragged |
 +                              NSEventMaskLeftMouseUp | NSEventMaskRightMouseUp | NSEventMaskOtherMouseUp;
 +    [NSEvent addLocalMonitorForEventsMatchingMask:hoverEvents
 +                                          handler:^NSEvent *(NSEvent *event) {
 +                                            if (event.type == NSEventTypeLeftMouseDragged || event.type == NSEventTypeRightMouseDragged ||
-+                                                event.type == NSEventTypeOtherMouseDragged || ArdiaHoverHeld) {
-+                                              [RCTView ardia_markHoverDirty];
++                                                event.type == NSEventTypeOtherMouseDragged || NillaHoverHeld) {
++                                              [RCTView nilla_markHoverDirty];
 +                                            }
 +                                            return event;
 +                                          }];
 +  }
 +  dispatch_async(dispatch_get_main_queue(), ^{
-+    ArdiaHoverDirty = NO;
-+    [RCTView ardia_checkHover];
++    NillaHoverDirty = NO;
++    [RCTView nilla_checkHover];
 +  });
 +}
 +
 +#if DEBUG
-++ (void)ardia_setPointerOverride:(NSValue *)screenPoint
+++ (void)nilla_setPointerOverride:(NSValue *)screenPoint
 +{
-+  ArdiaPointerOverride = screenPoint;
-+  [self ardia_markHoverDirty];
++  NillaPointerOverride = screenPoint;
++  [self nilla_markHoverDirty];
 +}
 +
-++ (void)ardia_setButtonsOverride:(NSNumber *)pressed
+++ (void)nilla_setButtonsOverride:(NSNumber *)pressed
 +{
-+  ArdiaButtonsOverride = pressed;
-+  [self ardia_markHoverDirty];
++  NillaButtonsOverride = pressed;
++  [self nilla_markHoverDirty];
 +}
 +
-++ (NSDictionary *)ardia_hoverStats:(NSNumber *)reset
+++ (NSDictionary *)nilla_hoverStats:(NSNumber *)reset
 +{
-+  NSDictionary *stats = @{@"passes": @(ArdiaHoverPasses), @"log": ArdiaHoverLog ?: @[], @"registered": @(ArdiaHoverViews.count)};
++  NSDictionary *stats = @{@"passes": @(NillaHoverPasses), @"log": NillaHoverLog ?: @[], @"registered": @(NillaHoverViews.count)};
 +  if (reset.boolValue) {
-+    ArdiaHoverPasses = 0;
-+    ArdiaHoverLog = nil;
++    NillaHoverPasses = 0;
++    NillaHoverLog = nil;
 +  }
 +  return stats;
 +}
 +#endif
 +
-++ (NSWindow *)ardia_windowUnderPointer:(NSPoint)screen
+++ (NSWindow *)nilla_windowUnderPointer:(NSPoint)screen
 +{
 +#if DEBUG
-+  if (ArdiaPointerOverride != nil) {
++  if (NillaPointerOverride != nil) {
 +    for (NSWindow *window in NSApp.orderedWindows) {
 +      if (window.isVisible && !window.ignoresMouseEvents && NSPointInRect(screen, window.frame)) {
 +        return window;
@@ -2086,7 +2086,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +  return [NSApp windowWithWindowNumber:[NSWindow windowNumberAtPoint:screen belowWindowWithWindowNumber:0]];
 +}
 +
-++ (NSArray<RCTView *> *)ardia_byDepth:(NSArray<RCTView *> *)views deepestFirst:(BOOL)deepestFirst
+++ (NSArray<RCTView *> *)nilla_byDepth:(NSArray<RCTView *> *)views deepestFirst:(BOOL)deepestFirst
 +{
 +  NSMapTable<RCTView *, NSNumber *> *depths = [NSMapTable strongToStrongObjectsMapTable];
 +  for (RCTView *view in views) {
@@ -2102,26 +2102,26 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +  }];
 +}
 +
-++ (void)ardia_checkHover
+++ (void)nilla_checkHover
 +{
 +#if DEBUG
-+  ArdiaHoverPasses++;
++  NillaHoverPasses++;
 +#endif
 +  NSPoint screen = [NSEvent mouseLocation];
 +  BOOL pressed = [NSEvent pressedMouseButtons] != 0;
 +#if DEBUG
-+  if (ArdiaPointerOverride != nil) {
-+    screen = ArdiaPointerOverride.pointValue;
++  if (NillaPointerOverride != nil) {
++    screen = NillaPointerOverride.pointValue;
 +  }
-+  if (ArdiaButtonsOverride != nil) {
-+    pressed = ArdiaButtonsOverride.boolValue;
++  if (NillaButtonsOverride != nil) {
++    pressed = NillaButtonsOverride.boolValue;
 +  }
 +#endif
-+  NSWindow *front = [self ardia_windowUnderPointer:screen];
++  NSWindow *front = [self nilla_windowUnderPointer:screen];
 +  NSMutableArray<RCTView *> *leaving = [NSMutableArray new];
 +  NSMutableArray<RCTView *> *entering = [NSMutableArray new];
 +  BOOL held = NO;
-+  for (RCTView *view in ArdiaHoverViews.allObjects) {
++  for (RCTView *view in NillaHoverViews.allObjects) {
 +    NSWindow *window = view.window;
 +    if (window == nil) {
 +      continue;
@@ -2142,16 +2142,16 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +      [entering addObject:view];
 +    }
 +  }
-+  ArdiaHoverHeld = held;
-+  for (RCTView *view in [self ardia_byDepth:leaving deepestFirst:YES]) {
-+    [view ardia_setMouseOver:NO atScreenPoint:screen];
++  NillaHoverHeld = held;
++  for (RCTView *view in [self nilla_byDepth:leaving deepestFirst:YES]) {
++    [view nilla_setMouseOver:NO atScreenPoint:screen];
 +  }
-+  for (RCTView *view in [self ardia_byDepth:entering deepestFirst:NO]) {
-+    [view ardia_setMouseOver:YES atScreenPoint:screen];
++  for (RCTView *view in [self nilla_byDepth:entering deepestFirst:NO]) {
++    [view nilla_setMouseOver:YES atScreenPoint:screen];
 +  }
 +}
 +
-+- (void)ardia_setMouseOver:(BOOL)over atScreenPoint:(NSPoint)screen
++- (void)nilla_setMouseOver:(BOOL)over atScreenPoint:(NSPoint)screen
 +{
 +  _hasMouseOver = over;
 +  if (_trackingArea) {
@@ -2161,10 +2161,10 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
 +    [self addTrackingArea:_trackingArea];
 +  }
 +#if DEBUG
-+  if (ArdiaHoverLog == nil) {
-+    ArdiaHoverLog = [NSMutableArray new];
++  if (NillaHoverLog == nil) {
++    NillaHoverLog = [NSMutableArray new];
 +  }
-+  [ArdiaHoverLog addObject:@[over ? @"enter" : @"leave", self.reactTag ?: @0, @(CACurrentMediaTime() * 1000)]];
++  [NillaHoverLog addObject:@[over ? @"enter" : @"leave", self.reactTag ?: @0, @(CACurrentMediaTime() * 1000)]];
 +#endif
 +  NSPoint inWindow = self.window != nil ? [self.window convertPointFromScreen:screen] : screen;
 +  [self sendMouseEventWithBlock:over ? self.onMouseEnter : self.onMouseLeave
@@ -2181,7 +2181,7 @@ index 0a4efc1fff0a6e32ea1634ab5f863c211f452409..14f2626aefac347210d21285aa08587a
    NSNumber *emitted = objc_getAssociatedObject(event, &kRCTViewKeyboardEventEmittedKey);
    BOOL alreadyEmitted = [emitted boolValue];
 -  if (!alreadyEmitted) {
-+  if (!alreadyEmitted && keyboardEvent != nil) { // [Ardia: a dead key has no characters, so no event Ardia]
++  if (!alreadyEmitted && keyboardEvent != nil) { // [Nilla: a dead key has no characters, so no event Nilla]
      [_eventDispatcher sendEvent:keyboardEvent];
      objc_setAssociatedObject(event, &kRCTViewKeyboardEventEmittedKey, @(YES), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
    }
@@ -2195,8 +2195,8 @@ index eb79ff32614392cb16e6eb3dbec6cc5b037fe27a..f123de53330a9fd6a5b2bb013e52f899
  #import "RCTUtils.h"
 +
 +#if TARGET_OS_OSX // [macOS
-+@interface RCTView (ArdiaClipping)
-++ (BOOL)ardia_anyRemovesClippedSubviews;
++@interface RCTView (NillaClipping)
+++ (BOOL)nilla_anyRemovesClippedSubviews;
 +@end
 +#endif // macOS]
  #import "RCTViewUtils.h"
@@ -2207,7 +2207,7 @@ index eb79ff32614392cb16e6eb3dbec6cc5b037fe27a..f123de53330a9fd6a5b2bb013e52f899
  - (void)updateClippedSubviews
  {
 +#if TARGET_OS_OSX // [macOS
-+  if (![RCTView ardia_anyRemovesClippedSubviews]) { // [Ardia: nothing to unmount, so nothing to walk Ardia]
++  if (![RCTView nilla_anyRemovesClippedSubviews]) { // [Nilla: nothing to unmount, so nothing to walk Nilla]
 +    return;
 +  }
 +#endif // macOS]
@@ -2218,24 +2218,24 @@ index eb79ff32614392cb16e6eb3dbec6cc5b037fe27a..f123de53330a9fd6a5b2bb013e52f899
    NSNotificationCenter *defaultCenter = [NSNotificationCenter defaultCenter];
    if ([self window] == nil) {
      // Unregister for bounds change notifications
-+    // [Ardia: every clip view's, as RCTView's removal here used to do for it (it now removes only its own).
++    // [Nilla: every clip view's, as RCTView's removal here used to do for it (it now removes only its own).
      [defaultCenter removeObserver:self
                               name:NSViewBoundsDidChangeNotification
 -                           object:_scrollView.contentView];
 +                           object:nil];
-+    // Ardia]
++    // Nilla]
      [defaultCenter removeObserver:self
                               name:NSPreferredScrollerStyleDidChangeNotification
                             object:nil];
    } else {
-+    // [Ardia: AppKit calls this again each time the view is re-added in the same window: register once.
++    // [Nilla: AppKit calls this again each time the view is re-added in the same window: register once.
 +    [defaultCenter removeObserver:self
 +                             name:NSViewBoundsDidChangeNotification
 +                           object:_scrollView.contentView];
 +    [defaultCenter removeObserver:self
 +                             name:NSPreferredScrollerStyleDidChangeNotification
 +                           object:nil];
-+    // Ardia]
++    // Nilla]
      // Register for bounds change notifications so we can track scrolling
      [defaultCenter addObserver:self
                        selector:@selector(scrollViewDocumentViewBoundsDidChange:)
@@ -2248,10 +2248,10 @@ index 30c4f1e53e7b94016c8ed1b425587753fc80c2ce..1fe8dd641c9c0135f43960e4cc57a0fa
  - (void)didUpdateReactSubviews
  {
 +#if TARGET_OS_OSX // [macOS
-+  // [Ardia: -addSubview: on a view that is already a subview takes it out and puts it back (it leaves and re-enters
++  // [Nilla: -addSubview: on a view that is already a subview takes it out and puts it back (it leaves and re-enters
 +  // the window, its layer is rebuilt), so re-adding every child whenever one was inserted or removed cost a closed
 +  // tab ~58 of them, 7-9 ms. The children end up in the same order, after any non-React subviews, as before; the
-+  // ones already in place are left alone and the rest are put in order by -setSubviews:. Ardia]
++  // ones already in place are left alone and the rest are put in order by -setSubviews:. Nilla]
 +  NSArray<RCTPlatformView *> *wanted = self.reactSubviews;
 +  NSArray<NSView *> *current = self.subviews;
 +  if (current.count >= wanted.count &&
@@ -2286,7 +2286,7 @@ index 30c4f1e53e7b94016c8ed1b425587753fc80c2ce..1fe8dd641c9c0135f43960e4cc57a0fa
      transform = view.reactTransform;
    }
  
-+#if TARGET_OS_OSX // [Ardia: RCTUIView keeps the transform and puts it back after AppKit resets the layer's.
++#if TARGET_OS_OSX // [Nilla: RCTUIView keeps the transform and puts it back after AppKit resets the layer's.
 +  if ([view isKindOfClass:[RCTUIView class]]) {
 +    ((RCTUIView *)view).transform3D = transform;
 +  } else {
@@ -2294,7 +2294,7 @@ index 30c4f1e53e7b94016c8ed1b425587753fc80c2ce..1fe8dd641c9c0135f43960e4cc57a0fa
 +  }
 +#else
    view.layer.transform = transform;
-+#endif // Ardia]
++#endif // Nilla]
    // Enable edge antialiasing in rotation, skew, or perspective transforms
    view.layer.allowsEdgeAntialiasing = transform.m12 != 0.0f || transform.m21 != 0.0f || transform.m34 != 0.0f;
  }
@@ -2306,7 +2306,7 @@ index 61de2be2e8f6b7114a6fb92f6e7b07b130f8fc25..924d3490150e68d9878137875af03bf4
      const bool hasFractionalHeight =
          !yoga::inexactEquals(round(scaledNodeHeight), scaledNodeHeight);
  
-+    // [Ardia: on a fractional pixel grid (an interface size other than 100%) a thin node, a hairline or a 1 to 2 point
++    // [Nilla: on a fractional pixel grid (an interface size other than 100%) a thin node, a hairline or a 1 to 2 point
 +    // rule, keeps one whole-pixel size wherever it sits and never rounds to nothing
 +    const bool fractionalGrid =
 +        !yoga::inexactEquals(round(pointScaleFactor), pointScaleFactor);
@@ -2315,11 +2315,11 @@ index 61de2be2e8f6b7114a6fb92f6e7b07b130f8fc25..924d3490150e68d9878137875af03bf4
 +        scaledNodeWith > 0.01 && scaledNodeWith < thinPixels;
 +    const bool thinHeight = fractionalGrid && !textRounding &&
 +        scaledNodeHeight > 0.01 && scaledNodeHeight < thinPixels;
-+    // Ardia]
++    // Nilla]
 +
      node->getLayout().setDimension(
          Dimension::Width,
-+        thinWidth // [Ardia]
++        thinWidth // [Nilla]
 +            ? (float)(std::max(1.0, round(scaledNodeWith)) / pointScaleFactor)
 +            :
          roundValueToPixelGrid(
@@ -2329,7 +2329,7 @@ index 61de2be2e8f6b7114a6fb92f6e7b07b130f8fc25..924d3490150e68d9878137875af03bf4
  
      node->getLayout().setDimension(
          Dimension::Height,
-+        thinHeight // [Ardia]
++        thinHeight // [Nilla]
 +            ? (float)(std::max(1.0, round(scaledNodeHeight)) / pointScaleFactor)
 +            :
          roundValueToPixelGrid(

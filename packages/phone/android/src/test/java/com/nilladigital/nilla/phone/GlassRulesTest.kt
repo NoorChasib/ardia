@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.sync.SyncSnapshot
-import com.ardia.sync.SyncedLook
-import com.ardia.sync.syncJson
+import com.nilladigital.nilla.sync.SyncSnapshot
+import com.nilladigital.nilla.sync.SyncedLook
+import com.nilladigital.nilla.sync.syncJson
 import kotlinx.serialization.decodeFromString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -56,10 +56,10 @@ class GlassRulesTest {
 
     @Test
     fun nativeGlassIsOnlyAskedForByItsLaunchArgument() {
-        assertTrue(GlassRules.nativeGlassAsked(mapOf("ArdiaNativeGlass" to true)))
-        assertFalse(GlassRules.nativeGlassAsked(mapOf("ArdiaNativeGlass" to "true")))
+        assertTrue(GlassRules.nativeGlassAsked(mapOf("NillaNativeGlass" to true)))
+        assertFalse(GlassRules.nativeGlassAsked(mapOf("NillaNativeGlass" to "true")))
         assertFalse(GlassRules.nativeGlassAsked(emptyMap()))
-        assertFalse("a store build passes no arguments", GlassRules.nativeGlassAsked(LaunchExtras.arguments(mapOf("ArdiaNativeGlass" to true), allowed = false)))
+        assertFalse("a store build passes no arguments", GlassRules.nativeGlassAsked(LaunchExtras.arguments(mapOf("NillaNativeGlass" to true), allowed = false)))
     }
 
     @Test

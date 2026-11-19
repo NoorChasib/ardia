@@ -1,4 +1,4 @@
-var ArdiaSyncChecks = (() => {
+var NillaSyncChecks = (() => {
   const echo = (text) => (globalThis.__host && globalThis.__host.labEcho ? globalThis.__host.labEcho(text) : "echo:" + text);
 
   const checks = {

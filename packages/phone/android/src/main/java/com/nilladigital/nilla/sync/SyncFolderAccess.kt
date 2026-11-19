@@ -1,7 +1,7 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
-import com.ardia.sync.core.FolderStorage
-import com.ardia.sync.core.SyncStorage
+import com.nilladigital.nilla.sync.core.FolderStorage
+import com.nilladigital.nilla.sync.core.SyncStorage
 import java.io.File
 import java.io.IOException
 import kotlinx.serialization.SerialName

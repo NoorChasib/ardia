@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.animation.TimeInterpolator
 import android.view.animation.PathInterpolator

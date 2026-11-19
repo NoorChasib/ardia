@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.widget.FrameLayout
@@ -55,6 +55,6 @@ class LookBudgetTest {
         assertFalse("a verdict that changes mid-session waits for the next build", frost.canBlur())
         val rebuilt = FrostView(activity, appContext).apply { source = frost.source }
         root.addView(rebuilt)
-        org.junit.Assert.assertEquals(com.ardia.design.Frosting.isBlurSupported, rebuilt.canBlur())
+        org.junit.Assert.assertEquals(com.nilladigital.nilla.design.Frosting.isBlurSupported, rebuilt.canBlur())
     }
 }

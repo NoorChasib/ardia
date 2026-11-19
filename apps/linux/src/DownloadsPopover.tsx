@@ -32,7 +32,7 @@ export function DownloadsPopover() {
     });
   }, [open, windowId]);
   return (
-    <PageOverlayRegion ref={region} testID="ardia-downloads-popover" dataSet={{ open: open ? "true" : "false" }}>
+    <PageOverlayRegion ref={region} testID="nilla-downloads-popover" dataSet={{ open: open ? "true" : "false" }}>
       <BrowserDownloadsPopover />
     </PageOverlayRegion>
   );

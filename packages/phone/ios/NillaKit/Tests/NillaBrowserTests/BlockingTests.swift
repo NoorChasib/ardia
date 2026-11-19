@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import WebKit
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 struct ConvertedRule: Decodable {
   struct Trigger: Decodable {
@@ -199,7 +199,7 @@ google.*##.tld-entity
     #expect(matches("https://shop.example/banner/product/img/1.png"))
     #expect(!matches("https://shop.example/banner/product/imgallery.jpg"))
     #expect(!matches("https://shop.example/banner/product/img.png"))
-    let directory = URL.temporaryDirectory.appending(path: "ardia-rules-\(UUID().uuidString)", directoryHint: .isDirectory)
+    let directory = URL.temporaryDirectory.appending(path: "nilla-rules-\(UUID().uuidString)", directoryHint: .isDirectory)
     defer { try? FileManager.default.removeItem(at: directory) }
     let store = try #require(WKContentRuleListStore(url: directory))
     let json = String(data: try JSONSerialization.data(withJSONObject: [["trigger": ["url-filter": filter], "action": ["type": "block"]]]), encoding: .utf8)!
@@ -300,7 +300,7 @@ google.*##.tld-entity
 @MainActor
 @Suite struct BlockingSettingsTests {
   @Test func exemptionsPersistAndCoverSubdomains() throws {
-    let suite = "ardia.tests.\(UUID().uuidString)"
+    let suite = "nilla.tests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suite))
     defer { defaults.removePersistentDomain(forName: suite) }
     let settings = BlockingSettings(defaults: defaults)
@@ -319,7 +319,7 @@ google.*##.tld-entity
   }
 
   @Test func incognitoChangesStayInMemoryAndEndWithPrivateBrowsing() throws {
-    let suite = "ardia.tests.\(UUID().uuidString)"
+    let suite = "nilla.tests.\(UUID().uuidString)"
     let defaults = try #require(UserDefaults(suiteName: suite))
     defer { defaults.removePersistentDomain(forName: suite) }
     let blocking = BlockingSettings(defaults: defaults)
@@ -349,7 +349,7 @@ google.*##.tld-entity
 @MainActor
 @Suite(.serialized) struct RuleListCompileTests {
   @Test func seedAndConvertedListsCompileInWebKit() async throws {
-    let directory = URL.temporaryDirectory.appending(path: "ardia-rules-\(UUID().uuidString)", directoryHint: .isDirectory)
+    let directory = URL.temporaryDirectory.appending(path: "nilla-rules-\(UUID().uuidString)", directoryHint: .isDirectory)
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     defer { try? FileManager.default.removeItem(at: directory) }
     let store = try #require(WKContentRuleListStore(url: directory))

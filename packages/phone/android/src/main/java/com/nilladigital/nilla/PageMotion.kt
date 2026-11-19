@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import kotlin.math.floor
 import kotlin.math.max

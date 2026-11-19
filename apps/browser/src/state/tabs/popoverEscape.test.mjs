@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const stub = await import("../../test-native/index.ts");
 const captured = [];
-stub.shellNativeModules.ArdiaFocus.setDragEscapeCapture = (on) => (captured.push(on), Promise.resolve());
+stub.shellNativeModules.NillaFocus.setDragEscapeCapture = (on) => (captured.push(on), Promise.resolve());
 const { useBrowser } = await import("../browser/store.ts");
 const { PLATFORM_FEATURES } = await import("../../lib/platformFeatures.ts");
 const windowsFeatures = (await import("../../lib/platformFeatures.windows.ts")).PLATFORM_FEATURES;

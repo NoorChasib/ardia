@@ -1,12 +1,12 @@
 param(
   [string]$DataDir = (Join-Path $env:LOCALAPPDATA "Nilla"),
-  [string]$App = (Join-Path $env:LOCALAPPDATA "Programs\Nilla\Ardia.exe"),
+  [string]$App = (Join-Path $env:LOCALAPPDATA "Programs\Nilla\Nilla.exe"),
   [Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments
 )
 
 $ErrorActionPreference = "Stop"
 
-if (-not (Test-Path -LiteralPath $App -PathType Leaf)) { throw "nilla-dev-run: no app at $App; pass -App with the path to the build's Ardia.exe" }
+if (-not (Test-Path -LiteralPath $App -PathType Leaf)) { throw "nilla-dev-run: no app at $App; pass -App with the path to the build's Nilla.exe" }
 $data = [System.IO.Path]::GetFullPath($DataDir).TrimEnd("\")
 $ardia = [System.IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA "Ardia")).TrimEnd("\")
 if ($data -ieq $ardia -or $data.StartsWith("$ardia\", [System.StringComparison]::OrdinalIgnoreCase)) {

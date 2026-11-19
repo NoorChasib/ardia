@@ -1,20 +1,20 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.net.Uri
-import com.ardia.browser.ExternalApp
-import com.ardia.browser.FindResult
-import com.ardia.browser.NetworkFailure
-import com.ardia.browser.PageColors
-import com.ardia.browser.PageLoadFailure
-import com.ardia.browser.PageRequest
-import com.ardia.browser.PageSecurity
-import com.ardia.browser.PageState
-import com.ardia.browser.PressTarget
-import com.ardia.browser.ReadableContent
-import com.ardia.browser.ScrollDirection
-import com.ardia.browser.SitePermission
-import com.ardia.browser.VisitKind
+import com.nilladigital.nilla.ExternalApp
+import com.nilladigital.nilla.FindResult
+import com.nilladigital.nilla.NetworkFailure
+import com.nilladigital.nilla.PageColors
+import com.nilladigital.nilla.PageLoadFailure
+import com.nilladigital.nilla.PageRequest
+import com.nilladigital.nilla.PageSecurity
+import com.nilladigital.nilla.PageState
+import com.nilladigital.nilla.PressTarget
+import com.nilladigital.nilla.ReadableContent
+import com.nilladigital.nilla.ScrollDirection
+import com.nilladigital.nilla.SitePermission
+import com.nilladigital.nilla.VisitKind
 import expo.modules.kotlin.exception.CodedException
 
 object PagePayloads {
@@ -101,7 +101,7 @@ object PagePayloads {
     }
 
     fun fileChooser(kind: PageRequest.Kind.FileChooser): Map<String, Any?> {
-        val plan = com.ardia.browsing.FileChooserPlan.of(kind.acceptTypes, kind.prefersCapture)
+        val plan = com.nilladigital.nilla.browsing.FileChooserPlan.of(kind.acceptTypes, kind.prefersCapture)
         return mapOf(
             "kind" to "fileChooser",
             "acceptTypes" to kind.acceptTypes,
@@ -181,11 +181,11 @@ object PagePayloads {
 }
 
 internal object SitePermissionGate {
-    fun held(context: android.content.Context, permission: com.ardia.browser.SitePermission): Map<String, Boolean> =
+    fun held(context: android.content.Context, permission: com.nilladigital.nilla.SitePermission): Map<String, Boolean> =
         PagePayloads.androidPermissions(permission).associateWith { androidx.core.content.ContextCompat.checkSelfPermission(context, it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
 
-    fun granted(permission: com.ardia.browser.SitePermission, held: Map<String, Boolean>): Boolean = when (permission) {
-        com.ardia.browser.SitePermission.Location -> held[android.Manifest.permission.ACCESS_FINE_LOCATION] == true || held[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    fun granted(permission: com.nilladigital.nilla.SitePermission, held: Map<String, Boolean>): Boolean = when (permission) {
+        com.nilladigital.nilla.SitePermission.Location -> held[android.Manifest.permission.ACCESS_FINE_LOCATION] == true || held[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true
         else -> PagePayloads.androidPermissions(permission).all { held[it] == true }
     }
 }

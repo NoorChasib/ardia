@@ -25,7 +25,7 @@ enum ServerWindowDrag {
   private static let lastWindow = NSMapTable<NSView, NSWindow>.weakToWeakObjects()
 
   private static let scaleChanges: NSObjectProtocol = NotificationCenter.default.addObserver(
-    forName: .ArdiaInterfaceScaleDidChange, object: nil, queue: .main
+    forName: .NillaInterfaceScaleDidChange, object: nil, queue: .main
   ) { _ in
     for window in trackedWindows() {
       refresh(window)
@@ -303,7 +303,7 @@ enum ServerWindowDrag {
   }
 
   static func embeddedRoot(_ window: NSWindow?) -> NSView? {
-    window.flatMap { ArdiaChromeWindowHost.embeddedRoot(of: $0) }
+    window.flatMap { NillaChromeWindowHost.embeddedRoot(of: $0) }
   }
 
   static func hostsRoot(_ view: NSView) -> Bool {
@@ -371,7 +371,7 @@ enum ServerWindowDrag {
 
   private static let capable: Bool = {
     let noArguments = { (types: String) in types.hasSuffix("@0:8") }
-    let host: AnyClass = ArdiaChromeWindowHost.contentViewClass
+    let host: AnyClass = NillaChromeWindowHost.contentViewClass
     guard NSClassFromString("RCTView") != nil,
           matches(NSView.self, opaqueRectSelector, { $0.hasPrefix("{CGRect=") && noArguments($0) }),
           matches(host, opaqueRectSelector, { $0.hasPrefix("{CGRect=") && noArguments($0) }),

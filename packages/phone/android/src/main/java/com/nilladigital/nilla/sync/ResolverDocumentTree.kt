@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.content.ContentResolver
 import android.database.ContentObserver
@@ -209,7 +209,7 @@ class ResolverDocumentTree(
         }
     }
 
-    class FolderAccessLost(cause: Throwable) : IOException("Ardia can’t open the sync folder any more", cause)
+    class FolderAccessLost(cause: Throwable) : IOException("Nilla can’t open the sync folder any more", cause)
 
     companion object {
         const val DEFAULT_TIMEOUT_MS = 20_000L
@@ -229,6 +229,6 @@ class ResolverDocumentTree(
         private const val MODIFIED = 3
         private const val FLAGS = 4
 
-        private val workers = Executors.newCachedThreadPool { work -> Thread(work, "ardia-sync-folder").apply { isDaemon = true } }
+        private val workers = Executors.newCachedThreadPool { work -> Thread(work, "nilla-sync-folder").apply { isDaemon = true } }
     }
 }

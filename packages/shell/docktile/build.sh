@@ -2,7 +2,7 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "$0")" && pwd)"
-name="ArdiaDockTile"
+name="NillaDockTile"
 . "$here/../../../scripts/lib/identity.sh"
 bundle_id="${PRODUCT_BUNDLE_IDENTIFIER:-$NILLA_BUNDLE_ID}.DockTilePlugIn"
 plugin="$TARGET_BUILD_DIR/${PLUGINS_FOLDER_PATH:-$CONTENTS_FOLDER_PATH/PlugIns}/$name.plugin"
@@ -45,7 +45,7 @@ cat > "$plugin/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>${MARKETING_VERSION:-1.0}</string>
   <key>CFBundleVersion</key><string>${CURRENT_PROJECT_VERSION:-1}</string>
   <key>LSMinimumSystemVersion</key><string>$min_os</string>
-  <key>NSPrincipalClass</key><string>ArdiaDockTilePlugIn</string>
+  <key>NSPrincipalClass</key><string>NillaDockTilePlugIn</string>
 </dict>
 </plist>
 PLIST

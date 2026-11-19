@@ -1,20 +1,20 @@
 #import "ArdiaLaunchSequence.h"
 
-@interface ArdiaLaunchWaiter : NSObject
-@property(nonatomic) ArdiaLaunchMilestone milestones;
+@interface NillaLaunchWaiter : NSObject
+@property(nonatomic) NillaLaunchMilestone milestones;
 @property(nonatomic, copy) dispatch_block_t block;
 @end
 
-@implementation ArdiaLaunchWaiter
+@implementation NillaLaunchWaiter
 @end
 
-@implementation ArdiaLaunchSequence {
-  ArdiaLaunchMilestone _reached;
-  NSMutableArray<ArdiaLaunchWaiter *> *_waiters;
+@implementation NillaLaunchSequence {
+  NillaLaunchMilestone _reached;
+  NSMutableArray<NillaLaunchWaiter *> *_waiters;
 }
 
-+ (ArdiaLaunchSequence *)shared {
-  static ArdiaLaunchSequence *shared = [ArdiaLaunchSequence new];
++ (NillaLaunchSequence *)shared {
+  static NillaLaunchSequence *shared = [NillaLaunchSequence new];
   return shared;
 }
 
@@ -23,19 +23,19 @@
   return self;
 }
 
-- (BOOL)reached:(ArdiaLaunchMilestone)milestones {
+- (BOOL)reached:(NillaLaunchMilestone)milestones {
   return (_reached & milestones) == milestones;
 }
 
-- (void)reach:(ArdiaLaunchMilestone)milestone {
+- (void)reach:(NillaLaunchMilestone)milestone {
   if (_shutDown) return;
   _reached |= milestone;
   for (;;) {
-    NSUInteger ready = [_waiters indexOfObjectPassingTest:^BOOL(ArdiaLaunchWaiter *waiter, NSUInteger, BOOL *) {
+    NSUInteger ready = [_waiters indexOfObjectPassingTest:^BOOL(NillaLaunchWaiter *waiter, NSUInteger, BOOL *) {
       return [self reached:waiter.milestones];
     }];
     if (ready == NSNotFound || _shutDown) return;
-    ArdiaLaunchWaiter *waiter = _waiters[ready];
+    NillaLaunchWaiter *waiter = _waiters[ready];
     [_waiters removeObjectAtIndex:ready];
     waiter.block();
   }
@@ -44,12 +44,12 @@
 - (void)appKitFinishedHidden:(BOOL)hidden forDocuments:(BOOL)documents {
   _launchedHidden = hidden;
   _launchedForDocuments = documents;
-  [self reach:ArdiaLaunchAppKitDidFinish];
+  [self reach:NillaLaunchAppKitDidFinish];
 }
 
-- (void)after:(ArdiaLaunchMilestone)milestones do:(dispatch_block_t)block {
+- (void)after:(NillaLaunchMilestone)milestones do:(dispatch_block_t)block {
   if (_shutDown) return;
-  ArdiaLaunchWaiter *waiter = [ArdiaLaunchWaiter new];
+  NillaLaunchWaiter *waiter = [NillaLaunchWaiter new];
   waiter.milestones = milestones;
   waiter.block = block;
   [_waiters addObject:waiter];

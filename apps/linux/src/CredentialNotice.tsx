@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Group, Row } from "./settingsForm";
-import { ardiaHost } from "./host";
+import { nillaHost } from "./host";
 import { autofillStatus, credentialNotice, credentialNoticeTitle, credentialStorage, passwordStatus } from "./hostCredentials";
 
 type Shown = { title: string; notice: string | null; storage: string | null };
@@ -8,9 +8,9 @@ type Shown = { title: string; notice: string | null; storage: string | null };
 export function CredentialNotice({ kind, profile }: { kind: "passwords" | "autofill"; profile: string }) {
   const [shown, setShown] = useState<Shown | null>(null);
   useEffect(() => {
-    if (!ardiaHost) return;
+    if (!nillaHost) return;
     let live = true;
-    const status = kind === "passwords" ? passwordStatus(ardiaHost, profile) : autofillStatus(ardiaHost, profile);
+    const status = kind === "passwords" ? passwordStatus(nillaHost, profile) : autofillStatus(nillaHost, profile);
     status.then(
       (value) => live && setShown({ title: credentialNoticeTitle(value, kind), notice: credentialNotice(value, kind), storage: credentialStorage(value, kind) }),
       (error: unknown) =>

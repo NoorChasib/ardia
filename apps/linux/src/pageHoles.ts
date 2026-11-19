@@ -2,8 +2,8 @@ import { intersection, subtract, type PageArea, type Rect } from "./inputRegions
 import type { CornerRadii } from "./hostExtensionView.ts";
 
 export const PAGE_CORNER_RADIUS = 12;
-export const HOLE_HOST_CLASS = "ardia-hole-host";
-export const PAGE_STACK_ATTRIBUTE = "data-ardia-page-stack";
+export const HOLE_HOST_CLASS = "nilla-hole-host";
+export const PAGE_STACK_ATTRIBUTE = "data-nilla-page-stack";
 const FILL_VAR = "--ardia-hole-fill";
 const CLIP_VAR = "--ardia-hole-clip";
 

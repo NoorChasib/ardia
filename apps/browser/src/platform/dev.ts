@@ -1,6 +1,6 @@
-import { nativeModule, type Click, type ClickResult, type IntroMusicCues, type KeyPress, type KeyPressResult } from "@ardia/shell";
+import { nativeModule, type Click, type ClickResult, type IntroMusicCues, type KeyPress, type KeyPressResult } from "@nilla/shell";
 
-const Dev = nativeModule("ArdiaDev");
+const Dev = nativeModule("NillaDev");
 
 export const devCrash = (kind?: "exception") => Dev.devCrash(kind);
 export const devRenderIntroMusic = (cues: IntroMusicCues, path: string) => Dev.devRenderIntroMusic(cues, path);

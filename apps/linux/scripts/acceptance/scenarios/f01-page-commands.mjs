@@ -63,7 +63,7 @@ async function findOnPane(shell, tabId, expected) {
 }
 
 async function dismissFind(shell, tabId) {
-  const focusedInPane = `(() => { const field = document.activeElement; const pane = document.querySelector(${js(`[data-ardia-native-tab="${tabId}"]`)}); if (field?.getAttribute('placeholder') !== 'Find on Page' || !pane) return false; const f = field.getBoundingClientRect(), p = pane.getBoundingClientRect(); const x = f.left + f.width / 2; return x >= p.left && x <= p.right; })()`;
+  const focusedInPane = `(() => { const field = document.activeElement; const pane = document.querySelector(${js(`[data-nilla-native-tab="${tabId}"]`)}); if (field?.getAttribute('placeholder') !== 'Find on Page' || !pane) return false; const f = field.getBoundingClientRect(), p = pane.getBoundingClientRect(); const x = f.left + f.width / 2; return x >= p.left && x <= p.right; })()`;
   await until(async () => {
     await shell.state(`s.activate(${js(tabId)}); s.setFind(${js(tabId)}, { open: true, focusRequest: Date.now() }); return true;`);
     await pause(200);

@@ -1,4 +1,4 @@
-#import "ArdiaHermesFatal.h"
+#import "NillaHermesFatal.h"
 
 #include <fcntl.h>
 #include <limits.h>
@@ -34,7 +34,7 @@ void WriteReason(const std::string &reason) {
 
 }
 
-void ArdiaHermesFatalInstall(NSString *path) {
+void NillaHermesFatalInstall(NSString *path) {
   const char *utf8 = path.fileSystemRepresentation;
   if (utf8 == NULL || strlen(utf8) >= sizeof(gPath)) return;
   strlcpy(gPath, utf8, sizeof(gPath));

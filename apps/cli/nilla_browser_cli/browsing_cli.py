@@ -1,17 +1,17 @@
 import json
 
-from ardia_cli import browsing, endpoint
-from ardia_cli.endpoint import DATA_DIR_HELP, data_root
-from ardia_cli.printable import complain, say, shown
+from nilla_browser_cli import browsing, endpoint
+from nilla_browser_cli.endpoint import DATA_DIR_HELP, data_root
+from nilla_browser_cli.printable import complain, say, shown
 
-SESSION_SHOWN = "<data dir>/<app profile>/Ardia/linux-session.json" if endpoint.LINUX else "<data dir>/session.json"
+SESSION_SHOWN = "<data dir>/<app profile>/Nilla/linux-session.json" if endpoint.LINUX else "<data dir>/session.json"
 PROFILE_FOLDERS_SHOWN = "<data dir>/" if endpoint.LINUX else "Chromium/"
 READS = f"""\
 Reads {SESSION_SHOWN} and Chromium's History files, never cookies, passwords,
-Login Data or Web Data. Needs Ardia running with "Let the ardia command control Ardia" on. Incognito, guest and
+Login Data or Web Data. Needs Nilla running with "Let the nilla-browser command control Nilla" on. Incognito, guest and
 system profiles are skipped.
 
-Exit status: 0 done, 1 the data couldn't be read or ran out of time (20 s), 2 Ardia can't be reached.
+Exit status: 0 done, 1 the data couldn't be read or ran out of time (20 s), 2 Nilla can't be reached.
 """
 PINNED_DESCRIPTION = f"""\
 List the user's favorites (the tiles) and pinned tabs (tabs in pinned folders), in profile order. Each row has
@@ -25,9 +25,9 @@ up per domain (domain, visits, pages, last_visit, top_title, profile), most visi
 
 {READS}
 Examples:
-  ardia history
-  ardia history --days 7 --domains --limit 20
-  ardia history --profile Work --json
+  nilla-browser history
+  nilla-browser history --days 7 --domains --limit 20
+  nilla-browser history --profile Work --json
 """
 
 
@@ -52,20 +52,20 @@ def run(args) -> int:
             rows = browsing.pinned(root)
         else:
             if args.days <= 0:
-                complain("ardia history: --days must be more than 0")
+                complain("nilla history: --days must be more than 0")
                 return 1
             if args.limit < 0:
-                complain("ardia history: --limit can't be negative")
+                complain("nilla history: --limit can't be negative")
                 return 1
             rows = browsing.history(root, days=args.days, limit=args.limit or None, profile=args.profile, domains=args.domains)
     except browsing.NotRunning as error:
         complain(f"ardia: {error}")
         return 2
     except browsing.BrowsingDataError as error:
-        complain(f"ardia {args.command}: {error}")
+        complain(f"nilla {args.command}: {error}")
         return 1
     except KeyboardInterrupt:
-        complain(f"ardia {args.command}: interrupted")
+        complain(f"nilla {args.command}: interrupted")
         return 130
     if args.json:
         say(json.dumps(rows, indent=2, ensure_ascii=False))

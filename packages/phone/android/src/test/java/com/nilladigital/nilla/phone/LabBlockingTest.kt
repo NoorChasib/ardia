@@ -1,12 +1,12 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.blocking.BlockingSettings
-import com.ardia.blocking.ContentBlocker
-import com.ardia.blocking.FetchResponse
-import com.ardia.blocking.FilterListDownloader
-import com.ardia.blocking.FilterLists
-import com.ardia.blocking.InMemoryBlockingStore
-import com.ardia.blocking.NetworkUnavailableException
+import com.nilladigital.nilla.blocking.BlockingSettings
+import com.nilladigital.nilla.blocking.ContentBlocker
+import com.nilladigital.nilla.blocking.FetchResponse
+import com.nilladigital.nilla.blocking.FilterListDownloader
+import com.nilladigital.nilla.blocking.FilterLists
+import com.nilladigital.nilla.blocking.InMemoryBlockingStore
+import com.nilladigital.nilla.blocking.NetworkUnavailableException
 import java.nio.file.Files
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -40,7 +40,7 @@ class LabBlockingTest {
         val blocker = blocker()
         val blocked = labRequests.filter { blocker.blocks(it, labPage, false) }
         assertEquals(labRequests, blocked)
-        val busted = labRequests.map { "$it?ardia=k3x9" }
+        val busted = labRequests.map { "$it?nilla=k3x9" }
         assertEquals(busted, busted.filter { blocker.blocks(it, "https://example.com/?lab=1", false) })
     }
 
@@ -50,7 +50,7 @@ class LabBlockingTest {
         blocker.setBlockersEnabled(labPage, false)
         assertTrue(labRequests.none { blocker.blocks(it, labPage, false) })
         blocker.setBlockersEnabled("https://example.com/", false)
-        assertTrue(labRequests.none { blocker.blocks("$it?ardia=k3x9", "https://example.com/?lab=2", false) })
+        assertTrue(labRequests.none { blocker.blocks("$it?nilla=k3x9", "https://example.com/?lab=2", false) })
         blocker.setBlockersEnabled(labPage, true)
         assertTrue(labRequests.all { blocker.blocks(it, labPage, false) })
     }

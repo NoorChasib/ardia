@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ardia_paint_probe {
+namespace nilla_paint_probe {
 
 enum Reason : unsigned {
   kAlphaZero = 1u << 0,

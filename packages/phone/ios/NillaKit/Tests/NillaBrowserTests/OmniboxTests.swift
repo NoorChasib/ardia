@@ -1,8 +1,8 @@
-import ArdiaSync
+import NillaSync
 import Foundation
 import Synchronization
 import Testing
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 @Suite struct OmniboxTests {
   let omnibox: Omnibox

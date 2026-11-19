@@ -1,4 +1,4 @@
-import { ardiaHost, hostSupports, type ArdiaHost } from "./host.ts";
+import { nillaHost, hostSupports, type ArdiaHost } from "./host.ts";
 
 export type LinuxCapabilities = {
   defaultBrowser: boolean;
@@ -13,7 +13,7 @@ export type LinuxCapabilities = {
   taskManager: boolean;
   videoUpscaling: boolean;
   commandScrollZoom: boolean;
-  littleArdiaNewTabLinks: boolean;
+  littleNillaNewTabLinks: boolean;
   peekOtherSites: boolean;
   popupsOpenAsTabs: boolean;
   haptics: boolean;
@@ -53,7 +53,7 @@ export const PAGE_PICTURE_COMMAND = "tab.capturePicture";
 export const TAB_MEMORY_CALL = "engine.tasks";
 export const HIDDEN_ELEMENTS_CALLS = ["contentBlocker.hiddenElements", "contentBlocker.hideElements", "contentBlocker.restoreElements"] as const;
 
-export function linuxCapabilities(host: ArdiaHost | undefined = ardiaHost): LinuxCapabilities {
+export function linuxCapabilities(host: ArdiaHost | undefined = nillaHost): LinuxCapabilities {
   const has = (...methods: string[]) => !!host && methods.every((method) => hostSupports(method, host));
   return {
     defaultBrowser: has("ArdiaSystem.isDefaultBrowser", "ArdiaSystem.setAsDefaultBrowser"),
@@ -68,7 +68,7 @@ export function linuxCapabilities(host: ArdiaHost | undefined = ardiaHost): Linu
     taskManager: has("engine.openTaskManager"),
     videoUpscaling: false,
     commandScrollZoom: has("webView.setCommandScrollZoom"),
-    littleArdiaNewTabLinks: has("webView.setLittleArdiaOpensNewTabLinks"),
+    littleNillaNewTabLinks: has("webView.setLittleArdiaOpensNewTabLinks"),
     peekOtherSites: has("webView.setPeekOtherSiteTabs"),
     popupsOpenAsTabs: has("webView.setPopupsOpenAsTabs"),
     haptics: has("ArdiaSystem.hapticTick"),
@@ -91,10 +91,10 @@ export function unavailableSettingIds(capabilities: LinuxCapabilities, settingId
   if (!capabilities.defaultBrowser) ids.add("general.defaultBrowser");
   if (!capabilities.launchAtLogin) ids.add("general.openAtLogin");
   if (!capabilities.videoUpscaling) ids.add("tabs.videoUpscaling");
-  if (!capabilities.cliControl) for (const id of ["advanced.ardiaCommand", "advanced.compactCliPill"]) ids.add(id);
+  if (!capabilities.cliControl) for (const id of ["advanced.nillaCommand", "advanced.compactCliPill"]) ids.add(id);
   if (!capabilities.peekOtherSites) ids.add("tabs.peekLinksToOtherSites");
   if (!capabilities.popupsOpenAsTabs) ids.add("tabs.popupsOpenAsTabs");
-  if (!capabilities.linksFromOtherApps) for (const id of ["tabs.openLinksInLittleArdia", "tabs.appLinksFirst"]) ids.add(id);
+  if (!capabilities.linksFromOtherApps) for (const id of ["tabs.openLinksInLittleNilla", "tabs.appLinksFirst"]) ids.add(id);
   if (!capabilities.pagePictures) ids.add("tabs.showPagePreviewInTabHoverMenu");
   if (!capabilities.tabMemory) ids.add("tabs.showMemoryInTabHoverMenu");
   if (!capabilities.webkit) for (const id of WEB_ENGINE_SETTINGS) if (settingIds.includes(id)) ids.add(id);
@@ -104,7 +104,7 @@ export function unavailableSettingIds(capabilities: LinuxCapabilities, settingId
 export const unavailableCommands = (capabilities: LinuxCapabilities): Set<string> =>
   new Set([
     ...(capabilities.externalLinks ? [] : ["emailPageLocation"]),
-    ...(capabilities.linksFromOtherApps ? [] : ["toggleOpenLinksInLittleArdia"]),
+    ...(capabilities.linksFromOtherApps ? [] : ["toggleOpenLinksInLittleNilla"]),
     ...(capabilities.webkit ? [] : ["togglePageEngine", "toggleJavaScriptFromAppleEvents"]),
     ...(capabilities.fullScreen ? [] : [FULL_SCREEN_ITEM]),
     ...(capabilities.hiddenElements ? [] : ["hideElement", "showHiddenElements"]),

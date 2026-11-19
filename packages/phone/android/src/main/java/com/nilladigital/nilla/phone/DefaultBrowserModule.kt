@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.ActivityNotFoundException
 import android.content.Context
-import com.ardia.appmodel.AndroidSystemActions
+import com.nilladigital.nilla.appmodel.AndroidSystemActions
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.functions.Queues
@@ -17,7 +17,7 @@ class DefaultBrowserModule : Module() {
     private val system: AndroidSystemActions by lazy { AndroidSystemActions(context) }
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneDefaultBrowser")
+        Name("NillaPhoneDefaultBrowser")
 
         AsyncFunction("status") { -> mapOf("isDefault" to (system.isDefaultBrowser() == true), "canAsk" to (system.browserRoleRequest() != null)) }
 
@@ -38,7 +38,7 @@ class DefaultBrowserModule : Module() {
         }.runOnQueue(Queues.MAIN)
 
         AsyncFunction("openDefaultAppsSettings") { ->
-            val activity = appContext.currentActivity ?: throw CodedException("ERR_NO_ACTIVITY", "Ardia isn't on screen", null)
+            val activity = appContext.currentActivity ?: throw CodedException("ERR_NO_ACTIVITY", "Nilla isn't on screen", null)
             try {
                 activity.startActivity(system.defaultAppsSettings())
             } catch (missing: ActivityNotFoundException) {

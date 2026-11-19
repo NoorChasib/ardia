@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cstdio>
 
-using namespace ardia_window_sight;
+using namespace nilla_window_sight;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

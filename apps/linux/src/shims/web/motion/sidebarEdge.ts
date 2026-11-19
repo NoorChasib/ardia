@@ -2,7 +2,7 @@ import { emitNativeEvent } from "../../expo-modules-core";
 import { currentPointer, watchPointer, type PointerSample } from "./pointer";
 
 const REACH = 24;
-const WINDOW_SELECTOR = ".ardia-window";
+const WINDOW_SELECTOR = ".nilla-window";
 
 type Watch = { hold: number; right: boolean };
 
@@ -46,7 +46,7 @@ function check(pointer: PointerSample | null = currentPointer()) {
   }
 }
 
-const HOLDING_CLASS = "ardia-pointer-hold";
+const HOLDING_CLASS = "nilla-pointer-hold";
 
 function holdPagePointer() {
   const holding = [...watched.values()].some(({ hold }) => hold > 0);

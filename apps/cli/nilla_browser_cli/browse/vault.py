@@ -7,11 +7,11 @@ import sys
 import time
 from urllib.parse import urlsplit
 
-from ardia_cli.browse import paths
-from ardia_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse import paths
+from nilla_browser_cli.browse.errors import BrowseError, Usage
 
 SECURITY = "/usr/bin/security"
-SERVICE = "dev.ardia.browse.auth"
+SERVICE = "com.nilladigital.nilla.browse.auth"
 LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1", "[::1]"}
 SECURITY_TIMEOUT = 20
 
@@ -41,7 +41,7 @@ def security(words: list[str]) -> tuple[int, str]:
 
 
 def store_secret(name: str, password: str) -> None:
-    code, _ = security(["add-generic-password", "-U", "-a", name, "-s", SERVICE, "-l", f"Ardia browse: {name}", "-w", password, *keychain_args()])
+    code, _ = security(["add-generic-password", "-U", "-a", name, "-s", SERVICE, "-l", f"Nilla browse: {name}", "-w", password, *keychain_args()])
     if code:
         raise BrowseError("The Keychain refused to save the password")
 
@@ -49,7 +49,7 @@ def store_secret(name: str, password: str) -> None:
 def read_secret(name: str, utf8: bool) -> str:
     code, output = security(["find-generic-password", "-a", name, "-s", SERVICE, "-w", *keychain_args()])
     if code:
-        raise BrowseError(f"No password for {name} in the Keychain; save it again with `ardia browse auth save {name} ...`")
+        raise BrowseError(f"No password for {name} in the Keychain; save it again with `nilla-browser browse auth save {name} ...`")
     value = output[:-1] if output.endswith("\n") else output
     if utf8 and re.fullmatch(r"(?:[0-9a-f]{2})+", value):
         value = bytes.fromhex(value).decode("utf-8")
@@ -85,7 +85,7 @@ def load_meta(root, name: str) -> dict:
     finally:
         os.close(folder)
     if not meta:
-        raise BrowseError(f"No auth profile named {name}; run `ardia browse auth list`")
+        raise BrowseError(f"No auth profile named {name}; run `nilla-browser browse auth list`")
     return meta
 
 
@@ -110,7 +110,7 @@ def read_password(options: dict, stdin_reader) -> str:
 def save(root, name: str, options: dict, stdin_reader) -> dict:
     paths.check_name("An auth profile name", name)
     if not options.get("url"):
-        raise Usage("Usage: ardia browse auth save <name> --url <https url> --username <user> [--password-stdin]")
+        raise Usage("Usage: nilla browse auth save <name> --url <https url> --username <user> [--password-stdin]")
     origins = [origin_of(options["url"])] + [origin_of(value) for value in options.get("origin") or []]
     password = read_password(options, stdin_reader)
     meta = {
@@ -163,13 +163,13 @@ def delete(root, name: str) -> None:
 
 
 async def login(ctx, argv):
-    from ardia_cli.browse import actions, plugins
-    from ardia_cli.browse.commands import Result, current_or_new, navigate, parse, wait_until
+    from nilla_browser_cli.browse import actions, plugins
+    from nilla_browser_cli.browse.commands import Result, current_or_new, navigate, parse, wait_until
 
     options, args = parse(argv, {"--url": "value", "--username-selector": "value", "--password-selector": "value", "--submit-selector": "value",
                                  "--credential-provider": "value", "--item": "value", "--no-humanize": "bool"})
     if not args:
-        raise Usage("Usage: ardia browse auth login <name> [--username-selector S] [--password-selector S] [--submit-selector S]")
+        raise Usage("Usage: nilla browse auth login <name> [--username-selector S] [--password-selector S] [--submit-selector S]")
     name = args[0]
     root = ctx.state.config["data_root"]
     if options.get("credential_provider"):
@@ -200,7 +200,7 @@ async def login(ctx, argv):
             found_page, element = await ctx.state.locate(password_selector, page)
         except BrowseError:
             return None
-        visible = await found_page.call("(el) => ardiaBrowse.visible(el)", element, frame=element.frame)
+        visible = await found_page.call("(el) => nillaBrowse.visible(el)", element, frame=element.frame)
         return element if visible else None
 
     password_element = await wait_until(password_field, ctx.timeout, 0.2, "the password field")
@@ -210,7 +210,7 @@ async def login(ctx, argv):
             _, username_element = await ctx.state.locate(meta["usernameSelector"], page)
         else:
             remote = await page.call(
-                "(pw) => { const inputs = Array.from(document.querySelectorAll('input')).filter((i) => ardiaBrowse.visible(i) && !i.disabled);"
+                "(pw) => { const inputs = Array.from(document.querySelectorAll('input')).filter((i) => nillaBrowse.visible(i) && !i.disabled);"
                 " const named = inputs.find((i) => /username|email/.test(i.autocomplete || '')); if (named) return named;"
                 " const before = inputs.filter((i) => i.compareDocumentPosition(pw) & Node.DOCUMENT_POSITION_FOLLOWING && /^(text|email|tel|)$/.test(i.type));"
                 " return before.length ? before[before.length - 1] : null; }",
@@ -246,7 +246,7 @@ async def login(ctx, argv):
         return guard
 
     async def type_guarded(element, text):
-        info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=frame)
+        info = await page.call("(el) => nillaBrowse.info(el)", element, frame=frame)
         await actions.focus_field(page, element, info, humanize)
         await actions.clear_field(page, element, humanize)
         guard = make_guard(element)

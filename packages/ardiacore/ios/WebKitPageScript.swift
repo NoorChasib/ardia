@@ -6,7 +6,7 @@ enum WebKitPageScript {
   const frame = Math.random().toString(36).slice(2);
   const post = (kind, data) => {
     try {
-      window.webkit.messageHandlers.ardia.postMessage({ kind, data: data === undefined ? null : data, frame });
+      window.webkit.messageHandlers.nilla.postMessage({ kind, data: data === undefined ? null : data, frame });
     } catch (e) {}
   };
   let muted = false;
@@ -124,7 +124,7 @@ enum WebKitPageScript {
   };
   for (const type of mediaEvents) document.addEventListener(type, onMedia, true);
   document.addEventListener(
-    "ardia:media-element",
+    "nilla:media-element",
     (e) => {
       const m = e.relatedTarget;
       if (!(m instanceof HTMLMediaElement)) return;
@@ -137,7 +137,7 @@ enum WebKitPageScript {
   if (location.protocol === "https:" && mediaFaultSites.some((site) => location.hostname === site || location.hostname.endsWith("." + site))) {
     let faultsRelayed = 0;
     document.addEventListener(
-      "ardia:media-fault",
+      "nilla:media-fault",
       (e) => {
         if (typeof e.detail !== "string" || e.detail.length > 64 || ++faultsRelayed > 200) return;
         post("mediaFault", { reason: e.detail });
@@ -147,7 +147,7 @@ enum WebKitPageScript {
   }
   const knownActions = ["play", "pause", "stop", "seekbackward", "seekforward", "seekto", "previoustrack", "nexttrack", "skipad", "enterpictureinpicture"];
   document.addEventListener(
-    "ardia:media-session",
+    "nilla:media-session",
     (e) => {
       let data = null;
       try {
@@ -332,7 +332,7 @@ enum WebKitPageScript {
       const m = active(allMedia());
       const call = (name, details) =>
         pageActions.includes(name) &&
-        !document.dispatchEvent(new CustomEvent("ardia:media-action", { cancelable: true, detail: JSON.stringify({ action: name, ...details }) }));
+        !document.dispatchEvent(new CustomEvent("nilla:media-action", { cancelable: true, detail: JSON.stringify({ action: name, ...details }) }));
       const isPlaying = sessionState() === "playing" || (!!m && playing(m));
       if (action === "play") call("play") || (m && m.play());
       else if (action === "pause") call("pause") || (m && m.pause());
@@ -404,7 +404,7 @@ enum WebKitPageScript {
   const fault = (reason) => {
     reported[reason] = (reported[reason] || 0) + 1;
     if (reported[reason] > 20) return;
-    apply(dispatch, doc, [new Custom("ardia:media-fault", { detail: reason })]);
+    apply(dispatch, doc, [new Custom("nilla:media-fault", { detail: reason })]);
   };
   const observe = (promise, onValue, onError) =>
     apply(then, promise, [
@@ -430,7 +430,7 @@ enum WebKitPageScript {
     if (!handedOver.has(this) && !apply(connected, this, [])) {
       handedOver.add(this);
       try {
-        apply(dispatch, doc, [new Mouse("ardia:media-element", { relatedTarget: this })]);
+        apply(dispatch, doc, [new Mouse("nilla:media-element", { relatedTarget: this })]);
       } catch (e) {}
     }
     if (watched && !errorsHeard.has(this) && !apply(connected, this, [])) {
@@ -451,7 +451,7 @@ enum WebKitPageScript {
   let samples = 0;
   const notify = () => {
     try {
-      apply(dispatch, doc, [new Custom("ardia:media-session", { detail: stringify({ actions: Array.from(handlers.keys()), position }) })]);
+      apply(dispatch, doc, [new Custom("nilla:media-session", { detail: stringify({ actions: Array.from(handlers.keys()), position }) })]);
     } catch (e) {}
   };
   const setActionHandler = proto.setActionHandler;
@@ -488,7 +488,7 @@ enum WebKitPageScript {
     });
   }
   apply(listen, doc, [
-    "ardia:media-action",
+    "nilla:media-action",
     (e) => {
       let request = null;
       try {

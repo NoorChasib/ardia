@@ -16,11 +16,11 @@
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "shell32.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 struct AppIcon {
   static constexpr wchar_t kAppUserModelId[] = L"NillaDigital.Nilla";
-  static constexpr wchar_t kDisplayName[] = L"Ardia";
+  static constexpr wchar_t kDisplayName[] = L"Nilla";
 
   static void ClaimAppUserModelId() noexcept {
     PWSTR previous = nullptr;
@@ -57,7 +57,7 @@ struct AppIcon {
   }
 
   static std::optional<std::wstring> NotificationIconPath() noexcept {
-    std::filesystem::path png = Paths::DataDirectory() / L"Ardia.png";
+    std::filesystem::path png = Paths::DataDirectory() / L"Nilla.png";
     std::error_code ignored;
     std::filesystem::path library = AppImage::Path();
     bool current = std::filesystem::exists(png, ignored) && std::filesystem::file_size(png, ignored) > 0 &&

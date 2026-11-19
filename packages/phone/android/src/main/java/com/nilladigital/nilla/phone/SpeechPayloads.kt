@@ -1,6 +1,6 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.search.DictationProblem
+import com.nilladigital.nilla.search.DictationProblem
 
 object SpeechPayloads {
     fun text(session: Int, text: String, isFinal: Boolean): Map<String, Any?> = mapOf("type" to "text", "session" to session, "text" to text, "isFinal" to isFinal)

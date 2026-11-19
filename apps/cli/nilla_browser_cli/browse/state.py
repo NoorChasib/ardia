@@ -3,12 +3,12 @@ import re
 import time
 from dataclasses import dataclass
 
-from ardia_cli import command_metrics, control
-from ardia_cli.caller import Caller
-from ardia_cli.browse.connection import Browser
-from ardia_cli.browse.errors import BrowseError, ConnectionLost, StaleRef
-from ardia_cli.browse.page import Page
-from ardia_cli.browse.tabs import Registry
+from nilla_browser_cli import command_metrics, control
+from nilla_browser_cli.caller import Caller
+from nilla_browser_cli.browse.connection import Browser
+from nilla_browser_cli.browse.errors import BrowseError, ConnectionLost, StaleRef
+from nilla_browser_cli.browse.page import Page
+from nilla_browser_cli.browse.tabs import Registry
 
 NTH_SUFFIX = re.compile(r">>\s*nth=-?\d+\s*$")
 
@@ -18,12 +18,12 @@ APPEAR_POLL = 0.15
 PROBE_TIMEOUT = 3.0
 UNKNOWN = object()
 NO_PAGE = (
-    "The user isn't on a web page right now (New Tab or another Ardia view). "
-    "Open a tab of this session's own with `ardia browse open <url>`, or pick one with `ardia browse tab list` and `ardia browse tab <id>`"
+    "The user isn't on a web page right now (New Tab or another Nilla view). "
+    "Open a tab of this session's own with `nilla-browser browse open <url>`, or pick one with `nilla-browser browse tab list` and `nilla-browser browse tab <id>`"
 )
 NO_SESSION_TAB = (
-    "This session has no tab yet, and it never takes the user's tab on its own. `ardia browse open <url>` opens a "
-    "background tab of its own; to work in the tab the user is looking at, pick it first with `ardia browse tab active`"
+    "This session has no tab yet, and it never takes the user's tab on its own. `nilla-browser browse open <url>` opens a "
+    "background tab of its own; to work in the tab the user is looking at, pick it first with `nilla-browser browse tab active`"
 )
 
 
@@ -120,8 +120,8 @@ class State:
         if self.instance is not None and endpoint.instance != self.instance:
             self.restarted = True
             raise RestartedBrowser(
-                "Ardia restarted (or control was turned off and on) since this session started, so its tabs and refs are gone. "
-                "Start over with `ardia browse open <url>`",
+                "Nilla restarted (or control was turned off and on) since this session started, so its tabs and refs are gone. "
+                "Start over with `nilla-browser browse open <url>`",
                 code="browser_restarted",
             )
         browser = Browser(endpoint, self.on_event)
@@ -142,7 +142,7 @@ class State:
         except BrowseError:
             pass
         await self.refresh_targets()
-        from ardia_cli.browse import temptabs
+        from nilla_browser_cli.browse import temptabs
 
         await temptabs.sweep(self)
         command_metrics.spent("connect_ms", started)
@@ -258,7 +258,7 @@ class State:
         if target_id is None:
             if self.pin_tab and self.extras.get("pinned_target"):
                 raise BrowseError(
-                    "The session's pinned tab was closed. Recover with `ardia browse tab new <url>` or pick one from `ardia browse tab list`",
+                    "The session's pinned tab was closed. Recover with `nilla-browser browse tab new <url>` or pick one from `nilla-browser browse tab list`",
                     data={"targetId": self.extras.get("pinned_target")},
                     code="tab_gone",
                 )
@@ -286,8 +286,8 @@ class State:
     async def reattach(self, page: Page) -> Page:
         if page.session_id is not None and page.browser is self.browser:
             return page
-        from ardia_cli.browse.errors import CdpError
-        from ardia_cli.browse.page import DETACHED
+        from nilla_browser_cli.browse.errors import CdpError
+        from nilla_browser_cli.browse.page import DETACHED
 
         if self.pages.get(page.target_id) is not page or page.target_id not in self.target_infos:
             raise BrowseError(DETACHED, code="tab_detached")
@@ -301,10 +301,10 @@ class State:
     async def follow_lost_tab(self) -> str:
         lost = self.extras.get("lost_tab") or {}
         gone = f" [{lost['tab']}]" if lost.get("tab") else ""
-        fix = "Pick one with `ardia browse tab active` or `ardia browse tab <id>`, or open one with `ardia browse open <url>`"
+        fix = "Pick one with `nilla-browser browse tab active` or `nilla-browser browse tab <id>`, or open one with `nilla-browser browse open <url>`"
         app_tab = lost.get("app")
         if app_tab:
-            from ardia_cli.browse import tabs
+            from nilla_browser_cli.browse import tabs
 
             await self.refresh_targets()
             found = await tabs.app_tab_target(self, app_tab)
@@ -320,14 +320,14 @@ class State:
                     self.registry.note_opened(self.instance, target_id)
                 if self.pin_tab and self.extras.get("pinned_target") == lost.get("target"):
                     self.extras["pinned_target"] = target_id
-                self.extras["notice"] = (f"→ Ardia replaced the page of this session's tab{gone} ({app_tab}), so the session follows it: "
+                self.extras["notice"] = (f"→ Nilla replaced the page of this session's tab{gone} ({app_tab}), so the session follows it: "
                                          f"[{self.tab_id(target_id)}] {found.get('title') or found.get('url') or ''}")
                 return target_id
             if found.get("asleep"):
-                raise BrowseError(f"This session's tab{gone} ({app_tab}) is still open in Ardia, but Ardia unloaded its page, so there is "
-                                  f"nothing to drive until it loads again (click it in Ardia, or `ardia browse open <url>` for a copy). {fix}",
+                raise BrowseError(f"This session's tab{gone} ({app_tab}) is still open in Nilla, but Nilla unloaded its page, so there is "
+                                  f"nothing to drive until it loads again (click it in Nilla, or `nilla-browser browse open <url>` for a copy). {fix}",
                                   data={"appTabId": app_tab}, code="tab_asleep")
-        raise BrowseError(f"This session's tab{gone} is gone (closed, or Ardia replaced its page and didn't say which page took over). {fix}",
+        raise BrowseError(f"This session's tab{gone} is gone (closed, or Nilla replaced its page and didn't say which page took over). {fix}",
                           code="tab_gone")
 
     async def take_active(self) -> str:
@@ -376,7 +376,7 @@ class State:
         return (focused or visible or [None])[0]
 
     async def probe(self, target_id: str) -> tuple[bool, bool]:
-        from ardia_cli.browse.page import WORLD_NAME
+        from nilla_browser_cli.browse.page import WORLD_NAME
 
         try:
             attached = await self.browser.send("Target.attachToTarget", {"targetId": target_id, "flatten": True}, timeout=PROBE_TIMEOUT)
@@ -405,8 +405,8 @@ class State:
         frame = self.frames.get(page.target_id)
         if frame and frame not in page.frames:
             raise BrowseError(
-                "The frame chosen with `ardia browse frame` is gone, so commands won't fall back to another document. "
-                "Run `ardia browse frame main` or choose another frame",
+                "The frame chosen with `nilla-browser browse frame` is gone, so commands won't fall back to another document. "
+                "Run `nilla-browser browse frame main` or choose another frame",
                 code="frame_gone",
             )
         return frame
@@ -475,7 +475,7 @@ class State:
                 raise StaleRef(ref_id, "it came from an earlier snapshot, and refs are never reused")
             raise BrowseError(f"Unknown ref: {ref_id}", code="unknown_ref")
         if ref.instance != self.instance:
-            raise StaleRef(ref_id, "Ardia restarted since that snapshot")
+            raise StaleRef(ref_id, "Nilla restarted since that snapshot")
         if ref.target not in self.target_infos and ref.target not in self.pages:
             raise StaleRef(ref_id, "its tab was closed")
         try:
@@ -547,7 +547,7 @@ class State:
         return f'{why}; the new page has the same {old.role} "{old.name}" as @{successor.id}, if it is the one you meant'
 
     async def redrawn(self, page: Page, ref: Ref) -> Ref | None:
-        from ardia_cli.browse import snapshot
+        from nilla_browser_cli.browse import snapshot
 
         if not ref.role or not ref.name:
             return None
@@ -573,7 +573,7 @@ class State:
         while True:
             frame = self.frame_for(page) or page.main_frame
             try:
-                remote = await page.call("(s) => ardiaBrowse.query(s)", selector, frame=frame, by_value=False, read=True)
+                remote = await page.call("(s) => nillaBrowse.query(s)", selector, frame=frame, by_value=False, read=True)
             except BrowseError as error:
                 if error.code in ("document_changed", "page_navigated", "frame_gone") and time.monotonic() + APPEAR_POLL < deadline:
                     polled = True
@@ -621,7 +621,7 @@ class State:
         return rows
 
     async def find_tab(self, ref: str) -> str:
-        from ardia_cli.browse import tabs
+        from nilla_browser_cli.browse import tabs
 
         if ref in self.labels:
             return self.labels[ref]
@@ -638,14 +638,14 @@ class State:
         if len(matches) == 1:
             return matches[0]
         if ref.isdigit():
-            raise BrowseError(f"Tab ids look like t{ref}, not {ref}; run `ardia browse tab` to list open tabs")
+            raise BrowseError(f"Tab ids look like t{ref}, not {ref}; run `nilla-browser browse tab` to list open tabs")
         if tabs.APP_TAB.fullmatch(ref):
             found = await tabs.app_tab_target(self, ref)
             if found.get("target"):
                 self.app_tabs[found["target"]] = ref
                 return found["target"]
             raise BrowseError(found["error"], data={"appTabId": ref, "candidates": found.get("candidates", [])}, code=found["code"])
-        raise BrowseError(f"Tab {ref} not found; run `ardia browse tab` to list open tabs", code="tab_not_found")
+        raise BrowseError(f"Tab {ref} not found; run `nilla-browser browse tab` to list open tabs", code="tab_not_found")
 
     def refs_json(self) -> dict:
         return {ref.id: {"name": ref.name, "role": ref.role} for ref in self.snapshot_refs()}

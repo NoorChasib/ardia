@@ -1,7 +1,7 @@
 import { systemInfo, type SystemInfo } from "../../platform/app";
 import { devTestValue } from "../../platform/launchConfig";
 import { PLATFORM_IDS, PLATFORM_TERMS } from "../../lib/platformTerms";
-import { INGEST_KEY_HEADER } from "@ardia/core";
+import { INGEST_KEY_HEADER } from "@nilla/core";
 import { appServices } from "../../platform/launchConfig";
 import { DEV_SEND_TEST_KEY } from "./config";
 import { logRequest, type RequestLogEntry } from "./requestLog";

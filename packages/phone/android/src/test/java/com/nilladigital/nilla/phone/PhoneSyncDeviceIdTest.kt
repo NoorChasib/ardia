@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.content.ContextWrapper
-import com.ardia.sync.SyncFiles
-import com.ardia.sync.SyncMeta
+import com.nilladigital.nilla.sync.SyncFiles
+import com.nilladigital.nilla.sync.SyncMeta
 import java.io.File
 import java.nio.file.Files
 import org.junit.After

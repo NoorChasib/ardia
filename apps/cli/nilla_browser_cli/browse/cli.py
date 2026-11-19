@@ -6,8 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ardia_cli.browse import paths
-from ardia_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse import paths
+from nilla_browser_cli.browse.errors import BrowseError, Usage
 
 VALUE_FLAGS = {
     "--session", "--namespace", "--data-dir", "--port", "--ws", "--cdp", "--max-output", "--screenshot-dir", "--screenshot-format",
@@ -27,9 +27,9 @@ LAUNCH_ONLY = {
     "-q": False, "--quiet": False,
 }
 LAUNCH_HINTS = {
-    "--headers": "run `ardia browse set headers <json>` instead",
-    "--color-scheme": "run `ardia browse set media dark|light` instead",
-    "--download-path": "pass the path to `ardia browse download <sel> <path>` instead",
+    "--headers": "run `nilla-browser browse set headers <json>` instead",
+    "--color-scheme": "run `nilla-browser browse set media dark|light` instead",
+    "--download-path": "pass the path to `nilla-browser browse download <sel> <path>` instead",
 }
 VALUE_FLAGS -= set(LAUNCH_HINTS)
 COMMAND_OWNS = {"stream": {"--port"}, "screenshot": {"--annotate", "--full"}, "diff": {"--full"}}
@@ -80,7 +80,7 @@ def split_globals(argv: list[str]) -> tuple[dict, list[str]]:
         if name in LAUNCH_HINTS:
             raise Usage(f"{name} is a launch option agent-browser applies when it starts its own browser; {LAUNCH_HINTS[name]}")
         if name in LAUNCH_ONLY:
-            raise Usage(f"{name} doesn't apply to Ardia: ardia browse drives the browser you're running, so launch options have no effect")
+            raise Usage(f"{name} doesn't apply to Nilla: nilla browse drives the browser you're running, so launch options have no effect")
         if command is None and not token.startswith("-"):
             command = token
         rest.append(token)
@@ -97,7 +97,7 @@ def stdout_is_file() -> bool:
 
 
 def options_from(found: dict, env: dict) -> dict:
-    from ardia_cli.browse.inputs import humanize_default
+    from nilla_browser_cli.browse.inputs import humanize_default
 
     humanize = humanize_default(env)
     if found.get("no_humanize"):
@@ -156,7 +156,7 @@ def endpoint_choice(found: dict, env: dict) -> tuple[str | None, int | None, str
 
 
 def write(text: str, stream) -> None:
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     if text:
         stream.write(redact(text))
@@ -166,7 +166,7 @@ def write(text: str, stream) -> None:
 def register_secrets(ws: str | None, env: dict) -> None:
     from urllib.parse import parse_qs, urlsplit
 
-    from ardia_cli.redact import add_secret
+    from nilla_browser_cli.redact import add_secret
 
     for url in (ws, env.get("ARDIA_CDP_URL"), env.get("AGENT_BROWSER_CDP")):
         if url and "?" in str(url):
@@ -176,7 +176,7 @@ def register_secrets(ws: str | None, env: dict) -> None:
 
 
 def print_result(result, as_json: bool, options: dict) -> int:
-    from ardia_cli.browse.daemon import render
+    from nilla_browser_cli.browse.daemon import render
 
     code, out, err = render(dict(options, json=as_json), result=result)
     write(out, sys.stdout)
@@ -185,8 +185,8 @@ def print_result(result, as_json: bool, options: dict) -> int:
 
 
 def print_error(error: BrowseError, as_json: bool) -> int:
-    from ardia_cli import telemetry
-    from ardia_cli.browse.daemon import render
+    from nilla_browser_cli import telemetry
+    from nilla_browser_cli.browse.daemon import render
 
     telemetry.note_error_code(error.code)
     code, out, err = render({"json": as_json}, error=error)
@@ -196,7 +196,7 @@ def print_error(error: BrowseError, as_json: bool) -> int:
 
 
 def session_id(args: list[str], cwd: str) -> str:
-    from ardia_cli.browse.commands import parse
+    from nilla_browser_cli.browse.commands import parse
 
     options, _ = parse(args, {"--scope": "value", "--prefix": "value"})
     scope = options.get("scope") or "cwd"
@@ -214,8 +214,8 @@ def session_id(args: list[str], cwd: str) -> str:
 
 
 def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_factory, key_for):
-    from ardia_cli.browse import client, plugins, readurl, vault
-    from ardia_cli.browse.commands import Result, parse
+    from nilla_browser_cli.browse import client, plugins, readurl, vault
+    from nilla_browser_cli.browse.commands import Result, parse
 
     if command == "auth":
         action = args[0] if args else "list"
@@ -224,7 +224,7 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
                                                   "--password-stdin": "bool", "--username-selector": "value", "--password-selector": "value",
                                                   "--submit-selector": "value"})
             if not positional:
-                raise Usage("Usage: ardia browse auth save <name> --url <https url> --username <u> [--password-stdin]")
+                raise Usage("Usage: nilla browse auth save <name> --url <https url> --username <u> [--password-stdin]")
             meta = vault.save(root, positional[0], parsed, lambda: sys.stdin.read())
             return Result(vault.public(meta), f"✓ Saved {positional[0]} for {', '.join(meta['origins'])} (password in the login Keychain)")
         if action == "list":
@@ -232,12 +232,12 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
             return Result({"profiles": rows}, "\n".join(f"{row['name']}  {row.get('username') or '-'}  {row['url']}" for row in rows) or "No saved auth profiles")
         if action == "show":
             if len(args) < 2:
-                raise Usage("Usage: ardia browse auth show <name>")
+                raise Usage("Usage: nilla browse auth show <name>")
             meta = vault.public(vault.load_meta(root, args[1]))
             return Result({"profile": meta}, "\n".join(f"{key}: {value}" for key, value in meta.items() if value is not None))
         if action == "delete":
             if len(args) < 2:
-                raise Usage("Usage: ardia browse auth delete <name>")
+                raise Usage("Usage: nilla browse auth delete <name>")
             vault.delete(root, args[1])
             return Result({"deleted": args[1]}, f"✓ Deleted {args[1]}")
         raise Usage(f"Unknown auth subcommand: {action}")
@@ -246,7 +246,7 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
         if action == "add":
             parsed, positional = parse(args[1:], {"--name": "value", "--capability": "multi"})
             if not positional:
-                raise Usage("Usage: ardia browse plugin add <npm-name[@version] | owner/repo[#ref]> [--name n]")
+                raise Usage("Usage: nilla browse plugin add <npm-name[@version] | owner/repo[#ref]> [--name n]")
             plugin = plugins.add(root, positional[0], parsed.get("name"), parsed.get("capability"))
             return Result({"plugin": plugin}, f"✓ Added {plugin['name']} ({plugin['spec']})")
         if action == "list":
@@ -254,35 +254,35 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
             return Result({"plugins": rows}, "\n".join(f"{row['name']}  {', '.join(row['capabilities'])}" for row in rows) or "No plugins")
         if action == "show":
             if len(args) < 2:
-                raise Usage("Usage: ardia browse plugin show <name>")
+                raise Usage("Usage: nilla browse plugin show <name>")
             plugin = plugins.find(root, args[1])
             return Result({"plugin": plugin}, json.dumps(plugin, indent=2))
         if action == "remove":
             if len(args) < 2:
-                raise Usage("Usage: ardia browse plugin remove <name>")
+                raise Usage("Usage: nilla browse plugin remove <name>")
             plugins.remove(root, args[1])
             return Result({"removed": args[1]}, f"✓ Removed {args[1]}")
         if action == "run":
             parsed, positional = parse(args[1:], {"--payload": "value"})
             if len(positional) < 2:
-                raise Usage("Usage: ardia browse plugin run <name> <type> [--payload json]")
+                raise Usage("Usage: nilla browse plugin run <name> <type> [--payload json]")
             payload = json.loads(parsed["payload"]) if parsed.get("payload") else {}
             data = plugins.call(root, positional[0], positional[1], payload)
             return Result(data if isinstance(data, dict) else {"result": data}, json.dumps(data, ensure_ascii=False, indent=2))
         raise Usage(f"Unknown plugin subcommand: {action}")
     if command == "flow":
-        from ardia_cli.browse import flows
+        from nilla_browser_cli.browse import flows
 
         return flows.run_local(root, args)
     if command == "notes":
-        from ardia_cli import notes
+        from nilla_browser_cli import notes
 
         request = notes.parse_args(args)
         if request.text == "-":
             request.text = read_stdin_text()
         return notes.run_request(root, request, None)
     if command == "read":
-        from ardia_cli.browse import readpages
+        from nilla_browser_cli.browse import readpages
 
         parsed, positional = parse(args, readpages.flags(), readpages.ALIASES)
         if readpages.single_fetch(parsed, positional):
@@ -307,13 +307,13 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
 
 
 def flow_runs_locally(args: list[str]) -> bool:
-    from ardia_cli.browse import flows
+    from nilla_browser_cli.browse import flows
 
     return flows.runs_locally(args)
 
 
 def notes_need_page(args: list[str]) -> bool:
-    from ardia_cli import notes
+    from nilla_browser_cli import notes
 
     try:
         return notes.parse_args(args).site is None and notes.parse_args(args).action != "list"
@@ -337,7 +337,7 @@ def eval_code_given(args: list[str]) -> bool:
 
 
 def read_stdin_text() -> str:
-    from ardia_cli import notes
+    from nilla_browser_cli import notes
 
     text = sys.stdin.read(notes.MAX_NOTE * 4 + 1)
     if len(text) > notes.MAX_NOTE * 4:
@@ -346,8 +346,8 @@ def read_stdin_text() -> str:
 
 
 def read_args(args: list[str]):
-    from ardia_cli.browse import readpages
-    from ardia_cli.browse.commands import parse
+    from nilla_browser_cli.browse import readpages
+    from nilla_browser_cli.browse.commands import parse
 
     try:
         return parse(args, readpages.flags(), readpages.ALIASES)
@@ -356,14 +356,14 @@ def read_args(args: list[str]):
 
 
 def read_runs_locally(args: list[str]) -> bool:
-    from ardia_cli.browse import readpages
+    from nilla_browser_cli.browse import readpages
 
     parsed = read_args(args)
     return parsed is not None and readpages.runs_locally(*parsed)
 
 
 def reads_named_urls(args: list[str]) -> bool:
-    from ardia_cli.browse import readpages
+    from nilla_browser_cli.browse import readpages
 
     parsed = read_args(args)
     if parsed is None:
@@ -375,7 +375,7 @@ def reads_named_urls(args: list[str]) -> bool:
 
 
 def read_beside(request: dict, config: dict, namespace: str, endpoint_key: str, session: str, dir_fd_factory) -> dict:
-    from ardia_cli.browse import client
+    from nilla_browser_cli.browse import client
 
     beside = f"{session[:59]}-side"
     key = paths.session_key(namespace, endpoint_key, beside)
@@ -393,7 +393,7 @@ def read_beside(request: dict, config: dict, namespace: str, endpoint_key: str, 
 
 
 def read_stdin_urls(args: list[str]) -> str | None:
-    from ardia_cli.browse import readpages
+    from nilla_browser_cli.browse import readpages
 
     parsed = read_args(args)
     if parsed is None or not readpages.reads_stdin(*parsed):
@@ -406,12 +406,12 @@ def inline_code(text: str) -> bool:
 
 
 def script_source(args: list[str], cwd: str) -> str:
-    from ardia_cli.browse import script
-    from ardia_cli.browse.commands import parse
+    from nilla_browser_cli.browse import script
+    from nilla_browser_cli.browse.commands import parse
 
     parsed, positional = parse(args, {"--timeout": "value", "--stdin": "bool"})
     if len(positional) > 1:
-        raise Usage("Usage: ardia browse script [file.js] [--timeout 90s]; quote the script in a heredoc on stdin, or put it in a file")
+        raise Usage("Usage: nilla browse script [file.js] [--timeout 90s]; quote the script in a heredoc on stdin, or put it in a file")
     if positional and positional[0] != "-":
         path = Path(cwd, os.path.expanduser(positional[0]))
         try:
@@ -424,14 +424,14 @@ def script_source(args: list[str], cwd: str) -> str:
     elif positional or parsed.get("stdin") or not sys.stdin.isatty():
         source = sys.stdin.read(script.MAX_SOURCE + 1)
     else:
-        raise Usage("ardia browse script reads the script from a file or stdin: ardia browse script <<'EOF' … EOF")
+        raise Usage("nilla browse script reads the script from a file or stdin: nilla browse script <<'EOF' … EOF")
     if len(source) > script.MAX_SOURCE:
         raise Usage(f"The script is over {script.MAX_SOURCE // 1024} KB")
     return source
 
 
 def main(argv: list[str]) -> int:
-    from ardia_cli.browse import outfile
+    from nilla_browser_cli.browse import outfile
 
     try:
         try:
@@ -458,8 +458,8 @@ def quiet_stdout() -> None:
 
 
 def run(argv: list[str]) -> int:
-    from ardia_cli import endpoint as endpoints
-    from ardia_cli.browse import client, help as helptext
+    from nilla_browser_cli import endpoint as endpoints
+    from nilla_browser_cli.browse import client, help as helptext
 
     env = dict(os.environ)
     try:
@@ -473,9 +473,9 @@ def run(argv: list[str]) -> int:
         sys.stdout.write(helptext.command_help(topic) + "\n")
         return 0
     if rest[0] in ("--version", "-V"):
-        from ardia_cli import __version__
+        from nilla_browser_cli import __version__
 
-        sys.stdout.write(f"ardia browse {__version__}\n")
+        sys.stdout.write(f"nilla browse {__version__}\n")
         return 0
     if "--help" in rest[1:] or "-h" in rest[1:]:
         sys.stdout.write(helptext.command_help(rest[0]) + "\n")
@@ -529,7 +529,7 @@ def run(argv: list[str]) -> int:
         finally:
             os.close(dir_fd)
         env_subset = {name: value for name, value in env.items() if name.startswith("AGENT_BROWSER_")}
-        from ardia_cli import caller, telemetry
+        from nilla_browser_cli import caller, telemetry
 
         request = {
             "argv": rest, "options": options, "cwd": os.getcwd(), "env": env_subset, "stdin": stdin, "telemetry": telemetry.shareable(env),
@@ -543,14 +543,14 @@ def run(argv: list[str]) -> int:
     except BrowseError as error:
         return print_error(error, as_json)
     except endpoints.EndpointError as error:
-        from ardia_cli.browse.errors import Unreachable
+        from nilla_browser_cli.browse.errors import Unreachable
 
         return print_error(Unreachable(str(error)), as_json)
     except paths.PathError as error:
         return print_error(BrowseError(str(error)), as_json)
     except KeyboardInterrupt:
         sys.stderr.write("✗ interrupted\n" if rest[0] != "script" else
-                         "✗ interrupted. Whatever the script had put in `state` is kept: `ardia browse script 'return state'` prints it\n")
+                         "✗ interrupted. Whatever the script had put in `state` is kept: `nilla-browser browse script 'return state'` prints it\n")
         return 130
     telemetry.note_answer(answer)
     write(answer.get("out") or "", sys.stdout)
@@ -559,8 +559,8 @@ def run(argv: list[str]) -> int:
 
 
 def close_all(root: Path, as_json: bool, options: dict) -> int:
-    from ardia_cli.browse import client
-    from ardia_cli.browse.commands import Result
+    from nilla_browser_cli.browse import client
+    from nilla_browser_cli.browse.commands import Result
 
     dir_fd = paths.browse_dir(root)
     closed = []

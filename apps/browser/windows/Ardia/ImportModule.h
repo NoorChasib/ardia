@@ -23,7 +23,7 @@
 #include "ImportSecrets.h"
 #include "Paths.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace ImportParts {
 
@@ -54,7 +54,7 @@ inline void RemoveLeftovers() noexcept {
   auto cutoff = std::filesystem::file_time_type::clock::now() - std::chrono::hours(1);
   for (auto it = std::filesystem::directory_iterator(temp, ignored); !ignored && it != std::filesystem::directory_iterator(); it.increment(ignored)) {
     std::wstring name = it->path().filename().wstring();
-    if (name.rfind(L"ardia-import-", 0) != 0) continue;
+    if (name.rfind(L"nilla-import-", 0) != 0) continue;
     std::error_code timeError;
     auto written = std::filesystem::last_write_time(it->path(), timeError);
     if (!timeError && written < cutoff) std::filesystem::remove_all(it->path(), timeError);
@@ -195,7 +195,7 @@ void OnAThread(TPromise const &promise, TWork &&work) noexcept {
 
 }
 
-REACT_MODULE(ImportModule, L"ArdiaWindowsImport")
+REACT_MODULE(ImportModule, L"NillaWindowsImport")
 struct ImportModule {
   using Promise = ImportParts::Promise;
   using MaybeText = ImportParts::MaybeText;

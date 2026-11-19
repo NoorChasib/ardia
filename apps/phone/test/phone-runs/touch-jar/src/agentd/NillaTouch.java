@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ArdiaTouch {
+public final class NillaTouch {
   static long now() { return System.nanoTime() / 1_000_000L; }
   static void sleepUntil(long t) throws InterruptedException { long w; while ((w = t - now()) > 0) Thread.sleep(Math.min(w, 50)); }
 
@@ -34,7 +34,7 @@ public final class ArdiaTouch {
       for (int id : (int[]) ids.invoke(im)) {
         Object o = dev.invoke(im, id);
         if (o != null && name.equals(o.getClass().getMethod("getName").invoke(o))) {
-          System.out.println("[ardia-touch-sync14] " + name + " ready in " + (now() - t0) + " ms");
+          System.out.println("[nilla-touch-sync14] " + name + " ready in " + (now() - t0) + " ms");
           Thread.sleep(30);
           return;
         }
@@ -62,7 +62,7 @@ public final class ArdiaTouch {
     try (BufferedReader r = new BufferedReader(new FileReader(a[0]))) {
       String l; while ((l = r.readLine()) != null) { l = l.trim(); if (l.isEmpty() || l.startsWith("#")) continue; steps.add(l.split("\\s+")); }
     }
-    Hid t = new Hid("ardia timed touch", 0x7A13, Hid.touchDesc());
+    Hid t = new Hid("nilla timed touch", 0x7A13, Hid.touchDesc());
     try {
       waitForDevice(t.name);
       int[] d = display();

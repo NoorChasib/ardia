@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaEvents : NSObject
+@interface NillaEvents : NSObject
 
 + (void)setSender:(nullable void (^)(NSString *name, NSDictionary<NSString *, id> *data))sender
         forDomain:(NSString *)domain NS_SWIFT_NAME(setSender(_:forDomain:));

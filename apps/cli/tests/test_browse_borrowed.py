@@ -6,9 +6,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli.browse import audit, capture, commands, script, vault
-from ardia_cli.browse.errors import BrowseError
-from ardia_cli.browse.state import State
+from nilla_browser_cli.browse import audit, capture, commands, script, vault
+from nilla_browser_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.state import State
 
 
 class Stop(Exception):
@@ -103,13 +103,13 @@ class BorrowedTab(unittest.TestCase):
             with self.assertRaises(BrowseError) as caught:
                 asyncio.run(function(ctx(name), argv))
             self.assertEqual(caught.exception.code, "borrowed_tab", name)
-            self.assertIn("ardia browse tab t", caught.exception.message)
+            self.assertIn("nilla browse tab t", caught.exception.message)
 
     def refused(self, function, argv, name=""):
         with self.assertRaises(BrowseError) as caught:
             asyncio.run(function(commands.Ctx(self.state, {}, "/", {}, None, name), argv))
         self.assertEqual(caught.exception.code, "borrowed_tab", argv)
-        self.assertIn("pick it with `ardia browse tab t", caught.exception.message)
+        self.assertIn("pick it with `nilla-browser browse tab t", caught.exception.message)
         return caught.exception.message
 
     def test_storage_changes_refuse_a_borrowed_tab_and_reads_still_work(self):
@@ -121,8 +121,8 @@ class BorrowedTab(unittest.TestCase):
         self.assertEqual(result.text, "(empty)")
 
     def test_set_device_asks_for_touch_before_it_changes_the_viewport(self):
-        from ardia_cli import command_metrics
-        from ardia_cli.browse.errors import Gated
+        from nilla_browser_cli import command_metrics
+        from nilla_browser_cli.browse.errors import Gated
 
         self.state.current = "MINE"
         self.state.target_infos["MINE"] = {"targetId": "MINE", "url": "about:blank"}
@@ -148,7 +148,7 @@ class BorrowedTab(unittest.TestCase):
         self.assertTrue(command_metrics.answer_fields(request)["metrics"]["viewport_set"])
 
     def own_tab_on_the_token_path(self):
-        from ardia_cli.browse import tabs
+        from nilla_browser_cli.browse import tabs
 
         self.state.current = "MINE"
         self.state.target_infos["MINE"] = {"targetId": "MINE", "url": "https://mine.example/"}
@@ -185,8 +185,8 @@ class BorrowedTab(unittest.TestCase):
         set_viewport()
         self.assertEqual(len(calls), 1)
 
-    def test_a_tab_ardia_wont_take_off_screen_gets_no_viewport(self):
-        from ardia_cli import control
+    def test_a_tab_nilla_wont_take_off_screen_gets_no_viewport(self):
+        from nilla_browser_cli import control
 
         _, tabs = self.own_tab_on_the_token_path()
         sent = []
@@ -197,7 +197,7 @@ class BorrowedTab(unittest.TestCase):
 
         self.mine.send = send
         for error, code, says in ((control.MethodError("refused", "That tab is shown in a window, so it can't go off-screen."), "viewport_needs_hidden_tab", "open <url>` (without --show)"),
-                                  (control.MethodError("unknown_method", "no such method"), "viewport_unsupported", "update Ardia")):
+                                  (control.MethodError("unknown_method", "no such method"), "viewport_unsupported", "update Nilla")):
             async def app_call(state, method, params, timeout=0):
                 raise error
 
@@ -287,7 +287,7 @@ class BorrowedTab(unittest.TestCase):
         self.assertEqual(steps, [("navigate", "about:blank"), ("options", False), ("navigate", "https://dest.example/")])
 
     def test_each_off_screen_tab_of_a_session_is_remembered(self):
-        from ardia_cli.browse import tabs
+        from nilla_browser_cli.browse import tabs
 
         other, fresh = FakePage("OTHER"), FakePage("FRESH")
         pages = {"MINE": self.mine, "OTHER": other, "FRESH": fresh}
@@ -422,7 +422,7 @@ class BorrowedTab(unittest.TestCase):
         self.refused(commands.cmd_cookies, ["set", "--curl", "cookies.txt"])
 
     def test_settings_state_load_init_scripts_and_routes_refuse_a_borrowed_tab(self):
-        from ardia_cli.browse import capture
+        from nilla_browser_cli.browse import capture
 
         for argv in (["credentials", "u", "p"], ["headers", "{}"], ["offline", "on"], ["viewport", "800", "600"], ["geo", "1", "2"]):
             self.refused(commands.cmd_set, argv)
@@ -464,7 +464,7 @@ class BorrowedTab(unittest.TestCase):
         self.state.take_active = take_active
         self.state.find_tab = find_tab
         self.state.refresh_targets = refresh_targets
-        with mock.patch("ardia_cli.browse.tabs.app_tab_map", app_tab_map), \
+        with mock.patch("nilla_browser_cli.browse.tabs.app_tab_map", app_tab_map), \
                 mock.patch.object(commands, "page_title", mock.AsyncMock(return_value="Draft")):
             return asyncio.run(commands.cmd_tab(commands.Ctx(self.state, {}, "/", {}, None, "tab"), argv))
 

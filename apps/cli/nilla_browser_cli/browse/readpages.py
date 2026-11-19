@@ -3,8 +3,8 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from ardia_cli.browse.errors import BrowseError, ConnectionLost, OutcomeUnknown, Usage
-from ardia_cli.browse.page import FETCH_FRESH
+from nilla_browser_cli.browse.errors import BrowseError, ConnectionLost, OutcomeUnknown, Usage
+from nilla_browser_cli.browse.page import FETCH_FRESH
 
 READ_TABS = 4
 READER_TRIES = 2
@@ -59,19 +59,19 @@ LINKS = r"""() => {
 EXTRACT = r"""(selector) => {
   let roots;
   if (selector) {
-    roots = ardiaBrowse.queryAll(selector);
+    roots = nillaBrowse.queryAll(selector);
   } else {
     const main = document.querySelector("main, [role=main]");
     roots = main && (main.innerText || "").trim() ? [main] : [document.body || document.documentElement];
   }
-  const text = roots.filter(Boolean).map((root) => ardiaBrowse.readable(root)).filter(Boolean).join("\n\n");
+  const text = roots.filter(Boolean).map((root) => nillaBrowse.readable(root)).filter(Boolean).join("\n\n");
   let status = null;
   try {
     const entry = performance.getEntriesByType("navigation")[0];
     status = entry && entry.responseStatus ? entry.responseStatus : null;
   } catch (e) {}
   let scope = "";
-  try { scope = ardiaBrowse.scope(); } catch (e) {}
+  try { scope = nillaBrowse.scope(); } catch (e) {}
   return { title: document.title || "", text, matched: roots.length, status, scope };
 }"""
 
@@ -106,7 +106,7 @@ SCROLL_END_WAIT = 3.0
 SCROLL_STEP = r"""(selector, action, to) => {
   const ROW = "[role=option], [role=row], [role=listitem], [role=treeitem], [role=article], [role=feed] > *, li, tr, article";
   const LOADING = /^\s*loading(\.\.\.|…)?\s*$/i;
-  const found = (typeof selector === "string" ? ardiaBrowse.queryAll(selector) : [selector]).filter((el) => el && el.nodeType === 1);
+  const found = (typeof selector === "string" ? nillaBrowse.queryAll(selector) : [selector]).filter((el) => el && el.nodeType === 1);
   if (!found.length) return { missing: true };
   const outermost = (hits, within) => {
     const set = new Set(hits);
@@ -122,7 +122,7 @@ SCROLL_STEP = r"""(selector, action, to) => {
       else return kids;
     }
   };
-  const list = found.find((el) => ardiaBrowse.visible(el)) || found[0];
+  const list = found.find((el) => nillaBrowse.visible(el)) || found[0];
   const rows = found.length > 1 && !list.querySelector(ROW) ? found : rowsIn(list);
   const page = document.scrollingElement || document.documentElement;
   const scrolls = (el) => /(auto|scroll|overlay)/.test(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight + 1;
@@ -150,7 +150,7 @@ SCROLL_STEP = r"""(selector, action, to) => {
   const top = position();
   const out = [];
   for (const row of rows) {
-    const text = ardiaBrowse.readable(row).split("\n").map((line) => line.trim()).filter(Boolean).join(" · ");
+    const text = nillaBrowse.readable(row).split("\n").map((line) => line.trim()).filter(Boolean).join(" · ");
     if (!text || LOADING.test(text) || row.getAttribute("aria-busy") === "true") continue;
     const raw = row.getAttribute("aria-posinset") || row.getAttribute("aria-rowindex") || row.getAttribute("data-index") || row.getAttribute("data-row-index");
     const index = raw != null && raw !== "" && Number.isFinite(Number(raw)) ? Number(raw) : null;
@@ -160,12 +160,12 @@ SCROLL_STEP = r"""(selector, action, to) => {
   const busy = !!list.querySelector("[aria-busy=true]") || list.getAttribute("aria-busy") === "true"
     || Array.from(scroller.children).some((child) => LOADING.test(child.textContent || ""));
   return { rows: out, before, position: top, moved: Math.abs(top - before) > 1, height, view, busy,
-           atEnd: top + view >= height - 2, scroller: ardiaBrowse.describe(scroller), hidden: document.visibilityState === "hidden" };
+           atEnd: top + view >= height - 2, scroller: nillaBrowse.describe(scroller), hidden: document.visibilityState === "hidden" };
 }"""
 
 
 def flags() -> dict:
-    from ardia_cli.browse import readurl
+    from nilla_browser_cli.browse import readurl
 
     return {**readurl.FLAGS, "--http": "bool", "--stdin": "bool", "--links": "value", "--limit": "value", "--selector": "value", "--list": "bool",
             "--scroll": "bool", "--match": "value", "--data": "bool", "--fields": "value", "--where": "multi", "--block": "value"}
@@ -278,7 +278,7 @@ def no_links_message(pattern: str, page_url: str, links: list[str]) -> str:
 def wanted_urls(options: dict, positional: list[str], stdin: str | None, base: str | None = None) -> list[str]:
     from urllib.parse import urljoin
 
-    from ardia_cli.browse.commands import normalize_url
+    from nilla_browser_cli.browse.commands import normalize_url
 
     urls = [url for url in positional if url != "-"]
     if reads_stdin(options, positional):
@@ -349,7 +349,7 @@ FRAME_MARK = '[frame "'
 
 
 def note_virtualized(*texts: str) -> None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     if any(VIRTUALIZED_MARK in (text or "") for text in texts):
         command_metrics.flag("read_virtualized_grid", True)
@@ -358,13 +358,13 @@ def note_virtualized(*texts: str) -> None:
 
 
 def pages_cap(pages: int) -> int:
-    from ardia_cli.browse.daemon import OUTPUT_CAP
+    from nilla_browser_cli.browse.daemon import OUTPUT_CAP
 
     return min(max(PAGE_SHARE * pages, OUTPUT_CAP), PAGES_CAP_CEILING)
 
 
 def empty_note(record: dict) -> str:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     if record.get("title") or (record.get("status") or 200) >= 300:
         return "(no text)"
@@ -373,7 +373,7 @@ def empty_note(record: dict) -> str:
 
 
 def render(records: list[dict], options: dict, extra: str = "") -> str:
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     heads = [redact(header(record, index + 1, len(records))) for index, record in enumerate(records)]
     texts = [redact(record.get("text") or ("" if record.get("error") else empty_note(record))) for record in records]
@@ -382,7 +382,7 @@ def render(records: list[dict], options: dict, extra: str = "") -> str:
     whole = join(heads, texts, [extra])
     if not limit or limit <= 0 or len(whole) <= limit:
         return whole
-    from ardia_cli.browse.daemon import spill
+    from nilla_browser_cli.browse.daemon import spill
 
     saved = "" if options.get("json") else (spill(whole) or "")
     for shown in range(len(records), -1, -1):
@@ -430,8 +430,8 @@ async def collect_links(ctx, pattern: str):
 
 
 async def open_reader(state, opened: list[str]):
-    from ardia_cli.browse import temptabs
-    from ardia_cli.browse.page import Page
+    from nilla_browser_cli.browse import temptabs
+    from nilla_browser_cli.browse.page import Page
 
     target_id = await temptabs.create(state, opened)
     state.target_infos.setdefault(target_id, {"targetId": target_id, "url": "about:blank", "title": "", "type": "page"})
@@ -460,7 +460,7 @@ def fetching(page, earlier: frozenset) -> bool:
 
 
 async def settle(page, deadline: float, earlier: frozenset = frozenset()):
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     loop = asyncio.get_running_loop()
     last = None
@@ -511,8 +511,8 @@ async def arrived_text(page, loader: str) -> bool:
 
 
 async def goto(ctx, page, url: str, timeout: float, keep_partial: bool = False) -> str | None:
-    from ardia_cli.browse.commands import wait_for_load
-    from ardia_cli.browse.errors import Gated
+    from nilla_browser_cli.browse.commands import wait_for_load
+    from nilla_browser_cli.browse.errors import Gated
 
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout
@@ -523,13 +523,13 @@ async def goto(ctx, page, url: str, timeout: float, keep_partial: bool = False) 
     try:
         result = await page.send("Page.navigate", {"url": url}, timeout=timeout)
     except Gated:
-        raise BrowseError(f"Ardia's policy only lets the ardia command open web pages; {url} isn't one", code="policy_refused") from None
+        raise BrowseError(f"Nilla's policy only lets the nilla-browser command open web pages; {url} isn't one", code="policy_refused") from None
     except OutcomeUnknown as error:
-        from ardia_cli.browse.commands import site_silent
+        from nilla_browser_cli.browse.commands import site_silent
 
         raise site_silent(url, timeout, error) from None
     if result.get("errorText"):
-        from ardia_cli.browse.commands import HTTPS_ONLY_NOTE, https_only_block
+        from nilla_browser_cli.browse.commands import HTTPS_ONLY_NOTE, https_only_block
 
         note = f". {HTTPS_ONLY_NOTE}" if https_only_block(url, result["errorText"]) else ""
         raise BrowseError(f"couldn't load it: {result['errorText']}{note}", code="navigation_failed")
@@ -540,7 +540,7 @@ async def goto(ctx, page, url: str, timeout: float, keep_partial: bool = False) 
         except BrowseError as error:
             if not keep_partial or error.code != "timeout" or not await arrived_text(page, loader):
                 raise
-            from ardia_cli import command_metrics
+            from nilla_browser_cli import command_metrics
 
             command_metrics.flag("read_partial_page", True)
             await page.refresh_frames()
@@ -562,7 +562,7 @@ CHALLENGE_MAX_TEXT = 1500
 
 
 def command_metrics_flag(name: str) -> None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     command_metrics.flag(name, True)
 
@@ -574,7 +574,7 @@ def read_at() -> str:
 
 
 def bot_check(title: str, text: str, status, count: bool = True) -> str | None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     blocked_status = status in (401, 403, 429)
     if not (blocked_status or CHALLENGE.search(title or "") or (len(text or "") < CHALLENGE_MAX_TEXT and CHALLENGE.search(text or ""))):
@@ -591,7 +591,7 @@ def thin(got: dict, selector: str | None) -> bool:
 
 
 async def extract_filled(page, selector: str | None, timeout: float) -> dict:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     loop = asyncio.get_running_loop()
     deadline = loop.time() + min(THIN_WAIT, timeout)
@@ -614,9 +614,9 @@ async def extract_filled(page, selector: str | None, timeout: float) -> dict:
 
 
 async def read_in(ctx, page, url: str, selector: str | None, timeout: float, options: dict) -> dict:
-    from ardia_cli.browse import readurl
+    from nilla_browser_cli.browse import readurl
 
-    from ardia_cli.browse import pdftext
+    from nilla_browser_cli.browse import pdftext
 
     record = {"url": url, "source": "browser"}
     try:
@@ -648,8 +648,8 @@ async def read_in(ctx, page, url: str, selector: str | None, timeout: float, opt
 
 
 async def read_tabs(ctx, urls: list[str], selector: str | None, timeout: float, options: dict) -> list[dict]:
-    from ardia_cli import command_metrics
-    from ardia_cli.browse import temptabs
+    from nilla_browser_cli import command_metrics
+    from nilla_browser_cli.browse import temptabs
 
     state = ctx.state
     await state.connect()
@@ -679,7 +679,7 @@ async def read_tabs(ctx, urls: list[str], selector: str | None, timeout: float, 
         for task in done:
             task.result()
     finally:
-        from ardia_cli.browse import temptabs
+        from nilla_browser_cli.browse import temptabs
 
         for task in tasks:
             task.cancel()
@@ -689,7 +689,7 @@ async def read_tabs(ctx, urls: list[str], selector: str | None, timeout: float, 
 
 
 def read_http_one(url: str, options: dict) -> dict:
-    from ardia_cli.browse import readurl
+    from nilla_browser_cli.browse import readurl
 
     record = {"url": url, "source": "http"}
     try:
@@ -711,9 +711,9 @@ def read_http(urls: list[str], options: dict) -> list[dict]:
 
 
 def result_for(records: list[dict], options: dict, global_options: dict, extra: str = "", data_extra: dict | None = None):
-    from ardia_cli.browse.commands import Result
+    from nilla_browser_cli.browse.commands import Result
 
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     result = Result({"pages": records, **(data_extra or {})}, render(records, global_options, extra), page_content=True)
     result.output_cap = pages_cap(len(records))
@@ -727,11 +727,11 @@ def result_for(records: list[dict], options: dict, global_options: dict, extra: 
 def run_local(options: dict, positional: list[str], stdin: str | None, global_options: dict):
     urls = wanted_urls(options, positional, stdin)
     if not urls:
-        raise Usage("Usage: ardia browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
+        raise Usage("Usage: nilla browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
     limit = pages_limit(options, len(urls))
     page_timeout(options)
     if options.get("selector"):
-        raise Usage("-s needs the browser's DOM; drop --http to read the pages in Ardia")
+        raise Usage("-s needs the browser's DOM; drop --http to read the pages in Nilla")
     extra = limit_note(len(urls), limit, "--limit")
     return result_for(read_http(urls[:limit], options), options, global_options, extra)
 
@@ -798,7 +798,7 @@ def scroll_summary(total: int, shown: int, match: str | None, stopped: str, limi
         "limit": f"stopped at --limit {limit}; --limit <n> for more",
         "time": f"stopped after {seconds:g} s before the end of the list; --timeout <ms> for longer",
     }
-    hidden = (f"; the tab is hidden, so the page may not have drawn every row: ardia browse tab {hidden_tab} --show, then read again"
+    hidden = (f"; the tab is hidden, so the page may not have drawn every row: nilla browse tab {hidden_tab} --show, then read again"
               if hidden_tab and stopped == "end" else "")
     return f"[{counted}; {reasons[stopped]}{hidden}]"
 
@@ -831,7 +831,7 @@ async def settle_rows(page, frame, target, collector: RowCollector, deadline: fl
 
 
 async def wait_at_bottom(page, frame, target, collector: RowCollector, current: dict, until: float) -> dict | None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     loop = asyncio.get_running_loop()
     height, rows = current["height"], len(collector.rows)
@@ -888,9 +888,9 @@ def scrolls(options: dict) -> bool:
 
 
 async def run_scroll(ctx, options: dict, positional: list[str]):
-    from ardia_cli import command_metrics
-    from ardia_cli.browse.commands import Result
-    from ardia_cli.browse.state import parse_ref
+    from nilla_browser_cli import command_metrics
+    from nilla_browser_cli.browse.commands import Result
+    from nilla_browser_cli.browse.state import parse_ref
 
     selector = options.get("selector")
     if not options.get("scroll"):
@@ -956,7 +956,7 @@ async def run(ctx, options: dict, positional: list[str]):
         data_extra = {"listing": source, "matched": len(picked)}
         urls += [url for url in picked if url not in urls]
         if options.get("list"):
-            from ardia_cli.browse.commands import Result
+            from nilla_browser_cli.browse.commands import Result
 
             shown = picked[:limit] if options.get("limit") is not None else picked
             text = "\n".join(shown) + (f"\n{limit_note(len(picked), limit, '--limit')}" if len(shown) < len(picked) else "")
@@ -964,13 +964,13 @@ async def run(ctx, options: dict, positional: list[str]):
     elif options.get("list"):
         raise Usage("--list goes with --links <pattern>: it prints the links that read would visit")
     if not urls:
-        raise Usage("Usage: ardia browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
+        raise Usage("Usage: nilla browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
     limit = pages_limit(options, named)
     extra = limit_note(len(urls), limit, "--limit")
     urls = urls[:limit]
     if fetch_only(options):
         if selector:
-            raise Usage("-s needs the browser's DOM; drop --http to read the pages in Ardia")
+            raise Usage("-s needs the browser's DOM; drop --http to read the pages in Nilla")
         records = await asyncio.to_thread(read_http, urls, options)
     else:
         records = await read_tabs(ctx, urls, selector, timeout, options)

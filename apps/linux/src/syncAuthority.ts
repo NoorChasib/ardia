@@ -1,12 +1,12 @@
-export const SYNC_AUTHORITY_LOCK = "ardia.linux.sync-authority";
-export const SYNC_CHANNEL = "ardia.linux.sync";
+export const SYNC_AUTHORITY_LOCK = "nilla.linux.sync-authority";
+export const SYNC_CHANNEL = "nilla.linux.sync";
 export const RENEW_MS = 10_000;
 export const CLAIM_RETRY_MS = 5_000;
 export const CALL_TIMEOUT_MS = 30_000;
 export const INTERACTIVE_CALL_TIMEOUT_MS = 900_000;
 export const AUTHORITY_WAIT_MS = 10_000;
 export const BECOME_RETRY_MAX_MS = 60_000;
-export const NO_AUTHORITY_MESSAGE = "Sync runs in an Ardia browser window, and none answered. Open a browser window and try again.";
+export const NO_AUTHORITY_MESSAGE = "Sync runs in a Nilla browser window, and none answered. Open a browser window and try again.";
 
 export const REMOTE_METHODS = [
   "syncNow",
@@ -83,7 +83,7 @@ const defaultTimers: Timers = {
 export function startSyncAuthority<S>(options: AuthorityOptions<S>) {
   const { id, channel, mirror } = options;
   const timers = options.timers ?? defaultTimers;
-  const report = options.report ?? ((error: unknown) => console.warn("[ardia linux] sync authority", error));
+  const report = options.report ?? ((error: unknown) => console.warn("[nilla linux] sync authority", error));
   const present = options.present ?? ((state: S) => state);
   let role: Role = options.candidate ? "claiming" : "client";
   let remote: SyncRemote | null = null;

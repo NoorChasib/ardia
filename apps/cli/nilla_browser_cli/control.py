@@ -6,9 +6,9 @@ import stat
 import struct
 from pathlib import Path
 
-from ardia_cli import endpoint
-from ardia_cli.caller import Caller
-from ardia_cli.caller import current as current_caller
+from nilla_browser_cli import endpoint
+from nilla_browser_cli.caller import Caller
+from nilla_browser_cli.caller import current as current_caller
 
 SOCKET_FILE = "ArdiaControl.sock"
 SUN_PATH_MAX = 103
@@ -39,7 +39,7 @@ EVENTS = (
     "notification.shown",
     "peek.opened",
     "peek.closed",
-    "littleArdia.opened",
+    "littleNilla.opened",
     "split.created",
     "split.closed",
     "pin.added",
@@ -67,7 +67,7 @@ class Unreachable(Exception):
     sent = False
 
     def noted(self) -> "Unreachable":
-        from ardia_cli import telemetry
+        from nilla_browser_cli import telemetry
 
         telemetry.note_error_code("connection_dropped" if self.sent else "unreachable")
         return self
@@ -108,7 +108,7 @@ def check_socket(path: Path) -> None:
 
 
 def check_events(names) -> list[str]:
-    from ardia_cli.schema_check import did_you_mean
+    from nilla_browser_cli.schema_check import did_you_mean
 
     names = list(names)
     for name in names:
@@ -160,7 +160,7 @@ class Connection:
         return self._lost is not None
 
     async def _read(self):
-        reason = "Ardia closed the connection"
+        reason = "Nilla closed the connection"
         try:
             while True:
                 try:
@@ -168,15 +168,15 @@ class Connection:
                 except asyncio.IncompleteReadError:
                     break
                 except asyncio.LimitOverrunError:
-                    reason = "Ardia sent a line longer than 1 MB"
+                    reason = "Nilla sent a line longer than 1 MB"
                     break
                 if len(line) > MAX_LINE + 1:
-                    reason = "Ardia sent a line longer than 1 MB"
+                    reason = "Nilla sent a line longer than 1 MB"
                     break
                 try:
                     message = json.loads(line)
                 except ValueError:
-                    reason = "Ardia sent a line that isn't JSON"
+                    reason = "Nilla sent a line that isn't JSON"
                     break
                 if not isinstance(message, dict):
                     continue
@@ -232,7 +232,7 @@ class Connection:
             reply = await asyncio.wait_for(future, timeout)
         except asyncio.TimeoutError:
             self._pending.pop(ident, None)
-            error = unreachable(f"Ardia didn't answer {method} in {timeout:g} s")
+            error = unreachable(f"Nilla didn't answer {method} in {timeout:g} s")
             error.sent = True
             raise error from None
         except Unreachable as error:
@@ -316,8 +316,8 @@ async def connect(path: Path, timeout: float = CONNECT_TIMEOUT, caller: Caller |
     connection = Connection(reader, writer)
     try:
         info = await connection.call("hello", {"caller": (caller or current_caller()).wire()}, timeout=timeout)
-        if not isinstance(info, dict) or info.get("app") != "Ardia":
-            raise unreachable(f"something other than Ardia answers on {path.name}")
+        if not isinstance(info, dict) or info.get("app") != "Nilla":
+            raise unreachable(f"something other than Nilla answers on {path.name}")
     except MethodError as error:
         await connection.close()
         raise unreachable(f"hello failed: {error.message}") from None

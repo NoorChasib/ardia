@@ -1,4 +1,4 @@
 import { requireNativeModule } from "expo-modules-core";
-import type { MotionNative } from "@ardia/shell";
+import type { MotionNative } from "@nilla/shell";
 
-export const animationBursts = requireNativeModule<MotionNative>("ArdiaMotion");
+export const animationBursts = requireNativeModule<MotionNative>("NillaMotion");

@@ -1,4 +1,4 @@
-internal import ArdiaPhoneNative
+internal import NillaPhoneNative
 internal import Expo
 import React
 import ReactAppDependencyProvider
@@ -45,7 +45,7 @@ enum BuildStamp {
   static var line: String {
     let info = Bundle.main.infoDictionary ?? [:]
     let value = { (key: String) in info[key] as? String ?? "unstamped" }
-    return "ARDIA build \(value("ArdiaBuildCommit")) dirty: \(value("ArdiaBuildDirty")) from the \(value("ArdiaBuildSource")); native \(value("ArdiaBuildNative"))"
+    return "NILLA build \(value("NillaBuildCommit")) dirty: \(value("NillaBuildDirty")) from the \(value("NillaBuildSource")); native \(value("NillaBuildNative"))"
   }
 }
 

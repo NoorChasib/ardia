@@ -1,9 +1,9 @@
-import { nativeModule, type RecordingResult, type ReportEvent, type UploadReply } from "@ardia/shell";
+import { nativeModule, type RecordingResult, type ReportEvent, type UploadReply } from "@nilla/shell";
 
 export type { RecordingResult, ReportEvent, UploadReply };
 
-let bound: ReturnType<typeof nativeModule<"ArdiaReport">> | null = null;
-const Report = () => (bound ??= nativeModule("ArdiaReport"));
+let bound: ReturnType<typeof nativeModule<"NillaReport">> | null = null;
+const Report = () => (bound ??= nativeModule("NillaReport"));
 
 export type ReportPost = (url: string, body: string, headers: Record<string, string>, timeoutMs: number) => Promise<{ status: number; text: string }>;
 export type ReportPlatform = { recording: boolean; post: ReportPost };

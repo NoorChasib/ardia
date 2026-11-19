@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import SwiftUI
 
 #if canImport(UIKit)

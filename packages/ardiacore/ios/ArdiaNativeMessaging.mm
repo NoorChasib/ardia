@@ -1,11 +1,11 @@
 #import "ArdiaNativeMessaging.h"
 
-namespace ardia_native_messaging {
+namespace nilla_native_messaging {
 
 namespace {
 
 NSString *const kChromeSystemDir = @"/Library/Google/Chrome/NativeMessagingHosts";
-NSString *const kManagedList = @".ardia-managed.json";
+NSString *const kManagedList = @".nilla-managed.json";
 
 NSArray<NSDictionary *> *KnownHosts() {
   return @[

@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

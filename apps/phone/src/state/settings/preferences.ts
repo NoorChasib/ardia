@@ -3,7 +3,7 @@ import { isAutoArchiveInterval, STANDARD_AUTO_ARCHIVE, type AutoArchiveInterval 
 
 export type NightShadeMode = "disabled" | "automatic" | "always";
 export type SwipeNavigationMode = "anywhere" | "screenEdges" | "disabled";
-export type AppLinkPreference = "ardia" | "app";
+export type AppLinkPreference = "nilla" | "app";
 export type ColorChoice = "plum" | "blue" | "purple" | "pink" | "red" | "orange" | "yellow" | "green" | "neutral";
 
 export type Preferences = {
@@ -29,7 +29,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   autoArchiveInterval: STANDARD_AUTO_ARCHIVE,
   nightShade: "disabled",
   swipeNavigation: "anywhere",
-  appLinks: "ardia",
+  appLinks: "nilla",
   searchSuggestions: true,
   searchEngineId: "google",
   collapsesBottomBar: false,
@@ -74,7 +74,7 @@ const PARSERS: { [K in keyof Preferences]: (raw: string) => Preferences[K] | und
   autoArchiveInterval: (raw) => (isAutoArchiveInterval(raw) ? raw : undefined),
   nightShade: oneOf<NightShadeMode>(["disabled", "automatic", "always"]),
   swipeNavigation: oneOf<SwipeNavigationMode>(["anywhere", "screenEdges", "disabled"]),
-  appLinks: oneOf<AppLinkPreference>(["ardia", "app"]),
+  appLinks: oneOf<AppLinkPreference>(["nilla", "app"]),
   searchSuggestions: flag,
   searchEngineId: (raw) => raw || undefined,
   collapsesBottomBar: flag,

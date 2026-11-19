@@ -1,5 +1,5 @@
-export const PAINT_MOTION_ATTRIBUTE = "data-ardia-paint-motion";
-export const PAINT_MOTION = { ardiaPaintMotion: "" };
+export const PAINT_MOTION_ATTRIBUTE = "data-nilla-paint-motion";
+export const PAINT_MOTION = { nillaPaintMotion: "" };
 export const PAINT_MOTION_SELECTOR = `[${PAINT_MOTION_ATTRIBUTE}]`;
 
 export type Timing = { duration: number; easing: string };

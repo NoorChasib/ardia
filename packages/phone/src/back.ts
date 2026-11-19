@@ -14,7 +14,7 @@ type BackNative = {
   addListener(event: "onBackCancel" | "onBackCommit", listener: () => void): Subscription;
 };
 
-const native = requireOptionalNativeModule<BackNative>("ArdiaPhoneBack");
+const native = requireOptionalNativeModule<BackNative>("NillaPhoneBack");
 
 export const TRAY_BACK_TRAVEL = 72;
 

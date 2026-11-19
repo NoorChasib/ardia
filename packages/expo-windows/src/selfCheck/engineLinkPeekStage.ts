@@ -56,9 +56,9 @@ async function realShiftClick(name: string, page: string) {
     let tries = 0;
     while (tries < MOST_TRIES && !opened.seen.event && presses === 0) {
       tries++;
-      console.info(`[ardia windows] self-check note: peek stage ready ${name} try ${tries} at ${at.x},${at.y} page window ${window.left},${window.top},${window.width},${window.height}`);
+      console.info(`[nilla windows] self-check note: peek stage ready ${name} try ${tries} at ${at.x},${at.y} page window ${window.left},${window.top},${window.width},${window.height}`);
       await waitFor(PRESS_MS, async () => !!opened.seen.event || (presses = await trustedPresses(page)) > 0);
-      if (!opened.seen.event && presses === 0) console.info(`[ardia windows] self-check note: peek stage ${name} try ${tries}: no trusted press reached the page within ${PRESS_MS} ms`);
+      if (!opened.seen.event && presses === 0) console.info(`[nilla windows] self-check note: peek stage ${name} try ${tries}: no trusted press reached the page within ${PRESS_MS} ms`);
     }
     expectTrue(!!opened.seen.event || presses > 0, `the ${name} page: the real Shift+click never reached the page after ${tries} tries (launch-smoke.ps1 logs why each try missed)`);
     await waitFor(PEEK_AFTER_PRESS_MS, async () => !!opened.seen.event);

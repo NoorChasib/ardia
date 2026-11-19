@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.SearchManager
 import android.content.Intent
@@ -29,7 +29,7 @@ class PhoneSystemLinksTest {
     }
 
     @Test
-    fun ardiaLinksBecomeTheirKindsFromWidgetsAndShortcuts() {
+    fun nillaLinksBecomeTheirKindsFromWidgetsAndShortcuts() {
         assertEquals(mapOf("kind" to "search", "source" to "system"), PhoneSystemLinks.link(view("ardia://search")))
         assertEquals(mapOf("kind" to "search", "query" to "red pandas", "source" to "system"), PhoneSystemLinks.link(view("ardia://search?q=red%20pandas")))
         assertEquals(mapOf("kind" to "voiceSearch", "source" to "system"), PhoneSystemLinks.link(view("ardia://voice")))

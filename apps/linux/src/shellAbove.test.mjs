@@ -65,10 +65,10 @@ test("an animation on an overlay's ancestor or inside it counts as the overlay m
   }
 });
 
-test("an animation inside [data-ardia-paint-motion] isn't the overlay moving", () => {
+test("an animation inside [data-nilla-paint-motion] isn't the overlay moving", () => {
   const previous = globalThis.document;
   const { overlay, row } = tree();
-  const pill = { ...row, closest: (selector) => (selector === "[data-ardia-paint-motion]" ? pill : null) };
+  const pill = { ...row, closest: (selector) => (selector === "[data-nilla-paint-motion]" ? pill : null) };
   pill.parentElement = overlay;
   globalThis.document = { getAnimations: () => [{ playState: "running", effect: { target: pill } }] };
   try {

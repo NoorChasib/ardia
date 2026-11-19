@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import Foundation
 import Testing
 @testable import PhoneBlocking

@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <vector>
 
-using namespace ardia_pip_throw;
+using namespace nilla_pip_throw;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

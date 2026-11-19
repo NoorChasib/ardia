@@ -1,10 +1,10 @@
 #import "ArdiaTabParking.h"
 
-@class ArdiaWebView;
+@class NillaWebView;
 
-@interface ArdiaLaunchTabHolder : NSObject <ArdiaParkedPageHolder>
+@interface NillaLaunchTabHolder : NSObject <NillaParkedPageHolder>
 @property (nonatomic, copy) NSString *url;
 @property (nonatomic, copy) NSString *profile;
 @property (nonatomic, readonly) BOOL closedByChrome;
-- (void)replayTo:(ArdiaWebView *)view tab:(ArdiaCoreTab *)tab;
+- (void)replayTo:(NillaWebView *)view tab:(ArdiaCoreTab *)tab;
 @end

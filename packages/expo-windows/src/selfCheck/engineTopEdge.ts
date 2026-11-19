@@ -1,4 +1,4 @@
-import type { WindowsNative } from "@ardia/shell";
+import type { WindowsNative } from "@nilla/shell";
 import { engineAvailable, hostCall } from "../engine/host";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
@@ -10,7 +10,7 @@ const PLACE = { unit: "px", x: 0, y: 0, width: 400, height: 200 };
 type Hit = { hit?: unknown; appHit?: unknown };
 
 const firstWindow = async () => {
-  const ids = await requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows").windowIds();
+  const ids = await requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows").windowIds();
   expectTrue(ids.length > 0, "no window is open to host a page");
   return ids[0]!;
 };

@@ -1,4 +1,4 @@
-import type { BrowserCommand, MenuBookmark, MenuItem, MenuState, ShortcutModifier } from "@ardia-real/shell";
+import type { BrowserCommand, MenuBookmark, MenuItem, MenuState, ShortcutModifier } from "@nilla-real/shell";
 import { commandSpec, LINUX_STANDARD_ITEMS } from "./commandCatalog";
 import { EDIT_ITEMS, editActionOf, type EditAction, type EditMenu } from "./editCommands";
 
@@ -82,8 +82,8 @@ export function appMenuItems(state: MenuState, shortcuts: AppMenuShortcuts = new
   const extensions = state.extensions ?? [];
 
   return [
-    sub("Ardia", [
-      { id: ABOUT, title: "About Ardia" },
+    sub("Nilla", [
+      { id: ABOUT, title: "About Nilla" },
       separator,
       cmd("openSettings"),
       cmd("importBrowserData"),
@@ -95,9 +95,9 @@ export function appMenuItems(state: MenuState, shortcuts: AppMenuShortcuts = new
       cmd("newTabInGroup"),
       cmd("newWindow"),
       cmd("newIncognitoWindow"),
-      cmd("newLittleArdia"),
-      ...(multipleProfiles ? [sub("New Little Ardia Window in Profile", state.profiles.map(entry("newLittleArdia")))] : []),
-      cmd("toggleOpenLinksInLittleArdia"),
+      cmd("newLittleNilla"),
+      ...(multipleProfiles ? [sub("New Little Nilla Window in Profile", state.profiles.map(entry("newLittleNilla")))] : []),
+      cmd("toggleOpenLinksInLittleNilla"),
       cmd("reopenClosedTab"),
       cmd("reopenClosedWindow"),
       cmd("openFile"),

@@ -1,9 +1,9 @@
 #import "ArdiaPictureInPictureInternal.h"
 
-@implementation ArdiaPiPController (Skip)
+@implementation NillaPiPController (Skip)
 
 - (BOOL)skipBy:(double)seconds at:(NSPoint)point clickCount:(NSInteger)clickCount {
-  ArdiaWebView *view = _view;
+  NillaWebView *view = _view;
   if (!view || !seconds) return NO;
   [view seekPictureInPictureBy:seconds];
   [view emit:@"pictureInPictureSkip" payload:@{@"seconds" : @(seconds)}];

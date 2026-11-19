@@ -8,7 +8,7 @@ type NetworkNative = {
   addListener(eventName: "onNetwork", listener: (event: NetworkEvent) => void): Subscription;
 };
 
-const native = requireOptionalNativeModule<NetworkNative>("ArdiaPhoneNetwork");
+const native = requireOptionalNativeModule<NetworkNative>("NillaPhoneNetwork");
 
 export const network = {
   isOnline: (): boolean => (native ? native.isOnline() : true),

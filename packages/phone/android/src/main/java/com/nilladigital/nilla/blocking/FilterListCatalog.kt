@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.util.Locale
 import kotlinx.serialization.Serializable
@@ -72,7 +72,7 @@ data class FilterListCatalog(val ubo: String, val lists: List<Entry>) {
         val OVER_PHONE_BUDGET: Set<String> = setOf("urlhaus-1")
 
         val bundled: FilterListCatalog by lazy {
-            val stream = FilterListCatalog::class.java.getResourceAsStream("/com/ardia/blocking/FilterListCatalog.json")
+            val stream = FilterListCatalog::class.java.getResourceAsStream("/com/nilladigital/nilla/blocking/FilterListCatalog.json")
             val text = stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
             text?.let { runCatching { blockingJson.decodeFromString(serializer(), it) }.getOrNull() } ?: FilterListCatalog("", emptyList())
         }

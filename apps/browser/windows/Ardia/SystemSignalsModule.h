@@ -23,11 +23,11 @@
 #pragma comment(lib, "powrprof.lib")
 #pragma comment(lib, "user32.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 namespace SystemSignalsParts {
 
-constexpr wchar_t ModuleName[] = L"ArdiaSystemSignals";
+constexpr wchar_t ModuleName[] = L"NillaSystemSignals";
 constexpr wchar_t SignalEvent[] = L"onSystemSignal";
 
 inline std::atomic<bool> &HoldsIncomingLinks() noexcept {
@@ -161,7 +161,7 @@ inline ULONG CALLBACK OnPowerChange(PVOID context, ULONG type, PVOID) noexcept {
 
 }
 
-REACT_MODULE(SystemSignalsModule, L"ArdiaSystemSignals")
+REACT_MODULE(SystemSignalsModule, L"NillaSystemSignals")
 struct SystemSignalsModule {
   SystemSignalsModule() noexcept = default;
   SystemSignalsModule(SystemSignalsModule const &) = delete;

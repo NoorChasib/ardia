@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.os.Bundle
 
 object RestorableState {
-    private const val BUNDLE_KEY = "com.ardia.phone.RESTORABLE"
+    private const val BUNDLE_KEY = "com.nilladigital.nilla.phone.RESTORABLE"
     private val values = LinkedHashMap<String, String>()
 
     fun get(key: String): String? = synchronized(values) { values[key] }

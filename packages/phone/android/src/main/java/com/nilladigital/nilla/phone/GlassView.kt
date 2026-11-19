@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.animation.ValueAnimator
 import android.content.Context
@@ -19,7 +19,7 @@ internal object GlassRules {
     const val CLASSIC_EDGE_DP = 0.5f
     const val CLASSIC_SHADOW_ELEVATION_DP = 3f
     const val DEFAULT_SHOWN_MS = 200f
-    const val NATIVE_GLASS_ARGUMENT = "ArdiaNativeGlass"
+    const val NATIVE_GLASS_ARGUMENT = "NillaNativeGlass"
 
     fun solid(surface: String?, reduceTransparency: Boolean): Boolean = reduceTransparency || surface == "classic"
 

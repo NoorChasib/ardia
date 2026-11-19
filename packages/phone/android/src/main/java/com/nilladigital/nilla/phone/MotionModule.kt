@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
@@ -191,7 +191,7 @@ class MotionView(context: Context, appContext: AppContext) : ExpoView(context, a
 
 class MotionModule : Module() {
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneMotion")
+        Name("NillaPhoneMotion")
 
         Constants("runsInRenderServer" to true)
 

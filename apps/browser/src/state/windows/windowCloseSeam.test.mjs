@@ -20,7 +20,7 @@ const S = () => useBrowser.getState();
 const PERSONAL = { id: "default", name: "Personal", color: "plum", icon: null, createdAt: 0 };
 const asks = [];
 let answer;
-stub.shellNativeModules.ArdiaDialogs.confirm = (options) => { asks.push(options); return Promise.resolve(answer); };
+stub.shellNativeModules.NillaDialogs.confirm = (options) => { asks.push(options); return Promise.resolve(answer); };
 startWindowCloseGuard();
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -152,7 +152,7 @@ test("a window close request with several tabs asks once; Cancel keeps it and th
   assert.equal(S().settings.warnBeforeClosingLastTab, true);
 });
 
-test("confirming the window warning removes the window, and Little Ardia closes without it", async () => {
+test("confirming the window warning removes the window, and Little Nilla closes without it", async () => {
   const id = windowWith(["https://a.example/", "https://b.example/", "https://c.example/"]);
   stub.windows.emit({ type: "closeRequest", id });
   await settle();

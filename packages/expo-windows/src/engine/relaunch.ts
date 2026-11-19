@@ -8,7 +8,7 @@ export function watchRelaunches() {
   watching = true;
   onEngineTopic("relaunch", (launch) => {
     const urls = Array.isArray(launch.urls) ? launch.urls.filter((url): url is string => typeof url === "string" && url.length > 0) : [];
-    if (urls.length) emitWhenListened("ArdiaShell", "onOpenURLs", { urls });
-    else emitNativeEvent("ArdiaShell", "onAppEvent", { type: "reopen" });
+    if (urls.length) emitWhenListened("NillaShell", "onOpenURLs", { urls });
+    else emitNativeEvent("NillaShell", "onAppEvent", { type: "reopen" });
   });
 }

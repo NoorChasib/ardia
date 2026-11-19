@@ -2,8 +2,8 @@ import AppKit
 import ArdiaCore
 import Carbon.HIToolbox
 
-final class LittleArdiaHotKey {
-  static let shared = LittleArdiaHotKey()
+final class LittleNillaHotKey {
+  static let shared = LittleNillaHotKey()
 
   struct Chord: Equatable {
     let keyCode: UInt32
@@ -12,7 +12,7 @@ final class LittleArdiaHotKey {
 
   fileprivate static let signature: OSType = 0x4172_4C41
   private static let pressWindow: TimeInterval = 2
-  private static let command = "newLittleArdia"
+  private static let command = "newLittleNilla"
 
   private var hotKey: EventHotKeyRef?
   private var handler: EventHandlerRef?
@@ -59,7 +59,7 @@ final class LittleArdiaHotKey {
 
   func press() {
     pressedAt = Date()
-    ShellEvents.send(.app, ["type": "littleArdiaGlobalShortcut"])
+    ShellEvents.send(.app, ["type": "littleNillaGlobalShortcut"])
     MenuTarget.shared.dispatch(Self.command, nil, windowId: nil)
   }
 
@@ -70,7 +70,7 @@ final class LittleArdiaHotKey {
     guard let wanted else { return }
     if LaunchConfig.shared.background {
       heldBack = wanted
-      NSLog("[littleArdia] global shortcut %u/%u not registered (background mode)", wanted.keyCode, wanted.modifiers)
+      NSLog("[littleNilla] global shortcut %u/%u not registered (background mode)", wanted.keyCode, wanted.modifiers)
       return
     }
     register(wanted)
@@ -82,7 +82,7 @@ final class LittleArdiaHotKey {
     let id = EventHotKeyID(signature: Self.signature, id: 1)
     let status = RegisterEventHotKey(chord.keyCode, chord.modifiers, id, GetApplicationEventTarget(), 0, &ref)
     guard status == noErr, let ref else {
-      NSLog("[littleArdia] global shortcut %u/%u taken (%d)", chord.keyCode, chord.modifiers, status)
+      NSLog("[littleNilla] global shortcut %u/%u taken (%d)", chord.keyCode, chord.modifiers, status)
       return
     }
     hotKey = ref
@@ -104,8 +104,8 @@ final class LittleArdiaHotKey {
       let status = GetEventParameter(
         event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID), nil,
         MemoryLayout<EventHotKeyID>.size, nil, &id)
-      guard status == noErr, id.signature == LittleArdiaHotKey.signature else { return OSStatus(eventNotHandledErr) }
-      DispatchQueue.main.async { LittleArdiaHotKey.shared.press() }
+      guard status == noErr, id.signature == LittleNillaHotKey.signature else { return OSStatus(eventNotHandledErr) }
+      DispatchQueue.main.async { LittleNillaHotKey.shared.press() }
       return noErr
     }, 1, &spec, nil, &handler)
   }

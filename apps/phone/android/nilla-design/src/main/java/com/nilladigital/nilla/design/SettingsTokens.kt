@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import androidx.compose.ui.unit.dp
 
@@ -8,14 +8,14 @@ object SettingsTile {
 }
 
 object SettingsTint {
-    val neutral = ardiaColor(0x86888D)
-    val red = ardiaColor(0xFF5A5F)
-    val orange = ardiaColor(0xFF901A)
-    val yellow = ardiaColor(0xFFC829)
-    val blue = ardiaColor(0x458AFF)
-    val deepBlue = ardiaColor(0x007AFF)
-    val purple = ardiaColor(0xB059EE)
-    val green = ardiaColor(0x3EA82E)
+    val neutral = nillaColor(0x86888D)
+    val red = nillaColor(0xFF5A5F)
+    val orange = nillaColor(0xFF901A)
+    val yellow = nillaColor(0xFFC829)
+    val blue = nillaColor(0x458AFF)
+    val deepBlue = nillaColor(0x007AFF)
+    val purple = nillaColor(0xB059EE)
+    val green = nillaColor(0x3EA82E)
 
     val sync = blue
     val ads = red
@@ -25,12 +25,12 @@ object SettingsTint {
     val archive = purple
     val keyboard = yellow
     val swipe = blue
-    val nightShade = ardiaColor(0x5856D6)
+    val nightShade = nillaColor(0x5856D6)
     val appLinks = green
-    val bottomBar = ardiaColor(0x30B0C7)
+    val bottomBar = nillaColor(0x30B0C7)
     val defaultBrowser = deepBlue
     val clearData = red
-    val export = ardiaColor(0x0153FF)
+    val export = nillaColor(0x0153FF)
     val onboarding = orange
 }
 
@@ -43,7 +43,7 @@ object MenuLayout {
     val rowHeight = 50.dp
 }
 
-object ArdiaColors {
+object NillaColors {
     val accentText = Palette.formAccent
     val title = SystemPalette.label
 }

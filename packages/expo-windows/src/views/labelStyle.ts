@@ -1,4 +1,4 @@
-import type { FadeLabelProps } from "@ardia/shell";
+import type { FadeLabelProps } from "@nilla/shell";
 import type { TextStyle } from "react-native";
 
 const FONT_WEIGHT: Record<string, TextStyle["fontWeight"]> = { ultraLight: "100", thin: "200", light: "300", regular: "400", medium: "500", semibold: "600", bold: "700", heavy: "800", black: "900" };

@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import android.content.SharedPreferences
 import kotlinx.serialization.builtins.ListSerializer

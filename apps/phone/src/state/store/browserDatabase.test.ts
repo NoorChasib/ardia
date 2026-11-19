@@ -70,7 +70,7 @@ test("a tab keeps the pinned tile it was opened from, and a database from before
 
 test("the native sync readers accept this schema: a version they don't know stops sync on that phone", () => {
   const source = (path: string) => readFileSync(new URL(`../../../../../packages/phone/${path}`, import.meta.url), "utf8");
-  const android = /const val SCHEMA_VERSION = (\d+)/.exec(source("android/src/main/java/com/ardia/phone/PhoneBrowsingSource.kt"))?.[1];
+  const android = /const val SCHEMA_VERSION = (\d+)/.exec(source("android/src/main/java/com/nilladigital/nilla/phone/PhoneBrowsingSource.kt"))?.[1];
   const iphone = /static let schemaVersion: Int32 = (\d+)/.exec(source("ios/PhoneSync/Sources/PhoneSync/PhoneBrowsingSource.swift"))?.[1];
   assert.deepEqual([Number(android), Number(iphone)], [SCHEMA_VERSION, SCHEMA_VERSION]);
 });

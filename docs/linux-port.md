@@ -1,11 +1,11 @@
-# Ardia on Linux
+# Nilla on Linux
 
 The Linux port runs the same browser UI as the Mac app on the same Chromium (157.0.8103.50) and Helium (0.21.2, with
 helium-linux 0.21.2.1) pins. It targets x86-64 Linux on Wayland, with Hyprland and Omarchy as the main desktop; X11
 works, and arm64 builds are configured but untested. It answers upstream issue #1, "Linux Support".
 
 On the Mac, ArdiaCore is a framework that the React Native app hosts. On Linux there is no React Native: Chromium's own
-`chrome` executable is the app. It serves Ardia's UI from `chrome://ardia/` inside each browser window and hands the
+`chrome` executable is the app. It serves Nilla's UI from `chrome://ardia/` inside each browser window and hands the
 UI one privileged bridge, `window.__ardiaHost`. ArdiaCore is linked into `chrome`; there is no separate
 `libardiacore.so`.
 
@@ -17,7 +17,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
 | --- | --- |
 | `apps/linux` | The Linux UI entry point. Vite builds it from the shared `apps/browser` components into `apps/linux/dist`. It holds the Linux adapters (native modules, WebView, menus, window controls, wording transforms) and the acceptance suite. |
 | `engine/ardiacore-linux` | The Aura host and every Linux-only native service (`src/ardia/linux/ac_linux_*`), the content blocker's bridge page, and their tests. It is the Linux patch-series layer. |
-| `engine/chromium/src/chrome/browser/ardia` | The shared engine services (`ac_*`), the `ardia` command's token server (`ac_cli_control.cc`, `ac_cli_token_policy*`) included. Linux-only parts are `ac_reauth_linux.*`, `pip/ac_pip_linux.cc` and `pip/ac_pip_hyprland.*`, behind `is_linux` in `BUILD.gn`. |
+| `engine/chromium/src/chrome/browser/ardia` | The shared engine services (`ac_*`), the `nilla-browser` command's token server (`ac_cli_control.cc`, `ac_cli_token_policy*`) included. Linux-only parts are `ac_reauth_linux.*`, `pip/ac_pip_linux.cc` and `pip/ac_pip_hyprland.*`, behind `is_linux` in `BUILD.gn`. |
 | `engine/patches/chromium-linux-*.patch` | Chromium hooks the Linux host needs. They are selected with `linux` in `engine/patches/series`. |
 | `scripts/linux` | Build, package, install, engine publish and fetch, smoke gate, CI checks, the polkit policy and the Arch `PKGBUILD`. |
 | `.github/workflows/linux.yml` | The Linux workflow ([linux-ci.md](linux-ci.md)). |
@@ -28,7 +28,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
 
 ### The shell and its bridge
 
-- **Startup.** `chromium-ardia-linux-layer.patch` calls `ardia::StartLinuxHost()` from
+- **Startup.** `chromium-ardia-linux-layer.patch` calls `nilla::StartLinuxHost()` from
   `ChromeBrowserMainParts::PostBrowserStart()`. Each browser window gets a `ShellHostView` (`ac_linux_host.cc`). It
   lays a WebView over Chromium's `BrowserView` client area and loads `chrome://ardia/` into it. Chromium keeps
   ownership of `Browser`, `BrowserWindow` and `TabStripModel`, and its normal browser delegates.
@@ -45,7 +45,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   the window's profile, and its address is `http` or `https`. It loads in the strip's blank first tab (Chrome's new
   tab page), or in a new background tab when there is none, and no binding owns it. The shell's first `tab.create`
   for that address takes it instead of opening another, whatever its page has redirected to since. Nothing starts for
-  a utility, Little Ardia or private window, a launch that brought addresses from another app, or an empty session.
+  a utility, Little Nilla or private window, a launch that brought addresses from another app, or an empty session.
   A started page the shell hasn't taken after 30 s is closed, or turned back into a blank page when it is the strip's
   only tab, so the window never closes with it.
 - **CSP.** The shell's policy is `default-src 'none'`, `script-src 'self'`, `connect-src 'none'`, `frame-src 'none'`,
@@ -90,7 +90,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   `GrainLayer`'s four tiles from the same generator.
 - **Onboarding meadow.** `Meadow` (the intro's scene) runs ardia.dev's own meadow (`apps/site/src/scripts/meadow`,
   the source the Mac's `ios/Meadow/index.html` is built from) straight in the shell, since the shell CSP allows no
-  frames (`shims/web/gl/meadow.ts`, imported as `@ardia-site/meadow/*` and compiled by `vite.config.ts` without the
+  frames (`shims/web/gl/meadow.ts`, imported as `@nilla-site/meadow/*` and compiled by `vite.config.ts` without the
   site's Astro tsconfig). It loads as its own chunk when the intro mounts, shows the Mac's dawn poster for the window's
   shape (morning with reduced motion, none at night) until the first frame, cross-fades in over 0.4 s, and reports
   the text tone and halo the same way. The scene draws at the display's rate, drops to 30 fps when idle, stops when
@@ -139,7 +139,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   - **Scrolls.** A scroll in something that holds a shown page measures that page at once. A scroll anywhere else (the
     sidebar list) waits for the frame.
   - **Animations.** It keeps measuring each frame only while a running animation targets a shown page's ancestors or
-    an overlay. Animations inside `[data-ardia-paint-motion]` (transform or opacity inside a box that doesn't move)
+    an overlay. Animations inside `[data-nilla-paint-motion]` (transform or opacity inside a box that doesn't move)
     don't count; see Loading motion below.
   - **Ordering.** Mutation-triggered measures run in the next frame rather than in a later task, so a React commit and
     the animated transform that offsets it are never seen apart. Each tab keeps at most one `tab.viewport` request in
@@ -159,7 +159,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   at once.
 - **Loading motion.** The loading pill's sweep (`LoadingPill.tsx`) and the reload button's breathe (`reloadBreathe.ts`)
   are WAAPI loops on the compositor (`paintMotion.ts`), not JS-driven `Animated` loops, so a loading tab costs the shell
-  no frames. Their layers carry `data-ardia-paint-motion`, which the viewport coordinator and the input regions skip.
+  no frames. Their layers carry `data-nilla-paint-motion`, which the viewport coordinator and the input regions skip.
   Reduce Motion turned on mid-load ends the sweep after the cycle it is in, each pill with its own `matchMedia`
   listener. macOS and Windows keep the shared `Animated` versions.
 - **Shell counts.** `usage_counts` carries the Linux shell's own work once an hour (`state/telemetry/shellCounts.ts`,
@@ -178,7 +178,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   host sends the shell a mouse leave (`LinuxPageChannel::ReleaseShellPointer`), so a sidebar hover card closes when the
   pointer moves straight from the sidebar into the page.
 - **Peek.** The Peek card is a page overlay that hosts its own page (`PeekOverlay.tsx`, marked
-  `data-ardia-page-stack`). The source page stays live and dimmed under the scrim: points of a page that fall on a
+  `data-nilla-page-stack`). The source page stays live and dimmed under the scrim: points of a page that fall on a
   page in a stack above it don't hide it, but one wholly under that page is hidden (full-screen Peek). Inside the
   stack, the shell elements painted before the peek page and under it (the scrim, the card's panel) are cut where the
   peek page shows, and a page below the stack doesn't cut the card's own surfaces. A page hole that overlaps an
@@ -270,13 +270,13 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
 - **Window close.** A close request waits until pending writes are sealed on the worker. The 30 s native deadline
   cancels the close; it never forces it. A save failure leaves the window open for a retry. Killing the process
   bypasses all of this.
-- **Little Ardia windows** aren't saved to the session, so the renderer of a new one can't learn its kind from it.
-  The opener leaves the window and its tab in `localStorage` (`ardia.smallWindow.<id>`, `hostSmallWindows.ts`), which
+- **Little Nilla windows** aren't saved to the session, so the renderer of a new one can't learn its kind from it.
+  The opener leaves the window and its tab in `localStorage` (`nilla.smallWindow.<id>`, `hostSmallWindows.ts`), which
   every regular shell shares; the new renderer takes it once at startup, within 60 s, and starts as that small
   window, on its command bar when its tab is blank. Once the native window has opened, the opener forgets its copy
   without closing the window, so the window lives in one store only and a tab it moves to the main window
-  (Open in Ardia) arrives through the session like any other. The opener also sends the Mac's frame: the saved
-  Little Ardia size, at least 420 by 300, centred in the work area. With an engine that advertises
+  (Open in Nilla) arrives through the session like any other. The opener also sends the Mac's frame: the saved
+  Little Nilla size, at least 420 by 300, centred in the work area. With an engine that advertises
   `ArdiaShell.smallWindows` the shell does neither: the opener passes the same window and tab as `smallWindow` in the
   `openWindow` options and no frame, and the new renderer reads `windowKind` and `smallWindow` from its bootstrap
   (a relayed window has no 60 s limit). A bootstrap whose `windowKind` isn't `"small"` takes no seed at all. See
@@ -307,7 +307,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
     `readerOpen` and `readerSetLook` pin everything before the look and a fixed suffix after it. The host accepts only
     `{dark, size, font}` with exactly those keys, a boolean, a size index inside `READER_SIZES` and a font from
     `READER_FONTS`, and it writes its own canonical copy of the look into the script.
-  - Every operation runs in the page's Ardia isolated world, so the reader's state on
+  - Every operation runs in the page's Nilla isolated world, so the reader's state on
     `window[Symbol.for("ardia.reader")]` lasts across calls for one document. Its overlay, `inert` and key listeners act
     on the shared DOM.
   - The element picker (Hide Element) uses five. `elementPickerCancel` is the shared text; `elementPickerApply` and
@@ -418,7 +418,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
     every member, so closing the only visible window asks once, in that window, for the whole family.
   - A companion never reaches `TabRestoreService`: neither its window nor the tabs it closes while closing, on a
     window close or on quit, so the profile's recently closed list never holds a hidden window that would reopen as a
-    separate one. Ardia's own closed windows keep every profile's tabs.
+    separate one. Nilla's own closed windows keep every profile's tabs.
 - **Downloaded files.** Opening, showing, status and icons of a download accept a path of any profile the window
   shows; a private window still accepts only its own.
 - **Private ids.** A private window is `incognito:<window>@<original>`, which resolves to the original profile's
@@ -453,13 +453,13 @@ Command-line switches win over it.
 | `ARDIA_SWITCHES` | Feature switches. |
 | `ARDIA_INSTANCE` | Read for the downloads folder only. |
 | `HYPRLAND_INSTANCE_SIGNATURE`, `XDG_RUNTIME_DIR` | Become `--ardia-hyprland-instance` and `--ardia-hyprland-runtime-dir`, the only way the Hyprland socket reaches the PiP code. |
-| `ARDIA_CLI_HOME`, `ARDIA_CLI_BIN_DIR`, `ARDIA_CLI_URL` | Passed to the `ardia` command's installer (absolute paths only for the first two). |
+| `ARDIA_CLI_HOME`, `ARDIA_CLI_BIN_DIR`, `ARDIA_CLI_URL` | Passed to the `nilla-browser` command's installer (absolute paths only for the first two). |
 | `XDG_DATA_HOME`, `HOME` | Give the default CLI home, `${XDG_DATA_HOME:-$HOME/.local/share}/ardia/cli`. |
 | `XDG_CONFIG_HOME`, `XDG_DATA_HOME`, `XDG_DATA_DIRS`, `HOME`, `PATH` | Give the desktop folders (`LinuxDesktop()`): the autostart folder `${XDG_CONFIG_HOME:-$HOME/.config}/autostart`, the `applications` folders searched for `ardia.desktop` (the user's, then each of `${XDG_DATA_DIRS:-/usr/local/share:/usr/share}`) and the folders searched for `xdg-settings`. Relative entries are dropped. |
 | `ARDIA_PACKAGE_DIR` | Only with an explicit `--user-data-dir`: the folder read for `VERSION` and `cli/` instead of the one holding `chrome`. For tests of a raw build tree. |
 
 It also reads `VERSION` beside `chrome` and appends `DevToolsAcceptDebuggingConnections` to `--disable-features`, as
-the Mac app does: chrome://inspect's approval mode would replace the process's one DevTools handler, the `ardia`
+the Mac app does: chrome://inspect's approval mode would replace the process's one DevTools handler, the `nilla`
 command's token server.
 
 `ARDIA_DATA_DIR` isn't read: pass `--user-data-dir`. Test hooks and authentication bypasses don't exist in this
@@ -525,14 +525,14 @@ bun run --cwd apps/linux build
 - **Sandbox.** The fetched `chrome` has no setuid sandbox helper, so its sandbox needs user namespaces. On Ubuntu 24.04
   and later, AppArmor denies them to programs without a profile (`kernel.apparmor_restrict_unprivileged_userns=1`).
   Grant them to the fetched engine the way `install.sh` does for an installed one: copy `scripts/linux/ardia.apparmor`
-  to `/etc/apparmor.d/ardia-dev`, rename its profile to `ardia-dev` so it can't collide with an installed Ardia's,
+  to `/etc/apparmor.d/ardia-dev`, rename its profile to `ardia-dev` so it can't collide with an installed Nilla's,
   replace `/usr/lib/ardia/chrome` with the engine's `chrome` path (AppArmor globs such as
-  `/home/*/ardia/apps/browser/build-ardiacore/prebuilt-linux-x86_64/*/chrome` work), and load it with
+  `/home/*/nilla/apps/browser/build-ardiacore/prebuilt-linux-x86_64/*/chrome` work), and load it with
   `sudo apparmor_parser -r`. Don't run with `--no-sandbox`.
 - **Checks.** `scripts/linux/ci-checks.sh` ([Tests](#tests)) also compiles the engine fixtures under ASan and UBSan
   and against OpenSSL and SQLite. On Ubuntu that needs `libclang-rt-<clang major>-dev libssl-dev libsqlite3-dev` too.
 - **Headless.** Under Xvfb, add `--ozone-platform=x11 --use-gl=angle --use-angle=swiftshader
-  --enable-unsafe-swiftshader`. The shell is the `chrome://ardia/` CDP target; `window.ardiaLinux.store` is the
+  --enable-unsafe-swiftshader`. The shell is the `chrome://ardia/` CDP target; `window.nillaLinux.store` is the
   shared store and `window.__ardiaHost` the bridge ([linux-acceptance.md](linux-acceptance.md) › Hooks the scenarios
   use).
 
@@ -545,7 +545,7 @@ Provision Chromium's Linux build dependencies first, along with Node 24, Bun 1.4
 and ImageMagick or Pillow. Helium's Docker build environment is a useful reference.
 
 ```bash
-export AC_CHROMIUM_BUILD="$HOME/ardia-linux-build"
+export AC_CHROMIUM_BUILD="$HOME/nilla-linux-build"
 export AC_TARGET_OS=linux
 export AC_TARGET_CPU=x64
 export PYTHONDONTWRITEBYTECODE=1
@@ -599,7 +599,7 @@ python3 scripts/linux/package.py \
   --out "$CB/chromium_git/chromium/src/out/$GN_OUT_CONFIGS" \
   --ui apps/linux/dist \
   --content-blocker "$(scripts/linux/fetch-ubo.sh)" \
-  --destination "$CB/artifacts/ardia-linux-$AC_TARGET_CPU.tar.xz"
+  --destination "$CB/artifacts/nilla-linux-$AC_TARGET_CPU.tar.xz"
 ```
 
 With a prebuilt engine (a clean clone, no Chromium tree):
@@ -614,7 +614,7 @@ python3 scripts/linux/package.py \
   --out "$engine" \
   --ui apps/linux/dist \
   --content-blocker "$blocker" \
-  --destination /tmp/ardia-linux-x64.tar.xz
+  --destination /tmp/nilla-linux-x64.tar.xz
 ```
 
 The engine refuses a group-writable data folder, so package and smoke-test with `umask 022`.
@@ -624,16 +624,16 @@ The engine refuses a group-writable data folder, so package and smoke-test with 
 - **Launcher.** Every format starts through `lib/ardia/ardia-launch`, which decides the sandbox before it runs
   `chrome`: user namespaces when the kernel allows them and AppArmor doesn't restrict them (or a profile grants
   `userns` to this `chrome`), else the setuid-root `chrome-sandbox` beside it on a mount without `nosuid`. Otherwise it
-  says why on stderr and exits 1, whatever the format: Ardia never runs without the sandbox on its own. A tarball run
+  says why on stderr and exits 1, whatever the format: Nilla never runs without the sandbox on its own. A tarball run
   in place points at `sudo install.sh` or the `.deb`; an AppImage points at the `.deb` (the sandbox helper and the
   AppArmor profile) or at the `sysctl` that allows user namespaces for the reason it found. Only a user who passes
-  `--no-sandbox` runs without it: the launcher adds `--ardia-sandbox-decision=Ardia was started with --no-sandbox`, and
+  `--no-sandbox` runs without it: the launcher adds `--ardia-sandbox-decision=Nilla was started with --no-sandbox`, and
   the shell says so once per launch and counts `launches_without_sandbox`.
 - **`.deb`.** Installs under `/usr` (`/usr/bin/ardia` links the launcher), with `chrome-sandbox` setuid root, the
   polkit policy and the AppArmor profile, which its `postinst` installs and loads on AppArmor 4 and its `postrm`
   removes. Version `0.2.47-nightly.2` becomes `0.2.47~nightly.2` so a nightly sorts before its release.
 - **AppImage.** AppImage's static type 2 runtime and `mksquashfs` (zstd) from a toolset pinned by SHA-256, cached in
-  `~/.cache/ardia-appimage`. It carries no setuid helper and no polkit policy, so reauth falls back to the login
+  `~/.cache/nilla-appimage`. It carries no setuid helper and no polkit policy, so reauth falls back to the login
   password, and it needs user namespaces: where they're restricted (Ubuntu 24.04 and later) it refuses to start.
 
 That makes a dev package. A release adds `--version <version>` and `--cli <dist>/ardia-cli-<version>-linux-x64.tar.gz`.
@@ -651,7 +651,7 @@ command ([linux-ci.md](linux-ci.md) › Linux releases).
 - **Seeded blocker.** With a blocker, package.py runs `scripts/linux/ubo-seed.mjs` on its staged copy (skip it with
   `--no-ubo-seed`). The script starts the staged `chrome` once on a scratch profile in English, waits for uBlock
   Origin to fetch and compile its default lists and save its engine, and writes that storage to
-  `extensions/ublock/ardia-seed/storage.json`, without the raw and compiled list copies uBlock Origin can rebuild. It
+  `extensions/ublock/nilla-seed/storage.json`, without the raw and compiled list copies uBlock Origin can rebuild. It
   also patches the staged `js/start.js` to load the seed first thing into a profile whose uBlock Origin storage is
   empty, when the seed's uBlock Origin version is the running one and the profile's languages select no regional list
   the seed lacks (otherwise uBlock Origin compiles its own lists, as before). A seeded profile skips uBlock Origin's
@@ -663,9 +663,9 @@ command ([linux-ci.md](linux-ci.md) › Linux releases).
   - `lib/ardia/chrome` and the Chromium runtime files from the allowlist in `scripts/linux/runtime_files.py`;
   - `lib/ardia/ardia-ui`;
   - `lib/ardia/extensions/ublock`;
-  - `lib/ardia/VERSION` (with `--version`), one line with the Ardia version (`0.2.44`, `0.2.44-nightly.3`);
+  - `lib/ardia/VERSION` (with `--version`), one line with the Nilla version (`0.2.44`, `0.2.44-nightly.3`);
   - `lib/ardia/cli/` (with `--cli`): `ardia-cli-install.sh` (a copy of `apps/cli/install.sh`, mode 0755),
-    `ardia-cli-<version>-linux-x64.tar.gz` and `ardia-cli.sha256` (the digest is its first token), the `ardia`
+    `ardia-cli-<version>-linux-x64.tar.gz` and `ardia-cli.sha256` (the digest is its first token), the `nilla`
     command's installer, tarball and pinned digest. When the CLI is turned on, the browser installs from these files
     with `ardia-cli-install.sh --version <VERSION> --sha256 <digest>` and `ARDIA_CLI_URL=file://…`;
   - the desktop entry and icon;
@@ -674,16 +674,16 @@ command ([linux-ci.md](linux-ci.md) › Linux releases).
   - `install.sh`.
 - **Running it.** Run the extracted `bin/ardia`. A raw build-tree `chrome` needs `--ardia-ui-dir apps/linux/dist`.
   Test with a throwaway `--user-data-dir` and keep the sandbox on.
-- **Installing.** `sudo ./ardia/install.sh` installs under `/usr`. It also accepts `--prefix /opt/ardia` and
+- **Installing.** `sudo ./nilla/install.sh` installs under `/usr`. It also accepts `--prefix /opt/ardia` and
   `--destdir <staging root>`.
   - Without `--destdir` it must run as root and refuses otherwise, so it never leaves a partial install. Installed
     files are owned by root.
   - It copies `lib/ardia` whole, so `VERSION` and `cli/` come along.
   - It always installs the polkit policy at `<destdir>/usr/share/polkit-1/actions` (mode 0644), whatever the prefix,
-    because polkit reads actions only from there. Without the policy Ardia can't ask for the system password, so saved
+    because polkit reads actions only from there. Without the policy Nilla can't ask for the system password, so saved
     passwords and card numbers stay hidden.
-- **Arch.** Copy `scripts/linux/arch/PKGBUILD` and the archive, renamed `ardia-linux-x64.tar.xz`, into an empty folder
-  and run `makepkg -si` there. The package (`ardia-bin`) depends on `polkit` and installs through the same script.
+- **Arch.** Copy `scripts/linux/arch/PKGBUILD` and the archive, renamed `nilla-linux-x64.tar.xz`, into an empty folder
+  and run `makepkg -si` there. The package (`nilla-bin`) depends on `polkit` and installs through the same script.
   Its `pkgver()` reads the package's `VERSION`, with `-` turned into `_` (`0.2.44_nightly.3`), and falls back to
   `0.0.0` for a dev package. makepkg writes that version back into the PKGBUILD, which is why the copy goes in a
   folder of its own.
@@ -732,26 +732,26 @@ bun run test:linux-ubo-seed
 Against a built package:
 
 ```bash
-node scripts/linux/smoke.mjs --package <ardia-linux-x64.tar.xz> --results <dir>
-bun run acceptance:linux <extracted>/ardia/bin/ardia
+node scripts/linux/smoke.mjs --package <nilla-linux-x64.tar.xz> --results <dir>
+bun run acceptance:linux <extracted>/nilla/bin/ardia
 ```
 
 - **Smoke gate.** Twelve checks: libraries resolve; the shell renders the packaged UI; the bootstrap reports
   `linux-host`; a native tab paints and can't see the bridge; renderers run under seccomp; the blocker loads; a restart restores the tab; `install.sh --destdir`
-  stages correctly; and, for a release package, the app version, the bundled CLI install, `ardia` control, and a
-  userscript installed with `ardia scripts install` running on the fixture page ([linux-ci.md](linux-ci.md) › Smoke gate).
+  stages correctly; and, for a release package, the app version, the bundled CLI install, `nilla` control, and a
+  userscript installed with `nilla-browser scripts install` running on the fixture page ([linux-ci.md](linux-ci.md) › Smoke gate).
 - **Acceptance suite.** Eleven headless scenarios for core features; see [linux-acceptance.md](linux-acceptance.md).
 - **Shared changes.** A change to shared code also needs the Mac checks.
 
 ### Updates and kill switches
 
 - **Check.** With an engine that serves `ArdiaUpdates.releases`, Settings › General shows Updates. The host reads
-  GitHub's release list for ardia-browser/ardia (`ac_linux_updates.cc`: a cookieless GET of a fixed URL, at most
+  GitHub's release list for NoorChasib/nilla (`ac_linux_updates.cc`: a cookieless GET of a fixed URL, at most
   4 MiB, no redirects, 20 s), and the shell (`hostUpdates.ts`, `updateReleases.ts`) keeps published releases that
   carry a Linux package and a github.com release page, newest per channel (a nightly build follows nightly).
 - **What it does.** Check Now and the app menu ask before opening the release page; an automatic check (30 s after
   launch, then every 6 h, in one window, never in a hidden instance or a build without `lib/ardia/VERSION`) offers a
-  newer release once as a toast. Ardia doesn't install updates on Linux, so "Automatically update Ardia" is hidden.
+  newer release once as a toast. Nilla doesn't install updates on Linux, so "Automatically update Nilla" is hidden.
 - **Kill switches.** `ArdiaShell.fetchKillSwitches` fetches `ardia.dev/switches.json` (at most 16 KiB) once per
   browser process for every window, and the shared refresh runs under the Mac's rule (automatic checks on).
 - **Telemetry.** `update_checks_asked`, `update_checks_automatic`, `update_check_failures`, `update_checks_found`,
@@ -764,9 +764,9 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
   (`ui::CalculateIdleTime`), polled only while a window watches a threshold. Automation's `user.idle`, `user.active`,
   sleep and wake hooks fire.
 - **Location.** Sites get positions from GeoClue 2 (`ac_linux_geoclue.cc`, hooked into
-  `OverrideSystemLocationProvider` by `chromium-linux-geolocation.patch`): desktop id `ardia`, exact accuracy for
+  `OverrideSystemLocationProvider` by `chromium-linux-geolocation.patch`): desktop id `nilla`, exact accuracy for
   high-accuracy requests and city level otherwise. Without GeoClue or a fix within 10 s a page gets "position
-  unavailable". `ArdiaLocation.locationPermission` answers `servicesOff` when the desktop refuses Ardia.
+  unavailable". `ArdiaLocation.locationPermission` answers `servicesOff` when the desktop refuses Nilla.
 
 ## Platform notes
 
@@ -775,7 +775,7 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
 - **Window controls.** Linux uses the Windows build's caption buttons on the right: `…`, minimize, maximize (restore
   while maximized) and close, drawn by the shared `WindowControls.tsx` in the places Windows puts them (the toolbar
   row, the end of the top strip, a right sidebar's header, atop a left sidebar with the address bar in it, Little
-  Ardia's bar, Settings and Import). There are no traffic lights. They work on decorationless desktops such as
+  Nilla's bar, Settings and Import). There are no traffic lights. They work on decorationless desktops such as
   Hyprland; Chrome's own caption buttons are hidden: opacity 0, no input, ignored by accessibility.
   - `lib/platformChrome.linux.ts` takes the Windows `WINDOW_CHROME`. `platform/windowControls.ts` is swapped for
     `hostWindowControls.ts`: minimize and maximize call `ArdiaShell.minimizeWindow` and `toggleMaximizeWindow`, and
@@ -805,7 +805,7 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
 - **Outer frame.** The host overlays Chromium's client view and doesn't replace its frame. Without the Wayland
   decoration protocol, Chromium draws its custom frame.
 - **Menu button.** Linux has no global menu bar, so a menu button stands in for the Mac one: usually the `…` beside the
-  window buttons, and a hamburger in the header only while they're hidden (Window controls above). It lists Ardia,
+  window buttons, and a hamburger in the header only while they're hidden (Window controls above). It lists Nilla,
   File, Edit, View, Tabs, Bookmarks, History, Extensions, Window and Help as submenus built from the same menu
   state the Mac menu bar uses (checks, disabled commands, dynamic titles, bookmarks, recently closed entries, profiles
   and extensions), labelled with the effective Linux shortcuts (`apps/linux/src/appMenu.ts`). Items run through the
@@ -844,11 +844,11 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
   the Mac's dominant-hue pick over a 32 px canvas copy of a `data:` or `blob:` favicon (`iconAccent.ts`). Other URLs
   answer no accent.
 - **Settings and Import.** Each opens in its own utility window and reuses an open one. Settings
-  opens from Ardia › Settings… in the menu or Ctrl+comma.
+  opens from Nilla › Settings… in the menu or Ctrl+comma.
   - Settings starts at 820×640 with a 720×480 minimum.
   - Import starts at 640×600 and doesn't resize.
   - They never create browser tabs or windows. A utility close waits for its pending session writes.
-  - Closing the last browser window closes them too, so Ardia quits instead of living on behind a lone Settings
+  - Closing the last browser window closes them too, so Nilla quits instead of living on behind a lone Settings
     window.
 - **Shortcuts.**
   - Linux owns its shortcut catalog (`apps/linux/src/commandCatalog.ts`, `shortcuts.ts`). The same effective bindings
@@ -947,13 +947,13 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
   - Private windows never enter it.
   - Chromium keeps audio focus, URL safety, permissions and the single PiP owner.
 - **Automatic PiP plays inside the window.** When a playing tab goes to the background (a tab switch, Ctrl+T, a new
-  tab), its video keeps playing in a floating player drawn inside Ardia's window, over the content card. It never
+  tab), its video keeps playing in a floating player drawn inside Nilla's window, over the content card. It never
   maps a toplevel: a Wayland compositor focuses every new toplevel and gives clients no portable way to refuse, so
   Chromium's inactive PiP window used to take the keyboard from the new tab's field. X11 plays it the same way.
   - Engine (`ac_linux_pip_player.{h,cc}`, hooks in `chromium-linux-pip-in-window.patch`): every video PiP window on
     Linux is a `Player`, the controller's `VideoOverlayWindow`. Each session start decides where it plays: in the
     window when the request is automatic (the auto-PiP hook records the intent), otherwise in Chromium's real,
-    Dia-styled window (a page's own PiP button, Ardia's PiP command, site controls). The video is a `PlayerView`
+    Dia-styled window (a page's own PiP button, Nilla's PiP command, site controls). The video is a `PlayerView`
     (`LAYER_SURFACE`, 6 pt corners) above the page views and below the shell; it takes no input, and the host keeps
     its rectangle out of the shell's page pass-through.
   - An automatic request with nowhere to play (the window hidden or minimized, its shell not attached, a site set to
@@ -1014,8 +1014,8 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
   reach only tabs of the caller's own kind of session, regular or private. With an older engine the shell refuses
   them as before (`hostCast.ts`). Neither has run against a real capture on Linux yet.
 - **Casting.** Chromium's media router finds Cast devices over mDNS (DIAL discovery is off in Helium). Its device
-  picker is Ardia's own, as on the Mac: `ac_linux_cast.cc` fills `chromium-cast-dialog-hook.patch`'s two hooks, so a
-  cast request from a tab an Ardia window holds (Cast in the menu, a page's `PresentationRequest.start()`, a video's
+  picker is Nilla's own, as on the Mac: `ac_linux_cast.cc` fills `chromium-cast-dialog-hook.patch`'s two hooks, so a
+  cast request from a tab a Nilla window holds (Cast in the menu, a page's `PresentationRequest.start()`, a video's
   remote playback) keeps Chromium's `MediaRouterUI` and its fullscreen blocker and sends `media.castDialog` (id, open,
   header, sinks with their state, modes and route, `tabId`) to the window holding the tab. The host serves the six
   calls: `media.showCastDialog {tabId}`, `media.startCasting {id, sink, mode}`, `media.stopCasting {id, route}`,
@@ -1024,17 +1024,17 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
   calls to the engine only when it advertises all six (`castsTabs` in `hostCast.ts`), so an older engine keeps the
   "Casting Isn't Available" toast.
 
-### ardia browse off-screen tabs
+### nilla browse off-screen tabs
 
-- **The automation window.** `engine.cliMoveOffscreen` moves a tab the ardia command opened, and that was never shown,
+- **The automation window.** `engine.cliMoveOffscreen` moves a tab the nilla-browser command opened, and that was never shown,
   into a hidden Browser per regular profile (`ac_linux_automation_window.cc`). The host treats it as a companion:
   it is never shown or mapped, never restored by the session, and doesn't count as a window when closing. Chromium's
-  `IsAutomationWindow` and `InAutomationWindow` answer true for it and its tabs, so `ardia browse set viewport` and
+  `IsAutomationWindow` and `InAutomationWindow` answer true for it and its tabs, so `nilla-browser browse set viewport` and
   emulation are allowed there. The tab's binding is dropped before it leaves its strip, and the shell's release of
   it then succeeds. Private tabs are refused.
 - `engine.cliOwnsTab` answers from Chromium's own ownership record and shown-slot note, and
   `engine.cliCloseOffscreenTabs` closes every off-screen tab; they also close when the last browser window closes,
-  so they never keep Ardia running.
+  so they never keep Nilla running.
 - `engine.cliTabTargets` answers each regular tab's DevTools target id (`DevToolsAgentHost::GetOrCreateFor`) and a
   page generation that rises when the id changes, as the Mac does; a tab without a committed page answers null.
 - **Unverified.** None of it has run in a built engine. Whether a page in a never-mapped window paints for
@@ -1042,12 +1042,12 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
 
 ### Page prompts
 
-- **What reaches Ardia's UI.** Permission requests, password save and update offers, save-address,
+- **What reaches Nilla's UI.** Permission requests, password save and update offers, save-address,
   update-address and local save-card offers, and external-app ("open in app") requests from a tab the window
   shows. A WebContents no window shows keeps Chromium's own UI. `chromium-linux-page-prompts.patch` adds the
   hooks the Mac layer writes in with `engine/ardiacore/apply.sh` (the permission prompt factory, the File System
   Access restore dialog, the external-protocol dialog, PermissionRequestManager's tab activation), forwards each
-  `AutofillBubbleHandlerImpl::Show*Bubble` for those tabs, and tells Ardia when Chromium hides its password
+  `AutofillBubbleHandlerImpl::Show*Bubble` for those tabs, and tells Nilla when Chromium hides its password
   bubble. The engine side is `ac_linux_page_prompts*.cc`, a port of the Mac's `ac_permissions.mm`,
   `ac_password_prompt.mm`, `ac_autofill_prompt.mm` and `ac_external_apps.mm`.
 - **Delivery.** Permission requests go to the window that shows the tab as `permissions.requested` and
@@ -1136,7 +1136,7 @@ bun run acceptance:linux <extracted>/ardia/bin/ardia
 
 ### Memory Saver
 
-- **Routing.** Chrome's Memory Saver replaces Ardia's own tab sleeping, driven by the shared `ac_memory_saver` call.
+- **Routing.** Chrome's Memory Saver replaces Nilla's own tab sleeping, driven by the shared `ac_memory_saver` call.
   On Linux, `engine.memorySaver` and `engine.validateKeepActiveSite` go through `ac_linux_memory_saver.cc`. Both
   routes are in the bootstrap capabilities.
 - **Validation.** It accepts:
@@ -1192,13 +1192,13 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
   `chromium-linux-settings-overrides.patch` adds Linux, so an extension's `search_provider` reaches `search.engines`
   and can become the default, as on macOS. The key's `homepage` and `startup_pages` stay off on Linux.
 - **The page menu's search item.** Chrome's own page menu searches with Chrome's default engine, so
-  `search.setEngineName` carries Ardia's default engine (`name`, `keyword`, `url`; macOS reads only `name`) and
+  `search.setEngineName` carries Nilla's default engine (`name`, `keyword`, `url`; macOS reads only `name`) and
   `ac_linux_search_engines.cc` makes it Chrome's default in every regular profile, including ones loaded later.
   "Search … for" then names and uses the same engine as the command bar, custom engines included.
   - A Chrome search engine (one with a search-terms placeholder) with the same name and host is selected as is.
-    Otherwise one Ardia-owned engine is added or updated, with `%s` turned into `{searchTerms}`, and it's removed
+    Otherwise one Nilla-owned engine is added or updated, with `%s` turned into `{searchTerms}`, and it's removed
     once another engine is the default. It has a fixed sync GUID and a fixed keyword,
-    `ardia-default-search-engine`: Chrome resolves the default engine's searches by keyword, so Ardia's own shortcut
+    `ardia-default-search-engine`: Chrome resolves the default engine's searches by keyword, so Nilla's own shortcut
     could otherwise send them to another engine that shares it, an extension's say.
   - A default set by policy or by an extension is left alone. The request is checked first (name up to 256
     characters, keyword up to 256, an http or https URL up to 2048 with `%s`, no control characters).
@@ -1213,7 +1213,7 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
 - **Keyboard shortcuts.**
   - Each browser window keeps a `LinuxExtensionKeybindings` registry (`ac_linux_extension_keybindings.cc`), and
     `chromium-linux-extension-keybindings.patch` stops Chromium's own registry from registering accelerators.
-  - Ardia's shortcut table is checked first. A key Ardia binds never reaches an extension, even in text fields.
+  - Nilla's shortcut table is checked first. A key Nilla binds never reaches an extension, even in text fields.
   - `_execute_action` (and the MV2 aliases) sends `extensions.actionShortcut`, and the shared toolbar opens the popup
     or side panel. Named commands fire `chrome.commands.onCommand`, and global commands keep Chromium's listener.
   - In private windows only incognito-allowed extensions are registered.
@@ -1221,10 +1221,10 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
 - **Tabs and windows extensions open.** A tab Chrome inserts by itself (`chrome.tabs.create`, an action's
   `onClicked`, a URL handed to the running instance that the shell didn't take, see Links from other apps) has no
   opener page to report it, so the host does.
-  - Each window notes tabs inserted outside Ardia's own operations (`unclaimed_` in `ac_linux_host.cc`). It also notes
+  - Each window notes tabs inserted outside Nilla's own operations (`unclaimed_` in `ac_linux_host.cc`). It also notes
     tabs already in the window when it attaches, unless they're blank or look restored by Chromium (more than one
     history entry, or an entry marked restored). In a window Chrome made, an `about:blank` tab counts too, so a
-    later `chrome.tabs.update` lands in a tab the sidebar shows; Chrome's New Tab page is left to Ardia's own first
+    later `chrome.tabs.update` lands in a tab the sidebar shows; Chrome's New Tab page is left to Nilla's own first
     tab, which adopts it.
   - A tab a page already reported, or one bound in any window, is left alone. A blank URL gets 20 tries, 25 ms apart,
     to resolve.
@@ -1239,8 +1239,8 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
     any other instead of waiting for an opener to save it.
 - **Install prompts.** These are never auto-accepted. They show in the window of the tab that asked and end with that
   tab. Nothing installs without Add Extension. Popups size between 25×25 and 800×600, within the window.
-- **Native messaging hosts.** Ardia looks for `<name>.json` in this order:
-  1. `<Ardia data dir>/NativeMessagingHosts` (by default `~/.config/ardia/NativeMessagingHosts`);
+- **Native messaging hosts.** Nilla looks for `<name>.json` in this order:
+  1. `<Nilla data dir>/NativeMessagingHosts` (by default `~/.config/ardia/NativeMessagingHosts`);
   2. `~/.config/google-chrome/NativeMessagingHosts` (Helium's base patch; honours `CHROME_CONFIG_HOME`);
   3. `~/.config/chromium/NativeMessagingHosts` (`chromium-linux-native-messaging-hosts.patch`; honours
      `CHROME_CONFIG_HOME`, then `XDG_CONFIG_HOME`);
@@ -1249,8 +1249,8 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
 
   Hosts installed for Chrome or Chromium, such as Bitwarden and KeePassXC, are found without changes, because Web
   Store installs keep their Chrome ids for `allowed_origins`. Two exceptions:
-  - 1Password talks only to browsers it knows, so add Ardia's binary to `/etc/1password/custom_allowed_browsers`;
-  - Flatpak and Snap installs write manifests inside their sandbox, where Ardia doesn't look.
+  - 1Password talks only to browsers it knows, so add Nilla's binary to `/etc/1password/custom_allowed_browsers`;
+  - Flatpak and Snap installs write manifests inside their sandbox, where Nilla doesn't look.
 
 ### Live folders
 
@@ -1279,14 +1279,14 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
 
 ### Passwords, cards and system authentication
 
-- **Storage.** Ardia stores no secret of its own. Passwords live in Chromium's `Login Data` and card numbers in
+- **Storage.** Nilla stores no secret of its own. Passwords live in Chromium's `Login Data` and card numbers in
   `Web Data`, both encrypted by OSCrypt.
   - The key comes from the Secret Service, KWallet or the secret portal (`--password-store`).
   - `ArdiaPasswords.status` and `ArdiaAutofill.status` report which key encrypts new data. They read the
     ciphertext's provider tag (`v10` built-in, `v11` keyring, `v12` portal) and flag Chromium's silent fallback to the
     obfuscating v10 key (`protectionFallback`).
   - An unreadable store answers `ERR_PASSWORDS_UNAVAILABLE` or `ERR_AUTOFILL_UNAVAILABLE`, never an empty list.
-- **Reauthentication.** `ardia::Reauth` (`ac_reauth_linux.cc`) asks polkit for `dev.ardia.linux.reauthenticate`. The
+- **Reauthentication.** `nilla::Reauth` (`ac_reauth_linux.cc`) asks polkit for `dev.ardia.linux.reauthenticate`. The
   browser's own bus name is the subject, with interaction allowed and a 120 s timeout.
   - The policy is `auth_self` for active sessions and `no` for inactive and remote ones.
   - Only `is_authorized && !is_challenge` grants. Everything else is `denied`, `cancelled`, `expired` or
@@ -1367,7 +1367,7 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
 - **Files.** A file import uses only a path the native chooser returned to the same window, once.
 - **Refreshing open windows.** Imported bookmarks and history reach open windows without a relaunch.
 
-### The `ardia` command
+### The `nilla-browser` command
 
 It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what differs:
 
@@ -1424,7 +1424,7 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
     `ARDIA_CLI_HOME` and `ARDIA_CLI_BIN_DIR` set, and reports no installed version without `ARDIA_CLI_HOME`.
 - **Config files** ([config.md](config.md)). `config.json` and `themes/` live in `<user data dir>/config`
   (`~/.config/ardia/config` by default), not beside Chromium's files; the CLI resolves the same folder, so
-  `ardia config set|unset|edit` and `ardia theme new|use` reach a running Ardia. `ArdiaConfig.readFile`, `watch` and
+  `nilla-browser config set|unset|edit` and `nilla-browser theme new|use` reach a running Nilla. `ArdiaConfig.readFile`, `watch` and
   `writeSchemas` are native (`ac_linux_config_core.cc` for the files and the inotify watcher, `ac_linux_config.cc`
   for the threads and the windows), with the Mac's limits; the schemas go to `<user data dir>/config-schema/` and into
   the config folder when it exists. `apps/linux/src/hostConfig.ts` keeps each window's reads so the shared code can
@@ -1453,7 +1453,7 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
   - All file work runs on one thread-pool sequence. Only regular browser windows may call these methods (not
     Settings or private windows).
   - The UI turns userscripts on when the host advertises all four methods (`userScripts` in `hostCapabilities.ts`).
-    One regular window at a time runs the shared `startUserScripts`, chosen by the `ardia-user-scripts` web lock
+    One regular window at a time runs the shared `startUserScripts`, chosen by the `nilla-user-scripts` web lock
     (`hostUserScripts.ts`); when it closes, the next window takes the lock and applies the folder again.
 
 ### Telemetry
@@ -1464,7 +1464,7 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
   Native crash reports come from Chromium's own crash handler (Crash reports, below); with an engine that doesn't
   list its dumps `ArdiaApp.crashReports` answers an empty list, and "crash reports" there means page-process exits
   and JavaScript errors. The group has no crash-report control of its own to hide.
-- **Crash reports.** `chrome_crashpad_handler` runs beside every Ardia process and writes a minidump for each crash of
+- **Crash reports.** `chrome_crashpad_handler` runs beside every Nilla process and writes a minidump for each crash of
   the browser, page, GPU and helper processes into `~/.config/ardia/Crash Reports` (`pending/<uuid>.dmp`), or `<user
   data dir>/Crash Reports` for an instance started with `--user-data-dir` (`ardia-launch` sets
   `BREAKPAD_DUMP_LOCATION`, which Chromium reads before it starts the handler, so a test instance never leaves its
@@ -1477,7 +1477,7 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
   it's gone or over 8 MiB. Settings and private windows are refused. The shell reads up to the newest 16, parses each
   one (`minidump.ts`) and keeps the newest five of the browser and five of the other processes, as the Mac does. A
   report carries the process kind (from Chromium's `ptype` annotation), the signal and its code (`SIGSEGV`,
-  `SEGV_MAPERR`), the engine version (Ardia's own version for a browser crash, from the `ardia-ver` annotation the
+  `SEGV_MAPERR`), the engine version (Nilla's own version for a browser crash, from the `ardia-ver` annotation the
   engine sets at startup from `VERSION`), the process's uptime, the build IDs of the files beside `chrome`, and the
   crashing thread's frames as file plus offset: a frame-pointer walk from the signal's registers (Linux builds keep
   frame pointers), and when libc reused the frame pointer, from the first frame record on the stack. A dump written
@@ -1492,8 +1492,8 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
 - **Sending.** The shell can't fetch, so the shared client posts through `ArdiaTelemetry.post` (`ac_linux_telemetry.cc`):
   native sends the OTLP body to the fixed `https://ardia.dev/otel/v1/logs` with the app's ingest key, over the system
   network context with no cookies, and answers the HTTP status (0 for a network error). JS keeps its queue, batching and
-  backoff. Events carry `$os: Linux` and `os.type: linux`; the `ardia` command reports the same on Linux.
-- **One owner.** Every window runs its own copy of the UI, so one browser window holds the `ardia.linux.telemetry` lock
+  backoff. Events carry `$os: Linux` and `os.type: linux`; the `nilla-browser` command reports the same on Linux.
+- **One owner.** Every window runs its own copy of the UI, so one browser window holds the `nilla.linux.telemetry` lock
   and runs the client (queue, flush, hourly usage, the daily ping) (`telemetryLeader.ts`). The others, utility windows
   included, forward `capture` and log calls to it over a `BroadcastChannel`. The owner acknowledges each one, and a
   window keeps what nobody acknowledged and sends it again when a new owner announces itself, so nothing is lost while
@@ -1502,14 +1502,14 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
   takes the lock, re-reads the telemetry documents and resumes the same session; the `telemetry` launch step tells it
   this is a takeover, not a new launch, and a session that was already ended stays ended.
 - **The 7-day local copy.** `ArdiaTelemetryLocal` is TypeScript on Linux (`hostTelemetryLocal.ts`). The lines live in
-  the shell's IndexedDB (`ardia.telemetry-local`, one store of `{day, text}` chunks), which every window of the instance
+  the shell's IndexedDB (`nilla.telemetry-local`, one store of `{day, text}` chunks), which every window of the instance
   shares because every shell runs in the app profile. Only the telemetry owner records, each write, prune and clear is
   one transaction, and a private window never writes. A prune applies the Mac's rules (7 days, 8 MB, oldest first,
-  down to nine tenths) and folds each day into one record. View My Data saves `Ardia data <day>.jsonl` as an ordinary
+  down to nine tenths) and folds each day into one record. View My Data saves `Nilla data <day>.jsonl` as an ordinary
   download of a blob from the shell, so it lands in the Downloads folder (or wherever downloads are set to go, with
   Chromium's ` (1)` suffix for a second file), shows in the downloads list and can be shown in the file manager.
-  Before it reads, the exporting window asks the owner to flush its buffer (`ardia.linux.telemetry-local` channel).
-  The `ardia` command's own lines aren't in the export. Watch `telemetry_local_store` (`write_failures`, `bytes`,
+  Before it reads, the exporting window asks the owner to flush its buffer (`nilla.linux.telemetry-local` channel).
+  The `nilla-browser` command's own lines aren't in the export. Watch `telemetry_local_store` (`write_failures`, `bytes`,
   `lines_dropped`) and `local_copy_exported` (`ok`) from Linux.
 - **Session end.** When a close ends the session (quitting or the last browser window), the closing window asks the
   owner to record `app_session_ended` and save its queue before the close is acknowledged (2 s at most); an owner
@@ -1524,7 +1524,7 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
 `xdg-settings` process and the replies. The file and process work runs on one thread-pool sequence, never on the UI
 thread. The reply shapes are the Mac's (`packages/shell/ios/SystemModule.swift`, `AppModule.swift`).
 
-- **This copy of Ardia.** The launcher is `<prefix>/bin/ardia`, found from the running `chrome`
+- **This copy of Nilla.** The launcher is `<prefix>/bin/ardia`, found from the running `chrome`
   (`<prefix>/lib/ardia/chrome`). A desktop entry counts only when its `Exec` program resolves to that launcher or to
   `chrome` itself (symlinks followed; a bare name is looked up in `PATH`).
 - **The installed entry.** The first `ardia.desktop` in the `applications` folders, in XDG order, the one
@@ -1557,30 +1557,30 @@ thread. The reply shapes are the Mac's (`packages/shell/ios/SystemModule.swift`,
 
 ### Links from other apps
 
-A link another app opens (`xdg-open`, a mail client, `ardia <url>` in a terminal) reaches the shell as the Mac's
-`ArdiaShell`/`onOpenURLs` event, `{urls}`, so Open links from other apps in Little Ardia, link rules and Put links from
+A link another app opens (`xdg-open`, a mail client, `nilla <url>` in a terminal) reaches the shell as the Mac's
+`ArdiaShell`/`onOpenURLs` event, `{urls}`, so Open links from other apps in Little Nilla, link rules and Put links from
 other apps first apply. The Mac's `source` and `pointer` are left out: Linux can't tell which app sent a link, and the
 Mac leaves `source` out too when it doesn't know.
 
-- **The hook.** `chromium-linux-open-urls.patch` asks `ardia::TakeLinuxLaunchUrls` (`ac_linux_launch_urls.cc`) in the
+- **The hook.** `chromium-linux-open-urls.patch` asks `nilla::TakeLinuxLaunchUrls` (`ac_linux_launch_urls.cc`) in the
   two places Chromium turns command-line arguments into tabs: `StartupBrowserCreator::Start` (the launch that starts
-  Ardia) and `ProcessCommandLineWithProfile` (a second launch, handed to the running process through the process
+  Nilla) and `ProcessCommandLineWithProfile` (a second launch, handed to the running process through the process
   singleton). The URLs are the ones Chromium itself would open (`StartupTabProviderImpl::GetCommandLineTabs`).
 - **What the shell takes** (`ShellTakesLaunch` in `ac_linux_open_urls.cc`, no Chromium in it): 1 to 64 valid `http`,
   `https` or `file` URLs of at most 32 KiB each. Anything else stays with Chromium, which opens it as before and the
   window adopts the tab (`unclaimedTabs.ts`): another scheme, a launch with `--incognito`, `--new-window`, `--app`,
   `--app-id`, `--kiosk`, `--guest`, `--headless`, `--no-startup-window`, `--silent-launch`, `--profile-directory` or
-  `--profile-email`, a background instance (`ARDIA_BACKGROUND`), and a running Ardia with no regular browser window
+  `--profile-email`, a background instance (`ARDIA_BACKGROUND`), and a running Nilla with no regular browser window
   (only private or utility windows).
 - **At launch.** The URLs are taken off the command line Chromium starts from (`LinuxLaunchWithoutUrls` keeps the
-  program and every switch), so Ardia starts as it does without a link and restores its windows, then gets the links,
+  program and every switch), so Nilla starts as it does without a link and restores its windows, then gets the links,
   as on the Mac.
 - **Delivery.** Links wait natively (at most 256) until a regular browser window says it listens
   (`ArdiaShell.listenForOpenURLs`, which `openUrls.ts` sends once the shared listener is registered). They go as one
   event to the listening window that was active most recently; private and utility windows are never chosen and
   don't get the capability. A renderer that reloads has to say it listens again.
 - **Capability.** `ArdiaShell.onOpenURLs` and `ArdiaShell.listenForOpenURLs`, in regular browser windows only.
-- **Unchanged.** The `ardia` command opens pages over its control connection, never by launching the browser, and a
+- **Unchanged.** The `nilla-browser` command opens pages over its control connection, never by launching the browser, and a
   second launch without a URL still opens a window.
 
 ### Full screen and page editing commands
@@ -1595,7 +1595,7 @@ Mac leaves `source` out too when it doesn't know.
   as `tab.edit`.
 - The app menu offers both when the host advertises them (see Windows, focus and input › Menu button).
 
-### Links in pinned tabs and Little Ardia windows
+### Links in pinned tabs and Little Nilla windows
 
 Both are ports of the Mac's native code (`ArdiaWebView+Peek.mm`, `ArdiaWebView+Tab.mm`), with the rules in
 `ac_linux_link_tabs.cc` and `ac_linux_link_gesture.cc` (no Chromium in either) and the same page script.
@@ -1616,7 +1616,7 @@ Both are ports of the Mac's native code (`ArdiaWebView+Peek.mm`, `ArdiaWebView+T
     here runs. Link clicks have their own message allowance per document (64, refilled at 32 a second), so a page
     that floods the channel can't make a held click vanish.
 - **`webView.setLittleArdiaOpensNewTabLinks {enabled}`** (Settings › General › Keep new-tab links inside a Little
-  Ardia window). The setting is one for the whole app, as on the Mac. A window is a Little Ardia window when its
+  Nilla window). The setting is one for the whole app, as on the Mac. A window is a Little Nilla window when its
   shell opened it with `kind: "small"`.
   - The page script notes each link it expects to open a tab (`newTabLink`: a `target` click or a `window.open` with
     user activation). A tab keeps its last four notes for two seconds.
@@ -1627,7 +1627,7 @@ Both are ports of the Mac's native code (`ArdiaWebView+Peek.mm`, `ArdiaWebView+T
   - On a match the opened tab is closed, unless a window has taken it, as soon as Chromium has put it in a tab
     strip (Chromium reports a new tab before it adds it), and the shell gets `openWindow` with the
     noted address, `disposition: "current"`, `userGesture: true` and `linkWait: "matched"`, so the page opens in
-    the Little Ardia window's own tab. Without one the tab is reported as before, with `linkWait` `skipped` or
+    the Little Nilla window's own tab. Without one the tab is reported as before, with `linkWait` `skipped` or
     `timedOut`.
   - With the setting off, or in any other window, a new tab is reported at once, exactly as before.
 
@@ -1639,7 +1639,7 @@ Both are ports of the Mac's native code (`ArdiaWebView+Peek.mm`, `ArdiaWebView+T
   when the pointer is near the bottom.
 - **`ArdiaSystem.setThinScrollBars(thin)`** (Settings › Appearance › Scroll bars). Helium turns on Chromium's
   overlay scroll bars in the mode that follows the OS, which on Linux is GTK's `gtk-overlay-scrolling`.
-  `chromium-linux-thin-scroll-bars.patch` adds `ui::NativeTheme::SetArdiaLinuxThinScrollBars`: Thin makes
+  `chromium-linux-thin-scroll-bars.patch` adds `ui::NativeTheme::SetNillaLinuxThinScrollBars`: Thin makes
   `NativeTheme::CalculateUseOverlayScrollbar` prefer overlay scroll bars whatever GTK says, and the change runs the
   path an OS setting change takes, so open pages switch without a reload and new ones start that way. The shell
   sends the setting at every launch.
@@ -1660,7 +1660,7 @@ Both are ports of the Mac's native code (`ArdiaWebView+Peek.mm`, `ArdiaWebView+T
 - **`tabs.reportCommits {on}`** turns on the Mac's commit stamps for one window's tabs, until its renderer goes
   away: each `navigation` event then carries `committedAt` (the time, in milliseconds, of the tab's last
   cross-document commit in the main frame, 0 before the first) and `httpStatus` when that document had a response
-  status. The `ardia` command's page events (`page.error`, the held navigations) use them.
+  status. The `nilla-browser` command's page events (`page.error`, the held navigations) use them.
 
 ### Pointer hand-off, Escape, app activation and small windows
 
@@ -1678,14 +1678,14 @@ Both are ports of the Mac's native code (`ArdiaWebView+Peek.mm`, `ArdiaWebView+T
 - **Escape a page leaves unhandled.** `chromium-linux-unhandled-key.patch` hands a key a tab's page left unhandled to
   the host before the window gets it. For a key-down of Escape without Ctrl, Alt or Super, in a tab the window
   shows, the host sends that tab's page the Mac's `command` event `{command: "escape", text: ""}`
-  (`ac_linux_page_keys.h`), which closes Peek and a Little Ardia window while the page has focus. Chromium still
+  (`ac_linux_page_keys.h`), which closes Peek and a Little Nilla window while the page has focus. Chromium still
   gets the key afterwards (it stops a loading page). An Escape that leaves full screen or a page that handles Escape
   never gets here. Advertised as `tab.unhandledEscape`.
-- **App activation.** When an Ardia window loses activation and no other Ardia window (a Settings or Import window
+- **App activation.** When a Nilla window loses activation and no other Nilla window (a Settings or Import window
   included) has it 150 ms later, every window's shell gets `ArdiaShell` `onAppEvent` `{type: "resignActive"}`, as
-  the Mac sends from `didResignActive` (`AppActivation`, `ac_linux_app_activation.h`). A switch between Ardia
+  the Mac sends from `didResignActive` (`AppActivation`, `ac_linux_app_activation.h`). A switch between Nilla
   windows sends nothing, and neither does a window closing while another takes over. While a native dialog of
-  Ardia's is open the event is held back, as the Mac holds it during a modal or a sheet. The other half is the
+  Nilla's is open the event is held back, as the Mac holds it during a modal or a sheet. The other half is the
   `focus` window event the host already sends when a browser window becomes active, which is what the shared UI
   listens for. Advertised as `ArdiaShell.resignActive`.
 - **Small windows.** `ArdiaShell.openWindow` with `kind: "small"` and no `frame` now opens at `size` (`[width,
@@ -1712,11 +1712,11 @@ answer at once on the Mac and with a promise here, so the shell has to opt in.
   draft recorded stands), `ensureDraftDir` awaits a promised folder, and `setReportPlatform` replaces the sheet's
   `fetch` with `ArdiaReport.post` and turns recording off, which hides the Record section (and with it the trace
   and the page choice). `ArdiaTelemetryLocal.exportForReport` gzips the last seven days of the IndexedDB copy into
-  one draft folder with `gzipText`; the folder's path is kept in `localStorage` (`ardia.report.exportFolder`) and
+  one draft folder with `gzipText`; the folder's path is kept in `localStorage` (`nilla.report.exportFolder`) and
   reused, so there is one export file at a time as on the Mac. The sheet's copy drops recordings and crash reports
   (`linuxWording.ts`).
 
-- **Drafts.** `draftDirectory()` makes `<profile>/Ardia/Report Drafts/<uuid>` (mode 0700) and answers its path.
+- **Drafts.** `draftDirectory()` makes `<profile>/Nilla/Report Drafts/<uuid>` (mode 0700) and answers its path.
   Every other path a call names must lie inside one of those folders, as given and again after symbolic links are
   resolved; anything else is refused. `fileSize(path)` answers the size, or -1; `removeFile(path)` removes a file or
   a draft folder.
@@ -1737,10 +1737,10 @@ answer at once on the Mac and with a promise here, so the shell has to opt in.
   dumps (Crash reports). The shell answers an empty sample, so a report's `footprint_mb` and `free_disk_gb` are null: the shell can read neither
   the app's memory footprint nor free disk space (`navigator.storage.estimate()` reports a quota, not free space).
 
-### Ardia's notifications
+### Nilla's notifications
 
 `ArdiaApp.notificationPermission`, `requestNotificationPermission`, `postNotification` and `removeNotifications`
-(`ac_linux_notifications.cc`, with the checks and the ledger in `ac_linux_notifications_core.cc`) show Ardia's own
+(`ac_linux_notifications.cc`, with the checks and the ledger in `ac_linux_notifications_core.cc`) show Nilla's own
 notifications, such as a meeting reminder, through Chromium's Linux notification stack
 (`NotificationDisplayService`, then `org.freedesktop.Notifications`), the one sites' notifications use.
 
@@ -1750,8 +1750,8 @@ notifications, such as a meeting reminder, through Chromium's Linux notification
   `data`); the answer is the id, or null when nothing was shown. `subtitle` becomes the body's first line. The title
   is cut at 1 KiB and the body at 4 KiB, on character boundaries; `data` is at most 16 KiB. `icon` and `origin` are
   ignored. At most 64 are tracked, and the oldest is closed to make room.
-- **Type.** Chromium sends its generic notification type to its own in-app popups, not to the desktop. Ardia's
-  notifications use `NotificationHandler::Type::NEARBY_SHARE`, which has no handler on Linux, and register Ardia's
+- **Type.** Chromium sends its generic notification type to its own in-app popups, not to the desktop. Nilla's
+  notifications use `NotificationHandler::Type::NEARBY_SHARE`, which has no handler on Linux, and register Nilla's
   handler for it on the app profile's display service.
 - **Responses.** A click sends `ArdiaApp`/`onNotificationResponse` (`{id, action: "click", tabId, windowId, data}`),
   closes the notification and activates the window. A close is reported (`action: "close"`) only for a `dismissible`
@@ -1792,7 +1792,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
   came and went within the range, so the series is unchanged. The engine key moved from `1078820d892b` to
   `8562381ee0dd`; engine `engine-8562381ee0dd` is published, rebuilt incrementally at `-j 8` (13 steps). The link exports
   the same 63 dynamic symbols and no `ac_*`; the package passes all 12 smoke checks. Linux changes:
-  - set viewport now works only on a tab the ardia command took into an off-screen automation window
+  - set viewport now works only on a tab the nilla-browser command took into an off-screen automation window
     (`engine.cliMoveOffscreen`). Linux has no such window: `IsAutomationWindow` and `InAutomationWindow` answer false,
     `engine.cliMoveOffscreen`, `cliCloseOffscreenTabs` and `cliOwnsTab` answer that the call is unavailable on Linux,
     and set viewport stays refused over the token connection (see Known gaps).
@@ -1805,7 +1805,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
   - `engine/patches/build/helium-pins.ini`: upstream's helium-chromium 0.21.2 and helium-macos 0.21.2.1 pins, with
     `[helium-linux]` moved to 0.21.2.1 (`c594074e`), whose `helium-chromium` submodule is exactly 0.21.2 (`e817502a`);
     helium-linux changed only its packaging metadata. `HELIUM_LINUX_TAG` in `env.sh` follows.
-  - the ardia `BUILD.gn`: upstream added `ac_cli_owned_tabs.{cc,h}` to the Mac-only list; the CLI sources build on
+  - the nilla `BUILD.gn`: upstream added `ac_cli_owned_tabs.{cc,h}` to the Mac-only list; the CLI sources build on
     Linux, so they join the shared list with the rest of them.
 
   The engine key moved from `087c111e94fc` to `1078820d892b`; engine `engine-1078820d892b` is published. The build tree
@@ -1814,7 +1814,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
   later edit to `chromium-drag-always-ends.patch` went into the tree through `series.py materialize`, which rewrote only
   the six files that differed. The link exports the same 63 dynamic symbols as before and no `ac_*`; the package passes
   all 12 smoke checks. Linux changes:
-  - `ardia browse set viewport`'s shown-slot record (`ac_host_visibility_linux.cc`): `ShellHostView::LayoutPane` notes a
+  - `nilla-browser browse set viewport`'s shown-slot record (`ac_host_visibility_linux.cc`): `ShellHostView::LayoutPane` notes a
     tab when it attaches its contents to a visible pane, as the Mac web view does when it is visible in a window. A tab
     whose override is being cleared keeps its page hidden until the size is restored; with the page held back that
     usually ends at upstream's 250 ms deadline. Upstream gated set viewport over the token connection again for 0.2.46,
@@ -1852,7 +1852,7 @@ Newest first. Each entry names the upstream commit `linux-support` was rebased o
 
 - **2026-11-12, upstream 42c6291** (77 commits after 39bd206). Three conflicts: `engine/patches/series` (upstream's new
   `chromium-pref-hash-safe-storage-key-change.patch` stays shared, beside the two Mac-only Safe Storage patches; it
-  touches only `services/preferences` and applies to the Linux tree unchanged), the shared source list in the ardia
+  touches only `services/preferences` and applies to the Linux tree unchanged), the shared source list in the nilla
   `BUILD.gn` (gains `ac_extensions_load_health.cc` and `ac_search_suggest.cc`, which build on Linux), and the Linux
   telemetry hunks in the onboarding and new-tab ask files that upstream rewrote. The engine key moved from
   `e3f26f7253b3` to `756f755c2bf0`. Linux changes:
@@ -1881,7 +1881,7 @@ These were open at the time of the PR.
   - bookmarks HTML export (`bookmarks.exportHtml`). Until an engine advertises it, the shell serves the call itself
     (`hostBookmarksExport.ts`): it builds the file from `bookmarks.tree` and `favicons.get` in Chromium's own
     bookmark-file format (`bookmarksHtml.ts`) and downloads it from the shell page, so it lands in the Downloads
-    folder as `Ardia Bookmarks.html`, follows Ask where to save each file, and shows in the downloads list. There is
+    folder as `Nilla Bookmarks.html`, follows Ask where to save each file, and shows in the downloads list. There is
     no Save dialog of its own, a folder's `LAST_MODIFIED` is its newest child's date (the tree carries no
     modification date), and the downloads list keeps the entry;
   - the `extensions.installFailed` event. The Mac sends it when a `.crx` dropped on the window fails to install
@@ -1894,7 +1894,7 @@ These were open at the time of the PR.
 - **Profiles.** Deleting the data of an engine profile that was loaded in this run waits for the next launch
   (Profiles and private windows › Deleting a profile's data). In a window that shows several engine profiles:
   - a page's own fullscreen in a companion's tab makes only its viewport fullscreen, not the window;
-  - Chrome's own download bubble and other toolbar-anchored bubbles of a companion have no visible anchor (Ardia's
+  - Chrome's own download bubble and other toolbar-anchored bubbles of a companion have no visible anchor (Nilla's
     downloads panel lists them); the downloads list a window loads at start comes from its own profile, while later
     downloads, controls and file operations reach the window from every profile it shows;
   - a window Chrome itself creates for an isolated profile (`chrome.windows.create` from that profile's extension)
@@ -1907,7 +1907,7 @@ These were open at the time of the PR.
   tab dropped on another window is appended rather than placed at the pointer's row.
 - **Wayland focus.** A keyboard switch right after a window maps can be undone. A quit within about 200 ms of moving
   a fullscreen window to another output can save the old output.
-- **Closing the last window during a download** shows Chromium's own download dialog, not an Ardia dialog.
+- **Closing the last window during a download** shows Chromium's own download dialog, not a Nilla dialog.
 - **Window menu.** It has no Arrange in Front, Keep on Top or Profiles submenu.
 - **Window corner radius.** `ArdiaAppWindows.windowCornerRadius` answers a fixed 19 (`shellMethods.ts`), the Mac's
   default, so the page card keeps its 10 pt radius at the default inset. Linux doesn't measure the compositor's
@@ -1922,18 +1922,18 @@ These were open at the time of the PR.
   field journeys send no samples from Linux. UI only; the engine key is unchanged.
 - **Settings rows without a backend are hidden**, each until the host advertises its capability
   (`unavailableSettingIds` in `hostCapabilities.ts`): Zoom with Ctrl and the mouse wheel
-  (`webView.setCommandScrollZoom`), Keep new-tab links inside a Little Ardia window
+  (`webView.setCommandScrollZoom`), Keep new-tab links inside a Little Nilla window
   (`webView.setLittleArdiaOpensNewTabLinks`), Open a Peek window when clicking on links to other sites
   (`webView.setPeekOtherSiteTabs`), Scroll bars (`ArdiaSystem.setThinScrollBars`), all four advertised by the
   current host, Haptic feedback when reordering tabs (`ArdiaSystem.hapticTick`), Show page preview in tab hover menu
   (`tab.capturePicture`, which no engine serves yet), Show memory use in tab hover menu (`engine.tasks`, which every
   pinned engine serves), and the two rows
-  about links from other apps, Open links from other apps in Little Ardia and Put links from other apps first
+  about links from other apps, Open links from other apps in Little Nilla and Put links from other apps first
   (`ArdiaShell.onOpenURLs`, which the host advertises now that it sends that event; an older engine leaves such
   links to Chromium, which opens them as tabs). The command bar's Dictate button follows `ArdiaShell.startDictation`
   the same way. With an older engine the app menu's Open Links from Other Apps entry, its row in Keyboard Shortcuts
   and the sentence about links from other apps under Open new-tab links in are left out too (`unavailableCommands`,
-  `settingsForm.tsx`). Calendar › Show alerts is hidden until a host posts Ardia's own notifications
+  `settingsForm.tsx`). Calendar › Show alerts is hidden until a host posts Nilla's own notifications
   (`ArdiaApp.postNotification`), and the commands that need WebKit or AppleScript (Open Page in WebKit, Allow
   JavaScript from Apple Events) have no menu entry or shortcut row.
 - **Tab pictures.** The web view handle answers `capturePicture` with null and makes no host call unless the host
@@ -1949,25 +1949,25 @@ These were open at the time of the PR.
   session without the stamp counts as version 9, the last one Linux's own shape checks cover. A migration that changes
   something is saved at launch against what was on disk. A session from a newer build is left as it is, and its stamp
   is written down to this build's on the next save; as on the Mac, downgrades aren't supported.
-- **Default browser.** An Ardia that isn't installed where the desktop looks (an extracted folder, a prefix outside
+- **Default browser.** A Nilla that isn't installed where the desktop looks (an extracted folder, a prefix outside
   `XDG_DATA_DIRS`) still shows the default browser controls, and they answer false; the reason is only in the log.
   `xdg-settings` is the only backend: a desktop without it can't be asked or set.
 - **Links from other apps.** The source app is never known, so link rules that match on the app don't apply, and a
-  Little Ardia window opens where the compositor puts it rather than at the pointer. Whether the window that takes
+  Little Nilla window opens where the compositor puts it rather than at the pointer. Whether the window that takes
   a link comes to the front on Wayland depends on the launch's activation token reaching `ArdiaShell.focusWindow`,
   which hasn't been checked on a real desktop. Links that arrive while a window exists but its shell never listens
   (a shell that failed to load) wait until one does.
 - **Not compiled yet.** The pointer hand-off, the unhandled Escape, app activation, small windows, the extension
-  popup's focus and the problem report calls (the two sections above Ardia's notifications) are written against
+  popup's focus and the problem report calls (the two sections above Nilla's notifications) are written against
   the Chromium 157 headers with fixture tests and have not run in a built engine.
-- **Little Ardia.** With an engine older than `ArdiaShell.smallWindows` the native window has no minimum size of
+- **Little Nilla.** With an engine older than `ArdiaShell.smallWindows` the native window has no minimum size of
   its own, and with one older than `tab.unhandledEscape` Escape closes the window only from its blank command bar
   and when nothing in the shell has focus, not while the page has focus (Peek's Escape too). Pinch
   and swipe to close have no Linux gesture.
-- **Meeting notifications.** Calendar › Show alerts › Always posts only while Ardia isn't active. With an engine
+- **Meeting notifications.** Calendar › Show alerts › Always posts only while Nilla isn't active. With an engine
   older than `ArdiaShell.resignActive` the shell is never told, and only the in-window alert appears. Any focused
-  Ardia toplevel (a browser window, a PiP window, a dialog) counts as Ardia being active. Coming back
-  to Ardia through a Settings or Import window sends no `focus` window event, so the shell counts Ardia as inactive
+  Nilla toplevel (a browser window, a PiP window, a dialog) counts as Nilla being active. Coming back
+  to Nilla through a Settings or Import window sends no `focus` window event, so the shell counts Nilla as inactive
   until a browser window is active again.
 - **Problem reports.** The sheet opens only with an engine that advertises `report.files` and `report.send`, and
   has no recording, trace or crash reports. The engine only accepts `https://ardia.dev/api/feedback`:
@@ -1977,18 +1977,18 @@ These were open at the time of the PR.
   published with (`scripts/linux/symbolize.py`). An engine older than `crash.dumps` answers no crash reports.
 - **Casting.** Real Cast devices haven't been tried: the build network has none, so casting has run against the test
   sink only. Mirroring a tab or the screen to a real device is Chromium's own Cast mirroring service, unchanged.
-- **Ardia's notifications.** A desktop without a notification service falls back to Chromium's own popups, as sites'
+- **Nilla's notifications.** A desktop without a notification service falls back to Chromium's own popups, as sites'
   notifications do. A click activates the window through the same Wayland activation path as above.
-- **Launch at login** starts Ardia as any launch does; it doesn't start hidden. A system-wide
-  `/etc/xdg/autostart/ardia.desktop`, which Ardia doesn't install, is neither read nor overridden.
+- **Launch at login** starts Nilla as any launch does; it doesn't start hidden. A system-wide
+  `/etc/xdg/autostart/ardia.desktop`, which Nilla doesn't install, is neither read nor overridden.
 - **Ctrl-scroll zoom off** (`webView.setCommandScrollZoom`) stops the zoom, and the wheel then does nothing; on the
   Mac the page scrolls instead. A site that handles Ctrl-scroll itself still gets it either way.
-- **Links to other sites and new-tab links** (Links in pinned tabs and Little Ardia windows). None of it has run in
+- **Links to other sites and new-tab links** (Links in pinned tabs and Little Nilla windows). None of it has run in
   a built engine yet. A site click the shell never answers (a shell that hangs after the host sent it `openWindow`)
-  is lost, as on the Mac. A window is a Little Ardia window only once its shell has opened it as one
+  is lost, as on the Mac. A window is a Little Nilla window only once its shell has opened it as one
   (`kind: "small"` in `ArdiaShell.openWindow`); new-tab links there open as tabs until then, and in every other
   window they are reported at once, without the Mac's `fromClick`, `point` or `linkWait`, so Open new-tab links in
-  Peek or Little Ardia still doesn't apply on Linux.
+  Peek or Little Nilla still doesn't apply on Linux.
 - **Link status bubble.** The pointer's place is the last one Chromium saw in this window. With an older engine the
   status carries no `fromBottom` and the bubble stays at the bottom.
 - **Scroll bars.** Follow the system and Thin look the same on a desktop whose GTK setting already prefers overlay
@@ -2005,7 +2005,7 @@ These were open at the time of the PR.
     `stopCasting`, `closeCastDialog`, `watchCastRoutes`, `terminateCastRoute`): Cast shows a toast;
   - translation (Bergamot isn't ported yet);
   - video upscaling;
-  - installing updates: Ardia checks for them and opens the release page (Updates and kill switches);
+  - installing updates: Nilla checks for them and opens the release page (Updates and kill switches);
   - crash reports with an engine that doesn't advertise `crash.dumps` (see Crash reports);
   - sending problem reports from the sheet with an engine older than `report.files` and `report.send` (see Problem
     reports), where `ArdiaTelemetryLocal.exportForReport` answers null;
@@ -2020,7 +2020,7 @@ These were open at the time of the PR.
 - **Packaging.**
   - There is no AUR package yet; the `PKGBUILD` builds from a local tarball.
   - An AppImage can't carry a setuid helper, so where user namespaces are restricted (Ubuntu 24.04 and later
-    without Ardia's AppArmor profile) it refuses to start, like the tarball, and says to install the `.deb` or allow
+    without Nilla's AppArmor profile) it refuses to start, like the tarball, and says to install the `.deb` or allow
     user namespaces. The `.deb` and `install.sh` set the sandbox up.
 - **Sync.** One read has no total size cap (each file is capped at 64 MiB). Linux and macOS sharing a real folder has
   not been run end to end with a Mac.

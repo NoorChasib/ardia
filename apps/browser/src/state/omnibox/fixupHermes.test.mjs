@@ -49,7 +49,7 @@ test("fixupUrl on hyphenated dotted words neither throws nor stalls in Hermes", 
   const driver = `var inputs = ${JSON.stringify(HYPHENATED_WORDS)};
 inputs.forEach(function (text) { for (var i = 1; i <= text.length; i++) core.fixupUrl(text.slice(0, i)); });
 print(JSON.stringify(inputs.map(function (text) { return core.fixupUrl(text); })));`;
-  const dir = mkdtempSync(join(tmpdir(), "ardia-fixup-hermes-"));
+  const dir = mkdtempSync(join(tmpdir(), "nilla-fixup-hermes-"));
   try {
     const file = join(dir, "fixup.js");
     writeFileSync(file, hermesScript(omnibox, driver));

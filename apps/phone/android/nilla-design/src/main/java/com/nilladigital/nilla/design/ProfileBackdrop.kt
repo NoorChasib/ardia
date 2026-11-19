@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import android.graphics.BitmapShader
 import android.graphics.Matrix
@@ -42,7 +42,7 @@ fun Modifier.profileBackdrop(look: ProfileLook, dark: Boolean, themed: Boolean =
 
 @Composable
 fun ProfileBackdrop(modifier: Modifier = Modifier, look: ProfileLook? = null, themed: Boolean = false, softened: Boolean = false) {
-    Box(modifier.clearAndSetSemantics {}.profileBackdrop(look ?: LocalProfileLook.current, LocalArdiaDarkTheme.current, themed, softened))
+    Box(modifier.clearAndSetSemantics {}.profileBackdrop(look ?: LocalProfileLook.current, LocalNillaDarkTheme.current, themed, softened))
 }
 
 @Composable

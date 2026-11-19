@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 interface PageFilter {
     fun blocks(requestUrl: String, pageUrl: String?, isMainFrame: Boolean): Boolean

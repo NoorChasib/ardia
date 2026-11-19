@@ -1,5 +1,5 @@
 import { TurboModuleRegistry } from "react-native";
-import type { SyncNative } from "@ardia/sync";
+import type { SyncNative } from "@nilla/sync";
 import { requireNativeModule } from "../modules";
 import type { WindowsSyncModule } from "../nativeModuleTypes";
 import { NATIVE_SYNC } from "../sync";
@@ -13,7 +13,7 @@ const native = () => {
   return module;
 };
 
-const contract = () => requireNativeModule<NonNullable<typeof SyncNative>>("ArdiaSync");
+const contract = () => requireNativeModule<NonNullable<typeof SyncNative>>("NillaSync");
 
 const PRIMITIVES = ["aead", "kdf", "hmac", "tags", "words", "padding", "logins", "passwordless", "passwordWins", "protectedStorage"];
 

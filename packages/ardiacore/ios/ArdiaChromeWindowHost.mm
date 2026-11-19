@@ -11,7 +11,7 @@
 
 #include <cmath>
 
-using namespace ardia_window;
+using namespace nilla_window;
 
 namespace {
 
@@ -27,7 +27,7 @@ void AnswerFloatingSubrole(Class windowClass) {
   static NSMutableSet<Class> *answered = [NSMutableSet set];
   if (!windowClass || [answered containsObject:windowClass]) return;
   [answered addObject:windowClass];
-  ardia_runtime::ReplaceMethod(windowClass, @selector(accessibilitySubrole), ^id(IMP original) {
+  nilla_runtime::ReplaceMethod(windowClass, @selector(accessibilitySubrole), ^id(IMP original) {
     return ^NSAccessibilitySubrole(NSWindow *window) {
       if (objc_getAssociatedObject(window, kFloatsForWindowManagersKey)) return NSAccessibilitySystemFloatingWindowSubrole;
       return ((NSAccessibilitySubrole (*)(id, SEL))original)(window, @selector(accessibilitySubrole));
@@ -59,7 +59,7 @@ NSRect OnScreen(NSRect frame, NSWindow *window) {
 }
 
 NSSize InterfaceSize(NSSize size, NSWindow *window) {
-  const NSSize scaled = [ArdiaInterfaceScale windowSizeFromRoot:size];
+  const NSSize scaled = [NillaInterfaceScale windowSizeFromRoot:size];
   return WithinVisibleFrame(NSMakeSize(round(scaled.width), round(scaled.height)), window);
 }
 
@@ -83,7 +83,7 @@ void ApplyInterfaceMinSize(NSWindow *window, BOOL grow) {
 void RescaleInterfaceContent(NSWindow *window) {
   NSNumber *was = objc_getAssociatedObject(window, kInterfaceContentScaleKey);
   if (!was) return;
-  const CGFloat scale = ArdiaInterfaceScale.scale;
+  const CGFloat scale = NillaInterfaceScale.scale;
   objc_setAssociatedObject(window, kInterfaceContentScaleKey, @(scale), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   if (was.doubleValue == scale || !(was.doubleValue > 0) || (window.styleMask & NSWindowStyleMaskFullScreen)) return;
   const NSSize content = [window contentRectForFrameRect:window.frame].size;
@@ -96,7 +96,7 @@ void RescaleInterfaceContent(NSWindow *window) {
 void FollowInterfaceScale() {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    [NSNotificationCenter.defaultCenter addObserverForName:ArdiaInterfaceScaleDidChange
+    [NSNotificationCenter.defaultCenter addObserverForName:NillaInterfaceScaleDidChange
                                                     object:nil
                                                      queue:nil
                                                 usingBlock:^(NSNotification *) {
@@ -118,11 +118,11 @@ void FollowInterfaceScale() {
 
 }
 
-NSView *ArdiaWindowRootView(NSWindow *window) {
-  return [ArdiaChromeWindowHost rootViewOfWindow:window] ?: window.contentView;
+NSView *NillaWindowRootView(NSWindow *window) {
+  return [NillaChromeWindowHost rootViewOfWindow:window] ?: window.contentView;
 }
 
-@implementation ArdiaChromeWindowHost
+@implementation NillaChromeWindowHost
 
 + (CGFloat)windowCornerRadius {
   return WindowCornerRadius(nil);
@@ -146,19 +146,19 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 }
 
 + (NSWindow *)makeWindowForProfile:(NSString *)profile {
-  if (!ArdiaHost.isStarted) return nil;
+  if (!NillaHost.isStarted) return nil;
   ArdiaCoreWindow *coreWindow = [[ArdiaCoreWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1360, 860)];
   NSWindow *window = coreWindow.window;
   if (!window) return nil;
   ConfigureWindow(window);
-  ArdiaWindowController *controller = [[ArdiaWindowController alloc] initWithCoreWindow:coreWindow];
+  NillaWindowController *controller = [[NillaWindowController alloc] initWithCoreWindow:coreWindow];
   [Controllers() setObject:controller forKey:window];
   [self showProfile:profile ?: @"" inWindow:window];
   return window;
 }
 
 + (NSWindow *)makeWindowForProfile:(NSString *)profile chromeWindow:(NSString *)chromeWindow {
-  ArdiaWindowController *made = [ArdiaWindowController claimChromeMadeWindow:chromeWindow];
+  NillaWindowController *made = [NillaWindowController claimChromeMadeWindow:chromeWindow];
   if (!made) return [self makeWindowForProfile:profile];
   NSWindow *window = made.coreWindow.window;
   [self showProfile:profile ?: @"" inWindow:window];
@@ -168,11 +168,11 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 + (NSWindow *)makeWindowForProfile:(NSString *)profile chromeWindow:(NSString *)chromeWindow appWindow:(NSString *)appWindow {
   const BOOL link = [appWindow hasPrefix:@"link:"];
   NSWindow *window = chromeWindow.length ? nil
-                     : link ? [ArdiaEarlyWindow claimLittleWindowForLink:appWindow profile:profile]
-                            : [ArdiaEarlyWindow claimForAppWindow:appWindow profile:profile];
+                     : link ? [NillaEarlyWindow claimLittleWindowForLink:appWindow profile:profile]
+                            : [NillaEarlyWindow claimForAppWindow:appWindow profile:profile];
   if (window) [self showProfile:profile ?: @"" inWindow:window];
   else window = [self makeWindowForProfile:profile chromeWindow:chromeWindow];
-  if (window && appWindow.length && !link) [ArdiaWindowController forNSWindow:window].appWindowId = appWindow;
+  if (window && appWindow.length && !link) [NillaWindowController forNSWindow:window].appWindowId = appWindow;
   return window;
 }
 
@@ -184,19 +184,19 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 
 + (void)floatOverActiveSpace:(NSWindow *)window {
   if (!window) return;
-  ardia_pip::FloatOverActiveSpace(window);
+  nilla_pip::FloatOverActiveSpace(window);
 }
 
 + (void)recordLaunchLayout {
-  [ArdiaEarlyWindow recordNow];
+  [NillaEarlyWindow recordNow];
 }
 
 + (void)forgetLaunchPictures {
-  [ArdiaEarlyWindow forgetPicturesNow];
+  [NillaEarlyWindow forgetPicturesNow];
 }
 
 + (BOOL)takeDismissedAppWindow:(NSString *)appWindow {
-  return [ArdiaEarlyWindow takeDismissed:appWindow];
+  return [NillaEarlyWindow takeDismissed:appWindow];
 }
 
 + (void)showProfile:(NSString *)profile inWindow:(NSWindow *)window {
@@ -206,20 +206,20 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 + (void)showProfile:(NSString *)profile
            inWindow:(NSWindow *)window
              report:(void (^)(BOOL, double, double, BOOL))report {
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
   if (!controller) return;
   const CFTimeInterval started = CACurrentMediaTime();
-  const BOOL profileLoaded = ardia_host::LoadedProfile(profile ?: @"") != nil;
+  const BOOL profileLoaded = nilla_host::LoadedProfile(profile ?: @"") != nil;
   __weak ArdiaCoreWindow *coreWindow = controller.coreWindow;
-  __weak ArdiaWindowController *weakController = controller;
-  ardia_host::WithProfile(profile ?: @"", ^(ArdiaCoreProfile *p) {
-    ArdiaWindowController *shown = weakController;
+  __weak NillaWindowController *weakController = controller;
+  nilla_host::WithProfile(profile ?: @"", ^(ArdiaCoreProfile *p) {
+    NillaWindowController *shown = weakController;
     if (!p || !coreWindow || !shown) return;
     coreWindow.activeProfile = p;
-    ardia_host::NoteProfileSwitch(p, coreWindow.window);
+    nilla_host::NoteProfileSwitch(p, coreWindow.window);
     const double activeMs = (CACurrentMediaTime() - started) * 1000;
-    ArdiaCoreTab *tab = [ArdiaTabStrip activeTabInWindow:shown profile:p];
-    ArdiaWebView *view = tab ? [ArdiaTabRegistry viewForTab:tab] : nil;
+    ArdiaCoreTab *tab = [NillaTabStrip activeTabInWindow:shown profile:p];
+    NillaWebView *view = tab ? [NillaTabRegistry viewForTab:tab] : nil;
     NSWindow *shownWindow = coreWindow.window;
     if (report) {
       void (^shownFirstFrame)(BOOL) = ^(BOOL heldTimedOut) {
@@ -234,11 +234,11 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 }
 
 + (void)prepareProfiles:(NSArray<NSString *> *)profiles forWindow:(NSWindow *)window {
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
   if (!controller) return;
   __weak ArdiaCoreWindow *coreWindow = controller.coreWindow;
   for (NSString *profile in profiles)
-    ardia_host::WithProfile(profile, ^(ArdiaCoreProfile *p) {
+    nilla_host::WithProfile(profile, ^(ArdiaCoreProfile *p) {
       if (p && coreWindow) [coreWindow prepareProfile:p];
     });
 }
@@ -246,7 +246,7 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 + (void)setTrafficLightsCenter:(NSValue *)center trailing:(BOOL)trailing inWindow:(NSWindow *)window {
   const BOOL translated = objc_getAssociatedObject(window, kLightsShownKey) != nil;
   NSValue *current = objc_getAssociatedObject(window, kLightsCenterKey);
-  const BOOL placed = ArdiaTrafficLightsTrailing(window) == trailing && (current == center || [current isEqual:center]);
+  const BOOL placed = NillaTrafficLightsTrailing(window) == trailing && (current == center || [current isEqual:center]);
   if (placed && !translated) return;
   [CATransaction begin];
   [CATransaction setDisableActions:YES];
@@ -264,7 +264,7 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 }
 
 + (void)moveTrafficLightsCenter:(NSValue *)center trailing:(BOOL)trailing inWindow:(NSWindow *)window {
-  if (ArdiaTrafficLightsTrailing(window) != trailing) return [self setTrafficLightsCenter:center trailing:trailing inWindow:window];
+  if (NillaTrafficLightsTrailing(window) != trailing) return [self setTrafficLightsCenter:center trailing:trailing inWindow:window];
   id shown = objc_getAssociatedObject(window, kLightsShownKey);
   NSValue *current = shown ? (shown == NSNull.null ? nil : shown) : objc_getAssociatedObject(window, kLightsCenterKey);
   if (current == center || [current isEqual:center]) return;
@@ -289,7 +289,7 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 + (void)keepInterfaceContentSizeOfWindow:(NSWindow *)window {
   if (!window) return;
   FollowInterfaceScale();
-  objc_setAssociatedObject(window, kInterfaceContentScaleKey, @(ArdiaInterfaceScale.scale), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  objc_setAssociatedObject(window, kInterfaceContentScaleKey, @(NillaInterfaceScale.scale), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }
 
 + (void)setSwappedHandler:(void (^)(NSWindow *, NSWindow *))handler {
@@ -301,10 +301,10 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 }
 
 + (void)closeWindow:(NSWindow *)window {
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
-  if (![ArdiaWebView keepTransfersOfWindow:window]) {
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
+  if (![NillaWebView keepTransfersOfWindow:window]) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [ArdiaChromeWindowHost closeWindow:window];
+      [NillaChromeWindowHost closeWindow:window];
     });
     return;
   }
@@ -317,7 +317,7 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 }
 
 + (BOOL)userSeesWindow:(NSWindow *)window {
-  return [ArdiaWindowController userSees:window];
+  return [NillaWindowController userSees:window];
 }
 
 + (void)setShouldCloseHandler:(BOOL (^)(NSWindow *))handler {
@@ -349,17 +349,17 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 }
 
 + (void)embedRootView:(NSView *)root inWindow:(NSWindow *)window {
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
   if (!controller) return;
   NSView *host = controller.coreWindow.hostView;
   root.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
   root.frame = host.bounds;
-  NSView *cover = [ArdiaEarlyWindow coverInWindow:window];
+  NSView *cover = [NillaEarlyWindow coverInWindow:window];
   if (cover.superview == host) [host addSubview:root positioned:NSWindowBelow relativeTo:cover];
   else [host addSubview:root];
   controller.root = root;
-  [ArdiaInterfaceScale rootAttached:root];
-  [ArdiaEarlyWindow rootEmbedded:root inWindow:window];
+  [NillaInterfaceScale rootAttached:root];
+  [NillaEarlyWindow rootEmbedded:root inWindow:window];
 }
 
 + (NSView *)embeddedRootOfWindow:(NSWindow *)window {
@@ -371,11 +371,11 @@ NSView *ArdiaWindowRootView(NSWindow *window) {
 }
 
 + (NSView *)rootViewOfWindow:(NSWindow *)window {
-  return [ArdiaWindowController forNSWindow:window].root;
+  return [NillaWindowController forNSWindow:window].root;
 }
 
 + (void)removeRootViewOfWindow:(NSWindow *)window {
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
   [controller.root removeFromSuperview];
   controller.root = nil;
 }

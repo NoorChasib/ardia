@@ -37,7 +37,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version; set, the run also names the installers Ardia-<version>-windows-<cpu>-setup.exe and packs the engine's source, as the artifacts windows-release-x64, windows-release-arm64 and windows-release-source
+        description: Release version; set, the run also names the installers Nilla-<version>-windows-<cpu>-setup.exe and packs the engine's source, as the artifacts windows-release-x64, windows-release-arm64 and windows-release-source
         type: string
         default: ""
   workflow_call:
@@ -48,10 +48,10 @@ on:
         required: true
     outputs:
       version:
-        description: The version stamped in Ardia.build.json
+        description: The version stamped in Nilla.build.json
         value: ${{ jobs.identity.outputs.version }}
       build:
-        description: The build number stamped in Ardia.build.json
+        description: The build number stamped in Nilla.build.json
         value: ${{ jobs.identity.outputs.build }}
 
 permissions:
@@ -96,19 +96,19 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
-          sparse-checkout: apps/browser/macos/Ardia.xcodeproj/project.pbxproj
+          sparse-checkout: apps/browser/macos/Nilla.xcodeproj/project.pbxproj
           sparse-checkout-cone-mode: false
       - id: identity
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};.*/\1/p' apps/browser/macos/Ardia.xcodeproj/project.pbxproj | head -1)
+          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};.*/\1/p' apps/browser/macos/Nilla.xcodeproj/project.pbxproj | head -1)
           version="${RELEASE_VERSION:-$project}"
           [[ "$version" =~ ^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$ ]] || { echo "::error::'$version' isn't a version the updater reads"; exit 1; }
           build=$(git rev-list --count HEAD)
           { echo "version=$version"; echo "build=$build"; } >> "$GITHUB_OUTPUT"
-          echo "Ardia $version, Windows build $build (the commits in $(git rev-parse --short HEAD)'s history)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Nilla $version, Windows build $build (the commits in $(git rev-parse --short HEAD)'s history)" >> "$GITHUB_STEP_SUMMARY"
 
   source:
     needs: identity
@@ -126,7 +126,7 @@ jobs:
           BUILD: ${{ needs.identity.outputs.build }}
         run: |
           set -euo pipefail
-          out="$RUNNER_TEMP/source/Ardia-$VERSION-windows-source.tar.xz"
+          out="$RUNNER_TEMP/source/Nilla-$VERSION-windows-source.tar.xz"
           mkdir -p "$(dirname "$out")"
           scripts/windows/engine-source.sh "$GITHUB_SHA" "$VERSION" "$BUILD" "$out"
           (cd "$(dirname "$out")" && sha256sum "$(basename "$out")" > "$(basename "$out").sha256")
@@ -234,7 +234,7 @@ jobs:
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
           $msbuild = "$vs\MSBuild\Current\Bin\arm64\MSBuild.exe"
           "Building with $msbuild"
-          & $msbuild windows\Ardia.sln /nologo /restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform=ARM64 /p:AppxBundle=Never /p:RunAutolinkCheck=false /p:PreferredToolArchitecture=arm64 "/clp:NoSummary;NoItemAndPropertyList;Verbosity=normal" "/bl:windows\msbuild_arm64_build.binlog" "/flp1:errorsonly;logfile=windows\msbuild_arm64_build.err" "/flp2:warningsonly;logfile=windows\msbuild_arm64_build.wrn"
+          & $msbuild windows\Nilla.sln /nologo /restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform=ARM64 /p:AppxBundle=Never /p:RunAutolinkCheck=false /p:PreferredToolArchitecture=arm64 "/clp:NoSummary;NoItemAndPropertyList;Verbosity=normal" "/bl:windows\msbuild_arm64_build.binlog" "/flp1:errorsonly;logfile=windows\msbuild_arm64_build.err" "/flp2:warningsonly;logfile=windows\msbuild_arm64_build.wrn"
           exit $LASTEXITCODE
       - name: Keep the Hermes compiler beside the built app
         if: steps.built.outputs.cache-hit != 'true'
@@ -314,7 +314,7 @@ jobs:
           sparse-checkout: |
             scripts/windows
             apps/browser/windows/Ardia
-            apps/browser/macos/Ardia.xcodeproj
+            apps/browser/macos/Nilla.xcodeproj
             packages/import/fixtures/home
       - name: Check the launch script's process tree
         if: env.SLUG == 'x64' && env.PART == 'launch'
@@ -366,7 +366,7 @@ jobs:
         shell: pwsh
         run: |
           $copy = Join-Path "${{ runner.temp }}" "host-manifest-check.exe"
-          Copy-Item "$env:APP/Ardia.exe" $copy
+          Copy-Item "$env:APP/Nilla.exe" $copy
           scripts/windows/host-manifest.ps1 -From "$env:APP/ArdiaApp.dll" -To $copy
       - name: Fetch the engine
         id: engine
@@ -389,46 +389,46 @@ jobs:
         id: assemble
         if: ${{ !cancelled() && steps.engine.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/assemble.ps1 -App $env:APP -Engine "${{ runner.temp }}/engine" -Out "${{ runner.temp }}/Ardia" -Version $env:VERSION -Build $env:BUILD
+        run: scripts/windows/assemble.ps1 -App $env:APP -Engine "${{ runner.temp }}/engine" -Out "${{ runner.temp }}/Nilla" -Version $env:VERSION -Build $env:BUILD
       - name: Every DLL the assembled app needs is in it or in a clean Windows 11
         if: ${{ !cancelled() && steps.assemble.outcome == 'success' && env.PART == 'launch' }}
         shell: pwsh
-        run: scripts/windows/dependency-check.ps1 -App "${{ runner.temp }}/Ardia"
+        run: scripts/windows/dependency-check.ps1 -App "${{ runner.temp }}/Nilla"
       - name: Launch it
         if: ${{ !cancelled() && (env.FULL == 'true' || steps.engine.outcome != 'success' || env.COMPILED == 'true') }}
         timeout-minutes: 12
         shell: pwsh
-        run: scripts/windows/launch-smoke.ps1 -App "$env:APP/Ardia.exe" -Out "${{ runner.temp }}/launch" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
+        run: scripts/windows/launch-smoke.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/launch" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
       - name: Tour
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' }}
         continue-on-error: true
         timeout-minutes: 12
         shell: pwsh
         run: |
-          scripts/windows/tour.ps1 -App "$env:APP/Ardia.exe" -Out "${{ runner.temp }}/tour"
+          scripts/windows/tour.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/tour"
           if (Test-Path "${{ runner.temp }}/tour/tour.md") { Get-Content "${{ runner.temp }}/tour/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Make the installer
         id: installer
         if: ${{ !cancelled() && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/make-installer.ps1 -Source "${{ runner.temp }}/Ardia" -Out "${{ runner.temp }}/installer" -Cpu $env:SLUG -Version $env:VERSION
+        run: scripts/windows/make-installer.ps1 -Source "${{ runner.temp }}/Nilla" -Out "${{ runner.temp }}/installer" -Cpu $env:SLUG -Version $env:VERSION
       - name: Install and uninstall it
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/installer-check.ps1 -Setup "${{ runner.temp }}/installer/Ardia-Setup-$env:SLUG.exe"
+        run: scripts/windows/installer-check.ps1 -Setup "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe"
       - name: Close and reopen the installed app
         id: relaunch
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
         timeout-minutes: 15
         shell: pwsh
         run: |
-          scripts/windows/relaunch-check.ps1 -Setup "${{ runner.temp }}/installer/Ardia-Setup-$env:SLUG.exe" -Out "${{ runner.temp }}/relaunch"
+          scripts/windows/relaunch-check.ps1 -Setup "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe" -Out "${{ runner.temp }}/relaunch"
           if (Test-Path "${{ runner.temp }}/relaunch/relaunch.md") { "### Close and reopen ($env:SLUG)" >> $env:GITHUB_STEP_SUMMARY; Get-Content "${{ runner.temp }}/relaunch/relaunch.md" | ForEach-Object { "- $_" } >> $env:GITHUB_STEP_SUMMARY }
       - name: Name it for a release
         id: release-files
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/release-files.ps1 -Installer "${{ runner.temp }}/installer" -Identity "${{ runner.temp }}/Ardia/Ardia.build.json" -Cpu $env:SLUG -Out "${{ runner.temp }}/release"
+        run: scripts/windows/release-files.ps1 -Installer "${{ runner.temp }}/installer" -Identity "${{ runner.temp }}/Ardia/Nilla.build.json" -Cpu $env:SLUG -Out "${{ runner.temp }}/release"
       - if: ${{ vars.NILLA_RELEASES_ENABLED && inputs.version && steps.release-files.outcome == 'success' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
@@ -441,28 +441,28 @@ jobs:
         if: ${{ !cancelled() && steps.engine.outcome == 'success' }}
         timeout-minutes: 12
         shell: pwsh
-        run: scripts/windows/launch-smoke.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/launch-engine" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
+        run: scripts/windows/launch-smoke.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/launch-engine" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
       - name: Tour the pages
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 20
         shell: pwsh
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/tour-engine" -Only pages,peek,peek-dark,peek-tabs,peek-layouts
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/tour-engine" -Only pages,peek,peek-dark,peek-tabs,peek-layouts
           if (Test-Path "${{ runner.temp }}/tour-engine/tour.md") { Get-Content "${{ runner.temp }}/tour-engine/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Tour the first run
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
         timeout-minutes: 40
         shell: pwsh
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/tour-first-run" -Only first-run
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/tour-first-run" -Only first-run
           if (Test-Path "${{ runner.temp }}/tour-first-run/tour.md") { Get-Content "${{ runner.temp }}/tour-first-run/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Tour the typing
         if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
         timeout-minutes: 18
         shell: pwsh
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/tour-typing" -Only typing
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Nilla.exe" -Out "${{ runner.temp }}/tour-typing" -Only typing
           if (Test-Path "${{ runner.temp }}/tour-typing/tour.md") { Get-Content "${{ runner.temp }}/tour-typing/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Only logs and smoke results go up
         if: ${{ !cancelled() }}

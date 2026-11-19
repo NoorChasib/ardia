@@ -1,5 +1,5 @@
 #!/bin/sh
-# Builds the ardia CLI tarball: a relocatable CPython 3.13 with ardia_cli, its pinned dependencies, esbuild and axe-core.
+# Builds the ardia CLI tarball: a relocatable CPython 3.13 with nilla_browser_cli, its pinned dependencies, esbuild and axe-core.
 #
 #   apps/cli/scripts/build.sh <version> <out dir> [--platform macos-arm64|linux-x64]
 #   apps/cli/scripts/build.sh -h | --help
@@ -127,19 +127,19 @@ site=$lib/site-packages
 
 UV_CACHE_DIR=$cache/uv "$uv" pip install --quiet --python "$python" --break-system-packages --link-mode copy \
   --no-build --require-hashes -r "$cli_dir/requirements.lock"
-cp -R "$cli_dir/ardia_cli" "$site/ardia_cli"
-printf '__version__ = "%s"\n' "$version" >"$site/ardia_cli/__init__.py"
-mkdir "$work/esbuild" "$site/ardia_cli/bin"
+cp -R "$cli_dir/nilla_browser_cli" "$site/nilla_browser_cli"
+printf '__version__ = "%s"\n' "$version" >"$site/nilla_browser_cli/__init__.py"
+mkdir "$work/esbuild" "$site/nilla_browser_cli/bin"
 tar -xzf "$cache/$esbuild_asset" -C "$work/esbuild" package/bin/esbuild
-cp "$work/esbuild/package/bin/esbuild" "$site/ardia_cli/bin/esbuild"
-chmod 755 "$site/ardia_cli/bin/esbuild"
+cp "$work/esbuild/package/bin/esbuild" "$site/nilla_browser_cli/bin/esbuild"
+chmod 755 "$site/nilla_browser_cli/bin/esbuild"
 rm -rf "$work/esbuild"
-mkdir "$work/axe" "$site/ardia_cli/vendor"
+mkdir "$work/axe" "$site/nilla_browser_cli/vendor"
 tar -xzf "$cache/$axe_asset" -C "$work/axe" package/axe.min.js package/LICENSE
-cp "$work/axe/package/axe.min.js" "$site/ardia_cli/vendor/axe.min.js"
-cp "$work/axe/package/LICENSE" "$site/ardia_cli/vendor/axe-core-LICENSE"
+cp "$work/axe/package/axe.min.js" "$site/nilla_browser_cli/vendor/axe.min.js"
+cp "$work/axe/package/LICENSE" "$site/nilla_browser_cli/vendor/axe-core-LICENSE"
 rm -rf "$work/axe"
-[ "$("$site/ardia_cli/bin/esbuild" --version)" = "$esbuild_version" ] || { echo "build.sh: the bundled esbuild doesn't run" >&2; exit 1; }
+[ "$("$site/nilla_browser_cli/bin/esbuild" --version)" = "$esbuild_version" ] || { echo "build.sh: the bundled esbuild doesn't run" >&2; exit 1; }
 
 rm -rf "$lib/test" "$lib/idlelib" "$lib/tkinter" "$lib/turtledemo" "$lib/ensurepip" "$lib/lib2to3" \
   "$lib/turtle.py" "$lib/pydoc_data" "$lib"/config-* "$lib/lib-dynload"/_tkinter* \
@@ -157,7 +157,7 @@ find "$root" -type l | while IFS= read -r link; do
     /*|..|../*|*/../*|*/..) rm -f "$link" ;;
   esac
 done
-"$python" -I -c 'import ardia_cli.cli, ardia_cli.computer, ardia_cli.browse.cli, ardia_cli.browse.daemon, ardia_cli.scripts_cli, ardia_cli.scripts_test, ardia_cli.scripts_store, ardia_cli.browsing, ardia_cli.wsclient, websockets.asyncio.server, sqlite3, ssl, zoneinfo, ctypes, lzma; from ardia_cli.userscript import find_esbuild; assert find_esbuild().endswith("ardia_cli/bin/esbuild"); from ardia_cli.browse.audit import axe_source; assert "axe" in axe_source()[:4000]' >/dev/null
+"$python" -I -c 'import nilla_browser_cli.cli, nilla_browser_cli.computer, nilla_browser_cli.browse.cli, nilla_browser_cli.browse.daemon, nilla_browser_cli.scripts_cli, nilla_browser_cli.scripts_test, nilla_browser_cli.scripts_store, nilla_browser_cli.browsing, nilla_browser_cli.wsclient, websockets.asyncio.server, sqlite3, ssl, zoneinfo, ctypes, lzma; from nilla_browser_cli.userscript import find_esbuild; assert find_esbuild().endswith("nilla_browser_cli/bin/esbuild"); from nilla_browser_cli.browse.audit import axe_source; assert "axe" in axe_source()[:4000]' >/dev/null
 
 cat >"$root/bin/ardia" <<'EOF'
 #!/bin/sh
@@ -170,7 +170,7 @@ while [ -L "$self" ]; do
   esac
 done
 root=$(cd -P "$(dirname "$self")/.." && pwd -P)
-exec "$root/python/bin/python3" -I -m ardia_cli "$@"
+exec "$root/python/bin/python3" -I -m nilla_browser_cli "$@"
 EOF
 chmod 755 "$root/bin/ardia"
 mkdir "$root/.leases"

@@ -3,8 +3,8 @@ import fcntl
 import hashlib
 import os
 
-from ardia_cli.browse import paths
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse import paths
+from nilla_browser_cli.browse.errors import BrowseError
 
 
 def _name(target_id: str) -> str:
@@ -30,7 +30,7 @@ def claim(browse_fd: int, key: str, session: str, target_id: str, kind: str) -> 
         if current and current.get("owner") != key and paths.lock_held(f"{current.get('owner')}.lock", browse_fd):
             raise BrowseError(
                 f"Session {current.get('session')} is already capturing or routing this tab; "
-                f"stop it there first (`ardia browse --session {current.get('session')} ...`)",
+                f"stop it there first (`nilla-browser browse --session {current.get('session')} ...`)",
                 code="tab_owned",
             )
         kinds = sorted(set((current or {}).get("kinds", []) if current and current.get("owner") == key else []) | {kind})

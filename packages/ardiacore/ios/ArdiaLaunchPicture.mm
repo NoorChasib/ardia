@@ -14,7 +14,7 @@
 #include <initializer_list>
 #include <mach/mach.h>
 
-using namespace ardia_early_window;
+using namespace nilla_early_window;
 
 namespace {
 
@@ -39,7 +39,7 @@ NSData *EncodePNG(CGImageRef image) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 NSString *PicturePath(NSString *windowId) {
   return [gDirectory stringByAppendingPathComponent:PictureName(windowId)];
@@ -168,9 +168,9 @@ CALayer *StandIn(CALayer *layer, CGFloat scale) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
-BOOL CapturePicture(ArdiaWindowController *controller, NSString *windowId, NSMutableDictionary *layout) {
+BOOL CapturePicture(NillaWindowController *controller, NSString *windowId, NSMutableDictionary *layout) {
   NSWindow *window = controller.coreWindow.window;
   NSView *root = controller.root;
   CALayer *layer = root.layer;
@@ -289,7 +289,7 @@ void FreePages(void *, const void *data, size_t size) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 CGImageRef DecodeOutsideHeap(CGImageRef encoded) {
   const size_t w = CGImageGetWidth(encoded), h = CGImageGetHeight(encoded), stride = w * 4;
@@ -328,7 +328,7 @@ CGImageRef TakePrefetched(NSString *windowId) {
     gPrefetched = nullptr;
     os_unfair_lock_unlock(&gPrefetchLock);
   }
-  [ArdiaEarlyWindow discardPrefetch];
+  [NillaEarlyWindow discardPrefetch];
   return picture;
 }
 

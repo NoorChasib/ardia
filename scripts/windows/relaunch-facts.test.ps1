@@ -12,10 +12,10 @@ function Process([int]$Id, [int]$Parent, [string]$CommandLine) {
 }
 
 $running = @(
-  (Process 10 1 '"C:\Users\a\AppData\Local\Programs\Ardia\Ardia.exe" '),
-  (Process 11 10 'C:\Users\a\AppData\Local\Programs\Ardia\Ardia.exe --type=crashpad-handler "--user-data-dir=C:\x"'),
-  (Process 12 10 '"C:\Users\a\AppData\Local\Programs\Ardia\Ardia.exe" --type=gpu-process --field-trial-handle=1'),
-  (Process 20 1 '"C:\Users\a\AppData\Local\Programs\Ardia\Ardia.exe" --single-argument https://example.com/--type=x'),
+  (Process 10 1 '"C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe" '),
+  (Process 11 10 'C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe --type=crashpad-handler "--user-data-dir=C:\x"'),
+  (Process 12 10 '"C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe" --type=gpu-process --field-trial-handle=1'),
+  (Process 20 1 '"C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe" --single-argument https://example.com/--type=x'),
   (Process 30 1 $null)
 )
 Check "a process without --type is a browser process" "10,20" ((Get-BrowserProcesses $running | ForEach-Object ProcessId) -join ",")
@@ -24,14 +24,14 @@ Check "a process with no command line is not counted" $false ((Get-BrowserProces
 Check "children are found by parent id" "11,12" ((Get-ChildProcesses $running 10 | ForEach-Object ProcessId) -join ",")
 Check "a browser that has started nothing has no children" 0 @(Get-ChildProcesses $running 20).Count
 Check "the crash handler, which starts before the engine, isn't a browser child" "12" ((Get-BrowserChildren $running 10 | ForEach-Object ProcessId) -join ",")
-Check "a waiting launch with only its crash handler has no browser children" 0 @(Get-BrowserChildren @((Process 40 1 'x'), (Process 41 40 'Ardia.exe --type=crashpad-handler --monitor-self')) 40).Count
+Check "a waiting launch with only its crash handler has no browser children" 0 @(Get-BrowserChildren @((Process 40 1 'x'), (Process 41 40 'Nilla.exe --type=crashpad-handler --monitor-self')) 40).Count
 
 $waited = Read-LaunchGuard @(
   "launch 270 process started inside the engine",
   "engine 0 launch guard: waited 2875 ms for the previous Ardia on this profile to finish exiting",
   "engine 0 launch guard: waited 2875 ms for a previous Ardia, 0 unfinished starts before this one, restore state kept"
 )
-Check "the wait for a previous Ardia is read" 2875 $waited.WaitedMs
+Check "the wait for a previous Nilla is read" 2875 $waited.WaitedMs
 Check "unfinished starts are read" 0 $waited.UnfinishedBefore
 Check "kept restore state is not set aside" $false $waited.SetAside
 Check "a clean log has no fatal lines" 0 $waited.Fatal.Count

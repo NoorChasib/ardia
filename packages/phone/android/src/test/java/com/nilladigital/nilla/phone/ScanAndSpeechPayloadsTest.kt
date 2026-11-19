@@ -1,7 +1,7 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.search.DictationProblem
-import com.ardia.settings.SyncCodeJudge
+import com.nilladigital.nilla.search.DictationProblem
+import com.nilladigital.nilla.settings.SyncCodeJudge
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

@@ -18,7 +18,7 @@ const mirrors = {
   "apps/phone/ios/Config/Nilla.xcconfig": /^NILLA_ID_PREFIX = (\S+)$/m,
   "apps/phone/android/gradle.properties": /^nillaIdPrefix=(\S+)$/m,
   "scripts/lib/identity.sh": /^NILLA_ID_PREFIX=(\S+)$/m,
-  "apps/cli/ardia_cli/endpoint.py": /^ID_PREFIX = "([^"]+)"$/m,
+  "apps/cli/nilla_browser_cli/endpoint.py": /^ID_PREFIX = "([^"]+)"$/m,
 };
 
 test("the id prefix is com.nilladigital in packages/core/src/identity.ts", () => {
@@ -48,17 +48,17 @@ test("the Mac and phone xcconfigs build their ids from the prefix and take the t
 });
 
 test("the CLI's bundle id is the prefix plus nilla", () => {
-  assert.match(read("apps/cli/ardia_cli/endpoint.py"), /^BUNDLE_ID = f"\{ID_PREFIX\}\.nilla"$/m);
+  assert.match(read("apps/cli/nilla_browser_cli/endpoint.py"), /^BUNDLE_ID = f"\{ID_PREFIX\}\.nilla"$/m);
 });
 
 test("the Mac project takes its bundle id and team from Nilla.xcconfig and signs only its own keychain groups", () => {
-  const project = read("apps/browser/macos/Ardia.xcodeproj/project.pbxproj");
+  const project = read("apps/browser/macos/Nilla.xcodeproj/project.pbxproj");
   assert.doesNotMatch(project, /PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM|DevelopmentTeam|U5L5T3NGVV/);
   assert.equal(basedOn(project, "Nilla.xcconfig"), 2, "both project configurations are based on Nilla.xcconfig");
   assert.equal([...project.matchAll(/PRODUCT_NAME = Nilla;/g)].length, 2);
   assert.deepEqual([...new Set([...project.matchAll(/MARKETING_VERSION = "?([^";]*)"?;/g)].map((m) => m[1]))], ["0.1.0"]);
-  for (const file of ["Ardia.entitlements", "Ardia-ICloudPasskeys.entitlements"]) {
-    const entitlements = read(`apps/browser/macos/Ardia-macOS/${file}`);
+  for (const file of ["Nilla.entitlements", "Nilla-ICloudPasskeys.entitlements"]) {
+    const entitlements = read(`apps/browser/macos/Nilla-macOS/${file}`);
     const groups = entitlements.match(/<key>keychain-access-groups<\/key>\s*<array>([\s\S]*?)<\/array>/)?.[1] ?? "";
     assert.deepEqual(
       [...groups.matchAll(/<string>([^<]+)<\/string>/g)].map((m) => m[1]),
@@ -78,17 +78,17 @@ test("the release check and the Dock tile build read their ids from identity.sh"
 });
 
 test("the phone apps take their ids from the prefix: the iOS targets, app group, Expo config and Android applicationId", () => {
-  const project = read("apps/phone/ios/Ardia.xcodeproj/project.pbxproj");
+  const project = read("apps/phone/ios/Nilla.xcodeproj/project.pbxproj");
   assert.doesNotMatch(project, /com\.ardia\.browser|DEVELOPMENT_TEAM|DevelopmentTeam|U5L5T3NGVV/);
   assert.equal(basedOn(project, "Config/Nilla.xcconfig"), 2);
   const ids = [...project.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = "?([^";]*)"?;/g)].map((m) => m[1]);
   assert.deepEqual([...new Set(ids)].sort(), ["$(NILLA_PHONE_BUNDLE_ID)", "$(NILLA_PHONE_BUNDLE_ID).open", "$(NILLA_PHONE_BUNDLE_ID).share", "$(NILLA_PHONE_BUNDLE_ID).widgets"]);
   const group = `group.${PREFIX}.nilla.ios`;
-  for (const name of ["Ardia", "Ardia-DefaultBrowser", "Open", "Share", "Widgets"]) {
+  for (const name of ["Nilla", "Nilla-DefaultBrowser", "Open", "Share", "Widgets"]) {
     const entitlements = read(`apps/phone/ios/Config/${name}.entitlements`);
     assert.deepEqual([...entitlements.matchAll(/<string>(group\.[^<]+)<\/string>/g)].map((m) => m[1]), [group], name);
   }
-  assert.match(read("packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Models/BrowserSchema.swift"), new RegExp(`appGroupIdentifier = "${group.replace(/\./g, "\\.")}"`));
+  assert.match(read("packages/phone/ios/NillaKit/Sources/NillaBrowser/Models/BrowserSchema.swift"), new RegExp(`appGroupIdentifier = "${group.replace(/\./g, "\\.")}"`));
   const expo = JSON.parse(read("apps/phone/app.json")).expo;
   assert.equal(expo.ios.bundleIdentifier, `${PREFIX}.nilla.ios`);
   assert.equal(expo.android.package, `${PREFIX}.nilla.android`);
@@ -104,18 +104,18 @@ test("the phone registers nilla:// with the OS, and its builders of OS links use
     assert.doesNotMatch(shortcuts, /android:data="ardia:/, path);
     assert.ok([...shortcuts.matchAll(/android:targetPackage="([^"]+)"/g)].every((m) => m[1] === `${PREFIX}.nilla.android`), path);
   }
-  const plist = read("apps/phone/ios/Ardia/Info.plist");
+  const plist = read("apps/phone/ios/Nilla/Info.plist");
   const bgTask = `${PREFIX}.nilla.ios.sync`;
   assert.match(plist, new RegExp(`<key>BGTaskSchedulerPermittedIdentifiers</key>\\s*<array>\\s*<string>${bgTask.replace(/\./g, "\\.")}</string>`));
   assert.match(plist, /<key>CFBundleURLSchemes<\/key>\s*<array>\s*<string>nilla<\/string>/);
   assert.doesNotMatch(plist, /<string>ardia<\/string>|com\.ardia\.browser/);
-  assert.ok(read("packages/phone/ios/ArdiaKit/Sources/ArdiaSync/SyncService.swift").includes(`backgroundTaskIdentifier = "${bgTask}"`));
-  const tabPolicies = read("packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Tabs/TabPolicies.swift");
+  assert.ok(read("packages/phone/ios/NillaKit/Sources/NillaSync/SyncService.swift").includes(`backgroundTaskIdentifier = "${bgTask}"`));
+  const tabPolicies = read("packages/phone/ios/NillaKit/Sources/NillaBrowser/Tabs/TabPolicies.swift");
   assert.match(tabPolicies, /browseScheme = "ardia"/);
   assert.match(tabPolicies, /systemLinkScheme = "nilla"/);
-  assert.doesNotMatch(read("packages/phone/ios/ArdiaKit/Sources/ArdiaDesign/SystemShared.swift"), /browseScheme/);
-  const browserUrl = read("packages/phone/android/src/main/java/com/ardia/browser/BrowserUrl.kt");
+  assert.doesNotMatch(read("packages/phone/ios/NillaKit/Sources/NillaDesign/SystemShared.swift"), /browseScheme/);
+  const browserUrl = read("packages/phone/android/src/main/java/com/nilladigital/nilla/BrowserUrl.kt");
   assert.match(browserUrl, /BROWSE_SCHEME = "ardia"/);
   assert.match(browserUrl, /SYSTEM_LINK_SCHEME = "nilla"/);
-  assert.match(read("packages/phone/android/src/main/java/com/ardia/appmodel/SystemLink.kt"), /const val SCHEME = BrowserUrl\.SYSTEM_LINK_SCHEME/);
+  assert.match(read("packages/phone/android/src/main/java/com/nilladigital/nilla/appmodel/SystemLink.kt"), /const val SCHEME = BrowserUrl\.SYSTEM_LINK_SCHEME/);
 });

@@ -3,7 +3,7 @@ import { isPinnedRow } from "../browser/model";
 import type { Tab } from "../browser/types";
 import { awayFromPin } from "./organize";
 
-export const NO_ROW_ICON = symbolIcon("ardia:no-icon");
+export const NO_ROW_ICON = symbolIcon("nilla:no-icon");
 
 export const drawnIcon = (icon: string | null | undefined): string | null => (icon && icon !== NO_ROW_ICON ? icon : null);
 

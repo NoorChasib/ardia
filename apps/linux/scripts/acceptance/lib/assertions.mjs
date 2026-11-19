@@ -98,7 +98,7 @@ export function percentText(zoom) {
 
 export const UNSUPPORTED_SETTINGS = [
   { id: "general.defaultBrowser", text: "Default browser", pane: "General" },
-  { id: "general.openAtLogin", text: "Open Ardia at login", pane: "General" },
+  { id: "general.openAtLogin", text: "Open Nilla at login", pane: "General" },
 ];
 
 export function visibleUnsupported(textByPane) {
@@ -116,6 +116,6 @@ export function launchStepsComplete(steps) {
   return Array.isArray(steps) && LAUNCH_STEPS.every((step) => steps.includes(step));
 }
 
-export function launchLockHolders(locks, name = "ardia.linux.app-launch") {
+export function launchLockHolders(locks, name = "nilla.linux.app-launch") {
   return (locks?.held ?? []).filter((lock) => lock.name === name).map((lock) => lock.clientId);
 }

@@ -3,7 +3,7 @@ import { act, type ReactTestInstance } from "react-test-renderer";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 import { idOf, resetNativeMenus, titles, type NativeItem } from "./nativeMenusMock";
 
-jest.mock("@ardia/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@ardia/phone-native")));
+jest.mock("@nilla/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@nilla/phone-native")));
 
 const { BottomBar } = require("../components/browsing/BottomBar") as typeof import("../components/browsing/BottomBar");
 const { FloatingBar } = require("../components/browsing/FloatingBar") as typeof import("../components/browsing/FloatingBar");

@@ -10,7 +10,7 @@ import { useBrowse } from "../state/browse/store";
 import { currentTabs, useTabs } from "../state/tabs/store";
 import { landOpeningPage, renderSurface, unmount, withTabs } from "../../test/render/harness";
 
-jest.mock("@ardia/phone-native", () => ({ ...jest.requireActual("@ardia/phone-native"), pageObscuresInsets: () => true }));
+jest.mock("@nilla/phone-native", () => ({ ...jest.requireActual("@nilla/phone-native"), pageObscuresInsets: () => true }));
 
 beforeEach(() => {
   jest.useFakeTimers();

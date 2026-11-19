@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
@@ -20,12 +20,12 @@ object SwiftEasing {
 }
 
 @Immutable
-sealed interface ArdiaMotion {
+sealed interface NillaMotion {
     fun <T> spec(visibilityThreshold: T? = null): FiniteAnimationSpec<T>
 }
 
 @Immutable
-data class ArdiaSpring(val response: Float, val dampingFraction: Float) : ArdiaMotion {
+data class NillaSpring(val response: Float, val dampingFraction: Float) : NillaMotion {
     val stiffness: Float get() = (2.0 * PI / response).pow(2).toFloat()
 
     val dampingRatio: Float get() = dampingFraction
@@ -36,47 +36,47 @@ data class ArdiaSpring(val response: Float, val dampingFraction: Float) : ArdiaM
         spring(dampingRatio = dampingRatio, stiffness = stiffness, visibilityThreshold = visibilityThreshold)
 
     companion object {
-        fun withBounce(duration: Float, bounce: Float): ArdiaSpring =
-            ArdiaSpring(response = duration, dampingFraction = if (bounce >= 0f) 1f - bounce else 1f / (1f + bounce))
+        fun withBounce(duration: Float, bounce: Float): NillaSpring =
+            NillaSpring(response = duration, dampingFraction = if (bounce >= 0f) 1f - bounce else 1f / (1f + bounce))
     }
 }
 
 @Immutable
-data class ArdiaTween(val durationMillis: Int, val easing: Easing, val delayMillis: Int = 0) : ArdiaMotion {
+data class NillaTween(val durationMillis: Int, val easing: Easing, val delayMillis: Int = 0) : NillaMotion {
     override fun <T> spec(visibilityThreshold: T?): FiniteAnimationSpec<T> =
         tween(durationMillis = durationMillis, delayMillis = delayMillis, easing = easing)
 }
 
 object Motion {
-    val snappy = ArdiaSpring(response = 0.3f, dampingFraction = 0.86f)
-    val smooth = ArdiaSpring(response = 0.42f, dampingFraction = 0.9f)
-    val tabStack = ArdiaSpring.withBounce(duration = 0.4f, bounce = 0.2f)
-    val modeToggle = ArdiaSpring.withBounce(duration = 0.3f, bounce = 0.15f)
+    val snappy = NillaSpring(response = 0.3f, dampingFraction = 0.86f)
+    val smooth = NillaSpring(response = 0.42f, dampingFraction = 0.9f)
+    val tabStack = NillaSpring.withBounce(duration = 0.4f, bounce = 0.2f)
+    val modeToggle = NillaSpring.withBounce(duration = 0.3f, bounce = 0.15f)
 
-    val searchRise = ArdiaSpring(response = 0.39f, dampingFraction = 1f)
-    val surfaceSwap = ArdiaTween(300, SwiftEasing.easeOut)
-    val surfaceFade = ArdiaTween(200, SwiftEasing.easeOut)
-    val trayDim = ArdiaTween(300, SwiftEasing.easeInOut)
-    val trayDismiss = ArdiaSpring(response = 0.32f, dampingFraction = 1f)
-    val traySettle = ArdiaSpring(response = 0.34f, dampingFraction = 0.86f)
-    val resultsIn = ArdiaTween(140, SwiftEasing.easeOut)
-    val pager = ArdiaSpring(response = 0.3f, dampingFraction = 0.9f)
-    val press = ArdiaSpring(response = 0.2f, dampingFraction = 0.7f)
-    val barPressIn = ArdiaSpring.withBounce(duration = 0.08f, bounce = 0f)
-    val barPressOut = ArdiaSpring.withBounce(duration = 0.16f, bounce = 0.1f)
-    val barCollapse = ArdiaSpring.withBounce(duration = 0.4f, bounce = 0f)
-    val progressReveal = ArdiaTween(200, SwiftEasing.easeOut)
-    val progressAdvance = ArdiaTween(450, SwiftEasing.easeOut)
-    val progressFill = ArdiaTween(200, SwiftEasing.easeOut)
-    val progressFade = ArdiaTween(250, SwiftEasing.easeOut)
+    val searchRise = NillaSpring(response = 0.39f, dampingFraction = 1f)
+    val surfaceSwap = NillaTween(300, SwiftEasing.easeOut)
+    val surfaceFade = NillaTween(200, SwiftEasing.easeOut)
+    val trayDim = NillaTween(300, SwiftEasing.easeInOut)
+    val trayDismiss = NillaSpring(response = 0.32f, dampingFraction = 1f)
+    val traySettle = NillaSpring(response = 0.34f, dampingFraction = 0.86f)
+    val resultsIn = NillaTween(140, SwiftEasing.easeOut)
+    val pager = NillaSpring(response = 0.3f, dampingFraction = 0.9f)
+    val press = NillaSpring(response = 0.2f, dampingFraction = 0.7f)
+    val barPressIn = NillaSpring.withBounce(duration = 0.08f, bounce = 0f)
+    val barPressOut = NillaSpring.withBounce(duration = 0.16f, bounce = 0.1f)
+    val barCollapse = NillaSpring.withBounce(duration = 0.4f, bounce = 0f)
+    val progressReveal = NillaTween(200, SwiftEasing.easeOut)
+    val progressAdvance = NillaTween(450, SwiftEasing.easeOut)
+    val progressFill = NillaTween(200, SwiftEasing.easeOut)
+    val progressFade = NillaTween(250, SwiftEasing.easeOut)
     const val progressRevealDelayMillis = 150L
     const val placeholderDelayMillis = 300L
-    val placeholderIn = ArdiaTween(220, SwiftEasing.easeOut)
-    val pagerSettle = ArdiaSpring.withBounce(duration = 0.38f, bounce = 0f)
-    val pagerFade = ArdiaTween(200, SwiftEasing.easeOut)
-    val barTone = ArdiaTween(250, SwiftEasing.easeOut)
-    val logoSpin = ArdiaTween(2200, SwiftEasing.logoSpin)
-    val reducedFade = ArdiaTween(200, SwiftEasing.easeInOut)
-    val reducedSettle = ArdiaTween(200, SwiftEasing.easeOut)
-    val logoReset = ArdiaTween(300, SwiftEasing.easeOut)
+    val placeholderIn = NillaTween(220, SwiftEasing.easeOut)
+    val pagerSettle = NillaSpring.withBounce(duration = 0.38f, bounce = 0f)
+    val pagerFade = NillaTween(200, SwiftEasing.easeOut)
+    val barTone = NillaTween(250, SwiftEasing.easeOut)
+    val logoSpin = NillaTween(2200, SwiftEasing.logoSpin)
+    val reducedFade = NillaTween(200, SwiftEasing.easeInOut)
+    val reducedSettle = NillaTween(200, SwiftEasing.easeOut)
+    val logoReset = NillaTween(300, SwiftEasing.easeOut)
 }

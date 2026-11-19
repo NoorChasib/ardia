@@ -1,4 +1,4 @@
-import { ScanView, type ScanError } from "@ardia/phone-native";
+import { ScanView, type ScanError } from "@nilla/phone-native";
 import { StyleSheet } from "react-native";
 
 type Props = { active: boolean; onCode: (text: string) => void; onRejected: () => void; onError: (error: ScanError) => void };

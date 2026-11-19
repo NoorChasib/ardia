@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import ExpoModulesCore
 import UIKit
 
@@ -140,7 +140,7 @@ final class CompletingFieldView: ExpoView {
 
 public final class CompletingFieldModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneCompletingField")
+    Name("NillaPhoneCompletingField")
 
     View(CompletingFieldView.self) {
       Events("onTypedChange", "onSubmit", "onFocusChange", "onSuffixChange", "onFieldScroll")

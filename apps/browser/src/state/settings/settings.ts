@@ -14,7 +14,7 @@ import {
   type SearchEngine,
   isProviderEntryList,
   type ProviderEntry,
-} from "@ardia/core";
+} from "@nilla/core";
 import type { StateCreator } from "zustand";
 import type { BrowserState } from "../browser/store";
 import { DEFAULT_SIDEBAR_WIDTH, PAGE_FRAME, validPageFrame } from "../../lib/windowLayout";
@@ -98,7 +98,7 @@ export const SETTING_SPECS = {
   optShiftClickOpensInGroup: flag(true, SYNCED),
   peekModifier: oneOf(["alt", "shift", "off"], "shift", SYNCED),
   peekLinksToOtherSites: flag(true, SYNCED),
-  newTabLinksOpenIn: oneOf(["tab", "peek", "littleArdia"], "peek", SYNCED),
+  newTabLinksOpenIn: oneOf(["tab", "peek", "littleNilla"], "peek", SYNCED),
   popupsOpenAsTabs: flag(false, SYNCED),
   peekButtons: oneOf(["top", "left", "right"], "top", SYNCED),
   splitLinkModifier: oneOf(["altShift", "alt"], "altShift", SYNCED),
@@ -168,8 +168,8 @@ export const SETTING_SPECS = {
   showProfileDots: flag(true, SYNCED),
   profileSwitcherIcons: flag(false, SYNCED),
   shortcuts: shaped<Record<string, string[]>>({}, (v) => isRecordOf(v, isStringList), recordOf(STRING_LIST), SYNCED),
-  openLinksInLittleArdia: flag(true),
-  littleArdiaSize: shaped<[number, number]>([900, 640], (v) => Array.isArray(v) && v.length === 2 && v.every(isWidth), { type: "array", prefixItems: [WIDTH, WIDTH], minItems: 2, maxItems: 2 }),
+  openLinksInLittleNilla: flag(true),
+  littleNillaSize: shaped<[number, number]>([900, 640], (v) => Array.isArray(v) && v.length === 2 && v.every(isWidth), { type: "array", prefixItems: [WIDTH, WIDTH], minItems: 2, maxItems: 2 }),
   pageEngine: oneOf(["chromium", "webkit"], "chromium"),
   websiteEngines: shaped<Record<string, "chromium" | "webkit">>({}, (v) => isRecordOf(v, (e) => e === "chromium" || e === "webkit"), recordOf({ type: "string", enum: ["chromium", "webkit"] })),
   protectedVideoInWebKit: flag(true),
@@ -326,7 +326,7 @@ function withoutUntouchedSetting(doc: SavedObject, key: string, oldDefault: unkn
   return { ...doc, settings, settingsMeta: { chosen: without(chosen), inferred: without(inferred) } };
 }
 
-export const sessionWithNewTabLinksInLittleArdia = (doc: SavedObject) => withoutUntouchedSetting(doc, "littleArdiaOpensNewTabLinks", false);
+export const sessionWithNewTabLinksInLittleNilla = (doc: SavedObject) => withoutUntouchedSetting(doc, "littleNillaOpensNewTabLinks", false);
 
 export const sessionWithUnreadCountsOffByDefault = (doc: SavedObject) => withoutUntouchedSetting(doc, "showUnreadCounts", true);
 

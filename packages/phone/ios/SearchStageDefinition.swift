@@ -1,10 +1,10 @@
-import ArdiaDesign
+import NillaDesign
 import ExpoModulesCore
 import UIKit
 
 public final class SearchStageModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneSearchStage")
+    Name("NillaPhoneSearchStage")
 
     View(SearchStageView.self) {
       ViewName("SearchStage")

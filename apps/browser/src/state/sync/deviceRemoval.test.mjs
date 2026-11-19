@@ -10,7 +10,7 @@ const downloading = new Set();
 const unreadable = new Set();
 let ids = 0;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => `id${++ids}`,
     deviceName: () => "Test Mac",
     createPhrase: async () => true,
@@ -149,7 +149,7 @@ test("a removed device that still syncs comes back, and the Mac that removed it 
   assert.equal(liveDevice(bId), true);
 });
 
-test("two Macs with the same name are told apart: only the other one can be removed, and its row says when it last synced and which Ardia and system it ran", async () => {
+test("two Macs with the same name are told apart: only the other one can be removed, and its row says when it last synced and which Nilla and system it ran", async () => {
   folder.clear();
   const a = new Mac("A");
   const old = new Mac("Old");
@@ -171,7 +171,7 @@ test("two Macs with the same name are told apart: only the other one can be remo
     assert.ok(other.version && other.os, JSON.stringify(other));
     const at = other.lastSeen;
     assert.equal(typeof at, "number");
-    assert.equal(deviceDetail(other, (t) => (t === at ? "3 weeks ago" : "?")), `last synced 3 weeks ago · Ardia ${other.version} · ${other.os}`);
+    assert.equal(deviceDetail(other, (t) => (t === at ? "3 weeks ago" : "?")), `last synced 3 weeks ago · Nilla ${other.version} · ${other.os}`);
     assert.equal(other.os, "macOS 27.0");
     assert.equal(deviceDetail({ lastSeen: null }, () => "?"), "hasn’t synced yet");
   });

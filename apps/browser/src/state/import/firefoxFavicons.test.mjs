@@ -31,7 +31,7 @@ const ZEN = {
 
 let reply = FIREFOX;
 globalThis.acTestNativeModules = {
-  ArdiaImport: {
+  NillaImport: {
     addListener: () => ({ remove() {} }),
     cancelImport() {},
     forgetUnlockedKeys() {},

@@ -158,7 +158,7 @@ try {
     await inApp(`ac.actions.switchToTab(ac.store.getState().newTab(${W}, { url: "${origin}/work.html", profileId: ${JSON.stringify(work)} })); return 1;`);
     report.setWork = await inPage("work.html", `document.cookie = "w_persist=yes; max-age=31536000; path=/"; document.cookie = "w_session=yes; path=/"; localStorage.setItem("w_ls", "yes"); document.cookie`);
     report.made = await inApp(`
-      const s = ac.store.getState(), E = ac.engine, P = globalThis.expo.modules.ArdiaPasswords, O = ${JSON.stringify(origin)}, work = ${JSON.stringify(work)};
+      const s = ac.store.getState(), E = ac.engine, P = globalThis.expo.modules.NillaPasswords, O = ${JSON.stringify(origin)}, work = ${JSON.stringify(work)};
       const orError = (p) => p.catch((e) => ({ error: e.message }));
       s.addBookmark({ profileId: "default", url: O + "/page2.html", title: "Carryover bookmark" });
       s.addBookmark({ profileId: work, url: O + "/work.html", title: "Work bookmark" });
@@ -182,7 +182,7 @@ try {
       const s = ac.store.getState(), E = ac.engine, O = ${JSON.stringify(origin)};
       const orError = (p) => p.catch((e) => ({ error: e.message }));
       s.addBookmark({ profileId: "default", url: O + "/page3.html", title: "New build bookmark" });
-      return orError(globalThis.expo.modules.ArdiaPasswords.save("", O, "carol", "pw-new-789").then(JSON.parse))
+      return orError(globalThis.expo.modules.NillaPasswords.save("", O, "carol", "pw-new-789").then(JSON.parse))
         .then(() => E.call("sites.setZoom", { profile: "", host: "localhost", zoom: 0.9 }))
         .then(() => orError(E.call("extensions.list", { profile: "" })))
         .then((l) => { const e = ((l && l.extensions) || []).find((e) => e.name === "ArdiaCore spike extension"); return e ? orError(E.call("extensions.setEnabled", { profile: "", id: e.id, enabled: false })) : "no extension"; });`, 60_000);

@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.database.Cursor
 import android.database.MatrixCursor
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class TestDocumentsProvider : DocumentsProvider() {
     companion object {
-        const val AUTHORITY = "com.ardia.sync.test.documents"
+        const val AUTHORITY = "com.nilladigital.nilla.sync.test.documents"
         const val ROOT = "root"
         const val PIPE_COMMIT_DELAY_MS = 100L
 

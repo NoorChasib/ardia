@@ -4,8 +4,8 @@ import sys
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from ardia_cli.browse.errors import Usage
-from ardia_cli.printable import well_formed
+from nilla_browser_cli.browse.errors import Usage
+from nilla_browser_cli.printable import well_formed
 
 TAKES_OUT = ("script", "eval", "read", "snapshot", "get")
 AS_TEXT = ("snapshot", "get")
@@ -40,7 +40,7 @@ def checked(path: str) -> str:
 
 
 def run_saving(run, argv: list[str], command: str, path: str) -> int:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     captured = io.StringIO()
     if command in AS_TEXT:
@@ -88,7 +88,7 @@ def save(path: str, text: str) -> Path:
     import os
     import tempfile
 
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     target = Path(path).expanduser()
     if target.is_dir():
@@ -221,7 +221,7 @@ def content(command: str, data: dict, path: Path) -> tuple[str, str]:
         return value, f"text starting {json.dumps(value[:PREVIEW], ensure_ascii=False)}"
     table = tabular(value) if path.suffix.lower() in (".csv", ".tsv") else None
     if table is not None:
-        from ardia_cli import telemetry
+        from nilla_browser_cli import telemetry
 
         telemetry.note_count("saved_as_csv", True)
         return as_csv(table, "\t" if path.suffix.lower() == ".tsv" else ","), list_digest(table) + shown_rows(table)

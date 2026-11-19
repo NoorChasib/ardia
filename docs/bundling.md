@@ -20,7 +20,7 @@ latest release of the package into a global cache and run that, unpinned.
 | Windows app JS | Metro + Hermes | `bun run --cwd apps/browser bundle:windows`; `bun x --no-install react-native run-windows …` | bundle byte-identical |
 | Phone (Expo) | Metro | `bun run --cwd apps/phone dev`; the bundle export installs with `bun install --offline` | same modules, name@version for name@version |
 | `apps/videos` | Remotion (webpack) | `bun run --cwd apps/videos render <id>`, `studio`; `deliver.sh` | `check` 0 errors |
-| `ardia` userscripts | an esbuild binary `apps/cli/scripts/build.sh` pins | the `ardia` command, on the user's machine | userscript tests pass |
+| `nilla` userscripts | an esbuild binary `apps/cli/scripts/build.sh` pins | the `nilla-browser` command, on the user's machine | userscript tests pass |
 | `apps/cli/bench` fixtures | `bun x esbuild@<pinned>` | `node apps/cli/bench/tasks/build.mjs` | n/a |
 
 ## Vite 7 for `apps/linux` and `packages/demo`
@@ -33,7 +33,7 @@ for:
   how a shared module gets its Linux adapter while the adapter still imports the original.
 - **Chained transforms of shared sources.** `transform` hooks rewrite already-loaded shared modules on every load
   (`linuxShortcutText` and the wording plugins), after the other plugins have run.
-- **Virtual modules.** The `\0ardia-lazy:` modules.
+- **Virtual modules.** The `\0nilla-lazy:` modules.
 - **Resolution rules.** `resolve.dedupe`, and the extension order `.linux` before `.web`.
 
 `apps/linux`'s `test:graph` also calls Vite's `build()` and reads Rollup's module info.
@@ -87,7 +87,7 @@ with `require.context`). Each is started through `bun run` and runs on Node.
 
 ## The CLI's userscript bundler
 
-`ardia` bundles user scripts on the user's machine, which has no Bun, with the esbuild binary it ships
+`nilla` bundles user scripts on the user's machine, which has no Bun, with the esbuild binary it ships
 (`apps/cli/scripts/build.sh`). It stays esbuild.
 
 ## What still isn't Bun
@@ -103,12 +103,12 @@ with `require.context`). Each is started through `bun run` and runs on Node.
   `Bundle.props` defaults `BundleCliCommand` to `npx @react-native-community/cli bundle`. The app doesn't override it,
   so that one step goes through npm's `npx`. Setting
   `<BundleCliCommand>bun x --no-install @react-native-community/cli bundle</BundleCliCommand>` in
-  `apps/browser/windows/Ardia/Ardia.vcxproj` waits for a Windows run that can prove it.
+  `apps/browser/windows/Ardia/Nilla.vcxproj` waits for a Windows run that can prove it.
 - **corex's Bun.** `apps/phone/scripts/corex-bun` installs the pinned Bun with `npm install bun@<version>` into the
   build folder on corex.
 - **The tools' bins.** Vite, Metro, Astro, Remotion and jest have Node shebangs and run on Node under `bun run`.
 - **TypeScript 6 and 5 where an API needs them.** The test loader, `page-operations.mjs` and three browser tests use
   the TypeScript 6 API (`@typescript/typescript6`), because TypeScript 7 has no JavaScript API. The site's
-  `astro check` uses it too. The Raycast extension (`extras/raycast-ardia`) stays on TypeScript 5 with Raycast's
+  `astro check` uses it too. The Raycast extension (`extras/raycast-nilla`) stays on TypeScript 5 with Raycast's
   `ray` tooling. `scripts/typescript-version.test.mjs` checks that the root's `tsc` and the phone's, the dashboard's and
   the videos' are TypeScript 7.

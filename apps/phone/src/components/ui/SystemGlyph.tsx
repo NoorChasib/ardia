@@ -1,7 +1,7 @@
 import { Host, Image as SystemImage } from "@expo/ui/swift-ui";
 import { font as systemFont } from "@expo/ui/swift-ui/modifiers";
 import { Platform, StyleSheet, View } from "react-native";
-import { settingsUI } from "@ardia/phone-native";
+import { settingsUI } from "@nilla/phone-native";
 import { Symbol } from "./Symbol";
 import type { SymbolName } from "./symbolPaths";
 

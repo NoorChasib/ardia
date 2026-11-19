@@ -5,7 +5,7 @@ import os
 import struct
 from urllib.parse import urlsplit
 
-from ardia_cli import guard
+from nilla_browser_cli import guard
 
 ACCEPT_GUID = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 CONTINUATION, TEXT, BINARY, CLOSE, PING, PONG = 0x0, 0x1, 0x2, 0x8, 0x9, 0xA
@@ -78,7 +78,7 @@ class Socket:
 
     async def send(self, message) -> None:
         if not isinstance(message, (str, bytes, bytearray, memoryview)):
-            raise guard.ForbiddenCommand("ardia only sends whole messages, not fragments")
+            raise guard.ForbiddenCommand("nilla only sends whole messages, not fragments")
         guard.check_message(message)
         if self.closed is not None or self.close_sent:
             raise self.closed or Closed()

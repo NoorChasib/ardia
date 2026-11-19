@@ -1,10 +1,10 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import com.ardia.browser.OnlineAgain
+import com.nilladigital.nilla.OnlineAgain
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -14,7 +14,7 @@ class NetworkModule : Module() {
     private val connectivity: ConnectivityManager? get() = appContext.reactContext?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneNetwork")
+        Name("NillaPhoneNetwork")
 
         Events("onNetwork")
 

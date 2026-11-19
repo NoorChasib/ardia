@@ -22,7 +22,7 @@
 #include "LaunchConfig.h"
 #include "Paths.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace ConfigFolder {
 
@@ -492,7 +492,7 @@ class ConfigWatcher : public std::enable_shared_from_this<ConfigWatcher> {
   bool m_stopped = false;
 };
 
-REACT_MODULE(ConfigModule, L"ArdiaConfig")
+REACT_MODULE(ConfigModule, L"NillaConfig")
 struct ConfigModule {
   REACT_INIT(Initialize)
   void Initialize(winrt::Microsoft::ReactNative::ReactContext const &context) noexcept { m_context = context; }
@@ -520,7 +520,7 @@ struct ConfigModule {
       return;
     }
     auto context = m_context;
-    m_watcher->Watch(names, [promise]() { promise.Resolve(); }, [context]() { EmitEvent(context, L"ArdiaConfig", L"onChange", winrt::Microsoft::ReactNative::JSValueObject{}); });
+    m_watcher->Watch(names, [promise]() { promise.Resolve(); }, [context]() { EmitEvent(context, L"NillaConfig", L"onChange", winrt::Microsoft::ReactNative::JSValueObject{}); });
   }
 
   REACT_METHOD(writeSchemas)

@@ -1,7 +1,7 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
-import com.ardia.sync.core.Base32
-import com.ardia.sync.core.SyncStorage
+import com.nilladigital.nilla.sync.core.Base32
+import com.nilladigital.nilla.sync.core.SyncStorage
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.util.UUID
@@ -248,7 +248,7 @@ class DocumentTreeStorage(
     }
 
     companion object {
-        const val STAGING_SUFFIX = ".ardia-partial"
+        const val STAGING_SUFFIX = ".nilla-partial"
         const val STALE_STAGING_MS = 15L * 60_000
         val PROOF_WAITS_MS = listOf(100L, 250L, 500L, 1_000L, 2_000L)
 

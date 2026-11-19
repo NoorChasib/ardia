@@ -1,6 +1,6 @@
 #import "ArdiaChromeWindowInternal.h"
 
-using namespace ardia_window;
+using namespace nilla_window;
 
 namespace {
 
@@ -11,7 +11,7 @@ NSString *HostAndPort(NSURLComponents *parts) {
 
 }
 
-namespace ardia_window {
+namespace nilla_window {
 
 NSString *PopupOriginText(NSString *url) {
   if (!url.length) return @"about:blank";
@@ -39,7 +39,7 @@ NSString *PopupOriginText(NSString *url) {
 
 }
 
-@implementation ArdiaPopupOriginStrip {
+@implementation NillaPopupOriginStrip {
   NSImageView *_glyph;
   NSTextField *_origin;
 }

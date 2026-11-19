@@ -1,8 +1,8 @@
-import { nativeModule, type CommandEvent, type MenuState } from "@ardia/shell";
+import { nativeModule, type CommandEvent, type MenuState } from "@nilla/shell";
 
-export type { CommandEvent, BrowserCommand, MenuShortcut, ShortcutModifier, MenuState, MenuBookmark } from "@ardia/shell";
+export type { CommandEvent, BrowserCommand, MenuShortcut, ShortcutModifier, MenuState, MenuBookmark } from "@nilla/shell";
 
-const Menus = nativeModule("ArdiaMenus");
+const Menus = nativeModule("NillaMenus");
 
 export const onCommand = (listener: (e: CommandEvent) => void) => Menus.addListener("onCommand", (e) => e.command !== "menu.pick" && listener(e));
 export const menuShortcuts = () => Menus.menuShortcuts();

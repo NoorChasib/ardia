@@ -1,4 +1,4 @@
-import ArdiaDesign
+import NillaDesign
 import Testing
 
 struct BottomBarVisibilityTests {

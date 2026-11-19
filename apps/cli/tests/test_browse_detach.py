@@ -6,10 +6,10 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import command_metrics
-from ardia_cli.browse import changes, commands, readpages
-from ardia_cli.browse.errors import BrowseError, CdpError
-from ardia_cli.browse.state import State
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse import changes, commands, readpages
+from nilla_browser_cli.browse.errors import BrowseError, CdpError
+from nilla_browser_cli.browse.state import State
 
 START = "https://mine.example/start"
 DEST = "https://mine.example/dest"
@@ -111,7 +111,7 @@ class OpenAfterDetach(unittest.TestCase):
     def detach_after_load(self):
         self.browser.after_load = lambda session: self.state.on_event("Target.detachedFromTarget", {"sessionId": session, "targetId": "T"}, None)
 
-    def test_an_open_whose_session_ardia_ended_while_the_tab_stayed_open_attaches_again_and_finishes(self):
+    def test_an_open_whose_session_nilla_ended_while_the_tab_stayed_open_attaches_again_and_finishes(self):
         self.detach_after_load()
         result = self.open()
         self.assertEqual(result.data["url"], DEST)

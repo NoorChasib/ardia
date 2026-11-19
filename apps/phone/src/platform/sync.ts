@@ -1,4 +1,4 @@
-export { sync } from "@ardia/phone-native";
+export { sync } from "@nilla/phone-native";
 export type {
   BookmarkItem,
   ConnectResult,
@@ -21,4 +21,4 @@ export type {
   SyncEvent,
   SyncPhase,
   SyncStatus,
-} from "@ardia/phone-native";
+} from "@nilla/phone-native";

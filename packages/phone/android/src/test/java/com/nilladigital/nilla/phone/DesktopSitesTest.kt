@@ -1,6 +1,6 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.browser.DesktopSites
+import com.nilladigital.nilla.DesktopSites
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

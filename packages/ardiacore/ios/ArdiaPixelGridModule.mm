@@ -22,7 +22,7 @@ CGFloat CoarsestRootWindowScale(BOOL visibleOnly) {
   CGFloat coarsest = 0;
   for (NSWindow *window in NSApp.windows) {
     const CGFloat scale = window.backingScaleFactor;
-    if ((visibleOnly && !window.visible) || scale <= 0 || (coarsest > 0 && scale >= coarsest) || ![ArdiaInterfaceScale rootOfWindow:window]) continue;
+    if ((visibleOnly && !window.visible) || scale <= 0 || (coarsest > 0 && scale >= coarsest) || ![NillaInterfaceScale rootOfWindow:window]) continue;
     coarsest = scale;
   }
   return coarsest;
@@ -35,17 +35,17 @@ CGFloat CoarsestReactWindowScale() {
 
 NSArray<NSNotificationName> *GridChangingNotifications() {
   return @[
-    ArdiaInterfaceScaleDidChange, ArdiaInterfaceScaleRootDidAttach, NSWindowDidChangeBackingPropertiesNotification, NSWindowDidChangeScreenNotification, NSWindowDidChangeOcclusionStateNotification,
+    NillaInterfaceScaleDidChange, NillaInterfaceScaleRootDidAttach, NSWindowDidChangeBackingPropertiesNotification, NSWindowDidChangeScreenNotification, NSWindowDidChangeOcclusionStateNotification,
     NSWindowWillCloseNotification, NSApplicationDidChangeScreenParametersNotification
   ];
 }
 
 }
 
-@interface ArdiaPixelGridModule : NSObject <RCTBridgeModule, RCTInvalidating, RCTUIManagerObserver>
+@interface NillaPixelGridModule : NSObject <RCTBridgeModule, RCTInvalidating, RCTUIManagerObserver>
 @end
 
-@implementation ArdiaPixelGridModule {
+@implementation NillaPixelGridModule {
   NSMutableArray<id> *_observers;
   CGFloat _applied;
   BOOL _pending;
@@ -64,7 +64,7 @@ RCT_EXPORT_MODULE(ACPixelGrid)
 - (instancetype)init {
   if ((self = [super init])) {
     _observers = [NSMutableArray array];
-    __weak ArdiaPixelGridModule *weakSelf = self;
+    __weak NillaPixelGridModule *weakSelf = self;
     for (NSNotificationName name in GridChangingNotifications()) {
       [_observers addObject:[NSNotificationCenter.defaultCenter addObserverForName:name
                                                                            object:nil
@@ -90,9 +90,9 @@ RCT_EXPORT_MODULE(ACPixelGrid)
 - (void)followWindowsSoon {
   if (_pending || !_observers) return;
   _pending = YES;
-  __weak ArdiaPixelGridModule *weakSelf = self;
+  __weak NillaPixelGridModule *weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
-    ArdiaPixelGridModule *me = weakSelf;
+    NillaPixelGridModule *me = weakSelf;
     if (!me) return;
     me->_pending = NO;
     [me followWindows];
@@ -100,7 +100,7 @@ RCT_EXPORT_MODULE(ACPixelGrid)
 }
 
 - (void)followWindows {
-  const CGFloat scale = CoarsestReactWindowScale() * ArdiaInterfaceScale.scale;
+  const CGFloat scale = CoarsestReactWindowScale() * NillaInterfaceScale.scale;
   RCTUIManager *uiManager = _bridge.uiManager;
   if (scale <= 0 || scale == _applied || !uiManager || !_observers) return;
   _applied = scale;
@@ -108,12 +108,12 @@ RCT_EXPORT_MODULE(ACPixelGrid)
     _observesMounting = YES;
     [uiManager.observerCoordinator addObserver:self];
   }
-  __weak ArdiaPixelGridModule *weakSelf = self;
+  __weak NillaPixelGridModule *weakSelf = self;
   RCTExecuteOnUIManagerQueue(^{
     YGConfigRef config = [RCTShadowView yogaConfig];
     if (YGConfigGetPointScaleFactor(config) == (float)scale) return;
     YGConfigSetPointScaleFactor(config, (float)scale);
-    if (ArdiaPixelGridModule *me = weakSelf) me->_relayout = kRelayoutAsked;
+    if (NillaPixelGridModule *me = weakSelf) me->_relayout = kRelayoutAsked;
     [uiManager setNeedsLayout];
   });
 }
@@ -127,7 +127,7 @@ RCT_EXPORT_MODULE(ACPixelGrid)
   int running = kRelayoutRunning;
   if (!_relayout.compare_exchange_strong(running, kRelayoutNone)) return;
   dispatch_async(dispatch_get_main_queue(), ^{
-    [ArdiaInterfaceScale layoutSettled];
+    [NillaInterfaceScale layoutSettled];
   });
 }
 

@@ -16,9 +16,9 @@
 #include <string>
 #include <vector>
 
-using namespace ardia_host;
+using namespace nilla_host;
 
-namespace ardia_host {
+namespace nilla_host {
 
 NSMutableDictionary<NSString *, ArdiaCoreProfile *> *Profiles() {
   static NSMutableDictionary *profiles = [NSMutableDictionary dictionary];
@@ -52,27 +52,27 @@ namespace {
 void RememberProfile(NSString *name, ArdiaCoreProfile *profile) {
   const BOOL fresh = Profiles()[name] != profile;
   Profiles()[name] = profile;
-  if (fresh && !profile.offTheRecord && !IsPrivateSessionId(name)) [ArdiaEvents emit:@"profiles.loaded" data:@{@"profile" : name}];
+  if (fresh && !profile.offTheRecord && !IsPrivateSessionId(name)) [NillaEvents emit:@"profiles.loaded" data:@{@"profile" : name}];
 }
 
 NSString *DirectoryName(NSString *name) {
   if (name.length && ([name isEqualToString:@"Default"] || [name hasPrefix:@"Profile "])) return nil;
-  return ardia_host::ProfileDirectoryName(name);
+  return nilla_host::ProfileDirectoryName(name);
 }
 
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 NSString *InstalledDataDirectory() {
   NSString *support = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES).firstObject;
-  NSString *bundleId = NSBundle.mainBundle.bundleIdentifier ?: @"com.ardia.browser";
+  NSString *bundleId = NSBundle.mainBundle.bundleIdentifier ?: @"com.nilladigital.nilla";
   return [[support stringByAppendingPathComponent:bundleId] stringByAppendingPathComponent:@"Chromium"];
 }
 
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 void ForgetDestroyedProfiles() {
   for (NSString *name in Profiles().allKeys)
@@ -207,8 +207,8 @@ void WithProfile(NSString *name, void (^completion)(ArdiaCoreProfile *)) {
              }
              ArdiaCoreProfile *profile = [DeletedProfiles() containsObject:name] ? nil : loaded;
              if (profile) RememberProfile(name, profile);
-             if (profile) ardia_host::LoadContentBlocker(name);
-             if (profile) [ArdiaServices watchDownloads:name];
+             if (profile) nilla_host::LoadContentBlocker(name);
+             if (profile) [NillaServices watchDownloads:name];
              for (void (^waiter)(ArdiaCoreProfile *) in pending) waiter(profile);
            }];
 }

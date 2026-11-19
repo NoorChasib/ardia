@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import java.util.WeakHashMap
 
@@ -28,7 +28,7 @@ object TouchScrollers {
 
     val script: String = """
 (() => {
-  if (window.__ardiaTouchScroller || typeof ardiaPage === "undefined") return;
+  if (window.__ardiaTouchScroller || typeof nillaPage === "undefined") return;
   window.__ardiaTouchScroller = true;
   const scrollsSideways = (style) => /(auto|scroll|overlay)/.test(style.overflowX);
   window.addEventListener("touchstart", (event) => {
@@ -48,7 +48,7 @@ object TouchScrollers {
       right = right || (rtl ? towardStart : towardEnd);
       if (left && right) break;
     }
-    try { ardiaPage.postMessage("$MESSAGE_PREFIX" + (left ? "1" : "0") + (right ? "1" : "0")); } catch (error) {}
+    try { nillaPage.postMessage("$MESSAGE_PREFIX" + (left ? "1" : "0") + (right ? "1" : "0")); } catch (error) {}
   }, { capture: true, passive: true });
 })();"""
 }

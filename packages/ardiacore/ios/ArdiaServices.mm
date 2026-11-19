@@ -13,7 +13,7 @@
 
 #include <cmath>
 
-using namespace ardia_runtime;
+using namespace nilla_runtime;
 
 namespace {
 
@@ -66,25 +66,25 @@ NSMutableData *WithSecrets(NSDictionary *plain, NSDictionary<NSString *, NSStrin
   return data;
 }
 
-NSString *LoginOrigin(NSString *url) { return ardia_web_view::OriginOf(url) ?: url ?: @""; }
+NSString *LoginOrigin(NSString *url) { return nilla_web_view::OriginOf(url) ?: url ?: @""; }
 
 NSDictionary *Login(NSString *origin, NSString *username) {
   return @{@"origin" : LoginOrigin(origin), @"username" : username ?: @""};
 }
 
-void Answer(NSDictionary *result, ArdiaServiceReply reply) {
+void Answer(NSDictionary *result, NillaServiceReply reply) {
   if (id error = result[@"error"]) return reply(nil, [error description]);
   reply(result, nil);
 }
 
-ArdiaCoreResult Answering(ArdiaServiceReply reply, id (^shape)(NSDictionary *result)) {
+ArdiaCoreResult Answering(NillaServiceReply reply, id (^shape)(NSDictionary *result)) {
   return ^(NSDictionary *result) {
     if (id error = result[@"error"]) return reply(nil, [error description]);
     reply(shape(result), nil);
   };
 }
 
-ArdiaCoreResult Dated(NSString *key, ArdiaServiceReply reply) {
+ArdiaCoreResult Dated(NSString *key, NillaServiceReply reply) {
   return Answering(reply, ^id(NSDictionary *result) {
     NSArray *list = result[key];
     if (![list isKindOfClass:NSArray.class]) return result;
@@ -102,17 +102,17 @@ ArdiaCoreResult Dated(NSString *key, ArdiaServiceReply reply) {
 
 void Changed(NSString *profile, NSString *extensionId, NSString *event) {
   if (extensionId.length)
-    [ArdiaEvents emit:@"extensions.changed" data:@{@"profile" : ardia_host::OriginalProfileName(profile), @"id" : extensionId, @"event" : event}];
+    [NillaEvents emit:@"extensions.changed" data:@{@"profile" : nilla_host::OriginalProfileName(profile), @"id" : extensionId, @"event" : event}];
 }
 
 NSString *ProfileDirectory(NSString *profile) {
-  NSString *name = ardia_host::OriginalProfileName(profile);
-  NSString *dir = ardia_host::ProfileDirectoryName(name);
-  return [ArdiaHost.dataDirectory stringByAppendingPathComponent:dir];
+  NSString *name = nilla_host::OriginalProfileName(profile);
+  NSString *dir = nilla_host::ProfileDirectoryName(name);
+  return [NillaHost.dataDirectory stringByAppendingPathComponent:dir];
 }
 
 NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
-  if (!ardia_extensions::IsExtensionId(extensionId) || ![version isKindOfClass:NSString.class] || ![version length]) return nil;
+  if (!nilla_extensions::IsExtensionId(extensionId) || ![version isKindOfClass:NSString.class] || ![version length]) return nil;
   NSString *dir = [[ProfileDirectory(profile) stringByAppendingPathComponent:@"Extensions"] stringByAppendingPathComponent:extensionId];
   NSString *prefix = [version stringByAppendingString:@"_"];
   for (NSString *name in [NSFileManager.defaultManager contentsOfDirectoryAtPath:dir error:nil])
@@ -122,25 +122,25 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
 
 }
 
-@implementation ArdiaServices
+@implementation NillaServices
 
 + (void)call:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args completion:(ArdiaCoreResult)completion {
-  [ArdiaEngineBridge call:name profile:profile args:args ? JSONText(args) : nil completion:^(NSString *json) { completion(Parse(json)); }];
+  [NillaEngineBridge call:name profile:profile args:args ? JSONText(args) : nil completion:^(NSString *json) { completion(Parse(json)); }];
 }
 
 + (void)callBase:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args completion:(ArdiaCoreResult)completion {
-  [self call:name profile:ardia_host::OriginalProfileName(profile) args:args completion:completion];
+  [self call:name profile:nilla_host::OriginalProfileName(profile) args:args completion:completion];
 }
 
 + (void)call:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args secrets:(NSDictionary<NSString *, NSString *> *)secrets
     completion:(ArdiaCoreResult)completion {
-  [ArdiaEngineBridge callWithSecret:name
-                                profile:ardia_host::OriginalProfileName(profile)
+  [NillaEngineBridge callWithSecret:name
+                                profile:nilla_host::OriginalProfileName(profile)
                                    args:WithSecrets(args, secrets)
                              completion:^(NSString *json) { completion(Parse(json)); }];
 }
 
-+ (void)listPasswords:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)listPasswords:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_passwords_list" profile:profile args:nil completion:Answering(reply, ^id(NSDictionary *result) {
     NSArray *list = result[@"passwords"];
     if (![list isKindOfClass:NSArray.class]) return result;
@@ -151,41 +151,41 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
   })];
 }
 
-+ (void)unlockPasswords:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)unlockPasswords:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_passwords_unlock" profile:profile args:nil completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)password:(NSString *)profile origin:(NSString *)origin username:(NSString *)username reply:(ArdiaServiceReply)reply {
++ (void)password:(NSString *)profile origin:(NSString *)origin username:(NSString *)username reply:(NillaServiceReply)reply {
   [self callBase:@"ac_passwords_reveal" profile:profile args:Login(origin, username) completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
 + (void)savePassword:(NSString *)profile origin:(NSString *)origin username:(NSString *)username password:(NSString *)password
-               reply:(ArdiaServiceReply)reply {
+               reply:(NillaServiceReply)reply {
   [self call:@"ac_passwords_add" profile:profile args:Login(origin, username) secrets:@{@"password" : password ?: @""}
       completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
 + (void)updatePassword:(NSString *)profile origin:(NSString *)origin username:(NSString *)username
-           newUsername:(NSString *)newUsername newPassword:(NSString *)newPassword reply:(ArdiaServiceReply)reply {
+           newUsername:(NSString *)newUsername newPassword:(NSString *)newPassword reply:(NillaServiceReply)reply {
   NSMutableDictionary *args = [Login(origin, username) mutableCopy];
   if (newUsername) args[@"newUsername"] = newUsername;
   [self call:@"ac_passwords_update" profile:profile args:args secrets:newPassword ? @{@"newPassword" : newPassword} : @{}
       completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)deletePassword:(NSString *)profile origin:(NSString *)origin username:(NSString *)username reply:(ArdiaServiceReply)reply {
++ (void)deletePassword:(NSString *)profile origin:(NSString *)origin username:(NSString *)username reply:(NillaServiceReply)reply {
   [self callBase:@"ac_passwords_remove" profile:profile args:Login(origin, username) completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)neverSaveOrigins:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)neverSaveOrigins:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_passwords_exceptions" profile:profile args:nil completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)allowSaving:(NSString *)profile origin:(NSString *)origin reply:(ArdiaServiceReply)reply {
++ (void)allowSaving:(NSString *)profile origin:(NSString *)origin reply:(NillaServiceReply)reply {
   [self callBase:@"ac_passwords_allow" profile:profile args:@{@"origin" : LoginOrigin(origin)} completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)exportPasswords:(NSString *)profile path:(NSString *)path reply:(ArdiaServiceReply)reply {
++ (void)exportPasswords:(NSString *)profile path:(NSString *)path reply:(NillaServiceReply)reply {
   void (^run)(NSString *) = ^(NSString *target) {
     if (!target) return reply(@{@"status" : @"cancelled"}, nil);
     [self callBase:@"ac_passwords_export" profile:profile args:@{@"path" : target} completion:Answering(reply, ^id(NSDictionary *result) {
@@ -196,17 +196,17 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
   };
   if (path.length) return run(path);
   NSSavePanel *panel = [NSSavePanel savePanel];
-  panel.nameFieldStringValue = @"Ardia Passwords.csv";
+  panel.nameFieldStringValue = @"Nilla Passwords.csv";
   panel.allowedContentTypes = @[ UTTypeCommaSeparatedText ];
   panel.canCreateDirectories = YES;
   panel.message = @"Anyone who can open this file can read your passwords.";
   [panel beginWithCompletionHandler:^(NSModalResponse response) { run(response == NSModalResponseOK ? panel.URL.path : nil); }];
 }
 
-+ (void)profileToggles:(NSString *)profile set:(NSDictionary<NSString *, NSNumber *> *)values reply:(ArdiaServiceReply)reply {
++ (void)profileToggles:(NSString *)profile set:(NSDictionary<NSString *, NSNumber *> *)values reply:(NillaServiceReply)reply {
   NSDictionary<NSString *, NSNumber *> *wanted = [values copy];
-  ArdiaServiceReply done = [reply copy];
-  ardia_host::WithProfile(ardia_host::OriginalProfileName(profile), ^(ArdiaCoreProfile *p) {
+  NillaServiceReply done = [reply copy];
+  nilla_host::WithProfile(nilla_host::OriginalProfileName(profile), ^(ArdiaCoreProfile *p) {
     if (!p || p.destroyed) return done(nil, @"profile not loaded");
     if (NSNumber *on = wanted[@"passwords"]) p.passwordsOffered = on.boolValue;
     if (NSNumber *on = wanted[@"addresses"]) p.addressesAutofilled = on.boolValue;
@@ -215,53 +215,53 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
   });
 }
 
-+ (void)preloadPages:(NSString *)profile reply:(ArdiaServiceReply)reply {
-  ardia_host::WithProfile(ardia_host::OriginalProfileName(profile), ^(ArdiaCoreProfile *p) {
++ (void)preloadPages:(NSString *)profile reply:(NillaServiceReply)reply {
+  nilla_host::WithProfile(nilla_host::OriginalProfileName(profile), ^(ArdiaCoreProfile *p) {
     if (!p) return reply(nil, @"profile not loaded");
     reply(p.preloadPages ? @YES : @NO, nil);
   });
 }
 
-+ (void)setPreloadPages:(BOOL)on profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
-  ardia_host::WithProfile(ardia_host::OriginalProfileName(profile), ^(ArdiaCoreProfile *p) {
++ (void)setPreloadPages:(BOOL)on profile:(NSString *)profile reply:(NillaServiceReply)reply {
+  nilla_host::WithProfile(nilla_host::OriginalProfileName(profile), ^(ArdiaCoreProfile *p) {
     if (!p) return reply(nil, @"profile not loaded");
     p.preloadPages = on;
     reply(nil, nil);
   });
 }
 
-+ (void)addresses:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)addresses:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_autofill_addresses" profile:profile args:nil completion:Dated(@"addresses", reply)];
 }
 
-+ (void)saveAddress:(NSDictionary *)address profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)saveAddress:(NSDictionary *)address profile:(NSString *)profile reply:(NillaServiceReply)reply {
   NSMutableDictionary *fields = [NSMutableDictionary dictionary];
   for (NSString *key in address)
     if ([address[key] isKindOfClass:NSString.class] || [address[key] isKindOfClass:NSNumber.class]) fields[key] = [address[key] description];
   [self callBase:@"ac_autofill_save_address" profile:profile args:@{@"address" : fields} completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)cards:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)cards:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_autofill_cards" profile:profile args:nil completion:Dated(@"cards", reply)];
 }
 
-+ (void)saveCard:(NSDictionary *)card number:(NSString *)number profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)saveCard:(NSDictionary *)card number:(NSString *)number profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self call:@"ac_autofill_save_card" profile:profile args:@{@"card" : card ?: @{}} secrets:number ? @{@"number" : number} : @{}
       completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)deleteAutofillEntry:(NSString *)entryId profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)deleteAutofillEntry:(NSString *)entryId profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_autofill_remove" profile:profile args:@{@"id" : entryId ?: @""} completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)revealCardNumber:(NSString *)cardId profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)revealCardNumber:(NSString *)cardId profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_autofill_card_number" profile:profile args:@{@"id" : cardId ?: @""} completion:Answering(reply, ^id(NSDictionary *result) {
     return [result[@"number"] isKindOfClass:NSString.class] ? @{@"number" : result[@"number"]} : @{};
   })];
 }
 
-+ (void)zoomLevels:(NSString *)profile reply:(ArdiaServiceReply)reply {
-  if (ardia_host::IsPrivateProfile(profile)) return reply(@{}, nil);
++ (void)zoomLevels:(NSString *)profile reply:(NillaServiceReply)reply {
+  if (nilla_host::IsPrivateProfile(profile)) return reply(@{}, nil);
   [self call:@"ac_zoom_list" profile:profile args:nil completion:Answering(reply, ^id(NSDictionary *result) {
     NSMutableDictionary *levels = [NSMutableDictionary dictionary];
     NSDictionary *hosts = [result[@"levels"] isKindOfClass:NSDictionary.class] ? result[@"levels"] : @{};
@@ -277,7 +277,7 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
   [self call:@"ac_zoom_set" profile:profile args:@{@"host" : host, @"level" : @(level)} completion:^(NSDictionary *) {}];
 }
 
-+ (void)listExtensions:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)listExtensions:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_extensions_list" profile:profile args:nil completion:^(NSDictionary *result) {
     if (id error = result[@"error"]) return reply(nil, [error description]);
     NSArray *infos = result[@"extensions"];
@@ -290,7 +290,7 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
         if (item[key] == NSNull.null) item[key] = nil;
       NSString *path = [info[@"path"] isKindOfClass:NSString.class] ? info[@"path"] : nil;
       NSString *folder = path ?: StoreFolder(profile, info[@"id"], info[@"version"]);
-      NSDictionary *manifest = folder ? ardia_extensions::ReadManifest(folder) : nil;
+      NSDictionary *manifest = folder ? nilla_extensions::ReadManifest(folder) : nil;
       for (NSString *key in @[ @"popup", @"actionTitle", @"actionIcon", @"sidePanel", @"hasAction" ])
         if (manifest[key]) item[key] = manifest[key];
       item[@"incognitoSplit"] = @([manifest[@"incognitoSplit"] boolValue]);
@@ -306,12 +306,12 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
 }
 
 + (NSDictionary *)inspectUnpacked:(NSString *)path {
-  NSMutableDictionary *info = [ardia_extensions::ReadManifest(path) mutableCopy];
+  NSMutableDictionary *info = [nilla_extensions::ReadManifest(path) mutableCopy];
   if (!info[@"error"]) info[@"path"] = path;
   return info;
 }
 
-+ (void)run:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args event:(NSString *)event reply:(ArdiaServiceReply)reply {
++ (void)run:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args event:(NSString *)event reply:(NillaServiceReply)reply {
   NSString *extensionId = args[@"id"];
   [self callBase:name profile:profile args:args completion:^(NSDictionary *result) {
     if (event && !result[@"error"]) Changed(profile, extensionId, event);
@@ -319,34 +319,34 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
   }];
 }
 
-+ (void)installExtension:(NSString *)path profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)installExtension:(NSString *)path profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_extensions_install" profile:profile args:@{@"path" : path ?: @""} completion:^(NSDictionary *result) {
     if ([result[@"id"] isKindOfClass:NSString.class]) Changed(profile, result[@"id"], @"installed");
     Answer(result, reply);
   }];
 }
 
-+ (void)installCrx:(NSString *)path profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)installCrx:(NSString *)path profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_extensions_install_crx" profile:profile args:@{@"path" : path ?: @""} completion:^(NSDictionary *result) {
     if ([result[@"id"] isKindOfClass:NSString.class]) Changed(profile, result[@"id"], @"installed");
     Answer(result, reply);
   }];
 }
 
-+ (void)setExtension:(NSString *)extensionId enabled:(BOOL)enabled profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)setExtension:(NSString *)extensionId enabled:(BOOL)enabled profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self run:@"ac_extensions_set_enabled" profile:profile args:@{@"id" : extensionId, @"enabled" : @(enabled)}
       event:enabled ? @"enabled" : @"disabled" reply:reply];
 }
 
-+ (void)uninstallExtension:(NSString *)extensionId profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)uninstallExtension:(NSString *)extensionId profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self run:@"ac_extensions_uninstall" profile:profile args:@{@"id" : extensionId} event:@"uninstalled" reply:reply];
 }
 
-+ (void)reloadExtension:(NSString *)extensionId profile:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)reloadExtension:(NSString *)extensionId profile:(NSString *)profile reply:(NillaServiceReply)reply {
   [self run:@"ac_extensions_reload" profile:profile args:@{@"id" : extensionId} event:@"reloaded" reply:reply];
 }
 
-+ (void)configureExtension:(NSString *)extensionId profile:(NSString *)profile options:(NSDictionary *)options reply:(ArdiaServiceReply)reply {
++ (void)configureExtension:(NSString *)extensionId profile:(NSString *)profile options:(NSDictionary *)options reply:(NillaServiceReply)reply {
   NSMutableDictionary *args = [NSMutableDictionary dictionaryWithObject:extensionId forKey:@"id"];
   for (NSString *key in @[ @"pinned", @"incognito", @"fileAccess", @"userScripts", @"siteAccess" ])
     if (options[key]) args[key] = options[key];
@@ -354,7 +354,7 @@ NSString *StoreFolder(NSString *profile, NSString *extensionId, id version) {
   [self run:@"ac_extensions_configure" profile:profile args:args event:@"configured" reply:reply];
 }
 
-+ (void)searchEngineList:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)searchEngineList:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_search_engines_list" profile:profile args:nil completion:Answering(reply, ^id(NSDictionary *result) {
     return @{@"list" : @{@"engines" : result[@"engines"] ?: @[]}};
   })];
@@ -369,14 +369,14 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
   static bool observing = false;
   if (observing) return;
   observing = true;
-  [ArdiaEngineBridge observe:@"downloads.changed"
+  [NillaEngineBridge observe:@"downloads.changed"
                       handler:^(NSDictionary *payload) {
                         NSDictionary *download = [payload[@"download"] isKindOfClass:NSDictionary.class] ? payload[@"download"] : nil;
                         if (!download) return;
                         NSMutableDictionary *d = [download mutableCopy];
                         d[@"profile"] = payload[@"profile"] ?: @"";
                         if ([d[@"id"] isKindOfClass:NSString.class]) DownloadProfiles()[d[@"id"]] = d[@"profile"];
-                        [ArdiaEvents emit:@"downloads.changed" data:d];
+                        [NillaEvents emit:@"downloads.changed" data:d];
                       }];
 }
 
@@ -387,7 +387,7 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
       NSMutableDictionary *d = [download mutableCopy];
       d[@"profile"] = profile ?: @"";
       if ([d[@"id"] isKindOfClass:NSString.class]) DownloadProfiles()[d[@"id"]] = d[@"profile"];
-      [ArdiaEvents emit:@"downloads.changed" data:d];
+      [NillaEvents emit:@"downloads.changed" data:d];
     }
   }];
 }
@@ -398,7 +398,7 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
       completion:^(NSDictionary *) {}];
 }
 
-+ (void)siteSettings:(NSString *)profile origin:(NSString *)origin reply:(ArdiaServiceReply)reply {
++ (void)siteSettings:(NSString *)profile origin:(NSString *)origin reply:(NillaServiceReply)reply {
   [self call:@"ac_site_settings_get" profile:profile args:@{@"origin" : origin ?: @""} completion:Answering(reply, ^id(NSDictionary *result) {
     return [result[@"settings"] isKindOfClass:NSDictionary.class] ? result[@"settings"] : @{};
   })];
@@ -409,7 +409,7 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
       completion:^(NSDictionary *) {}];
 }
 
-+ (void)siteSettingsOrigins:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)siteSettingsOrigins:(NSString *)profile reply:(NillaServiceReply)reply {
   [self call:@"ac_site_settings_origins" profile:profile args:nil completion:Answering(reply, ^id(NSDictionary *result) {
     return [result[@"origins"] isKindOfClass:NSArray.class] ? result[@"origins"] : @[];
   })];
@@ -419,11 +419,11 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
   [self call:@"ac_site_settings_reset" profile:profile args:@{@"origin" : origin ?: @""} completion:^(NSDictionary *) {}];
 }
 
-+ (void)clearSiteData:(NSString *)profile origin:(NSString *)origin reply:(ArdiaServiceReply)reply {
++ (void)clearSiteData:(NSString *)profile origin:(NSString *)origin reply:(NillaServiceReply)reply {
   [self call:@"ac_site_data_clear" profile:profile args:@{@"origin" : origin ?: @""} completion:^(NSDictionary *result) { Answer(result, reply); }];
 }
 
-+ (void)externalAppAllowances:(NSString *)profile reply:(ArdiaServiceReply)reply {
++ (void)externalAppAllowances:(NSString *)profile reply:(NillaServiceReply)reply {
   [self callBase:@"ac_external_apps_allowances" profile:profile args:nil completion:Answering(reply, ^id(NSDictionary *result) {
     return [result[@"allowances"] isKindOfClass:NSArray.class] ? result[@"allowances"] : @[];
   })];
@@ -434,7 +434,7 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
       completion:^(NSDictionary *) {}];
 }
 
-+ (void)tasks:(ArdiaServiceReply)reply {
++ (void)tasks:(NillaServiceReply)reply {
   [self call:@"ac_tasks_list" profile:@"" args:nil completion:Answering(reply, ^id(NSDictionary *result) {
     NSMutableArray *tasks = [NSMutableArray array];
     for (NSDictionary *task in [result[@"tasks"] isKindOfClass:NSArray.class] ? result[@"tasks"] : @[]) {
@@ -442,10 +442,10 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
       NSMutableDictionary *t = [task mutableCopy];
       NSMutableArray *tabIds = [NSMutableArray array];
       for (NSNumber *chromeTabId in [task[@"tabIds"] isKindOfClass:NSArray.class] ? task[@"tabIds"] : @[])
-        for (ArdiaWindowController *c in ArdiaWindowController.all)
-          for (ArdiaCoreProfile *p in ardia_host::LoadedProfiles())
+        for (NillaWindowController *c in NillaWindowController.all)
+          for (ArdiaCoreProfile *p in nilla_host::LoadedProfiles())
             for (ArdiaCoreTab *tab in [c.coreWindow tabsForProfile:p])
-              if (tab.tabId == chromeTabId.intValue) [tabIds addObject:ardia_host::AppTabIdValue(tab)];
+              if (tab.tabId == chromeTabId.intValue) [tabIds addObject:nilla_host::AppTabIdValue(tab)];
       t[@"tabIds"] = tabIds;
       [tasks addObject:t];
     }
@@ -453,14 +453,14 @@ NSMutableDictionary<NSString *, NSString *> *DownloadProfiles() {
   })];
 }
 
-+ (void)components:(ArdiaServiceReply)reply {
++ (void)components:(NillaServiceReply)reply {
   [self call:@"ac_components_list" profile:@"" args:nil completion:Answering(reply, ^id(NSDictionary *result) {
     return [result[@"components"] isKindOfClass:NSArray.class] ? result[@"components"] : @[];
   })];
 }
 
 + (void)clearBrowsingData:(NSString *)profile types:(NSArray<NSString *> *)types since:(double)sinceMs completion:(void (^)(NSString * _Nullable))completion {
-  if ([types containsObject:@"history"]) [ArdiaEarlyWindow forgetPictures];
+  if ([types containsObject:@"history"]) [NillaEarlyWindow forgetPictures];
   [self call:@"ac_browsing_data_clear" profile:profile args:@{@"types" : types, @"since" : @(sinceMs)} completion:^(NSDictionary *result) {
     if (id error = result[@"error"]) return completion([error description]);
     id ok = result[@"ok"];

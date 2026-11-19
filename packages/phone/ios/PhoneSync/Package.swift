@@ -8,18 +8,18 @@ let package = Package(
     .library(name: "PhoneSync", targets: ["PhoneSync"]),
   ],
   dependencies: [
-    .package(name: "ArdiaKit", path: "../ArdiaKit"),
-    .package(name: "ArdiaSyncCore", path: "../../../sync"),
+    .package(name: "NillaKit", path: "../NillaKit"),
+    .package(name: "NillaSyncCore", path: "../../../sync"),
   ],
   targets: [
-    .target(name: "PhoneSync", dependencies: [.product(name: "ArdiaSync", package: "ArdiaKit")]),
+    .target(name: "PhoneSync", dependencies: [.product(name: "NillaSync", package: "NillaKit")]),
     .testTarget(
       name: "PhoneSyncTests",
       dependencies: [
         "PhoneSync",
-        .product(name: "ArdiaSync", package: "ArdiaKit"),
-        .product(name: "ArdiaShared", package: "ArdiaKit"),
-        .product(name: "ArdiaSyncCore", package: "ArdiaSyncCore"),
+        .product(name: "NillaSync", package: "NillaKit"),
+        .product(name: "NillaShared", package: "NillaKit"),
+        .product(name: "NillaSyncCore", package: "NillaSyncCore"),
       ]
     ),
   ]

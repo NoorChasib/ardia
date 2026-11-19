@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -369,6 +369,6 @@ class DevelopmentWebViewEngine(
 
     companion object {
         const val LIVE_LIMIT = 6
-        private const val PRIVATE_PROFILE_PREFIX = "ardia-private-"
+        private const val PRIVATE_PROFILE_PREFIX = "nilla-private-"
     }
 }

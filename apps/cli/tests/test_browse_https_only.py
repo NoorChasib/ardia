@@ -1,7 +1,7 @@
 import unittest
 from types import SimpleNamespace
 
-from ardia_cli.browse.commands import failed_navigation
+from nilla_browser_cli.browse.commands import failed_navigation
 
 
 class HttpsOnlyBlock(unittest.TestCase):
@@ -10,7 +10,7 @@ class HttpsOnlyBlock(unittest.TestCase):
 
     def test_a_blocked_http_address_says_why(self):
         error = failed_navigation(self.ctx(), "http://example.test/page", "net::ERR_BLOCKED_BY_CLIENT")
-        self.assertIn("Ardia loads http:// addresses over https", error.message)
+        self.assertIn("Nilla loads http:// addresses over https", error.message)
         self.assertIn("Try the https:// address", error.message)
 
     def test_other_blocks_keep_the_plain_error(self):

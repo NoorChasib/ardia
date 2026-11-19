@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 @MainActor
 @Suite struct SitePermissionsTests {

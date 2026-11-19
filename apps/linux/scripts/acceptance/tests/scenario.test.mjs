@@ -13,7 +13,7 @@ const exists = (path) => access(path).then(() => true, () => false);
 
 describe("scenario runner", () => {
   let root;
-  before(async () => { root = await mkdtemp(join(tmpdir(), "ardia-acceptance-runner-")); });
+  before(async () => { root = await mkdtemp(join(tmpdir(), "nilla-acceptance-runner-")); });
   after(() => rm(root, { recursive: true, force: true }));
 
   const fakeLaunch = (closed) => async ({ scratch, label }) => ({ scratch, label, close: async () => { closed.push(label); return true; } });
@@ -174,7 +174,7 @@ describe("scenario runner", () => {
 
 describe("browser start", () => {
   let root;
-  before(async () => { root = await mkdtemp(join(tmpdir(), "ardia-acceptance-start-")); });
+  before(async () => { root = await mkdtemp(join(tmpdir(), "nilla-acceptance-start-")); });
   after(() => rm(root, { recursive: true, force: true }));
 
   const fakeContext = () => {

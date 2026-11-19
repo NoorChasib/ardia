@@ -1,4 +1,4 @@
-import { labLog, CompletingField, completingFieldIsNative, type CompletingFieldHandle, type CompletionOffer } from "@ardia/phone-native";
+import { labLog, CompletingField, completingFieldIsNative, type CompletingFieldHandle, type CompletionOffer } from "@nilla/phone-native";
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 

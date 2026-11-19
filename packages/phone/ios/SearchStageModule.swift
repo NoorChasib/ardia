@@ -1,4 +1,4 @@
-import ArdiaDesign
+import NillaDesign
 import ExpoModulesCore
 import QuartzCore
 import SwiftUI
@@ -531,7 +531,7 @@ final class SearchStageView: ExpoView {
   private enum Curve {
     case immediate
     case spring(Spring, velocity: CGFloat)
-    case timing(ArdiaDesign.MotionCurve)
+    case timing(NillaDesign.MotionCurve)
   }
 
   @discardableResult

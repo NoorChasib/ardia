@@ -1,4 +1,4 @@
-package com.ardia.search
+package com.nilladigital.nilla.search
 
 fun interface DictationRecorder {
     fun stop()

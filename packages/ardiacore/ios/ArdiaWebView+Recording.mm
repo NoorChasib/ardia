@@ -4,7 +4,7 @@
 
 static const NSTimeInterval kRecordingPictureTimeout = 0.5;
 
-@implementation ArdiaWebView (Recording)
+@implementation NillaWebView (Recording)
 
 - (void)copyRecordingPicture:(void (^)(CGImageRef _Nullable picture))completion {
   if (!self.recordingShowsPage || !self.window || self.isHiddenOrHasHiddenAncestor) return completion(NULL);
@@ -17,26 +17,26 @@ static const NSTimeInterval kRecordingPictureTimeout = 0.5;
 }
 
 + (NSArray<NSWindow *> *)recordingPictureInPictureWindowsOfWindow:(NSWindow *)window {
-  ArdiaWindowController *owner = [ArdiaWindowController forNSWindow:window];
+  NillaWindowController *owner = [NillaWindowController forNSWindow:window];
   if (!owner || owner.coreWindow.window != window) return @[];
   NSMutableArray<NSWindow *> *owned = [NSMutableArray array];
   for (NSWindow *candidate in NSApp.windows) {
-    ArdiaPiPController *controller = [ArdiaPiPController forWindow:candidate];
-    ArdiaWebView *view = controller.view;
+    NillaPiPController *controller = [NillaPiPController forWindow:candidate];
+    NillaWebView *view = controller.view;
     ArdiaCoreTab *tab = view ? view->_tab : nil;
-    if (controller.window == candidate && tab && !tab.closed && [ArdiaWindowController holding:tab] == owner) [owned addObject:candidate];
+    if (controller.window == candidate && tab && !tab.closed && [NillaWindowController holding:tab] == owner) [owned addObject:candidate];
   }
   return owned;
 }
 
 + (BOOL)recordingWindowIsPrivate:(NSWindow *)window {
-  ArdiaWindowController *owner = [ArdiaWindowController forNSWindow:window];
+  NillaWindowController *owner = [NillaWindowController forNSWindow:window];
   ArdiaCoreProfile *profile = owner.coreWindow.activeProfile;
   return !owner || !profile || profile.offTheRecord;
 }
 
 + (CGFloat)recordingCornerRadiusOfWindow:(NSWindow *)window {
-  ArdiaPiPController *controller = [ArdiaPiPController forWindow:window];
+  NillaPiPController *controller = [NillaPiPController forWindow:window];
   return controller ? controller.cornerRadius : window.contentView.layer.cornerRadius;
 }
 
@@ -45,7 +45,7 @@ static const NSTimeInterval kRecordingPictureTimeout = 0.5;
 }
 
 + (NSView *)recordingControlsOfWindow:(NSWindow *)window {
-  return [ArdiaPiPController forWindow:window].overlay;
+  return [NillaPiPController forWindow:window].overlay;
 }
 
 @end

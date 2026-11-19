@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.phone.NativeMenuRules.Action
-import com.ardia.phone.NativeMenuRules.ActionSheetActionShape
-import com.ardia.phone.NativeMenuRules.Header
-import com.ardia.phone.NativeMenuRules.MenuItemShape
+import com.nilladigital.nilla.phone.NativeMenuRules.Action
+import com.nilladigital.nilla.phone.NativeMenuRules.ActionSheetActionShape
+import com.nilladigital.nilla.phone.NativeMenuRules.Header
+import com.nilladigital.nilla.phone.NativeMenuRules.MenuItemShape
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -90,7 +90,7 @@ class NativeMenuRulesTest {
     @Test
     fun androidsOwnMenusAreTheDefaultAndOnlyTheLabArgumentBringsBackTheDrawnOnes() {
         assertTrue(NativeMenuRules.nativeMenus(emptyMap()))
-        assertFalse(NativeMenuRules.nativeMenus(mapOf("ArdiaDrawnMenus" to true)))
-        assertTrue("a store build ignores launch arguments", NativeMenuRules.nativeMenus(LaunchExtras.arguments(mapOf("ArdiaDrawnMenus" to true), allowed = false)))
+        assertFalse(NativeMenuRules.nativeMenus(mapOf("NillaDrawnMenus" to true)))
+        assertTrue("a store build ignores launch arguments", NativeMenuRules.nativeMenus(LaunchExtras.arguments(mapOf("NillaDrawnMenus" to true), allowed = false)))
     }
 }

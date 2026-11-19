@@ -1,4 +1,4 @@
-package com.ardia.browsing
+package com.nilladigital.nilla.browsing
 
 import kotlin.math.abs
 import kotlin.math.max

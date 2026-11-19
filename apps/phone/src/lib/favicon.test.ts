@@ -22,7 +22,7 @@ test("only web addresses are tried", () => {
 });
 
 test("the letter tile uses the host without www", () => {
-  assert.equal(monogramHost("https://www.GitHub.com/ardia"), "github.com");
+  assert.equal(monogramHost("https://www.GitHub.com/nilla"), "github.com");
   assert.equal(monogramHost("https://user:pass@mail.example.org:443/"), "mail.example.org");
   assert.equal(monogramHost("not a url"), null);
   assert.equal(monogramHost(""), null);

@@ -47,10 +47,10 @@ type NativeProps = Omit<ContextMenuProps, "onSelect" | "onOpen" | "onClose"> & {
   onClose?: () => void;
 };
 
-const native = requireOptionalNativeModule<NativeMenus>("ArdiaPhoneMenus");
+const native = requireOptionalNativeModule<NativeMenus>("NillaPhoneMenus");
 
 let nativeView: ComponentType<NativeProps> | undefined;
-const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("ArdiaPhoneMenus"));
+const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("NillaPhoneMenus"));
 
 export const nativeMenusAvailable = (): { contextMenu: boolean; actionSheet: boolean } => ({
   contextMenu: native?.hasContextMenu === true,

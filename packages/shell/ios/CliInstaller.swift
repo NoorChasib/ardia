@@ -48,7 +48,7 @@ final class CliInstaller {
   }
 
   private static func pinnedDigest() -> String? {
-    guard let url = Bundle.main.url(forResource: "ardia-cli", withExtension: "sha256"),
+    guard let url = Bundle.main.url(forResource: "nilla-cli", withExtension: "sha256"),
       let text = try? String(contentsOf: url, encoding: .utf8)
     else { return nil }
     let digest = text.split(whereSeparator: { $0.isWhitespace }).first.map(String.init)?.lowercased() ?? ""
@@ -74,7 +74,7 @@ final class CliInstaller {
     return LaunchConfig.shared.isolated && LaunchConfig.shared.instance("cliUrl")?.hasPrefix("file://") == true
   }
 
-  private let queue = DispatchQueue(label: "dev.ardia.cli-installer")
+  private let queue = DispatchQueue(label: "com.nilladigital.nilla.cli-installer")
   private var waiting: [([String: Any]) -> Void] = []
   private var lineListeners: [(String) -> Void] = []
 
@@ -108,10 +108,10 @@ final class CliInstaller {
     }
     let version = Self.appVersion
     guard version.range(of: Self.versionPattern, options: .regularExpression) != nil else {
-      return finish(failure("This build's version (\(version)) has no ardia command release."))
+      return finish(failure("This build's version (\(version)) has no nilla command release."))
     }
     guard let script = Self.script(), FileManager.default.isReadableFile(atPath: script.path) else {
-      return finish(failure("The installer isn't in this build of Ardia."))
+      return finish(failure("The installer isn't in this build of Nilla."))
     }
     var arguments = [script.path, "--version", version]
     if let digest = Self.pinnedDigest() { arguments += ["--sha256", digest] }

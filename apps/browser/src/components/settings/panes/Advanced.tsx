@@ -64,7 +64,7 @@ function memorySaverLevel(s: MemorySaverKeys): MemorySaverLevel {
 
 function customDescription(s: MemorySaverKeys) {
   const tabs = MEMORY_SAVER_LEVELS[s.memorySaverMode].description().split(". ")[0];
-  const load = s.loadProfilesWhenOpened ? " Profiles load when you first open them." : " Every profile loads when Ardia opens.";
+  const load = s.loadProfilesWhenOpened ? " Profiles load when you first open them." : " Every profile loads when Nilla opens.";
   return `${tabs}.${load}${s.unloadProfilesAfter === "never" ? "" : profilesUnload(UNLOAD_AFTER[s.unloadProfilesAfter])} Pick a level to use its settings instead.`;
 }
 
@@ -144,7 +144,7 @@ function CommandLineSection() {
           ? server.connections
             ? `Connected now: ${server.connections === 1 ? "1 session" : `${server.connections} sessions`}.`
             : "On. Nothing is connected."
-          : "Installs the ardia command and lets it open, read and act in every page you're signed in to. It stays on after you quit.";
+          : "Installs the nilla-browser command and lets it open, read and act in every page you're signed in to. It stays on after you quit.";
   const failed = !!cli.error && !cli.installing;
   const setOn = (next: boolean) => {
     updateSettings({ cliControl: next });
@@ -155,7 +155,7 @@ function CommandLineSection() {
       <SectionHeader title="Command line and automation" />
       <Group>
         <Row
-          anchor="advanced.ardiaCommand"
+          anchor="advanced.nillaCommand"
           description={
             <View>
               <Text size="caption" tone="textSecondary" style={NOTE()}>
@@ -171,7 +171,7 @@ function CommandLineSection() {
         >
           {on && failed ? <Button title="Try Again" onPress={() => void installCliInBackground("settings")} /> : null}
           {on && !failed && cli.installedVersion && !cli.installing ? <Button title="Reinstall" onPress={() => void installCliInBackground("settings")} /> : null}
-          <Toggle value={on} accessibilityLabel="ardia command" onChange={setOn} />
+          <Toggle value={on} accessibilityLabel="nilla command" onChange={setOn} />
         </Row>
         <SettingToggle anchor="advanced.compactCliPill" />
         {ruleRows}

@@ -8,11 +8,11 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ardia_cli.cdp import Cdp, CdpError, ConnectionLost
-from ardia_cli.endpoint import NOT_REACHABLE, Endpoint, EndpointError
-from ardia_cli.redact import redact
-from ardia_cli import caller, control, urlmatch
-from ardia_cli.userscript import SOURCE_URL_PREFIX, Build, SourceMap, rules
+from nilla_browser_cli.cdp import Cdp, CdpError, ConnectionLost
+from nilla_browser_cli.endpoint import NOT_REACHABLE, Endpoint, EndpointError
+from nilla_browser_cli.redact import redact
+from nilla_browser_cli import caller, control, urlmatch
+from nilla_browser_cli.userscript import SOURCE_URL_PREFIX, Build, SourceMap, rules
 
 CONNECT_TIMEOUT = 10
 RUN_TIMEOUT = 30
@@ -139,7 +139,7 @@ class Run:
 
     def mapped(self, line: int, column: int) -> str:
         if line not in self.body:
-            return "ardia test wrapper"
+            return "nilla test wrapper"
         found = self.map.lookup(line, column)
         if found:
             return f"{found[0]}:{found[1]}:{found[2]}"
@@ -269,7 +269,7 @@ async def run_test(build: Build, url: str, endpoint: Endpoint, expect: str | Non
     report.warnings.extend(build.meta.warnings + build.warnings)
     if build.meta.world == "ISOLATED":
         report.warnings.append(
-            "@inject-into content: this test runs the script in the page's world (ardia command connections can't "
+            "@inject-into content: this test runs the script in the page's world (nilla command connections can't "
             "create isolated worlds); installed, it runs in an isolated world and can't see page globals"
         )
     loop = asyncio.get_running_loop()
@@ -358,7 +358,7 @@ async def check_frames(cdp: Cdp, session: str, report: Report):
     if frames > reported:
         report.warnings.append(
             f"{frames - reported} of the page's {frames} iframes never reported back: they hadn't loaded, or they show "
-            "an extension's or the browser's own page, which Ardia's control connection never reaches (a --port test "
+            "an extension's or the browser's own page, which Nilla's control connection never reaches (a --port test "
             "server does)"
         )
 

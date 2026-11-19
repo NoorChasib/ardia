@@ -8,11 +8,11 @@ import sys
 import time
 from pathlib import Path
 
-from ardia_cli import command_metrics
-from ardia_cli.browse import paths
-from ardia_cli.caller import parse as parse_caller
-from ardia_cli.browse.errors import BrowseError, ConnectionLost, Unreachable, Usage
-from ardia_cli.browse.limits import BEHIND_SCRIPT_WAIT, QUEUE_WAIT, command_limit, queue_wait
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse import paths
+from nilla_browser_cli.caller import parse as parse_caller
+from nilla_browser_cli.browse.errors import BrowseError, ConnectionLost, Unreachable, Usage
+from nilla_browser_cli.browse.limits import BEHIND_SCRIPT_WAIT, QUEUE_WAIT, command_limit, queue_wait
 
 CONNECTED_IDLE = 30.0
 DEFAULT_DAEMON_IDLE = 3600.0
@@ -24,12 +24,12 @@ SPILL_KEEP = 40
 SETTLE_TIMEOUT = 5.0
 WATCH_INTERVAL = 2.0
 EXIT_GRACE = 3.0
-log = logging.getLogger("ardia_cli.browse")
+log = logging.getLogger("nilla_browser_cli.browse")
 
 
 def unreachable_message(endpoint, error) -> str:
-    from ardia_cli.endpoint import NOT_REACHABLE
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.endpoint import NOT_REACHABLE
+    from nilla_browser_cli.redact import redact
 
     if endpoint.explicit:
         detail = str(error) or type(error).__name__
@@ -38,13 +38,13 @@ def unreachable_message(endpoint, error) -> str:
 
 
 def load_commands():
-    from ardia_cli.browse import audit, capture, commands, flows, media, react
+    from nilla_browser_cli.browse import audit, capture, commands, flows, media, react
 
     return commands, (audit, capture, flows, media, react)
 
 
 async def run_one(ctx, argv, options: dict | None = None):
-    from ardia_cli.browse.commands import ALIASES, Ctx
+    from nilla_browser_cli.browse.commands import ALIASES, Ctx
 
     if not argv:
         return None, BrowseError("No command given")
@@ -58,23 +58,23 @@ async def run_one(ctx, argv, options: dict | None = None):
 
 
 async def dispatch(ctx, name, argv):
-    from ardia_cli.browse import vault
-    from ardia_cli.browse.commands import COMMANDS, SKIPPED
+    from nilla_browser_cli.browse import vault
+    from nilla_browser_cli.browse.commands import COMMANDS, SKIPPED
 
     if name == "auth":
         if argv[:1] != ["login"]:
             raise Usage("auth save|list|show|delete run without the daemon")
         return await vault.login(ctx, argv[1:])
     if name in SKIPPED:
-        raise BrowseError(f"`{name}` isn't part of ardia browse: {SKIPPED[name]}", code="unsupported")
+        raise BrowseError(f"`{name}` isn't part of nilla browse: {SKIPPED[name]}", code="unsupported")
     handler = COMMANDS.get(name)
     if handler is None:
-        raise Usage(f"Unknown command: {name}. Run `ardia browse --help`")
+        raise Usage(f"Unknown command: {name}. Run `nilla-browser browse --help`")
     if name != "batch":
-        from ardia_cli.browse.changes import settle_reaction
+        from nilla_browser_cli.browse.changes import settle_reaction
 
         await settle_reaction(ctx.state, name, argv)
-    from ardia_cli.browse import flowlog
+    from nilla_browser_cli.browse import flowlog
 
     step = await flowlog.begin(ctx, name, argv)
     try:
@@ -88,14 +88,14 @@ async def dispatch(ctx, name, argv):
     await flowlog.end(ctx, step)
     extras = getattr(ctx.state, "extras", None)
     if name != "batch" and isinstance(extras, dict) and extras.get("top_command") != "script":
-        from ardia_cli.browse.commands import note_reading
+        from nilla_browser_cli.browse.commands import note_reading
 
         note_reading(ctx.state, name, argv, result)
     return result
 
 
 def sanitize(value):
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     if isinstance(value, str):
         return redact(value)
@@ -107,13 +107,13 @@ def sanitize(value):
 
 
 def redact_text(text: str) -> str:
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     return redact(text)
 
 
 def render(options: dict, result=None, error: BrowseError | None = None, name: str = "") -> tuple[int, str, str]:
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     code, out, err = _render(options, result, error, name)
     command_metrics.rendered(name, result, error, out)
@@ -121,8 +121,8 @@ def render(options: dict, result=None, error: BrowseError | None = None, name: s
 
 
 def _render(options: dict, result=None, error: BrowseError | None = None, name: str = "") -> tuple[int, str, str]:
-    from ardia_cli.browse.commands import MUTATING, boundary
-    from ardia_cli.printable import inert, json_safe
+    from nilla_browser_cli.browse.commands import MUTATING, boundary
+    from nilla_browser_cli.printable import inert, json_safe
 
     as_json = options.get("json")
     if error is not None:
@@ -181,14 +181,14 @@ def cap(text: str, options: dict, name: str = "", default: int | None = None) ->
 def spill(text: str) -> str | None:
     import tempfile
 
-    folder = Path(tempfile.gettempdir()) / f"ardia-browse-output-{os.getuid()}"
+    folder = Path(tempfile.gettempdir()) / f"nilla-browse-output-{os.getuid()}"
     try:
         folder.mkdir(mode=0o700, exist_ok=True)
         info = folder.lstat()
         if not folder.is_dir() or folder.is_symlink() or info.st_uid != os.getuid() or info.st_mode & 0o077:
             return None
         fd, path = tempfile.mkstemp(prefix="output-", suffix=".txt", dir=folder)
-        from ardia_cli.printable import well_formed
+        from nilla_browser_cli.printable import well_formed
 
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(well_formed(text))
@@ -209,8 +209,8 @@ def cap_notice(text: str) -> str:
 
 class Daemon:
     def __init__(self, config: dict):
-        from ardia_cli import endpoint as endpoints
-        from ardia_cli.browse.state import State
+        from nilla_browser_cli import endpoint as endpoints
+        from nilla_browser_cli.browse.state import State
 
         self.config = config
         self.root = Path(config["data_root"])
@@ -310,7 +310,7 @@ class Daemon:
             paths.unlink_quietly(self.sock, self.dir_fd)
         paths.unlink_quietly(f"{self.key}.json", self.dir_fd)
         try:
-            from ardia_cli.browse import claims
+            from nilla_browser_cli.browse import claims
 
             claims.release(self.dir_fd, self.key)
         except Exception:
@@ -322,7 +322,7 @@ class Daemon:
         os.close(self.lock_fd)
 
     async def _cleanup(self):
-        from ardia_cli.browse import capture, temptabs
+        from nilla_browser_cli.browse import capture, temptabs
 
         await temptabs.drain(self.state)
         if self.state.connected:
@@ -340,7 +340,7 @@ class Daemon:
         await self.state.disconnect()
 
     def bare_ctx(self):
-        from ardia_cli.browse.commands import Ctx
+        from nilla_browser_cli.browse.commands import Ctx
 
         return Ctx(self.state, {}, str(Path.home()), {}, None)
 
@@ -366,7 +366,7 @@ class Daemon:
             browser = self.state.browser
             if browser is not None and browser.link is not None and browser.link.lost.is_set() and not browser.closed_by_us:
                 self.state.lost = True
-                log.info("Ardia closed the connection; this daemon ends")
+                log.info("Nilla closed the connection; this daemon ends")
                 continue
             if browser is None and self.state.instance is not None and self.pending == 0:
                 try:
@@ -414,7 +414,7 @@ class Daemon:
                 pass
 
     async def execute(self, request: dict) -> tuple[int, str, str]:
-        from ardia_cli.browse.commands import ALIASES, Ctx
+        from nilla_browser_cli.browse.commands import ALIASES, Ctx
 
         command_metrics.begin(request)
         argv = request.get("argv") or []
@@ -472,7 +472,7 @@ class Daemon:
         return code, out, err
 
     async def restore_metrics(self):
-        from ardia_cli.browse.actions import restore_metrics
+        from nilla_browser_cli.browse.actions import restore_metrics
 
         for page in list(self.state.pages.values()):
             if getattr(page, "temporary_metrics", False) and page.session_id and self.state.connected:
@@ -507,7 +507,7 @@ class Daemon:
             raise
         except Exception as error:
             log.exception("command %s crashed", name)
-            from ardia_cli import telemetry
+            from nilla_browser_cli import telemetry
 
             telemetry.report_exception(error, "browse_daemon", self.config)
             return render(options, error=BrowseError(f"{name} failed: {type(error).__name__}: {error}"), name=name)
@@ -526,7 +526,7 @@ class Daemon:
             self.lock.release()
 
     async def close(self, ctx):
-        from ardia_cli.browse.commands import Result
+        from nilla_browser_cli.browse.commands import Result
 
         closed = 0
         kept = []
@@ -537,7 +537,7 @@ class Daemon:
             leftovers = self.state.instance is not None and self.state.registry.temporaries(self.state.instance)
             if (self.state.opened or leftovers) and not self.state.lost:
                 try:
-                    from ardia_cli.browse import temptabs
+                    from nilla_browser_cli.browse import temptabs
 
                     await self.state.connect()
                     await self.state.refresh_targets()
@@ -582,14 +582,14 @@ def joined_batch(out: str, closed: str, options: dict) -> str:
 
 
 def timed_out(name: str, limit: float) -> BrowseError:
-    from ardia_cli.browse.commands import MUTATING
+    from nilla_browser_cli.browse.commands import MUTATING
 
     unknown = ", so its outcome is unknown and it wasn't retried" if name in MUTATING else ""
     return BrowseError(f"`{name}` didn't finish within {limit:g} s and was stopped{unknown}. Snapshot to see where the page is", code="command_timeout")
 
 
 def encode_answer(code: int, out: str, err: str, fields: dict | None = None) -> bytes:
-    from ardia_cli.printable import well_formed
+    from nilla_browser_cli.printable import well_formed
 
     data = (well_formed(json.dumps({"exit": code, "out": out, "err": err, **(fields or {})}, ensure_ascii=False)) + "\n").encode()
     if len(data) <= MAX_RESPONSE:
@@ -612,7 +612,7 @@ def take_lease():
 
 
 def main():
-    from ardia_cli import redact
+    from nilla_browser_cli import redact
 
     config = json.loads(sys.stdin.read() or "{}")
     sys.stdin.close()
@@ -627,10 +627,10 @@ def main():
         daemon = Daemon(config)
         status = asyncio.run(daemon.run())
     except paths.PathError as error:
-        sys.stderr.write(f"ardia browse daemon: {error}\n")
+        sys.stderr.write(f"nilla browse daemon: {error}\n")
         status = 2
     except Exception as error:
-        from ardia_cli import telemetry
+        from nilla_browser_cli import telemetry
 
         telemetry.report_exception(error, "browse_daemon", config, fatal=True)
         raise

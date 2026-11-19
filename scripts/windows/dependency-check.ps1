@@ -38,7 +38,7 @@ if (-not $unmet.Count) {
 }
 
 foreach ($group in ($unmet | Group-Object Name | Sort-Object Name)) {
-  $what = if ($group.Group[0].VcRuntime) { "a Visual C++ runtime DLL the app folder lacks (Windows doesn't ship it; the redist must sit beside Ardia.exe)" } else { "neither in the app folder nor on the list of DLLs a clean Windows 11 ships" }
+  $what = if ($group.Group[0].VcRuntime) { "a Visual C++ runtime DLL the app folder lacks (Windows doesn't ship it; the redist must sit beside Nilla.exe)" } else { "neither in the app folder nor on the list of DLLs a clean Windows 11 ships" }
   $users = ($group.Group | ForEach-Object { "$($_.By) ($($_.Kind))" } | Sort-Object -Unique) -join ", "
   Write-Host "::error::$($group.Name) is $what; needed by $users"
 }

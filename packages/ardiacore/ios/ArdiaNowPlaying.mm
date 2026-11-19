@@ -53,7 +53,7 @@ NSDictionary *Sanitized(NSDictionary *d, BOOL main) {
 
 }
 
-@implementation ArdiaNowPlaying {
+@implementation NillaNowPlaying {
   NSMutableDictionary<NSString *, NSDictionary *> *_frames;
   NSMutableSet<NSString *> *_mainFrames;
 }

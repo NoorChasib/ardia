@@ -1,4 +1,4 @@
-import * as shellPackage from "@ardia/shell";
+import * as shellPackage from "@nilla/shell";
 import * as app from "./app";
 import * as calendar from "./calendar";
 import * as cli from "./cli";

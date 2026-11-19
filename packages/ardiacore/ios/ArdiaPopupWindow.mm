@@ -2,9 +2,9 @@
 #import "ArdiaRuntime.h"
 #import "ArdiaWebViewInternal.h"
 
-using namespace ardia_window;
+using namespace nilla_window;
 
-@interface ArdiaPopupWindow : NSObject <ArdiaCoreWindowDelegate, ArdiaCoreTabDelegate>
+@interface NillaPopupWindow : NSObject <ArdiaCoreWindowDelegate, ArdiaCoreTabDelegate>
 @property(nonatomic, readonly) ArdiaCoreTab *tab;
 @property(nonatomic, readonly) ArdiaCoreWindow *coreWindow;
 - (void)askPermission:(NSDictionary *)request;
@@ -23,18 +23,18 @@ NSWindowCollectionBehavior JoiningFullScreenSpace(NSWindowCollectionBehavior beh
 
 NSWindow *_Nullable FrontWindowOfProfile(ArdiaCoreProfile *profile) {
   for (NSWindow *window in NSApp.orderedWindows) {
-    ArdiaWindowController *c = [ArdiaWindowController forNSWindow:window];
+    NillaWindowController *c = [NillaWindowController forNSWindow:window];
     if (c && !c.stray && c.coreWindow.activeProfile == profile) return window;
   }
   return nil;
 }
 
-NSMutableSet<ArdiaPopupWindow *> *PopupWindows() {
+NSMutableSet<NillaPopupWindow *> *PopupWindows() {
   static NSMutableSet *windows = [NSMutableSet set];
   return windows;
 }
 
-NSMapTable<ArdiaWebView *, NSPointerArray *> *PasswordPromptSources() {
+NSMapTable<NillaWebView *, NSPointerArray *> *PasswordPromptSources() {
   static NSMapTable *sources = [NSMapTable weakToStrongObjectsMapTable];
   return sources;
 }
@@ -130,11 +130,11 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
 
 }
 
-@implementation ArdiaPopupWindow {
+@implementation NillaPopupWindow {
   ArdiaCoreWindow *_coreWindow;
   ArdiaCoreTab *_tab;
-  __weak ArdiaWebView *_opener;
-  ArdiaPopupOriginStrip *_strip;
+  __weak NillaWebView *_opener;
+  NillaPopupOriginStrip *_strip;
   id _closeObserver;
   BOOL _adopting;
   BOOL _showInactive;
@@ -146,7 +146,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
 
 + (void)load {
   Class chromeWindow = NSClassFromString(@"NativeWidgetMacNSWindow");
-  ardia_runtime::ReplaceMethod(chromeWindow, @selector(setCollectionBehavior:), ^id(IMP original) {
+  nilla_runtime::ReplaceMethod(chromeWindow, @selector(setCollectionBehavior:), ^id(IMP original) {
     return ^(NSWindow *window, NSWindowCollectionBehavior behavior) {
       if (gChromeAppWindowJoinsFullScreenSpace && !window.visible && (behavior & NSWindowCollectionBehaviorFullScreenPrimary))
         behavior = JoiningFullScreenSpace(behavior);
@@ -182,7 +182,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   [alert addButtonWithTitle:@"Don't Allow"].keyEquivalent = @"\e";
   _permissionAlert = alert;
   NSString *requestId = request[@"id"];
-  __weak ArdiaPopupWindow *weakSelf = self;
+  __weak NillaPopupWindow *weakSelf = self;
   [alert beginSheetModalForWindow:window
                 completionHandler:^(NSModalResponse response) {
                   [weakSelf permission:requestId answered:response];
@@ -193,8 +193,8 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   if (![_shownPermission[@"id"] isEqual:requestId]) return;
   _shownPermission = nil;
   _permissionAlert = nil;
-  if (response == NSAlertFirstButtonReturn) [ArdiaHost resolvePermission:requestId result:@"accept" remember:YES];
-  else if (response == NSAlertSecondButtonReturn) [ArdiaHost resolvePermission:requestId result:@"deny" remember:YES];
+  if (response == NSAlertFirstButtonReturn) [NillaHost resolvePermission:requestId result:@"accept" remember:YES];
+  else if (response == NSAlertSecondButtonReturn) [NillaHost resolvePermission:requestId result:@"deny" remember:YES];
   [self showNextPermission];
 }
 
@@ -215,7 +215,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   return YES;
 }
 
-- (instancetype)initWithTab:(ArdiaCoreTab *)tab opener:(ArdiaWebView *)opener {
+- (instancetype)initWithTab:(ArdiaCoreTab *)tab opener:(NillaWebView *)opener {
   if (!(self = [super init])) return nil;
   _tab = tab;
   _opener = opener;
@@ -234,7 +234,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   window.minSize = NSMakeSize(200, 150);
   [window setContentSize:size];
   [self placeWithFeatures:features];
-  __weak ArdiaPopupWindow *weakSelf = self;
+  __weak NillaPopupWindow *weakSelf = self;
   _closeObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSWindowWillCloseNotification
                                                                    object:window
                                                                     queue:nil
@@ -277,7 +277,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   const ArdiaCoreAdoption adoption = [_coreWindow adoptTab:_tab];
   _adopting = NO;
   if (adoption == ArdiaCoreAdoptionBusy) {
-    __weak ArdiaPopupWindow *weakSelf = self;
+    __weak NillaPopupWindow *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
       [weakSelf takeTab];
     });
@@ -300,7 +300,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   page.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
   [_tab noteInShownSlot];
   [host addSubview:page];
-  _strip = [[ArdiaPopupOriginStrip alloc]
+  _strip = [[NillaPopupOriginStrip alloc]
       initWithFrame:NSMakeRect(0, flipped ? 0 : pageHeight, NSWidth(bounds), kPopupOriginStripHeight)];
   _strip.autoresizingMask = NSViewWidthSizable | (flipped ? NSViewMaxYMargin : NSViewMinYMargin);
   [host addSubview:_strip positioned:NSWindowAbove relativeTo:page];
@@ -309,7 +309,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   _shown = YES;
   NSWindow *window = _coreWindow.window;
   if (IsWindowFullScreen(_opener.window)) window.collectionBehavior = JoiningFullScreenSpace(window.collectionBehavior);
-  if (ardia_host::Background() || _showInactive) [_coreWindow showInactive];
+  if (nilla_host::Background() || _showInactive) [_coreWindow showInactive];
   else [_coreWindow.window makeKeyAndOrderFront:nil];
   [_tab focus];
 }
@@ -333,7 +333,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   _permissionAlert = nil;
   if (alert.window.sheetParent) [alert.window.sheetParent endSheet:alert.window returnCode:NSModalResponseAbort];
   if (_tab.delegate == self) _tab.delegate = nil;
-  ArdiaPopupWindow *me = self;
+  NillaPopupWindow *me = self;
   dispatch_async(dispatch_get_main_queue(), ^{ [PopupWindows() removeObject:me]; });
 }
 
@@ -351,7 +351,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
 }
 
 - (void)tab:(ArdiaCoreTab *)tab requestsActivation:(NSString *)reason {
-  if (!ardia_host::Background()) [_coreWindow.window makeKeyAndOrderFront:nil];
+  if (!nilla_host::Background()) [_coreWindow.window makeKeyAndOrderFront:nil];
 }
 
 - (void)tab:(ArdiaCoreTab *)tab
@@ -361,16 +361,16 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
                      main:(BOOL)main
                    origin:(NSString *)verifiedOrigin {
   if (![kind isEqualToString:@"drm"]) return;
-  id data = ardia_runtime::JSONObject(json);
+  id data = nilla_runtime::JSONObject(json);
   if (![data isKindOfClass:NSDictionary.class]) return;
   id keySystem = ((NSDictionary *)data)[@"keySystem"];
   NSString *family = KeySystemFamily([keySystem isKindOfClass:NSString.class] ? keySystem : nil);
   NSLog(@"[ardiacore] popup protected media %@: %@", [family isEqualToString:@"none"] ? @"stalled" : @"refused", family);
-  [ArdiaEvents emit:@"engine.popupProtectedMedia" data:@{@"family" : family, @"listed" : @(OnProtectedVideoSite(tab.url))}];
+  [NillaEvents emit:@"engine.popupProtectedMedia" data:@{@"family" : family, @"listed" : @(OnProtectedVideoSite(tab.url))}];
 }
 
-- (ArdiaWebView *)promptHost {
-  return _opener ?: [ArdiaWindowController hostingViewForProfile:_tab.profile];
+- (NillaWebView *)promptHost {
+  return _opener ?: [NillaWindowController hostingViewForProfile:_tab.profile];
 }
 
 - (void)tab:(ArdiaCoreTab *)tab externalAppRequest:(NSDictionary<NSString *, id> *)request {
@@ -385,24 +385,24 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
   if (_adopting || tab == _tab) return;
   if (!_tab) {
     _tab = tab;
-    __weak ArdiaPopupWindow *weakSelf = self;
+    __weak NillaPopupWindow *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf showTab]; });
     return;
   }
-  if ([disposition isEqualToString:@"popup"]) return ardia_host::OpenPopupWindow(tab, _opener);
-  ArdiaWebView *view = _opener ?: [ArdiaWindowController hostingViewForProfile:tab.profile];
-  if (view) [view openedTab:tab adoptId:[ArdiaTabRegistry offerTab:tab] disposition:ardia_host::AppDisposition(disposition)];
+  if ([disposition isEqualToString:@"popup"]) return nilla_host::OpenPopupWindow(tab, _opener);
+  NillaWebView *view = _opener ?: [NillaWindowController hostingViewForProfile:tab.profile];
+  if (view) [view openedTab:tab adoptId:[NillaTabRegistry offerTab:tab] disposition:nilla_host::AppDisposition(disposition)];
   else [tab closeNow];
 }
 
 - (void)window:(ArdiaCoreWindow *)window passwordPrompt:(NSDictionary<NSString *, id> *)prompt forTab:(ArdiaCoreTab *)tab {
   if (tab != _tab) return;
-  ArdiaWebView *opener = [self promptHost];
+  NillaWebView *opener = [self promptHost];
   if (!opener) {
     NSLog(@"[ardiacore] dropped a popup's password prompt: no window of its profile is open");
     return;
   }
-  ardia_host::NotePasswordPromptSource(opener, tab);
+  nilla_host::NotePasswordPromptSource(opener, tab);
   [opener emit:@"passwordPrompt" payload:prompt];
 }
 
@@ -415,7 +415,7 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
 - (BOOL)window:(ArdiaCoreWindow *)window preHandleKeyEvent:(NSEvent *)event {
   NSMenuItem *reserved = ReservedMenuItemForEvent(event);
   if (!reserved) return NO;
-  if ([reserved.identifier isEqualToString:@"ardia.command.closeTab"]) {
+  if ([reserved.identifier isEqualToString:@"nilla.command.closeTab"]) {
     [_coreWindow close];
     return YES;
   }
@@ -424,25 +424,25 @@ NSImage *_Nullable PermissionIcon(NSDictionary *request) {
 
 @end
 
-namespace ardia_host {
+namespace nilla_host {
 
-void OpenPopupWindow(ArdiaCoreTab *tab, ArdiaWebView *opener) {
+void OpenPopupWindow(ArdiaCoreTab *tab, NillaWebView *opener) {
   if ([opener opensPopupsAsTabs]) return [opener openedPopupTab:tab];
-  ArdiaPopupWindow *popup = [[ArdiaPopupWindow alloc] initWithTab:tab opener:opener];
+  NillaPopupWindow *popup = [[NillaPopupWindow alloc] initWithTab:tab opener:opener];
   if (!popup) {
-    if (opener) [opener openedTab:tab adoptId:[ArdiaTabRegistry offerTab:tab] disposition:@"foreground"];
+    if (opener) [opener openedTab:tab adoptId:[NillaTabRegistry offerTab:tab] disposition:@"foreground"];
     return;
   }
   [PopupWindows() addObject:popup];
-  __weak ArdiaPopupWindow *weakPopup = popup;
+  __weak NillaPopupWindow *weakPopup = popup;
   dispatch_async(dispatch_get_main_queue(), ^{ [weakPopup takeTab]; });
 }
 
 ArdiaCoreWindow *PopupWindowForChromeBrowser(ArdiaCoreProfile *profile) {
-  ArdiaPopupWindow *popup = [[ArdiaPopupWindow alloc] initWithTab:nil opener:[ArdiaWindowController hostingViewForProfile:profile]];
+  NillaPopupWindow *popup = [[NillaPopupWindow alloc] initWithTab:nil opener:[NillaWindowController hostingViewForProfile:profile]];
   if (!popup) return nil;
   [PopupWindows() addObject:popup];
-  __weak ArdiaPopupWindow *weakPopup = popup;
+  __weak NillaPopupWindow *weakPopup = popup;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{ [weakPopup closeIfNeverGivenTab]; });
   return popup.coreWindow;
 }
@@ -457,7 +457,7 @@ NSUInteger PopupWindowCount() {
 }
 
 bool AskPermissionInPopupWindow(ArdiaCoreTab *tab, NSDictionary *request) {
-  for (ArdiaPopupWindow *popup in PopupWindows()) {
+  for (NillaPopupWindow *popup in PopupWindows()) {
     if (popup.tab != tab) continue;
     [popup askPermission:request];
     return true;
@@ -466,11 +466,11 @@ bool AskPermissionInPopupWindow(ArdiaCoreTab *tab, NSDictionary *request) {
 }
 
 void DropPopupWindowPermission(NSString *requestId) {
-  for (ArdiaPopupWindow *popup in PopupWindows().allObjects)
+  for (NillaPopupWindow *popup in PopupWindows().allObjects)
     if ([popup dropPermission:requestId]) return;
 }
 
-void NotePasswordPromptSource(ArdiaWebView *view, ArdiaCoreTab *source) {
+void NotePasswordPromptSource(NillaWebView *view, ArdiaCoreTab *source) {
   if (!source) {
     [PasswordPromptSources() removeObjectForKey:view];
     return;
@@ -480,7 +480,7 @@ void NotePasswordPromptSource(ArdiaWebView *view, ArdiaCoreTab *source) {
   [PasswordPromptSources() setObject:route forKey:view];
 }
 
-ArdiaCoreTab *PasswordPromptTab(ArdiaWebView *view, ArdiaCoreTab *own) {
+ArdiaCoreTab *PasswordPromptTab(NillaWebView *view, ArdiaCoreTab *own) {
   NSPointerArray *route = [PasswordPromptSources() objectForKey:view];
   if (!route) return own;
   [PasswordPromptSources() removeObjectForKey:view];

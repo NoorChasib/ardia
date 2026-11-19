@@ -1,12 +1,12 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import com.ardia.sync.ConnectResult
-import com.ardia.sync.SyncController
-import com.ardia.sync.SyncFolderPick
+import com.nilladigital.nilla.sync.ConnectResult
+import com.nilladigital.nilla.sync.SyncController
+import com.nilladigital.nilla.sync.SyncFolderPick
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.functions.Coroutine
@@ -36,15 +36,15 @@ class SyncModule : Module() {
             java.io.File(java.io.File(app.noBackupFilesDir, "PhoneSync"), "folder-picks.json"),
             object : FolderPicks.Grants {
                 override fun take(tree: String): Boolean = runCatching {
-                    resolver.takePersistableUriPermission(android.net.Uri.parse(tree), com.ardia.sync.AndroidSyncFolderAccess.READ_AND_WRITE)
+                    resolver.takePersistableUriPermission(android.net.Uri.parse(tree), com.nilladigital.nilla.sync.AndroidSyncFolderAccess.READ_AND_WRITE)
                 }.isSuccess
 
                 override fun release(tree: String) {
-                    runCatching { resolver.releasePersistableUriPermission(android.net.Uri.parse(tree), com.ardia.sync.AndroidSyncFolderAccess.READ_AND_WRITE) }
+                    runCatching { resolver.releasePersistableUriPermission(android.net.Uri.parse(tree), com.nilladigital.nilla.sync.AndroidSyncFolderAccess.READ_AND_WRITE) }
                 }
 
                 override fun connected(): String? =
-                    (com.ardia.sync.SyncFiles(java.io.File(app.noBackupFilesDir, "Sync")).loadMeta().folder as? com.ardia.sync.SyncFolderLocation.Tree)?.treeUri
+                    (com.nilladigital.nilla.sync.SyncFiles(java.io.File(app.noBackupFilesDir, "Sync")).loadMeta().folder as? com.nilladigital.nilla.sync.SyncFolderLocation.Tree)?.treeUri
             },
         )
     }
@@ -59,14 +59,14 @@ class SyncModule : Module() {
             val sync = try {
                 PhoneSync.controller(context, demo)
             } catch (pending: UpgradeGate.Pending) {
-                throw CodedException("ERR_IMPORT_PENDING", "The import from the previous Ardia app has not finished", null)
+                throw CodedException("ERR_IMPORT_PENDING", "The import from the previous Nilla app has not finished", null)
             }
             if (watched !== sync) watch(sync)
             return sync
         }
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneSync")
+        Name("NillaPhoneSync")
 
         Events("onSyncEvent")
 
@@ -111,7 +111,7 @@ class SyncModule : Module() {
 
         AsyncFunction("incoming") { -> controller.incoming.value.map(SyncPayloads::received) }
 
-        Function("check") { phrase: String -> SyncPayloads.check(com.ardia.sync.SyncJoin.check(phrase)) }
+        Function("check") { phrase: String -> SyncPayloads.check(com.nilladigital.nilla.sync.SyncJoin.check(phrase)) }
 
         Function("deviceId") { -> PhoneSync.ownDeviceId(context) }
 

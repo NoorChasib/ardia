@@ -185,7 +185,7 @@ final class ContextMenuView: ExpoView, UIContextMenuInteractionDelegate {
 
 public final class MenusModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneMenus")
+    Name("NillaPhoneMenus")
 
     Constant("hasContextMenu") { true }
     Constant("hasActionSheet") { true }

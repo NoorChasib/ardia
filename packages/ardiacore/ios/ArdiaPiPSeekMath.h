@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace ardia_pip_seek {
+namespace nilla_pip_seek {
 
 constexpr double kSkipSeconds = 10;
 constexpr double kDeadBandHalfWidth = 40;

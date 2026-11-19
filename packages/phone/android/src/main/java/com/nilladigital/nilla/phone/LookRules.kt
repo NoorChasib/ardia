@@ -1,11 +1,11 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.design.DeckBackdropStyle
-import com.ardia.design.FrostedStyle
-import com.ardia.design.LookFrosting
-import com.ardia.design.ProfileBackdropStyle
-import com.ardia.design.ProfileLook
-import com.ardia.design.TabsBackdropMotion
+import com.nilladigital.nilla.design.DeckBackdropStyle
+import com.nilladigital.nilla.design.FrostedStyle
+import com.nilladigital.nilla.design.LookFrosting
+import com.nilladigital.nilla.design.ProfileBackdropStyle
+import com.nilladigital.nilla.design.ProfileLook
+import com.nilladigital.nilla.design.TabsBackdropMotion
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.max

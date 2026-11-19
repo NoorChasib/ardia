@@ -5,8 +5,8 @@
 
 #import <objc/runtime.h>
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
 static const NSUInteger kControlPressesKept = 8;
 static const NSTimeInterval kControlClickLifetime = 10;
@@ -20,7 +20,7 @@ static NSMutableArray<NSDictionary *> *ControlPresses() {
 
 static BOOL InWebContent(NSView *view) {
   for (; view; view = view.superview)
-    if ([view isKindOfClass:ArdiaWebView.class] || [NSStringFromClass(view.class) hasPrefix:@"RenderWidgetHostView"]) return YES;
+    if ([view isKindOfClass:NillaWebView.class] || [NSStringFromClass(view.class) hasPrefix:@"RenderWidgetHostView"]) return YES;
   return NO;
 }
 
@@ -80,7 +80,7 @@ static NSTimeInterval TakeControlPress(double clickMs, NSInteger target, NSWindo
   return 0;
 }
 
-namespace ardia_web_view {
+namespace nilla_web_view {
 
 void InstallControlPressMonitor() {
   static id monitor;
@@ -99,15 +99,15 @@ void InstallControlPressMonitor() {
 }
 
 BOOL TracingPictureInPicture() {
-  static const BOOL tracing = [ArdiaLaunchConfig.shared traced:@"pip"];
+  static const BOOL tracing = [NillaLaunchConfig.shared traced:@"pip"];
   return tracing;
 }
 }
 
-@implementation ArdiaWebView (PictureInPicture)
+@implementation NillaWebView (PictureInPicture)
 
 - (void)notePictureInPictureSight:(NSString *)what {
-  ardia_host::NoteFocusChange(
+  nilla_host::NoteFocusChange(
       [NSString stringWithFormat:@"pip %@ seenByUser=%d seenNow=%d visible=%d appActive=%d key=%d autoActive=%d inPip=%d", what,
                                  _reports.seenByUser, self.seenByUser, _visible, NSApp.isActive,
                                  self.window.isKeyWindow, _reports.autoPictureInPictureActive,
@@ -162,10 +162,10 @@ BOOL TracingPictureInPicture() {
   [self traceManualPictureInPicture:[NSString stringWithFormat:@"%@ %@ (control %ld)", clickMs > 0 ? @"click" : @"key or accessibility press", clickAt > 0 ? @"verified" : @"not verified", (long)target]];
   if (clickAt <= 0) return completion(NO);
   [self thawHiddenPage];
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   [_tab enterPictureInPictureForClickAt:clickAt
                              completion:^(NSString *route, BOOL opened) {
-                               ArdiaWebView *view = weakSelf;
+                               NillaWebView *view = weakSelf;
                                if (!view) return completion(NO);
                                [view traceManualPictureInPicture:[NSString stringWithFormat:@"route %@ opened=%d", route, opened]];
                                if (![route isEqualToString:@"session"]) return completion(opened || view->_reports.inPictureInPicture);
@@ -175,9 +175,9 @@ BOOL TracingPictureInPicture() {
 
 - (void)awaitPictureInPicture:(int)tries completion:(void (^)(BOOL))completion {
   if (_reports.inPictureInPicture || tries <= 0) return completion(_reports.inPictureInPicture);
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 100 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
+    NillaWebView *view = weakSelf;
     if (!view) return completion(NO);
     [view awaitPictureInPicture:tries - 1 completion:completion];
   });
@@ -193,7 +193,7 @@ BOOL TracingPictureInPicture() {
 }
 
 + (BOOL)playsForAutoPictureInPictureInWindow:(NSWindow *)window {
-  for (ArdiaWebView *view in LiveViews().allObjects)
+  for (NillaWebView *view in LiveViews().allObjects)
     if (view.window == window && view->_visible && view->_tab && view.playsForAutoPictureInPicture) return YES;
   return NO;
 }
@@ -203,13 +203,13 @@ BOOL TracingPictureInPicture() {
   if (plays == _reports.playedForAutoPictureInPicture) return;
   _reports.playedForAutoPictureInPicture = plays;
   if (!self.window) return;
-  [ArdiaWindowController reconsiderSightOf:self.window];
+  [NillaWindowController reconsiderSightOf:self.window];
   [self userSightChanged];
 }
 
 - (void)noteStayedOnAppSwitch {
   if (!_tab || !_visible || _reports.inPictureInPicture || !self.seenByUser || !self.playsForAutoPictureInPicture) return;
-  [self traceAutoPictureInPicture:@"app: the user left Ardia, the window server still shows the tab"];
+  [self traceAutoPictureInPicture:@"app: the user left Nilla, the window server still shows the tab"];
   [self emit:@"autoPictureInPictureKept" payload:@{@"appSwitch" : @YES}];
 }
 
@@ -240,17 +240,17 @@ BOOL TracingPictureInPicture() {
     _reports.inPictureInPicture = active;
     [self emit:@"pictureInPicture" payload:payload];
     if (!active) return;
-    ardia_pip::WatchZoom();
-    ardia_pip::VideoEntered(self, [NSURL URLWithString:tab.url ?: @""].host ?: @"");
+    nilla_pip::WatchZoom();
+    nilla_pip::VideoEntered(self, [NSURL URLWithString:tab.url ?: @""].host ?: @"");
     return;
   }
   _reports.inPictureInPicture = active;
   [self emit:@"pictureInPicture" payload:payload];
-  if (_reports.inPictureInPicture) ardia_pip::DocumentEntered(self);
+  if (_reports.inPictureInPicture) nilla_pip::DocumentEntered(self);
 }
 
 - (void)tab:(ArdiaCoreTab *)tab requestsActivation:(NSString *)reason {
-  ardia_pip::TabRequestedActivation(self);
+  nilla_pip::TabRequestedActivation(self);
   [self emit:@"activateRequest" payload:@{@"reason" : reason ?: @"page"}];
 }
 

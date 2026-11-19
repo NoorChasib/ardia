@@ -2,9 +2,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaDownloadMover : NSObject
+@interface NillaDownloadMover : NSObject
 
-@property(class, readonly) ArdiaDownloadMover *shared;
+@property(class, readonly) NillaDownloadMover *shared;
 @property(nonatomic, copy, nullable) void (^stepHook)(NSString *step, NSString *stagingPath);
 
 - (instancetype)initWithHome:(NSString *)home defaults:(nullable NSUserDefaults *)defaults NS_DESIGNATED_INITIALIZER;

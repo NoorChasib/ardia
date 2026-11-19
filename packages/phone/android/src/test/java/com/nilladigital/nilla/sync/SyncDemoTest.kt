@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

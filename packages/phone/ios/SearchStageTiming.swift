@@ -1,29 +1,29 @@
-import ArdiaDesign
+import NillaDesign
 import QuartzCore
 import SwiftUI
 import UIKit
 
 nonisolated extension Motion {
-  static let stageDepartCurve = ArdiaDesign.MotionCurve(0.2, 0, 0, 1, duration: 0.2)
+  static let stageDepartCurve = NillaDesign.MotionCurve(0.2, 0, 0, 1, duration: 0.2)
   static let stageWiden = Spring(response: 0.18, dampingRatio: 1)
   static let stageDeepen = Spring(response: 0.24, dampingRatio: 1)
   static let stageOpenWiden = Spring(response: 0.12, dampingRatio: 1)
   static let stageFold = Spring(response: 0.1, dampingRatio: 1)
   static let stageFoldBeforeNarrowing: CGFloat = 0.8
-  static let stageFaceFade = ArdiaDesign.MotionCurve.easeOut(duration: 0.06)
+  static let stageFaceFade = NillaDesign.MotionCurve.easeOut(duration: 0.06)
   static let stageFaceLead: Double = 0.04
-  static let stageFaceArrival = ArdiaDesign.MotionCurve.easeOut(duration: 0.1)
+  static let stageFaceArrival = NillaDesign.MotionCurve.easeOut(duration: 0.1)
   static let stageFaceArrivalDelay: Double = 0.02
-  static let stageContentFade = ArdiaDesign.MotionCurve.easeOut(duration: 0.035)
-  static let stageTintFade = ArdiaDesign.MotionCurve(0.42, 0, 0.58, 1, duration: 0.16)
-  static let stageShadowIn = ArdiaDesign.MotionCurve.easeOut(duration: 0.15)
+  static let stageContentFade = NillaDesign.MotionCurve.easeOut(duration: 0.035)
+  static let stageTintFade = NillaDesign.MotionCurve(0.42, 0, 0.58, 1, duration: 0.16)
+  static let stageShadowIn = NillaDesign.MotionCurve.easeOut(duration: 0.15)
   static let stageFoldLag: Double = 1.0 / 60
-  static let stageHandOff = ArdiaDesign.MotionCurve.easeOut(duration: 0.1)
+  static let stageHandOff = NillaDesign.MotionCurve.easeOut(duration: 0.1)
   static let stageRevealHold: Double = 0.25
   static let stageRevealFieldDelay: Double = 0.06
   static let stageRevealRowsDelay: Double = 0.09
-  static let stageRevealCurve = ArdiaDesign.MotionCurve.easeOut(duration: 0.12)
-  static let stageReduced = ArdiaDesign.MotionCurve.easeOut(duration: 0.2)
+  static let stageRevealCurve = NillaDesign.MotionCurve.easeOut(duration: 0.12)
+  static let stageReduced = NillaDesign.MotionCurve.easeOut(duration: 0.2)
 }
 
 nonisolated extension BrowseLayout {
@@ -34,7 +34,7 @@ nonisolated extension BrowseLayout {
   }
 }
 
-extension ArdiaDesign.MotionCurve {
+extension NillaDesign.MotionCurve {
   var stageTimingFunction: CAMediaTimingFunction {
     CAMediaTimingFunction(controlPoints: Float(start.x), Float(start.y), Float(end.x), Float(end.y))
   }
@@ -55,7 +55,7 @@ extension Spring {
 }
 
 extension UIView {
-  func restartStageOpacityFade(to opacity: Float, after delay: CFTimeInterval, from base: CFTimeInterval, curve: ArdiaDesign.MotionCurve) {
+  func restartStageOpacityFade(to opacity: Float, after delay: CFTimeInterval, from base: CFTimeInterval, curve: NillaDesign.MotionCurve) {
     let from = (layer.presentation() ?? layer).opacity
     UIView.performWithoutAnimation {
       CATransaction.begin()

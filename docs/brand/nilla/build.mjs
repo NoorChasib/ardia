@@ -56,7 +56,7 @@ const BACK = "M100 700C320 640 560 610 924 560V924H100Z";
 const FRONT = "M100 812C380 760 650 600 924 338V924H100Z";
 
 const entries = [];
-const rename = (p) => p && p.replace(/Ardia/g, "Nilla").replace(/ardia/g, "nilla").replace(/ARDIA/g, "NILLA");
+const rename = (p) => p && p.replace(/Nilla/g, "Nilla").replace(/nilla/g, "nilla").replace(/NILLA/g, "NILLA");
 const layerOf = (p) => (p && /^engine\//.test(p) ? 2 : 1);
 function add(file, data, { current = null, target, action = current ? "replace" : "add", note = "" } = {}) {
   const path = join(OUT, file);
@@ -122,7 +122,7 @@ function icns(parts) {
   return Buffer.concat([head, ...chunks]);
 }
 
-const MAC = "apps/browser/macos/Ardia-macOS";
+const MAC = "apps/browser/macos/Nilla-macOS";
 const macSvg = scene(h, { id: "m", shadow: true });
 const flatSvg = scene(h, { id: "e", box: tight(36) });
 
@@ -211,10 +211,10 @@ for (const [tint, col] of Object.entries(NTP_TINTS)) {
   };
   for (const [layer, svg] of Object.entries(parts))
     for (const [suffix, size] of [["", 100], ["@2x", 200]])
-      add(`icons/ntp/${prefix}-${layer}${suffix}.png`, png(svg, size), { current: `apps/browser/assets/${prefix}-${layer}${suffix}.png`, action: "optional", note: `New Tab page mark, ${tint} profile colour, ${layer} layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Ardia's logo painting (see the notes)` });
+      add(`icons/ntp/${prefix}-${layer}${suffix}.png`, png(svg, size), { current: `apps/browser/assets/${prefix}-${layer}${suffix}.png`, action: "optional", note: `New Tab page mark, ${tint} profile colour, ${layer} layer. Optional: the owner keeps today's hills as scenery for now, but they are cut from Nilla's logo painting (see the notes)` });
 }
 const silhouette = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="100 100 824 824" width="32" height="32"><defs><clipPath id="nt"><path d="${SQ}"/></clipPath><mask id="gap"><rect x="0" y="0" width="1024" height="1024" fill="#FFFFFF"/><path d="M100 812C380 760 650 600 924 338" fill="none" stroke="#000000" stroke-width="70"/></mask></defs><circle cx="${SUN.cx}" cy="${SUN.cy}" r="${SUN.r + 20}" fill="#000000"/><g clip-path="url(#nt)"><path d="${BACK}" fill="#000000" mask="url(#gap)"/><path d="${FRONT}" fill="#000000"/></g></svg>\n`;
-add("icons/ntp/new-tab-mark.png", png(silhouette, 16), { current: "apps/browser/assets/new-tab-mark.png", action: "optional", note: "New Tab favicon: one colour (drawn tinted), hills split, sun cut free. Optional, like the New Tab hills, but today's is a small copy of Ardia's logo" });
+add("icons/ntp/new-tab-mark.png", png(silhouette, 16), { current: "apps/browser/assets/new-tab-mark.png", action: "optional", note: "New Tab favicon: one colour (drawn tinted), hills split, sun cut free. Optional, like the New Tab hills, but today's is a small copy of Nilla's logo" });
 add("icons/ntp/new-tab-mark@2x.png", png(silhouette, 32), { current: "apps/browser/assets/new-tab-mark@2x.png", action: "optional", note: "New Tab favicon @2x (optional, as above)" });
 
 const THEME = "engine/chromium/src/chrome/app/theme";
@@ -236,7 +236,7 @@ const winPngs = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256].map((s) => ({ size: s
 add("icons/windows/Nilla.ico", ico(winPngs), { current: "apps/browser/windows/Ardia/Ardia.ico", note: "10 sizes as today. The Windows engine copies the same file over its chrome/app/theme/chromium/win/chromium.ico through scripts/windows/engine/ardia_resources_win.txt; that mapping is Layer 2" });
 
 const linux = [16, 22, 24, 32, 48, 64, 128, 256, 512];
-for (const s of linux) add(`icons/linux/hicolor/${s}x${s}/apps/nilla.png`, png(scene(h, { id: `l${s}`, box: tight(s <= 24 ? 16 : 48) }), s), { target: `scripts/linux/icons/hicolor/${s}x${s}/apps/nilla.png`, note: "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as ardia.png); Icon=nilla in nilla.desktop" });
+for (const s of linux) add(`icons/linux/hicolor/${s}x${s}/apps/nilla.png`, png(scene(h, { id: `l${s}`, box: tight(s <= 24 ? 16 : 48) }), s), { target: `scripts/linux/icons/hicolor/${s}x${s}/apps/nilla.png`, note: "new: package.py installs these to share/icons/hicolor as nilla.png (today it copies the engine's product_logo_256.png as nilla.png); Icon=nilla in nilla.desktop" });
 add("icons/linux/hicolor/scalable/apps/nilla.svg", scene(h, { id: "ls", box: tight(48), size: 256 }), { target: "scripts/linux/icons/hicolor/scalable/apps/nilla.svg", note: "new: scalable app icon; also the AppImage's top-level icon" });
 
 const fav = (s) => png(scene(h, { id: `f${s}`, box: tight(12) }), s);
@@ -256,7 +256,7 @@ ${lettering(setWord("touch grass."), 98, 380, 0.095, INK_LIGHT)}
 add("icons/site/og.svg", og, { target: "docs/brand/nilla/web/og.svg", note: "share-image source, placeholder lettering; the site (apps/site) is deleted under D4; kept as a brand asset for a future site" });
 add("icons/site/og.png", png(og, 1200), { target: "docs/brand/nilla/web/og.png", note: "1200×630; the site (apps/site) is deleted under D4; kept as a brand asset for a future site" });
 
-add("icons/phone/ios/OpenInNilla.png", png(scene(h, { id: "a", shape: "square" }), 1024), { current: "apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset/OpenInArdia.png", note: "share extension, 1024 full square (iOS rounds it)" });
+add("icons/phone/ios/OpenInNilla.png", png(scene(h, { id: "a", shape: "square" }), 1024), { current: "apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset/OpenInNilla.png", note: "share extension, 1024 full square (iOS rounds it)" });
 add("icons/phone/ios/Action-AppIcon-Contents.json", json({ images: [{ filename: "OpenInNilla.png", idiom: "universal", platform: "ios", size: "1024x1024" }], info: { author: "xcode", version: 1 } }), { current: "apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset/Contents.json", note: "points at the renamed file" });
 const preview360 = png(scene(h, { id: "p", box: tight(0) }), 360);
 add("icons/phone/AppIconPreview.png", preview360, { current: "apps/phone/ios/App/Assets.xcassets/AppIconPreview.imageset/AppIconPreview.png", note: "360 px" });
@@ -277,10 +277,10 @@ add("icons/phone/android/drawable/ic_launcher_background.xml", vec(`    <path an
 const adaptive = `<?xml version="1.0" encoding="utf-8"?>\n<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n    <background android:drawable="@drawable/ic_launcher_background" />\n    <foreground android:drawable="@drawable/ic_launcher_foreground" />\n    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />\n</adaptive-icon>\n`;
 add("icons/phone/android/mipmap-anydpi-v26/ic_launcher.xml", adaptive, { current: `${RES}/mipmap-anydpi-v26/ic_launcher.xml` });
 add("icons/phone/android/mipmap-anydpi-v26/ic_launcher_round.xml", adaptive, { current: `${RES}/mipmap-anydpi-v26/ic_launcher_round.xml` });
-entries.push({ file: null, action: "edit", layer: 1, current: `${RES}/values/colors.xml`, target: `${RES}/values/colors.xml`, note: `set the icon background colour (today \`ardia_icon_background\`, #FFF9F5E3) to ${argb(h[1])}; under the full rename the resource becomes \`nilla_icon_background\`` });
+entries.push({ file: null, action: "edit", layer: 1, current: `${RES}/values/colors.xml`, target: `${RES}/values/colors.xml`, note: `set the icon background colour (today \`nilla_icon_background\`, #FFF9F5E3) to ${argb(h[1])}; under the full rename the resource becomes \`nilla_icon_background\`` });
 add("icons/phone/android-preview.svg", `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="432" height="432"><defs><linearGradient id="ap-sky" x1="0" y1="18" x2="0" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${h[0]}"/><stop offset=".6" stop-color="${h[1]}"/><stop offset="1" stop-color="${h[2]}"/></linearGradient><clipPath id="ap-mask"><circle cx="54" cy="54" r="36"/></clipPath></defs><g clip-path="url(#ap-mask)"><rect width="108" height="108" fill="url(#ap-sky)"/><g transform="translate(${T} ${T}) scale(${D.toFixed(6)})"><path d="${SUN_PATH.replace(/,/g, " ")}" fill="${h[3]}"/><path d="${BACK_BLEED}" fill="${h[4]}"/><path d="${FRONT_BLEED}" fill="${h[5]}"/></g></g></svg>\n`, { target: null, action: "preview", note: "the adaptive icon under a circle mask; not shipped" });
 
-add("icons/extras/raycast-icon.png", png(macSvg, 512), { current: "extras/raycast-ardia/assets/icon.png", note: "Raycast extension icon, 512 px" });
+add("icons/extras/raycast-icon.png", png(macSvg, 512), { current: "extras/raycast-nilla/assets/icon.png", note: "Raycast extension icon, 512 px" });
 
 function lockup(text, { ink, adaptive = false, withMark = true }) {
   const H = 800, t = 0.92;
@@ -314,11 +314,11 @@ const manifest = {
   generated: "docs/brand/nilla/build.mjs",
   palette: { default: DEFAULT.id, colors: DEFAULT.colors, alternates: ALTS.map((a) => a.id) },
   notes: [
-    "file: relative to the --out folder. current: the path at the repo base today (null for new files). target: the proposed path after the full rename (Ardia→Nilla, ardia→nilla in path segments); the conversion workflow owns the final paths.",
+    "file: relative to the --out folder. current: the path at the repo base today (null for new files). target: the proposed path after the full rename (Nilla→Nilla, nilla→nilla in path segments); the conversion workflow owns the final paths.",
     "action: replace (overwrite current, then move to target), add (new file), remove (delete the current path), edit (change a value in place), optional (owner decision pending; today's file can stay), mac-step (must be produced on a Mac), preview (not shipped).",
     "layer: 1 = works with today's prebuilt engines; 2 = engine/ (and its interface), lands with the first Nilla engine builds. Every engine/chromium asset is Layer 2.",
     "Site assets (favicons, apple-touch, og) target docs/brand/nilla/web/ because apps/site is deleted under D4. README.md's header image moves to docs/brand/nilla/app-icon-256.png.",
-    "New Tab hills (ntp-mark*, new-tab-mark*) are optional: the owner keeps today's as scenery, but they are cut from Ardia's logo painting, which the attribution rules say Nilla must not use as its brand. The redrawn set is ready if the owner wants it.",
+    "New Tab hills (ntp-mark*, new-tab-mark*) are optional: the owner keeps today's as scenery, but they are cut from Nilla's logo painting, which the attribution rules say Nilla must not use as its brand. The redrawn set is ready if the owner wants it.",
     "Default icon: Highland. AppIcons.swift's variants become the 23 alternates in palettes.json order, each drawn whole from its AppIconVariant-<id> imageset (no plate, no monochrome filter).",
   ],
   assets: entries,

@@ -27,7 +27,7 @@ const HANDS_PLATFORM_TO_SCRIPTS = new Set(["components/dev/devHarness.ts"]);
 const RULES = ["layout", "imports", "native-calls", "tokens", "scale", "get-state", "set-state", "store-reads", "store-shape", "size", "env", "naming", "comments", "file-names"];
 const SIZE_CAP = { js: 400, native: 600 };
 const SCOPES = ["apps/browser/src", "packages", "engine/ardiacore/src", "engine/chromium/src"];
-const GENERATED = new Set(["packages/core/src/bangList.ts", "packages/demo/src/shims/web/symbols/data.ts", "apps/browser/src/lib/emojiData.ts", "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-core.js", "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-sync.js"]);
+const GENERATED = new Set(["packages/core/src/bangList.ts", "packages/demo/src/shims/web/symbols/data.ts", "apps/browser/src/lib/emojiData.ts", "packages/phone/ios/NillaKit/Sources/NillaShared/Scripts/nilla-core.js", "packages/phone/ios/NillaKit/Sources/NillaShared/Scripts/nilla-sync.js"]);
 const ONE_INJECTED_SCRIPT = new Set(["packages/ardiacore/ios/page_script.js"]);
 const FROZEN_SPECS = new Set(["packages/core/src/suggest.reference.ts"]);
 const LAUNCH_CONFIG = [/^packages\/ardiacore\/ios\/ArdiaLaunchConfig\.\w+$/, /^apps\/browser\/src\/platform\/launchConfig\.ts$/];
@@ -322,7 +322,7 @@ const APP_SIDE_OBJC_CLASS =
   /@(?:interface|implementation|protocol)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*\b(?!\s*[(;])|(?<!@)\b(?:class|struct|enum|protocol|actor|typealias)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*|@objc\(\s*(?:AC[A-Z]|ArdiaCore[A-Z])\w*\s*\)/g;
 const IMPORT_SPEC =
   /\b(?:import|export)\b[^;"'`]*?\bfrom\s*(["'])([^"'\n]+)\1|\bimport\s*(?:\(\s*)?(["'])([^"'\n]+)\3|\brequire\s*\(\s*(["'])([^"'\n]+)\5/g;
-const NATIVE_PACKAGE = /^(?:@ardia\/(?:ardiacore|shell|shaders|import|sync)(?:\/.*)?|expo-modules-core)$/;
+const NATIVE_PACKAGE = /^(?:@nilla\/(?:ardiacore|shell|shaders|import|sync)(?:\/.*)?|expo-modules-core)$/;
 const NATIVE_GLOBAL = /\bNativeModules\b(?!\s*[,}])|\brequireNative(?:Module|Component|ViewManager)\s*\(/g;
 const COMPONENT_FILE = /^[A-Z][A-Za-z0-9]*(?:\.(?:web|native|macos|ios|windows|linux))?\.tsx$/;
 const MODULE_FILE = /^[a-z][A-Za-z0-9]*(?:\.(?:web|native|macos|ios|windows|linux))?\.(?:ts|mjs)$/;

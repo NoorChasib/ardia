@@ -11,7 +11,7 @@ import { MAX_JSON_BYTES, attachmentRule, validateReport } from "./validate.mjs";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FILE_ROUTE = /^\/api\/feedback\/([^/]+)\/files\/([^/]+)$/;
 const COMPLETE_ROUTE = /^\/api\/feedback\/([^/]+)\/complete$/;
-const SERVICE_NAME = "ardia-feedback";
+const SERVICE_NAME = "nilla-feedback";
 const SERVICE_VERSION = "1.0.0";
 const RETRY_AFTER_SECONDS = 60;
 export const EVENT_RETRY_MS = [30_000, 120_000, 600_000, 1_800_000, 3_600_000, 3_600_000, 3_600_000, 3_600_000];
@@ -54,7 +54,7 @@ const tableCell = (value) => String(value).replace(/\|/g, "\\|").replace(/[\r\n]
 export function issueFor(report, dashboardUrl) {
   const version = report.source === "cli"
     ? `CLI ${report.cli_version}${report.app_version ? ` (app ${report.app_version})` : ""}`
-    : `Ardia ${report.app_version}${report.app_build ? ` (${report.app_build})` : ""}${report.channel ? ` ${report.channel}` : ""}`;
+    : `Nilla ${report.app_version}${report.app_build ? ` (${report.app_build})` : ""}${report.channel ? ` ${report.channel}` : ""}`;
   const rows = [["Kind", report.kind], ["Version", version], ["macOS", report.os_version ?? "unknown"], ["Reference", report.id]];
   const body = [
     scrubForIssue(report.description),
@@ -117,7 +117,7 @@ export function feedbackEvent(report, { attachments, issue, completedAtMs }) {
     resourceLogs: [{
       resource: { attributes: [{ key: "service.name", value: { stringValue: SERVICE_NAME } }, { key: "service.version", value: { stringValue: SERVICE_VERSION } }] },
       scopeLogs: [{
-        scope: { name: "ardia.analytics" },
+        scope: { name: "nilla.analytics" },
         logRecords: [{ timeUnixNano: `${completedAtMs}000000`, severityNumber: 9, severityText: "INFO", body: { stringValue: "feedback_submitted" }, attributes }],
       }],
     }],

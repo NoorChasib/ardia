@@ -1,4 +1,4 @@
-package com.ardia.sync.core
+package com.nilladigital.nilla.sync.core
 
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermissions
@@ -11,7 +11,7 @@ import org.junit.Test
 class FileKeyStoreTest {
     @Test
     fun theKeyFileIsOnlyEverTheOwnersAndNothingIsLeftBeside() {
-        val folder = Files.createTempDirectory("ardia-sync-keys").toFile()
+        val folder = Files.createTempDirectory("nilla-sync-keys").toFile()
         try {
             val store = FileKeyStore(folder)
             assertTrue(store.save("first".toByteArray(), "device"))

@@ -1,8 +1,8 @@
 import asyncio
 import logging
 
-from ardia_cli import command_metrics
-from ardia_cli.browse.errors import POLICY_REFUSAL, CdpError, CdpTimeout, ConnectionLost, Gated, OutcomeUnknown, Unreachable, refusal_reason
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse.errors import POLICY_REFUSAL, CdpError, CdpTimeout, ConnectionLost, Gated, OutcomeUnknown, Unreachable, refusal_reason
 
 MAX_MESSAGE = 256 * 1024 * 1024
 CONNECT_TIMEOUT = 10
@@ -75,13 +75,13 @@ class Browser:
         return self.endpoint.instance
 
     async def open(self):
-        from ardia_cli.cdp import Connection
+        from nilla_browser_cli.cdp import Connection
 
         self.link = Connection(self.endpoint.ws, max_size=MAX_MESSAGE)
         try:
             await self.link.open(CONNECT_TIMEOUT)
         except Exception as error:
-            from ardia_cli.browse.daemon import unreachable_message
+            from nilla_browser_cli.browse.daemon import unreachable_message
 
             raise Unreachable(unreachable_message(self.endpoint, error)) from None
         for name in EVENTS:
@@ -91,14 +91,14 @@ class Browser:
         try:
             self.on_event(method, params, session)
         except Exception:
-            logging.getLogger("ardia_cli.browse").exception("event handler failed")
+            logging.getLogger("nilla_browser_cli.browse").exception("event handler failed")
 
     @property
     def alive(self) -> bool:
         return self.link is not None and not self.link.lost.is_set()
 
     async def send(self, method: str, params: dict | None = None, session: str | None = None, timeout: float = 30, mutation: bool = False):
-        from ardia_cli import cdp
+        from nilla_browser_cli import cdp
 
         method = getattr(method, "value", method)
         if not self.alive:
@@ -113,7 +113,7 @@ class Browser:
             raise failure(method, error) from None
         except cdp.CommandTimeout:
             if mutation or is_mutation(method):
-                raise OutcomeUnknown(f"`{method}`", f"Ardia didn't answer {method} in {timeout:g}s after it was sent") from None
+                raise OutcomeUnknown(f"`{method}`", f"Nilla didn't answer {method} in {timeout:g}s after it was sent") from None
             raise CdpTimeout(method, timeout) from None
         except cdp.ConnectionLost:
             raise ConnectionLost() from None

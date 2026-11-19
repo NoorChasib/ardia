@@ -13,9 +13,9 @@ public final class DefaultBrowserStatus {
     static let isAwaitingSettingsReturn = "defaultBrowser.isAwaitingSettingsReturn"
   }
 
-  public static let isOffered = Bundle.main.object(forInfoDictionaryKey: "ArdiaDefaultBrowser") as? String == "YES"
+  public static let isOffered = Bundle.main.object(forInfoDictionaryKey: "NillaDefaultBrowser") as? String == "YES"
   static let askInterval: TimeInterval = 100 * 24 * 60 * 60
-  private static let log = Logger(subsystem: "com.ardia.browser.ios", category: "default-browser")
+  private static let log = Logger(subsystem: "com.nilladigital.nilla.ios", category: "default-browser")
 
   public private(set) var isDefault: Bool
 

@@ -36,7 +36,7 @@ type SystemNative = {
   setUsageConsent?(sharing: boolean): void;
 };
 
-const native = requireOptionalNativeModule<SystemNative>("ArdiaPhoneSystem");
+const native = requireOptionalNativeModule<SystemNative>("NillaPhoneSystem");
 
 const normalize = (link: NativeLink): SystemLink => (link.kind === "search" ? { ...link, query: link.query ?? null } : link) as SystemLink;
 

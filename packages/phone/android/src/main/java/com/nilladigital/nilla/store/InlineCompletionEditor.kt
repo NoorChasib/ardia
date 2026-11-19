@@ -1,4 +1,4 @@
-package com.ardia.store
+package com.nilladigital.nilla.store
 
 data class CompletionOffer(val query: String, val completion: String?)
 

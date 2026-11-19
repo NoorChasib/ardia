@@ -1,4 +1,4 @@
-import type { SearchScope } from "@ardia/core";
+import type { SearchScope } from "@nilla/core";
 import { View } from "react-native";
 import { Symbol, Text, useTheme } from "../ui";
 import { usePageProfileId } from "../../state/browser/hooks";

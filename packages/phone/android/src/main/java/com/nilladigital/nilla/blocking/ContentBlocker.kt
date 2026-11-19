@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
@@ -55,7 +55,7 @@ class ContentBlocker(
             val directory = filterLists.directory
             val ready = withContext(Dispatchers.IO) { directory.isDirectory || directory.mkdirs() }
             if (!ready) {
-                mutableState.value = ContentBlockerState.Failed("Ardia couldn’t set up content blocking. Restart Ardia to try again.")
+                mutableState.value = ContentBlockerState.Failed("Nilla couldn’t set up content blocking. Restart Nilla to try again.")
                 return
             }
             scope.launch(workDispatcher) { PublicSuffixes.shared }

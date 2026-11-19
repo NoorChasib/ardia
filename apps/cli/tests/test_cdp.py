@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import cdp, guard, wsclient
+from nilla_browser_cli import cdp, guard, wsclient
 
 logging.getLogger("websockets").setLevel(logging.CRITICAL)
 

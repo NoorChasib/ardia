@@ -6,15 +6,15 @@ const SETTINGS = "chrome://settings/searchEngines";
 const LOAD_MS = 20000;
 const ANSWER_MS = 4000;
 const SETTLE_MS = 500;
-const CHECK_SITE = "https://ardia-settings-check.example:443";
+const CHECK_SITE = "https://nilla-settings-check.example:443";
 const PRIVATE_PROFILE = "settings-check@";
 
 type Changed = { error?: string; switched?: boolean; restored?: boolean; listed?: boolean; cleared?: boolean; reset?: boolean; noted?: boolean };
 
-const step = (what: string) => console.info(`[ardia windows] self-check note: settings step: ${what}`);
+const step = (what: string) => console.info(`[nilla windows] self-check note: settings step: ${what}`);
 
 const ASK = `const ask = (target, name, ...args) => new Promise((resolve, reject) => {
-  const id = "ardia-check-" + name + "-" + Math.random();
+  const id = "nilla-check-" + name + "-" + Math.random();
   const cr = target.cr;
   const prior = cr.webUIResponse;
   const timer = setTimeout(() => { cr.webUIResponse = prior; reject(new Error(name + " gave no answer")); }, ${ANSWER_MS});
@@ -46,7 +46,7 @@ answer((async () => {
 
 const SITE_PERMISSION = (target: string) => `${ASK}
 const at = ${target};
-const named = (list) => JSON.stringify(list).includes("ardia-settings-check.example");
+const named = (list) => JSON.stringify(list).includes("nilla-settings-check.example");
 answer((async () => {
   await ask(at, "getExceptionList", "notifications");
   at.chrome.send("setCategoryPermissionForPattern", ["${CHECK_SITE}", "", "notifications", "block", false]);

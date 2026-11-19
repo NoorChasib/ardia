@@ -12,7 +12,7 @@ import type {
   NativeMouseAreaProps,
   OutsidePressAreaProps,
   WindowProfileProps,
-} from "@ardia/shell";
+} from "@nilla/shell";
 import type { Fiber } from "../fiber";
 import type { WindowsHostModule } from "../nativeModuleTypes";
 import { noteMissing } from "../missing";
@@ -36,7 +36,7 @@ const contextMenuPurpose = (props: Pick<ViewProps, (typeof PURPOSE_KEYS)[number]
   return "an unlabelled area";
 };
 
-const noteContextMenu = (line: string) => console.info(`[ardia windows] context menu area: ${line}`);
+const noteContextMenu = (line: string) => console.info(`[nilla windows] context menu area: ${line}`);
 
 const LEFT_DOWN = 1;
 const RIGHT_DOWN = 2;
@@ -48,7 +48,7 @@ const FIBER_STEPS = 400;
 
 type ContextMenuMarker = { open(): void; capture: boolean; purpose: string };
 type MiddleClickMarker = { click(state: number): void };
-type Markers = { ardiaContextMenu?: ContextMenuMarker; ardiaMiddleClick?: MiddleClickMarker };
+type Markers = { nillaContextMenu?: ContextMenuMarker; nillaMiddleClick?: MiddleClickMarker };
 type SecondaryPress =
   | { kind: "context"; area: ContextMenuMarker | undefined; trail: string }
   | { kind: "middle"; area: MiddleClickMarker | undefined; state: number };
@@ -61,7 +61,7 @@ function pointerStateAt(event: PointerLike): number {
   if (known !== undefined) return known;
   let state = 0;
   try {
-    state = TurboModuleRegistry.get<WindowsHostModule>("ArdiaWindowsHost")?.pointerState?.() ?? 0;
+    state = TurboModuleRegistry.get<WindowsHostModule>("NillaWindowsHost")?.pointerState?.() ?? 0;
   } catch {
     state = 0;
   }
@@ -111,7 +111,7 @@ function trailUnder(event: PointerLike): string {
 function contextMenuUnder(path: Markers[]): ContextMenuMarker | undefined {
   const areas: ContextMenuMarker[] = [];
   for (const props of path) {
-    const marker = props.ardiaContextMenu;
+    const marker = props.nillaContextMenu;
     if (marker && typeof marker.open === "function" && !areas.includes(marker)) areas.push(marker);
   }
   for (let index = areas.length - 1; index >= 0; index -= 1) if (areas[index]!.capture) return areas[index];
@@ -120,7 +120,7 @@ function contextMenuUnder(path: Markers[]): ContextMenuMarker | undefined {
 
 function middleClickUnder(path: Markers[]): MiddleClickMarker | undefined {
   for (const props of path) {
-    const marker = props.ardiaMiddleClick;
+    const marker = props.nillaMiddleClick;
     if (marker && typeof marker.click === "function") return marker;
   }
   return undefined;
@@ -176,7 +176,7 @@ export const ContextMenuArea = forwardRef<View, NativeContextMenuAreaProps>(func
     [onContextMenu, purpose],
   );
   return (
-    <View {...rest} ref={ref} {...windowsEvents({ onKeyDown: key })} {...({ ardiaContextMenu: marker } as object)}>
+    <View {...rest} ref={ref} {...windowsEvents({ onKeyDown: key })} {...({ nillaContextMenu: marker } as object)}>
       {children}
     </View>
   );
@@ -197,7 +197,7 @@ export const MouseArea = forwardRef<View, NativeMouseAreaProps>(function MouseAr
     [hasClick],
   );
   return (
-    <View {...rest} ref={ref} {...({ ardiaMiddleClick: marker } as object)}>
+    <View {...rest} ref={ref} {...({ nillaMiddleClick: marker } as object)}>
       {children}
     </View>
   );
@@ -279,7 +279,7 @@ export const OutsidePressArea = forwardRef<View, OutsidePressAreaProps>(function
   const area = useMemo<OutsideArea>(() => ({ press: (timestamp) => latest.current?.({ nativeEvent: { timestamp } }) }), []);
   useEffect(() => {
     if (!registry) {
-      noteMissing("<ArdiaOutsidePressArea> without OutsidePressRoot");
+      noteMissing("<NillaOutsidePressArea> without OutsidePressRoot");
       return;
     }
     registry.areas.add(area);
@@ -300,7 +300,7 @@ export const OutsidePressArea = forwardRef<View, OutsidePressAreaProps>(function
 });
 
 export const MagnifyArea = forwardRef<View, NativeMagnifyAreaProps>(function MagnifyArea({ enabled: _enabled, onMagnify: _onMagnify, children, ...rest }, ref) {
-  useEffect(() => noteMissing("<ArdiaMagnifyArea> gestures"), []);
+  useEffect(() => noteMissing("<NillaMagnifyArea> gestures"), []);
   return (
     <View {...rest} ref={ref}>
       {children}
@@ -334,7 +334,7 @@ export const FileDrop = forwardRef<FileDropHandle, NativeFileDropAreaProps>(func
 });
 
 export const WindowProfile = forwardRef<View, WindowProfileProps>(function WindowProfile({ profile, selection: _selection, switchId: _switchId, neighbours: _neighbours, onSwapped: _onSwapped, style, children, ...rest }, ref) {
-  useEffect(() => noteMissing("<ArdiaWindowProfile> profile swap"), []);
+  useEffect(() => noteMissing("<NillaWindowProfile> profile swap"), []);
   const windowId = useContext(WindowIdContext);
   useEffect(() => {
     if (typeof profile !== "string") return undefined;

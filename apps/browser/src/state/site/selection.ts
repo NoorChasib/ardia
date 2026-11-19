@@ -1,5 +1,5 @@
 import { setSearchEngineName, setSelectionPopover, type SearchEngineIdentity } from "../../platform/pageOptions";
-import { chooseTextFragment, cleanUrl, searchUrl, withTextFragment, type SelectionContext } from "@ardia/core";
+import { chooseTextFragment, cleanUrl, searchUrl, withTextFragment, type SelectionContext } from "@nilla/core";
 import { copyText } from "../../platform/clipboard";
 import { create } from "zustand";
 import { webviews } from "../../platform/webviews";

@@ -1,9 +1,9 @@
 Pod::Spec.new do |s|
-  s.name           = 'ArdiaShell'
+  s.name           = 'NillaShell'
   s.version        = '0.0.0'
   s.summary        = 'Window chrome and menus'
   s.author         = ''
-  s.homepage       = 'https://github.com/ardia'
+  s.homepage       = 'https://github.com/nilla'
   s.license        = 'Apache-2.0'
   s.platforms      = { :osx => '14.0' }
   s.source         = { git: '' }

@@ -1,14 +1,14 @@
 import Foundation
 
 enum BlockingScripts {
-  static let handlerName = "ardiaBlocking"
+  static let handlerName = "nillaBlocking"
 
   static let consent = #"""
   (async () => {
     const isTop = window.top === window;
     if (!isTop && !/trustarc|truste|consent|cmp|privacy|cookie|usercentrics|didomi|onetrust|cookiebot|sourcepoint|sp-prod|message_id=/i.test(location.hostname + location.pathname + location.search)) return;
     let allowed = false;
-    try { allowed = await window.webkit.messageHandlers.ardiaBlocking.postMessage({ type: "consent" }); } catch (e) { return; }
+    try { allowed = await window.webkit.messageHandlers.nillaBlocking.postMessage({ type: "consent" }); } catch (e) { return; }
     if (!allowed) return;
 
     const visible = (el) => !!el && el.isConnected && (el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0);
@@ -177,7 +177,7 @@ enum BlockingScripts {
       timer = 0;
       const hosts = pending.splice(0, pending.length);
       if (!hosts.length) return;
-      try { window.webkit.messageHandlers.ardiaBlocking.postMessage({ type: "blocked", hosts }).catch(() => {}); } catch (e) {}
+      try { window.webkit.messageHandlers.nillaBlocking.postMessage({ type: "blocked", hosts }).catch(() => {}); } catch (e) {}
     };
     const seen = new WeakSet();
     window.addEventListener("error", (event) => {

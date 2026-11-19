@@ -1,4 +1,4 @@
-import type { CommandEvent, MenuItem } from "@ardia-real/shell";
+import type { CommandEvent, MenuItem } from "@nilla-real/shell";
 import type { ArdiaHost } from "./host";
 import { hostSupports, invokeHost } from "./host.ts";
 import { privateWindowEntries } from "./hostPrivateWindows.ts";

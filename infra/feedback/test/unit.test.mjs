@@ -136,7 +136,7 @@ test("scrubText removes emails, secrets, URL queries and home paths", () => {
   const ghp = `ghp_${"a1B2".repeat(9)}`;
   const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
   const cases = [
-    ["mail me at jane.doe+ardia@example.co.uk please", "mail me at [email] please"],
+    ["mail me at jane.doe+nilla@example.co.uk please", "mail me at [email] please"],
     [`token ${ghp} leaked`, "token [secret] leaked"],
     [`github_pat_${"x".repeat(30)}`, "[secret]"],
     ["key sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123", "key [secret]"],
@@ -209,7 +209,7 @@ test("issueFor puts only public-safe fields in the issue", () => {
   assert.deepEqual(issueFor({ ...report, kind: "other" }, "https://d").labels, ["feedback"]);
   assert.equal(issue.title, "Slow @\u200bbob");
   assert.match(issue.body, /Typing lags at \/Users\/\[user\]\/x, mail \[email\]/);
-  assert.match(issue.body, /\| Version \| Ardia 0\.2\.45 \(45\\\|12\) nightly \|/);
+  assert.match(issue.body, /\| Version \| Nilla 0\.2\.45 \(45\\\|12\) nightly \|/);
   assert.match(issue.body, /\| macOS \| 26\.1 \|/);
   assert.match(issue.body, /https:\/\/dash\.example\.test\/feedback\/FB-AB23/);
   for (const secret of ["jane@x.io", "secret.example", "recording.mp4", "400", INSTALL, "arm64"]) assert.ok(!issue.body.includes(secret), secret);
@@ -236,9 +236,9 @@ test("feedbackEvent has the shape of other events", () => {
   const attachments = [{ name: "recording.mp4", bytes: 9, type: "video/mp4", received: true }];
   const body = feedbackEvent(report, { attachments, issue: { number: 12, url: "https://github.com/x/y/issues/12" }, completedAtMs: 1762516800000 });
   const [resource] = body.resourceLogs;
-  assert.deepEqual(resource.resource.attributes[0], { key: "service.name", value: { stringValue: "ardia-feedback" } });
+  assert.deepEqual(resource.resource.attributes[0], { key: "service.name", value: { stringValue: "nilla-feedback" } });
   const record = resource.scopeLogs[0].logRecords[0];
-  assert.equal(resource.scopeLogs[0].scope.name, "ardia.analytics");
+  assert.equal(resource.scopeLogs[0].scope.name, "nilla.analytics");
   assert.equal(record.body.stringValue, "feedback_submitted");
   assert.equal(record.timeUnixNano, "1762516800000000000");
   const attrs = Object.fromEntries(record.attributes.map((a) => [a.key, a.value]));

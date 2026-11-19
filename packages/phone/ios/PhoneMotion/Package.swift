@@ -12,18 +12,18 @@ let package = Package(
     .library(name: "PhoneScreenLayout", targets: ["PhoneScreenLayout"]),
   ],
   dependencies: [
-    .package(name: "ArdiaKit", path: "../ArdiaKit"),
+    .package(name: "NillaKit", path: "../NillaKit"),
   ],
   targets: [
     .target(name: "PhoneMotion", swiftSettings: [.swiftLanguageMode(.v5)]),
     .testTarget(name: "PhoneMotionTests", dependencies: ["PhoneMotion"], swiftSettings: [.swiftLanguageMode(.v5)]),
     .target(name: "PhonePageVisuals", swiftSettings: [.swiftLanguageMode(.v5)]),
     .testTarget(name: "PhonePageVisualsTests", dependencies: ["PhonePageVisuals"], swiftSettings: [.swiftLanguageMode(.v5)]),
-    .target(name: "PhoneBlocking", dependencies: [.product(name: "ArdiaBrowser", package: "ArdiaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
+    .target(name: "PhoneBlocking", dependencies: [.product(name: "NillaBrowser", package: "NillaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
     .target(name: "PhoneScreenLayout", swiftSettings: [.swiftLanguageMode(.v5)]),
     .testTarget(name: "PhoneScreenLayoutTests", dependencies: ["PhoneScreenLayout"], swiftSettings: [.swiftLanguageMode(.v5)]),
-    .target(name: "PhoneLaunchLook", dependencies: [.product(name: "ArdiaDesign", package: "ArdiaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
-    .testTarget(name: "PhoneLaunchLookTests", dependencies: ["PhoneLaunchLook", .product(name: "ArdiaDesign", package: "ArdiaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
-    .testTarget(name: "PhoneBlockingTests", dependencies: ["PhoneBlocking", .product(name: "ArdiaBrowser", package: "ArdiaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
+    .target(name: "PhoneLaunchLook", dependencies: [.product(name: "NillaDesign", package: "NillaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
+    .testTarget(name: "PhoneLaunchLookTests", dependencies: ["PhoneLaunchLook", .product(name: "NillaDesign", package: "NillaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
+    .testTarget(name: "PhoneBlockingTests", dependencies: ["PhoneBlocking", .product(name: "NillaBrowser", package: "NillaKit")], swiftSettings: [.swiftLanguageMode(.v5)]),
   ]
 )

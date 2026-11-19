@@ -171,9 +171,9 @@ export const tabRows = {
     {
       section: "Links",
       rows: {
-        openLinksInLittleArdia: {
-          title: "Open links from other apps in Little Ardia",
-          keywords: ["little ardia", "little arc", "arc", "little window", "small window", "mini window", "external links", "links from other apps", "open links", "discord", "slack", "mail", "messages"],
+        openLinksInLittleNilla: {
+          title: "Open links from other apps in Little Nilla",
+          keywords: ["little nilla", "little arc", "arc", "little window", "small window", "mini window", "external links", "links from other apps", "open links", "discord", "slack", "mail", "messages"],
         },
         peekLinksToOtherSites: {
           title: "Links to other sites open in",

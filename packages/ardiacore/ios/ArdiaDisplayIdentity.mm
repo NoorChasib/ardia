@@ -6,11 +6,11 @@
 
 #include "ArdiaDisplayPlacementMath.h"
 
-static ardia_display::Rect RectOf(NSRect rect) {
+static nilla_display::Rect RectOf(NSRect rect) {
   return {rect.origin.x, rect.origin.y, rect.size.width, rect.size.height};
 }
 
-@implementation ArdiaDisplayIdentity
+@implementation NillaDisplayIdentity
 
 + (NSString *)identifierOfScreen:(NSScreen *)screen {
   NSNumber *number = screen.deviceDescription[@"NSScreenNumber"];
@@ -35,9 +35,9 @@ static ardia_display::Rect RectOf(NSRect rect) {
   NSArray<NSScreen *> *screens = NSScreen.screens;
   const NSUInteger target = [screens indexOfObject:screen];
   if (target == NSNotFound) return frame;
-  std::vector<ardia_display::Rect> frames;
+  std::vector<nilla_display::Rect> frames;
   for (NSScreen *each in screens) frames.push_back(RectOf(each.frame));
-  const ardia_display::Rect fitted = ardia_display::OnScreen(RectOf(frame), frames.data(), frames.size(), target, RectOf(screen.visibleFrame));
+  const nilla_display::Rect fitted = nilla_display::OnScreen(RectOf(frame), frames.data(), frames.size(), target, RectOf(screen.visibleFrame));
   return NSMakeRect(fitted.x, fitted.y, fitted.w, fitted.h);
 }
 

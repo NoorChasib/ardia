@@ -16,7 +16,7 @@ test("Windows native code reads the environment only in the launch config", () =
 });
 
 test("the launcher, which runs before the app's DLL, reads only ARDIA_BACKGROUND, and only to keep a failure quiet", () => {
-  const launcher = readFileSync(new URL("../../windows/ArdiaLauncher/Launcher.cpp", import.meta.url), "utf8");
+  const launcher = readFileSync(new URL("../../windows/NillaLauncher/Launcher.cpp", import.meta.url), "utf8");
   const reads = launcher.match(ENVIRONMENT_READ) ?? [];
   assert.equal(reads.length, 1);
   assert.match(launcher, /DWORD length = GetEnvironmentVariableW\(L"ARDIA_BACKGROUND", value, 4\);/);
@@ -75,7 +75,7 @@ test("a test instance seals its sync key under its own DPAPI purpose, so it can'
 test("an app folder the Windows workflow uploads has lost its test-build marker, with no harness run after that", () => {
   const workflow = readFileSync(new URL("../../../../.github/workflows/windows.yml", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const harness = /launch-smoke\.ps1|tour\.ps1/;
-  const appFolder = /^\s+(?:path: )?(\$\{\{ runner\.temp \}\}\/Ardia|\$\{\{ env\.APP \}\}|apps\/browser\/windows\/\w+\/Release)$/gm;
+  const appFolder = /^\s+(?:path: )?(\$\{\{ runner\.temp \}\}\/Nilla|\$\{\{ env\.APP \}\}|apps\/browser\/windows\/\w+\/Release)$/gm;
   const stepLists = workflow.split(/\n  (?=[a-z0-9-]+:\n)/).slice(1).flatMap((job) => {
     const at = job.search(/\n    steps:(?: &\w+)?\n/);
     return at < 0 ? [] : [job.slice(at).split("\n      - ").slice(1)];

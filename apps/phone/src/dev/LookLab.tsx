@@ -1,4 +1,4 @@
-import { DeckBackdrop, FilmGrain, Frost, FrostSource, INCOGNITO_LOOK, labLog, lookBudget, lookIsNative, lookLab, PageView, ProfileBackdrop, type FrostVariant } from "@ardia/phone-native";
+import { DeckBackdrop, FilmGrain, Frost, FrostSource, INCOGNITO_LOOK, labLog, lookBudget, lookIsNative, lookLab, PageView, ProfileBackdrop, type FrostVariant } from "@nilla/phone-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 

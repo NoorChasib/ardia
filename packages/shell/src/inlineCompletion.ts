@@ -5,7 +5,7 @@ export type InlineCompletionNative = {
   copyFieldAs(shown: string | null, url: string | null): Promise<void>;
 };
 
-const InlineCompletionModule = nativeModule("ArdiaInlineCompletion");
+const InlineCompletionModule = nativeModule("NillaInlineCompletion");
 
 export type InlineWrite = 0 | 1 | 2;
 

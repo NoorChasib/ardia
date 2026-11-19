@@ -28,7 +28,7 @@ FLAGS = frozenset({"daemon_spawned", "reconnected_after_idle", "output_truncated
 MAIN_PHASE = {"snapshot": "snapshot_build_ms", "eval": "eval_ms"}
 OUTPUT_MARKERS = ("\n[output capped at ", "\n[truncated ", "\n[pages cut to fit ", " not shown. Narrow it instead: ")
 
-current: ContextVar = ContextVar("ardia_command_metrics", default=None)
+current: ContextVar = ContextVar("nilla_command_metrics", default=None)
 last_request_shareable = False
 
 

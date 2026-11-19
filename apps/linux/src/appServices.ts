@@ -17,12 +17,12 @@ import { openReleaseNotesAfterUpdate, openReleaseNotesPage } from "../../browser
 import { showToast } from "../../browser/src/state/app/toasts";
 import { useBrowser } from "../../browser/src/state/browser/store";
 import type { LinuxCapabilities } from "./hostCapabilities.ts";
-import { ardiaHost, hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
+import { nillaHost, hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
 import { QUIT_COMMAND, createHostQuit, type QuitOutcome } from "./quit.ts";
 import { BROWSER_COMMAND_CHANNEL, BROWSER_WINDOW_COMMANDS, regularFocusOrder, routeToBrowserWindow, serveBrowserCommands, type RouteChannel } from "./browserCommandRoute.ts";
 
-export const APP_LAUNCH_LOCK = "ardia.linux.app-launch";
-export const APP_LAUNCH_MARK = "ardia.linux.app-launch";
+export const APP_LAUNCH_LOCK = "nilla.linux.app-launch";
+export const APP_LAUNCH_MARK = "nilla.linux.app-launch";
 export const ONBOARDING_DOCUMENT = "onboarding.json";
 export const FRESH_PROFILE_DOCUMENT = "linux-fresh-profile.json";
 export const LAUNCH_STEPS = ["version", "onboarding", "releaseNotes", "defaultBrowserOffer"] as const;
@@ -36,7 +36,7 @@ export type DocumentPresence = "present" | "absent" | "unknown";
 export type OnboardingEvidence = { onboarding: DocumentPresence; freshProfile: DocumentPresence; savedSession: boolean };
 export type StoredDocumentReader = (name: string) => Promise<string | null>;
 
-const report = (error: unknown) => console.warn("[ardia linux] app services", error);
+const report = (error: unknown) => console.warn("[nilla linux] app services", error);
 
 export function hostLaunchRecord(host: ArdiaHost): LaunchRecord | undefined {
   if (!hostSupports("ArdiaShell.launchSteps", host) || !hostSupports("ArdiaShell.completeLaunchStep", host)) return undefined;
@@ -159,19 +159,19 @@ export async function runLaunchServices(options: {
 const unavailable = (windowId: string, feature: string) => showToast(windowId, "Not available on Linux yet", `${feature} isn't available in this Linux build.`);
 
 let quitLinux: (() => Promise<QuitOutcome>) | undefined;
-const linuxQuit = () => quitLinux ??= ardiaHost
-  ? createHostQuit(ardiaHost, confirm)
+const linuxQuit = () => quitLinux ??= nillaHost
+  ? createHostQuit(nillaHost, confirm)
   : () => Promise.reject(Object.assign(new Error("Quitting needs the Linux host"), { code: "ERR_UNAVAILABLE" }));
 
 function quitApp(windowId: string) {
   void linuxQuit()().catch((error: unknown) => {
     if ((error as { code?: string } | null)?.code === "ERR_UNAVAILABLE") return unavailable(windowId, "Quit");
     report(error);
-    showToast(windowId, "Ardia couldn't quit", "Try again, or close each window.");
+    showToast(windowId, "Nilla couldn't quit", "Try again, or close each window.");
   });
 }
 
-export function runAppCommand(windowId: string, command: CommandEvent["command"], capabilities: LinuxCapabilities, host: ArdiaHost | undefined = ardiaHost): boolean {
+export function runAppCommand(windowId: string, command: CommandEvent["command"], capabilities: LinuxCapabilities, host: ArdiaHost | undefined = nillaHost): boolean {
   if ((command as string) === QUIT_COMMAND) {
     quitApp(windowId);
     return true;

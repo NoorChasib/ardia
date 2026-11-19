@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { View } from "react-native";
-import type { MeadowProps, PowerUpProps, ThemeSwatchProps, WindowBackdropProps } from "@ardia-real/shaders";
+import type { MeadowProps, PowerUpProps, ThemeSwatchProps, WindowBackdropProps } from "@nilla-real/shaders";
 import { useBrowser } from "../../../browser/src/state/browser/store";
 import { prefersReducedMotion } from "./web/gl/clock";
 import { parseHex } from "./web/gl/colors";
@@ -15,7 +15,7 @@ import { baseLine, baseStops, GRAIN_POINTS, GRAIN_SIDE, grainAlpha, overlayLine,
 import { usePageHoleLayer } from "../shellAbove";
 import { useSurfaceDark } from "./web/chrome";
 
-export * from "@ardia-real/shaders";
+export * from "@nilla-real/shaders";
 
 const FRAME = 1 / 60;
 

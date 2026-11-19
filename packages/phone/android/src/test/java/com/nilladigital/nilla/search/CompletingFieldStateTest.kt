@@ -1,8 +1,8 @@
-package com.ardia.search
+package com.nilladigital.nilla.search
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import com.ardia.store.CompletionOffer
+import com.nilladigital.nilla.store.CompletionOffer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

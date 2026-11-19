@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.util.Random
 import org.junit.Assert.assertEquals
@@ -49,13 +49,13 @@ class RegexEquivalenceTest {
     @Test
     fun everyDefaultListRegexRuleRunsAndOnlyBacktrackingFeaturesAreRefused() {
         val (honoured, refused) = defaultListRules()
-        println("ArdiaBlockingRegex default lists: ${honoured.size} regex rules honoured, ${refused.size} refused")
-        refused.forEach { println("ArdiaBlockingRegex refused (needs lookaround, backreference or a repeat over 1000): ${it.take(150)}") }
+        println("NillaBlockingRegex default lists: ${honoured.size} regex rules honoured, ${refused.size} refused")
+        refused.forEach { println("NillaBlockingRegex refused (needs lookaround, backreference or a repeat over 1000): ${it.take(150)}") }
         assertEquals(emptyList<String>(), refused.filterNot { needsBacktracking(it) || it.contains("\$xhr,script,domain=dogdrip.net,replace=") })
         assertEquals(emptyList<String>(), lostPatterns.toList())
         val sizes = honoured.map { MeteredRegex(ListRegex.compile(it.source, it.matchCase)!!).size }.sorted()
         println(
-            "ArdiaBlockingRegex default lists program size: median=%d p90=%d p99=%d max=%d, cap=%d"
+            "NillaBlockingRegex default lists program size: median=%d p90=%d p99=%d max=%d, cap=%d"
                 .format(sizes[sizes.size / 2], sizes[sizes.size * 9 / 10], sizes[sizes.size * 99 / 100], sizes.last(), ListRegex.MAX_PROGRAM_SIZE),
         )
         assertTrue(sizes.last() * 2 <= ListRegex.MAX_PROGRAM_SIZE)
@@ -119,10 +119,10 @@ class RegexEquivalenceTest {
         }
         val skipped = context.regexRulesSkipped - skippedBefore
         println(
-            "ArdiaBlockingRegex equivalence: ${honoured.size} rules, $checked urls ($longChecked longer than 512 chars), $matched match, " +
+            "NillaBlockingRegex equivalence: ${honoured.size} rules, $checked urls ($longChecked longer than 512 chars), $matched match, " +
                 "$rulesWithAMatch rules matched at least once, $notRequests samples were not web requests, ${mismatches.size} mismatches, $skipped budget skips",
         )
-        mismatches.take(20).forEach { println("ArdiaBlockingRegex mismatch: $it") }
+        mismatches.take(20).forEach { println("NillaBlockingRegex mismatch: $it") }
         assertEquals(emptyList<String>(), mismatches)
         assertEquals(0L, skipped)
         assertTrue("only $rulesWithAMatch of ${honoured.size} rules matched a generated url", rulesWithAMatch * 10 >= honoured.size * 9)
@@ -156,7 +156,7 @@ class RegexEquivalenceTest {
         }
         val skipped = context.regexRulesSkipped - skippedBefore
         println(
-            "ArdiaBlockingRegex all ${engine.stats.blockRules} real regex rules in one engine: worst request used $worst steps, %.0f%% of its budget ($worstUrl), $skipped budget skips".format(worstShare * 100),
+            "NillaBlockingRegex all ${engine.stats.blockRules} real regex rules in one engine: worst request used $worst steps, %.0f%% of its budget ($worstUrl), $skipped budget skips".format(worstShare * 100),
         )
         assertEquals(0L, skipped)
         assertTrue("worst share $worstShare", worstShare < 0.6)

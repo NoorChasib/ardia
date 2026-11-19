@@ -10,7 +10,7 @@ import stat
 import struct
 from pathlib import Path
 
-from ardia_cli.printable import well_formed
+from nilla_browser_cli.printable import well_formed
 
 DIR_NAME = "Browse"
 SESSION_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
@@ -173,7 +173,7 @@ def socket_is_ours(name: str, dir_fd: int) -> tuple[int, int] | None:
 
 
 def peer_uid(sock: socket.socket) -> int | None:
-    from ardia_cli import control, endpoint
+    from nilla_browser_cli import control, endpoint
 
     if endpoint.LINUX:
         return control.linux_peer_uid(sock)

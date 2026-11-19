@@ -1,9 +1,9 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
-import com.ardia.shared.ScriptEngine
-import com.ardia.sync.core.SyncKeys
-import com.ardia.sync.core.SyncStorage
-import com.ardia.sync.core.SyncVault
+import com.nilladigital.nilla.shared.ScriptEngine
+import com.nilladigital.nilla.sync.core.SyncKeys
+import com.nilladigital.nilla.sync.core.SyncStorage
+import com.nilladigital.nilla.sync.core.SyncVault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer

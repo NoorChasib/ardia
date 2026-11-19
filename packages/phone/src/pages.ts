@@ -101,7 +101,7 @@ type PagesNative = {
 };
 
 let loaded: PagesNative | undefined;
-const native = () => (loaded ??= requireNativeModule<PagesNative>("ArdiaPhonePageView"));
+const native = () => (loaded ??= requireNativeModule<PagesNative>("NillaPhonePageView"));
 
 export const pages = {
   capabilities: (): PageEngineCapabilities => {

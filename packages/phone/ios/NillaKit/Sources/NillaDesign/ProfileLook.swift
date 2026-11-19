@@ -1,4 +1,4 @@
-import ArdiaSync
+import NillaSync
 import SwiftUI
 
 struct LookRGB: Equatable, Hashable, Sendable {

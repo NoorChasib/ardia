@@ -14,7 +14,7 @@ GEN = WORK / "gen"
 PATCHED = WORK / "overlay"
 LINUX = ROOT / "engine/ardiacore-linux/src"
 ENGINE = ROOT / "engine/chromium/src"
-ARDIA = ENGINE / "chrome/browser/ardia"
+NILLA = ENGINE / "chrome/browser/ardia"
 BASE = pathlib.Path(os.environ.get("AC_SERIES_BASE", SRC.parent.parent.parent / "series-base-linux-x64"))
 LAYER_HEADERS = ["ac_hooks.h", "ac_content_hooks.h", "ac_launch_switches.h"]
 GIT_HEADER = ("diff --git", "index ", "new file mode", "deleted file mode", "old mode", "new mode", "similarity", "rename ")
@@ -54,13 +54,13 @@ def generate_mojom():
     run(generate + ["--typemap", "typemap"] + salt, mojo)
     run(generate + ["--generate_non_variant_code"], mojo)
     run(generate + ["--generate_non_variant_code", "--generate_message_ids"] + salt, mojo)
-    for header in (mojo / "gen/ardia").rglob("*.h"):
+    for header in (mojo / "gen/nilla").rglob("*.h"):
         target = GEN / header.relative_to(mojo / "gen")
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(header, target)
 
 
-def generate_headers(ardia_sources):
+def generate_headers(nilla_sources):
     for name in LAYER_HEADERS:
         (GEN / "ardia/core").mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / "engine/ardiacore/src/ardia/core" / name, GEN / "ardia/core" / name)
@@ -69,8 +69,8 @@ def generate_headers(ardia_sources):
               "--output", GEN / "ardia/linux/page_script.h"], WORK)
     run(py + [LINUX / "ardia/linux/generate_bootstrap.py", "--input", LINUX / "ardia/linux/bootstrap.js",
               "--output", GEN / "ardia/linux/host_bootstrap.h"], WORK)
-    run(py + [ARDIA / "gen_engine_dispatch.py", "--output", GEN / "chrome/browser/ardia/ac_engine_dispatch.inc"]
-        + ardia_sources, WORK)
+    run(py + [NILLA / "gen_engine_dispatch.py", "--output", GEN / "chrome/browser/ardia/ac_engine_dispatch.inc"]
+        + nilla_sources, WORK)
     generate_mojom()
 
 
@@ -164,15 +164,15 @@ def sources():
     linux_flags = ninja_flags("obj/ardia/linux/linux.ninja")
     core_ninja = "obj/ardia/core/launch_switches.ninja"
     core_flags = ninja_flags(core_ninja) if (OUT / core_ninja).exists() else linux_flags
-    ardia_flags = ninja_flags("obj/chrome/browser/ardia/ardia.ninja")
+    nilla_flags = ninja_flags("obj/chrome/browser/ardia/ardia.ninja")
     files = [(p, linux_flags) for p in sorted((LINUX / "ardia/linux").rglob("*.cc"))]
     files += [(p, core_flags) for p in sorted((LINUX / "ardia/core").rglob("*.cc"))]
-    gn = (ARDIA / "BUILD.gn").read_text()
-    common = re.search(r"ardia_sources = \[(.*?)\]", gn, re.S).group(1)
-    linux = re.search(r"if \(is_linux\) \{\s*ardia_sources \+= \[(.*?)\]", gn, re.S).group(1)
-    ardia = [ARDIA / f for f in re.findall(r'"([^"]+\.cc)"', common + linux)]
-    files += [(p, ardia_flags) for p in sorted(ardia)]
-    return files, [str(p) for p in ardia]
+    gn = (NILLA / "BUILD.gn").read_text()
+    common = re.search(r"nilla_sources = \[(.*?)\]", gn, re.S).group(1)
+    linux = re.search(r"if \(is_linux\) \{\s*nilla_sources \+= \[(.*?)\]", gn, re.S).group(1)
+    nilla = [NILLA / f for f in re.findall(r'"([^"]+\.cc)"', common + linux)]
+    files += [(p, nilla_flags) for p in sorted(nilla)]
+    return files, [str(p) for p in nilla]
 
 
 def check(item):
@@ -188,8 +188,8 @@ def main():
         sys.exit("--work must be outside the Chromium tree")
     shutil.rmtree(WORK, ignore_errors=True)
     PATCHED.mkdir(parents=True)
-    files, ardia_sources = sources()
-    generate_headers(ardia_sources)
+    files, nilla_sources = sources()
+    generate_headers(nilla_sources)
     gaps, conflicts = build_overlay()
     print("Series hunks the tree lacks, applied to copies under", PATCHED)
     for name, paths in gaps.items():

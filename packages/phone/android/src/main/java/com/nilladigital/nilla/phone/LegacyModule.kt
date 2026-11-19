@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import expo.modules.kotlin.exception.CodedException
@@ -21,7 +21,7 @@ class LegacyModule : Module() {
     }
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneLegacy")
+        Name("NillaPhoneLegacy")
 
         AsyncFunction("source") { -> PhoneLegacy(context).source() }
 

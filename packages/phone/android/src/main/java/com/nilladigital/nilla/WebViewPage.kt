@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
@@ -1043,8 +1043,8 @@ internal class WebViewPage(
 
     companion object {
         private const val SAVED_STATE_LIMIT = 512 * 1024
-        private const val LOG_TAG = "ArdiaPages"
-        private const val DESKTOP_SITE_KEY = "ardia.desktopSite"
+        private const val LOG_TAG = "NillaPages"
+        private const val DESKTOP_SITE_KEY = "nilla.desktopSite"
         private const val FIT_WIDTH_DELAY_MILLIS = 300L
         private const val FIT_WIDTH_LATER_MILLIS = 2_000L
         private const val DESKTOP_FINISHED = "pageFinished"

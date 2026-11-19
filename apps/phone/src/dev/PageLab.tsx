@@ -12,7 +12,7 @@ import {
   type PageSnapshot,
   type PageState,
   type ReadableContent,
-} from "@ardia/phone-native";
+} from "@nilla/phone-native";
 import { openDatabaseSync } from "expo-sqlite";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";

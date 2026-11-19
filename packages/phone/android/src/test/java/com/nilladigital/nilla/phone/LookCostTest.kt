@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import org.junit.After
@@ -45,7 +45,7 @@ class LookCostTest {
         var fastest = 0f
         for (index in 0 until 3) {
             val start = LookRules.blobCenter(index, 0f, 1080f, 2400f)
-            val angle = (2 * Math.PI * pace / com.ardia.design.TabsBackdropMotion.loopsMillis[index]).toFloat()
+            val angle = (2 * Math.PI * pace / com.nilladigital.nilla.design.TabsBackdropMotion.loopsMillis[index]).toFloat()
             val moved = LookRules.blobCenter(index, angle, 1080f, 2400f)
             fastest = maxOf(fastest, Math.hypot((moved.first - start.first).toDouble(), (moved.second - start.second).toDouble()).toFloat())
         }

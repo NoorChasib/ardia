@@ -8,18 +8,18 @@
 //   node phone-sync-relay.mjs stop   [--serial SERIAL]
 //   node phone-sync-relay.mjs type-phrase [--serial SERIAL]
 //
-// start remembers the options, creates the phone folder (default /sdcard/Documents/Ardia Sync) and runs a pass
+// start remembers the options, creates the phone folder (default /sdcard/Documents/Nilla Sync) and runs a pass
 // every --every seconds (default 3) in the background, logging each copy and deletion. sync runs one pass now and
 // prints it; both remember the options, so later commands need only --serial, and both first write, read back, list
 // and delete a probe file on the phone, so a phone that doesn't behave fails before anything is copied. status says
 // whether the loop runs, its last pass and the file counts on both sides; stop ends the loop and forgets the state.
 // A file changed on one side since the last pass is copied to the other; changed on both, the newer wins; gone from
-// one side after a pass saw it on both, it is deleted on the other. A copy is written whole into .ardia-relay-parts
+// one side after a pass saw it on both, it is deleted on the other. A copy is written whole into .nilla-relay-parts
 // beside the sync folder by a lone cat (adb exec-in drops anything after the command that reads stdin), then a
 // separate command syncs, checks its SHA-256 and only then renames it into place, so an app never reads half a
 // file; a write that lands late (the F4 read some back empty at first) is checked again for up to 2 s. A
 // pass that finds a side empty after seeing files there stops without changing anything. State lives in
-// $TMPDIR/ardia-phone-relay-<serial>. --adb PATH runs another adb. type-phrase reads phrase.txt beside the Mac's
+// $TMPDIR/nilla-phone-relay-<serial>. --adb PATH runs another adb. type-phrase reads phrase.txt beside the Mac's
 // folder over ssh and types it into the phone's focused field through adb's stdin, never on a command line; on a
 // phone that refuses injected text (MIUI) it says so.
 import { spawn, spawnSync } from "node:child_process";
@@ -30,9 +30,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const TEMP_SUFFIX = ".relay-part";
-const PARTS_FOLDER = ".ardia-relay-parts";
-const PROBE_NAME = ".ardia-relay-probe";
-const PROBE_TEXT = "ardia relay probe\n";
+const PARTS_FOLDER = ".nilla-relay-parts";
+const PROBE_NAME = ".nilla-relay-probe";
+const PROBE_TEXT = "nilla relay probe\n";
 
 export function plan(mac, phone, record) {
   const steps = [];
@@ -285,7 +285,7 @@ function options(argv) {
     else throw new Error(`unknown option ${name}`);
     index += 1;
   }
-  found.work = path.resolve(found.work ?? path.join(os.tmpdir(), `ardia-phone-relay-${found.serial ?? "default"}`));
+  found.work = path.resolve(found.work ?? path.join(os.tmpdir(), `nilla-phone-relay-${found.serial ?? "default"}`));
   const savedFile = path.join(found.work, "relay.json");
   const saved = fs.existsSync(savedFile) ? JSON.parse(fs.readFileSync(savedFile, "utf8")) : {};
   const merged = { ...saved, ...Object.fromEntries(Object.entries(found).filter(([, v]) => v !== undefined)) };

@@ -28,7 +28,7 @@ const find = (items, id) => {
 };
 
 test("the menu mirrors the macOS menu bar's top-level menus", () => {
-  assert.deepEqual(appMenuItems(state()).map((item) => item.title), ["Ardia", "File", "Edit", "View", "Tabs", "Bookmarks", "History", "Extensions", "Window", "Help"]);
+  assert.deepEqual(appMenuItems(state()).map((item) => item.title), ["Nilla", "File", "Edit", "View", "Tabs", "Bookmarks", "History", "Extensions", "Window", "Help"]);
 });
 
 test("items carry the menu state's checks, disabled commands and titles", () => {
@@ -51,7 +51,7 @@ test("empty lists show a disabled placeholder and single profiles hide profile m
   const history = top(items, "History").children;
   assert.deepEqual(history.at(-1), { id: "empty", title: "Empty", enabled: false });
   assert.equal(find(items, "menu:Profiles"), undefined);
-  assert.equal(find(items, "menu:New Little Ardia Window in Profile"), undefined);
+  assert.equal(find(items, "menu:New Little Nilla Window in Profile"), undefined);
 });
 
 test("items show the effective Linux shortcut", () => {
@@ -71,10 +71,10 @@ test("choices resolve to commands or window actions and ignore structure rows", 
 
 const rows = (items, title) => top(items, title).children.map((item) => "separator" in item ? "-" : item.title);
 
-test("the Ardia, File, View and Help menus carry the Mac menu bar's entries in its order", () => {
+test("the Nilla, File, View and Help menus carry the Mac menu bar's entries in its order", () => {
   const items = appMenuItems(state(), new Map([["std:quit:", { key: "q", modifiers: ["command", "shift"] }], ["newIncognitoWindow", { key: "n", modifiers: ["command", "shift"] }]]));
-  assert.deepEqual(rows(items, "Ardia"), ["About Ardia", "-", "Settings…", "Import from Another Browser…", "-", "Quit Ardia"]);
-  assert.deepEqual(find(items, "std:quit:"), { id: "std:quit:", title: "Quit Ardia", key: "q", modifiers: ["command", "shift"] });
+  assert.deepEqual(rows(items, "Nilla"), ["About Nilla", "-", "Settings…", "Import from Another Browser…", "-", "Quit Nilla"]);
+  assert.deepEqual(find(items, "std:quit:"), { id: "std:quit:", title: "Quit Nilla", key: "q", modifiers: ["command", "shift"] });
   const file = rows(items, "File");
   assert.deepEqual(file.slice(0, 4), ["New Tab", "New Tab in Group", "New Window", "New Incognito Window"]);
   assert.deepEqual(file.slice(-5), ["Save Page As…", "Share", "Email Page Location", "Print…", "Print Using System Dialog…"]);

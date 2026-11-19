@@ -16,7 +16,7 @@
 #include <initializer_list>
 #include <mach/mach.h>
 
-using namespace ardia_early_window;
+using namespace nilla_early_window;
 
 namespace {
 
@@ -26,9 +26,9 @@ constexpr CGFloat kMinPage = 100;
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
-NSString *StateOf(ArdiaSavedSession *session, NSString *windowId) {
+NSString *StateOf(NillaSavedSession *session, NSString *windowId) {
   NSDictionary *settings = session.settings;
   NSDictionary *window = [session windowWithId:windowId];
   if (!window) return nil;
@@ -44,12 +44,12 @@ NSString *StateOf(ArdiaSavedSession *session, NSString *windowId) {
   NSNumber *autoHideTabs = [window[@"autoHideTabs"] isKindOfClass:NSNumber.class] ? window[@"autoHideTabs"]
                          : [settings[@"autoHideTabs"] isKindOfClass:NSNumber.class] ? settings[@"autoHideTabs"] : nil;
   if (id tabsShown = autoHideTabs ? (autoHideTabs.boolValue ? @NO : @YES) : window[@"sidebarOpen"]) state[@"w.sidebarOpen"] = tabsShown;
-  if (const CGFloat scale = ArdiaInterfaceScale.scale; scale != 1) state[@"i.interfaceScale"] = @(scale);
+  if (const CGFloat scale = NillaInterfaceScale.scale; scale != 1) state[@"i.interfaceScale"] = @(scale);
   NSData *data = [NSJSONSerialization dataWithJSONObject:state options:NSJSONWritingSortedKeys error:nil];
   return data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : nil;
 }
 
-NSString *ContentOf(ArdiaSavedSession *session, NSString *windowId) {
+NSString *ContentOf(NillaSavedSession *session, NSString *windowId) {
   NSDictionary *window = [session windowWithId:windowId];
   if (!window) return nil;
   NSMutableDictionary *tabs = [NSMutableDictionary dictionary];
@@ -89,7 +89,7 @@ NSArray<NSNumber *> *Insets(NSRect rect, NSView *host) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 bool ReadInsets(id value, CGFloat out[4]) {
   if (![value isKindOfClass:NSArray.class] || [value count] != 4) return false;
@@ -116,7 +116,7 @@ NSRect RectFromInsets(const CGFloat insets[4], NSView *host) {
 
 namespace {
 
-NSDictionary *WindowLayout(ArdiaWindowController *controller, ArdiaSavedSession *session) {
+NSDictionary *WindowLayout(NillaWindowController *controller, NillaSavedSession *session) {
   NSWindow *window = controller.coreWindow.window;
   NSView *host = controller.coreWindow.hostView;
   if (!window.visible || !host || !controller.root || (window.styleMask & NSWindowStyleMaskFullScreen)) return nil;
@@ -124,18 +124,18 @@ NSDictionary *WindowLayout(ArdiaWindowController *controller, ArdiaSavedSession 
   NSString *state = StateOf(session, controller.appWindowId);
   if (!state) return nil;
   NSMutableArray<NSView *> *pending = [NSMutableArray arrayWithObject:controller.root];
-  NSMutableArray<ArdiaWebView *> *shown = [NSMutableArray array];
+  NSMutableArray<NillaWebView *> *shown = [NSMutableArray array];
   for (NSUInteger i = 0; i < pending.count && i < 4000; i++) {
     NSView *view = pending[i];
-    if ([view isKindOfClass:ArdiaWebView.class]) {
-      ArdiaWebView *web = (ArdiaWebView *)view;
+    if ([view isKindOfClass:NillaWebView.class]) {
+      NillaWebView *web = (NillaWebView *)view;
       if (web.visible && web.browserId && !web.hiddenOrHasHiddenAncestor && web.alphaValue > 0) [shown addObject:web];
       continue;
     }
     [pending addObjectsFromArray:view.subviews];
   }
   if (shown.count != 1) return nil;
-  ArdiaWebView *web = shown[0];
+  NillaWebView *web = shown[0];
   if (NSWidth(web.bounds) < kMinPage || NSHeight(web.bounds) < kMinPage) return nil;
   NSView *clip = nil;
   for (NSView *v = web; v && v != host; v = v.superview)
@@ -155,8 +155,8 @@ NSDictionary *WindowLayout(ArdiaWindowController *controller, ArdiaSavedSession 
     @"content" : ContentOf(session, controller.appWindowId) ?: @"",
   } mutableCopy];
   if (web.transferKey.length) layout[@"tab"] = web.transferKey;
-  if (NSValue *lights = ArdiaTrafficLightsCenter(window))
-    layout[@"lights"] = @[ @(lights.pointValue.x), @(lights.pointValue.y), @(ArdiaTrafficLightsTrailing(window)) ];
+  if (NSValue *lights = NillaTrafficLightsCenter(window))
+    layout[@"lights"] = @[ @(lights.pointValue.x), @(lights.pointValue.y), @(NillaTrafficLightsTrailing(window)) ];
   if (window.appearance.name) layout[@"appearance"] = window.appearance.name;
   if (NSColor *color = [web.pageBackgroundColor colorUsingColorSpace:NSColorSpace.sRGBColorSpace])
     layout[@"pageColor"] = @[ @(color.redComponent), @(color.greenComponent), @(color.blueComponent), @(color.alphaComponent) ];
@@ -165,13 +165,13 @@ NSDictionary *WindowLayout(ArdiaWindowController *controller, ArdiaSavedSession 
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 void LoadLayouts() {
   if (gLayouts || !gLayoutPath) return;
   gLayouts = [NSMutableDictionary dictionary];
   NSData *data = [NSData dataWithContentsOfFile:gLayoutPath];
-  NSDictionary *file = [ArdiaSavedDocument parse:data oldest:kLayoutVersion newest:kLayoutVersion];
+  NSDictionary *file = [NillaSavedDocument parse:data oldest:kLayoutVersion newest:kLayoutVersion];
   if (!file) return;
   if ([file[@"windows"] isKindOfClass:NSDictionary.class])
     for (NSString *key in file[@"windows"])
@@ -195,20 +195,20 @@ void Write(NSData *data) {
   });
 }
 
-NSString *ActiveTabOf(ArdiaSavedSession *session, NSString *windowId) {
+NSString *ActiveTabOf(NillaSavedSession *session, NSString *windowId) {
   NSDictionary *w = [session windowWithId:windowId];
   NSDictionary *active = [w[@"activeTabIds"] isKindOfClass:NSDictionary.class] ? w[@"activeTabIds"] : nil;
   id tab = [w[@"profileId"] isKindOfClass:NSString.class] ? active[w[@"profileId"]] : nil;
   return [tab isKindOfClass:NSString.class] ? tab : nil;
 }
 
-void RecordLayouts(ArdiaSavedSession *session, BOOL wait) {
+void RecordLayouts(NillaSavedSession *session, BOOL wait) {
   LoadLayouts();
   NSMutableSet *saved = [NSMutableSet set];
   for (NSDictionary *w in session.windows)
     if ([w[@"id"] isKindOfClass:NSString.class]) [saved addObject:w[@"id"]];
   NSMutableSet *live = [NSMutableSet set];
-  for (ArdiaWindowController *controller in ArdiaWindowController.all) {
+  for (NillaWindowController *controller in NillaWindowController.all) {
     NSString *windowId = controller.appWindowId;
     if (!windowId.length || controller.stray || controller.standalone) continue;
     [live addObject:windowId];
@@ -245,14 +245,14 @@ void RecordLayouts(ArdiaSavedSession *session, BOOL wait) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 void Record(BOOL wait) {
   gRecordQueued = NO;
   if (!gDirectory.length) return;
-  ArdiaSavedSession *session = [ArdiaSavedSession readFrom:gDirectory];
+  NillaSavedSession *session = [NillaSavedSession readFrom:gDirectory];
   if ([session.settings[@"restoreSession"] isEqual:@NO])
-    [ArdiaEarlyWindow forgetPictures];
+    [NillaEarlyWindow forgetPictures];
   else if (gLayoutPath && session)
     RecordLayouts(session, wait);
   if (wait) dispatch_sync(Writer(), ^{});

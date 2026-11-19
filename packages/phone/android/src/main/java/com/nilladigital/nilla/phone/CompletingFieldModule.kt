@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
@@ -6,7 +6,7 @@ import expo.modules.kotlin.modules.ModuleDefinition
 
 class CompletingFieldModule : Module() {
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneCompletingField")
+        Name("NillaPhoneCompletingField")
 
         View(CompletingFieldView::class) {
             Events("onTypedChange", "onSubmit", "onFocusChange", "onSuffixChange")

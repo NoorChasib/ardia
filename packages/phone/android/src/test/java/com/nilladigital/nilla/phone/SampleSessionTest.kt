@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.util.Printer
 import org.junit.Assert.assertEquals

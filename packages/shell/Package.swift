@@ -2,22 +2,22 @@
 import PackageDescription
 
 let package = Package(
-  name: "ArdiaUpdaterCore",
+  name: "NillaUpdaterCore",
   platforms: [.macOS(.v14)],
   products: [
-    .library(name: "ArdiaUpdaterCore", targets: ["ArdiaUpdaterCore"]),
-    .library(name: "ArdiaTranslateCore", targets: ["ArdiaTranslateCore"]),
-    .library(name: "ArdiaReportCore", targets: ["ArdiaReportCore"]),
-    .library(name: "ArdiaNotificationCore", targets: ["ArdiaNotificationCore"]),
+    .library(name: "NillaUpdaterCore", targets: ["NillaUpdaterCore"]),
+    .library(name: "NillaTranslateCore", targets: ["NillaTranslateCore"]),
+    .library(name: "NillaReportCore", targets: ["NillaReportCore"]),
+    .library(name: "NillaNotificationCore", targets: ["NillaNotificationCore"]),
   ],
   targets: [
-    .target(name: "ArdiaUpdaterCore", path: "ios/UpdaterCore"),
-    .testTarget(name: "ArdiaUpdaterCoreTests", dependencies: ["ArdiaUpdaterCore"], path: "tests"),
-    .target(name: "ArdiaTranslateCore", path: "ios/TranslateCore"),
-    .testTarget(name: "ArdiaTranslateCoreTests", dependencies: ["ArdiaTranslateCore"], path: "translate-tests"),
-    .target(name: "ArdiaReportCore", path: "ios/ReportCore"),
-    .testTarget(name: "ArdiaReportCoreTests", dependencies: ["ArdiaReportCore"], path: "report-tests"),
-    .target(name: "ArdiaNotificationCore", path: "ios/NotificationCore"),
-    .testTarget(name: "ArdiaNotificationCoreTests", dependencies: ["ArdiaNotificationCore"], path: "notification-tests"),
+    .target(name: "NillaUpdaterCore", path: "ios/UpdaterCore"),
+    .testTarget(name: "NillaUpdaterCoreTests", dependencies: ["NillaUpdaterCore"], path: "tests"),
+    .target(name: "NillaTranslateCore", path: "ios/TranslateCore"),
+    .testTarget(name: "NillaTranslateCoreTests", dependencies: ["NillaTranslateCore"], path: "translate-tests"),
+    .target(name: "NillaReportCore", path: "ios/ReportCore"),
+    .testTarget(name: "NillaReportCoreTests", dependencies: ["NillaReportCore"], path: "report-tests"),
+    .target(name: "NillaNotificationCore", path: "ios/NotificationCore"),
+    .testTarget(name: "NillaNotificationCoreTests", dependencies: ["NillaNotificationCore"], path: "notification-tests"),
   ]
 )

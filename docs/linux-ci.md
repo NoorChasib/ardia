@@ -12,7 +12,7 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
 | [`.github/actions/linux-setup`](../.github/actions/linux-setup/action.yml) | Ubuntu packages for the fixtures (clang, dbus, NSS tools, gnome-keyring, PyGObject), Bun from `package.json`'s `packageManager` and Node 24 through [`.github/actions/bun-install`](../.github/actions/bun-install/action.yml), its cache of `~/.bun/install/cache`, and `bun install --frozen-lockfile` |
 | [`scripts/linux/ci-checks.sh`](../scripts/linux/ci-checks.sh) | The engine-free checks; the `engine/ardiacore-linux/tests` modules run in parallel because the suite takes well over five minutes serially |
 | [`scripts/linux/publish-engine.sh`](../scripts/linux/publish-engine.sh) | Builder side: stages, strips and archives an engine from a Chromium out dir; `--upload` publishes it and adds its table row |
-| [`packages/ardiacore/prebuilt-engines-linux.tsv`](../packages/ardiacore/prebuilt-engines-linux.tsv) | `key<TAB>tag<TAB>sha256` for each Linux engine published in ardia-browser/ardia |
+| [`packages/ardiacore/prebuilt-engines-linux.tsv`](../packages/ardiacore/prebuilt-engines-linux.tsv) | `key<TAB>tag<TAB>sha256` for each Linux engine published in NoorChasib/nilla |
 | `packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64` | Dispatches to [`scripts/linux/fetch-engine.sh`](../scripts/linux/fetch-engine.sh); the Mac path is unchanged |
 | [`scripts/linux/runtime_files.py`](../scripts/linux/runtime_files.py) | The one runtime allowlist used by publishing, fetching and packaging, and the safe archive unpacker |
 | [`scripts/linux/smoke.mjs`](../scripts/linux/smoke.mjs) | Strict smoke gate for a packaged tarball |
@@ -30,9 +30,9 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
 - **Archive.** `ArdiaCore-<key12>-linux-x64.tar.xz` holds one directory, `ardiacore-linux-x64/`. It contains the
   allowlisted runtime files and a `manifest.json` (format 2): engine key, source commit, Chromium version, `args.gn` hash,
   chrome hash and build ID, and build and packaging times.
-- **Where it's published.** It is attached to the `engine-<key12>` prerelease in ardia-browser/ardia, with a `.sha256`
+- **Where it's published.** It is attached to the `engine-<key12>` prerelease in NoorChasib/nilla, with a `.sha256`
   beside it; the Mac engine of the same key lives on the same prerelease. The scripts and workflows default to
-  ardia-browser/ardia; `ARDIACORE_PREBUILT_REPO` (an environment variable, or a repository variable for the workflows)
+  NoorChasib/nilla; `ARDIACORE_PREBUILT_REPO` (an environment variable, or a repository variable for the workflows)
   points them elsewhere. The engines published earlier on the contributor fork aren't used.
 - **What it ships.** The allowlist ships only what Chromium loads at runtime. It leaves out `.so.TOC` files, the mock
   Vulkan driver, the Vulkan validation layer and `locales/*.pak.info`.
@@ -57,7 +57,7 @@ Publishing an engine for the current build:
 source engine/patches/build/env.sh
 scripts/linux/publish-engine.sh \
   --out "$CB/chromium_git/chromium/src/out/$GN_OUT_CONFIGS" \
-  --source <the Ardia checkout the engine was built from> --upload
+  --source <the Nilla checkout the engine was built from> --upload
 git add packages/ardiacore/prebuilt-engines-linux.tsv
 ```
 
@@ -81,7 +81,7 @@ package job red after almost every merge.
 
 - **Nearest.** The workflow defaults to `--nearest`, the same option the Mac fetcher has. It uses the engine of the nearest
   earlier commit that changed the key's paths, within the last 200 such commits. The job warns, the summary names
-  both keys, and the artifact is named `Ardia-linux-x64-<commit12>-engine-<engine12>`.
+  both keys, and the artifact is named `Nilla-linux-x64-<commit12>-engine-<engine12>`.
 - **Exact.** Choose `exact` when a package must match its source. A Linux release requires it, and
   `scripts/linux/release.sh` defaults to it.
 - **Keeping nearest close.** Publishing after each change to the key's paths on the builder keeps nearest builds close.
@@ -138,19 +138,19 @@ It refuses any sandbox-disabling switch. Every check must run and pass:
 9. `app-version`: `systemInfo.appVersion` is `lib/ardia/VERSION`.
 10. `cli-install`: the bundled installer installs the bundled CLI the way the browser does
     (`--version <VERSION> --sha256 <digest>`, `ARDIA_CLI_URL=file://…`). `HOME`, `XDG_DATA_HOME`, `ARDIA_CLI_HOME` and
-    `ARDIA_CLI_BIN_DIR` all point into the scratch folder. `ardia --version` must print the package version, and a
+    `ARDIA_CLI_BIN_DIR` all point into the scratch folder. `nilla --version` must print the package version, and a
     second install must be a no-op.
-11. `cli-control`: a third instance turns `cliControl` on. Then, with `--data-dir <profile>`, `ardia windows` must
-    succeed, `ardia browse open <fixture>` (a background tab) then `get title` must read the fixture's title, and
-    `ardia windows` must list that tab. Turning control off must make `ardia windows` exit 2. It doesn't use
-    `open --show`: that switches Ardia to the tab, but on Linux the page can stay hidden, so the command fails (see
+11. `cli-control`: a third instance turns `cliControl` on. Then, with `--data-dir <profile>`, `nilla-browser windows` must
+    succeed, `nilla-browser browse open <fixture>` (a background tab) then `get title` must read the fixture's title, and
+    `nilla-browser windows` must list that tab. Turning control off must make `nilla-browser windows` exit 2. It doesn't use
+    `open --show`: that switches Nilla to the tab, but on Linux the page can stay hidden, so the command fails (see
     [cli.md](cli.md) › Linux).
     The app doesn't start its token server when `--remote-debugging-port` is set, so this instance is driven over
     `--remote-debugging-pipe` instead.
-12. `cli-scripts`: a fourth pipe-driven instance, with extensions on, turns `cliControl` on. `ardia scripts install`
-    of a userscript that prefixes the fixture's title must report the profile `loaded`, `ardia scripts list` must show
-    it as reported by Ardia, and the fixture opened with `ardia browse` must read retitled. After
-    `ardia scripts uninstall` it must report `removed`, and the fixture must open with its own title.
+12. `cli-scripts`: a fourth pipe-driven instance, with extensions on, turns `cliControl` on. `nilla-browser scripts install`
+    of a userscript that prefixes the fixture's title must report the profile `loaded`, `nilla-browser scripts list` must show
+    it as reported by Nilla, and the fixture opened with `nilla-browser browse` must read retitled. After
+    `nilla-browser scripts uninstall` it must report `removed`, and the fixture must open with its own title.
 
 Checks 9 to 12 report `skip` and pass for a dev package without `VERSION` or `cli/`. Each can also report `old` when
 the engine's host predates the feature: `appVersion` is Chromium's own version, the bootstrap advertises none of
@@ -171,7 +171,7 @@ acceptance suite ([linux-acceptance.md](linux-acceptance.md)) runs by hand.
 1. checks the version's channel, `MARKETING_VERSION`, the notes file and a clean tree;
 2. fetches the exact engine (`--engine nearest`, an engine dir or a Chromium out dir make test builds);
 3. builds `apps/linux/dist`, the CLI and uBlock Origin;
-4. packages `Ardia-<version>-linux-x64.tar.xz` with `--version` and `--cli`;
+4. packages `Nilla-<version>-linux-x64.tar.xz` with `--version` and `--cli`;
 5. writes the `.sha256` files and `provenance.txt` (version, channel, commit, engine key, Chromium version and both
    digests);
 6. runs the smoke gate.
@@ -196,7 +196,7 @@ with `release.sh` and uploads them by hand.
   does ([linux-port.md](linux-port.md) › Packaging and installing).
 - **In CI.** The workflow lifts the restriction on its throwaway runner before the smoke step and never passes
   `--no-sandbox`.
-- **For users.** Users on Ubuntu 24.04 hit the same restriction. `sudo ./ardia/install.sh` installs and loads an
+- **For users.** Users on Ubuntu 24.04 hit the same restriction. `sudo ./nilla/install.sh` installs and loads an
   AppArmor profile for the installed `chrome`, as Chrome's `.deb` does ([linux-port.md](linux-port.md) › Packaging
   and installing). An extracted tarball run in place says how to fix it and exits; an AppImage runs without the
   sandbox there and says so.

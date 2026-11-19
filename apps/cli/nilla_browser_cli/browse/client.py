@@ -6,8 +6,8 @@ import sys
 import time
 from pathlib import Path
 
-from ardia_cli.browse import paths
-from ardia_cli.browse.errors import BrowseError, OutcomeUnknown, Unreachable
+from nilla_browser_cli.browse import paths
+from nilla_browser_cli.browse.errors import BrowseError, OutcomeUnknown, Unreachable
 
 START_TIMEOUT = 15.0
 MAX_RESPONSE = 256 * 1024 * 1024
@@ -22,7 +22,7 @@ def endpoint_key(ws: str | None, port: int | None, root: Path) -> tuple[str, str
         return f"ws:{parts.scheme}://{parts.netloc}{parts.path}", f"{parts.netloc}{parts.path}"
     if port is not None:
         return f"port:{port}", f"--port {port}"
-    return f"token:{root}", "Ardia"
+    return f"token:{root}", "Nilla"
 
 
 def connect(dir_fd: int, name: str) -> socket.socket | None:
@@ -48,7 +48,7 @@ def connect(dir_fd: int, name: str) -> socket.socket | None:
 def spawn(dir_fd: int, key: str, config: dict) -> subprocess.Popen:
     package_parent = str(Path(__file__).resolve().parent.parent.parent)
     log_fd = paths.open_private_file(f"{key}.log", dir_fd, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
-    code = f"import sys; sys.path.insert(0, {package_parent!r}); from ardia_cli.browse import daemon; daemon.main()"
+    code = f"import sys; sys.path.insert(0, {package_parent!r}); from nilla_browser_cli.browse import daemon; daemon.main()"
     try:
         process = subprocess.Popen(
             [sys.executable, "-I", "-c", code],
@@ -75,7 +75,7 @@ def ensure_daemon(dir_fd: int, key: str, config: dict) -> socket.socket:
     sock = connect(dir_fd, f"{key}.sock")
     if sock is not None:
         return sock
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     process = spawn(dir_fd, key, config)
     spawned = time.monotonic()
@@ -91,13 +91,13 @@ def ensure_daemon(dir_fd: int, key: str, config: dict) -> socket.socket:
                 telemetry.note_daemon_start(spawned)
                 return sock
             if not paths.lock_held(f"{key}.lock", dir_fd):
-                raise Unreachable(f"the ardia browse daemon exited before it listened: {log_tail(dir_fd, key) or 'no output'}")
+                raise Unreachable(f"the nilla browse daemon exited before it listened: {log_tail(dir_fd, key) or 'no output'}")
         time.sleep(0.03)
-    raise Unreachable("the ardia browse daemon didn't start in 15 s")
+    raise Unreachable("the nilla browse daemon didn't start in 15 s")
 
 
 def command_of(payload: dict) -> tuple[str, bool]:
-    from ardia_cli.browse.commands import ALIASES, MUTATING
+    from nilla_browser_cli.browse.commands import ALIASES, MUTATING
 
     argv = payload.get("argv") or [""]
     name = ALIASES.get(argv[0], argv[0])
@@ -107,23 +107,23 @@ def command_of(payload: dict) -> tuple[str, bool]:
 def gone(payload: dict) -> BrowseError:
     name, mutating = command_of(payload)
     if mutating:
-        return OutcomeUnknown(f"`{name}`", "the ardia browse daemon went away after it took the command (see the session log)")
-    return Unreachable("the ardia browse daemon closed the connection without answering (it may have exited; see the session log)")
+        return OutcomeUnknown(f"`{name}`", "the nilla browse daemon went away after it took the command (see the session log)")
+    return Unreachable("the nilla browse daemon closed the connection without answering (it may have exited; see the session log)")
 
 
 def stalled(payload: dict, seconds: float) -> BrowseError:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     telemetry.note_count("daemon_answer_timed_out", True)
     name, mutating = command_of(payload)
-    why = f"the ardia browse daemon didn't answer in {seconds:g} s (see the session log)"
+    why = f"the nilla browse daemon didn't answer in {seconds:g} s (see the session log)"
     if mutating:
         return OutcomeUnknown(f"`{name}`", why)
     return Unreachable(why)
 
 
 def request(sock: socket.socket, payload: dict) -> dict:
-    from ardia_cli.browse.limits import answer_deadline
+    from nilla_browser_cli.browse.limits import answer_deadline
 
     seconds = answer_deadline(payload)
     deadline = time.monotonic() + seconds
@@ -132,9 +132,9 @@ def request(sock: socket.socket, payload: dict) -> dict:
         try:
             sock.sendall((json.dumps(payload, ensure_ascii=False) + "\n").encode())
         except (BrokenPipeError, ConnectionResetError):
-            raise Unreachable("the ardia browse daemon closed the connection before taking the command (see the session log)") from None
+            raise Unreachable("the nilla browse daemon closed the connection before taking the command (see the session log)") from None
         except TimeoutError:
-            raise Unreachable(f"the ardia browse daemon didn't take the command in {seconds:g} s (see the session log)") from None
+            raise Unreachable(f"the nilla browse daemon didn't take the command in {seconds:g} s (see the session log)") from None
         chunks = []
         size = 0
         while True:

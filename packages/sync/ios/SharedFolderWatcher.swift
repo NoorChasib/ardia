@@ -2,7 +2,7 @@ import CoreServices
 import Foundation
 
 final class SharedFolderWatcher {
-  private let queue = DispatchQueue(label: "ardia.shared-folders.watch", qos: .utility)
+  private let queue = DispatchQueue(label: "nilla.shared-folders.watch", qos: .utility)
   private var stream: FSEventStreamRef?
   private var lastEvent = FSEventStreamEventId(kFSEventStreamEventIdSinceNow)
   private var roots: [(watched: String, real: String)] = []

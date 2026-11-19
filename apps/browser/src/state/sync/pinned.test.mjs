@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const folders = await import("../pins/tileFolders.ts");
-const { Clock, emptyScope, syncScope } = await import("@ardia/sync");
+const { Clock, emptyScope, syncScope } = await import("@nilla/sync");
 const pinnedArea = await import("./pinned.ts");
 const previous = await import("./fixtures/pinned-v0.2.40.ts");
 

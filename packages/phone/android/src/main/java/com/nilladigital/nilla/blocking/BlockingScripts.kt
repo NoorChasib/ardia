@@ -1,10 +1,10 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.util.concurrent.ConcurrentHashMap
 
 object BlockingScripts {
     val consent: String by lazy {
-        val stream = BlockingScripts::class.java.getResourceAsStream("/com/ardia/blocking/consent.js")
+        val stream = BlockingScripts::class.java.getResourceAsStream("/com/nilladigital/nilla/blocking/consent.js")
         stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
     }
 

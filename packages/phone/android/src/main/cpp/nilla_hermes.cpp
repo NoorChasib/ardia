@@ -236,8 +236,8 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *) {
   jint version = facebook::jni::initialize(vm, [&ready] {
     JNIEnv *env = facebook::jni::Environment::current();
     stringClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/String")));
-    scriptErrorClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/ardia/shared/ScriptError")));
-    jclass engine = env->FindClass("com/ardia/shared/ScriptEngine");
+    scriptErrorClass = static_cast<jclass>(env->NewGlobalRef(env->FindClass("com/nilladigital/nilla/shared/ScriptError")));
+    jclass engine = env->FindClass("com/nilladigital/nilla/shared/ScriptEngine");
     callHostMethod = env->GetMethodID(engine, "callHost", "(Ljava/lang/String;[Ljava/lang/String;)Ljava/lang/String;");
     env->DeleteLocalRef(engine);
     ready = stringClass != nullptr && scriptErrorClass != nullptr && callHostMethod != nullptr;
@@ -245,7 +245,7 @@ extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *) {
   return ready ? version : JNI_ERR;
 }
 
-extern "C" JNIEXPORT jlong JNICALL Java_com_ardia_shared_ScriptEngine_nativeCreate(JNIEnv *env, jobject self) {
+extern "C" JNIEXPORT jlong JNICALL Java_com_nilladigital_nilla_shared_ScriptEngine_nativeCreate(JNIEnv *env, jobject self) {
   auto config = ::hermes::vm::RuntimeConfig::Builder().withMicrotaskQueue(true).withES6BlockScoping(true).withEnableAsyncGenerators(true).build();
   auto engine = std::make_unique<Engine>();
   try {
@@ -255,7 +255,7 @@ extern "C" JNIEXPORT jlong JNICALL Java_com_ardia_shared_ScriptEngine_nativeCrea
     jsi::Runtime &rt = *raw->runtime;
     rt.global().setProperty(rt, "__log", hostFunction(rt, "__log", 1, [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
 #ifndef ARDIA_SCRIPT_QUIET
-      if (count > 0) __android_log_print(ANDROID_LOG_DEBUG, "ArdiaJS", "%s", utf8(jsText(rt, args[0])).c_str());
+      if (count > 0) __android_log_print(ANDROID_LOG_DEBUG, "NillaJS", "%s", utf8(jsText(rt, args[0])).c_str());
 #endif
       return jsi::Value::undefined();
     }));
@@ -271,16 +271,16 @@ extern "C" JNIEXPORT jlong JNICALL Java_com_ardia_shared_ScriptEngine_nativeCrea
   return reinterpret_cast<jlong>(engine.release());
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_ardia_shared_ScriptEngine_nativeDestroy(JNIEnv *, jobject, jlong handle) {
+extern "C" JNIEXPORT void JNICALL Java_com_nilladigital_nilla_shared_ScriptEngine_nativeDestroy(JNIEnv *, jobject, jlong handle) {
   delete reinterpret_cast<Engine *>(handle);
 }
 
-extern "C" JNIEXPORT jint JNICALL Java_com_ardia_shared_ScriptEngine_nativeBytecodeVersion(JNIEnv *, jclass) {
+extern "C" JNIEXPORT jint JNICALL Java_com_nilladigital_nilla_shared_ScriptEngine_nativeBytecodeVersion(JNIEnv *, jclass) {
   auto *root = jsi::castInterface<facebook::hermes::IHermesRootAPI>(facebook::hermes::makeHermesRootAPI());
   return root == nullptr ? -1 : static_cast<jint>(root->getBytecodeVersion());
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_ardia_shared_ScriptEngine_nativeEvaluate(JNIEnv *env, jobject self, jlong handle, jbyteArray source, jstring name) {
+extern "C" JNIEXPORT void JNICALL Java_com_nilladigital_nilla_shared_ScriptEngine_nativeEvaluate(JNIEnv *env, jobject self, jlong handle, jbyteArray source, jstring name) {
   Engine &engine = engineOf(handle);
   Scope scope(engine, env, self);
   jsize length = env->GetArrayLength(source);
@@ -298,7 +298,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_ardia_shared_ScriptEngine_nativeEvalu
   }
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_ardia_shared_ScriptEngine_nativeRegister(JNIEnv *env, jobject self, jlong handle, jstring name) {
+extern "C" JNIEXPORT void JNICALL Java_com_nilladigital_nilla_shared_ScriptEngine_nativeRegister(JNIEnv *env, jobject self, jlong handle, jstring name) {
   Engine &engine = engineOf(handle);
   Scope scope(engine, env, self);
   std::u16string key = javaText(env, name);
@@ -317,7 +317,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_ardia_shared_ScriptEngine_nativeRegis
   }
 }
 
-extern "C" JNIEXPORT jstring JNICALL Java_com_ardia_shared_ScriptEngine_nativeCall(JNIEnv *env, jobject self, jlong handle, jstring global, jstring function, jobjectArray arguments) {
+extern "C" JNIEXPORT jstring JNICALL Java_com_nilladigital_nilla_shared_ScriptEngine_nativeCall(JNIEnv *env, jobject self, jlong handle, jstring global, jstring function, jobjectArray arguments) {
   Engine &engine = engineOf(handle);
   Scope scope(engine, env, self);
   try {
@@ -336,7 +336,7 @@ extern "C" JNIEXPORT jstring JNICALL Java_com_ardia_shared_ScriptEngine_nativeCa
   return nullptr;
 }
 
-extern "C" JNIEXPORT jstring JNICALL Java_com_ardia_shared_ScriptEngine_nativeCallAsync(JNIEnv *env, jobject self, jlong handle, jstring global, jstring function, jobjectArray arguments) {
+extern "C" JNIEXPORT jstring JNICALL Java_com_nilladigital_nilla_shared_ScriptEngine_nativeCallAsync(JNIEnv *env, jobject self, jlong handle, jstring global, jstring function, jobjectArray arguments) {
   Engine &engine = engineOf(handle);
   Scope scope(engine, env, self);
   std::u16string space = javaText(env, global);

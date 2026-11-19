@@ -1,6 +1,6 @@
 LIBRARY = r"""
 (() => {
-  if (globalThis.ardiaBrowse) return true;
+  if (globalThis.nillaBrowse) return true;
   const NATIVE = new Set(["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA", "SUMMARY", "OPTION", "LABEL", "IFRAME", "VIDEO", "AUDIO"]);
   const ROLES = new Set(["button", "link", "checkbox", "radio", "textbox", "combobox", "listbox", "option", "menuitem",
     "menuitemcheckbox", "menuitemradio", "slider", "spinbutton", "switch", "tab", "treeitem", "searchbox"]);
@@ -764,7 +764,7 @@ LIBRARY = r"""
         for (const node of root.querySelectorAll("[role=option]")) add(node);
       }
       const texts = out.map((node) => api.optionFacts(node));
-      Object.defineProperty(globalThis, "ardiaBrowseSuggestions", { value: texts, configurable: true, enumerable: false });
+      Object.defineProperty(globalThis, "nillaBrowseSuggestions", { value: texts, configurable: true, enumerable: false });
       return out.slice(0, 200);
     },
     optionFacts(node) {
@@ -851,14 +851,14 @@ LIBRARY = r"""
       });
     },
     inputWatch() {
-      if (!globalThis.ardiaBrowseInput) {
+      if (!globalThis.nillaBrowseInput) {
         const counts = { mousedown: 0, mouseup: 0, click: 0, mousemove: 0, keydown: 0, keyup: 0, wheel: 0, beforeinput: 0, input: 0 };
         for (const type of Object.keys(counts)) {
           addEventListener(type, (event) => { if (event.isTrusted) counts[type] += 1; }, { capture: true, passive: true });
         }
-        Object.defineProperty(globalThis, "ardiaBrowseInput", { value: counts, enumerable: false });
+        Object.defineProperty(globalThis, "nillaBrowseInput", { value: counts, enumerable: false });
       }
-      if (!globalThis.ardiaBrowseDragStarts) {
+      if (!globalThis.nillaBrowseDragStarts) {
         const drags = { accepted: 0, dragend: 0, drop: 0, dispatched: [] };
         for (const type of ["dragstart", "dragend", "drop"]) {
           addEventListener(type, (event) => {
@@ -867,14 +867,14 @@ LIBRARY = r"""
             else drags[type] += 1;
           }, { capture: true, passive: true });
         }
-        Object.defineProperty(globalThis, "ardiaBrowseDragStarts", { value: drags, enumerable: false });
+        Object.defineProperty(globalThis, "nillaBrowseDragStarts", { value: drags, enumerable: false });
       }
-      const drags = globalThis.ardiaBrowseDragStarts;
+      const drags = globalThis.nillaBrowseDragStarts;
       drags.accepted += drags.dispatched.filter((event) => !event.defaultPrevented).length;
       drags.dispatched.length = 0;
       let active = document.activeElement;
       while (active && active.shadowRoot && active.shadowRoot.activeElement) active = active.shadowRoot.activeElement;
-      return Object.assign({ activeFrame: !!active && ["IFRAME", "FRAME", "EMBED", "OBJECT"].includes(active.tagName) }, globalThis.ardiaBrowseInput, {
+      return Object.assign({ activeFrame: !!active && ["IFRAME", "FRAME", "EMBED", "OBJECT"].includes(active.tagName) }, globalThis.nillaBrowseInput, {
         dragstart: drags.accepted,
         dragend: drags.dragend,
         drop: drags.drop,
@@ -895,7 +895,7 @@ LIBRARY = r"""
       return location.href;
     },
   };
-  Object.defineProperty(globalThis, "ardiaBrowse", { value: api, configurable: false, enumerable: false });
+  Object.defineProperty(globalThis, "nillaBrowse", { value: api, configurable: false, enumerable: false });
   return true;
 })()
 """

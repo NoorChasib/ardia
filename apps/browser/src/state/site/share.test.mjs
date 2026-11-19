@@ -3,7 +3,7 @@ import { test } from "node:test";
 const { shareFromPage } = await import("./share.ts");
 const { shellNativeModules } = await import("../../test-native/shell.ts");
 
-const app = shellNativeModules.ArdiaApp;
+const app = shellNativeModules.NillaApp;
 const anchor = [99, 199, 2, 2];
 const tab = { url: "https://news.example/story?utm_source=x&id=7", title: "Story", customTitle: null, windowId: "w1" };
 
@@ -35,7 +35,7 @@ test("a selection shares its text, a link its clean URL with the link's text, a 
 });
 
 test("an image shares the picture's file, and its address only when the picture couldn't be read", async () => {
-  const fileUrl = "file:///var/folders/x/T/Ardia%20Shared%20Images/1/cat.png";
+  const fileUrl = "file:///var/folders/x/T/Nilla%20Shared%20Images/1/cat.png";
   assert.deepEqual(await shared({ kind: "image", fileUrl, url: "https://img.example/cat.png", title: "A cat" }), [["share", fileUrl, "A cat", "w1", anchor]]);
   assert.deepEqual(await shared({ kind: "image", url: "https://img.example/cat.png" }), [["share", "https://img.example/cat.png", null, "w1", anchor]]);
   assert.deepEqual(await shared({ kind: "image" }), []);

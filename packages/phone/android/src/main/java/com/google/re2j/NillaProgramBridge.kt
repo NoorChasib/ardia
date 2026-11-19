@@ -1,6 +1,6 @@
 package com.google.re2j
 
-internal object ArdiaProgramBridge {
+internal object NillaProgramBridge {
     const val ALT = Inst.ALT
     const val ALT_MATCH = Inst.ALT_MATCH
     const val CAPTURE = Inst.CAPTURE

@@ -1,12 +1,12 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.sync.SyncFiles
-import com.ardia.sync.SyncFolderLocation
-import com.ardia.sync.SyncMeta
-import com.ardia.sync.SyncPhase
-import com.ardia.sync.SyncService
-import com.ardia.sync.core.FileKeyStore
-import com.ardia.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.SyncFiles
+import com.nilladigital.nilla.sync.SyncFolderLocation
+import com.nilladigital.nilla.sync.SyncMeta
+import com.nilladigital.nilla.sync.SyncPhase
+import com.nilladigital.nilla.sync.SyncService
+import com.nilladigital.nilla.sync.core.FileKeyStore
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
 import java.io.File
 import java.nio.file.Files
 import org.junit.Assert.assertEquals
@@ -25,8 +25,8 @@ class SyncUpgradeIdentityTest {
     private val keys = File(sync, "Keys")
     private val folder = Files.createTempDirectory("sync-folder").toFile()
 
-    private val unreachable = object : com.ardia.sync.LocalFolderAccess() {
-        override fun resolve(location: SyncFolderLocation): com.ardia.sync.SyncFolderGrant? = null
+    private val unreachable = object : com.nilladigital.nilla.sync.LocalFolderAccess() {
+        override fun resolve(location: SyncFolderLocation): com.nilladigital.nilla.sync.SyncFolderGrant? = null
     }
 
     private fun service() = SyncService(sync, FileKeyStore(keys), RuntimeEnvironment.getApplication().assets, unreachable)
@@ -51,7 +51,7 @@ class SyncUpgradeIdentityTest {
 
     @Test
     fun aConnectedPhonesIdentityNameFolderAndKeySurviveTheNewAppStarting() {
-        val location = SyncFolderLocation.Path(folder.path, "Ardia")
+        val location = SyncFolderLocation.Path(folder.path, "Nilla")
         SyncFiles(sync).saveMeta(SyncMeta(deviceId = "D1", deviceName = "Shivam's Poco", folder = location, enabled = true, setupAt = 1_000L))
         FileKeyStore(keys).save(ByteArray(RecoveryPhrase.ENTROPY_BYTES) { it.toByte() }, "D1")
         val before = keyFiles()
@@ -71,7 +71,7 @@ class SyncUpgradeIdentityTest {
 
     @Test
     fun aConnectedPhoneWhoseKeyIsMissingLocksInsteadOfMakingANewIdentity() {
-        SyncFiles(sync).saveMeta(SyncMeta(deviceId = "D1", folder = SyncFolderLocation.Path(folder.path, "Ardia"), enabled = true))
+        SyncFiles(sync).saveMeta(SyncMeta(deviceId = "D1", folder = SyncFolderLocation.Path(folder.path, "Nilla"), enabled = true))
         val started = service().apply { start() }
         assertEquals(SyncPhase.Locked, started.phase)
         started.resignedActive()

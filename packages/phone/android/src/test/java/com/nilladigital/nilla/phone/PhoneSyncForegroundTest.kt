@@ -1,13 +1,13 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.content.ContextWrapper
-import com.ardia.sync.FakeDevice
-import com.ardia.sync.ManualTimers
-import com.ardia.sync.ReceivedTab
-import com.ardia.sync.RecordingScheduler
-import com.ardia.sync.SyncController
-import com.ardia.sync.inline
+import com.nilladigital.nilla.sync.FakeDevice
+import com.nilladigital.nilla.sync.ManualTimers
+import com.nilladigital.nilla.sync.ReceivedTab
+import com.nilladigital.nilla.sync.RecordingScheduler
+import com.nilladigital.nilla.sync.SyncController
+import com.nilladigital.nilla.sync.inline
 import java.io.File
 import java.nio.file.Files
 import org.junit.After

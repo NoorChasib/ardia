@@ -8,7 +8,7 @@ import { githubIssues, localEvents, localIssues, localStore, otlpEvents, seaweed
 import { acceptedKeys, isLoopbackHost } from "./lib/keys.mjs";
 import { createService } from "./lib/service.mjs";
 
-const USAGE = `ardia feedback service
+const USAGE = `nilla-browser feedback service
 
 usage:
   node infra/feedback/server.mjs                 production: SeaweedFS, the collector, GitHub

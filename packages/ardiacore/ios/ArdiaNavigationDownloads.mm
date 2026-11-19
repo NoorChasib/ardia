@@ -2,7 +2,7 @@
 
 #import "ArdiaInternal.h"
 
-namespace ardia_host {
+namespace nilla_host {
 
 namespace {
 
@@ -10,7 +10,7 @@ constexpr NSTimeInterval kTTL = 7 * 86400;
 NSMutableDictionary<NSString *, NSNumber *> *gSaved;
 NSMutableDictionary<NSString *, NSMutableDictionary<NSString *, NSNumber *> *> *gPrivate;
 
-NSString *SavedPath() { return [ArdiaHost.dataDirectory stringByAppendingPathComponent:@"NavigationDownloads.json"]; }
+NSString *SavedPath() { return [NillaHost.dataDirectory stringByAppendingPathComponent:@"NavigationDownloads.json"]; }
 
 NSMutableDictionary<NSString *, NSNumber *> *Saved() {
   if (!gSaved) {

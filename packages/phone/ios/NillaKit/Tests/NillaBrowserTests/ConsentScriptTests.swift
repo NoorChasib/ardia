@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 import WebKit
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 @MainActor
 final class ConsentAllower: NSObject, WKScriptMessageHandlerWithReply {
@@ -42,7 +42,7 @@ struct ConsentScriptTests {
 
   func load(_ html: String) async throws -> WKWebView {
     let configuration = WKWebViewConfiguration()
-    let world = WKContentWorld.world(name: "ArdiaBlockingTest")
+    let world = WKContentWorld.world(name: "NillaBlockingTest")
     configuration.userContentController.addScriptMessageHandler(ConsentAllower(), contentWorld: world, name: BlockingScripts.handlerName)
     configuration.userContentController.addUserScript(WKUserScript(source: BlockingScripts.consent, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: world))
     let webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 400, height: 800), configuration: configuration)

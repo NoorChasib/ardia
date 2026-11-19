@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -6,8 +6,8 @@ import androidx.work.Configuration
 import androidx.work.NetworkType
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
-import com.ardia.sync.core.FileKeyStore
-import com.ardia.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.core.FileKeyStore
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout

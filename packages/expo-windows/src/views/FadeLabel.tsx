@@ -1,5 +1,5 @@
 import { forwardRef, memo, useCallback, useState } from "react";
-import type { FadeLabelProps } from "@ardia/shell";
+import type { FadeLabelProps } from "@nilla/shell";
 import { Text, View, type LayoutChangeEvent, type TextProps, type TextStyle, type ViewStyle } from "react-native";
 import { labelTextStyle } from "./labelStyle";
 import { finite, useDark, useFirstWindow } from "./shared";

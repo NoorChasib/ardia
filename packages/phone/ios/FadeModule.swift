@@ -78,7 +78,7 @@ final class FadeView: ExpoView {
 
 public final class FadeModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneFade")
+    Name("NillaPhoneFade")
 
     View(FadeView.self) {
       Prop("topFade") { (view: FadeView, value: [String: Double]?) in

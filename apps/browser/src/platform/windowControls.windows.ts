@@ -1,8 +1,8 @@
 import { requireNativeModule } from "expo-modules-core";
-import type { WindowControlsNative } from "@ardia/shell";
+import type { WindowControlsNative } from "@nilla/shell";
 import type { WindowControls } from "./windowControls";
 
-const Windows = requireNativeModule<WindowControlsNative>("ArdiaAppWindows");
+const Windows = requireNativeModule<WindowControlsNative>("NillaAppWindows");
 
 export const windowControls: WindowControls = {
   minimize: (windowId) => void Windows.minimizeWindow(windowId),

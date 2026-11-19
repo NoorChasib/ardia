@@ -1,4 +1,4 @@
-import type { Suggestion } from "@ardia/core";
+import type { Suggestion } from "@nilla/core";
 import { memo } from "react";
 import { Animated, Pressable, View } from "react-native";
 import { Symbol, Text, useHover, useTheme } from "../ui";

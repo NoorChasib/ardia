@@ -6,7 +6,7 @@
 
 #import <objc/runtime.h>
 
-namespace ardia_host {
+namespace nilla_host {
 
 using namespace hover_probe;
 
@@ -15,7 +15,7 @@ namespace {
 NSPoint TopLeftPoint(NSWindow *window, NSString *spec) {
   NSArray<NSString *> *n = [spec componentsSeparatedByString:@","];
   if (n.count < 2) return NSMakePoint(-1, -1);
-  return [ArdiaInterfaceScale windowPointFromRoot:NSMakePoint(n[0].doubleValue, n[1].doubleValue) inWindow:window];
+  return [NillaInterfaceScale windowPointFromRoot:NSMakePoint(n[0].doubleValue, n[1].doubleValue) inWindow:window];
 }
 
 NSMutableArray<NSView *> *gDevCovers = [NSMutableArray array];
@@ -26,7 +26,7 @@ NSString *DevCover(NSWindow *window, NSString *how, NSString *at) {
   if ([how isEqualToString:@"off"]) return @"uncovered";
   NSView *page = PageAt(window, TopLeftPoint(window, at));
   if (!page) return @"no page there";
-  NSView *host = [how isEqualToString:@"rn"] ? [ArdiaWindowController forNSWindow:window].root : page.superview;
+  NSView *host = [how isEqualToString:@"rn"] ? [NillaWindowController forNSWindow:window].root : page.superview;
   if (!host) return @"no host";
   NSView *cover = [[([how isEqualToString:@"rn"] ? NSClassFromString(@"RCTView") : NSView.class) alloc]
       initWithFrame:[host convertRect:[page convertRect:page.bounds toView:nil] fromView:nil]];
@@ -132,7 +132,7 @@ NSString *DevSeeThroughCovers(NSWindow *window) {
 
 NSString *DevBlockerKey() {
   for (NSWindow *w in NSApp.windows)
-    if (ardia_content_blocker::IsHiddenPageWindow(w)) {
+    if (nilla_content_blocker::IsHiddenPageWindow(w)) {
       [w makeKeyWindow];
       return [NSString stringWithFormat:@"blocker %@, key %@", DescribeFocusWindow(w), DescribeFocusWindow(NSApp.keyWindow)];
     }

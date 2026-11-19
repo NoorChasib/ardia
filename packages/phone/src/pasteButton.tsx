@@ -10,10 +10,10 @@ export type PasteButtonProps = ViewProps & {
 
 type NativeProps = Omit<PasteButtonProps, "onPaste"> & { onPaste: (event: NativeSyntheticEvent<{ text: string }>) => void };
 
-const hasNative = requireOptionalNativeModule("ArdiaPhonePasteButton") !== null;
+const hasNative = requireOptionalNativeModule("NillaPhonePasteButton") !== null;
 
 let nativeView: ComponentType<NativeProps> | undefined;
-const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("ArdiaPhonePasteButton"));
+const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("NillaPhonePasteButton"));
 
 export const pasteButtonIsNative = () => hasNative;
 

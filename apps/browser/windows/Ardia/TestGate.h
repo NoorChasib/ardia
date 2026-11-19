@@ -10,7 +10,7 @@
 
 #include "Paths.h"
 
-namespace Ardia::TestGate {
+namespace Nilla::TestGate {
 
 constexpr wchar_t TestBuildMarker[] = L"Ardia.test-build";
 

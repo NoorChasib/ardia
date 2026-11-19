@@ -26,8 +26,8 @@ function windowsWithPicker(picked) {
       return Promise.resolve(key === "folderState" ? { exists: true, writable: true, hasSyncData: true } : key === "readChain" ? { entries: [] } : null);
     }),
   });
-  turboModules.ArdiaDialogs = { ...turboModules.ArdiaDialogs, pickFolder: async () => picked };
-  turboModules.ArdiaSystem = { ...turboModules.ArdiaSystem, revealFile: async (path) => void touched.push(["revealFile", path]) };
+  turboModules.NillaDialogs = { ...turboModules.NillaDialogs, pickFolder: async () => picked };
+  turboModules.NillaSystem = { ...turboModules.NillaSystem, revealFile: async (path) => void touched.push(["revealFile", path]) };
   const sync = ownSyncFoldersOnly(windowsSync());
   assert.ok(sync);
   return { sync, touched };

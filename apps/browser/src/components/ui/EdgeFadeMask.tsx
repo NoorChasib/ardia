@@ -1,1 +1,1 @@
-export { EdgeFadeMask } from "@ardia/shell";
+export { EdgeFadeMask } from "@nilla/shell";

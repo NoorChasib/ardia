@@ -16,7 +16,7 @@ function shellProbe(mode) {
   let resetAt = performance.now();
   const bump = (map, key) => (map[key] = (map[key] ?? 0) + 1);
 
-  const store = ardiaLinux.store;
+  const store = nillaLinux.store;
   const windowId = __ardiaHost.bootstrap.windowId;
   const activeOf = (s) => {
     const w = s.windows[windowId];
@@ -110,7 +110,7 @@ function shellProbe(mode) {
     if ((event.key === "Control" || event.code === "Tab") && keys.length < 5000) keys.push([epochOf(event), event.key === "Control" ? "ctrl-up" : "tab-up", event.ctrlKey]);
   }, true);
 
-  const hoverRegion = () => document.querySelector('[data-testid="ardia-sidebar-hover"]');
+  const hoverRegion = () => document.querySelector('[data-testid="nilla-sidebar-hover"]');
   let frames = null;
   addEventListener(
     "pointermove",
@@ -265,7 +265,7 @@ function shellProbe(mode) {
       };
     },
     lastActive: () => lastActive,
-    switcherOpen: () => !!document.querySelector('[data-testid="ardia-tab-switcher"], [data-testid="tab-switcher"]'),
+    switcherOpen: () => !!document.querySelector('[data-testid="nilla-tab-switcher"], [data-testid="tab-switcher"]'),
     startFrames,
     stopFrames,
     findRow: (title) => {

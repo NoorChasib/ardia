@@ -1,7 +1,7 @@
 import { PlatformColor } from "react-native";
 import { Button, Form, HStack, Image, LabeledContent, NavigationLink, Section, Spacer, Text, VStack } from "@expo/ui/swift-ui";
 import { accessibilityAddTraits, accessibilityHidden, accessibilityHint, font, foregroundStyle, frame, lineLimit, listRowBackground, navigationBarTitleDisplayMode, navigationTitle, opacity, padding, shadow, textSelection, tint, truncationMode } from "@expo/ui/swift-ui/modifiers";
-import { services } from "@ardia/core/src/services.ts";
+import { services } from "@nilla/core/src/services.ts";
 import { copy } from "../../lib/platformCopy";
 import { appVersion, openFromSettings } from "../../state/settings/actions";
 import { settingsRouteKey } from "../../state/settings/nav";
@@ -18,12 +18,12 @@ const page = (title: string) => modifierList(navigationTitle(title), navigationB
 export function ExpoAboutPage() {
   const theme = useTheme();
   return (
-    <Form modifiers={page("About Ardia")}>
+    <Form modifiers={page("About Nilla")}>
       <Section>
         <VStack spacing={12} modifiers={[frame({ maxWidth: FILL }), listRowBackground("clear")]}>
           {settingsUIAvailable() ? <AppIconPreview side={72} modifiers={[shadow({ radius: 10, y: 4, color: "rgba(0,0,0,0.12)" })]} /> : null}
           <VStack spacing={4}>
-            <Text modifiers={[font({ textStyle: "title", weight: "bold" }), accessibilityAddTraits(["isHeader"])]}>Ardia</Text>
+            <Text modifiers={[font({ textStyle: "title", weight: "bold" }), accessibilityAddTraits(["isHeader"])]}>Nilla</Text>
             <Text modifiers={[font({ textStyle: "subheadline" }), foregroundStyle(SECONDARY), textSelection(true)]}>{appVersion()}</Text>
           </VStack>
         </VStack>

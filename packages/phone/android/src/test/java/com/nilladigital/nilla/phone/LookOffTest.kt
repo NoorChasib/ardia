@@ -1,10 +1,10 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.widget.FrameLayout
-import com.ardia.design.Frosting
+import com.nilladigital.nilla.design.Frosting
 import expo.modules.kotlin.AppContext
 import org.junit.After
 import org.junit.Assert.assertEquals

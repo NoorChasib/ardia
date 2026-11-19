@@ -1,8 +1,8 @@
-import type { CommandEvent, ConfirmOptions, PromptOptions } from "@ardia-real/shell";
+import type { CommandEvent, ConfirmOptions, PromptOptions } from "@nilla-real/shell";
 import { emitCommand as emitWebCommand, confirm as webConfirm, prompt as webPrompt } from "./shellBase";
 import { provideNativeModuleProvider } from "./expo-modules-core";
 import { linuxHostDialogs, type DialogSuspension } from "../hostDialogs";
-import { ardiaHost, hostModuleMethod, reportHostError } from "../host";
+import { nillaHost, hostModuleMethod, reportHostError } from "../host";
 import { flushLinuxSession, isLinuxUtility, linuxWindowDeparture } from "../session";
 import { takeHandedOverWindow } from "../hostWindowProfiles";
 import { createWindowCloseBarrier, type WindowCloseRequest } from "../utilityClose";
@@ -19,12 +19,12 @@ export { menuShown, showMenu, watchMenus } from "../menus";
 import { recordShortcut, cancelShortcutRecording } from "../shortcutsRuntime";
 export { recordShortcut, cancelShortcutRecording };
 
-export const confirm = (options: ConfirmOptions) => ardiaHost ? linuxHostDialogs().confirm(options) : webConfirm(options);
-export const prompt = (options: PromptOptions) => ardiaHost ? linuxHostDialogs().prompt(options) : webPrompt(options);
+export const confirm = (options: ConfirmOptions) => nillaHost ? linuxHostDialogs().confirm(options) : webConfirm(options);
+export const prompt = (options: PromptOptions) => nillaHost ? linuxHostDialogs().prompt(options) : webPrompt(options);
 provideNativeModuleProvider((name, method) => name === "ArdiaShell" && method === "confirm" ? confirm : name === "ArdiaShell" && method === "prompt" ? prompt : undefined);
 
-export const emitCommand = (event: CommandEvent) => emitWebCommand(ardiaHost
-  ? { ...event, windowId: ardiaHost!.bootstrap.windowId }
+export const emitCommand = (event: CommandEvent) => emitWebCommand(nillaHost
+  ? { ...event, windowId: nillaHost!.bootstrap.windowId }
   : event);
 
 export const menuShortcuts = async () => {
@@ -33,7 +33,7 @@ export const menuShortcuts = async () => {
 };
 
 const closeToken = (request: WindowCloseRequest) => JSON.stringify(request);
-const ownWindowId = ardiaHost?.bootstrap.windowId ?? "";
+const ownWindowId = nillaHost?.bootstrap.windowId ?? "";
 const closeBarrier = createWindowCloseBarrier({
   quiesce: (request) => { quiesceLinuxSession(closeToken(request)); quiesceLinuxDocuments(closeToken(request)); },
   drain: async () => { await flushLinuxSession(); return flushLinuxDocuments(); },
@@ -68,7 +68,7 @@ const closeCoordinator = createWindowCloseCoordinator({
   reject: (request) => hostModuleMethod("ArdiaShell", "rejectWindowClose")(request) as Promise<void>,
   barrier: closeBarrier,
   cancelled: closeBarrier.cancelled,
-  ...(ardiaHost ? {
+  ...(nillaHost ? {
     ask: (options: ConfirmOptions, signal: AbortSignal) => linuxHostDialogs().abortableConfirm(options, signal),
     suspendDialogs: () => linuxHostDialogs().suspend(),
     resumeDialogs: (suspension: DialogSuspension) => linuxHostDialogs().resume(suspension),
@@ -82,14 +82,14 @@ const closeCoordinator = createWindowCloseCoordinator({
 const reportClose = (error: unknown) => {
   if ((error as { code?: string } | null)?.code !== "ERR_WINDOW_CLOSE_CANCELLED") reportHostError(error);
 };
-ardiaHost?.onEvent((module, event, payload) => {
+nillaHost?.onEvent((module, event, payload) => {
   if (module !== "ArdiaShell" || event !== "shell") return;
   const envelope = payload as { name: string; data: WindowCloseRequest; quitting?: boolean };
   if (envelope?.name === "shell.closeRequested") void closeCoordinator.accept(envelope.data, { quitting: envelope.quitting === true }).catch(reportClose);
   if (envelope?.name === "shell.closeCancelled" && envelope.data?.windowId === ownWindowId)
     closeCoordinator.cancelled(envelope.data);
 });
-if (ardiaHost && !isLinuxUtility(ownWindowId)) setManagedWindowClose((windowId, reason) => {
+if (nillaHost && !isLinuxUtility(ownWindowId)) setManagedWindowClose((windowId, reason) => {
   if (windowId !== ownWindowId) return false;
   void closeCoordinator.close(reason).catch(reportClose);
   return true;

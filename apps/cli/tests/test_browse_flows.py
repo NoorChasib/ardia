@@ -6,9 +6,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from ardia_cli.browse import flowlog, flowrun, flows, flowurl
-from ardia_cli.browse import shape as shaping
-from ardia_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse import flowlog, flowrun, flows, flowurl
+from nilla_browser_cli.browse import shape as shaping
+from nilla_browser_cli.browse.errors import BrowseError, Usage
 
 SEARCH = {"query": "kettle", "results": [{"title": "Steel kettle", "price": 30, "seller": {"name": "Ana"}},
                                          {"title": "Glass kettle", "price": 45, "seller": {"name": "Bo"}}], "total": 2}
@@ -448,10 +448,10 @@ class FinalPassTest(unittest.TestCase):
         state = mock.Mock(pages={"t1": user_tab}, current="t1", opened={"t1"} if current_owned else set(),
                           extras={"attached": "t1"} if borrowed else {}, connect=mock.AsyncMock())
         ctx = mock.Mock(state=state)
-        with mock.patch("ardia_cli.browse.readpages.open_reader", mock.AsyncMock(return_value=temp_tab)), \
-                mock.patch("ardia_cli.browse.readpages.goto", mock.AsyncMock()), \
-                mock.patch("ardia_cli.browse.temptabs.sweep", mock.AsyncMock()), \
-                mock.patch("ardia_cli.browse.temptabs.release", mock.AsyncMock()):
+        with mock.patch("nilla_browser_cli.browse.readpages.open_reader", mock.AsyncMock(return_value=temp_tab)), \
+                mock.patch("nilla_browser_cli.browse.readpages.goto", mock.AsyncMock()), \
+                mock.patch("nilla_browser_cli.browse.temptabs.sweep", mock.AsyncMock()), \
+                mock.patch("nilla_browser_cli.browse.temptabs.release", mock.AsyncMock()):
             answer = asyncio.run(flowrun.page_tier(ctx, flow, {"q": "x"}, "https://api.example.com/v1/search?q=x&page=1",
                                                    {"accept": "application/json", "x-requested-with": "XMLHttpRequest"}, 1e12))
         return answer, user_tab, temp_tab
@@ -470,7 +470,7 @@ class FinalPassTest(unittest.TestCase):
         args, kwargs = call.call_args
         self.assertFalse(kwargs["read"])
         self.assertEqual(args[2], {"accept": "application/json"})
-        from ardia_cli.browse.errors import OutcomeUnknown
+        from nilla_browser_cli.browse.errors import OutcomeUnknown
 
         answer, _, _ = self.tier(False, False, mock.AsyncMock(side_effect=OutcomeUnknown("the page script", "the page changed document")))
         self.assertEqual(answer, {"interrupted": True})

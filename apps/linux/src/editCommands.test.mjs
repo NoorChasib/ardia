@@ -4,7 +4,7 @@ import { EDIT_ITEMS, createEditTargets, editField, editMenu } from "./editComman
 
 const element = (kind, extra = {}) => ({
   matches: (selector) => kind === "field" ? selector.startsWith("textarea") : false,
-  closest: (selector) => (kind === "menu" && selector.includes("ardia-menu") ? {} : kind === "cluster" && selector.includes('[role="button"][aria-label="Menu"]') ? {} : null),
+  closest: (selector) => (kind === "menu" && selector.includes("nilla-menu") ? {} : kind === "cluster" && selector.includes('[role="button"][aria-label="Menu"]') ? {} : null),
   isConnected: true, selectionStart: 0, selectionEnd: 0, type: "text", value: "", readOnly: false, disabled: false,
   focused: 0,
   focus() { this.focused++; },

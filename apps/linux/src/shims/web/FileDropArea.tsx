@@ -1,13 +1,13 @@
 import { forwardRef, useEffect, useRef, type Ref } from "react";
 import { View } from "react-native";
-import type { FileDropAreaProps } from "@ardia-real/shell";
-import { ardiaHost, hostSupports, invokeHost } from "../../host";
+import type { FileDropAreaProps } from "@nilla-real/shell";
+import { nillaHost, hostSupports, invokeHost } from "../../host";
 import { createDropController } from "../../fileDrop";
 import { FILE_DROP } from "../../fileCapabilities";
 import { guardDocumentDrops, watchDropArea } from "./dropArea";
 
 const claimFiles = (names: string[]) =>
-  ardiaHost && hostSupports(FILE_DROP) ? invokeHost<unknown>(FILE_DROP, { args: [names] }) : Promise.resolve([]);
+  nillaHost && hostSupports(FILE_DROP) ? invokeHost<unknown>(FILE_DROP, { args: [names] }) : Promise.resolve([]);
 
 function assign<T>(ref: Ref<T> | undefined, value: T | null) {
   if (typeof ref === "function") ref(value);

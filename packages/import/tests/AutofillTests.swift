@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import ArdiaImportCore
+@testable import NillaImportCore
 
 final class AutofillTests: XCTestCase {
   let chrome = Fixtures.support("Google/Chrome/Default")

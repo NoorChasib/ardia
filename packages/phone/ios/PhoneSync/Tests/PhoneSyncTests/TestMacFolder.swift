@@ -1,6 +1,6 @@
-import ArdiaShared
-import ArdiaSync
-import ArdiaSyncCore
+import NillaShared
+import NillaSync
+import NillaSyncCore
 import Foundation
 import Testing
 
@@ -30,7 +30,7 @@ final class TestMac {
 
   static let source = """
   (() => {
-    const S = globalThis.ArdiaSync;
+    const S = globalThis.NillaSync;
     const scopes = {};
     const stores = {};
     let clock = null;

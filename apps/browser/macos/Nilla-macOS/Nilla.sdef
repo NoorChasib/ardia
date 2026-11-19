@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
-<dictionary title="Ardia Terminology" xmlns:xi="http://www.w3.org/2003/XInclude">
+<dictionary title="Nilla Terminology" xmlns:xi="http://www.w3.org/2003/XInclude">
   <suite name="Standard Suite" code="core" description="Common classes and commands for all applications.">
-    <class name="application" code="capp" description="The Ardia application.">
+    <class name="application" code="capp" description="The Nilla application.">
       <cocoa class="NSApplication"/>
       <property name="name" code="pnam" type="text" access="r" description="The name of the application."/>
       <property name="frontmost" code="pisf" type="boolean" access="r" description="Is this the active application?">
@@ -18,7 +18,7 @@
     </class>
 
     <class name="window" code="cwin" plural="windows" description="A browser window.">
-      <cocoa class="ArdiaScriptWindow"/>
+      <cocoa class="NillaScriptWindow"/>
       <property name="id" code="ID  " type="text" access="r" description="The unique identifier of the window.">
         <cocoa key="uniqueID"/>
       </property>
@@ -76,7 +76,7 @@
     </command>
 
     <command name="make" code="corecrel" description="Create a new window or tab.">
-      <cocoa class="ArdiaScriptCreateCommand"/>
+      <cocoa class="NillaScriptCreateCommand"/>
       <parameter name="new" code="kocl" type="type" description="The class of the new object (window or tab).">
         <cocoa key="ObjectClass"/>
       </parameter>
@@ -95,9 +95,9 @@
     </command>
   </suite>
 
-  <suite name="Ardia Suite" code="NNys" description="Browsing: tabs, profiles and page scripting.">
+  <suite name="Nilla Suite" code="NNys" description="Browsing: tabs, profiles and page scripting.">
     <class name="tab" code="DiaT" plural="tabs" description="A browser tab.">
-      <cocoa class="ArdiaScriptTab"/>
+      <cocoa class="NillaScriptTab"/>
       <property name="id" code="ID  " type="text" access="r" description="The unique identifier of the tab.">
         <cocoa key="uniqueID"/>
       </property>
@@ -137,7 +137,7 @@
     </class>
 
     <class name="profile" code="DiaP" plural="profiles" description="A profile: its own tabs, history, bookmarks and cookies.">
-      <cocoa class="ArdiaScriptProfile"/>
+      <cocoa class="NillaScriptProfile"/>
       <property name="id" code="ID  " type="text" access="r" description="The unique identifier of the profile.">
         <cocoa key="uniqueID"/>
       </property>

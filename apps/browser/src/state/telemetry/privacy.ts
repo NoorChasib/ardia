@@ -1,4 +1,4 @@
-import { anonymousIdentity, type AnonymousIdentity } from "@ardia/core";
+import { anonymousIdentity, type AnonymousIdentity } from "@nilla/core";
 import { revealFile } from "../../platform/files";
 import { consentStamp, useTelemetry } from "./choice";
 import { capture } from "./client";

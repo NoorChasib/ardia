@@ -3,15 +3,15 @@
 #import "ArdiaPaintProbeMath.h"
 #import "ArdiaWindowController.h"
 
-@interface ArdiaWebView (PaintProbe)
+@interface NillaWebView (PaintProbe)
 - (unsigned)paintProbeReasons;
 @end
 
-@implementation ArdiaWebView (PaintProbe)
+@implementation NillaWebView (PaintProbe)
 
 - (unsigned)paintProbeReasons {
   NSView *page = _tab.view;
-  ardia_paint_probe::View state;
+  nilla_paint_probe::View state;
   state.alphaZero = self.alphaValue <= 0.01;
   state.viewHidden = self.isHiddenOrHasHiddenAncestor;
   state.pageHidden = page && page.isHiddenOrHasHiddenAncestor;
@@ -19,23 +19,23 @@
   state.awaitingFrame = _frameHold.awaiting;
   state.standInLent = _standIn.lentTo || _standIn.tab || _standIn.page;
   state.standInLeaving = _standIn.leaving;
-  state.veilUp = [ArdiaEarlyWindow veils:_tab];
-  return ardia_paint_probe::ReasonsOf(state);
+  state.veilUp = [NillaEarlyWindow veils:_tab];
+  return nilla_paint_probe::ReasonsOf(state);
 }
 
 @end
 
-@interface ArdiaPaintWatch : NSObject {
+@interface NillaPaintWatch : NSObject {
  @public
-  ardia_paint_probe::Episode _episode;
+  nilla_paint_probe::Episode _episode;
   NSUInteger _generation;
 }
 @end
 
-@implementation ArdiaPaintWatch
+@implementation NillaPaintWatch
 @end
 
-namespace ardia_host {
+namespace nilla_host {
 
 namespace {
 
@@ -45,7 +45,7 @@ NSString *gLastPaintCheck;
 NSString *gLastPaintRecord;
 NSUInteger gPaintEpisodeCount = 0;
 
-NSMapTable<NSWindow *, ArdiaPaintWatch *> *PaintWatches() {
+NSMapTable<NSWindow *, NillaPaintWatch *> *PaintWatches() {
   static NSMapTable *watches = [NSMapTable weakToStrongObjectsMapTable];
   return watches;
 }
@@ -55,7 +55,7 @@ NSString *ReasonNames(unsigned reasons) {
   NSArray<NSString *> *names =
       @[ @"alpha 0", @"view hidden", @"page hidden", @"page detached", @"frame hold", @"stand-in lent", @"stand-in leaving", @"veil" ];
   NSMutableArray<NSString *> *found = [NSMutableArray array];
-  for (unsigned bit = 0; bit < ardia_paint_probe::kReasonCount; bit++)
+  for (unsigned bit = 0; bit < nilla_paint_probe::kReasonCount; bit++)
     if (reasons & (1u << bit)) [found addObject:names[bit]];
   return [found componentsJoinedByString:@", "];
 }
@@ -69,25 +69,25 @@ NSString *DescribePaint(NSDictionary *record) {
 
 NSUInteger OpenWindowCount() {
   NSUInteger open = 0;
-  for (ArdiaWindowController *controller in [ArdiaWindowController all])
+  for (NillaWindowController *controller in [NillaWindowController all])
     if (controller.coreWindow.window.isVisible) open++;
   return open;
 }
 
 void CheckPainting(NSWindow *window, NSString *trigger) {
-  ArdiaWindowController *owner = [ArdiaWindowController forNSWindow:window];
-  ArdiaPaintWatch *watch = [PaintWatches() objectForKey:window];
+  NillaWindowController *owner = [NillaWindowController forNSWindow:window];
+  NillaPaintWatch *watch = [PaintWatches() objectForKey:window];
   if (!owner || owner.coreWindow.window != window || !watch) return;
-  ardia_paint_probe::Tally tally;
-  for (ArdiaWebView *view in ardia_web_view::LiveViews().allObjects)
+  nilla_paint_probe::Tally tally;
+  for (NillaWebView *view in nilla_web_view::LiveViews().allObjects)
     if (view.window == window && view.visible) tally.Add([view paintProbeReasons]);
   const bool appKitShows = (window.occlusionState & NSWindowOcclusionStateVisible) != 0;
   NSDictionary *record = @{
     @"window" : owner.coreWindow.activeProfile.offTheRecord ? @"private" : @"regular",
     @"trigger" : trigger,
-    @"seen" : @([ArdiaWindowController userSees:window]),
+    @"seen" : @([NillaWindowController userSees:window]),
     @"occlusion" : appKitShows ? @"visible" : @"occluded",
-    @"overruled" : @([ArdiaWindowController userSeesOnlyThroughWindowServer:window]),
+    @"overruled" : @([NillaWindowController userSeesOnlyThroughWindowServer:window]),
     @"appActive" : @(NSApp.isActive),
     @"windows" : @(OpenWindowCount()),
     @"views" : @(tally.views),
@@ -98,21 +98,21 @@ void CheckPainting(NSWindow *window, NSString *trigger) {
   if (!watch->_episode.ShouldSend(tally)) return;
   gPaintEpisodeCount++;
   gLastPaintRecord = gLastPaintCheck;
-  [ArdiaEvents emit:@"engine.windowUnpainted" data:record];
+  [NillaEvents emit:@"engine.windowUnpainted" data:record];
 }
 
 void SchedulePaintCheck(NSWindow *window, NSString *trigger) {
-  if (![window isKindOfClass:NSWindow.class] || ![ArdiaWindowController forNSWindow:window]) return;
-  ArdiaPaintWatch *watch = [PaintWatches() objectForKey:window];
+  if (![window isKindOfClass:NSWindow.class] || ![NillaWindowController forNSWindow:window]) return;
+  NillaPaintWatch *watch = [PaintWatches() objectForKey:window];
   if (!watch) {
-    watch = [[ArdiaPaintWatch alloc] init];
+    watch = [[NillaPaintWatch alloc] init];
     [PaintWatches() setObject:watch forKey:window];
   }
   const NSUInteger generation = ++watch->_generation;
   __weak NSWindow *weakWindow = window;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kPaintCheckAfter * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
     NSWindow *checked = weakWindow;
-    ArdiaPaintWatch *current = checked ? [PaintWatches() objectForKey:checked] : nil;
+    NillaPaintWatch *current = checked ? [PaintWatches() objectForKey:checked] : nil;
     if (current && current->_generation == generation) CheckPainting(checked, trigger);
   });
 }
@@ -127,7 +127,7 @@ NSString *PaintProbeLine() {
 
 void WatchPainting() {
   NSNotificationCenter *center = NSNotificationCenter.defaultCenter;
-  [center addObserverForName:ArdiaWindowSeenDidChange object:nil queue:nil usingBlock:^(NSNotification *note) {
+  [center addObserverForName:NillaWindowSeenDidChange object:nil queue:nil usingBlock:^(NSNotification *note) {
     SchedulePaintCheck(note.object, @"seen");
   }];
   for (NSNotificationName name in @[ NSWindowDidBecomeKeyNotification, NSWindowDidResignKeyNotification ])

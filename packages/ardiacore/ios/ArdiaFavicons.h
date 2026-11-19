@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaFavicons : NSObject
+@interface NillaFavicons : NSObject
 + (void)fetch:(NSString *)url
        profile:(NSString *)profile
           name:(nullable NSString *)name

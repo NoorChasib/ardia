@@ -1,8 +1,8 @@
-import type { AppNative } from "@ardia/shell";
+import type { AppNative } from "@nilla/shell";
 import { TurboModuleRegistry, type TurboModule } from "react-native";
 import type { IntroMusicModule } from "./nativeModuleTypes";
 
-const native = () => TurboModuleRegistry.get<TurboModule & IntroMusicModule>("ArdiaIntroMusic");
+const native = () => TurboModuleRegistry.get<TurboModule & IntroMusicModule>("NillaIntroMusic");
 
 export const windowsIntroMusic: Pick<AppNative, "playIntroMusic" | "setIntroMusicMuted" | "stopIntroMusic"> = {
   playIntroMusic: async (_cues, muted) => native()?.play(muted),

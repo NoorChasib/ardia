@@ -1,4 +1,4 @@
-package com.ardia.sync.core
+package com.nilladigital.nilla.sync.core
 
 import java.io.File
 import java.security.MessageDigest
@@ -18,7 +18,7 @@ internal object SyncVectors {
     val writers = listOf("swift", "kotlin")
 
     val root: File by lazy {
-        val fixtures = System.getProperty("ardia.syncFixtures") ?: error("ardia.syncFixtures isn't set")
+        val fixtures = System.getProperty("nilla.syncFixtures") ?: error("nilla.syncFixtures isn't set")
         File(fixtures, "sync-vectors").also { check(File(it, "inputs.json").isFile && File(it, "expected.json").isFile) { "no sync vectors at $it" } }
     }
 

@@ -1,10 +1,10 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.SharedPreferences
-import com.ardia.browser.BrowserUrl
-import com.ardia.browser.RememberedSitePermissions
-import com.ardia.browser.SiteOrigin
-import com.ardia.browser.SitePermission
+import com.nilladigital.nilla.BrowserUrl
+import com.nilladigital.nilla.RememberedSitePermissions
+import com.nilladigital.nilla.SiteOrigin
+import com.nilladigital.nilla.SitePermission
 import org.json.JSONArray
 import org.json.JSONObject
 

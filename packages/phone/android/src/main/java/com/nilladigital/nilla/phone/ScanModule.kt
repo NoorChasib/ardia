@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.Manifest
 import android.content.Context
 import androidx.core.app.ActivityCompat
-import com.ardia.settings.CameraAccessCheck
+import com.nilladigital.nilla.settings.CameraAccessCheck
 import expo.modules.interfaces.permissions.PermissionsStatus
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
@@ -14,7 +14,7 @@ class ScanModule : Module() {
     private val context: Context get() = appContext.reactContext ?: throw CodedException("ERR_NO_CONTEXT", "The app context is gone", null)
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneScan")
+        Name("NillaPhoneScan")
 
         AsyncFunction("permission") { promise: Promise -> answer(promise, ask = false) }
 
@@ -64,7 +64,7 @@ class ScanModule : Module() {
     }
 
     private companion object {
-        const val ASKED = "ardia.scan"
+        const val ASKED = "nilla.scan"
         const val DENIED_FOR_GOOD = "camera.deniedForGood"
     }
 }

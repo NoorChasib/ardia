@@ -1,11 +1,11 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
-import com.ardia.design.ProfileLook
+import com.nilladigital.nilla.design.ProfileLook
 
 object LookSwitch {
-    private const val PREFERENCES = "ardia-lab"
+    private const val PREFERENCES = "nilla-lab"
     private const val KEY_OFF = "look.off"
     private const val KEY_BLOB_RATE = "look.blobFramesPerSecond"
     private const val KEY_BLUR_OVER_BACKDROP = "look.blurOverBackdrop"

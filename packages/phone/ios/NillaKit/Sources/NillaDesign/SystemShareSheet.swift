@@ -51,7 +51,7 @@
       return snapshot.sendTargets
     }
 
-    public func openInArdia() {
+    public func openInNilla() {
       if let url = page.url {
         hand(SystemLink.open(url).url, fallback: SystemInboxItem(action: .open, url: url.absoluteString, title: page.title))
       } else if let text = page.text {
@@ -63,10 +63,10 @@
       guard let url = page.url else { return }
       let item = SystemInboxItem(action: .send(to: device), url: url.absoluteString, title: page.displayTitle)
       guard store?.enqueue(item) == true else {
-        confirm(String(localized: "Couldn’t send this page. Open Ardia and try again."), succeeded: false)
+        confirm(String(localized: "Couldn’t send this page. Open Nilla and try again."), succeeded: false)
         return
       }
-      confirm(String(localized: "Sends to \(device.name) the next time Ardia syncs."))
+      confirm(String(localized: "Sends to \(device.name) the next time Nilla syncs."))
     }
 
     private func hand(_ link: URL, fallback: SystemInboxItem?) {
@@ -75,9 +75,9 @@
         return
       }
       if let fallback, store?.enqueue(fallback) == true {
-        confirm(String(localized: "Opens the next time you open Ardia."))
+        confirm(String(localized: "Opens the next time you open Nilla."))
       } else {
-        confirm(String(localized: "Couldn’t open Ardia. Open it from the Home Screen to see this page."), succeeded: false)
+        confirm(String(localized: "Couldn’t open Nilla. Open it from the Home Screen to see this page."), succeeded: false)
       }
     }
 
@@ -163,10 +163,10 @@
           ? AnyLayout(VStackLayout(alignment: .leading, spacing: Spacing.tight))
           : AnyLayout(HStackLayout(alignment: .center, spacing: Spacing.small))
         layout {
-          ArdiaLogoMark()
+          NillaLogoMark()
             .frame(width: 40, height: 32)
           VStack(alignment: .leading, spacing: 2) {
-            Text(model.page.displayTitle.isEmpty ? String(localized: "Ardia") : model.page.displayTitle)
+            Text(model.page.displayTitle.isEmpty ? String(localized: "Nilla") : model.page.displayTitle)
               .font(.headline)
               .foregroundStyle(BrowsePalette.foregroundPrimary)
               .lineLimit(typeSize.isAccessibilitySize ? 4 : 2)
@@ -195,10 +195,10 @@
       VStack(alignment: .leading, spacing: Spacing.medium) {
         ShareActionGroup {
           ShareActionRow(
-            title: model.page.url == nil ? Text("Search in Ardia") : Text("Open in Ardia"),
+            title: model.page.url == nil ? Text("Search in Nilla") : Text("Open in Nilla"),
             subtitle: nil,
             symbol: model.page.url == nil ? "magnifyingglass" : "arrow.up.forward.app",
-            action: model.openInArdia
+            action: model.openInNilla
           )
         }
         if !model.sendTargets.isEmpty {
@@ -217,7 +217,7 @@
             }
           }
         } else if model.page.url != nil, !model.snapshot.isSyncEnabled {
-          Text("To send pages to your Mac, turn on Sync With Your Mac in Ardia’s Settings.")
+          Text("To send pages to your Mac, turn on Sync With Your Mac in Nilla’s Settings.")
             .font(.footnote)
             .foregroundStyle(BrowsePalette.foregroundSecondary)
             .padding(.horizontal, Spacing.page)
@@ -226,7 +226,7 @@
     }
 
     private var nothingToShare: some View {
-      Text("There’s no web page or text to share with Ardia.")
+      Text("There’s no web page or text to share with Nilla.")
         .font(.body)
         .foregroundStyle(BrowsePalette.foregroundSecondary)
         .frame(maxWidth: .infinity, minHeight: 120)

@@ -28,7 +28,7 @@ export const advancedRows = {
         memorySaver: {
           title: "Memory Saver",
           explained: true,
-          description: "How hard Ardia works to free memory.",
+          description: "How hard Nilla works to free memory.",
           keywords: ["sleep", "sleeping tabs", "tab sleeping", "discard", "hibernate", "memory", "save ram", "inactive tabs", "unload", "suspend", "performance", "moderate", "balanced", "maximum", "memory savings", "profiles", "launch", "extensions", "lazy", "defer", "load profiles when opened", "idle", "inactive", "timeout", "unload inactive profiles"],
         },
         keepActiveSites: {
@@ -66,17 +66,17 @@ export const advancedRows = {
     {
       section: "Command line and automation",
       rows: {
-        ardiaCommand: {
-          title: "ardia command",
-          keywords: ["cli", "command line", "terminal", "shell", "install", "the ardia command", "devtools", "automation", "remote debugging", "let the ardia command control ardia"],
-          shown: () => PLATFORM_FEATURES.ardiaCommand,
+        nillaCommand: {
+          title: "nilla command",
+          keywords: ["cli", "command line", "terminal", "shell", "install", "the nilla-browser command", "devtools", "automation", "remote debugging", "let the nilla-browser command control nilla"],
+          shown: () => PLATFORM_FEATURES.nillaCommand,
         },
         compactCliPill: {
           title: "Show the control pill as an icon and Stop",
           explained: true,
-          description: "While a command drives Ardia, the pill shows just an icon and Stop.",
+          description: "While a command drives Nilla, the pill shows just an icon and Stop.",
           keywords: ["cli", "control pill", "is controlling", "agent", "claude code", "codex", "hide", "smaller", "compact", "minimize", "indicator", "stop"],
-          shown: () => PLATFORM_FEATURES.ardiaCommand,
+          shown: () => PLATFORM_FEATURES.nillaCommand,
         },
         automationRules: {
           title: "Automation rules",

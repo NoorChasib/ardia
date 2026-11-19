@@ -1,6 +1,6 @@
-import { nativeModule } from "@ardia/shell";
+import { nativeModule } from "@nilla/shell";
 
-const Keychain = nativeModule("ArdiaKeychain");
+const Keychain = nativeModule("NillaKeychain");
 
 export const keychainGet = (account: string) => Keychain.get(account);
 export const keychainSet = (account: string, secret: string) => Keychain.set(account, secret);

@@ -2,8 +2,8 @@ import AppKit
 import ArdiaCore
 import ObjectiveC
 
-final class LittleArdiaHandoff {
-  static let shared = LittleArdiaHandoff()
+final class LittleNillaHandoff {
+  static let shared = LittleNillaHandoff()
 
   private static let ignoredSchemes: Set<String> = ["http", "https", "file", "x-apple.systempreferences"]
   private static let activationWindow: TimeInterval = 3
@@ -49,11 +49,11 @@ final class LittleArdiaHandoff {
     if let replacement, replacement != id { return returnApps[replacement] = app }
     guard keyWindow, NSApp.isActive, !app.isTerminated else { return }
     if LaunchConfig.shared.background {
-      NSLog("[littleArdia] closing returns to %@ (background mode, not activated)", app.bundleIdentifier ?? "")
+      NSLog("[littleNilla] closing returns to %@ (background mode, not activated)", app.bundleIdentifier ?? "")
     } else if !app.activate(from: NSRunningApplication.current) {
       return
     }
-    ShellEvents.send(.app, ["type": "littleArdiaReturnedToApp"])
+    ShellEvents.send(.app, ["type": "littleNillaReturnedToApp"])
   }
 
   private func isOther(_ app: NSRunningApplication) -> Bool {
@@ -79,7 +79,7 @@ final class LittleArdiaHandoff {
     ShellEvents.send(.app, ["type": "appLinkOpened", "windowId": little ?? NSNull()])
   }
 
-  private func keyLittleArdia() -> String? {
+  private func keyLittleNilla() -> String? {
     guard Thread.isMainThread, WindowManager.shared.keyWindowKind == .small else { return nil }
     return WindowManager.shared.keyWindowId
   }
@@ -91,11 +91,11 @@ final class LittleArdiaHandoff {
     let original = unsafeBitCast(method_getImplementation(method), to: Open.self)
     let block: @convention(block) (NSWorkspace, URL, NSWorkspace.OpenConfiguration, ((NSRunningApplication?, Error?) -> Void)?) -> Void = {
       workspace, url, configuration, done in
-      let handoff = LittleArdiaHandoff.shared
+      let handoff = LittleNillaHandoff.shared
       guard handoff.isAppLink(url) else { return original(workspace, selector, url, configuration, done) }
-      let little = handoff.keyLittleArdia()
+      let little = handoff.keyLittleNilla()
       if LaunchConfig.shared.background {
-        NSLog("[littleArdia] app link %@: (background mode, not opened)", url.scheme ?? "")
+        NSLog("[littleNilla] app link %@: (background mode, not opened)", url.scheme ?? "")
         DispatchQueue.main.async {
           handoff.appLinkLaunched(from: little)
           done?(nil, CocoaError(.userCancelled))

@@ -1,9 +1,9 @@
-package com.ardia.browser.android
+package com.nilladigital.nilla.android
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.ardia.appmodel.SystemLink
+import com.nilladigital.nilla.appmodel.SystemLink
 
 object SystemIntents {
     fun main(context: Context, link: SystemLink): Intent = main(context, link.uri)

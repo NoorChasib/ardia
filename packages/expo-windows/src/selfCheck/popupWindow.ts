@@ -3,7 +3,7 @@ import { requireNativeModule } from "../modules";
 import { POPUP_CHROME_HEIGHT, POPUP_MIN_PAGE, popupFrame } from "../engine/popupPlacement";
 import { expectEqual, expectTrue, type Check } from "./check";
 
-const windows = () => requireNativeModule<Pick<AppWindowsModule, "windowIds" | "windowFrame" | "openWindow" | "closeWindow" | "debugDragRegions">>("ArdiaAppWindows");
+const windows = () => requireNativeModule<Pick<AppWindowsModule, "windowIds" | "windowFrame" | "openWindow" | "closeWindow" | "debugDragRegions">>("NillaAppWindows");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const SMALL_POPUP = "popup:self-check-small";
@@ -57,7 +57,7 @@ export const popupWindowChecks: Check[] = [
       try {
         const [x, y, width, height] = await frameOf(PLACED_POPUP);
         expectTrue(near(width, 400) && near(height, 300 + POPUP_CHROME_HEIGHT), `the pop-up is ${width} by ${height}`);
-        if (!near(x, frame[0]) || !near(y, frame[1])) console.info(`[ardia windows] the pop-up was kept on its display at ${x},${y} instead of ${frame[0]},${frame[1]}`);
+        if (!near(x, frame[0]) || !near(y, frame[1])) console.info(`[nilla windows] the pop-up was kept on its display at ${x},${y} instead of ${frame[0]},${frame[1]}`);
         expectTrue((await windows().windowIds()).includes(ids[0]!), "the opener's window closed when the pop-up opened");
       } finally {
         await closeAndForget(PLACED_POPUP);

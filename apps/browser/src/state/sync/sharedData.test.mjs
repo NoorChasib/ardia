@@ -10,7 +10,7 @@ const downloading = new Set();
 const unreadable = new Set();
 let ids = 0;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => `id${++ids}`,
     deviceName: () => "Test Mac",
     createPhrase: async () => true,
@@ -324,7 +324,7 @@ test("a profile whose owner hasn't synced here yet waits instead of getting data
 });
 
 const scopeLevel = async () => {
-  const { Clock, emptyScope, syncScope } = await import("@ardia/sync");
+  const { Clock, emptyScope, syncScope } = await import("@nilla/sync");
   const shipped = await import("../../../../../packages/sync/src/fixtures/scope-v0.2.38.ts");
   const { sharedDataAdapter } = await import("./adapters.ts");
   const { profilesAdapter } = await import("./profileAdapters.ts");
@@ -705,7 +705,7 @@ test("a Mac that joined while the other Mac's files couldn't be read for over a 
 });
 
 test("share: a Mac offline past the tombstone lifetime after another Mac removed its sharing profile brings the link and both profiles back", async () => {
-  const { Clock, emptyScope, syncScope, compact } = await import("@ardia/sync");
+  const { Clock, emptyScope, syncScope, compact } = await import("@nilla/sync");
   const { appAdapters } = await import("./scopeAdapters.ts");
   const { emptyDoc } = await import("./syncDoc.ts");
   const DAY = 86_400_000;

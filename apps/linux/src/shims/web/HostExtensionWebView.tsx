@@ -1,8 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { View } from "react-native";
-import { toAppUrl } from "@ardia/core";
-import type { NavigationState, WebViewHandle, WebViewProps } from "@ardia-real/ardiacore";
-import { ardiaHost, reportHostError } from "../../host";
+import { toAppUrl } from "@nilla/core";
+import type { NavigationState, WebViewHandle, WebViewProps } from "@nilla-real/ardiacore";
+import { nillaHost, reportHostError } from "../../host";
 import { HostExtensionView, type CornerRadii, type ExtensionViewEvent, type NativeFrame, type PopupPlacement } from "../../hostExtensionView";
 import { PopupSizeWaiters, extensionViewEvaluate } from "../../hostExtensionScripts";
 import { refreshTabViewports } from "../../hostViewport";
@@ -95,7 +95,7 @@ export const HostExtensionWebView = forwardRef<WebViewHandle, HostExtensionWebVi
   };
 
   useEffect(() => {
-    const current = new HostExtensionView(ardiaHost!, { kind: props.extensionHost!, url: props.url ?? "", profile: props.profile }, receive);
+    const current = new HostExtensionView(nillaHost!, { kind: props.extensionHost!, url: props.url ?? "", profile: props.profile }, receive);
     view.current = current;
     void current.ready.catch((error) => {
       if (!current.disposed) latest.current.onLoadError?.({ url: latest.current.url ?? "", code: -2, text: String(error) });
@@ -114,7 +114,7 @@ export const HostExtensionWebView = forwardRef<WebViewHandle, HostExtensionWebVi
       if (property === "nativeTag") return () => null;
       return async (...args: unknown[]) => {
         const current = view.current;
-        if (!current) throw new Error("Ardia extension view is not mounted");
+        if (!current) throw new Error("Nilla extension view is not mounted");
         if (property === "evaluate") return extensionViewEvaluate(args[0], sizes.current);
         if (property !== "focus") throw new Error(`Extension views do not support ${property}`);
         return current.command(property, args);
@@ -141,5 +141,5 @@ export const HostExtensionWebView = forwardRef<WebViewHandle, HostExtensionWebVi
     return watchPageBelowShell(node, regions, visible, () => view.current && { identity: true, disposed: view.current.disposed, viewport: (viewport) => view.current!.viewport({ ...viewport, radii: clipRadii(node) }) }, () => clipRadii(node));
   }, []);
 
-  return <View style={[props.style, { backgroundColor: "transparent" }]}><div ref={element} data-ardia-extension-view={props.extensionHost} style={{ position: "absolute", inset: 0 }} /></View>;
+  return <View style={[props.style, { backgroundColor: "transparent" }]}><div ref={element} data-nilla-extension-view={props.extensionHost} style={{ position: "absolute", inset: 0 }} /></View>;
 });

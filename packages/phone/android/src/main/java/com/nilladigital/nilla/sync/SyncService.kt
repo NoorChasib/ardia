@@ -1,10 +1,10 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.content.res.AssetManager
-import com.ardia.sync.core.RecoveryPhrase
-import com.ardia.sync.core.SyncKeyStore
-import com.ardia.sync.core.SyncKeys
-import com.ardia.sync.core.SyncStorage
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.core.SyncKeyStore
+import com.nilladigital.nilla.sync.core.SyncKeys
+import com.nilladigital.nilla.sync.core.SyncStorage
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
@@ -603,8 +603,8 @@ class SyncService(
         const val VISIT_OVERLAP_MS = 300_000L
         const val RESET_CONFIRMATION_MS = 60_000L
         const val RESET_MESSAGE = SyncStatusText.RESET_MESSAGE
-        const val STALLED_MESSAGE = "Ardia couldn’t read or write the sync folder. It will try again."
-        const val UNAVAILABLE_MESSAGE = "Ardia can’t read its sync data right now. It will try again."
+        const val STALLED_MESSAGE = "Nilla couldn’t read or write the sync folder. It will try again."
+        const val UNAVAILABLE_MESSAGE = "Nilla can’t read its sync data right now. It will try again."
 
         fun message(problem: RecoveryPhrase.Problem): String = SyncJoin.message(problem)
     }

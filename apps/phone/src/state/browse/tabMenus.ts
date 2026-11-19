@@ -1,6 +1,6 @@
 import { copy } from "../../lib/platformCopy";
-import { mobileClean } from "@ardia/core/src/mobile";
-import { hostOf } from "@ardia/core/src/omnibox";
+import { mobileClean } from "@nilla/core/src/mobile";
+import { hostOf } from "@nilla/core/src/omnibox";
 import { copyText, pressHaptic, shareLink, successHaptic } from "../../platform/system";
 import { settled } from "../pages/store";
 import type { TrayRow } from "../search/omnibox";

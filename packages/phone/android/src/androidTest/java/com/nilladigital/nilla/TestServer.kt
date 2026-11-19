@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import java.io.BufferedReader
 import java.io.InputStreamReader

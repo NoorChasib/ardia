@@ -86,7 +86,7 @@ public final class AppUpdater: NSObject {
       case .release(let waits):
         for wait in waits { quitWaits.removeValue(forKey: wait)?() }
       case .log(let line):
-        NSLog("Ardia: \(line)")
+        NSLog("Nilla: \(line)")
       }
     }
   }
@@ -94,14 +94,14 @@ public final class AppUpdater: NSObject {
   private func checkSwitchedChannel() {
     switchCheck.handle(.started)
     guard updater.canCheckForUpdates else {
-      NSLog("Ardia: Sparkle can't check the \(channel) channel after the switch yet")
+      NSLog("Nilla: Sparkle can't check the \(channel) channel after the switch yet")
       return switchCheck.handle(.finished(failed: true))
     }
     userDriver.quietCheck = !switchCheck.userAsked
     updater.checkForUpdates()
   }
 
-  private static let files = DispatchQueue(label: "com.ardia.updater.staged-copies", qos: .userInitiated)
+  private static let files = DispatchQueue(label: "com.nilladigital.nilla.updater.staged-copies", qos: .userInitiated)
 
   static let quitWaitLimit: TimeInterval = 8
 
@@ -212,7 +212,7 @@ public final class AppUpdater: NSObject {
     do {
       try updater.start()
     } catch {
-      NSLog("Ardia: couldn't start the updater: \(error.localizedDescription)")
+      NSLog("Nilla: couldn't start the updater: \(error.localizedDescription)")
     }
     sessionObservation = updater.observe(\.sessionInProgress, options: [.new]) { [weak self] _, change in
       guard change.newValue == false else { return }
@@ -225,7 +225,7 @@ public final class AppUpdater: NSObject {
   @objc public func checkForUpdates(_ sender: Any?) {
     guard isConfigured else {
       if LaunchConfig.shared.background {
-        return NSLog("Ardia: update checks are off in this instance")
+        return NSLog("Nilla: update checks are off in this instance")
       }
       return showNotSetUp()
     }
@@ -296,12 +296,12 @@ extension AppUpdater: SPUUpdaterDelegate {
   }
 
   public func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
-    NSLog("Ardia: update found: \(item.displayVersionString) (build \(item.versionString)\(item.channel.map { ", \($0)" } ?? "")) on the \(channel) channel")
+    NSLog("Nilla: update found: \(item.displayVersionString) (build \(item.versionString)\(item.channel.map { ", \($0)" } ?? "")) on the \(channel) channel")
     switchCheck.handle(.found(version: Self.displayVersion(of: item.displayVersionString)))
   }
 
   public func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: Error) {
-    NSLog("Ardia: no update on the \(channel) channel")
+    NSLog("Nilla: no update on the \(channel) channel")
     let reason = ((error as NSError).userInfo[SPUNoUpdateFoundReasonKey] as? NSNumber).flatMap { SPUNoUpdateFoundReason(rawValue: $0.int32Value) }
     switchCheck.handle(.notFound(newerThanLatest: reason == .onNewerThanLatestVersion))
   }

@@ -371,7 +371,7 @@ let scopeSupport = null;
 function systemdScopes() {
   if (scopeSupport !== null) return scopeSupport;
   try {
-    execFileSync("systemd-run", ["--user", "--scope", "-q", `--unit=ardia-bench-check-${process.pid}`, "true"], { stdio: "ignore", timeout: 10000 });
+    execFileSync("systemd-run", ["--user", "--scope", "-q", `--unit=nilla-bench-check-${process.pid}`, "true"], { stdio: "ignore", timeout: 10000 });
     scopeSupport = true;
   } catch {
     scopeSupport = false;
@@ -481,7 +481,7 @@ export async function shellSession(app, { timeout = 45000 } = {}) {
     { timeout, label: "shell target", abort: () => (app.exited ? `chrome exited (${app.exitCode})` : null) },
   );
   const session = await attach(app.browser, target.targetId);
-  await until(() => session.eval("!!(globalThis.ardiaLinux?.store && globalThis.__ardiaHost && document.querySelector('[data-ardia-linux-window]'))", { timeout: 5000 }), {
+  await until(() => session.eval("!!(globalThis.nillaLinux?.store && globalThis.__ardiaHost && document.querySelector('[data-nilla-linux-window]'))", { timeout: 5000 }), {
     timeout,
     label: "shell ready",
     abort: () => (app.exited ? `chrome exited (${app.exitCode})` : null),
@@ -538,7 +538,7 @@ export async function quit(app, { graceful = true } = {}) {
 }
 
 export async function cleanVolatile(data) {
-  for (const name of ["SingletonLock", "SingletonSocket", "SingletonCookie", "DevToolsActivePort", ".ardia-instance.json"]) await rm(join(data, name), { force: true });
+  for (const name of ["SingletonLock", "SingletonSocket", "SingletonCookie", "DevToolsActivePort", ".nilla-instance.json"]) await rm(join(data, name), { force: true });
   for (const name of readdirSync(data)) if (/^chrome-.*\.log$|\.log$/.test(name)) await rm(join(data, name), { force: true });
 }
 
@@ -569,11 +569,11 @@ export async function makeTemplate({ build, chrome, contentBlocker, extraArgs, c
   try {
     fixtures = await startFixtures({ cpus, port: fixturePort });
     xvfb = await startXvfb({ base: displayBase, cpus, logDir });
-    app = await launch({ chrome, data: dir, uiDir: build.dir, contentBlocker, extraArgs, debugPort, display: xvfb.display, cpus, unit: `ardia-bench-template-${build.label}-${process.pid}`, logPath: join(logDir, `template-${build.label}.log`) });
+    app = await launch({ chrome, data: dir, uiDir: build.dir, contentBlocker, extraArgs, debugPort, display: xvfb.display, cpus, unit: `nilla-bench-template-${build.label}-${process.pid}`, logPath: join(logDir, `template-${build.label}.log`) });
     const shell = await shellSession(app);
-    await shell.eval(`(() => { const s = ardiaLinux.store.getState(); const w = s.windows[__ardiaHost.bootstrap.windowId]; s.navigate(w.activeTabIds[w.profileId], ${JSON.stringify(`${fixtures.base}/p/1`)}); return true; })()`);
+    await shell.eval(`(() => { const s = nillaLinux.store.getState(); const w = s.windows[__ardiaHost.bootstrap.windowId]; s.navigate(w.activeTabIds[w.profileId], ${JSON.stringify(`${fixtures.base}/p/1`)}); return true; })()`);
     await pause(waitSeconds * 1000);
-    const title = await shell.eval(`(() => { const s = ardiaLinux.store.getState(); const w = s.windows[__ardiaHost.bootstrap.windowId]; return s.tabs[w.activeTabIds[w.profileId]]?.title ?? null; })()`);
+    const title = await shell.eval(`(() => { const s = nillaLinux.store.getState(); const w = s.windows[__ardiaHost.bootstrap.windowId]; return s.tabs[w.activeTabIds[w.profileId]]?.title ?? null; })()`);
     const { targetInfos } = await app.browser.send("Target.getTargets", {}, { timeout: 10000 });
     const extensions = targetInfos.filter((t) => t.url.startsWith("chrome-extension://")).length;
     validation = { title, extensions };

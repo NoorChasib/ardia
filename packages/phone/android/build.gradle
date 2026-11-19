@@ -4,11 +4,11 @@ plugins {
   id 'org.jetbrains.kotlin.plugin.compose'
 }
 
-group = 'com.ardia.phone'
+group = 'com.nilladigital.nilla.phone'
 version = '0.0.0'
 
 def repository = file("${projectDir}/../../..")
-def syncBundle = file("${repository}/packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-sync.js")
+def syncBundle = file("${repository}/packages/phone/ios/NillaKit/Sources/NillaShared/Scripts/nilla-sync.js")
 def syncFixtures = file("${repository}/packages/sync/tests/fixtures")
 def phoneSchema = file("${repository}/apps/phone/src/state/store/schema.ts")
 def cameraXVersion = '1.6.0'
@@ -40,7 +40,7 @@ abstract class CompileSyncBundle extends DefaultTask {
 
   @TaskAction
   void compile() {
-    if (compilerVersion.get() != HERMES_VERSION || engineVersion.get() != HERMES_VERSION) throw new GradleException("ardia-sync.hbc is pinned to Hermes ${HERMES_VERSION}, found hermes-compiler ${compilerVersion.get()} and React Native's Hermes ${engineVersion.get()}")
+    if (compilerVersion.get() != HERMES_VERSION || engineVersion.get() != HERMES_VERSION) throw new GradleException("nilla-sync.hbc is pinned to Hermes ${HERMES_VERSION}, found hermes-compiler ${compilerVersion.get()} and React Native's Hermes ${engineVersion.get()}")
     def compiler = hermesc.get().asFile
     def expected = HERMESC_SHA256[hermescPath.get()]
     def actual = java.security.MessageDigest.getInstance('SHA-256').digest(compiler.bytes).encodeHex().toString()
@@ -49,7 +49,7 @@ abstract class CompileSyncBundle extends DefaultTask {
     work.deleteDir()
     work.mkdirs()
     def source = bundle.get().asFile
-    def bytecode = new File(work, 'ardia-sync.hbc')
+    def bytecode = new File(work, 'nilla-sync.hbc')
     def register = companionHooks.files.find { it.name == 'sync-bundle-register.mjs' }
     exec.exec {
       environment 'ARDIA_SYNC_BUNDLE', source.absolutePath
@@ -60,10 +60,10 @@ abstract class CompileSyncBundle extends DefaultTask {
     def results = [bytecode]
     if (lab.get()) {
       exec.exec { commandLine 'node', makeChecksScript.get().asFile.absolutePath, runtimeChecks.get().asFile.absolutePath, work.absolutePath }
-      def checksBytecode = new File(work, 'ardia-sync-checks.hbc')
-      hermes(compiler, new File(work, 'ardia-sync-checks.js'), checksBytecode)
+      def checksBytecode = new File(work, 'nilla-sync-checks.hbc')
+      hermes(compiler, new File(work, 'nilla-sync-checks.js'), checksBytecode)
       checkBytecode(checksBytecode, 256)
-      results += [checksBytecode, new File(work, 'ardia-sync-checks.json')]
+      results += [checksBytecode, new File(work, 'nilla-sync-checks.json')]
     }
     def out = outputDir.get().asFile
     out.mkdirs()
@@ -104,7 +104,7 @@ androidComponents {
       companionTests.set(file("${repository}/packages/sync/src/companion/companion.test.ts"))
       runtimeChecks.set(file("${projectDir}/scripts/sync-runtime-checks.js"))
       makeChecksScript.set(file("${projectDir}/scripts/make-sync-checks.mjs"))
-      lab.set(findProperty('ardiaLab') == 'true')
+      lab.set(findProperty('nillaLab') == 'true')
     }
     variant.sources.assets?.addGeneratedSourceDirectory(task, { CompileSyncBundle compile -> compile.outputDir })
     variant.packaging.jniLibs.excludes.addAll([
@@ -120,18 +120,18 @@ androidComponents {
 }
 
 android {
-  namespace "com.ardia.browser"
+  namespace "com.nilladigital.nilla"
   defaultConfig {
     versionCode 1
     versionName "0.0.0"
     externalNativeBuild {
       cmake {
-        arguments "-DANDROID_STL=c++_shared", "-DARDIA_SCRIPT_SHIM=${projectDir}/src/main/cpp/ardia_hermes.cpp", "-DARDIA_SCRIPT_LOGS=${findProperty('ardiaLab') == 'true' ? 'ON' : 'OFF'}"
+        arguments "-DANDROID_STL=c++_shared", "-DARDIA_SCRIPT_SHIM=${projectDir}/src/main/cpp/nilla_hermes.cpp", "-DARDIA_SCRIPT_LOGS=${findProperty('nillaLab') == 'true' ? 'ON' : 'OFF'}"
         abiFilters(*architectures)
-        targets "ardiahermes"
+        targets "nillahermes"
       }
     }
-    buildConfigField "boolean", "ARDIA_LAB", (findProperty('ardiaLab') == 'true').toString()
+    buildConfigField "boolean", "ARDIA_LAB", (findProperty('nillaLab') == 'true').toString()
     testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   buildFeatures {
@@ -158,10 +158,10 @@ android {
     unitTests.returnDefaultValues = true
     unitTests.includeAndroidResources = true
     unitTests.all { test ->
-      test.systemProperty("ardia.syncFixtures", syncFixtures.absolutePath)
+      test.systemProperty("nilla.syncFixtures", syncFixtures.absolutePath)
       test.inputs.dir(syncFixtures).withPropertyName("syncFixtures").withPathSensitivity(PathSensitivity.RELATIVE)
-      test.systemProperty("ardia.phoneSchema", phoneSchema.absolutePath)
-      findProperty('ardiaBlockingLists')?.with { test.systemProperty("ardia.blockingLists", it) }
+      test.systemProperty("nilla.phoneSchema", phoneSchema.absolutePath)
+      findProperty('nillaBlockingLists')?.with { test.systemProperty("nilla.blockingLists", it) }
       System.getenv('ARDIA_SYNC_VECTORS_WRITE')?.with { target ->
         test.environment('ARDIA_SYNC_VECTORS_WRITE', target)
         test.outputs.upToDateWhen { false }
@@ -189,7 +189,7 @@ dependencies {
   implementation "androidx.camera:camera-lifecycle:${cameraXVersion}"
   implementation "androidx.camera:camera-view:${cameraXVersion}"
   implementation "com.google.zxing:core:3.5.4"
-  implementation project(":ardia-design")
+  implementation project(":nilla-design")
   implementation(findProject(":expo-ui") ?: "expo.modules.ui:expo.modules.ui:+")
   implementation "androidx.compose.foundation:foundation-android:1.12.1"
   implementation "androidx.compose.ui:ui-android:1.12.1"

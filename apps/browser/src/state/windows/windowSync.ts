@@ -4,7 +4,7 @@ import { engineProfile, windowTitle } from "../browser/model";
 import { windowOpens } from "./windowOpenOrder";
 import { focusedWindowOf } from "./ui";
 import { adoptOf } from "../tabs/pageSession";
-import { noteLittleArdiaFitBelowSaved } from "../telemetry/littleArdiaEscapes";
+import { noteLittleNillaFitBelowSaved } from "../telemetry/littleNillaEscapes";
 import { isSmallWindow } from "./small";
 import type { Frame } from "../browser/types";
 
@@ -50,7 +50,7 @@ export function createWindowSync({ port, getState, isQuitting, lightsCenter, isU
       if (e.type === "focus") s.setFocusedWindow(e.id);
       if (e.type === "frame") {
         const w = s.windows[e.id];
-        if (e.fitted && w && isSmallWindow(w) && fitsBelowSaved(e.frame, w.frame, s.settings.littleArdiaSize)) noteLittleArdiaFitBelowSaved();
+        if (e.fitted && w && isSmallWindow(w) && fitsBelowSaved(e.frame, w.frame, s.settings.littleNillaSize)) noteLittleNillaFitBelowSaved();
         s.setWindowFrame(e.id, e.frame, e.restored, e.fitted);
       }
       if (e.type === "maximized" && !isQuitting()) s.setWindowMaximized(e.id, e.on);
@@ -73,7 +73,7 @@ export function createWindowSync({ port, getState, isQuitting, lightsCenter, isU
       if (w.kind === "private") privateProfiles.set(id, profile);
       const claim = w.kind === "small" ? adoptOf(s.tabs[w.tabIds[0] ?? ""]) : undefined;
       const small = w.kind === "small"
-        ? { kind: "small" as const, size: s.settings.littleArdiaSize, ...(claim?.startsWith("link:") ? { claim } : {}), ...(w.linkPointer ? { pointer: w.linkPointer } : {}), ...(w.linkApp ? { returnTo: w.linkApp } : {}) }
+        ? { kind: "small" as const, size: s.settings.littleNillaSize, ...(claim?.startsWith("link:") ? { claim } : {}), ...(w.linkPointer ? { pointer: w.linkPointer } : {}), ...(w.linkApp ? { returnTo: w.linkApp } : {}) }
         : {};
       const made = w.kind !== "small" && w.chromeWindow ? { chromeWindow: w.chromeWindow } : {};
       const under = behind ?? (w.kind === "main" ? w.opensBehind : undefined);

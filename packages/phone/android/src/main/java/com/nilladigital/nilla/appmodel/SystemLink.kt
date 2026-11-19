@@ -1,7 +1,7 @@
-package com.ardia.appmodel
+package com.nilladigital.nilla.appmodel
 
 import android.net.Uri
-import com.ardia.browser.BrowserUrl
+import com.nilladigital.nilla.BrowserUrl
 
 sealed interface SystemLink {
     data class Search(val query: String?) : SystemLink

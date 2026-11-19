@@ -14,7 +14,7 @@
 #include "NativeModules.h"
 #include "Paths.h"
 
-namespace Ardia::Menus {
+namespace Nilla::Menus {
 
 struct MenuEntryValue {
   std::string id;
@@ -209,9 +209,9 @@ struct MenuStore {
           built.push_back(EntryFromRow(row));
           break;
         }
-        case Expansion::LittleArdiaProfiles: {
+        case Expansion::LittleNillaProfiles: {
           for (auto const &profile : profiles) {
-            built.push_back(DynamicEntry("newLittleArdia", profile.id, profile.title, row.path, {}, {}, true));
+            built.push_back(DynamicEntry("newLittleNilla", profile.id, profile.title, row.path, {}, {}, true));
           }
           break;
         }

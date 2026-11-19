@@ -5,7 +5,7 @@ import type { EngineHostModule } from "../nativeModuleTypes";
 type EngineEvent = { topic?: unknown; json?: unknown };
 type TopicListener = (payload: Record<string, unknown>) => void;
 
-const MODULE = "ArdiaEngineHost";
+const MODULE = "NillaEngineHost";
 
 let native: EngineHostModule | null | undefined;
 let present: boolean | undefined;

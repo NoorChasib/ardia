@@ -1,4 +1,4 @@
-package com.ardia.browsing
+package com.nilladigital.nilla.browsing
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PickedFileRuleTest {
-    private val packageName = "com.ardia.browser.android"
+    private val packageName = "com.nilladigital.nilla.android"
     private val own = setOf("$packageName.browsing.captures", "androidx.startup")
     private val capture = "content://$packageName.browsing.captures/captures/abc.jpg"
 

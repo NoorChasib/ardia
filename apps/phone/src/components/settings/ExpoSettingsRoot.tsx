@@ -21,7 +21,7 @@ import { syncOffered } from "../../state/sync/offer";
 
 const INTERVALS = (Object.keys(AUTO_ARCHIVE_INTERVALS) as AutoArchiveInterval[]).map((id) => ({ id, title: autoArchiveTitle(id) }));
 const APP_LINKS = [
-  { id: "ardia", title: "Ardia" },
+  { id: "nilla", title: "Nilla" },
   { id: "app", title: "App" },
 ] as const;
 const SHORTCUTS = [{ id: "archive", title: "Archive" }, { id: "spaces", title: "Spaces" }];
@@ -136,7 +136,7 @@ export function ExpoSettingsRoot() {
             <ExpoRowLabel title="Show Onboarding" systemImage="hand.wave.fill" tint="onboarding" />
           </Button>
           <NavigationLink value={link({ page: "about" })}>
-            <ExpoRowLabel title="About Ardia" systemImage="info" tint="neutral" />
+            <ExpoRowLabel title="About Nilla" systemImage="info" tint="neutral" />
           </NavigationLink>
         </Section>
       </Form>

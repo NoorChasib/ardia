@@ -20,14 +20,14 @@ $script:UiaReady = $null
 $script:LightBrightness = $null
 $script:Started = Get-Date
 
-if (-not ([System.Management.Automation.PSTypeName]"ArdiaTour").Type) {
+if (-not ([System.Management.Automation.PSTypeName]"NillaTour").Type) {
   Add-Type -TypeDefinition @"
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-public static class ArdiaTour {
+public static class NillaTour {
   [StructLayout(LayoutKind.Sequential)] public struct Rect { public int Left, Top, Right, Bottom; }
   [StructLayout(LayoutKind.Sequential)] public struct Point { public int X, Y; }
 
@@ -146,12 +146,12 @@ public static class ArdiaTour {
 "@
 }
 
-[ArdiaTour]::SetProcessDPIAware() | Out-Null
+[NillaTour]::SetProcessDPIAware() | Out-Null
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 
 function Write-Tour {
   $header = @(
-    "# Ardia on Windows: screenshot tour",
+    "# Nilla on Windows: screenshot tour",
     "",
     "Every line is one stop: what the tour did, what it expected, and whether a fact the script can check says it happened (yes, no, or unverified when there is nothing to check). A screen that looks wrong is reported here and never fails the job; only a crash or an exit does.",
     "",
@@ -234,7 +234,7 @@ function Wait-Until($Session, [scriptblock]$Test, [int]$Milliseconds) {
 }
 
 function Get-TopWindows($Session) {
-  try { return @([ArdiaTour]::VisibleWindowsOf([uint32]$Session.Process.Id)) } catch { return @() }
+  try { return @([NillaTour]::VisibleWindowsOf([uint32]$Session.Process.Id)) } catch { return @() }
 }
 
 function Get-BigWindows($Session) {
@@ -257,36 +257,36 @@ function Format-Windows($Windows) {
 }
 
 function Get-Client([IntPtr]$Window) {
-  if ($Window -eq [IntPtr]::Zero -or -not [ArdiaTour]::IsWindow($Window)) { return $null }
-  $origin = New-Object ArdiaTour+Point
-  $size = New-Object ArdiaTour+Rect
-  if (-not [ArdiaTour]::ClientToScreen($Window, [ref]$origin)) { return $null }
-  if (-not [ArdiaTour]::GetClientRect($Window, [ref]$size)) { return $null }
-  $dpi = [ArdiaTour]::GetDpiForWindow($Window)
+  if ($Window -eq [IntPtr]::Zero -or -not [NillaTour]::IsWindow($Window)) { return $null }
+  $origin = New-Object NillaTour+Point
+  $size = New-Object NillaTour+Rect
+  if (-not [NillaTour]::ClientToScreen($Window, [ref]$origin)) { return $null }
+  if (-not [NillaTour]::GetClientRect($Window, [ref]$size)) { return $null }
+  $dpi = [NillaTour]::GetDpiForWindow($Window)
   $scale = 1.0
   if ($dpi) { $scale = $dpi / 96.0 }
   return [pscustomobject]@{ X = $origin.X; Y = $origin.Y; Width = $size.Right; Height = $size.Bottom; Scale = $scale }
 }
 
 function Get-Frame([IntPtr]$Window) {
-  $rect = New-Object ArdiaTour+Rect
-  if (-not [ArdiaTour]::GetWindowRect($Window, [ref]$rect)) { return $null }
+  $rect = New-Object NillaTour+Rect
+  if (-not [NillaTour]::GetWindowRect($Window, [ref]$rect)) { return $null }
   return [pscustomobject]@{ Left = $rect.Left; Top = $rect.Top; Width = $rect.Right - $rect.Left; Height = $rect.Bottom - $rect.Top }
 }
 
 function Test-ForegroundIsOurs($Session) {
-  $foreground = [ArdiaTour]::GetForegroundWindow()
+  $foreground = [NillaTour]::GetForegroundWindow()
   if ($foreground -eq [IntPtr]::Zero) { return $false }
-  return [ArdiaTour]::ProcessOf($foreground) -eq [uint32]$Session.Process.Id
+  return [NillaTour]::ProcessOf($foreground) -eq [uint32]$Session.Process.Id
 }
 
 function Describe-Foreground {
-  $foreground = [ArdiaTour]::GetForegroundWindow()
+  $foreground = [NillaTour]::GetForegroundWindow()
   if ($foreground -eq [IntPtr]::Zero) { return "no window" }
-  $owner = [ArdiaTour]::ProcessOf($foreground)
+  $owner = [NillaTour]::ProcessOf($foreground)
   $name = "process $owner"
   try { $name = (Get-Process -Id $owner -ErrorAction Stop).ProcessName } catch { }
-  return "'$([ArdiaTour]::TitleOf($foreground))' ($([ArdiaTour]::ClassOf($foreground)), $name)"
+  return "'$([NillaTour]::TitleOf($foreground))' ($([NillaTour]::ClassOf($foreground)), $name)"
 }
 
 function Send-Click([int]$X, [int]$Y, [switch]$Right) {
@@ -296,11 +296,11 @@ function Send-Click([int]$X, [int]$Y, [switch]$Right) {
     $down = 8
     $up = 16
   }
-  [ArdiaTour]::SetCursorPos($X, $Y) | Out-Null
+  [NillaTour]::SetCursorPos($X, $Y) | Out-Null
   Start-Sleep -Milliseconds 120
-  [ArdiaTour]::mouse_event([uint32]$down, 0, 0, 0, [UIntPtr]::Zero)
+  [NillaTour]::mouse_event([uint32]$down, 0, 0, 0, [UIntPtr]::Zero)
   Start-Sleep -Milliseconds 60
-  [ArdiaTour]::mouse_event([uint32]$up, 0, 0, 0, [UIntPtr]::Zero)
+  [NillaTour]::mouse_event([uint32]$up, 0, 0, 0, [UIntPtr]::Zero)
   Start-Sleep -Milliseconds 300
 }
 
@@ -312,14 +312,14 @@ function Send-MouseMove([int]$X, [int]$Y, [int]$Steps = 8) {
     $atY = $from.Y + ($Y - $from.Y) * $step / $Steps
     $normalX = [Math]::Max(0, [Math]::Min(65535, [Math]::Round(($atX - $desk.Left) * 65535 / ($desk.Width - 1))))
     $normalY = [Math]::Max(0, [Math]::Min(65535, [Math]::Round(($atY - $desk.Top) * 65535 / ($desk.Height - 1))))
-    [ArdiaTour]::mouse_event([uint32]0xC001, [uint32]$normalX, [uint32]$normalY, 0, [UIntPtr]::Zero)
+    [NillaTour]::mouse_event([uint32]0xC001, [uint32]$normalX, [uint32]$normalY, 0, [UIntPtr]::Zero)
     Start-Sleep -Milliseconds 15
   }
 }
 
 function Send-Key([byte]$Key, [uint32]$Flags) {
-  $scan = [byte]([ArdiaTour]::MapVirtualKeyW([uint32]$Key, 0) -band 0xFF)
-  [ArdiaTour]::keybd_event($Key, $scan, $Flags, [UIntPtr]::Zero)
+  $scan = [byte]([NillaTour]::MapVirtualKeyW([uint32]$Key, 0) -band 0xFF)
+  [NillaTour]::keybd_event($Key, $scan, $Flags, [UIntPtr]::Zero)
 }
 
 function Send-Chord([byte[]]$Modifiers, [byte]$Key) {
@@ -348,23 +348,23 @@ function Send-Text([string]$Text) {
 }
 
 function Focus-Window($Session, [IntPtr]$Window, $Stop, [switch]$ClickBand) {
-  if (-not [ArdiaTour]::IsWindow($Window)) { throw "the window to focus is gone" }
-  if ([ArdiaTour]::IsIconic($Window)) { [ArdiaTour]::ShowWindow($Window, 9) | Out-Null }
-  if ([ArdiaTour]::GetForegroundWindow() -eq $Window) { return $true }
+  if (-not [NillaTour]::IsWindow($Window)) { throw "the window to focus is gone" }
+  if ([NillaTour]::IsIconic($Window)) { [NillaTour]::ShowWindow($Window, 9) | Out-Null }
+  if ([NillaTour]::GetForegroundWindow() -eq $Window) { return $true }
   if (-not (Test-ForegroundIsOurs $Session)) {
     Send-Key 0x12 0
     Send-Key 0x12 2
   }
-  [ArdiaTour]::SetForegroundWindow($Window) | Out-Null
-  [ArdiaTour]::BringWindowToTop($Window) | Out-Null
+  [NillaTour]::SetForegroundWindow($Window) | Out-Null
+  [NillaTour]::BringWindowToTop($Window) | Out-Null
   Start-Sleep -Milliseconds 300
-  if ([ArdiaTour]::GetForegroundWindow() -eq $Window) { return $true }
+  if ([NillaTour]::GetForegroundWindow() -eq $Window) { return $true }
   if ($ClickBand) {
     $client = Get-Client $Window
     if ($client) {
       Send-Click ($client.X + [int]($client.Width * 0.6)) ($client.Y + [int](16 * $client.Scale))
       Start-Sleep -Milliseconds 300
-      if ([ArdiaTour]::GetForegroundWindow() -eq $Window) { return $true }
+      if ([NillaTour]::GetForegroundWindow() -eq $Window) { return $true }
     }
   }
   if ($Stop) { $Stop.Facts.Add("could not bring the window forward; the foreground is $(Describe-Foreground)") }
@@ -374,7 +374,7 @@ function Focus-Window($Session, [IntPtr]$Window, $Stop, [switch]$ClickBand) {
 function Close-Dialogs($Session, $Stop) {
   foreach ($dialog in @(Get-TopWindows $Session | Where-Object { $_.ClassName -eq "#32770" })) {
     $Stop.Facts.Add("closed a dialog left open from before: '$($dialog.Title)'")
-    [ArdiaTour]::PostMessageW($dialog.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+    [NillaTour]::PostMessageW($dialog.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
     Start-Sleep -Milliseconds 400
   }
 }
@@ -436,7 +436,7 @@ function Measure-Screen([string]$Path, [IntPtr]$Window) {
         $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
         $result.Saved = $true
       }
-      if ($Window -ne [IntPtr]::Zero -and [ArdiaTour]::IsWindow($Window)) {
+      if ($Window -ne [IntPtr]::Zero -and [NillaTour]::IsWindow($Window)) {
         $frame = Get-Frame $Window
         if ($frame) {
           $signature = Get-Signature $bitmap $bounds $frame
@@ -560,7 +560,7 @@ function Set-Seen($Stop, [bool]$Seen) {
   if ($Seen) { $Stop.Seen = "yes" } else { $Stop.Seen = "no" }
 }
 
-function Start-Ardia([string]$Name, [switch]$Onboarded, [hashtable]$Settings, [switch]$KeepData) {
+function Start-Nilla([string]$Name, [switch]$Onboarded, [hashtable]$Settings, [switch]$KeepData) {
   $data = Join-Path (Join-Path $Out "data") $Name
   if (-not $KeepData) { Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $data }
   New-Item -ItemType Directory -Force -Path $data | Out-Null
@@ -597,7 +597,7 @@ function Start-Ardia([string]$Name, [switch]$Onboarded, [hashtable]$Settings, [s
   $script:Sessions.Add($session)
   $deadline = (Get-Date).AddSeconds($LaunchSeconds)
   while ((Get-Date) -lt $deadline -and -not $process.HasExited) {
-    $first = @(Read-LogLines $log | Where-Object { $_ -match "^\w+ (\d+) .*\[ardia windows\] first window" } | Select-Object -First 1)
+    $first = @(Read-LogLines $log | Where-Object { $_ -match "^\w+ (\d+) .*\[nilla windows\] first window" } | Select-Object -First 1)
     $windows = @(Get-BigWindows $session)
     if ($first.Count -and $windows.Count) {
       if ($first[0] -match "^\w+ (\d+) ") { $session.FirstWindowMs = [int64]$Matches[1] }
@@ -610,7 +610,7 @@ function Start-Ardia([string]$Name, [switch]$Onboarded, [hashtable]$Settings, [s
   return $session
 }
 
-function Stop-Ardia($Session) {
+function Stop-Nilla($Session) {
   if (-not $Session) { return }
   $exitedOnItsOwn = $Session.Process.HasExited
   $Session.Stopping = $true
@@ -736,16 +736,16 @@ function Invoke-OnboardingAdvance($Session, $State, $Stop) {
 }
 
 function Invoke-OnboardingTour {
-  $session = Start-Ardia "onboarding"
+  $session = Start-Nilla "onboarding"
   if (-not (Test-Usable $session)) {
     Invoke-Stop $session "onboarding-launch" "Onboarding: first launch" {
       param($stop)
       $stop.Did = "Launched with a fresh data folder."
-      $stop.Expected = "a window and the '[ardia windows] first window' log line within $LaunchSeconds s."
+      $stop.Expected = "a window and the '[nilla windows] first window' log line within $LaunchSeconds s."
       $stop.Seen = "no"
       $stop.Facts.Add("windows: $(Format-Windows (Get-TopWindows $session))")
     } | Out-Null
-    Stop-Ardia $session
+    Stop-Nilla $session
     return
   }
   Invoke-Stop $session "onboarding-intro" "Onboarding: intro animation" {
@@ -815,7 +815,7 @@ function Invoke-OnboardingTour {
     $now = Read-Onboarding $session
     if ($now) { $stop.Facts.Add("onboarding.json is at $($now.Step) $($now.Sub), completedAt $($now.Completed)") }
   } | Out-Null
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 function Read-FocusedText {
@@ -946,7 +946,7 @@ function Click-Named($Session, [string]$Name) {
 }
 
 function Get-BarGaps($Session, [int]$Mark) {
-  $lines = @(Get-LinesSince $Session $Mark "^(command \d+ newTab|\w+ \d+ \[ardia windows\] new tab bar )")
+  $lines = @(Get-LinesSince $Session $Mark "^(command \d+ newTab|\w+ \d+ \[nilla windows\] new tab bar )")
   $command = $null
   $tab = $null
   $firstTyped = $null
@@ -954,7 +954,7 @@ function Get-BarGaps($Session, [int]$Mark) {
   $found = [ordered]@{}
   foreach ($line in $lines) {
     if ($line -match "^command (\d+) newTab") { if ($null -eq $command) { $command = [int64]$Matches[1] }; continue }
-    if ($null -eq $command -or $line -notmatch "^\w+ (\d+) \[ardia windows\] new tab bar (\w+) (\S+)") { continue }
+    if ($null -eq $command -or $line -notmatch "^\w+ (\d+) \[nilla windows\] new tab bar (\w+) (\S+)") { continue }
     $at = [int64]$Matches[1]
     $stage = $Matches[2]
     $id = $Matches[3]
@@ -979,7 +979,7 @@ $script:FocusBoundMs = 90
 $script:FirstLetters = [System.Collections.Generic.List[object]]::new()
 
 function Format-BarMarks($Session, [int]$Mark) {
-  $lines = @(Get-LinesSince $Session $Mark "\[ardia windows\] (bar |js stall|new tab bar |new tab pane )" | ForEach-Object { $_ -replace '\[ardia windows\] ', '' } | Select-Object -First 60)
+  $lines = @(Get-LinesSince $Session $Mark "\[nilla windows\] (bar |js stall|new tab bar |new tab pane )" | ForEach-Object { $_ -replace '\[nilla windows\] ', '' } | Select-Object -First 60)
   if ($lines.Count) { return $lines -join ' / ' }
   return "none"
 }
@@ -1024,41 +1024,41 @@ function Close-Bar {
 }
 
 function Invoke-TypingTour {
-  $session = Start-Ardia "typing-sidebar" -Onboarded
+  $session = Start-Nilla "typing-sidebar" -Onboarded
   if (-not (Test-Usable $session)) { $script:Required.Add("Typing (typing-sidebar): no usable window") }
   if (Test-Usable $session) {
     $opened = Invoke-Stop $session "typing-page" "Not a first run: open Example Domain to type over" {
       param($stop)
       $stop.Did = "Launched onboarded, opened example.com in a tab."
-      $stop.Expected = "the window's title names example.com, the host Ardia shows for the open page."
+      $stop.Expected = "the window's title names example.com, the host Nilla shows for the open page."
       Set-Seen $stop (Open-Page $session $stop "example.com" "example\.com")
     }
     if ($opened.Seen -ne "yes") { $script:Required.Add("$($opened.Number) Not a first run: open Example Domain to type over") }
     Invoke-BarTypingStop $session "typing-ctrl-l" "Not a first run: Ctrl+L on a page, typing at 80 ms a key, ten tries" "On Example Domain, pressed Ctrl+L, typed example.com from 300 ms after it at 80 ms a key, reading the field after every key, then closed the bar with Escape; ten times." { Send-QuickChord @(0x11) 0x4C } { Close-Bar } 300 80 10
     Invoke-BarTypingStop $session "typing-ctrl-t" "Not a first run: Ctrl+T, typing at 80 ms a key from 100 ms after it, ten tries" "Pressed Ctrl+T, typed example.com from 100 ms after it at 80 ms a key, reading the field after every key, then closed the tab with Ctrl+W; ten times." { Send-QuickChord @(0x11) 0x54 } { Send-Chord @(0x11) 0x57 } 100 80 10
   }
-  Stop-Ardia $session
+  Stop-Nilla $session
 
-  $session = Start-Ardia "typing-top" -Onboarded -Settings @{ tabLayout = "top" }
+  $session = Start-Nilla "typing-top" -Onboarded -Settings @{ tabLayout = "top" }
   if (-not (Test-Usable $session)) { $script:Required.Add("Typing (typing-top): no usable window") }
   if (Test-Usable $session) {
     $opened = Invoke-Stop $session "typing-top-page" "Not a first run, tabs on top: open Example Domain to type over" {
       param($stop)
       $stop.Did = "Launched onboarded with tabLayout = top, opened example.com in a tab."
-      $stop.Expected = "the window's title names example.com, the host Ardia shows for the open page."
+      $stop.Expected = "the window's title names example.com, the host Nilla shows for the open page."
       Set-Seen $stop (Open-Page $session $stop "example.com" "example\.com")
     }
     if ($opened.Seen -ne "yes") { $script:Required.Add("$($opened.Number) Not a first run, tabs on top: open Example Domain to type over") }
     Invoke-BarTypingStop $session "typing-toolbar" "Not a first run, tabs on top: Ctrl+L into the toolbar's address field, typing at 80 ms a key, ten tries" "With tabs on top, on Example Domain, pressed Ctrl+L, typed example.com from 300 ms after it at 80 ms a key, reading the field after every key, then closed the bar with Escape; ten times." { Send-QuickChord @(0x11) 0x4C } { Close-Bar } 300 80 10
   }
-  Stop-Ardia $session
+  Stop-Nilla $session
 
-  $session = Start-Ardia "typing-floating" -Onboarded -Settings @{ newTabOpens = "commandBar" }
+  $session = Start-Nilla "typing-floating" -Onboarded -Settings @{ newTabOpens = "commandBar" }
   if (-not (Test-Usable $session)) { $script:Required.Add("Typing (typing-floating): no usable window") }
   if (Test-Usable $session) {
     Invoke-BarTypingStop $session "typing-floating" "Not a first run, new tabs open the command bar: Ctrl+T into the floating bar, typing at 80 ms a key, ten tries" "With newTabOpens = commandBar, pressed Ctrl+T, typed example.com from 100 ms after it at 80 ms a key, reading the field after every key, then closed the floating bar with Escape; ten times." { Send-QuickChord @(0x11) 0x54 } { Close-Bar } 100 80 10
   }
-  Stop-Ardia $session
+  Stop-Nilla $session
 
   Invoke-HoldTour
 }
@@ -1169,9 +1169,9 @@ function Invoke-WholeTextTries($Session, [string]$Slug, [string]$Title, [string]
 
 function Invoke-HoldTour {
   $env:ARDIA_TEST = "keyHoldReadyMs=$($script:HoldReadyMs)"
-  $session = Start-Ardia "hold" -Onboarded
+  $session = Start-Nilla "hold" -Onboarded
   $env:ARDIA_TEST = ""
-  if (-not (Test-Usable $session)) { $script:Required.Add("Hold (hold): no usable window"); Stop-Ardia $session; return }
+  if (-not (Test-Usable $session)) { $script:Required.Add("Hold (hold): no usable window"); Stop-Nilla $session; return }
   $opened = Invoke-Stop $session "hold-page" "Key hold: open Example Domain in the first tab" {
     param($stop)
     $stop.Did = "Launched onboarded, opened example.com in a tab."
@@ -1218,20 +1218,20 @@ function Invoke-HoldTour {
     param($stop)
     Send-Typed "ab" 10
     Send-Key 0x08 0; Send-Key 0x08 2
-  } { param($stop, $field, $mark) $end = Get-HoldEnd $session $mark "Backspace or Enter"; $stop.Facts.Add("the hold ended: $end"); $end -eq "dropped" -and $field -eq "" -and ([ArdiaTour]::TitleOf($session.Main)) -match "Tabs" }
+  } { param($stop, $field, $mark) $end = Get-HoldEnd $session $mark "Backspace or Enter"; $stop.Facts.Add("the hold ended: $end"); $end -eq "dropped" -and $field -eq "" -and ([NillaTour]::TitleOf($session.Main)) -match "Tabs" }
 
   Invoke-HoldStop $session "hold-escape" "Key hold: typing then Escape 15 ms after Ctrl+T leaves nothing anywhere" "With Example Domain in the first tab, pressed Ctrl+T, and from 15 ms after it typed ab, then Escape." "the new tab's bar is empty and Example Domain's tab is unchanged (#2099)." {
     param($stop)
     Send-Typed "ab"
     Send-Escape
-  } { param($stop, $field, $mark) $end = Get-HoldEnd $session $mark "a key without a character"; $stop.Facts.Add("the hold ended: $end"); $end -eq "dropped" -and $field -eq "" -and ([ArdiaTour]::TitleOf($session.Main)) -match "Tabs" }
+  } { param($stop, $field, $mark) $end = Get-HoldEnd $session $mark "a key without a character"; $stop.Facts.Add("the hold ended: $end"); $end -eq "dropped" -and $field -eq "" -and ([NillaTour]::TitleOf($session.Main)) -match "Tabs" }
 
   $before = @(Get-TopWindows $session)
   Send-Chord @(0x11) 0x4E
   Start-Sleep -Milliseconds 2500
   $second = @(Get-NewWindows $session $before) | Select-Object -First 1
   if ($second) {
-    [ArdiaTour]::SetWindowPos($second.Handle, [IntPtr](-1), 500, 400, 520, 360, 0x0040) | Out-Null
+    [NillaTour]::SetWindowPos($second.Handle, [IntPtr](-1), 500, 400, 520, 360, 0x0040) | Out-Null
     Start-Sleep -Milliseconds 700
     $secondBox = @(Find-Edits $second.Handle) | Select-Object -First 1
     Focus-Window $session $session.Main $null | Out-Null
@@ -1246,8 +1246,8 @@ function Invoke-HoldTour {
       Focus-Window $session $session.Main $null | Out-Null
       return $texts
     } { param($stop, $field, $mark, $acted) $end = Get-HoldEnd $session $mark "(a mouse button|the window lost the keyboard)"; $stop.Facts.Add("the hold ended: $end"); $stop.Facts.Add("the second window's field to click: $(if ($secondBox) { "$($secondBox.X),$($secondBox.Y)" } else { 'not found' })"); $end -eq "dropped" -and $secondBox -and $script:HoldReadCount -ge 1 -and @($acted | Where-Object { $_ -match "[ab]" }).Count -eq 0 }
-    [ArdiaTour]::SetWindowPos($second.Handle, [IntPtr](-2), 0, 0, 0, 0, 0x0013) | Out-Null
-    [ArdiaTour]::PostMessageW($second.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+    [NillaTour]::SetWindowPos($second.Handle, [IntPtr](-2), 0, 0, 0, 0, 0x0013) | Out-Null
+    [NillaTour]::PostMessageW($second.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
     Start-Sleep -Milliseconds 800
   } else {
     $script:Required.Add("Key hold: Ctrl+N opened no second window")
@@ -1268,15 +1268,15 @@ function Invoke-HoldTour {
     }
   }
   if ($pad -ne [IntPtr]::Zero) {
-    [ArdiaTour]::SetWindowPos($pad, [IntPtr](-1), 640, 420, 360, 260, 0x0040) | Out-Null
+    [NillaTour]::SetWindowPos($pad, [IntPtr](-1), 640, 420, 360, 260, 0x0040) | Out-Null
     Focus-Window $session $session.Main $null | Out-Null
-    Invoke-HoldStop $session "hold-click-other" "Key hold: typing, then a click into another program before the bar is ready" "With Notepad open beside Ardia, pressed Ctrl+T, and from 15 ms after it typed ab, then clicked into Notepad." "the hold ends when Notepad takes the keyboard, logged as a drop with keys held, and Notepad gets none of it (#2099)." {
+    Invoke-HoldStop $session "hold-click-other" "Key hold: typing, then a click into another program before the bar is ready" "With Notepad open beside Nilla, pressed Ctrl+T, and from 15 ms after it typed ab, then clicked into Notepad." "the hold ends when Notepad takes the keyboard, logged as a drop with keys held, and Notepad gets none of it (#2099)." {
       param($stop)
       $client = Get-Client $pad
       Send-Typed "ab" 10
       if ($client) { Send-Click ([int]($client.X + $client.Width / 2)) ([int]($client.Y + $client.Height / 2)) }
       Start-Sleep -Milliseconds 500
-      $texts = @([ArdiaTour]::EditTextsOf($pad)) + @(Read-EditTexts $pad)
+      $texts = @([NillaTour]::EditTextsOf($pad)) + @(Read-EditTexts $pad)
       $script:HoldReadCount = $texts.Count
       $stop.Facts.Add("Notepad's text, from $($texts.Count) field(s) read: $(($texts | ForEach-Object { "'$_'" }) -join ', ')")
       Focus-Window $session $session.Main $null | Out-Null
@@ -1287,7 +1287,7 @@ function Invoke-HoldTour {
   }
   $padIds = @()
   if ($notepad) { $padIds += $notepad.Id }
-  if ($pad -ne [IntPtr]::Zero) { $padIds += [int][ArdiaTour]::ProcessOf($pad) }
+  if ($pad -ne [IntPtr]::Zero) { $padIds += [int][NillaTour]::ProcessOf($pad) }
   foreach ($id in ($padIds | Select-Object -Unique)) { if ($padsBefore -notcontains $id) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue } }
 
   try { Set-Clipboard -Value "pasted" } catch { }
@@ -1296,10 +1296,10 @@ function Invoke-HoldTour {
     Send-QuickChord @(0x11) 0x56 | Out-Null
   } { param($stop, $field, $mark) @(Get-LinesSince $session $mark "^keys \d+ hold \d+ dropped: a key with Ctrl, Alt or Win").Count -ge 1 }
 
-  Stop-Ardia $session
+  Stop-Nilla $session
 
-  $live = Start-Ardia "hold-live" -Onboarded
-  if (-not (Test-Usable $live)) { $script:Required.Add("Hold (hold-live): no usable window"); Stop-Ardia $live; return }
+  $live = Start-Nilla "hold-live" -Onboarded
+  if (-not (Test-Usable $live)) { $script:Required.Add("Hold (hold-live): no usable window"); Stop-Nilla $live; return }
   $page = Invoke-Stop $live "hold-live-page" "Key hold, runner's own timing: open Example Domain in the first tab" {
     param($stop)
     $stop.Did = "Launched onboarded without a readiness floor, opened example.com in a tab."
@@ -1308,7 +1308,7 @@ function Invoke-HoldTour {
   }
   if ($page.Seen -ne "yes") { $script:Required.Add("$($page.Number) Key hold, runner's own timing: open Example Domain") }
   Invoke-WholeTextTries $live "hold-whole-live" "Key hold, runner's own timing: example.com typed from 15 ms after Ctrl+T, ten tries" "at the runner's own timing, so the first letters are held and the rest arrive live"
-  Stop-Ardia $live
+  Stop-Nilla $live
 }
 
 function Invoke-TypeStop($Session, [string]$Slug, [string]$Title, [string]$Did, [scriptblock]$Before, [string]$Into, [string]$Submit, [string]$Issues, [switch]$Required, [int]$FirstKeyMs = 100, [int]$KeyMs = 30, [switch]$ReadEachKey, [switch]$JudgeWholeText, [switch]$RequireGoHold, [switch]$JudgeLaterLetters) {
@@ -1387,7 +1387,7 @@ function Invoke-TypeStop($Session, [string]$Slug, [string]$Title, [string]$Did, 
       Send-Key 0x0D 2
     }
     $loaded = Wait-Title $Session "example\.com" 20000
-    $stop.Facts.Add("window title: '$([ArdiaTour]::TitleOf($Session.Main))'")
+    $stop.Facts.Add("window title: '$([NillaTour]::TitleOf($Session.Main))'")
     $stop.Facts.Add("foreground: $(Describe-Foreground)")
     $stop.Facts.Add("onboarding.json after: $(Format-OnboardingNow $Session)")
     $around = @(Get-LinesSince $Session $mark "keyboard|focus|keys |follow|page|tab\.|navigat|omnibox|command|error|onboarding|tour|new tab bar" | Select-Object -First 30)
@@ -1409,7 +1409,7 @@ function Invoke-TypeStop($Session, [string]$Slug, [string]$Title, [string]$Did, 
     $stop.Facts.Add("report only ($Issues): every key landed and $Submit opened Example Domain: $whole")
     $heldUnderPointer = $false
     if ($RequireGoHold) {
-      $heldUnderPointer = [bool]($rested -and $null -ne $holdMark -and @(Get-LinesSince $Session $holdMark "\[ardia windows\] bar rows pointer over, holding").Count -and $goStayed)
+      $heldUnderPointer = [bool]($rested -and $null -ne $holdMark -and @(Get-LinesSince $Session $holdMark "\[nilla windows\] bar rows pointer over, holding").Count -and $goStayed)
       $stop.Facts.Add("search engine: $($script:SuggestProfile)")
       $served = Join-Path $Out "suggest-server.log"
       if (Test-Path -LiteralPath $served) { $stop.Facts.Add("the tour's suggest server: $((Get-Content -LiteralPath $served | Select-Object -Last 4) -join ' / ')") }
@@ -1522,10 +1522,10 @@ function Get-SuggestSettings {
 }
 
 function Initialize-SuggestProfile([string]$Name) {
-  $prep = Start-Ardia $Name
+  $prep = Start-Nilla $Name
   $path = Join-Path $prep.Data "session.json"
   if (Test-Usable $prep) { Wait-Until $prep { Test-Path -LiteralPath $path } 8000 | Out-Null }
-  Stop-Ardia $prep
+  Stop-Nilla $prep
   $saved = $null
   if (Test-Path -LiteralPath $path) {
     try { $saved = Get-Content -Raw -LiteralPath $path | ConvertFrom-Json -AsHashtable } catch { $saved = $null }
@@ -1546,7 +1546,7 @@ function Invoke-FirstRunLaunch([string]$Name, [string]$Exe, [scriptblock]$Body, 
   try {
     $script:SuggestProfile = $null
     if ($OwnSuggestions) { $script:SuggestProfile = Initialize-SuggestProfile $Name }
-    $session = if ($OwnSuggestions) { Start-Ardia $Name -KeepData } else { Start-Ardia $Name }
+    $session = if ($OwnSuggestions) { Start-Nilla $Name -KeepData } else { Start-Nilla $Name }
   } finally {
     $script:App = $saved
   }
@@ -1562,7 +1562,7 @@ function Invoke-FirstRunLaunch([string]$Name, [string]$Exe, [scriptblock]$Body, 
     } | Out-Null
     $script:Required.Add("First run ($Name): no usable window")
   }
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 function Invoke-FirstRunTour {
@@ -1793,8 +1793,8 @@ function Invoke-ShortcutStop($Session, [string]$Slug, [string]$Title, [string]$K
     Send-Escape
     Start-Sleep -Milliseconds 500
     foreach ($window in $new) {
-      if ([ArdiaTour]::IsWindow($window.Handle) -and $window.ClassName -ne "#32768" -and $window.Width -ge 300) {
-        [ArdiaTour]::PostMessageW($window.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+      if ([NillaTour]::IsWindow($window.Handle) -and $window.ClassName -ne "#32768" -and $window.Width -ge 300) {
+        [NillaTour]::PostMessageW($window.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
       }
     }
     Start-Sleep -Milliseconds 400
@@ -1900,7 +1900,7 @@ function Invoke-SettingsStops($Session, [string]$Suffix, [string]$Label, [switch
       Start-Sleep -Milliseconds 1500
       $frame = Get-Frame $script:SettingsWindow
       $stop.Facts.Add("Settings is $($frame.Width) by $($frame.Height) at $($frame.Left), $($frame.Top)")
-      $dark = [ArdiaTour]::DarkModeOf($script:SettingsWindow)
+      $dark = [NillaTour]::DarkModeOf($script:SettingsWindow)
       if ($dark -ge 0) { $stop.Facts.Add("DWM dark title bar: $dark") }
       Save-Shot $stop $script:SettingsWindow | Out-Null
     } else {
@@ -1908,7 +1908,7 @@ function Invoke-SettingsStops($Session, [string]$Suffix, [string]$Label, [switch
     }
     Set-Seen $stop $opened
   } | Out-Null
-  if (-not $script:SettingsWindow -or -not [ArdiaTour]::IsWindow($script:SettingsWindow)) { return }
+  if (-not $script:SettingsWindow -or -not [NillaTour]::IsWindow($script:SettingsWindow)) { return }
   if ($Panes) {
     foreach ($pane in @(@{ Name = "Appearance"; Slug = "settings-appearance"; Row = 4 }, @{ Name = "Keyboard Shortcuts"; Slug = "settings-shortcuts"; Row = 11 })) {
       Invoke-Stop $Session $pane.Slug "Settings window, $($pane.Name)" {
@@ -1940,8 +1940,8 @@ function Invoke-SettingsStops($Session, [string]$Suffix, [string]$Label, [switch
     param($stop)
     $stop.Did = "Sent WM_CLOSE to the Settings window."
     $stop.Expected = "the Settings window goes away and the app keeps running."
-    [ArdiaTour]::PostMessageW($script:SettingsWindow, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
-    $closed = Wait-Until $Session { -not [ArdiaTour]::IsWindow($script:SettingsWindow) -or -not [ArdiaTour]::IsWindowVisible($script:SettingsWindow) } 4000
+    [NillaTour]::PostMessageW($script:SettingsWindow, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null
+    $closed = Wait-Until $Session { -not [NillaTour]::IsWindow($script:SettingsWindow) -or -not [NillaTour]::IsWindowVisible($script:SettingsWindow) } 4000
     Start-Sleep -Milliseconds 600
     Focus-Window $Session $Session.Main $stop | Out-Null
     Save-Shot $stop $Session.Main | Out-Null
@@ -1951,7 +1951,7 @@ function Invoke-SettingsStops($Session, [string]$Suffix, [string]$Label, [switch
 }
 
 function Invoke-MainTour {
-  $session = Start-Ardia "browser" -Onboarded
+  $session = Start-Nilla "browser" -Onboarded
   Invoke-Stop $session "main-window" "Main window, onboarding done" {
     param($stop)
     $stop.Did = "Launched with onboarding.json marked done and waited for the first window."
@@ -1966,9 +1966,9 @@ function Invoke-MainTour {
     $stop.Facts.Add("title band is $band")
     $stop.Facts.Add("windows: $(Format-Windows (Get-TopWindows $session))")
     $stop.Facts.Add("foreground is ours: $(Test-ForegroundIsOurs $session)")
-    $stop.Facts.Add("DWM dark title bar: $([ArdiaTour]::DarkModeOf($session.Main))")
+    $stop.Facts.Add("DWM dark title bar: $([NillaTour]::DarkModeOf($session.Main))")
   } | Out-Null
-  if (-not (Test-Usable $session)) { Stop-Ardia $session; return }
+  if (-not (Test-Usable $session)) { Stop-Nilla $session; return }
 
   Invoke-Stop $session "new-tabs" "Three new tabs" {
     param($stop)
@@ -1989,14 +1989,14 @@ function Invoke-MainTour {
 
   Invoke-Stop $session "command-bar" "Command bar with text typed" {
     param($stop)
-    $stop.Did = "Pressed Ctrl+L and typed 'ardia'."
+    $stop.Did = "Pressed Ctrl+L and typed 'nilla'."
     $stop.Expected = "a focusCommandBar command in the log."
     Focus-Window $session $session.Main $stop | Out-Null
     $mark = Get-LogCount $session
     Send-Chord @(0x11) 0x4C
     $commanded = Wait-Command $session $mark "focusCommandBar"
     Start-Sleep -Milliseconds 500
-    Send-Text "ardia"
+    Send-Text "nilla"
     Start-Sleep -Milliseconds 700
     Save-Shot $stop $session.Main | Out-Null
     Set-Seen $stop $commanded
@@ -2091,15 +2091,15 @@ function Invoke-MainTour {
 
   Invoke-SettingsStops $session "" "" -Panes
 
-  Invoke-Stop $session "little-ardia" "Little Ardia window" {
+  Invoke-Stop $session "little-nilla" "Little Nilla window" {
     param($stop)
     $stop.Did = "Pressed Ctrl+Alt+N."
-    $stop.Expected = "a newLittleArdia command, a new top-level window of ours, and its command panel drawn whole below the bar's field rather than cut off 24 points down, with the window buttons on the bare bar."
+    $stop.Expected = "a newLittleNilla command, a new top-level window of ours, and its command panel drawn whole below the bar's field rather than cut off 24 points down, with the window buttons on the bare bar."
     Focus-Window $session $session.Main $stop | Out-Null
     $mark = Get-LogCount $session
     $before = @(Get-BigWindows $session)
     Send-Chord @(0x11, 0x12) 0x4E
-    $commanded = Wait-Command $session $mark "newLittleArdia"
+    $commanded = Wait-Command $session $mark "newLittleNilla"
     $opened = Wait-Until $session { @(Get-NewWindows $session $before | Where-Object { $_.ClassName -ne "#32768" -and $_.Width -ge 300 }).Count -gt 0 } 5000
     Start-Sleep -Milliseconds 1500
     $new = @(Get-NewWindows $session $before | Where-Object { $_.ClassName -ne "#32768" -and $_.Width -ge 300 })
@@ -2107,7 +2107,7 @@ function Invoke-MainTour {
     if ($new.Count) { $target = $new[0].Handle }
     Save-Shot $stop $target | Out-Null
     Set-Seen $stop $opened
-    $stop.Facts.Add("command newLittleArdia logged: $commanded")
+    $stop.Facts.Add("command newLittleNilla logged: $commanded")
     $stop.Facts.Add("new windows: $(Format-Windows $new)")
     $client = $null
     if ($new.Count) { $client = Get-Client $target }
@@ -2121,7 +2121,7 @@ function Invoke-MainTour {
       $stop.Facts.Add("caption buttons' area brightness: $caption (under 240 is the bare band)")
       Set-Seen $stop ($opened -and $whole -and $bare)
     }
-    foreach ($window in $new) { [ArdiaTour]::PostMessageW($window.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
+    foreach ($window in $new) { [NillaTour]::PostMessageW($window.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
     Start-Sleep -Milliseconds 800
   } | Out-Null
 
@@ -2133,14 +2133,14 @@ function Invoke-MainTour {
     $stop.Did = "Maximized the main window with ShowWindow."
     $stop.Expected = "the window reports maximized."
     Focus-Window $session $session.Main $stop | Out-Null
-    [ArdiaTour]::ShowWindow($session.Main, 3) | Out-Null
-    $zoomed = Wait-Until $session { [ArdiaTour]::IsZoomed($session.Main) } 2000
+    [NillaTour]::ShowWindow($session.Main, 3) | Out-Null
+    $zoomed = Wait-Until $session { [NillaTour]::IsZoomed($session.Main) } 2000
     Start-Sleep -Milliseconds 1200
     Save-Shot $stop $session.Main | Out-Null
     Set-Seen $stop $zoomed
     $frame = Get-Frame $session.Main
     $stop.Facts.Add("frame $($frame.Width) by $($frame.Height) at $($frame.Left), $($frame.Top)")
-    [ArdiaTour]::ShowWindow($session.Main, 9) | Out-Null
+    [NillaTour]::ShowWindow($session.Main, 9) | Out-Null
     Start-Sleep -Milliseconds 800
   } | Out-Null
 
@@ -2153,21 +2153,21 @@ function Invoke-MainTour {
     $height = [int](460 * $scale)
     $stop.Did = "Resized the main window to $width by $height with SetWindowPos."
     $stop.Expected = "the window frame is that size (within 8 px)."
-    [ArdiaTour]::SetWindowPos($session.Main, [IntPtr]::Zero, 40, 40, $width, $height, 0x0014) | Out-Null
+    [NillaTour]::SetWindowPos($session.Main, [IntPtr]::Zero, 40, 40, $width, $height, 0x0014) | Out-Null
     Start-Sleep -Milliseconds 1500
     $frame = Get-Frame $session.Main
     Save-Shot $stop $session.Main | Out-Null
     Set-Seen $stop ($frame -and [Math]::Abs($frame.Width - $width) -le 8 -and [Math]::Abs($frame.Height - $height) -le 8)
     $stop.Facts.Add("frame $($frame.Width) by $($frame.Height)")
-    if ($restoreFrame) { [ArdiaTour]::SetWindowPos($session.Main, [IntPtr]::Zero, $restoreFrame.Left, $restoreFrame.Top, $restoreFrame.Width, $restoreFrame.Height, 0x0014) | Out-Null }
+    if ($restoreFrame) { [NillaTour]::SetWindowPos($session.Main, [IntPtr]::Zero, $restoreFrame.Left, $restoreFrame.Top, $restoreFrame.Width, $restoreFrame.Height, 0x0014) | Out-Null }
     Start-Sleep -Milliseconds 500
   } | Out-Null
 
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 function Wait-Title($Session, [string]$Pattern, [int]$Milliseconds = 25000) {
-  return Wait-Until $Session { [ArdiaTour]::TitleOf($Session.Main) -match $Pattern } $Milliseconds
+  return Wait-Until $Session { [NillaTour]::TitleOf($Session.Main) -match $Pattern } $Milliseconds
 }
 
 function Open-Page($Session, $Stop, [string]$Address, [string]$TitlePattern) {
@@ -2183,12 +2183,12 @@ function Open-Page($Session, $Stop, [string]$Address, [string]$TitlePattern) {
   $loaded = Wait-Title $Session $TitlePattern
   Start-Sleep -Milliseconds 3500
   $Stop.Facts.Add("newTab command logged: $opened")
-  $Stop.Facts.Add("window title: '$([ArdiaTour]::TitleOf($Session.Main))'")
+  $Stop.Facts.Add("window title: '$([NillaTour]::TitleOf($Session.Main))'")
   return $loaded
 }
 
 function Invoke-PagesTour {
-  $session = Start-Ardia "pages" -Onboarded
+  $session = Start-Nilla "pages" -Onboarded
   Invoke-Stop $session "page-loads" "A page loads in a tab" {
     param($stop)
     $stop.Did = "Pressed Ctrl+T, typed example.com and pressed Enter."
@@ -2199,7 +2199,7 @@ function Invoke-PagesTour {
     Set-Seen $stop $loaded
     $stop.Facts.Add("windows: $(Format-Windows (Get-TopWindows $session))")
   } | Out-Null
-  if (-not (Test-Usable $session)) { Stop-Ardia $session; return }
+  if (-not (Test-Usable $session)) { Stop-Nilla $session; return }
 
   Invoke-Stop $session "page-find" "Find in the page" {
     param($stop)
@@ -2252,7 +2252,7 @@ function Invoke-PagesTour {
     Start-Sleep -Milliseconds 800
     Save-Shot $stop $session.Main | Out-Null
     Set-Seen $stop $back
-    $stop.Facts.Add("window title: '$([ArdiaTour]::TitleOf($session.Main))'")
+    $stop.Facts.Add("window title: '$([NillaTour]::TitleOf($session.Main))'")
   } | Out-Null
 
   Invoke-Stop $session "page-history" "History lists the pages" {
@@ -2265,29 +2265,29 @@ function Invoke-PagesTour {
     Start-Sleep -Milliseconds 1500
     Save-Shot $stop $session.Main | Out-Null
     Set-Seen $stop $shown
-    $stop.Facts.Add("window title: '$([ArdiaTour]::TitleOf($session.Main))'")
+    $stop.Facts.Add("window title: '$([NillaTour]::TitleOf($session.Main))'")
   } | Out-Null
 
   Invoke-Stop $session "page-link-from-outside" "A link from another launch" {
     param($stop)
-    $stop.Did = "Started Ardia again with https://example.org/ while it was running."
+    $stop.Did = "Started Nilla again with https://example.org/ while it was running."
     $stop.Expected = "the running app opens the link in a window of ours whose title names the site, and no second app stays."
     $before = @(Get-TopWindows $session)
     $second = Start-Process -FilePath $App -ArgumentList "https://example.org/" -PassThru
     $ours = { @(Get-NewWindows $session $before | Where-Object { $_.ClassName -notmatch "^(#32768|Chrome_)" -and $_.Width -ge 300 -and $_.Height -ge 200 }) }
-    $opened = Wait-Until $session { (& $ours).Count -gt 0 -and [ArdiaTour]::TitleOf((& $ours)[0].Handle) -match "example\.org" } 25000
+    $opened = Wait-Until $session { (& $ours).Count -gt 0 -and [NillaTour]::TitleOf((& $ours)[0].Handle) -match "example\.org" } 25000
     $handed = $second.WaitForExit(10000)
     Start-Sleep -Milliseconds 3000
     $shown = @(& $ours)
     if ($shown.Count) {
       Save-Shot $stop $shown[0].Handle | Out-Null
-      $stop.Facts.Add("the new window is titled '$([ArdiaTour]::TitleOf($shown[0].Handle))'")
+      $stop.Facts.Add("the new window is titled '$([NillaTour]::TitleOf($shown[0].Handle))'")
     } else {
       $stop.Facts.Add("windows: $(Format-Windows (Get-TopWindows $session))")
     }
     $stop.Facts.Add("the second launch exited by itself: $handed")
     Set-Seen $stop ($opened -and $handed)
-    foreach ($window in $shown) { [ArdiaTour]::PostMessageW($window.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
+    foreach ($window in $shown) { [NillaTour]::PostMessageW($window.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
     Start-Sleep -Milliseconds 800
   } | Out-Null
 
@@ -2312,13 +2312,13 @@ function Invoke-PagesTour {
     Start-Sleep -Milliseconds 500
     Send-Key 0x0D 0
     Send-Key 0x0D 2
-    $loaded = Wait-Until $session { [ArdiaTour]::TitleOf($private) -match "example\.com" } 25000
+    $loaded = Wait-Until $session { [NillaTour]::TitleOf($private) -match "example\.com" } 25000
     Start-Sleep -Milliseconds 3500
     Save-Shot $stop $private | Out-Null
     Set-Seen $stop $loaded
-    $stop.Facts.Add("the new window is titled '$([ArdiaTour]::TitleOf($private))'")
+    $stop.Facts.Add("the new window is titled '$([NillaTour]::TitleOf($private))'")
   } | Out-Null
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 $script:TourPagesPort = 9363
@@ -2390,12 +2390,12 @@ function Send-Address([string]$Address) {
   Start-Sleep -Milliseconds 300
 }
 
-if (-not ([System.Management.Automation.PSTypeName]"ArdiaTourScale").Type) {
+if (-not ([System.Management.Automation.PSTypeName]"NillaTourScale").Type) {
   Add-Type -TypeDefinition @"
 using System;
 using System.Runtime.InteropServices;
 
-public static class ArdiaTourScale {
+public static class NillaTourScale {
   [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")] public static extern bool Get(uint action, uint parameter, ref int value, uint change);
   [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")] public static extern bool Set(uint action, int parameter, IntPtr value, uint change);
 }
@@ -2404,12 +2404,12 @@ public static class ArdiaTourScale {
 
 function Get-ScaleStep {
   $value = 0
-  [ArdiaTourScale]::Get(0x9E, 0, [ref]$value, 0) | Out-Null
+  [NillaTourScale]::Get(0x9E, 0, [ref]$value, 0) | Out-Null
   return $value
 }
 
 function Set-ScaleStep([int]$Step) {
-  $set = [ArdiaTourScale]::Set(0x9F, $Step, [IntPtr]::Zero, 3)
+  $set = [NillaTourScale]::Set(0x9F, $Step, [IntPtr]::Zero, 3)
   Start-Sleep -Milliseconds 2500
   return $set
 }
@@ -2507,7 +2507,7 @@ function Invoke-PeekTabsTour {
   }
   $blue = @(0x33, 0x66, 0xcc)
   $red = @(0xc0, 0x39, 0x2b)
-  $session = Start-Ardia "peek-tabs" -Onboarded -Settings @{ appearance = "light" }
+  $session = Start-Nilla "peek-tabs" -Onboarded -Settings @{ appearance = "light" }
   $state = [pscustomobject]@{ Card = $null; PageB = $null; PageA = $null }
 
   $stop = Invoke-Stop $session "peek-tabs-open" "A Peek on tab A takes the keyboard" {
@@ -2601,7 +2601,7 @@ function Invoke-PeekTabsTour {
     Set-Seen $stop ($closed -and $null -ne $notBlue -and $notBlue -lt 2 -and $typed)
   }
   Note-Required $stop "peek-tabs"
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 function Invoke-PeekTour([string]$Name, [hashtable]$Settings, [string]$Look, [int]$Height = 0, [int]$ScaleSteps = 0) {
@@ -2615,7 +2615,7 @@ function Invoke-PeekTour([string]$Name, [hashtable]$Settings, [string]$Look, [in
     $set = Set-ScaleStep ($savedStep + $ScaleSteps)
     $script:Lines.Add("- The $Name part moved the display scale override from step $savedStep to $(Get-ScaleStep) (set: $set).")
   }
-  $session = Start-Ardia $Name -Onboarded -Settings $Settings
+  $session = Start-Nilla $Name -Onboarded -Settings $Settings
   Invoke-Stop $session $Name "A Peek over a page, $Look" {
     param($stop)
     $stop.Did = "Opened a loopback page with one link, then Shift-clicked the link."
@@ -2623,7 +2623,7 @@ function Invoke-PeekTour([string]$Name, [hashtable]$Settings, [string]$Look, [in
     if (-not (Test-Usable $session)) { $stop.Seen = "no"; return }
     if ($Height -gt 0) {
       $frame = Get-Frame $session.Main
-      [ArdiaTour]::SetWindowPos($session.Main, [IntPtr]::Zero, $frame.Left, $frame.Top, $frame.Width, $Height, 0x0014) | Out-Null
+      [NillaTour]::SetWindowPos($session.Main, [IntPtr]::Zero, $frame.Left, $frame.Top, $frame.Width, $Height, 0x0014) | Out-Null
       Start-Sleep -Milliseconds 1200
       $stop.Facts.Add("the main window was made $Height pixels tall")
     }
@@ -2662,12 +2662,12 @@ function Invoke-PeekTour([string]$Name, [hashtable]$Settings, [string]$Look, [in
     Send-Escape
     Start-Sleep -Milliseconds 800
   } | Out-Null
-  Stop-Ardia $session
+  Stop-Nilla $session
   if ($null -ne $savedStep) { Set-ScaleStep $savedStep | Out-Null }
 }
 
 function Invoke-LayoutTour([string]$Name, [hashtable]$Settings, [string]$Title, [string]$Expected) {
-  $session = Start-Ardia $Name -Onboarded -Settings $Settings
+  $session = Start-Nilla $Name -Onboarded -Settings $Settings
   Invoke-Stop $session $Name $Title {
     param($stop)
     $stop.Did = "Launched with $(($Settings.GetEnumerator() | ForEach-Object { "$($_.Key) = $($_.Value)" }) -join ', ') in config.json, then pressed Ctrl+T twice."
@@ -2686,11 +2686,11 @@ function Invoke-LayoutTour([string]$Name, [hashtable]$Settings, [string]$Title, 
     $problems = @(Read-LogLines $session.Log | Where-Object { $_ -match "\[config\]" })
     if ($problems.Count) { $stop.Facts.Add("config log lines: $(($problems | Select-Object -First 3) -join ' | ')") }
   } | Out-Null
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 function Invoke-DarkTour {
-  $session = Start-Ardia "dark" -Onboarded -Settings @{ appearance = "dark" }
+  $session = Start-Nilla "dark" -Onboarded -Settings @{ appearance = "dark" }
   Invoke-Stop $session "dark-main" "Dark mode, main window" {
     param($stop)
     $stop.Did = "Launched with appearance = dark in config.json."
@@ -2699,7 +2699,7 @@ function Invoke-DarkTour {
     Focus-Window $session $session.Main $stop | Out-Null
     Start-Sleep -Milliseconds 800
     $shot = Save-Shot $stop $session.Main
-    $dark = [ArdiaTour]::DarkModeOf($session.Main)
+    $dark = [NillaTour]::DarkModeOf($session.Main)
     $darker = $null
     if ($null -ne $shot.Brightness -and $null -ne $script:LightBrightness) {
       $darker = $shot.Brightness -lt ($script:LightBrightness - 30)
@@ -2710,11 +2710,11 @@ function Invoke-DarkTour {
     elseif ($dark -eq 0 -or $darker -eq $false) { $stop.Seen = "no" }
   } | Out-Null
   if (Test-Usable $session) { Invoke-SettingsStops $session "-dark" ", dark mode" }
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 function Get-Motion($Session, [int]$Mark) {
-  return @(Get-LinesSince $Session $Mark "\[ardia windows\] motion \d+ frames in \d+ ms" | ForEach-Object {
+  return @(Get-LinesSince $Session $Mark "\[nilla windows\] motion \d+ frames in \d+ ms" | ForEach-Object {
     if ($_ -match "motion (\d+) frames in (\d+) ms, longest (\d+) ms, (\d+) long") {
       [pscustomobject]@{ Frames = [int]$Matches[1]; Milliseconds = [int]$Matches[2]; Longest = [int]$Matches[3]; Long = [int]$Matches[4] }
     }
@@ -2725,7 +2725,7 @@ function Invoke-MotionStop($Session, [string]$Slug, [string]$Title, [string]$Key
   Invoke-Stop $Session $Slug $Title {
     param($stop)
     $stop.Did = "Pressed $Keys."
-    $jumps = $JumpsWithAnimationsOff -and -not [ArdiaTour]::AnimationsOn()
+    $jumps = $JumpsWithAnimationsOff -and -not [NillaTour]::AnimationsOn()
     $stop.Expected = "the launch log reports animation frames for at least $AtLeastMs ms, at 30 a second or more apart from its one longest gap."
     if ($jumps) { $stop.Expected = "no slide: Windows' animation effects are off here, and this one follows that setting." }
     Focus-Window $Session $Session.Main $stop | Out-Null
@@ -2738,7 +2738,7 @@ function Invoke-MotionStop($Session, [string]$Slug, [string]$Title, [string]$Key
     $bursts = @(Get-Motion $Session $mark)
     Save-Shot $stop $Session.Main | Out-Null
     $stop.Facts.Add("command $Command logged: $commanded")
-    $stop.Facts.Add("Windows' animation effects are on: $([ArdiaTour]::AnimationsOn())")
+    $stop.Facts.Add("Windows' animation effects are on: $([NillaTour]::AnimationsOn())")
     if (-not $bursts.Count) {
       $stop.Facts.Add("no animation frames were logged")
       Set-Seen $stop ($commanded -and $jumps)
@@ -2755,13 +2755,13 @@ function Invoke-MotionStop($Session, [string]$Slug, [string]$Title, [string]$Key
 }
 
 function Invoke-MotionTour {
-  $session = Start-Ardia "motion" -Onboarded
+  $session = Start-Nilla "motion" -Onboarded
   if (Test-Usable $session) {
     Invoke-MotionStop $session "motion-sidebar-hides" "The sidebar slides away" "Ctrl+S" @(0x11) 0x53 "toggleSidebar" 150 -JumpsWithAnimationsOff
     Invoke-MotionStop $session "motion-sidebar-shows" "The sidebar slides back" "Ctrl+S" @(0x11) 0x53 "toggleSidebar" 150 -JumpsWithAnimationsOff
     Invoke-MotionStop $session "motion-new-tab" "A new tab's row slides in" "Ctrl+T" @(0x11) 0x54 "newTab" 80
   }
-  Stop-Ardia $session
+  Stop-Nilla $session
 }
 
 $script:SettingsWindow = [IntPtr]::Zero
@@ -2815,7 +2815,7 @@ foreach ($tour in $tours) {
     Write-Host "[tour] the $($tour.Name) part stopped early: $($_.Exception.Message)"
     if ($tour.Required) { $script:Required.Add("the $($tour.Name) part stopped early: $($_.Exception.Message)") }
   } finally {
-    foreach ($session in @($script:Sessions | Where-Object { -not $_.Stopping })) { Stop-Ardia $session }
+    foreach ($session in @($script:Sessions | Where-Object { -not $_.Stopping })) { Stop-Nilla $session }
   }
 }
 

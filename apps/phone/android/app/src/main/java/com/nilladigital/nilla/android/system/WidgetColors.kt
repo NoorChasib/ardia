@@ -1,7 +1,7 @@
-package com.ardia.browser.android.system
+package com.nilladigital.nilla.android.system
 
 import androidx.compose.ui.graphics.Color
-import com.ardia.design.ProfileLook
+import com.nilladigital.nilla.design.ProfileLook
 
 data class WidgetColors(
     val backdrop: List<Color>,

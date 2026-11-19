@@ -1,12 +1,12 @@
 import { Animated, Easing } from "react-native";
-import type { MotionBurst, MotionNative } from "@ardia/shell";
+import type { MotionBurst, MotionNative } from "@nilla/shell";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
 const FADE_MS = 200;
 const BURST_LIMIT_MS = 3000;
 
-const motion = () => requireNativeModule<MotionNative>("ArdiaMotion");
+const motion = () => requireNativeModule<MotionNative>("NillaMotion");
 
 export const checks: Check[] = [
   {

@@ -3,7 +3,7 @@ import * as engine from "../../browser/src/state/sync/engine";
 import type { DataType, SendTarget, SyncUi } from "../../browser/src/state/sync/syncDoc";
 import type { FolderInfo, PhraseResult } from "../../browser/src/platform/sync";
 import { SyncNative } from "../../browser/src/platform/sync";
-import { ardiaHost, type ArdiaHost } from "./host";
+import { nillaHost, type ArdiaHost } from "./host";
 import {
   claimSyncAuthority,
   configureHeldLogins,
@@ -94,7 +94,7 @@ function dropDeletedProfiles() {
     const live = new Set(Object.keys(last).map((id) => engineProfile({ profiles: last }, id)));
     if (live.size) {
       void heldLogins?.dropProfiles([...seen].filter((profile) => !live.has(profile))).catch((error: unknown) =>
-        console.warn("[ardia linux] sync", error instanceof Error ? error.message : error),
+        console.warn("[nilla linux] sync", error instanceof Error ? error.message : error),
       );
     }
     seen = live;
@@ -156,7 +156,7 @@ async function becomeAuthority(host: ArdiaHost) {
   try {
     await refreshSyncDocuments({ refresh: refreshDocument, remove: deleteDocument });
   } catch (error) {
-    useSync.setState({ status: "stalled", error: "Ardia couldn’t read this device’s sync files, so sync is paused to keep them." });
+    useSync.setState({ status: "stalled", error: "Nilla couldn’t read this device’s sync files, so sync is paused to keep them." });
     throw error;
   }
   await loadSyncDeviceName(host);
@@ -169,7 +169,7 @@ async function becomeAuthority(host: ArdiaHost) {
 }
 
 export function startLinuxSync(options: { host?: ArdiaHost; candidate: boolean; locks?: LocksLike; channel?: () => BroadcastChannel | null }) {
-  const host = options.host ?? ardiaHost;
+  const host = options.host ?? nillaHost;
   if (authority || !SyncNative || !host) return authority;
   const channel = (options.channel ?? (() => (typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel(SYNC_CHANNEL))))();
   const id = `${host.bootstrap.windowId}:${Math.random().toString(36).slice(2)}`;
@@ -226,7 +226,7 @@ function forward<T>(method: RemoteMethod, args: unknown[], timeoutMs?: number): 
   return authority.call(method, args, timeoutMs) as Promise<T>;
 }
 
-const quietly = (promise: Promise<unknown>) => void promise.catch((error: unknown) => console.warn("[ardia linux] sync", error));
+const quietly = (promise: Promise<unknown>) => void promise.catch((error: unknown) => console.warn("[nilla linux] sync", error));
 
 export const currentSyncFolder = () => useSync.getState().folder;
 export const deviceName = () => syncDeviceName();
@@ -263,7 +263,7 @@ export async function enterRecoveryPhrase(folder: string, text: string): Promise
   try {
     return await forward("enterRecoveryPhrase", [folder, text], INTERACTIVE_CALL_TIMEOUT_MS);
   } catch (error) {
-    console.warn("[ardia linux] sync", error instanceof Error ? error.message : error);
+    console.warn("[nilla linux] sync", error instanceof Error ? error.message : error);
     return { error: "unavailable" };
   }
 }

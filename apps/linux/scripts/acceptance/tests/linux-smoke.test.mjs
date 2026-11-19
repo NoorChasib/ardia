@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { deflateSync } from "node:zlib";
-import { launchArguments, launchEnvironment } from "../lib/ardia.mjs";
+import { launchArguments, launchEnvironment } from "../lib/nilla.mjs";
 import { ASSERTIONS, USAGE, commandLine, fixturePage, forbiddenSwitches, formatTable, launchRefusal, lddMissing, modeProblems, parseArgs, parseStat, parseStatus, pngInk, processTree, processType, sandboxVerdict, summarize } from "../../../../../scripts/linux/smoke.mjs";
 
 const status = ({ seccomp = 0, nspid = [100] } = {}) => ({ seccomp, seccompFilters: seccomp === 2 ? 1 : 0, nspid, uid: [1000, 1000, 1000, 1000], noNewPrivs: seccomp === 2 ? 1 : 0 });
@@ -161,6 +161,6 @@ test("pngInk decodes filtered RGB and RGBA rows and counts dark pixels", () => {
 
 test("fixturePage carries the run's token in its title and marker", () => {
   const page = fixturePage("smokeabc");
-  assert.match(page, /<title>Ardia smoke smokeabc<\/title>/);
-  assert.match(page, /id="smoke-marker"[^>]*>Ardia smoke smokeabc</);
+  assert.match(page, /<title>Nilla smoke smokeabc<\/title>/);
+  assert.match(page, /id="smoke-marker"[^>]*>Nilla smoke smokeabc</);
 });

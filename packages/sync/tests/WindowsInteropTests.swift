@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 import XCTest
-@testable import ArdiaSyncCore
+@testable import NillaSyncCore
 
 final class WindowsInteropTests: XCTestCase {
   static let entropy = Data((1...32).map(UInt8.init))

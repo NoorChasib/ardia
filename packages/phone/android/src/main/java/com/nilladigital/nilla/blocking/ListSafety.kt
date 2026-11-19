@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 data class ListBudget(
     val maxRulesPerList: Int = 250_000,

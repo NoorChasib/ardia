@@ -8,7 +8,7 @@ public enum HermesFatal {
 
   public static func install() {
     guard let url = try? DocumentStore.url(name) else { return }
-    ArdiaHermesFatalInstall(url.path)
+    NillaHermesFatalInstall(url.path)
   }
 
   static func pending() -> (written: Date, reason: String?)? {

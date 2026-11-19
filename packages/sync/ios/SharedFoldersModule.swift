@@ -3,11 +3,11 @@ import ArdiaCore
 import ExpoModulesCore
 
 public class SharedFoldersModule: Module {
-  private static let work = DispatchQueue(label: "ardia.shared-folders", qos: .utility)
+  private static let work = DispatchQueue(label: "nilla.shared-folders", qos: .utility)
   private var watcher: SharedFolderWatcher?
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaSharedFolders")
+    Name("NillaSharedFolders")
 
     Events("onChange")
 
@@ -45,7 +45,7 @@ public class SharedFoldersModule: Module {
 
   static var defaultParent: URL {
     if let testParent { return testParent }
-    if let dataDirectory { return dataDirectory.appendingPathComponent("Ardia Shared", isDirectory: true) }
-    return SyncFolder.iCloudDrive.appendingPathComponent("Ardia Shared", isDirectory: true)
+    if let dataDirectory { return dataDirectory.appendingPathComponent("Nilla Shared", isDirectory: true) }
+    return SyncFolder.iCloudDrive.appendingPathComponent("Nilla Shared", isDirectory: true)
   }
 }

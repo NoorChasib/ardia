@@ -4,14 +4,14 @@
 
 #include <vector>
 
-@interface NSWindow (ArdiaPreventsActivation)
+@interface NSWindow (NillaPreventsActivation)
 - (void)_setPreventsActivation:(BOOL)prevents;
 - (BOOL)_preventsActivation;
 - (NSInteger)_resizeDirectionForMouseLocation:(NSPoint)location;
 - (BOOL)_isNonactivatingPanel;
 @end
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 constexpr CGFloat kPeek = 28;
 constexpr CGFloat kReturnMargin = 16;
@@ -21,27 +21,27 @@ constexpr CGFloat kRimAlpha = 0.17;
 
 }
 
-typedef NS_ENUM(NSInteger, ArdiaPiPEdge) { ArdiaPiPEdgeNone = 0, ArdiaPiPEdgeLeft = -1, ArdiaPiPEdgeRight = 1 };
+typedef NS_ENUM(NSInteger, NillaPiPEdge) { NillaPiPEdgeNone = 0, NillaPiPEdgeLeft = -1, NillaPiPEdgeRight = 1 };
 
-@interface ArdiaPiPControl : NSView
+@interface NillaPiPControl : NSView
 @property (nonatomic, copy) void (^onClick)(void);
 @property (nonatomic) BOOL hovered;
 @end
 
-@interface ArdiaPiPHandle : ArdiaPiPControl
-@property (nonatomic) ArdiaPiPEdge edge;
+@interface NillaPiPHandle : NillaPiPControl
+@property (nonatomic) NillaPiPEdge edge;
 @end
 
-@interface ArdiaPiPOverlay : NSView
-@property (nonatomic, readonly) ArdiaPiPHandle *handle;
+@interface NillaPiPOverlay : NSView
+@property (nonatomic, readonly) NillaPiPHandle *handle;
 @end
 
-@interface ArdiaPiPController : NSObject
+@interface NillaPiPController : NSObject
 @property (nonatomic, readonly) NSWindow *window;
-@property (nonatomic, weak) ArdiaWebView *view;
+@property (nonatomic, weak) NillaWebView *view;
 @property (nonatomic, copy) NSString *host;
-@property (nonatomic, readonly) ArdiaPiPOverlay *overlay;
-@property (nonatomic, readonly) ArdiaPiPEdge stashedEdge;
+@property (nonatomic, readonly) NillaPiPOverlay *overlay;
+@property (nonatomic, readonly) NillaPiPEdge stashedEdge;
 @property (nonatomic) BOOL keepOnTop;
 + (instancetype)forWindow:(NSWindow *)window;
 - (instancetype)initWithWindow:(NSWindow *)window;
@@ -56,12 +56,12 @@ typedef NS_ENUM(NSInteger, ArdiaPiPEdge) { ArdiaPiPEdgeNone = 0, ArdiaPiPEdgeLef
 - (NSDictionary *)throwInfo;
 @end
 
-@interface ArdiaPiPController () {
+@interface NillaPiPController () {
   NSWindow *_window;
-  __weak ArdiaWebView *_view;
+  __weak NillaWebView *_view;
   NSString *_host;
-  ArdiaPiPOverlay *_overlay;
-  ArdiaPiPEdge _stashedEdge;
+  NillaPiPOverlay *_overlay;
+  NillaPiPEdge _stashedEdge;
   BOOL _keepOnTop;
   NSMutableArray *_observers;
   NSTimer *_slide;
@@ -83,7 +83,7 @@ typedef NS_ENUM(NSInteger, ArdiaPiPEdge) { ArdiaPiPEdgeNone = 0, ArdiaPiPEdgeLef
   double _dragMaxOff;
   double _dragSlowestMove;
   NSMutableArray *_dragTrace;
-  std::vector<ardia_pip_throw::Sample> _dragSamples;
+  std::vector<nilla_pip_throw::Sample> _dragSamples;
   __weak NSScreen *_dragHome;
   NSDictionary *_lastDrag;
   NSDictionary *_lastRelease;
@@ -104,28 +104,28 @@ typedef NS_ENUM(NSInteger, ArdiaPiPEdge) { ArdiaPiPEdgeNone = 0, ArdiaPiPEdgeLef
 - (void)bendCornersTo:(CGFloat)radius animated:(BOOL)animated;
 - (void)screenChanged;
 - (NSScreen *)homeScreen;
-- (ArdiaPiPEdge)edgeBeyond;
+- (NillaPiPEdge)edgeBeyond;
 - (BOOL)throwFrom:(NSPoint)grab velocity:(NSPoint)velocity;
 - (void)throwTo:(NSRect)target velocity:(NSPoint)velocity corner:(int)corner;
 - (void)settle;
 - (void)rescueIfLost;
-- (NSRect)frameStashedAt:(ArdiaPiPEdge)edge;
-- (void)stashAt:(ArdiaPiPEdge)edge;
+- (NSRect)frameStashedAt:(NillaPiPEdge)edge;
+- (void)stashAt:(NillaPiPEdge)edge;
 - (void)animateTo:(NSRect)target;
 - (void)swipeBegan:(NSEvent *)event;
-- (void)moveBy:(ardia_pip_throw::Point)delta;
+- (void)moveBy:(nilla_pip_throw::Point)delta;
 - (void)swipeMoved:(NSEvent *)event;
 - (void)swipeEnded:(NSEvent *)event cancelled:(BOOL)cancelled;
 - (void)dragReleasedAt:(NSPoint)pointer velocity:(NSPoint)velocity;
 @end
 
-@interface ArdiaPiPController (Workspaces)
+@interface NillaPiPController (Workspaces)
 @end
 
-@interface ArdiaPiPController (Placement)
+@interface NillaPiPController (Placement)
 @end
 
-@interface ArdiaPiPController (Swipe)
+@interface NillaPiPController (Swipe)
 + (BOOL)handleSwipe:(NSEvent *)event;
 + (void)abandonSwipeOn:(NSWindow *)window;
 - (void)dragBegan:(NSEvent *)event;
@@ -136,12 +136,12 @@ typedef NS_ENUM(NSInteger, ArdiaPiPEdge) { ArdiaPiPEdgeNone = 0, ArdiaPiPEdgeLef
 - (void)devDrag:(NSArray<NSString *> *)args;
 @end
 
-@interface ArdiaPiPController (Skip)
+@interface NillaPiPController (Skip)
 - (BOOL)skipBy:(double)seconds at:(NSPoint)point clickCount:(NSInteger)clickCount;
 - (NSDictionary *)skipInfo;
 @end
 
-@interface ArdiaPiPController (SelfTest)
+@interface NillaPiPController (SelfTest)
 - (NSString *)snapshot:(NSString *)name;
 - (void)runSelfTest;
 - (void)runButtonSelfTest:(NSString *)button;
@@ -149,11 +149,11 @@ typedef NS_ENUM(NSInteger, ArdiaPiPEdge) { ArdiaPiPEdgeNone = 0, ArdiaPiPEdgeLef
 - (void)devMouse:(NSArray<NSString *> *)args;
 @end
 
-@interface ArdiaPiPZoom : NSObject
+@interface NillaPiPZoom : NSObject
 + (BOOL)handle:(NSEvent *)event;
 @end
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 extern NSString *const kZoomDefault;
 extern const void *const kZoomKey;
@@ -170,8 +170,8 @@ extern NSInteger gActivations;
 void ActivateApp(NSString *why);
 BOOL ThrowEnabled();
 NSPoint PointerOf(NSEvent *event);
-ardia_pip_throw::Rect ThrowRect(NSRect r);
+nilla_pip_throw::Rect ThrowRect(NSRect r);
 int ScreenIndex(NSScreen *screen);
-std::vector<ardia_pip_throw::Screen> ThrowScreens();
+std::vector<nilla_pip_throw::Screen> ThrowScreens();
 
 }

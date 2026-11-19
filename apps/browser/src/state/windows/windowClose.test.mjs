@@ -17,7 +17,7 @@ const urlsClosedLast = () => S().closedWindows.at(-1).tabs.map((t) => t.url).sor
 const asked = [];
 let answer = true;
 let held = null;
-shellNativeModules.ArdiaDialogs.confirm = (options) => {
+shellNativeModules.NillaDialogs.confirm = (options) => {
   asked.push(options);
   if (held) return new Promise((resolve) => held.push(() => resolve({ confirmed: true, suppressed: false })));
   return Promise.resolve({ confirmed: answer, suppressed: false });
@@ -140,15 +140,15 @@ test("with sharing off, a profile only the closing window shows still closes wit
 test("a window already closing doesn't count as open: the next close is the last window's and asks nothing", async () => {
   const { a, b } = twoWindows();
   const gates = [];
-  const animateWindowClose = shellNativeModules.ArdiaAppWindows.animateWindowClose;
-  shellNativeModules.ArdiaAppWindows.animateWindowClose = () => new Promise((resolve) => gates.push(resolve));
+  const animateWindowClose = shellNativeModules.NillaAppWindows.animateWindowClose;
+  shellNativeModules.NillaAppWindows.animateWindowClose = () => new Promise((resolve) => gates.push(resolve));
   try {
     assert.deepEqual((await closeByUser(a)).map((d) => d.title), [], "A's tabs stay open in B");
     assert.ok(S().windows[a], "A is still in the store while it animates");
     assert.deepEqual((await closeByUser(b)).map((d) => d.title), [], "B is the last open window");
   } finally {
     gates.splice(0).forEach((resolve) => resolve());
-    shellNativeModules.ArdiaAppWindows.animateWindowClose = animateWindowClose;
+    shellNativeModules.NillaAppWindows.animateWindowClose = animateWindowClose;
   }
   await tick();
   await tick();
@@ -199,8 +199,8 @@ test("closing a window's last tab still asks about the tabs of its window", asyn
 
 async function withHeldAnimations(run) {
   const gates = new Map();
-  const animateWindowClose = shellNativeModules.ArdiaAppWindows.animateWindowClose;
-  shellNativeModules.ArdiaAppWindows.animateWindowClose = (id) => new Promise((resolve) => gates.set(id, resolve));
+  const animateWindowClose = shellNativeModules.NillaAppWindows.animateWindowClose;
+  shellNativeModules.NillaAppWindows.animateWindowClose = (id) => new Promise((resolve) => gates.set(id, resolve));
   const finish = async (id) => {
     gates.get(id)();
     gates.delete(id);
@@ -211,7 +211,7 @@ async function withHeldAnimations(run) {
     await run(finish);
   } finally {
     [...gates.values()].forEach((resolve) => resolve());
-    shellNativeModules.ArdiaAppWindows.animateWindowClose = animateWindowClose;
+    shellNativeModules.NillaAppWindows.animateWindowClose = animateWindowClose;
     await tick();
   }
 }
@@ -304,7 +304,7 @@ test("Settings and Import close through the same request as browser windows, fro
   assert.match(source("../import/flow.ts"), /export const closeImport = \(\) => requestWindowClose\(IMPORT_WINDOW_ID\);/);
   assert.match(source("../../../windows/Ardia/WindowManager.h"), /if \(!found \|\| !m_context \|\| m_quitting\) return;\n\s+try \{\n\s+args\.Cancel\(true\);/);
   assert.match(source("../../platform/nativeApi.ts"), /windows\.addListener\?\.\("onWindowEvent", \(event\) => \{\n\s+if \(event\.type === "closeRequest"\) void windows\.closeWindow\(event\.id\);/);
-  assert.match(source("../../platform/nativeApi.ts"), /^import type \{ WindowsNative \} from "@ardia\/shell";\n[\s\S]*type Windows = Pick<WindowsNative, "openWindow" \| "closeWindow"> & Partial<Pick<WindowsNative, "addListener">>;/, "the skew window reuses the shell's window types, and only as a type");
+  assert.match(source("../../platform/nativeApi.ts"), /^import type \{ WindowsNative \} from "@nilla\/shell";\n[\s\S]*type Windows = Pick<WindowsNative, "openWindow" \| "closeWindow"> & Partial<Pick<WindowsNative, "addListener">>;/, "the skew window reuses the shell's window types, and only as a type");
 });
 
 test("Settings and Import closes are decided one at a time, so two at once can't both miss the quit question", async () => {
@@ -324,11 +324,11 @@ test("the Windows self-check closes Settings, Import and a pop-up the ways users
   assert.match(selfCheck("selfCheck/windows.ts"), /\["self-check-close-settings", "settings"\], \["self-check-close-import", "import"\]/);
   assert.match(selfCheck("selfCheck/windows.ts"), /await windows\(\)\.requestClose\(id\);\n\s+const took = await goneWithin\(id, CLOSED_BY_REQUEST_MS\);/);
   assert.match(selfCheck("selfCheck/enginePopups.ts"), /expectTrue\(await popupWindowsGone\(popupsBefore, POPUP_WINDOW_GONE_MS\),/);
-  assert.doesNotMatch(selfCheck("selfCheck/enginePopups.ts"), /^import \{[^}]*\} from "@ardia\/shell";/m, "a runtime import of @ardia/shell from the self-checks loads its view managers before viewNamed is ready");
-  assert.match(selfCheck("selfCheck/enginePopups.ts"), /import \{ isPopupWindowId \} from "@ardia\/shell\/src\/windows\.ts";/);
+  assert.doesNotMatch(selfCheck("selfCheck/enginePopups.ts"), /^import \{[^}]*\} from "@nilla\/shell";/m, "a runtime import of @nilla/shell from the self-checks loads its view managers before viewNamed is ready");
+  assert.match(selfCheck("selfCheck/enginePopups.ts"), /import \{ isPopupWindowId \} from "@nilla\/shell\/src\/windows\.ts";/);
   assert.match(selfCheck("index.ts"), /void runSelfCheck\(\)\.finally\(\(\) => void endByClosingTheLastWindow\(\)\);/);
   const last = selfCheck("selfCheck/lastWindow.ts");
   assert.match(last, /for \(const id of await windows\(\)\.windowIds\(\)\) if \(id !== LAST_WINDOW_ID\) await windows\(\)\.closeWindow\(id\);/);
   assert.match(last, /await windows\(\)\.requestClose\(LAST_WINDOW_ID\);/);
-  assert.match(last, /console\.error\(`\[ardia windows\] self-check: the app was still running/);
+  assert.match(last, /console\.error\(`\[nilla windows\] self-check: the app was still running/);
 });

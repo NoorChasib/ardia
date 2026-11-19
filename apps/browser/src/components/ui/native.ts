@@ -19,11 +19,11 @@ export {
   type DropUpdate,
   type MagnifyUpdate,
   type SurfaceProps,
-} from "@ardia/shell";
+} from "@nilla/shell";
 
 export { FadeLabel } from "./FadeLabel";
 export { Symbol, type SymbolProps } from "./Symbol";
 
 export { SwipeArea, WebView, type SwipeAreaHandle, type SwipeEvent, type WebViewHandle } from "@ardia/ardiacore";
 
-export { DIA_SPECTRUM, Meadow, meadowTextStyle, PowerUp, ThemeSwatch, WindowBackdrop, type MeadowIntro, type MeadowIntroEvent, type MeadowTone } from "@ardia/shaders";
+export { DIA_SPECTRUM, Meadow, meadowTextStyle, PowerUp, ThemeSwatch, WindowBackdrop, type MeadowIntro, type MeadowIntroEvent, type MeadowTone } from "@nilla/shaders";

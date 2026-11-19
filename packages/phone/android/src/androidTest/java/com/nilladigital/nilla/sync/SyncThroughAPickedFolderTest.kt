@@ -1,12 +1,12 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.content.ContentResolver
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.ardia.sync.core.FileKeyStore
-import com.ardia.sync.core.RecoveryPhrase
-import com.ardia.sync.core.SyncKeys
-import com.ardia.sync.core.SyncVault
+import com.nilladigital.nilla.sync.core.FileKeyStore
+import com.nilladigital.nilla.sync.core.RecoveryPhrase
+import com.nilladigital.nilla.sync.core.SyncKeys
+import com.nilladigital.nilla.sync.core.SyncVault
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -68,7 +68,7 @@ class SyncThroughAPickedFolderTest {
             val vault = SyncVault(DocumentTreeStorage(tree, "Nilla Sync", "Nilla Sync"), keys)
             vault.createChain()
             val ids = (0 until 5).map { vault.write("app", "{\"n\":$it}".toByteArray()) }
-            val fromDisk = SyncVault(com.ardia.sync.core.FolderStorage(drive.folder), keys).read("app", emptySet())
+            val fromDisk = SyncVault(com.nilladigital.nilla.sync.core.FolderStorage(drive.folder), keys).read("app", emptySet())
             assertEquals(ids.sorted(), fromDisk.files.map { it.id }.sorted())
             assertEquals((0 until 5).map { "{\"n\":$it}" }.toSet(), fromDisk.files.map { String(it.payload) }.toSet())
             val everything = drive.folder.walkTopDown().map { it.name }.toList()

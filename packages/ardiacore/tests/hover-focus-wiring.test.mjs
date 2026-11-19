@@ -51,7 +51,7 @@ test("taking focus from a lingering pane gives it back to the tab's remembered D
   const after = body(focus, "- (void)focusAfterLingeringPane {");
   assert.match(after, /if \(!\[self focusRememberedDevToolsIn:window\]\) \[self focusPage\];/);
   const remembered = body(focus, "- (BOOL)focusRememberedDevToolsIn:(NSWindow *)window {");
-  assert.match(remembered, /_focus\.page != ArdiaPageFocus::DevTools \|\| devTools\.window != window \|\| !_devtoolsView \|\| !\[devTools isDescendantOf:_devtoolsView\]\) return NO;\s*\[window makeFirstResponder:devTools\];/);
+  assert.match(remembered, /_focus\.page != NillaPageFocus::DevTools \|\| devTools\.window != window \|\| !_devtoolsView \|\| !\[devTools isDescendantOf:_devtoolsView\]\) return NO;\s*\[window makeFirstResponder:devTools\];/);
 });
 
 test("a focus handoff's late page refocus stands down when a newer gate has opened in the window", () => {

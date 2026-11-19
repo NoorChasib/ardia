@@ -1,5 +1,5 @@
 import XCTest
-@testable import ArdiaTranslateCore
+@testable import NillaTranslateCore
 
 @MainActor
 final class PassageDispatchTests: XCTestCase {

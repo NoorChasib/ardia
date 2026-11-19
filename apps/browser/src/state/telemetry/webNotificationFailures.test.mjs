@@ -5,7 +5,7 @@ globalThis.__DEV__ = false;
 const posted = [];
 let outcome = () => Promise.resolve({ id: "ok", icon: "none" });
 globalThis.acTestNativeModules = {
-  ArdiaNotifications: {
+  NillaNotifications: {
     notificationPermission: () => Promise.resolve("granted"),
     requestNotificationPermission: () => Promise.resolve(true),
     removeNotifications: () => Promise.resolve(),

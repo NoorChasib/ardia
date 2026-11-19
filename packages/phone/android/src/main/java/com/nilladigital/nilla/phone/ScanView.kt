@@ -1,13 +1,13 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.view.ViewGroup
 import androidx.camera.view.PreviewView
 import androidx.lifecycle.LifecycleOwner
-import com.ardia.settings.CameraAccessCheck
-import com.ardia.settings.QrCameraSession
-import com.ardia.settings.QrFrameAnalyzer
-import com.ardia.settings.SyncCodeJudge
+import com.nilladigital.nilla.settings.CameraAccessCheck
+import com.nilladigital.nilla.settings.QrCameraSession
+import com.nilladigital.nilla.settings.QrFrameAnalyzer
+import com.nilladigital.nilla.settings.SyncCodeJudge
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.viewevent.EventDispatcher
 import expo.modules.kotlin.views.ExpoView

@@ -1,7 +1,7 @@
 import Foundation
 
 public struct SharedFolderDirectory {
-  public static let manifestName = ".ardia-folder.json"
+  public static let manifestName = ".nilla-folder.json"
   public static let linkExtension = "webloc"
   static let maxDepth = 8
   static let maxLinkBytes = 64 * 1024
@@ -361,6 +361,6 @@ public struct SharedFolderDirectory {
   }
 
   static func failure(_ message: String) -> NSError {
-    NSError(domain: "ArdiaSharedFolders", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+    NSError(domain: "NillaSharedFolders", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
   }
 }

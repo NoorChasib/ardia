@@ -6,8 +6,8 @@ import { renderSurface, textOf, unmount } from "../../test/render/harness";
 const mockListeners = new Set<(change: { source: number; target: number; durationMs: number; navigationBar: number }) => void>();
 const mockSettled = new Set<(change: { height: number; navigationBar: number }) => void>();
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual("@nilla/phone-native");
   return {
     ...actual,
     keyboard: {

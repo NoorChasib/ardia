@@ -52,7 +52,7 @@ export const checks: Check[] = [
   {
     name: "symbol: an unknown name resolves to nothing",
     run() {
-      expectEqual(vectorIcon("ardia.no.such.symbol", 14, "regular"), null, "unknown symbol");
+      expectEqual(vectorIcon("nilla.no.such.symbol", 14, "regular"), null, "unknown symbol");
       expectEqual(vectorIcon("", 14, "regular"), null, "empty symbol name");
       expectEqual(vectorIcon("xmark", 0, "regular"), null, "zero size");
     },

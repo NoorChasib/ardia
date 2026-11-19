@@ -1,14 +1,14 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.ardia.browser.NightShadeMode
-import com.ardia.browser.PageRequest
-import com.ardia.browser.PageZoom
-import com.ardia.browser.ReadableContentException
-import com.ardia.browser.WebsiteDataKind
+import com.nilladigital.nilla.NightShadeMode
+import com.nilladigital.nilla.PageRequest
+import com.nilladigital.nilla.PageZoom
+import com.nilladigital.nilla.ReadableContentException
+import com.nilladigital.nilla.WebsiteDataKind
 import expo.modules.interfaces.permissions.PermissionsStatus
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
@@ -60,7 +60,7 @@ class PageViewModule : Module() {
     private val context: Context get() = appContext.reactContext ?: throw CodedException("ERR_NO_CONTEXT", "The app context is gone", null)
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhonePageView")
+        Name("NillaPhonePageView")
 
         Constants("reportsDrawn" to true, "remembersSitePermissions" to true, "obscuresInsets" to true)
 
@@ -93,7 +93,7 @@ class PageViewModule : Module() {
             if (payload.requestCode == CAPTURE_REQUEST) {
                 val (request, promise, uri) = capturing ?: return@OnActivityResult
                 capturing = null
-                val answer = if (payload.resultCode == Activity.RESULT_OK) com.ardia.browsing.PickedFiles.answer(context, listOf(uri), captureUri = uri) else PageRequest.Answer.Dismissed
+                val answer = if (payload.resultCode == Activity.RESULT_OK) com.nilladigital.nilla.browsing.PickedFiles.answer(context, listOf(uri), captureUri = uri) else PageRequest.Answer.Dismissed
                 request.answer(answer)
                 promise.resolve(answer is PageRequest.Answer.Files && answer.uris.isNotEmpty())
                 return@OnActivityResult
@@ -209,7 +209,7 @@ class PageViewModule : Module() {
         AsyncFunction("snapshot") Coroutine { pageId: String, options: SnapshotOptionsRecord ->
             withContext(Dispatchers.Main) {
                 val covered = options.coveredInsets?.takeIf { it.size == 2 }?.let { it[0] to it[1] }
-                PhonePages.snapshot(pageId, options.maxWidth ?: com.ardia.browser.Page.SNAPSHOT_WIDTH, options.quality ?: SNAPSHOT_QUALITY, covered)
+                PhonePages.snapshot(pageId, options.maxWidth ?: com.nilladigital.nilla.Page.SNAPSHOT_WIDTH, options.quality ?: SNAPSHOT_QUALITY, covered)
             }
         }
 
@@ -432,7 +432,7 @@ class PageViewModule : Module() {
         }
         askAndroid(arrayOf(android.Manifest.permission.CAMERA)) { granted ->
             val activity = appContext.currentActivity
-            val uri = if (granted && activity != null) runCatching { com.ardia.browsing.CaptureFiles.create(context, if (photo) "jpg" else "mp4") }.getOrNull() else null
+            val uri = if (granted && activity != null) runCatching { com.nilladigital.nilla.browsing.CaptureFiles.create(context, if (photo) "jpg" else "mp4") }.getOrNull() else null
             if (activity == null || uri == null) {
                 request.dismiss()
                 promise.resolve(false)
@@ -487,7 +487,7 @@ class PageViewModule : Module() {
     }.getOrDefault(false)
 
     companion object {
-        const val PAGE_LAB_EXTRA = "com.ardia.phone.PAGE_LAB"
+        const val PAGE_LAB_EXTRA = "com.nilladigital.nilla.phone.PAGE_LAB"
         private const val PICK_FILES_REQUEST = 47_201
         private const val CAPTURE_REQUEST = 47_204
         private const val SNAPSHOT_QUALITY = 82

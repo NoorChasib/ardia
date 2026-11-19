@@ -12,7 +12,7 @@ let diaProfiles = [];
 let reply = () => unreadable();
 
 globalThis.acTestNativeModules = {
-  ArdiaImport: {
+  NillaImport: {
     addListener: () => ({ remove() {} }),
     isBrowserUnlocked: () => true,
     forgetUnlockedKeys() {},

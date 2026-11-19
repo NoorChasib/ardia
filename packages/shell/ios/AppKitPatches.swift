@@ -69,7 +69,7 @@ let installScrollViewInsetFix: Void = {
 }()
 
 enum StripWheel {
-  static let identifiers: Set<String> = ["ardia-top-strip", "ardia-tab-switcher"]
+  static let identifiers: Set<String> = ["nilla-top-strip", "nilla-tab-switcher"]
   static let pointsPerLine: CGFloat = 40
 
   static func tagged(_ scroll: NSScrollView) -> Bool {

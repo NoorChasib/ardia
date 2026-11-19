@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { launchArguments, launchEnvironment } from "../../apps/linux/scripts/acceptance/lib/ardia.mjs";
+import { launchArguments, launchEnvironment } from "../../apps/linux/scripts/acceptance/lib/nilla.mjs";
 import { ASSERTIONS, SCRIPT_NAME, SCRIPT_TITLE_PREFIX, USAGE, USER_SCRIPTS_CAPABILITIES, VERSION_PATTERN, appVersionVerdict, cliControlSupport, cliTarball, debLayoutProblems, packageFormat, formatTable, installerRanAgain, launchRefusal, packageStagedFiles, parseArgs, pipeLaunchArguments, splitPipeMessages, summarize, uboSeedProblems, uboTuningProblems, userScriptSource } from "./smoke.mjs";
 
 test("the package checks are named in the usage and keep the original eight first", () => {
@@ -97,19 +97,19 @@ test("the packaged uBlock Origin saves its engine soon after a launch and waits 
 });
 
 test("the packaged uBlock Origin carries a seed that its start sequence loads", () => {
-  const start = "µb.isReadyPromise = (async function start() {\n    try {\n        await ardiaSeedFromPackage();\n";
+  const start = "µb.isReadyPromise = (async function start() {\n    try {\n        await nillaSeedFromPackage();\n";
   const seed = JSON.stringify({ storage: { version: "1.76.0b25", selectedFilterLists: ["user-filters", "easylist"], "cache/selfie/staticMain": "a", "cache/selfie/staticNetFilteringEngine": "b" } });
   assert.deepEqual(uboSeedProblems(seed, start), []);
-  assert.deepEqual(uboSeedProblems(null, start), ["no readable ardia-seed/storage.json"]);
+  assert.deepEqual(uboSeedProblems(null, start), ["no readable nilla-seed/storage.json"]);
   assert.deepEqual(uboSeedProblems(seed, "µb.isReadyPromise = (async function start() {"), ["js/start.js doesn't load the seed"]);
   assert.deepEqual(uboSeedProblems(JSON.stringify({ storage: { version: "1.76.0b25", selectedFilterLists: [] } }), start), ["the seed has no cache/selfie/staticMain", "the seed has no cache/selfie/staticNetFilteringEngine"]);
 });
 
 test("the gate takes a tarball, a .deb or an AppImage and refuses anything else", () => {
-  assert.equal(packageFormat("/x/Ardia-0.2.47-linux-x64.tar.xz"), "tar");
-  assert.equal(packageFormat("/x/Ardia-0.2.47-linux-x64.deb"), "deb");
-  assert.equal(packageFormat("/x/Ardia-0.2.47-linux-x64.AppImage"), "appimage");
-  assert.equal(packageFormat("/x/Ardia.zip"), null);
+  assert.equal(packageFormat("/x/Nilla-0.2.47-linux-x64.tar.xz"), "tar");
+  assert.equal(packageFormat("/x/Nilla-0.2.47-linux-x64.deb"), "deb");
+  assert.equal(packageFormat("/x/Nilla-0.2.47-linux-x64.AppImage"), "appimage");
+  assert.equal(packageFormat("/x/Nilla.zip"), null);
   assert.equal(parseArgs(["--package", "a", "--results", "b"]).format, undefined);
   assert.equal(parseArgs(["--package", "a.deb", "--results", "b"]).format, "deb");
 });

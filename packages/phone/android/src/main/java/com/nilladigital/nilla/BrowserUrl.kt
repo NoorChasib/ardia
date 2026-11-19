@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 object BrowserUrl {
     const val BROWSE_SCHEME = "ardia"

@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaChromeWindowHost : NSObject
+@interface NillaChromeWindowHost : NSObject
 
 @property(class, nonatomic, readonly) CGFloat windowCornerRadius;
 
@@ -55,33 +55,33 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-extern NSNotificationName const ArdiaWindowSeenDidChange;
+extern NSNotificationName const NillaWindowSeenDidChange;
 
-NSView *_Nullable ArdiaWindowRootView(NSWindow *_Nullable window);
-NSValue *_Nullable ArdiaTrafficLightsCenter(NSWindow *_Nullable window);
-BOOL ArdiaTrafficLightsTrailing(NSWindow *_Nullable window);
-FOUNDATION_EXPORT BOOL ArdiaPerformReservedKey(NSEvent *event);
+NSView *_Nullable NillaWindowRootView(NSWindow *_Nullable window);
+NSValue *_Nullable NillaTrafficLightsCenter(NSWindow *_Nullable window);
+BOOL NillaTrafficLightsTrailing(NSWindow *_Nullable window);
+FOUNDATION_EXPORT BOOL NillaPerformReservedKey(NSEvent *event);
 
-@interface ArdiaChromeWindowHost (AccessibilityTitle)
+@interface NillaChromeWindowHost (AccessibilityTitle)
 
 @property(class, nonatomic, copy, nullable) void (^accessibilityTitleReadHandler)(NSWindow *window);
 
 @end
 
-@interface ArdiaChromeWindowHost (LittleFit)
+@interface NillaChromeWindowHost (LittleFit)
 
 + (nullable NSValue *)littleFrameFittingLandingOf:(NSWindow *)window
                                       minimumSize:(NSSize)minimum NS_SWIFT_NAME(littleFrameFittingLanding(of:minimumSize:));
 
 @end
 
-@interface ArdiaChromeWindowHost (Dev)
+@interface NillaChromeWindowHost (Dev)
 
 + (nullable NSString *)devAction:(NSString *)action window:(NSWindow *)window;
 
 @end
 
-@interface ArdiaChromeWindowHost (DevFullScreenProbe)
+@interface NillaChromeWindowHost (DevFullScreenProbe)
 
 + (NSString *)devFullScreenProbe:(nullable NSString *)argument window:(NSWindow *)window;
 

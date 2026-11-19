@@ -8,7 +8,7 @@ import UserNotifications
 public class DevModule: Module {
   #if DEBUG
   public func definition() -> ModuleDefinition {
-    Name("ArdiaDev")
+    Name("NillaDev")
 
     AsyncFunction("devCrash") { (kind: String?) in
       DispatchQueue.main.async { CrashReports.crashForTesting(kind) }
@@ -53,9 +53,9 @@ public class DevModule: Module {
       return IntroMusic.render(cues: cues, to: path)
     }
 
-    AsyncFunction("devLittleArdiaHotKey") { (press: Bool) -> [String: Any] in
-      if press { LittleArdiaHotKey.shared.press() }
-      return LittleArdiaHotKey.shared.state()
+    AsyncFunction("devLittleNillaHotKey") { (press: Bool) -> [String: Any] in
+      if press { LittleNillaHotKey.shared.press() }
+      return LittleNillaHotKey.shared.state()
     }.runOnQueue(.main)
 
     AsyncFunction("devMenuCommand") { (command: String, arg: String?) in
@@ -246,7 +246,7 @@ public class DevModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("devSetPointer") { (windowId: String, x: Double, y: Double, on: Bool) -> Bool in
-      let select = NSSelectorFromString("ardia_setPointerOverride:")
+      let select = NSSelectorFromString("nilla_setPointerOverride:")
       guard let view = NSClassFromString("RCTView"), (view as AnyObject).responds(to: select) else { return false }
       guard on else {
         _ = (view as AnyObject).perform(select, with: nil)
@@ -277,13 +277,13 @@ public class DevModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("devHoverStats") { (reset: Bool) -> [String: Any] in
-      let select = NSSelectorFromString("ardia_hoverStats:")
+      let select = NSSelectorFromString("nilla_hoverStats:")
       guard let view = NSClassFromString("RCTView"), (view as AnyObject).responds(to: select) else { return [:] }
       return ((view as AnyObject).perform(select, with: NSNumber(value: reset))?.takeUnretainedValue() as? [String: Any]) ?? [:]
     }.runOnQueue(.main)
 
     AsyncFunction("devSetMouseButtons") { (pressed: Int) -> Bool in
-      let select = NSSelectorFromString("ardia_setButtonsOverride:")
+      let select = NSSelectorFromString("nilla_setButtonsOverride:")
       guard let view = NSClassFromString("RCTView"), (view as AnyObject).responds(to: select) else { return false }
       _ = (view as AnyObject).perform(select, with: pressed < 0 ? nil : NSNumber(value: pressed > 0))
       return true
@@ -366,7 +366,7 @@ public class DevModule: Module {
 
   private static var urlDelivery: [String: Any] = [:]
 
-  private static let scriptQueue = DispatchQueue(label: "ardia.dev-applescript")
+  private static let scriptQueue = DispatchQueue(label: "nilla.dev-applescript")
 
   private static func snapshot(windowId: String, path: String, transparent: Bool = false) -> Bool {
     guard let view = WindowManager.shared.window(windowId)?.contentView, view.layer != nil else { return false }
@@ -410,7 +410,7 @@ public class DevModule: Module {
   }
   #else
   public func definition() -> ModuleDefinition {
-    Name("ArdiaDev")
+    Name("NillaDev")
   }
   #endif
 }

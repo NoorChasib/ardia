@@ -1,5 +1,5 @@
-import ArdiaShared
-@preconcurrency import ArdiaSyncCore
+import NillaShared
+@preconcurrency import NillaSyncCore
 import Foundation
 import Synchronization
 
@@ -51,7 +51,7 @@ public enum FolderCheck: Equatable, Sendable {
 }
 
 public actor SyncEngine {
-  private let queue = DispatchSerialQueue(label: "com.ardia.browser.ios.sync", qos: .utility)
+  private let queue = DispatchSerialQueue(label: "com.nilladigital.nilla.ios.sync", qos: .utility)
   public nonisolated var unownedExecutor: UnownedSerialExecutor { queue.asUnownedSerialExecutor() }
 
   public let deviceId: String

@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.content.res.Configuration
@@ -24,14 +24,14 @@ import android.os.SystemClock
 import android.view.View
 import android.view.ViewTreeObserver
 import androidx.compose.ui.graphics.toArgb
-import com.ardia.design.DeckBackdropStyle
-import com.ardia.design.DeckMesh
-import com.ardia.design.Frosting
-import com.ardia.design.GrainTexture
-import com.ardia.design.ProfileBackdropStyle
-import com.ardia.design.ProfileLook
-import com.ardia.design.SystemPalette
-import com.ardia.design.TabsBackdropMotion
+import com.nilladigital.nilla.design.DeckBackdropStyle
+import com.nilladigital.nilla.design.DeckMesh
+import com.nilladigital.nilla.design.Frosting
+import com.nilladigital.nilla.design.GrainTexture
+import com.nilladigital.nilla.design.ProfileBackdropStyle
+import com.nilladigital.nilla.design.ProfileLook
+import com.nilladigital.nilla.design.SystemPalette
+import com.nilladigital.nilla.design.TabsBackdropMotion
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.views.ExpoView
 import java.lang.ref.WeakReference
@@ -375,7 +375,7 @@ internal class NamedRunnable(private val label: String, private val body: () -> 
     override fun toString(): String = "$PREFIX$label"
 
     companion object {
-        const val PREFIX = "ardia "
+        const val PREFIX = "nilla "
     }
 }
 
@@ -384,7 +384,7 @@ internal interface SceneWork {
     fun toMain(job: Runnable)
 
     companion object {
-        private val thread by lazy { android.os.HandlerThread("ardia-look-scene", android.os.Process.THREAD_PRIORITY_DISPLAY).apply { start() } }
+        private val thread by lazy { android.os.HandlerThread("nilla-look-scene", android.os.Process.THREAD_PRIORITY_DISPLAY).apply { start() } }
         private val worker by lazy { android.os.Handler(thread.looper) }
         private val main by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
 
@@ -1171,7 +1171,7 @@ class DeckBackdropView(context: Context, appContext: AppContext) : LookView(cont
             return
         }
         val key = "${width}x$height $dark $base"
-        val node = grainNode ?: RenderNode("ardiaGrain").also { grainNode = it }
+        val node = grainNode ?: RenderNode("nillaGrain").also { grainNode = it }
         if (key != grainKey) {
             node.setPosition(0, 0, width, height)
             val recording = node.beginRecording(width, height)
@@ -1411,7 +1411,7 @@ class FrostSourceView(context: Context, appContext: AppContext) : ExpoView(conte
             super.dispatchDraw(canvas)
             return
         }
-        val node = recorder ?: RenderNode("ardiaFrostSource").also { recorder = it }
+        val node = recorder ?: RenderNode("nillaFrostSource").also { recorder = it }
         LookActivity.sourceRecordings += 1
         node.setPosition(0, 0, width, height)
         val recording = node.beginRecording(width, height)
@@ -1639,7 +1639,7 @@ open class FrostView(context: Context, appContext: AppContext) : LookView(contex
         report(choice, from?.finding?.why)
         if (choice.path == FrostPage.Path.Live && from != null) {
             if (isShown) scheduleRefresh(from.holdsPage)
-            val layerNode = blurNode ?: RenderNode("ardiaFrost").also { blurNode = it }
+            val layerNode = blurNode ?: RenderNode("nillaFrost").also { blurNode = it }
             val blur = style.blurRadius.value * density
             val scale = FrostScale.of(blur)
             applyEffect(layerNode, blur / scale, style.saturation)
@@ -1697,7 +1697,7 @@ open class FrostView(context: Context, appContext: AppContext) : LookView(contex
     internal var retintsSkipped = 0L
         private set
 
-    private fun tintColours(from: FrostSourceView, style: com.ardia.design.FrostedStyle, dark: Boolean): Boolean {
+    private fun tintColours(from: FrostSourceView, style: com.nilladigital.nilla.design.FrostedStyle, dark: Boolean): Boolean {
         val backdrop = from.backdrop() ?: return false
         backdrop.getLocationInWindow(there)
         getLocationInWindow(here)
@@ -1722,7 +1722,7 @@ open class FrostView(context: Context, appContext: AppContext) : LookView(contex
         invalidate()
     }
 
-    private fun tintedFill(canvas: Canvas, from: FrostSourceView, style: com.ardia.design.FrostedStyle, dark: Boolean): Boolean {
+    private fun tintedFill(canvas: Canvas, from: FrostSourceView, style: com.nilladigital.nilla.design.FrostedStyle, dark: Boolean): Boolean {
         if (!tintColours(from, style, dark)) return false
         paint.style = Paint.Style.FILL
         paint.shader = LinearGradient(0f, 0f, 0f, height.toFloat(), tinted[0], tinted[1], Shader.TileMode.CLAMP)

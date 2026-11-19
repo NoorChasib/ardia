@@ -2,7 +2,7 @@ import ExpoModulesCore
 
 public class MeadowModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaMeadow")
+    Name("NillaMeadow")
 
     AsyncFunction("debugState") { () -> [String: Any] in MeadowView.debugState }.runOnQueue(.main)
 

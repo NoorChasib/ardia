@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 
 object UsageConsent {
-    private const val PREFERENCES = "ardia-usage-consent"
+    private const val PREFERENCES = "nilla-usage-consent"
     private const val SHARING = "sharing"
     private const val GENERATION = "generation"
 
@@ -37,7 +37,7 @@ object PendingCounts {
     }
 
     private class Preferences(context: Context) : Store {
-        private val preferences = (context.applicationContext ?: context).getSharedPreferences("ardia-pending-counts", Context.MODE_PRIVATE)
+        private val preferences = (context.applicationContext ?: context).getSharedPreferences("nilla-pending-counts", Context.MODE_PRIVATE)
 
         override fun all(): Map<String, Int> = preferences.all.mapNotNull { (field, value) -> (value as? Int)?.takeIf { it > 0 }?.let { field to it } }.toMap()
 

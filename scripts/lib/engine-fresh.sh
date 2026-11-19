@@ -11,7 +11,7 @@ for layer in ardiacore chromium; do
   "$root/engine/$layer/apply.sh" --check \
     || die "the Chromium tree differs from engine/$layer: run engine/$layer/apply.sh and rebuild chrome_framework"
 done
-newest="$(find "$chromium_src/ardia" "$chromium_src/chrome/browser/ardia" -type f \
+newest="$(find "$chromium_src/nilla" "$chromium_src/chrome/browser/ardia" -type f \
   -newer "$framework_src/Versions/Current/Chromium Framework" -print -quit)"
 [ -z "$newest" ] || die "$newest is newer than the framework: rebuild chrome_framework (scripts/agent/engine-build, docs/engine-build.md)"
 game="$chromium_src/components/neterror/resources/game/game.html"

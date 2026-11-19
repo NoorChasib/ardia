@@ -18,10 +18,10 @@ export type AppEvent =
   | { type: "snapKeyHandedBack"; windowId: string; afterMenu?: boolean }
   | { type: "centeredResize" }
   | { type: "appLinkOpened"; windowId: string | null }
-  | { type: "littleArdiaReturnedToApp" }
+  | { type: "littleNillaReturnedToApp" }
   | { type: "windowTitleRead" }
   | { type: "keyHoldReplay"; tag: number; count: number }
-  | { type: "littleArdiaGlobalShortcut" }
+  | { type: "littleNillaGlobalShortcut" }
   | { type: "windowDragLoop" }
   | {
       type: "pasteRefused";

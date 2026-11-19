@@ -1,11 +1,11 @@
-package com.ardia.sync.core
+package com.nilladigital.nilla.sync.core
 
-import com.ardia.sync.core.SyncVectors.base64
-import com.ardia.sync.core.SyncVectors.base64String
-import com.ardia.sync.core.SyncVectors.hex
-import com.ardia.sync.core.SyncVectors.objects
-import com.ardia.sync.core.SyncVectors.string
-import com.ardia.sync.core.SyncVectors.strings
+import com.nilladigital.nilla.sync.core.SyncVectors.base64
+import com.nilladigital.nilla.sync.core.SyncVectors.base64String
+import com.nilladigital.nilla.sync.core.SyncVectors.hex
+import com.nilladigital.nilla.sync.core.SyncVectors.objects
+import com.nilladigital.nilla.sync.core.SyncVectors.string
+import com.nilladigital.nilla.sync.core.SyncVectors.strings
 import java.io.File
 import java.nio.file.Files
 import kotlinx.serialization.json.jsonObject
@@ -26,7 +26,7 @@ class SyncVectorsTest {
     }
 
     private fun <T> scratch(body: (File) -> T): T {
-        val folder = Files.createTempDirectory("ardia-sync-vectors").toFile()
+        val folder = Files.createTempDirectory("nilla-sync-vectors").toFile()
         try {
             return body(folder)
         } finally {

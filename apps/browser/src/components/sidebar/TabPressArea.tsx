@@ -1,6 +1,6 @@
 import { type ReactNode, useRef } from "react";
 import { Pressable, type Insets, type StyleProp, type ViewStyle } from "react-native";
-import { hostOf } from "@ardia/core";
+import { hostOf } from "@nilla/core";
 import { useSettings } from "../../state/browser/hooks";
 import { tabTitle } from "../../state/browser/model";
 import type { Tab } from "../../state/browser/types";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { services } from "@ardia/core/src/services.ts";
+import { services } from "@nilla/core/src/services.ts";
 import { haptics } from "../../state/app/haptics";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { appVersion, clearBrowsingData, openFromSettings, websiteDataClearsByTime } from "../../state/settings/actions";
@@ -69,12 +69,12 @@ function LinkRow({ title, icon, url, divider }: { title: string; icon: SymbolNam
 export function AboutPage() {
   const theme = useTheme();
   return (
-    <SettingsPage title="About Ardia" onBack={popSettings}>
+    <SettingsPage title="About Nilla" onBack={popSettings}>
       <View style={styles.hero}>
         <AppIcon side={appIconLayout.about} shadow />
         <View style={styles.heroText}>
           <Text accessibilityRole="header" style={[font.title, styles.heavy, styles.rounded, { color: theme.label }]}>
-            Ardia
+            Nilla
           </Text>
           <Text style={[font.subheadline, { color: theme.secondaryLabel }]}>{appVersion()}</Text>
         </View>
@@ -90,7 +90,7 @@ export function AboutPage() {
 }
 
 export const dataCredits = () => [
-  { name: "Nilla", use: copy().ardiaCredit, license: "Apache License 2.0", url: `https://github.com/${services().sourceRepo}` },
+  { name: "Nilla", use: copy().nillaCredit, license: "Apache License 2.0", url: `https://github.com/${services().sourceRepo}` },
   { name: "Ardia", use: "The browser Nilla is forked from.", license: "Apache License 2.0", url: "https://github.com/ardia-browser/ardia" },
   { name: "EasyList", use: "The list behind Block Ads.", license: "CC BY-SA 3.0 or GPLv3", url: "https://easylist.to" },
   { name: "EasyPrivacy", use: "The list behind Block Trackers.", license: "CC BY-SA 3.0 or GPLv3", url: "https://easylist.to" },

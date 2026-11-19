@@ -1,4 +1,4 @@
-package com.ardia.sync.core
+package com.nilladigital.nilla.sync.core
 
 import java.io.File
 import java.util.Base64
@@ -16,7 +16,7 @@ class SyncKeysTest {
         val zero = SyncKeys(ByteArray(32))
         assertEquals("d7edxrj7vwlaygcfhaqnqlb544", zero.chainTag)
         assertEquals("cmuewgnqxzle7emjmpiisvntxi", zero.scopeTag("app"))
-        val fixtures = File(System.getProperty("ardia.syncFixtures") ?: error("ardia.syncFixtures isn't set"))
+        val fixtures = File(System.getProperty("nilla.syncFixtures") ?: error("nilla.syncFixtures isn't set"))
         val sealed = Base64.getDecoder().decode(File(fixtures, "sealed-nilla-0.1.b64").readText().trim())
         assertArrayEquals("from nilla 0.1".toByteArray(), zero.open(sealed, zero.scopeTag("app"), "f1"))
     }

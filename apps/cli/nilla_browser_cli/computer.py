@@ -28,8 +28,8 @@ TEAM_ID = "YCK386LBJ7"
 REQUIREMENT = f'identifier "{BUNDLE_ID}" and anchor apple generic and certificate leaf[subject.OU] = "{TEAM_ID}"'
 APP_NAME = "CuaDriver.app"
 APP_BINARY = "Contents/MacOS/cua-driver"
-STAGING_NAME = f".{APP_NAME}.ardia-new"
-RETIRED_NAME = f".{APP_NAME}.ardia-old"
+STAGING_NAME = f".{APP_NAME}.nilla-new"
+RETIRED_NAME = f".{APP_NAME}.nilla-old"
 LOCK_NAME = ".applications.lock"
 LOCK_TIMEOUT_S = 120
 APPLICATIONS = Path("/Applications")
@@ -51,30 +51,30 @@ VERSION_DIR = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
 TARGETS = ("general", "claude-code", "codex", "cursor", "opencode")
 DOWNLOAD_TIMEOUT_S = 60
 PINNED_MESSAGE = (
-    f"ardia computer: cua-driver is pinned at {VERSION} and updates with the ardia command "
+    f"nilla computer: cua-driver is pinned at {VERSION} and updates with the nilla-browser command "
     "(the app installs new versions), not through cua's installer"
 )
 REFUSED = {
     "update": PINNED_MESSAGE,
     "channel": PINNED_MESSAGE,
-    "skills": "ardia computer: run `ardia skills install --target <agent>`; it installs cua-driver's skill pinned to this driver next to ardia's",
+    "skills": "nilla computer: run `nilla-browser skills install --target <agent>`; it installs cua-driver's skill pinned to this driver next to nilla's",
 }
 HELP = f"""\
-usage: ardia computer <cua-driver command> [args]
-       ardia computer setup
-       ardia computer mcp-config [--target general|claude-code|codex|cursor|opencode]
+usage: nilla computer <cua-driver command> [args]
+       nilla-browser computer setup
+       nilla-browser computer mcp-config [--target general|claude-code|codex|cursor|opencode]
 
 Operates native Mac apps (computer use) through cua-driver {VERSION} (github.com/trycua/cua, MIT), pinned and
-checked by ardia. Use ardia browse for web pages in Ardia.
+checked by nilla. Use nilla browse for web pages in Nilla.
 
   setup        download the pinned driver, put CuaDriver.app in /Applications (macOS ties the Accessibility and
                Screen Recording permissions to it), link a cua-driver command to this one, then ask for the
                permissions
-  mcp-config   print the MCP server entry for an agent, pointing at ardia computer mcp
+  mcp-config   print the MCP server entry for an agent, pointing at nilla computer mcp
   help         cua-driver's own help (every other command goes to cua-driver unchanged)
 
 Common commands: mcp, list-tools, describe <tool>, call <tool> '<json>', permissions status|grant, doctor, stop.
-update, channel and skills are ardia's job here: the driver updates with ardia, and ardia skills install adds its skill.
+update, channel and skills are nilla's job here: the driver updates with nilla, and nilla skills install adds its skill.
 """
 
 
@@ -87,7 +87,7 @@ class Inconclusive(Refused):
 
 
 def cua_home(env=None) -> Path:
-    from ardia_cli import usage
+    from nilla_browser_cli import usage
 
     return usage.cli_home(env) / "cua-driver"
 
@@ -113,7 +113,7 @@ def download(url: str, dest: Path) -> None:
     import urllib.error
     import urllib.request
 
-    from ardia_cli import __version__
+    from nilla_browser_cli import __version__
 
     class HttpsOnly(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -124,7 +124,7 @@ def download(url: str, dest: Path) -> None:
     if not url.startswith("https://"):
         raise Refused(f"refused a download that isn't https: {url}")
     opener = urllib.request.build_opener(HttpsOnly)
-    request = urllib.request.Request(url, headers={"User-Agent": f"ardia/{__version__}"})
+    request = urllib.request.Request(url, headers={"User-Agent": f"nilla/{__version__}"})
     with opener.open(request, timeout=DOWNLOAD_TIMEOUT_S) as response, open(dest, "wb") as out:
         shutil.copyfileobj(response, out, 1 << 20)
 
@@ -257,7 +257,7 @@ def ensure_driver(env=None) -> Path:
         except Inconclusive:
             raise
         except Refused as error:
-            say(f"ardia computer: the cached cua-driver failed verification ({error}); fetching it again")
+            say(f"nilla computer: the cached cua-driver failed verification ({error}); fetching it again")
             remove_path(app)
     home = version_home(env)
     home.mkdir(parents=True, exist_ok=True)
@@ -351,7 +351,7 @@ def committed(record: dict) -> bool:
     return record.get("state", "committed") == "committed"
 
 
-def installed_by_ardia(app: Path, env=None) -> bool:
+def installed_by_nilla(app: Path, env=None) -> bool:
     record = read_record(env)
     if not committed(record) or record.get("path") != str(app) or not record.get("cdhash"):
         return False
@@ -360,7 +360,7 @@ def installed_by_ardia(app: Path, env=None) -> bool:
 
 def quietly_ours(app: Path, env=None) -> bool:
     try:
-        return installed_by_ardia(app, env)
+        return installed_by_nilla(app, env)
     except Inconclusive:
         return False
 
@@ -390,7 +390,7 @@ def applications_lock(env=None):
                 break
             except BlockingIOError:
                 if time.monotonic() >= deadline:
-                    raise Refused(f"another ardia computer setup or refresh is still running (waited {LOCK_TIMEOUT_S} s)") from None
+                    raise Refused(f"another nilla computer setup or refresh is still running (waited {LOCK_TIMEOUT_S} s)") from None
                 time.sleep(0.1)
         yield
     finally:
@@ -438,7 +438,7 @@ def recover(env=None) -> bool:
         try:
             verdict = pending_verdict(dest, record.get("cdhash"))
         except Inconclusive as error:
-            say(f"ardia computer: recovery is pending for {dest} ({error}); the next ardia computer run tries again")
+            say(f"nilla computer: recovery is pending for {dest} ({error}); the next nilla computer run tries again")
             return False
         if verdict == "match":
             save_record({key: value for key, value in record.items() if key not in ("previous", "state")} | {"state": "committed"}, env)
@@ -482,16 +482,16 @@ def place_app(source: Path, env=None) -> str:
     staging = APPLICATIONS / STAGING_NAME
     retired = APPLICATIONS / RETIRED_NAME
     exists = dest.exists() or dest.is_symlink()
-    ours = exists and installed_by_ardia(dest, env)
+    ours = exists and installed_by_nilla(dest, env)
     if exists and not ours:
         version = app_version(dest) or "of unknown version"
-        return f"kept {dest}: CuaDriver.app {version} was put there by something other than ardia (cua's own installer?); ardia computer uses it as is"
+        return f"kept {dest}: CuaDriver.app {version} was put there by something other than nilla (cua's own installer?); nilla computer uses it as is"
     if ours:
         verify_app(dest)
         if app_version(dest) == VERSION:
             return f"current {dest} ({VERSION})"
     if not os.access(APPLICATIONS, os.W_OK):
-        raise Refused(f"can't write to {APPLICATIONS}; run ardia computer setup from an admin account")
+        raise Refused(f"can't write to {APPLICATIONS}; run nilla computer setup from an admin account")
     previous = read_record(env) if ours else None
     try:
         if staging.exists() or staging.is_symlink():
@@ -531,7 +531,7 @@ def bin_dir(env=None) -> Path:
 
 
 def trusted_launcher(env=None) -> Path | None:
-    from ardia_cli import usage
+    from nilla_browser_cli import usage
 
     cli_home = usage.cli_home(env)
     current = cli_home / "current" / "bin" / "ardia"
@@ -547,12 +547,12 @@ def trusted_launcher(env=None) -> Path | None:
     return None
 
 
-def ardia_command(env=None) -> str:
+def nilla_command(env=None) -> str:
     launcher = trusted_launcher(env)
     if launcher is None:
         raise Refused(
-            "can't find the installed ardia launcher ($ARDIA_CLI_HOME/current/bin/ardia), and won't take whatever "
-            "ardia is first on PATH; install the ardia command from Ardia (Settings › Advanced) and run this again"
+            "can't find the installed nilla launcher ($ARDIA_CLI_HOME/current/bin/ardia), and won't take whatever "
+            "nilla is first on PATH; install the nilla-browser command from Nilla (Settings › Advanced) and run this again"
         )
     return str(launcher)
 
@@ -562,7 +562,7 @@ def shim_path(env=None) -> Path:
 
 
 def link_command(env=None) -> str:
-    launcher = ardia_command(env)
+    launcher = nilla_command(env)
     shim = shim_path(env)
     shim.parent.mkdir(parents=True, exist_ok=True)
     body = f'#!/bin/sh\nexec {shlex.quote(launcher)} computer "$@"\n'
@@ -574,7 +574,7 @@ def link_command(env=None) -> str:
     if link.is_symlink() and os.readlink(link) == str(shim):
         return f"current {link}"
     if link.exists() or link.is_symlink():
-        return f"kept {link}: it isn't ardia's; run ardia computer instead of cua-driver"
+        return f"kept {link}: it isn't nilla's; run nilla computer instead of cua-driver"
     link.parent.mkdir(parents=True, exist_ok=True)
     link.symlink_to(shim)
     return f"linked {link} -> {shim}"
@@ -590,11 +590,11 @@ def driver_env(environ) -> dict:
 def setup(argv: list[str]) -> int:
     import argparse
 
-    parser = argparse.ArgumentParser(prog="ardia computer setup", description="Download the pinned cua-driver, put CuaDriver.app in /Applications and ask for its permissions.")
+    parser = argparse.ArgumentParser(prog="nilla computer setup", description="Download the pinned cua-driver, put CuaDriver.app in /Applications and ask for its permissions.")
     parser.add_argument("--no-grant", action="store_true", help="stop before asking for the permissions")
     args = parser.parse_args(argv)
     if not supported():
-        say("ardia computer: computer use through cua-driver needs macOS here")
+        say("nilla computer: computer use through cua-driver needs macOS here")
         return 1
     try:
         with applications_lock():
@@ -603,14 +603,14 @@ def setup(argv: list[str]) -> int:
             print(place_app(ensure_driver()))
         print(link_command())
     except (Refused, OSError, subprocess.CalledProcessError) as error:
-        say(f"ardia computer: {error}")
+        say(f"nilla computer: {error}")
         return 1
     dest = installed_app()
     if quietly_ours(dest) and signed_by_cua(dest):
         if run_driver_quietly(dest / APP_BINARY, "telemetry", "disable") == 0:
             print("cua-driver telemetry off (cua-driver telemetry enable turns it back on)")
     if args.no_grant or not (sys.stdin.isatty() and sys.stdout.isatty()):
-        print("next: ardia computer permissions grant")
+        print("next: nilla computer permissions grant")
         return 0
     print("Asking macOS for Cua Driver's Accessibility and Screen Recording permissions…")
     sys.stdout.flush()
@@ -625,17 +625,17 @@ def refresh() -> int:
         with applications_lock():
             if not recover():
                 return 1
-            if not dest.is_dir() or app_version(dest) == VERSION or not installed_by_ardia(dest):
+            if not dest.is_dir() or app_version(dest) == VERSION or not installed_by_nilla(dest):
                 return 0
             print(place_app(ensure_driver()))
     except (Refused, OSError, subprocess.CalledProcessError) as error:
-        say(f"ardia computer: {error}")
+        say(f"nilla computer: {error}")
         return 1
     return 0
 
 
 def mcp_config(target: str, env=None) -> str:
-    command = ardia_command(env)
+    command = nilla_command(env)
     args = ["computer", "mcp"]
     if target == "claude-code":
         entry = json.dumps({"command": command, "args": args})
@@ -653,13 +653,13 @@ def mcp_config(target: str, env=None) -> str:
 def print_mcp_config(argv: list[str]) -> int:
     import argparse
 
-    parser = argparse.ArgumentParser(prog="ardia computer mcp-config", description="Print the MCP server entry for an agent. It runs ardia computer mcp, so it keeps working across ardia and cua-driver updates.")
+    parser = argparse.ArgumentParser(prog="nilla computer mcp-config", description="Print the MCP server entry for an agent. It runs nilla computer mcp, so it keeps working across nilla and cua-driver updates.")
     parser.add_argument("--target", choices=TARGETS, default="general", help="claude-code and codex print the command that adds it; the others print the JSON to paste (default: general)")
     args = parser.parse_args(argv)
     try:
         print(mcp_config(args.target))
     except Refused as error:
-        say(f"ardia computer: {error}")
+        say(f"nilla computer: {error}")
         return 1
     return 0
 
@@ -673,12 +673,12 @@ def stale_notice(app: Path) -> str | None:
     record = read_record()
     if version == VERSION or record.get("path") != str(app) or record.get("version") != version:
         return None
-    return f"ardia computer: {app} is cua-driver {version}, ardia pins {VERSION}; run ardia computer setup to update it"
+    return f"nilla computer: {app} is cua-driver {version}, nilla pins {VERSION}; run nilla computer setup to update it"
 
 
 def run_driver(argv: list[str]) -> int:
     if not supported():
-        say("ardia computer: computer use through cua-driver needs macOS here")
+        say("nilla computer: computer use through cua-driver needs macOS here")
         return 1
     app = installed_app()
     try:
@@ -686,16 +686,16 @@ def run_driver(argv: list[str]) -> int:
             with applications_lock():
                 recover()
     except (Refused, OSError) as error:
-        say(f"ardia computer: {error}")
+        say(f"nilla computer: {error}")
         return 1
     if app.exists() or app.is_symlink():
         try:
             verify_app(app)
         except Inconclusive as error:
-            say(f"ardia computer: {error}; try again")
+            say(f"nilla computer: {error}; try again")
             return 1
         except Refused as error:
-            say(f"ardia computer: {error}. ardia won't run it: move it away and run ardia computer setup")
+            say(f"nilla computer: {error}. nilla won't run it: move it away and run nilla computer setup")
             return 1
         binary = app / APP_BINARY
         notice = stale_notice(app)
@@ -703,7 +703,7 @@ def run_driver(argv: list[str]) -> int:
             say(notice)
     elif argv and argv[0] in DAEMON_COMMANDS:
         say(
-            f"ardia computer: Cua Driver isn't set up yet. Run ardia computer setup: it puts {APP_NAME} in {APPLICATIONS}, "
+            f"nilla computer: Cua Driver isn't set up yet. Run nilla computer setup: it puts {APP_NAME} in {APPLICATIONS}, "
             "which macOS ties the Accessibility and Screen Recording permissions to"
         )
         return 1
@@ -711,9 +711,9 @@ def run_driver(argv: list[str]) -> int:
         try:
             binary = ensure_driver() / APP_BINARY
         except (Refused, OSError) as error:
-            say(f"ardia computer: {error}")
+            say(f"nilla computer: {error}")
             return 1
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     telemetry.finish_before_exec()
     os.execve(str(binary), [str(binary), *argv], driver_env(os.environ))
@@ -728,7 +728,7 @@ def label(argv: list[str]) -> str:
 
 
 def main(argv: list[str]) -> int:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     telemetry.note_command("computer", label(argv))
     first = argv[0] if argv else None

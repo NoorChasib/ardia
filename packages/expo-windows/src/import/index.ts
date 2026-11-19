@@ -1,5 +1,5 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
-import type { DialogsNative } from "@ardia/shell";
+import type { DialogsNative } from "@nilla/shell";
 import { emitNativeEvent } from "../events";
 import { findBrowser } from "./browsers";
 import { listSources } from "./discovery";
@@ -44,7 +44,7 @@ export function windowsImport(hostOf: () => ImportHost | null = nativeImportHost
     },
 
     async importData(jobId: string, browserId: string, profileId: string, kinds: ImportKind[], options: NativeOptions): Promise<string> {
-      const emit = (payload: object) => emitNativeEvent("ArdiaImport", "onImportEvent", { jobId, ...payload });
+      const emit = (payload: object) => emitNativeEvent("NillaImport", "onImportEvent", { jobId, ...payload });
       try {
         const result = await importProfile(needHost(), unlocks, browserId, profileId, kinds, options ?? {}, {
           progress: (p: Progress) => emit({ type: "progress", ...p }),
@@ -101,7 +101,7 @@ export function windowsImport(hostOf: () => ImportHost | null = nativeImportHost
     },
 
     async chooseImportFile(): Promise<string | null> {
-      const dialogs = TurboModuleRegistry.get<TurboModule & Pick<DialogsNative, "pickFiles">>("ArdiaDialogs");
+      const dialogs = TurboModuleRegistry.get<TurboModule & Pick<DialogsNative, "pickFiles">>("NillaDialogs");
       const [picked] = (await dialogs?.pickFiles()) ?? [];
       if (!picked) return null;
       return pathFromFileUrl(picked);

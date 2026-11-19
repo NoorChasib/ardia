@@ -1,6 +1,6 @@
-import ArdiaBrowser
+import NillaBrowser
 import Darwin
-import ArdiaDesign
+import NillaDesign
 import CoreSpotlight
 import ExpoModulesCore
 import UIKit
@@ -10,9 +10,9 @@ public final class PhoneSystemLinks {
   public static let shared = PhoneSystemLinks()
 
   public static let quickActions: [String: SystemLink] = [
-    "com.ardia.browser.ios.search": .search(query: nil),
-    "com.ardia.browser.ios.voice": .voiceSearch,
-    "com.ardia.browser.ios.incognito": .incognito,
+    "com.nilladigital.nilla.ios.search": .search(query: nil),
+    "com.nilladigital.nilla.ios.voice": .voiceSearch,
+    "com.nilladigital.nilla.ios.incognito": .incognito,
   ]
 
   public let defaultBrowser = DefaultBrowserStatus(defaults: .standard, asksSystem: true)
@@ -72,9 +72,9 @@ public final class PhoneSystemLinks {
   public func sceneBecameActive() {
     defaultBrowser.sceneBecameActive()
     UIApplication.shared.shortcutItems = [
-      UIApplicationShortcutItem(type: "com.ardia.browser.ios.search", localizedTitle: String(localized: "Search"), localizedSubtitle: nil, icon: UIApplicationShortcutIcon(systemImageName: "magnifyingglass")),
-      UIApplicationShortcutItem(type: "com.ardia.browser.ios.voice", localizedTitle: String(localized: "Voice Search"), localizedSubtitle: nil, icon: UIApplicationShortcutIcon(systemImageName: "mic")),
-      UIApplicationShortcutItem(type: "com.ardia.browser.ios.incognito", localizedTitle: String(localized: "New Incognito Tab"), localizedSubtitle: nil, icon: UIApplicationShortcutIcon(systemImageName: "eyes")),
+      UIApplicationShortcutItem(type: "com.nilladigital.nilla.ios.search", localizedTitle: String(localized: "Search"), localizedSubtitle: nil, icon: UIApplicationShortcutIcon(systemImageName: "magnifyingglass")),
+      UIApplicationShortcutItem(type: "com.nilladigital.nilla.ios.voice", localizedTitle: String(localized: "Voice Search"), localizedSubtitle: nil, icon: UIApplicationShortcutIcon(systemImageName: "mic")),
+      UIApplicationShortcutItem(type: "com.nilladigital.nilla.ios.incognito", localizedTitle: String(localized: "New Incognito Tab"), localizedSubtitle: nil, icon: UIApplicationShortcutIcon(systemImageName: "eyes")),
     ]
     drainInbox()
   }
@@ -97,7 +97,7 @@ public final class PhoneSystemLinks {
   }
 
   private func deliver(_ payload: [String: Any]) {
-    if PhoneTestBuild.flag("ArdiaLogSystemLinks"),
+    if PhoneTestBuild.flag("NillaLogSystemLinks"),
        let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]) {
       NSLog("ARDIA_SYSTEM_LINK %@", String(decoding: data, as: UTF8.self))
     }
@@ -128,7 +128,7 @@ public final class PhoneSystemLinks {
 
 public final class SystemModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneSystem")
+    Name("NillaPhoneSystem")
 
     Events("onSystemLink")
 
@@ -162,7 +162,7 @@ public final class SystemModule: Module {
 
 public final class DefaultBrowserModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneDefaultBrowser")
+    Name("NillaPhoneDefaultBrowser")
 
     AsyncFunction("status") { () -> [String: Any] in
       MainActor.assumeIsolated {

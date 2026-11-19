@@ -1,7 +1,7 @@
-import ArdiaSyncCore
+import NillaSyncCore
 import Foundation
 import Testing
-@testable import ArdiaSync
+@testable import NillaSync
 
 @MainActor
 @Suite struct SyncThroughICloudTests {

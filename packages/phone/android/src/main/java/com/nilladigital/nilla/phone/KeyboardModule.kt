@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.view.View
@@ -16,7 +16,7 @@ class KeyboardModule : Module() {
     private var layoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneKeyboard")
+        Name("NillaPhoneKeyboard")
 
         Events(WILL_CHANGE, DID_CHANGE)
 

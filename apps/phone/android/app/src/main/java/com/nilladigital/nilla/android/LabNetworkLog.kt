@@ -1,8 +1,8 @@
-package com.ardia.browser.android
+package com.nilladigital.nilla.android
 
 import android.content.Context
 import android.util.Log
-import com.ardia.phone.PhoneLab
+import com.nilladigital.nilla.phone.PhoneLab
 import com.facebook.react.modules.network.OkHttpClientProvider
 import okhttp3.Interceptor
 

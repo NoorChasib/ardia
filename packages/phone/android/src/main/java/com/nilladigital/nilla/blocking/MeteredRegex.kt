@@ -1,6 +1,6 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
-import com.google.re2j.ArdiaProgramBridge as Bridge
+import com.google.re2j.NillaProgramBridge as Bridge
 
 internal class MeteredRegex(pattern: com.google.re2j.Pattern) {
     private val program = Bridge.program(pattern)

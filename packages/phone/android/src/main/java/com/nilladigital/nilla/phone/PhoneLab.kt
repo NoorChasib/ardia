@@ -1,6 +1,6 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.browser.BuildConfig
+import com.nilladigital.nilla.BuildConfig
 
 object PhoneLab {
     val isOn: Boolean = BuildConfig.ARDIA_LAB

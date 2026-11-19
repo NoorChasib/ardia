@@ -1,4 +1,4 @@
-import ArdiaSyncCore
+import NillaSyncCore
 import Foundation
 
 public struct SyncFolderLocation: Codable, Equatable, Sendable {

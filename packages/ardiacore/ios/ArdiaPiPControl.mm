@@ -4,9 +4,9 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
-@implementation ArdiaPiPControl {
+@implementation NillaPiPControl {
   NSEvent *_down;
   NSTrackingArea *_tracking;
 }

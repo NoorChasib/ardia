@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.os.Handler
 import android.os.Looper
@@ -77,7 +77,7 @@ class BackModule : Module() {
     private fun current(): ComponentActivity? = appContext.currentActivity as? ComponentActivity
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneBack")
+        Name("NillaPhoneBack")
 
         Events(TrayBack.PROGRESS, TrayBack.CANCEL, TrayBack.COMMIT)
 

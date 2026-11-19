@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.database.Cursor
@@ -323,7 +323,7 @@ class PhoneLegacy(
             editor.putString(SITE_NIGHT_SHADE_DEFAULT, it)
             changed = true
         }
-        (browser[KEY_APP_LINKS] as? String)?.takeIf { it == "app" || it == "ardia" }?.let {
+        (browser[KEY_APP_LINKS] as? String)?.takeIf { it == "app" || it == "nilla" }?.let {
             editor.putBoolean(SITE_APP_LINKS_DEFAULT, it == "app")
             changed = true
         }
@@ -340,7 +340,7 @@ class PhoneLegacy(
                 if (key.isEmpty()) continue
                 if (site.has("pageZoom") && !site.isNull("pageZoom")) maps.getValue(SITE_ZOOM).put(key, site.getDouble("pageZoom"))
                 site.optString("nightShade").takeIf { it in NIGHT_SHADE_MODES }?.let { maps.getValue(SITE_NIGHT_SHADE).put(key, it) }
-                site.optString("appLinks").takeIf { it == "app" || it == "ardia" }?.let { maps.getValue(SITE_APP_LINKS).put(key, it == "app") }
+                site.optString("appLinks").takeIf { it == "app" || it == "nilla" }?.let { maps.getValue(SITE_APP_LINKS).put(key, it == "app") }
                 if (site.has("desktopSite") && !site.isNull("desktopSite")) maps.getValue(SITE_DESKTOP).put(key, site.getBoolean("desktopSite"))
                 if (site.has("blockersOff") && !site.isNull("blockersOff") && site.getBoolean("blockersOff")) trusted += key
             }
@@ -435,11 +435,11 @@ class PhoneLegacy(
         const val SCHEMA_VERSION = 1
         const val VISIT_PAGE_LIMIT = 5_000
         internal const val DATABASE_FILE = "browser.db"
-        internal const val BROWSER = "ardia.browser"
-        internal const val BLOCKING = "ardia.blocking"
+        internal const val BROWSER = "nilla.browser"
+        internal const val BLOCKING = "nilla.blocking"
         internal const val READER = "ardia.reader"
         private val PREFERENCE_FILES = listOf(BROWSER, BLOCKING, READER)
-        private const val SITE_PREFERENCES = "ardia-site-preferences"
+        private const val SITE_PREFERENCES = "nilla-site-preferences"
         private const val KEY_NIGHT_SHADE = "browsing.nightShade"
         private const val KEY_APP_LINKS = "browsing.appLinks"
         private const val KEY_SITES = "browsing.sites"

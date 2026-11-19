@@ -56,7 +56,7 @@ export type MemorySaverRequest = { state?: "on" | "off"; aggressiveness?: Memory
 
 export type MemorySaverState = { state: "on" | "off"; aggressiveness: MemorySaverMode; active: boolean; sites: string[]; invalid: string[] };
 
-export const inputIdleSeconds = () => nativeModule("ArdiaEngine").inputIdleSeconds();
+export const inputIdleSeconds = () => nativeModule("NillaEngine").inputIdleSeconds();
 
 type CliServer = { connections: number; generation: number; file: string; reason?: string };
 

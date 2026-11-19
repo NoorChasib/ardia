@@ -1,4 +1,4 @@
-package com.ardia.browser.android.system
+package com.nilladigital.nilla.android.system
 
 import android.content.Context
 import android.content.res.Configuration
@@ -50,14 +50,14 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import com.ardia.appmodel.SystemLink
-import com.ardia.browser.android.R
-import com.ardia.browser.android.SystemIntents
-import com.ardia.design.Monogram
-import com.ardia.design.ProfileLook
+import com.nilladigital.nilla.appmodel.SystemLink
+import com.nilladigital.nilla.android.R
+import com.nilladigital.nilla.android.SystemIntents
+import com.nilladigital.nilla.design.Monogram
+import com.nilladigital.nilla.design.ProfileLook
 
-object ArdiaWidgets {
-    internal val REVISION = longPreferencesKey("ardia.widget.revision")
+object NillaWidgets {
+    internal val REVISION = longPreferencesKey("nilla.widget.revision")
 
     suspend fun refreshSearch(context: Context) = refresh(context, SearchWidget(), SearchWidget::class.java)
 
@@ -99,26 +99,26 @@ object ArdiaWidgets {
 
     fun label(context: Context, kind: Kind): String = context.getString(kind.labelRes)
 
-    const val LOG_TAG = "ArdiaWidget"
+    const val LOG_TAG = "NillaWidget"
 }
 
 @Composable
 private fun WidgetPanel(colors: WidgetColors.DayNight, label: String, modifier: GlanceModifier = GlanceModifier, content: @Composable () -> Unit) {
     val fill = GlanceModifier.fillMaxSize()
-    Box(fill.background(ArdiaWidgets.both(colors) { it.panelTop }).cornerRadius(26.dp).semantics { contentDescription = label }) {
+    Box(fill.background(NillaWidgets.both(colors) { it.panelTop }).cornerRadius(26.dp).semantics { contentDescription = label }) {
         Image(
             ImageProvider(R.drawable.widget_fade_down),
             contentDescription = null,
             modifier = fill,
             contentScale = ContentScale.FillBounds,
-            colorFilter = ColorFilter.tint(ArdiaWidgets.both(colors) { if (it.panelDiagonal) it.panelTop else it.panelBottom }),
+            colorFilter = ColorFilter.tint(NillaWidgets.both(colors) { if (it.panelDiagonal) it.panelTop else it.panelBottom }),
         )
         Image(
             ImageProvider(R.drawable.widget_fade_diagonal),
             contentDescription = null,
             modifier = fill,
             contentScale = ContentScale.FillBounds,
-            colorFilter = ColorFilter.tint(ArdiaWidgets.both(colors) { if (it.panelDiagonal) it.panelBottom else it.panelTop }),
+            colorFilter = ColorFilter.tint(NillaWidgets.both(colors) { if (it.panelDiagonal) it.panelBottom else it.panelTop }),
         )
         Box(fill.then(modifier)) { content() }
     }
@@ -128,7 +128,7 @@ class SearchWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Responsive(setOf(SMALL, MEDIUM))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent { key(currentState(ArdiaWidgets.REVISION) ?: 0L) { SearchWidgetContent() } }
+        provideContent { key(currentState(NillaWidgets.REVISION) ?: 0L) { SearchWidgetContent() } }
     }
 
     companion object {
@@ -142,19 +142,19 @@ private fun SearchWidgetContent() {
     val context = LocalContext.current
     val isSmall = LocalSize.current.width < SearchWidget.MEDIUM.width
     val look = SystemStore.shared(context).loadSnapshot().look
-    ArdiaWidgets.logUpdate(context, "search", look)
+    NillaWidgets.logUpdate(context, "search", look)
     val colors = WidgetColors.dayNight(look, themed = true)
-    val inkProvider = ArdiaWidgets.both(colors) { it.ink }
-    val capsule = ArdiaWidgets.both(colors) { it.capsule }
-    WidgetPanel(colors, ArdiaWidgets.label(context, ArdiaWidgets.Kind.Search)) {
+    val inkProvider = NillaWidgets.both(colors) { it.ink }
+    val capsule = NillaWidgets.both(colors) { it.capsule }
+    WidgetPanel(colors, NillaWidgets.label(context, NillaWidgets.Kind.Search)) {
         Column(GlanceModifier.fillMaxSize().padding(16.dp)) {
             Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                Image(ImageProvider(R.drawable.ardia_logo), contentDescription = null, modifier = GlanceModifier.size(46.dp, 37.dp))
+                Image(ImageProvider(R.drawable.nilla_logo), contentDescription = null, modifier = GlanceModifier.size(46.dp, 37.dp))
                 Spacer(GlanceModifier.defaultWeight())
                 if (!isSmall) {
                     Text(
                         context.getString(R.string.app_name),
-                        style = TextStyle(color = ArdiaWidgets.both(colors) { it.ink.copy(alpha = 0.85f) }, fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                        style = TextStyle(color = NillaWidgets.both(colors) { it.ink.copy(alpha = 0.85f) }, fontSize = 15.sp, fontWeight = FontWeight.Bold),
                     )
                 }
             }
@@ -167,7 +167,7 @@ private fun SearchWidgetContent() {
                         .background(capsule)
                         .cornerRadius(22.dp)
                         .padding(horizontal = 14.dp)
-                        .clickable(ArdiaWidgets.open(context, SystemLink.Search(null)))
+                        .clickable(NillaWidgets.open(context, SystemLink.Search(null)))
                         .semantics { contentDescription = context.getString(R.string.widget_search) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -191,7 +191,7 @@ private fun SearchWidgetContent() {
                             .size(44.dp)
                             .background(capsule)
                             .cornerRadius(22.dp)
-                            .clickable(ArdiaWidgets.open(context, SystemLink.VoiceSearch))
+                            .clickable(NillaWidgets.open(context, SystemLink.VoiceSearch))
                             .semantics { contentDescription = context.getString(R.string.widget_voice_search) },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -212,7 +212,7 @@ class MacTabsWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Responsive(setOf(MEDIUM, LARGE))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        provideContent { key(currentState(ArdiaWidgets.REVISION) ?: 0L) { MacTabsWidgetContent() } }
+        provideContent { key(currentState(NillaWidgets.REVISION) ?: 0L) { MacTabsWidgetContent() } }
     }
 
     companion object {
@@ -249,10 +249,10 @@ private fun MacTabsWidgetContent() {
         if (!file.isFile) return@mapNotNull null
         BitmapFactory.decodeFile(file.path)?.let { name to it }
     }.toMap()
-    ArdiaWidgets.logUpdate(context, "macTabs", snapshot.look)
+    NillaWidgets.logUpdate(context, "macTabs", snapshot.look)
     val colors = WidgetColors.dayNight(snapshot.look, themed = false, softened = true)
     val large = LocalSize.current.height >= MacTabsWidget.LARGE.height
-    WidgetPanel(colors, ArdiaWidgets.label(context, ArdiaWidgets.Kind.MacTabs), GlanceModifier.padding(16.dp)) {
+    WidgetPanel(colors, NillaWidgets.label(context, NillaWidgets.Kind.MacTabs), GlanceModifier.padding(16.dp)) {
         when {
             !snapshot.isSyncEnabled -> MacTabsEmpty(R.string.widget_mac_tabs_sync_title, R.string.widget_mac_tabs_sync_message, R.drawable.ic_shortcut_mac_tabs, large, colors)
             !snapshot.hasMacTabs -> MacTabsEmpty(R.string.widget_mac_tabs_empty_title, R.string.widget_mac_tabs_empty_message, R.drawable.ic_shortcut_mac_tabs, large, colors)
@@ -261,23 +261,23 @@ private fun MacTabsWidgetContent() {
                 sections.forEachIndexed { index, section ->
                     if (index > 0) Spacer(GlanceModifier.height(10.dp))
                     Row(
-                        GlanceModifier.fillMaxWidth().clickable(ArdiaWidgets.open(context, SystemLink.MacTabs)),
+                        GlanceModifier.fillMaxWidth().clickable(NillaWidgets.open(context, SystemLink.MacTabs)),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Image(
                             ImageProvider(R.drawable.ic_shortcut_mac_tabs),
                             contentDescription = null,
                             modifier = GlanceModifier.size(14.dp),
-                            colorFilter = ColorFilter.tint(ArdiaWidgets.both(colors) { it.accent }),
+                            colorFilter = ColorFilter.tint(NillaWidgets.both(colors) { it.accent }),
                         )
                         Spacer(GlanceModifier.width(5.dp))
                         Text(
                             section.device.name,
                             maxLines = 1,
                             modifier = GlanceModifier.defaultWeight(),
-                            style = TextStyle(color = ArdiaWidgets.both(colors) { it.accent }, fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                            style = TextStyle(color = NillaWidgets.both(colors) { it.accent }, fontSize = 12.sp, fontWeight = FontWeight.Medium),
                         )
-                        Image(ImageProvider(R.drawable.ardia_logo_plain), contentDescription = null, modifier = GlanceModifier.size(18.dp, 14.dp))
+                        Image(ImageProvider(R.drawable.nilla_logo_plain), contentDescription = null, modifier = GlanceModifier.size(18.dp, 14.dp))
                     }
                     section.tabs.forEach { tab ->
                         Spacer(GlanceModifier.height(10.dp))
@@ -293,23 +293,23 @@ private fun MacTabsWidgetContent() {
 private fun MacTabRow(tab: SystemTab, icon: Bitmap?, colors: WidgetColors.DayNight) {
     val context = LocalContext.current
     Row(
-        GlanceModifier.fillMaxWidth().clickable(ArdiaWidgets.open(context, SystemLink.Open(tab.url))),
+        GlanceModifier.fillMaxWidth().clickable(NillaWidgets.open(context, SystemLink.Open(tab.url))),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
             Image(ImageProvider(icon), contentDescription = null, modifier = GlanceModifier.size(22.dp).cornerRadius(5.dp))
         } else {
-            Box(GlanceModifier.size(22.dp).background(ArdiaWidgets.both(colors) { it.monogramFill }).cornerRadius(5.dp), contentAlignment = Alignment.Center) {
+            Box(GlanceModifier.size(22.dp).background(NillaWidgets.both(colors) { it.monogramFill }).cornerRadius(5.dp), contentAlignment = Alignment.Center) {
                 Text(
                     Monogram.host(tab.url)?.take(1)?.uppercase().orEmpty(),
-                    style = TextStyle(color = ArdiaWidgets.both(colors) { it.secondaryLabel }, fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                    style = TextStyle(color = NillaWidgets.both(colors) { it.secondaryLabel }, fontSize = 12.sp, fontWeight = FontWeight.Medium),
                 )
             }
         }
         Spacer(GlanceModifier.width(10.dp))
         Column(GlanceModifier.defaultWeight()) {
-            Text(tab.displayTitle, maxLines = 1, style = TextStyle(color = ArdiaWidgets.both(colors) { it.label }, fontSize = 15.sp, fontWeight = FontWeight.Medium))
-            tab.host?.let { Text(it, maxLines = 1, style = TextStyle(color = ArdiaWidgets.both(colors) { it.secondaryLabel }, fontSize = 11.sp)) }
+            Text(tab.displayTitle, maxLines = 1, style = TextStyle(color = NillaWidgets.both(colors) { it.label }, fontSize = 15.sp, fontWeight = FontWeight.Medium))
+            tab.host?.let { Text(it, maxLines = 1, style = TextStyle(color = NillaWidgets.both(colors) { it.secondaryLabel }, fontSize = 11.sp)) }
         }
     }
 }
@@ -317,15 +317,15 @@ private fun MacTabRow(tab: SystemTab, icon: Bitmap?, colors: WidgetColors.DayNig
 @Composable
 private fun MacTabsEmpty(title: Int, message: Int, icon: Int, large: Boolean, colors: WidgetColors.DayNight) {
     val context = LocalContext.current
-    Column(GlanceModifier.fillMaxSize().clickable(ArdiaWidgets.open(context, SystemLink.MacTabs))) {
+    Column(GlanceModifier.fillMaxSize().clickable(NillaWidgets.open(context, SystemLink.MacTabs))) {
         Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-            Image(ImageProvider(icon), contentDescription = null, modifier = GlanceModifier.size(26.dp), colorFilter = ColorFilter.tint(ArdiaWidgets.both(colors) { it.accent }))
+            Image(ImageProvider(icon), contentDescription = null, modifier = GlanceModifier.size(26.dp), colorFilter = ColorFilter.tint(NillaWidgets.both(colors) { it.accent }))
             Spacer(GlanceModifier.defaultWeight())
-            Image(ImageProvider(R.drawable.ardia_logo), contentDescription = null, modifier = GlanceModifier.size(32.dp, 26.dp))
+            Image(ImageProvider(R.drawable.nilla_logo), contentDescription = null, modifier = GlanceModifier.size(32.dp, 26.dp))
         }
         Spacer(GlanceModifier.defaultWeight())
-        Text(context.getString(title), style = TextStyle(color = ArdiaWidgets.both(colors) { it.label }, fontSize = 17.sp, fontWeight = FontWeight.Bold))
-        Text(context.getString(message), maxLines = if (large) 4 else 2, style = TextStyle(color = ArdiaWidgets.both(colors) { it.secondaryLabel }, fontSize = 15.sp))
+        Text(context.getString(title), style = TextStyle(color = NillaWidgets.both(colors) { it.label }, fontSize = 17.sp, fontWeight = FontWeight.Bold))
+        Text(context.getString(message), maxLines = if (large) 4 else 2, style = TextStyle(color = NillaWidgets.both(colors) { it.secondaryLabel }, fontSize = 15.sp))
     }
 }
 

@@ -1,7 +1,7 @@
-import ArdiaShared
-import ArdiaSyncCore
+import NillaShared
+import NillaSyncCore
 import Foundation
-@testable import ArdiaSync
+@testable import NillaSync
 
 final class Sandbox {
   let root: URL
@@ -10,7 +10,7 @@ final class Sandbox {
   var keys: URL { root.appendingPathComponent("Keys", isDirectory: true) }
 
   init() throws {
-    root = FileManager.default.temporaryDirectory.appendingPathComponent("ardia-sync-\(UUID().uuidString)", isDirectory: true)
+    root = FileManager.default.temporaryDirectory.appendingPathComponent("nilla-sync-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
   }
 
@@ -71,7 +71,7 @@ final class FakeMac {
 
   static let source = """
   (() => {
-    const S = globalThis.ArdiaSync;
+    const S = globalThis.NillaSync;
     const scopes = {};
     const stores = {};
     let clock = null;

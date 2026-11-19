@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 import XCTest
-@testable import ArdiaSyncCore
+@testable import NillaSyncCore
 
 final class SyncVectorsTests: XCTestCase {
   static let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("fixtures/sync-vectors", isDirectory: true)

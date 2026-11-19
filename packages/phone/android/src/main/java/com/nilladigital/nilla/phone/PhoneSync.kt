@@ -1,16 +1,16 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
-import com.ardia.sync.LocalBrowsingSource
-import com.ardia.sync.SyncController
-import com.ardia.sync.SyncFiles
+import com.nilladigital.nilla.sync.LocalBrowsingSource
+import com.nilladigital.nilla.sync.SyncController
+import com.nilladigital.nilla.sync.SyncFiles
 import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 object PhoneSync {
-    const val DEMO_EXTRA = "com.ardia.phone.SYNC_DEMO"
+    const val DEMO_EXTRA = "com.nilladigital.nilla.phone.SYNC_DEMO"
     private const val RETIRE_TIMEOUT_MILLIS = 10_000L
 
     internal var makeController: (Context, LocalBrowsingSource) -> SyncController = { app, source -> SyncController.forApp(app, source) }

@@ -1,6 +1,6 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.design.FaviconTone
+import com.nilladigital.nilla.design.FaviconTone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

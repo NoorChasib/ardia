@@ -5,7 +5,7 @@
   "max_lanes": 2,
   "lane_base": 10,
   "cli": "dev:bu43",
-  "results": "~/ardia-scratch/bench-others/results/others-cloud-1",
+  "results": "~/nilla-scratch/bench-others/results/others-cloud-1",
   "memory_headroom_pct": 100,
   "contenders": [
     {
@@ -20,8 +20,8 @@
     },
     {
       "id": "ardia-cli-cloud",
-      "label": "ardia CLI, Browser Use cloud browser + Codex (GPT-6.1 Terra medium)",
-      "kind": "ardiacloud",
+      "label": "nilla CLI, Browser Use cloud browser + Codex (GPT-6.1 Terra medium)",
+      "kind": "nillacloud",
       "agent": "codex",
       "model": "gpt-6.1-terra",
       "effort": "medium",

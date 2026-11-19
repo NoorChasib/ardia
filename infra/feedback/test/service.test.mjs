@@ -29,7 +29,7 @@ function listen(handler) {
 }
 
 async function localService(options = {}) {
-  const dir = await mkdtemp(join(tmpdir(), "ardia-feedback-test-"));
+  const dir = await mkdtemp(join(tmpdir(), "nilla-feedback-test-"));
   dirs.push(dir);
   const logs = [];
   const handle = createService({
@@ -187,7 +187,7 @@ test("production backends: SeaweedFS, the collector and GitHub", async () => {
     const chunks = [];
     for await (const c of req) chunks.push(c);
     if (!collectorUp) return res.writeHead(503).end("collector down");
-    posted.push({ url: req.url, ingest: req.headers["x-ardia-ingest"], body: JSON.parse(Buffer.concat(chunks)) });
+    posted.push({ url: req.url, ingest: req.headers["x-nilla-ingest"], body: JSON.parse(Buffer.concat(chunks)) });
     res.writeHead(200, { "Content-Type": "application/json" }).end("{}");
   });
   const issuesSeen = [];
@@ -203,13 +203,13 @@ test("production backends: SeaweedFS, the collector and GitHub", async () => {
   const logs = [];
   const handle = createService({ keys: LOCAL_KEYS,
     store: seaweedStore("127.0.0.1", filer.port), events: otlpEvents("127.0.0.1", collector.port),
-    issues: githubIssues("tok", "o/r", github.url), secret: SECRET, publicUrl: () => "https://ardia.example",
+    issues: githubIssues("tok", "o/r", github.url), secret: SECRET, publicUrl: () => "https://nilla.example",
     dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l), later: (fn, ms) => timers.push({ fn, ms }),
   });
   const { url } = await listen(handle);
 
   const created = await (await post(`${url}/api/feedback`, report())).json();
-  assert.equal(created.upload_urls["crash-1.ips"], `https://ardia.example/api/feedback/${created.id}/files/crash-1.ips`);
+  assert.equal(created.upload_urls["crash-1.ips"], `https://nilla.example/api/feedback/${created.id}/files/crash-1.ips`);
   assert.ok(files.has(`/buckets/feedback/${created.id}/report.json`));
   const local = `${url}/api/feedback/${created.id}/files/`;
   assert.equal((await put(`${local}crash-1.ips`, created.upload_token, "hello")).status, 200);
@@ -267,7 +267,7 @@ test("production backends: SeaweedFS, the collector and GitHub", async () => {
 });
 
 test("a report completed while the collector was down sends its event on the next complete after a restart", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "ardia-feedback-test-"));
+  const dir = await mkdtemp(join(tmpdir(), "nilla-feedback-test-"));
   dirs.push(dir);
   let up = false;
   const sent = [];
@@ -296,7 +296,7 @@ test("storage that refuses writes answers 502 upstream:storage, retryable, and l
   const logs = [];
   const handle = createService({ keys: LOCAL_KEYS,
     store: seaweedStore("127.0.0.1", filer.port), events: { describe: () => "none", send: async () => {} }, issues: null, secret: SECRET,
-    publicUrl: () => "https://ardia.example", dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l),
+    publicUrl: () => "https://nilla.example", dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l),
   });
   const { url } = await listen(handle);
   const res = await post(`${url}/api/feedback`, report());
@@ -313,7 +313,7 @@ test("unreachable storage is blamed on storage, and a bug in the service answers
   const logs = [];
   const { url } = await listen(createService({ keys: LOCAL_KEYS,
     store: seaweedStore("127.0.0.1", port), events: { describe: () => "none", send: async () => {} }, issues: null, secret: SECRET,
-    publicUrl: () => "https://ardia.example", dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l),
+    publicUrl: () => "https://nilla.example", dashboardUrl: "https://dash.example", rateLimits: false, log: (l) => logs.push(l),
   }));
   const down = await post(`${url}/api/feedback`, report());
   assert.equal(down.status, 502);

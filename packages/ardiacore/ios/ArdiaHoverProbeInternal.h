@@ -2,10 +2,10 @@
 
 #import <AppKit/AppKit.h>
 
-namespace ardia_host::hover_probe {
+namespace nilla_host::hover_probe {
 
 enum class HoverReason { fine, halfActive, staleMenu, notKeyOrMain, coveredByView, responderLost, coveredByWindow };
-enum class FocusWindowKind { none, hidden, blockerPage, internal, ardiaPanel, popup, browser, other };
+enum class FocusWindowKind { none, hidden, blockerPage, internal, nillaPanel, popup, browser, other };
 enum class PageCover { none, reactNative, chromium, other };
 enum class HoverTrigger { move, click, recheck };
 enum class FocusHolder { none, window, otherWindow, page, control };

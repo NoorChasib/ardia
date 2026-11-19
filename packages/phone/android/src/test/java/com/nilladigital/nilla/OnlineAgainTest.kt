@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

@@ -1,5 +1,5 @@
 import XCTest
-@testable import ArdiaUpdaterCore
+@testable import NillaUpdaterCore
 
 final class WindowDragPacingTests: XCTestCase {
   let frame = 1.0 / 60

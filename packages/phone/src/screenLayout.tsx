@@ -31,7 +31,7 @@ export type ScreenLayoutReport = {
 
 type ScreenLayoutNative = { forcedCanvas?: () => DuoCanvasMode | null };
 
-const native = requireOptionalNativeModule<ScreenLayoutNative>("ArdiaPhoneScreenLayout");
+const native = requireOptionalNativeModule<ScreenLayoutNative>("NillaPhoneScreenLayout");
 
 let probe: ComponentType<ViewProps & { onLayoutChange: (event: { nativeEvent: ScreenLayoutReport }) => void }> | null = null;
 
@@ -41,6 +41,6 @@ export const forcedDuoCanvas = (): DuoCanvasMode | null => native?.forcedCanvas?
 
 export function ScreenLayoutProbe({ onLayoutChange }: { onLayoutChange: (report: ScreenLayoutReport) => void }) {
   if (!native) return null;
-  probe ??= requireNativeViewManager("ArdiaPhoneScreenLayout");
+  probe ??= requireNativeViewManager("NillaPhoneScreenLayout");
   return createElement(probe, { pointerEvents: "none", style: StyleSheet.absoluteFill, onLayoutChange: (event: { nativeEvent: ScreenLayoutReport }) => onLayoutChange(event.nativeEvent) });
 }

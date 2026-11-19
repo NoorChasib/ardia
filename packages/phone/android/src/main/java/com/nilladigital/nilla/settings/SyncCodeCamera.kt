@@ -1,4 +1,4 @@
-package com.ardia.settings
+package com.nilladigital.nilla.settings
 
 import android.Manifest
 import android.content.Context
@@ -76,7 +76,7 @@ class QrCameraSession(
 }
 
 class QrFrameAnalyzer(private val onPayload: (String) -> Unit) : ImageAnalysis.Analyzer {
-    val executor: ExecutorService = Executors.newSingleThreadExecutor { work -> Thread(work, "ardia-sync-scanner").apply { isDaemon = true } }
+    val executor: ExecutorService = Executors.newSingleThreadExecutor { work -> Thread(work, "nilla-sync-scanner").apply { isDaemon = true } }
     private val decoder = QrDecoder()
     private val main = Handler(Looper.getMainLooper())
     private var buffer = ByteArray(0)

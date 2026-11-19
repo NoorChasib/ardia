@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

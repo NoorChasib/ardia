@@ -8,13 +8,13 @@ const ids = (query) => search(SETTINGS_INDEX, query).map((h) => h.entry.id);
 const first = (query) => ids(query)[0];
 
 const TOP = [
-  ["cli", ["advanced.ardiaCommand"]],
-  ["shell", ["advanced.ardiaCommand"]],
-  ["devtools", ["advanced.ardiaCommand"]],
-  ["remote debugging", ["advanced.ardiaCommand"]],
-  ["command line", ["advanced.ardiaCommand"]],
-  ["terminal", ["advanced.ardiaCommand"]],
-  ["ardia command", ["advanced.ardiaCommand"]],
+  ["cli", ["advanced.nillaCommand"]],
+  ["shell", ["advanced.nillaCommand"]],
+  ["devtools", ["advanced.nillaCommand"]],
+  ["remote debugging", ["advanced.nillaCommand"]],
+  ["command line", ["advanced.nillaCommand"]],
+  ["terminal", ["advanced.nillaCommand"]],
+  ["nilla command", ["advanced.nillaCommand"]],
   ["dark", ["appearance.theme"]],
   ["dark mode", ["appearance.theme"]],
   ["theme", ["appearance.theme"]],
@@ -90,11 +90,11 @@ const TOP = [
   ["camera", ["profiles.siteSettings"]],
   ["microphone", ["profiles.siteSettings"]],
   ["startup", ["general.openAtLogin"]],
-  ["little arc", ["tabs.openLinksInLittleArdia"]],
-  ["little ardia", ["tabs.openLinksInLittleArdia"]],
-  ["little window", ["tabs.openLinksInLittleArdia"]],
-  ["links from other apps", ["tabs.openLinksInLittleArdia", "tabs.appLinksFirst"]],
-  ["slack", ["tabs.openLinksInLittleArdia"]],
+  ["little arc", ["tabs.openLinksInLittleNilla"]],
+  ["little nilla", ["tabs.openLinksInLittleNilla"]],
+  ["little window", ["tabs.openLinksInLittleNilla"]],
+  ["links from other apps", ["tabs.openLinksInLittleNilla", "tabs.appLinksFirst"]],
+  ["slack", ["tabs.openLinksInLittleNilla"]],
   ["air traffic control", ["automations.linkRules"]],
   ["atc", ["automations.linkRules"]],
   ["open links in profile", ["automations.linkRules"]],
@@ -126,7 +126,7 @@ test("real queries put the setting people mean first", () => {
 
 test("whole-word hits rank above word prefixes, and a loose keyword no longer wins", () => {
   const found = ids("cli");
-  assert.equal(found[0], "advanced.ardiaCommand");
+  assert.equal(found[0], "advanced.nillaCommand");
   assert.ok(!found.includes("general.crashDetails"));
   const clickRows = found.filter((id) => /[Cc]lick/.test(SETTINGS.find((s) => s.id === id).title));
   assert.ok(clickRows.length && clickRows.every((id) => found.indexOf(id) > 0));
@@ -161,8 +161,8 @@ test("results that land on the same place collapse into one", () => {
 test("rows named by the query stay apart even when they share a place", () => {
   const tabs = search(SETTINGS_INDEX, "tabs").filter((h) => h.entry.section === "Layout" && h.title.length);
   assert.ok(tabs.length >= 2, "several Layout rows say tabs in their names");
-  assert.equal(first("command line"), "advanced.ardiaCommand");
-  assert.equal(first("devtools"), "advanced.ardiaCommand");
+  assert.equal(first("command line"), "advanced.nillaCommand");
+  assert.equal(first("devtools"), "advanced.nillaCommand");
 });
 
 test("a pane's name finds that pane's rows", () => {
@@ -185,7 +185,7 @@ test("titles rank above keywords, keywords above descriptions", () => {
 
 test("every word of the query has to match", () => {
   assert.ok(!ids("block ads").includes("general.blockTrackers"));
-  assert.ok(ids("the ardia command").includes("advanced.ardiaCommand"));
+  assert.ok(ids("the nilla-browser command").includes("advanced.nillaCommand"));
 });
 
 test("garbage finds nothing", () => {

@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { tabCardAddress } = await import("./tabCardAddress.ts");
 
-const search = "https://www.google.com/search?q=ardia+browser&hl=en";
+const search = "https://www.google.com/search?q=nilla+browser&hl=en";
 
 test("the hover card shows a page's domain by default, without its path or query", () => {
   assert.equal(tabCardAddress(search, false), "google.com");
 });
 
 test("with Show full address on, the hover card shows the path and query too", () => {
-  assert.equal(tabCardAddress(search, true), "google.com/search?q=ardia+browser&hl=en");
+  assert.equal(tabCardAddress(search, true), "google.com/search?q=nilla+browser&hl=en");
 });
 
 test("a page without a host keeps its full address, in both modes", () => {

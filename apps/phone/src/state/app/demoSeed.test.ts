@@ -21,7 +21,7 @@ test("the demo store holds Compose's DemoSeed: eight open tabs, four archived, s
   assert.equal(new Set(rows.tabs.map((tab) => tab.id)).size, rows.tabs.length);
 });
 
-test("the lab's ArdiaDemoScale adds that many archived tabs and three times as many visits over 30 days, each its own address", () => {
+test("the lab's NillaDemoScale adds that many archived tabs and three times as many visits over 30 days, each its own address", () => {
   const now = Date.parse("2026-11-14T12:00:00Z");
   let next = 0;
   const rows = demoSeed(now, () => `id-${next++}`, 1000);

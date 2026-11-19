@@ -61,10 +61,10 @@ test("every native modal runs through RunModal off the UI thread, and the app st
   assert.match(windows, /if \(message == WM_ACTIVATE && LOWORD\(wParam\) != WA_INACTIVE && DialogParts::BringModalForward\(hwnd\)\) return 0;/);
   assert.match(windows, /if \(!DialogParts::BringModalForward\(entry->hwnd\)\) SetForegroundWindow\(entry->hwnd\);/);
   assert.match(native("NativeDialogs.h"), /else if \(HWND fallback = modal\.parent\.Dialog\(\)\) PostMessageW\(fallback, WM_COMMAND, IDCANCEL, 0\);/);
-  assert.match(native("Ardia.cpp"), /void ArdiaAppStop\(void\) \{\n  int dialogsOpen = Ardia::DialogParts::ModalRegistry::Shared\(\)\.threads\.load\(\);\n  int waited = Ardia::DialogParts::StopAllModals\(\);/);
+  assert.match(native("Nilla.cpp"), /void ArdiaAppStop\(void\) \{\n  int dialogsOpen = Nilla::DialogParts::ModalRegistry::Shared\(\)\.threads\.load\(\);\n  int waited = Nilla::DialogParts::StopAllModals\(\);/);
   assert.match(native("ModalThread.h"), /while \(registry\.threads\.load\(\) > 0 && GetTickCount64\(\) - began < StopWaitMs\) DeliverSentMessages\(10\);/);
   assert.match(native("ModalThread.h"), /PeekMessageW\(&message, nullptr, 0, 0, PM_NOREMOVE \| PM_QS_SENDMESSAGE\);/);
-  assert.match(native("Ardia.cpp"), /host\.engine = nullptr;\n  SetFocus\(nullptr\);\n  if \(host\.queue\) host\.queue\.ShutdownQueue\(\);/);
+  assert.match(native("Nilla.cpp"), /host\.engine = nullptr;\n  SetFocus\(nullptr\);\n  if \(host\.queue\) host\.queue\.ShutdownQueue\(\);/);
   assert.match(module, /parent\(owner, !Background\(\)\)/);
   const thread = native("ModalThread.h");
   assert.match(thread, /!m_ownerWasEnabled \|\| Stopping\(\)\) return;\n    bool hadFocus = m_givesFocusBack && DialogInFront\(\);/);
@@ -213,5 +213,5 @@ test("a pop-up menu tracks on a RunModal thread, owned by that thread's own wind
   assert.match(held, /loadWhileMenuHeld\(false, "held-menu-own-thread", LOAD_MS\)/);
   assert.match(held, /held = menus\(\)\.devHoldMenu\(MENU_OWNER, onUiThread\);/, "the menu is held in a window of its own, so the page loads in another window");
   assert.match(held, /!\(await loadWhileMenuHeld\(true, "held-menu-ui-thread", STALLED_MS\)\)/);
-  assert.match(readFileSync(new URL("../../../../packages/expo-windows/src/modules.ts", import.meta.url), "utf8"), /Pick<MenusModule, "openCount">>\("ArdiaMenus"\)\?\.openCount\(\)/, "pages asked while a menu is open count in dialog_pages_asked");
+  assert.match(readFileSync(new URL("../../../../packages/expo-windows/src/modules.ts", import.meta.url), "utf8"), /Pick<MenusModule, "openCount">>\("NillaMenus"\)\?\.openCount\(\)/, "pages asked while a menu is open count in dialog_pages_asked");
 });

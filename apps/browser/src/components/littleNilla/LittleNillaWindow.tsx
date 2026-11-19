@@ -17,30 +17,30 @@ import { setUrlAnchor, usePageFrameInset, windowCornerRadius } from "../../state
 import { showUrlBarMenu } from "../../state/omnibox/paste";
 import { copyPageUrl } from "../../state/site/selection";
 import { ProfileBadge } from "../profiles/ProfileIcons";
-import { closeLittleArdia, openInMainWindow, openLittleArdiaProfileMenu } from "../../state/littleArdia/actions";
+import { closeLittleNilla, openInMainWindow, openLittleNillaProfileMenu } from "../../state/littleNilla/actions";
 import { isWindowClosing } from "../../state/windows/closeAnimated";
 import { notePinch, noteSwipeClose } from "../../state/telemetry/usage";
 import { SwipeCloseContext } from "../window/swipeClose";
 import { useCardFrame } from "../window/cardFrame";
-import { startLittleArdiaNewTabLinks } from "../../state/littleArdia/newTabLinks";
+import { startLittleNillaNewTabLinks } from "../../state/littleNilla/newTabLinks";
 import { PageLabel, SMALL_BAR_BUTTON, SmallBar } from "./SmallChrome";
 import { SMALL_LIGHTS_CENTER } from "../../state/windows/small";
-import { littleArdiaBarLayout } from "./barLayout";
+import { littleNillaBarLayout } from "./barLayout";
 import { HistoryButton } from "../toolbar/NavButtons";
 import { toolbarPalette } from "../ui/toolbarColors";
 import { useHistoryAvailability } from "../../state/tabs/navigation";
-import { LITTLE_ARDIA_PINCH, LITTLE_ARDIA_SWIPE_CLOSE, SMALL_FIELD_MAX_WIDTH, smallBarRow } from "./tokens";
+import { LITTLE_NILLA_PINCH, LITTLE_NILLA_SWIPE_CLOSE, SMALL_FIELD_MAX_WIDTH, smallBarRow } from "./tokens";
 import { perLook } from "../ui/tokens";
 import { keyText } from "../../state/commands/keyText";
 
-const BAR = littleArdiaBarLayout();
+const BAR = littleNillaBarLayout();
 const NAV_HIT = perLook(() => ({ width: SMALL_BAR_BUTTON, height: SMALL_BAR_BUTTON, plateX: 0, plateY: 0, box: smallBarRow().button, radius: smallBarRow().buttonRadius }));
 const BACK_AT = perLook(() => ({ style: { position: "absolute" as const, top: BAR.buttonTop, left: BAR.navLeft }, hit: NAV_HIT() }));
 const FORWARD_AT = perLook(() => ({ style: { position: "absolute" as const, top: BAR.buttonTop, left: BAR.navLeft + BAR.navPitch }, hit: NAV_HIT() }));
 const alreadyFocused = () => {};
 const SPREAD_STARTS = 0.0001;
 
-export function LittleArdiaWindow() {
+export function LittleNillaWindow() {
   const theme = useTheme();
   const windowId = useWindowId();
   const fullScreen = useWindowFullScreen(windowId);
@@ -48,15 +48,15 @@ export function LittleArdiaWindow() {
   const frame = usePageFrameInset();
   const cardRadius = useCardFrame().radius;
   const gestures = !fullScreen;
-  const pinch = useLittleArdiaPinch(windowId);
-  const swipe = useLittleArdiaSwipeClose(windowId);
+  const pinch = useLittleNillaPinch(windowId);
+  const swipe = useLittleNillaSwipeClose(windowId);
   const windowRadius = windowCornerRadius();
   const headroom = Math.min(BAR.height, windowRadius);
   const corner = useMemo(
     () => zoomedCorner(pinch.scale, { ...size, inset: frame, cardRadius, windowRadius }),
     [pinch.scale, size.width, size.height, frame, cardRadius, windowRadius],
   );
-  useEffect(startLittleArdiaNewTabLinks, []);
+  useEffect(startLittleNillaNewTabLinks, []);
   return (
     <View
       style={{ flex: 1 }}
@@ -77,7 +77,7 @@ export function LittleArdiaWindow() {
               </View>
             </SwipeCloseContext.Provider>
             <View style={{ position: "absolute", left: 0, right: 0, top: 0 }}>
-              <LittleArdiaBar />
+              <LittleNillaBar />
             </View>
           </Animated.View>
         </PinchArea>
@@ -97,7 +97,7 @@ function zoomedCorner(scale: Animated.Value, { width, height, inset, cardRadius,
   return Animated.divide(scale.interpolate({ inputRange: [1, spreading, touchesEdge], outputRange: [0, cardRadius, windowRadius], extrapolate: "clamp" }), scale);
 }
 
-function useLittleArdiaPinch(windowId: string) {
+function useLittleNillaPinch(windowId: string) {
   const [scale] = useState(() => new Animated.Value(1));
   const leaving = useRef(false);
   const settle = () => pinchSettle([{ value: scale, to: 1 }]);
@@ -107,17 +107,17 @@ function useLittleArdiaPinch(windowId: string) {
     },
     idle: () => leaving.current || isWindowClosing(windowId),
     begin: () => scale.stopAnimation(),
-    follow: (magnification) => scale.setValue(pinchScale(magnification, LITTLE_ARDIA_PINCH.smallest, LITTLE_ARDIA_PINCH.largest)),
+    follow: (magnification) => scale.setValue(pinchScale(magnification, LITTLE_NILLA_PINCH.smallest, LITTLE_NILLA_PINCH.largest)),
     settle,
     open: () => {
-      notePinch("littleArdia", "open");
+      notePinch("littleNilla", "open");
       openInMainWindow(windowId);
       settle();
     },
     close: () => {
-      notePinch("littleArdia", "close");
+      notePinch("littleNilla", "close");
       leaving.current = true;
-      closeLittleArdia(windowId);
+      closeLittleNilla(windowId);
       if (isWindowClosing(windowId)) return;
       leaving.current = false;
       settle();
@@ -126,15 +126,15 @@ function useLittleArdiaPinch(windowId: string) {
   return { scale, motion };
 }
 
-function useLittleArdiaSwipeClose(windowId: string) {
+function useLittleNillaSwipeClose(windowId: string) {
   const [x] = useState(() => new Animated.Value(0));
-  const opacity = useMemo(() => x.interpolate({ inputRange: [0, LITTLE_ARDIA_SWIPE_CLOSE.fadeOver], outputRange: [1, 0], extrapolate: "clamp" }), [x]);
+  const opacity = useMemo(() => x.interpolate({ inputRange: [0, LITTLE_NILLA_SWIPE_CLOSE.fadeOver], outputRange: [1, 0], extrapolate: "clamp" }), [x]);
   const settle = () => pinchSettle([{ value: x, to: 0 }]);
   const close = () => {
     noteSwipeClose(true);
-    if (reduceMotion() === true) return closeLittleArdia(windowId);
-    Animated.timing(x, { toValue: LITTLE_ARDIA_SWIPE_CLOSE.fadeOver, duration: LITTLE_ARDIA_SWIPE_CLOSE.leaveMs, useNativeDriver: true }).start(() => {
-      closeLittleArdia(windowId);
+    if (reduceMotion() === true) return closeLittleNilla(windowId);
+    Animated.timing(x, { toValue: LITTLE_NILLA_SWIPE_CLOSE.fadeOver, duration: LITTLE_NILLA_SWIPE_CLOSE.leaveMs, useNativeDriver: true }).start(() => {
+      closeLittleNilla(windowId);
       if (!isWindowClosing(windowId)) x.setValue(0);
     });
   };
@@ -143,7 +143,7 @@ function useLittleArdiaSwipeClose(windowId: string) {
     if (e.phase === "swipe") return close();
     if (e.phase === "began") return x.stopAnimation();
     if (e.phase === "changed") return x.setValue(Math.max(0, e.distance));
-    if (e.phase === "ended" && (e.distance >= LITTLE_ARDIA_SWIPE_CLOSE.distance || (e.distance > 0 && e.velocity >= LITTLE_ARDIA_SWIPE_CLOSE.velocity))) return close();
+    if (e.phase === "ended" && (e.distance >= LITTLE_NILLA_SWIPE_CLOSE.distance || (e.distance > 0 && e.velocity >= LITTLE_NILLA_SWIPE_CLOSE.velocity))) return close();
     if (e.phase === "ended" || e.phase === "cancelled") {
       noteSwipeClose(false);
       settle();
@@ -152,7 +152,7 @@ function useLittleArdiaSwipeClose(windowId: string) {
   return { x, opacity, onSwipe };
 }
 
-function LittleArdiaBar() {
+function LittleNillaBar() {
   const windowId = useWindowId();
   const tab = useActiveTab();
   const panelOpen = useWindowUi().panel.open;
@@ -180,7 +180,7 @@ function LittleArdiaBar() {
       field={tab ? <PageField tab={tab} windowId={windowId} hidden={panelOpen} /> : null}
       buttons={[
         { icon: copied ? "checkmark" : "link", disabled: !tab?.url, tooltip: `Copy Link (${keyText("⇧⌘C")})`, onPress: copy },
-        { icon: "arrow.up.left.and.arrow.down.right", tooltip: `Open in Ardia (${keyText("⌘O")})`, onPress: () => openInMainWindow(windowId) },
+        { icon: "arrow.up.left.and.arrow.down.right", tooltip: `Open in Nilla (${keyText("⌘O")})`, onPress: () => openInMainWindow(windowId) },
       ]}
       trailing={severalProfiles ? <ProfileButton windowId={windowId} /> : undefined}
     >
@@ -206,7 +206,7 @@ function ProfileButton({ windowId }: { windowId: string }) {
   const profile = useWindowProfile();
   const iconsShown = useSettings((s) => s.profileSwitcherIcons);
   return (
-    <Button variant="icon" look="row" tooltip={`Profile: ${profile.name}`} onPress={() => void openLittleArdiaProfileMenu(windowId)}>
+    <Button variant="icon" look="row" tooltip={`Profile: ${profile.name}`} onPress={() => void openLittleNillaProfileMenu(windowId)}>
       <ProfileBadge profile={iconsShown ? profile : { ...profile, icon: null }} size={16} />
     </Button>
   );

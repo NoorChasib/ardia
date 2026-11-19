@@ -9,7 +9,7 @@ const panel = (...rows) => ["Site Controls", ...rows, "Zoom: 100%"].join("\n");
 
 describe("site panel security", () => {
   it("classifies each connection row", () => {
-    assert.equal(classifySitePanel(panel("Connection is secure", "Certificate issued by Ardia Acceptance Test CA")).level, "secure");
+    assert.equal(classifySitePanel(panel("Connection is secure", "Certificate issued by Nilla Acceptance Test CA")).level, "secure");
     assert.equal(classifySitePanel(panel("Connection is not secure", "Don't enter sensitive information on this site.")).level, "insecure");
     assert.equal(classifySitePanel(panel("Connection is not secure", "Parts of this page aren't secure (such as images).")).level, "mixed");
     assert.equal(classifySitePanel(panel("Connection is not secure", "The site's certificate isn't valid. Don't enter passwords or payment details.")).level, "certificateError");
@@ -62,13 +62,13 @@ describe("profiles and services", () => {
   });
 
   it("reads launch lease holders from a recorded navigator.locks.query()", () => {
-    const recorded = { held: [{ name: "ardia.linux.app-launch", mode: "exclusive", clientId: "c1" }, { name: "other", mode: "exclusive", clientId: "c2" }], pending: [] };
+    const recorded = { held: [{ name: "nilla.linux.app-launch", mode: "exclusive", clientId: "c1" }, { name: "other", mode: "exclusive", clientId: "c2" }], pending: [] };
     assert.deepEqual(launchLockHolders(recorded), ["c1"]);
     assert.deepEqual(launchLockHolders({ held: [], pending: [] }), []);
   });
 
   it("matches whole setting rows only", () => {
-    const texts = { General: "General\nDefault browser\nWarn before quitting", Appearance: "Theme", Advanced: "The ardia command line is unavailable" };
+    const texts = { General: "General\nDefault browser\nWarn before quitting", Appearance: "Theme", Advanced: "The nilla-browser command line is unavailable" };
     assert.deepEqual(visibleUnsupported(texts), ["general.defaultBrowser"]);
     assert.deepEqual(visibleUnsupported({ General: "General", Appearance: "", Advanced: "" }), []);
   });
@@ -93,8 +93,8 @@ describe("drop geometry", () => {
 
 describe("command line", () => {
   it("resolves paths against the caller's directory and drops a leading -- separator", () => {
-    const options = parseArgs(["--", "out/ardia", "dist", "--only", "F01,#33", "--keep", "--results=r"], { cwd: "/work" });
-    assert.equal(options.executable, "/work/out/ardia");
+    const options = parseArgs(["--", "out/nilla", "dist", "--only", "F01,#33", "--keep", "--results=r"], { cwd: "/work" });
+    assert.equal(options.executable, "/work/out/nilla");
     assert.equal(options.uiDir, "/work/dist");
     assert.deepEqual(options.only, ["F01", "#33"]);
     assert.equal(options.keep, true);

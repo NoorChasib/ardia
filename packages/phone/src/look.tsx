@@ -64,7 +64,7 @@ export type LookCounts = {
   restingLayered?: number;
 };
 
-const lookNative = requireOptionalNativeModule<LookNative>("ArdiaPhoneLook");
+const lookNative = requireOptionalNativeModule<LookNative>("NillaPhoneLook");
 
 const hasNativeLook = lookNative !== null;
 
@@ -94,7 +94,7 @@ function look<P extends ViewProps>(name: string) {
     }
     let native = views.get(name);
     if (!native) {
-      native = requireNativeViewManager<object>("ArdiaPhoneLook", name);
+      native = requireNativeViewManager<object>("NillaPhoneLook", name);
       views.set(name, native);
     }
     return createElement(native, props);

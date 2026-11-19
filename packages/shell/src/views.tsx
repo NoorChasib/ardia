@@ -10,7 +10,7 @@ export type WindowProfileProps = ViewProps & {
   neighbours: string[];
   onSwapped?: (event: { nativeEvent: WindowProfileSwapped }) => void;
 };
-export const WindowProfile = requireNativeViewManager<WindowProfileProps>("ArdiaWindowProfile");
+export const WindowProfile = requireNativeViewManager<WindowProfileProps>("NillaWindowProfile");
 
 export type WindowDragRegionProps = ViewProps & {
   titleBarDoubleClick?: boolean;
@@ -19,11 +19,11 @@ export type WindowDragRegionProps = ViewProps & {
   onRegionClick?: () => void;
 };
 
-export const WindowDragRegion = requireNativeViewManager<WindowDragRegionProps>("ArdiaAppWindows");
+export const WindowDragRegion = requireNativeViewManager<WindowDragRegionProps>("NillaAppWindows");
 
 export type OutsidePressAreaProps = ViewProps & { onOutsidePress?: (event: { nativeEvent: { timestamp?: number } }) => void };
 
-export const OutsidePressArea = requireNativeViewManager<OutsidePressAreaProps>("ArdiaOutsidePressArea");
+export const OutsidePressArea = requireNativeViewManager<OutsidePressAreaProps>("NillaOutsidePressArea");
 
 export type SymbolProps = ViewProps & {
   name: string;
@@ -32,7 +32,7 @@ export type SymbolProps = ViewProps & {
   color?: string;
 };
 
-export const Symbol = requireNativeViewManager<SymbolProps>("ArdiaSymbol");
+export const Symbol = requireNativeViewManager<SymbolProps>("NillaSymbol");
 
 export type FadeLabelProps = ViewProps & {
   text: string;
@@ -44,15 +44,15 @@ export type FadeLabelProps = ViewProps & {
   strikethrough?: boolean;
 };
 
-export const FadeLabel = requireNativeViewManager<FadeLabelProps>("ArdiaFadeLabel");
+export const FadeLabel = requireNativeViewManager<FadeLabelProps>("NillaFadeLabel");
 
 export type EdgeFadeMaskProps = ViewProps & { fadeWidth: number; floor: number; onset: number };
 
-export const EdgeFadeMask = requireNativeViewManager<EdgeFadeMaskProps>("ArdiaEdgeFadeMask");
+export const EdgeFadeMask = requireNativeViewManager<EdgeFadeMaskProps>("NillaEdgeFadeMask");
 
 export type ActivitySpinnerProps = ViewProps;
 
-export const ActivitySpinner = requireNativeViewManager<ActivitySpinnerProps>("ArdiaActivitySpinner");
+export const ActivitySpinner = requireNativeViewManager<ActivitySpinnerProps>("NillaActivitySpinner");
 
 export type FolderIconProps = ViewProps & {
   open: boolean;
@@ -62,7 +62,7 @@ export type FolderIconProps = ViewProps & {
   insideBottom?: string;
 };
 
-export const FolderIcon = requireNativeViewManager<FolderIconProps>("ArdiaFolderIcon");
+export const FolderIcon = requireNativeViewManager<FolderIconProps>("NillaFolderIcon");
 
 export type ContextMenuAreaProps = ViewProps & {
   onContextMenu?: () => void;
@@ -73,7 +73,7 @@ export type NativeContextMenuAreaProps = Omit<ContextMenuAreaProps, "onContextMe
   onContextMenu?: (event: { nativeEvent: Record<string, never> }) => void;
 };
 
-const NativeContextMenuArea = requireNativeViewManager<NativeContextMenuAreaProps>("ArdiaContextMenuArea");
+const NativeContextMenuArea = requireNativeViewManager<NativeContextMenuAreaProps>("NillaContextMenuArea");
 
 export function ContextMenuArea(props: ContextMenuAreaProps) {
   return <NativeContextMenuArea {...props} />;
@@ -102,7 +102,7 @@ export type NativeSurfaceProps = Omit<SurfaceProps, "shadowColor" | "shadowOpaci
   surfaceShadowOffset?: [number, number];
 };
 
-const NativeSurface = requireNativeViewManager<NativeSurfaceProps>("ArdiaSurface");
+const NativeSurface = requireNativeViewManager<NativeSurfaceProps>("NillaSurface");
 
 export function Surface({ shadowColor, shadowOpacity, shadowRadius, shadowOffset, ...props }: SurfaceProps) {
   return (
@@ -122,7 +122,7 @@ export type VisualEffectProps = ViewProps & {
   cornerRadius?: number;
 };
 
-export const VisualEffect = requireNativeViewManager<VisualEffectProps>("ArdiaVisualEffect");
+export const VisualEffect = requireNativeViewManager<VisualEffectProps>("NillaVisualEffect");
 
 export type GlassEffectProps = ViewProps & {
   cornerRadius?: number;
@@ -133,15 +133,15 @@ export type GlassEffectProps = ViewProps & {
 
 export type GlassEffectNative = { isLiquidGlass(): boolean };
 
-const GlassEffectModule = nativeModule("ArdiaGlassEffect");
+const GlassEffectModule = nativeModule("NillaGlassEffect");
 
 export const isLiquidGlass = (): boolean => GlassEffectModule.isLiquidGlass();
 
-export const GlassEffect = requireNativeViewManager<GlassEffectProps>("ArdiaGlassEffect");
+export const GlassEffect = requireNativeViewManager<GlassEffectProps>("NillaGlassEffect");
 
 export type GlassGroupProps = ViewProps & { strength?: number };
 
-export const GlassGroup = requireNativeViewManager<GlassGroupProps>("ArdiaGlassGroup");
+export const GlassGroup = requireNativeViewManager<GlassGroupProps>("NillaGlassGroup");
 
 export type PopoverBubbleProps = ViewProps & {
   material?: "popover" | "menu" | "hudWindow" | "sheet" | "toolTip";
@@ -166,7 +166,7 @@ export type NativePopoverBubbleProps = Omit<PopoverBubbleProps, "shadowOpacity" 
   bubbleShadowOffsetY?: number;
 };
 
-const NativePopoverBubble = requireNativeViewManager<NativePopoverBubbleProps>("ArdiaPopoverBubble");
+const NativePopoverBubble = requireNativeViewManager<NativePopoverBubbleProps>("NillaPopoverBubble");
 
 export function PopoverBubble({ shadowOpacity, shadowRadius, shadowOffsetY, ...props }: PopoverBubbleProps) {
   return <NativePopoverBubble {...props} bubbleShadowOpacity={shadowOpacity} bubbleShadowRadius={shadowRadius} bubbleShadowOffsetY={shadowOffsetY} />;
@@ -179,7 +179,7 @@ export type DockSelectionNative = {
   iconAccent(uri: string): Promise<string | null>;
 };
 
-const DockSelectionModule = nativeModule("ArdiaDockSelection");
+const DockSelectionModule = nativeModule("NillaDockSelection");
 
 export const iconTheme = (source: { uri: string } | { emoji: string }): Promise<IconTheme | null> =>
   DockSelectionModule.iconTheme("uri" in source ? source.uri : null, "emoji" in source ? source.emoji : null);
@@ -201,4 +201,4 @@ export type DockSelectionProps = ViewProps & {
   outline?: boolean;
 };
 
-export const DockSelection = requireNativeViewManager<DockSelectionProps>("ArdiaDockSelection");
+export const DockSelection = requireNativeViewManager<DockSelectionProps>("NillaDockSelection");

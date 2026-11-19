@@ -5,9 +5,9 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
-@implementation ArdiaPiPController (Swipe)
+@implementation NillaPiPController (Swipe)
 
 static __weak NSWindow *gSwipeWindow;
 static __weak NSWindow *gSwipeMomentum;
@@ -18,7 +18,7 @@ static __weak NSWindow *gSwipeMomentum;
   [[self forWindow:window] abandonSwipe];
 }
 
-+ (ArdiaPiPController *)swipeTargetFor:(NSEvent *)event {
++ (NillaPiPController *)swipeTargetFor:(NSEvent *)event {
   NSWindow *window = event.window;
   if (!window) {
     const NSPoint point = PointerOf(event);
@@ -28,7 +28,7 @@ static __weak NSWindow *gSwipeMomentum;
         break;
       }
   }
-  ArdiaPiPController *controller = window ? [self forWindow:window] : nil;
+  NillaPiPController *controller = window ? [self forWindow:window] : nil;
   return controller && window.visible ? controller : nil;
 }
 
@@ -47,14 +47,14 @@ static __weak NSWindow *gSwipeMomentum;
     if (phase != NSEventPhaseBegan || !ThrowEnabled() || !event.hasPreciseScrollingDeltas ||
         (event.modifierFlags & NSEventModifierFlagCommand))
       return NO;
-    ArdiaPiPController *controller = [self swipeTargetFor:event];
+    NillaPiPController *controller = [self swipeTargetFor:event];
     if (!controller) return NO;
     gSwipeWindow = controller.window;
     [controller swipeBegan:event];
     return YES;
   }
   NSWindow *window = gSwipeWindow;
-  ArdiaPiPController *controller = window ? [self forWindow:window] : nil;
+  NillaPiPController *controller = window ? [self forWindow:window] : nil;
   if (!controller) return NO;
   if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
     gSwipeWindow = nil;
@@ -67,7 +67,7 @@ static __weak NSWindow *gSwipeMomentum;
 }
 
 - (void)dragBegan:(NSEvent *)event {
-  [ArdiaPiPController abandonSwipeOn:_window];
+  [NillaPiPController abandonSwipeOn:_window];
   [self stopMotion];
   const NSPoint pointer = PointerOf(event);
   const NSRect frame = _window.frame;
@@ -87,20 +87,20 @@ static __weak NSWindow *gSwipeMomentum;
 
 - (void)followPointer:(NSEvent *)event {
   const NSPoint pointer = PointerOf(event);
-  _dragMoving = _dragMoving || !ardia_pip_seek::IsClick(ardia_pip_seek::Travel(pointer.x - _dragFrom.x, pointer.y - _dragFrom.y));
+  _dragMoving = _dragMoving || !nilla_pip_seek::IsClick(nilla_pip_seek::Travel(pointer.x - _dragFrom.x, pointer.y - _dragFrom.y));
   if (!_dragMoving) return;
   if (_dragSamples.size() >= 64) _dragSamples.erase(_dragSamples.begin(), _dragSamples.begin() + 32);
   _dragSamples.push_back({event.timestamp, pointer.x, pointer.y});
   const NSRect frame = _window.frame;
   const auto screens = ThrowScreens();
-  const ardia_pip_throw::Point at{pointer.x, pointer.y}, grab{_dragGrab.x, _dragGrab.y};
-  const auto next = ardia_pip_throw::DragTo(ThrowRect(frame), at, grab, screens.data(), (int)screens.size(), ScreenIndex(_dragHome));
+  const nilla_pip_throw::Point at{pointer.x, pointer.y}, grab{_dragGrab.x, _dragGrab.y};
+  const auto next = nilla_pip_throw::DragTo(ThrowRect(frame), at, grab, screens.data(), (int)screens.size(), ScreenIndex(_dragHome));
   const NSPoint origin = NSMakePoint(next.x, next.y);
   const CFTimeInterval before = CACurrentMediaTime();
   if (!NSEqualPoints(origin, frame.origin)) [_window setFrameOrigin:origin];
   const double moveMs = (CACurrentMediaTime() - before) * 1000;
   const NSRect placed = _window.frame;
-  const BOOL held = ardia_pip_throw::HeldBack(next, at, grab);
+  const BOOL held = nilla_pip_throw::HeldBack(next, at, grab);
   const double off = held ? 0 : MAX(fabs(NSMinX(placed) + _dragGrab.x - pointer.x), fabs(NSMinY(placed) + _dragGrab.y - pointer.y));
   if (off >= 1) _dragOffCursor++;
   _dragMaxOff = MAX(_dragMaxOff, off);
@@ -127,7 +127,7 @@ static __weak NSWindow *gSwipeMomentum;
   }
   const NSRect frame = _window.frame;
   const NSPoint grabbed = NSMakePoint(NSMinX(frame) + _dragGrab.x, NSMinY(frame) + _dragGrab.y);
-  const auto velocity = ardia_pip_throw::ReleaseVelocity(_dragSamples.data(), (int)_dragSamples.size(), event.timestamp);
+  const auto velocity = nilla_pip_throw::ReleaseVelocity(_dragSamples.data(), (int)_dragSamples.size(), event.timestamp);
   _dragSamples.clear();
   _lastDrag = @{
     @"grab" : NSStringFromPoint(_dragGrab),

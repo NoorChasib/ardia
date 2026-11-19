@@ -28,8 +28,8 @@ SDK = Path.home() / 'Library/Android/sdk'
 TOOLS = sorted((SDK / 'build-tools').iterdir())[-1] if (SDK / 'build-tools').exists() else None
 REPO = Path(__file__).resolve().parents[4]
 
-WORKERS = ['com.ardia.sync.SyncWorker']
-LEGACY_SOURCE = 'packages/phone/android/src/main/java/com/ardia/phone/PhoneLegacy.kt'
+WORKERS = ['com.nilladigital.nilla.sync.SyncWorker']
+LEGACY_SOURCE = 'packages/phone/android/src/main/java/com/nilladigital/nilla/phone/PhoneLegacy.kt'
 
 
 def manifest_components(text):
@@ -172,7 +172,7 @@ def shortcut_targets(apk):
 def self_test():
     compose = '''N: android=http://schemas.android.com/apk/res/android (line=2)
   E: manifest (line=2)
-    A: package="com.ardia.browser.android" (Raw: "com.ardia.browser.android")
+    A: package="com.nilladigital.nilla.android" (Raw: "com.nilladigital.nilla.android")
       E: application (line=10)
         E: activity (line=20)
           A: http://schemas.android.com/apk/res/android:name(0x01010003)=".share.ShareActivity" (Raw: ".share.ShareActivity")
@@ -196,7 +196,7 @@ def self_test():
             E: action (line=27)
               A: http://schemas.android.com/apk/res/android:name(0x01010003)="android.intent.action.SEND" (Raw: "android.intent.action.SEND")
         E: receiver (line=30)''')
-    classes = {'com.ardia.browser.android.share.PhoneShareActivity', 'com.ardia.browser.android.system.SearchWidgetReceiver'}
+    classes = {'com.nilladigital.nilla.android.share.PhoneShareActivity', 'com.nilladigital.nilla.android.system.SearchWidgetReceiver'}
     parsed = manifest_components(compose)
     gone = check_components(parsed, manifest_components(expo_without), classes)
     assert any('ShareActivity: exported by Compose, absent' in line for line in gone), gone
@@ -204,7 +204,7 @@ def self_test():
     assert kept == [], kept
     no_widget = check_components(parsed, manifest_components(expo_alias.replace('android.appwidget.provider', 'something.else')), classes)
     assert any('appwidget-provider' in line for line in no_widget), no_widget
-    renamed = check_components(parsed, manifest_components(expo_alias), {'com.ardia.browser.android.share.PhoneShareActivity'})
+    renamed = check_components(parsed, manifest_components(expo_alias), {'com.nilladigital.nilla.android.share.PhoneShareActivity'})
     assert any('SearchWidgetReceiver is not in the Expo dex' in line for line in renamed), renamed
     print('self-test passed')
 

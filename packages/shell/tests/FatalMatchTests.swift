@@ -1,5 +1,5 @@
 import XCTest
-@testable import ArdiaUpdaterCore
+@testable import NillaUpdaterCore
 
 final class FatalMatchTests: XCTestCase {
   private let written = Date(timeIntervalSince1970: 1_000_000)

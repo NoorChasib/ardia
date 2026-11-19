@@ -1,5 +1,5 @@
-import ArdiaDesign
-import ArdiaSync
+import NillaDesign
+import NillaSync
 import ExpoModulesCore
 import ExpoUI
 import SwiftUI
@@ -65,7 +65,7 @@ struct SettingsHeroContentView: ExpoSwiftUI.View {
   @Environment(\.profileLook) private var look
 
   private var subtitle: Text {
-    props.subtitleIsWarning ? Text(props.subtitle).foregroundStyle(.ardiaInk(.orange)) : Text(props.subtitle)
+    props.subtitleIsWarning ? Text(props.subtitle).foregroundStyle(.nillaInk(.orange)) : Text(props.subtitle)
   }
 
   var body: some View {
@@ -337,7 +337,7 @@ struct FilterTextEditorView: ExpoSwiftUI.View {
 
 struct SettingsChromeModifier: ViewModifier, Record {
   func body(content: Content) -> some View {
-    content.ardiaSettingsChrome()
+    content.nillaSettingsChrome()
   }
 }
 
@@ -345,7 +345,7 @@ struct SettingsPageModifier: ViewModifier, Record {
   @Field var title: String = ""
 
   func body(content: Content) -> some View {
-    content.ardiaSettingsPage(LocalizedStringKey(title))
+    content.nillaSettingsPage(LocalizedStringKey(title))
   }
 }
 
@@ -390,7 +390,7 @@ struct LegibleInkResolver: ViewModifier {
   @Environment(\.profileLook) private var look
 
   func body(content: Content) -> some View {
-    content.foregroundStyle(.ardiaInk(tint == "formAccent" ? Palette.formAccent : SettingsTintChoice.color(tint, look: look)))
+    content.foregroundStyle(.nillaInk(tint == "formAccent" ? Palette.formAccent : SettingsTintChoice.color(tint, look: look)))
   }
 }
 
@@ -441,20 +441,20 @@ struct ProfileLookModifier: ViewModifier, Record {
 }
 
 enum SettingsUIModifiers {
-  static let names = ["ardia.navigationBarBackButtonHidden", "ardia.minListRowHeight", "ardia.spaceBackdrop", "ardia.settingsChrome", "ardia.settingsPage", "ardia.chromeSurface", "ardia.settingsSwitchStyle", "ardia.pressableStyle", "ardia.legibleInk", "ardia.profileLook", "ardia.contentMargins"]
+  static let names = ["nilla.navigationBarBackButtonHidden", "nilla.minListRowHeight", "nilla.spaceBackdrop", "nilla.settingsChrome", "nilla.settingsPage", "nilla.chromeSurface", "nilla.settingsSwitchStyle", "nilla.pressableStyle", "nilla.legibleInk", "nilla.profileLook", "nilla.contentMargins"]
 
   static func register() {
-    ViewModifierRegistry.register("ardia.navigationBarBackButtonHidden") { params, context, _ in try BackButtonHiddenModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.minListRowHeight") { params, context, _ in try MinListRowHeightModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.spaceBackdrop") { params, context, _ in try SpaceBackdropModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.settingsChrome") { params, context, _ in try SettingsChromeModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.settingsPage") { params, context, _ in try SettingsPageModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.chromeSurface") { params, context, _ in try ChromeSurfaceModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.settingsSwitchStyle") { params, context, _ in try SettingsSwitchStyleModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.pressableStyle") { params, context, _ in try PressableStyleModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.legibleInk") { params, context, _ in try LegibleInkModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.profileLook") { params, context, _ in try ProfileLookModifier(from: params, appContext: context) }
-    ViewModifierRegistry.register("ardia.contentMargins") { params, context, _ in try ContentMarginsModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.navigationBarBackButtonHidden") { params, context, _ in try BackButtonHiddenModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.minListRowHeight") { params, context, _ in try MinListRowHeightModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.spaceBackdrop") { params, context, _ in try SpaceBackdropModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.settingsChrome") { params, context, _ in try SettingsChromeModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.settingsPage") { params, context, _ in try SettingsPageModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.chromeSurface") { params, context, _ in try ChromeSurfaceModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.settingsSwitchStyle") { params, context, _ in try SettingsSwitchStyleModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.pressableStyle") { params, context, _ in try PressableStyleModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.legibleInk") { params, context, _ in try LegibleInkModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.profileLook") { params, context, _ in try ProfileLookModifier(from: params, appContext: context) }
+    ViewModifierRegistry.register("nilla.contentMargins") { params, context, _ in try ContentMarginsModifier(from: params, appContext: context) }
   }
 
   static func unregister() {
@@ -464,7 +464,7 @@ enum SettingsUIModifiers {
 
 public final class SettingsUIModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneSettingsUI")
+    Name("NillaPhoneSettingsUI")
 
     OnCreate {
       SettingsUIModifiers.register()

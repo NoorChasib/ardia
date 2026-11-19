@@ -1,8 +1,8 @@
-import ArdiaSync
+import NillaSync
 import Foundation
 import SwiftData
 import Testing
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 @MainActor
 final class Clock {
@@ -22,7 +22,7 @@ struct StoreFixture {
   init() throws {
     container = try BrowserStore.makeContainer(.inMemory)
     clock = Clock(Date(timeIntervalSinceReferenceDate: 800_000_000))
-    suite = "ardia.tests.\(UUID().uuidString)"
+    suite = "nilla.tests.\(UUID().uuidString)"
     defaults = UserDefaults(suiteName: suite)!
     let clock = clock
     store = TabStore(context: container.mainContext, defaults: defaults, now: { clock.now })

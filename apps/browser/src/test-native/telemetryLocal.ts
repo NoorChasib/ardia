@@ -1,4 +1,4 @@
-import type { ShellNativeModules, TelemetryLocalExport } from "@ardia/shell";
+import type { ShellNativeModules, TelemetryLocalExport } from "@nilla/shell";
 
 const DAY_MS = 86_400_000;
 const utcDay = (ms: number) => new Date(ms).toISOString().slice(0, 10);
@@ -73,7 +73,7 @@ function exported(text: string): TelemetryLocalExport {
   return { path: "/tmp/fake/local-events.jsonl.gz", bytes: text.length, lines: text.split("\n").filter(Boolean).length };
 }
 
-export const telemetryLocalModule: ShellNativeModules["ArdiaTelemetryLocal"] = {
+export const telemetryLocalModule: ShellNativeModules["NillaTelemetryLocal"] = {
   append: (day, text) => (telemetryLocal.appendCalls++, write(day, text)),
   appendNow: (day, text) => (telemetryLocal.appendNowCalls++, write(day, text)),
   configure: (maxBytes, keepDays) => void Object.assign(telemetryLocal, { maxBytes, keepDays }),
@@ -87,6 +87,6 @@ export const telemetryLocalModule: ShellNativeModules["ArdiaTelemetryLocal"] = {
   exportToDownloads: async (now) => {
     const text = telemetryLocal.lines().map((l) => `${l}\n`).join("");
     telemetryLocal.exports.push({ now, text });
-    return { ...exported(text), path: "/tmp/fake/Ardia data.jsonl" };
+    return { ...exported(text), path: "/tmp/fake/Nilla data.jsonl" };
   },
 };

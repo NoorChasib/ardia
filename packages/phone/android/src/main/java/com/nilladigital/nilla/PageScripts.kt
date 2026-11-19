@@ -1,9 +1,9 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import android.content.res.AssetManager
 
 object PageScripts {
-    const val BRIDGE_NAME = "ardiaPage"
+    const val BRIDGE_NAME = "nillaPage"
     const val NIGHT_SHADE_MESSAGE = "nightShade"
 
     fun mainFrameOnly(script: String): String = "if (window === window.top) {\n$script\n}"
@@ -81,5 +81,5 @@ internal class PageScriptSources(private val assets: AssetManager) {
         reader
     }
 
-    private fun read(name: String): String = assets.open("ardia-browser/$name").bufferedReader().use { it.readText() }
+    private fun read(name: String): String = assets.open("nilla-browser/$name").bufferedReader().use { it.readText() }
 }

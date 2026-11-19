@@ -11,8 +11,8 @@
 
 #include <cmath>
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
 namespace {
 
@@ -24,14 +24,14 @@ NSMutableDictionary<NSNumber *, NSMutableArray *> *RecentEvents() {
 const char kDropTypesKey = 0;
 }
 
-namespace ardia_web_view {
+namespace nilla_web_view {
 
 bool TraceVisibility() {
-  static const bool on = [ArdiaLaunchConfig.shared traced:@"visibility"];
+  static const bool on = [NillaLaunchConfig.shared traced:@"visibility"];
   return on;
 }
 
-NSHashTable<ArdiaWebView *> *LiveViews() {
+NSHashTable<NillaWebView *> *LiveViews() {
   static NSHashTable *views = [NSHashTable weakObjectsHashTable];
   return views;
 }
@@ -67,7 +67,7 @@ NSString *OriginOf(NSString *url) {
 }
 
 NSView *ScaledRootOf(NSWindow *window) {
-  return window ? [ArdiaInterfaceScale rootOfWindow:window] ?: [ArdiaWindowController forNSWindow:window].root : nil;
+  return window ? [NillaInterfaceScale rootOfWindow:window] ?: [NillaWindowController forNSWindow:window].root : nil;
 }
 
 NSPoint RootPointFromWindow(NSWindow *window, NSPoint inWindow) {
@@ -124,26 +124,26 @@ void AcceptDrops(NSView *root, BOOL accept) {
 }
 }
 
-@implementation ArdiaWebView
+@implementation NillaWebView
 
 + (void)initialize {
-  if (self != ArdiaWebView.class) return;
+  if (self != NillaWebView.class) return;
   [NSNotificationCenter.defaultCenter addObserverForName:@"RCTBridgeWillReloadNotification"
                                                   object:nil
                                                    queue:nil
                                               usingBlock:^(NSNotification *) {
                                                 void (^park)(void) = ^{
-                                                  NSMapTable<NSString *, ArdiaWebView *> *views = [NSMapTable strongToWeakObjectsMapTable];
+                                                  NSMapTable<NSString *, NillaWebView *> *views = [NSMapTable strongToWeakObjectsMapTable];
                                                   NSMutableDictionary<NSString *, ArdiaCoreTab *> *handed = [NSMutableDictionary dictionary];
-                                                  for (ArdiaWebView *view in LiveViews().allObjects) {
+                                                  for (NillaWebView *view in LiveViews().allObjects) {
                                                     if (!view->_tab || view->_tab.closed || !view->_transferKey.length) continue;
                                                     view->_life.handingOff = YES;
                                                     [views setObject:view forKey:view->_transferKey];
                                                     handed[view->_transferKey] = view->_tab;
                                                   }
-                                                  [ArdiaTabParking holdAcrossReload:handed
+                                                  [NillaTabParking holdAcrossReload:handed
                                                                                 expired:^(NSString *key, ArdiaCoreTab *tab) {
-                                                                                  if (ArdiaWebView *view = [views objectForKey:key]; view && view->_tab == tab)
+                                                                                  if (NillaWebView *view = [views objectForKey:key]; view && view->_tab == tab)
                                                                                     view->_life.handingOff = NO;
                                                                                 }];
                                                 };
@@ -158,8 +158,8 @@ void AcceptDrops(NSView *root, BOOL accept) {
     _visible = YES;
     _tabIndex = -1;
     self.wantsLayer = YES;
-    __weak ArdiaWebView *weakSelf = self;
-    _interfaceScaleObserver = [NSNotificationCenter.defaultCenter addObserverForName:ArdiaInterfaceScaleDidChange object:nil queue:nil
+    __weak NillaWebView *weakSelf = self;
+    _interfaceScaleObserver = [NSNotificationCenter.defaultCenter addObserverForName:NillaInterfaceScaleDidChange object:nil queue:nil
                                                                           usingBlock:^(NSNotification *) {
                                                                             [weakSelf interfaceScaleChanged];
                                                                           }];
@@ -178,11 +178,11 @@ void AcceptDrops(NSView *root, BOOL accept) {
 }
 
 - (int)browserId {
-  return _tab ? ardia_host::BrowserId(_tab) : 0;
+  return _tab ? nilla_host::BrowserId(_tab) : 0;
 }
 
-- (ArdiaWindowController *)controller {
-  return [ArdiaWindowController forNSWindow:self.window];
+- (NillaWindowController *)controller {
+  return [NillaWindowController forNSWindow:self.window];
 }
 
 - (void)viewWillMoveToWindow:(NSWindow *)newWindow {
@@ -196,12 +196,12 @@ void AcceptDrops(NSView *root, BOOL accept) {
   if (_sightObserver) [NSNotificationCenter.defaultCenter removeObserver:_sightObserver];
   _sightObserver = nil;
   if (!self.window) return;
-  if (_visible) [ArdiaEarlyWindow noteLayoutChangeIn:self.window];
-  __weak ArdiaWebView *weakSelf = self;
-  _sightObserver = [NSNotificationCenter.defaultCenter addObserverForName:ArdiaWindowSeenDidChange object:self.window queue:nil
+  if (_visible) [NillaEarlyWindow noteLayoutChangeIn:self.window];
+  __weak NillaWebView *weakSelf = self;
+  _sightObserver = [NSNotificationCenter.defaultCenter addObserverForName:NillaWindowSeenDidChange object:self.window queue:nil
                                                                usingBlock:^(NSNotification *note) {
                                                                  [weakSelf userSightChanged];
-                                                                 if ([note.userInfo[ArdiaWindowSeenLeftAppKey] boolValue]) [weakSelf noteStayedOnAppSwitch];
+                                                                 if ([note.userInfo[NillaWindowSeenLeftAppKey] boolValue]) [weakSelf noteStayedOnAppSwitch];
                                                                }];
   [self userSightChanged];
   if (_tab) [self reclaimLentPage];
@@ -268,8 +268,8 @@ void AcceptDrops(NSView *root, BOOL accept) {
     [CATransaction commit];
   }
   [self schedulePainting];
-  if (visible) ArdiaFieldMarkAtCommit(_transferKey, @"view");
-  if (visible) [ArdiaEarlyWindow noteLayoutChangeIn:self.window];
+  if (visible) NillaFieldMarkAtCommit(_transferKey, @"view");
+  if (visible) [NillaEarlyWindow noteLayoutChangeIn:self.window];
   [self userSightChanged];
 }
 
@@ -295,7 +295,7 @@ void AcceptDrops(NSView *root, BOOL accept) {
 
 - (void)setShownURL:(NSString *)shownURL {
   _shownURL = [shownURL copy];
-  [ArdiaEarlyWindow page:_tab shownURL:_shownURL];
+  [NillaEarlyWindow page:_tab shownURL:_shownURL];
 }
 
 - (BOOL)discarded {
@@ -308,12 +308,12 @@ void AcceptDrops(NSView *root, BOOL accept) {
 
 - (void)emit:(NSString *)name payload:(NSDictionary *)payload {
   if (_sent.navigationQueued && ![name isEqualToString:@"navigation"]) [self emitNavigation];
-  if (_tab) NoteEvent(ardia_host::BrowserId(_tab), name, payload);
+  if (_tab) NoteEvent(nilla_host::BrowserId(_tab), name, payload);
   [self.delegate webView:self event:name payload:payload];
 }
 
-void ArdiaWebViewsSetFieldTiming(BOOL on) {
-  for (ArdiaWebView *view in LiveViews().allObjects)
+void NillaWebViewsSetFieldTiming(BOOL on) {
+  for (NillaWebView *view in LiveViews().allObjects)
     if (view->_tab) [view callFrame:@"" kind:@"fieldTiming" json:on ? @"{\"on\":true}" : @"{\"on\":false}"];
 }
 
@@ -332,42 +332,42 @@ static BOOL gReportsCommits = NO;
 }
 
 + (int)browserIdOfTab:(NSString *)tabId {
-  ArdiaCoreTab *tab = ardia_host::TabWithAppTabId(tabId);
-  return tab ? ardia_host::BrowserId(tab) : 0;
+  ArdiaCoreTab *tab = nilla_host::TabWithAppTabId(tabId);
+  return tab ? nilla_host::BrowserId(tab) : 0;
 }
 
 + (NSInteger)devWindowNumberForBrowser:(int)browserId {
-  ArdiaCoreTab *tab = ardia_host::TabWithBrowserId(browserId);
-  ArdiaWebView *view = tab ? [ArdiaTabRegistry viewForTab:tab] : nil;
+  ArdiaCoreTab *tab = nilla_host::TabWithBrowserId(browserId);
+  NillaWebView *view = tab ? [NillaTabRegistry viewForTab:tab] : nil;
   return view.window.windowNumber;
 }
 
-+ (ArdiaWebView *)devViewOf:(NSString *)transferKey {
-  for (ArdiaWebView *view in LiveViews().allObjects)
++ (NillaWebView *)devViewOf:(NSString *)transferKey {
+  for (NillaWebView *view in LiveViews().allObjects)
     if ([view->_transferKey isEqualToString:transferKey]) return view;
   return nil;
 }
 
 + (NSString *)devPagePhaseOf:(NSString *)transferKey {
-  ArdiaWebView *view = [self devViewOf:transferKey];
+  NillaWebView *view = [self devViewOf:transferKey];
   if (!view) return nil;
   switch (view->_life.phase) {
-    case ArdiaTabPhase::Waiting: return @"waiting";
-    case ArdiaTabPhase::Creating: return @"creating";
-    case ArdiaTabPhase::Attached: return @"attached";
-    case ArdiaTabPhase::Closing: return @"closing";
+    case NillaTabPhase::Waiting: return @"waiting";
+    case NillaTabPhase::Creating: return @"creating";
+    case NillaTabPhase::Attached: return @"attached";
+    case NillaTabPhase::Closing: return @"closing";
   }
 }
 
 + (BOOL)devClosePageOf:(NSString *)transferKey {
-  ArdiaWebView *view = [self devViewOf:transferKey];
+  NillaWebView *view = [self devViewOf:transferKey];
   [view closeBrowser];
   return view != nil;
 }
 
 + (BOOL)devFocusPageOfBrowser:(int)browserId {
 #if DEBUG
-  ArdiaCoreTab *tab = ardia_host::TabWithBrowserId(browserId);
+  ArdiaCoreTab *tab = nilla_host::TabWithBrowserId(browserId);
   NSWindow *window = tab.view.window;
   NSView *page = nil;
   for (NSMutableArray<NSView *> *queue = [NSMutableArray arrayWithObject:tab.view ?: [NSView new]]; queue.count && !page;) {

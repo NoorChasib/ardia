@@ -1,12 +1,12 @@
-import type { DevDragPayload, WindowsNative } from "@ardia/shell";
+import type { DevDragPayload, WindowsNative } from "@nilla/shell";
 import type { FileDropModule } from "../nativeModuleTypes";
 import { requireNativeModule } from "../modules";
 import type { DropAreaFrame, DroppedItem, WindowDrop } from "../views/fileDropAreas";
 import { expectEqual, expectTrue, type Check } from "./check";
 
 
-const fileDrop = () => requireNativeModule<FileDropModule>("ArdiaFileDrop");
-const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows");
+const fileDrop = () => requireNativeModule<FileDropModule>("NillaFileDrop");
+const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const FRAME = { x: 4, y: 48, width: 200, height: 120 };

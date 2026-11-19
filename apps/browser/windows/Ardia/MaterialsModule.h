@@ -12,7 +12,7 @@
 #include "MaterialSupport.h"
 #include "WindowManager.h"
 
-namespace Ardia {
+namespace Nilla {
 
 REACT_STRUCT(MaterialCapabilities)
 struct MaterialCapabilities {
@@ -40,7 +40,7 @@ struct MaterialPath {
   std::string step;
 };
 
-REACT_MODULE(MaterialsModule, L"ArdiaMaterials")
+REACT_MODULE(MaterialsModule, L"NillaMaterials")
 struct MaterialsModule {
   REACT_INIT(Initialize)
   void Initialize(winrt::Microsoft::ReactNative::ReactContext const &context) noexcept {

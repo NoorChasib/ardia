@@ -1,11 +1,11 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat
-import com.ardia.search.DictationEvents
-import com.ardia.search.SpeechRecorder
+import com.nilladigital.nilla.search.DictationEvents
+import com.nilladigital.nilla.search.SpeechRecorder
 import expo.modules.interfaces.permissions.PermissionsStatus
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.exception.CodedException
@@ -23,7 +23,7 @@ class SpeechModule : Module() {
     private val context: Context get() = appContext.reactContext ?: throw CodedException("ERR_NO_CONTEXT", "The app context is gone", null)
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneSpeech")
+        Name("NillaPhoneSpeech")
 
         Events("onSpeech")
 
@@ -53,7 +53,7 @@ class SpeechModule : Module() {
 
         AsyncFunction("start") { id: Int ->
             stopRecording()
-            if (!hasMicrophone()) throw CodedException("ERR_NO_MICROPHONE", "Ardia can't use the microphone", null)
+            if (!hasMicrophone()) throw CodedException("ERR_NO_MICROPHONE", "Nilla can't use the microphone", null)
             if (!SpeechRecorder.isAvailable(context)) throw CodedException("ERR_NO_RECOGNIZER", "Speech recognition isn't available on this phone", null)
             session = id
             recorder = SpeechRecorder.start(

@@ -25,11 +25,11 @@ type NativeProps = ViewProps & {
   onPageEvent?: (event: NativeSyntheticEvent<PageEventPayload>) => void;
 };
 
-const NativePageView = requireNativeViewManager<NativeProps>("ArdiaPhonePageView");
+const NativePageView = requireNativeViewManager<NativeProps>("NillaPhonePageView");
 
 export const closePage = (pageId: string) => pages.close(pageId);
 
-const pageModule = requireOptionalNativeModule<{ obscuresInsets?: boolean; reportsDrawn?: boolean }>("ArdiaPhonePageView");
+const pageModule = requireOptionalNativeModule<{ obscuresInsets?: boolean; reportsDrawn?: boolean }>("NillaPhonePageView");
 
 const obscuresInsets = pageModule?.obscuresInsets === true;
 

@@ -25,7 +25,7 @@ enum DockTile {
   static func add() -> Bool {
     guard !isInDock else { return true }
     if LaunchConfig.shared.background {
-      NSLog("ArdiaSystem: background instance, not adding to the Dock")
+      NSLog("NillaSystem: background instance, not adding to the Dock")
       return false
     }
     let tile: [String: Any] = [

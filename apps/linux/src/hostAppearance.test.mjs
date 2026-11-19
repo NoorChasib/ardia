@@ -102,6 +102,6 @@ test("an engine without the call keeps the local answer and only Auto follows th
 
 test("the shell module's setAppearance and isDarkAppearance come from the engine-aware appearance", () => {
   const shell = readFileSync(new URL("./shims/shellBase.tsx", import.meta.url), "utf8");
-  assert.match(shell, /createAppearance\(ardiaHost, darkQuery, \(dark\) => emitAppEvent\(\{ type: "appearance", dark \}\)\)/);
+  assert.match(shell, /createAppearance\(nillaHost, darkQuery, \(dark\) => emitAppEvent\(\{ type: "appearance", dark \}\)\)/);
   assert.doesNotMatch(shell, /let appearance: "auto" \| "light" \| "dark"/);
 });

@@ -1,6 +1,6 @@
-# When `ardia browse` doesn't do what you expected
+# When `nilla-browser browse` doesn't do what you expected
 
-`ardia browse` takes agent-browser's commands, flags and output (text and `--json`), on the user's running Ardia.
+`nilla-browser browse` takes agent-browser's commands, flags and output (text and `--json`), on the user's running Nilla.
 These are the places it differs, and what to do when something goes wrong.
 
 - Input that didn't land
@@ -27,15 +27,15 @@ and per-character typing.
 A session starts with no tab and never takes the user's: until `open <url>` (a background tab of its own) or
 `tab active` / `tab <id>`, commands that need a page fail with `no_session_tab`. `open` never navigates the user's
 tab unless you picked it with `tab <id>`; `tab active` works in it and `open` then moves to a tab of your own. Later
-`open`s navigate the session's own tab. A newer Ardia keeps the tab the CLI is attached to
+`open`s navigate the session's own tab. A newer Nilla keeps the tab the CLI is attached to
 live, so input works without switching the user's view. On one that doesn't, `open` says so, and `click`, `fill`,
-`type`, `press`, `hover`, `drag` and `mouse` fail with the fix: `ardia browse tab t2 --show` (or
-`open <url> --show`), which switches Ardia's window to the tab. Snapshots, `read`, `get`, `is`, `find … text`,
+`type`, `press`, `hover`, `drag` and `mouse` fail with the fix: `nilla-browser browse tab t2 --show` (or
+`open <url> --show`), which switches Nilla's window to the tab. Snapshots, `read`, `get`, `is`, `find … text`,
 `eval`, screenshots, `scroll` and `wait` work in the background either way.
 
 ## Refs
 
-A ref belongs to its document. After a navigation, a new document or an Ardia restart it's reported as stale
+A ref belongs to its document. After a navigation, a new document or a Nilla restart it's reported as stale
 (`Stale ref @e4: … Run snapshot again`). When the page redraws an element in place, the ref follows the new one
 (`→ @e4 was redrawn, so this used the same button "Save", now @e19`) only if its role and name were and still are
 unique on the page, inside the same named dialog, row or form; otherwise the error names the new ref. An element
@@ -62,13 +62,13 @@ line succeeded. On `stale_ref`, the answer has the new refs.
 
 ## Refused commands
 
-Ardia's policy doesn't allow the browser methods behind cookies, `state`, `set …` (but `set viewport <w> <h>` works
+Nilla's policy doesn't allow the browser methods behind cookies, `state`, `set …` (but `set viewport <w> <h>` works
 on a tab this session opened and never showed: it goes off-screen, and `--show` or `set viewport reset` reloads it
 at its own size), `network route`, `upload`,
 `download`, `highlight`, `clipboard`, `trace`, `profiler`, `record` and `stream`. They fail with exit 1 and name the
 refused method (`code: "policy_refused"` in `--json`). Use `storage local|session`, `eval`, or ask the user to do that
-step. A refusal that says "which Ardia allows for the ardia command, but not …" is about the tab or address, not the
-command: it gives the reason (`data.reason`) and, for a tab, what Ardia has there. Pick another tab or `open` a web page. Not here at all: `connect`, `install`, `upgrade`, `doctor`, `dashboard`, `chat`, `mcp`, `profiles`,
+step. A refusal that says "which Nilla allows for the nilla-browser command, but not …" is about the tab or address, not the
+command: it gives the reason (`data.reason`) and, for a tab, what Nilla has there. Pick another tab or `open` a web page. Not here at all: `connect`, `install`, `upgrade`, `doctor`, `dashboard`, `chat`, `mcp`, `profiles`,
 `confirm`/`deny`, iOS, cloud providers and launch flags (`--headed`, `--profile`, `--proxy`, …).
 
 ## Tabs and sessions
@@ -76,11 +76,11 @@ command: it gives the reason (`data.reason`) and, for a tab, what Ardia has ther
 - A session never takes the user's tab on its own: until it opens one (`open`, `tab new`) or picks one (`tab active`,
   `tab <id>`), page commands fail with `no_session_tab`. `tab list` shows the user's tabs too; `tab close` refuses
   theirs, and `close` leaves open a tab another live session uses.
-- `tN` ids are the same in every session and never move to another tab. `tab tab-…` takes the ids `ardia windows`
+- `tN` ids are the same in every session and never move to another tab. `tab tab-…` takes the ids `nilla-browser windows`
   prints.
-- `tab_detached`: Ardia took the tab away mid-command (it closed, crashed or went to sleep). Run the command again;
+- `tab_detached`: Nilla took the tab away mid-command (it closed, crashed or went to sleep). Run the command again;
   a multi-page `read` already retries that page in a new tab.
-- `setup_lost`: the tab was attached again after Ardia detached it, but the init scripts, `set` overrides or routes the
+- `setup_lost`: the tab was attached again after Nilla detached it, but the init scripts, `set` overrides or routes the
   error names couldn't be put back, so they are off. Set them again, then rerun the command.
 - `--session name` (or `AGENT_BROWSER_SESSION`) gives its own tabs, refs and captures; cookies and logins are the
   user's in every session. Use one session per task.
@@ -100,8 +100,8 @@ returns only the fields you need. `--json` and output redirected to a file (`> o
 ## Auth vault
 
 ```sh
-ardia browse auth save github --url https://github.com/login --username me --password-stdin < secret.txt
-ardia browse auth login github
+nilla-browser browse auth save github --url https://github.com/login --username me --password-stdin < secret.txt
+nilla-browser browse auth login github
 ```
 
 Passwords go to the macOS login Keychain (so `auth` doesn't work on Linux); `--password` is refused. `login` types only on the saved https origins and
@@ -109,6 +109,6 @@ stops if the page navigates, the frame changes or focus leaves the field. Never 
 
 ## Exit status
 
-0 done; 1 the command failed (a stale ref, a refused command, an action whose outcome is unknown); 2 Ardia isn't
+0 done; 1 the command failed (a stale ref, a refused command, an action whose outcome is unknown); 2 Nilla isn't
 reachable or closed the connection (Stop was pressed or control was turned off: the session ends, and an interrupted
 action is reported as unknown, never retried); 130 interrupted.

@@ -100,7 +100,7 @@ class MetalSurface: ExpoView, MTKViewDelegate {
       pipelines[ObjectIdentifier(self)] = state
       return state
     } catch {
-      NSLog("[ArdiaShaders] \(self) pipeline failed: \(error)")
+      NSLog("[NillaShaders] \(self) pipeline failed: \(error)")
       return nil
     }
   }
@@ -154,7 +154,7 @@ final class WindowActivity {
   static var override: Bool? = LaunchConfig.shared.testFlag("shadersKeyWindow") ? true : nil {
     didSet { NotificationCenter.default.post(name: changed, object: nil) }
   }
-  static let changed = Notification.Name("ArdiaShadersWindowActivityChanged")
+  static let changed = Notification.Name("NillaShadersWindowActivityChanged")
 
   static var reduceMotion: Bool {
     NSWorkspace.shared.accessibilityDisplayShouldReduceMotion

@@ -18,5 +18,5 @@ export function Sidebar(props: React.ComponentProps<typeof BrowserSidebar>) {
 function PeekMark() {
   const mark = useRef<View & Element>(null);
   useInputRegion(mark);
-  return <View ref={mark} testID="ardia-sidebar-peek" pointerEvents="none" style={StyleSheet.absoluteFill} />;
+  return <View ref={mark} testID="nilla-sidebar-peek" pointerEvents="none" style={StyleSheet.absoluteFill} />;
 }

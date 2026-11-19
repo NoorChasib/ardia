@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -44,7 +44,7 @@ class DecodedSnapshotTest {
 
     @Test
     fun thePinnedPictureIsUnderTheKeyReactNativesImageAsksForWithResizeMethodScale() {
-        val uri = "file:///data/user/0/com.ardia.browser.android/files/PageSnapshots/tab-1-1731650000000-600x1300.jpg"
+        val uri = "file:///data/user/0/com.nilladigital.nilla.android/files/PageSnapshots/tab-1-1731650000000-600x1300.jpg"
         assertEquals(reactNativeImageKey(uri, null), ImageMemory.decodedKey(uri))
         assertNotEquals("resizeMethod auto resizes file:// pictures to the view, which is another key", reactNativeImageKey(uri, ResizeOptions(400, 860)), ImageMemory.decodedKey(uri))
     }

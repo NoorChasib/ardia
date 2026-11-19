@@ -1,4 +1,4 @@
-import type { FocusNative } from "@ardia/shell";
+import type { FocusNative } from "@nilla/shell";
 import { findNodeHandle, type TextInput } from "react-native";
 import { noteFieldAsked, notePagePressed, placeOfField, readFocusedFieldWith, takeKeyboardFor, windowIdOfField } from "./appKeyboard";
 import { engineAvailable, hostCall } from "./engine/host";
@@ -27,7 +27,7 @@ const textInputState: { default: TextInputState } = require("react-native/Librar
 let installed = false;
 let reported: boolean | undefined;
 
-const focus = () => requireNativeModule<Pick<FocusOnWindows, "setTextInputFocused" | "takeKeyboardFromPage" | "fieldFocused" | "fieldAsked" | "fieldBlurred">>("ArdiaFocus");
+const focus = () => requireNativeModule<Pick<FocusOnWindows, "setTextInputFocused" | "takeKeyboardFromPage" | "fieldFocused" | "fieldAsked" | "fieldBlurred">>("NillaFocus");
 
 export function textInputHasFocus(state: Pick<TextInputState, "currentlyFocusedInput" | "isTextInput"> = textInputState.default): boolean {
   const field = state.currentlyFocusedInput();

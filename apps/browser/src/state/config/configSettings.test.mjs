@@ -15,7 +15,7 @@ test("the file's valid settings that differ from the current ones make the patch
 });
 
 test("a wrong value skips that setting with a message saying what's allowed, and the rest still applies", () => {
-  const { patch, problems } = read({ selectedTabGlow: "bright", sidebarWidth: -3, glassTintAmount: 4, warnBeforeQuitting: "yes", cleanUpInactiveTabsAfterMinutes: 0, littleArdiaSize: [1], tabLayout: "top" });
+  const { patch, problems } = read({ selectedTabGlow: "bright", sidebarWidth: -3, glassTintAmount: 4, warnBeforeQuitting: "yes", cleanUpInactiveTabsAfterMinutes: 0, littleNillaSize: [1], tabLayout: "top" });
   assert.deepEqual(patch, { tabLayout: "top" });
   assert.deepEqual(problems, [
     "config.json: selectedTabGlow must be full, soft or off",
@@ -23,7 +23,7 @@ test("a wrong value skips that setting with a message saying what's allowed, and
     "config.json: glassTintAmount must be a number from 0 to 1",
     "config.json: warnBeforeQuitting must be true or false",
     "config.json: cleanUpInactiveTabsAfterMinutes must be a number above 0 or null",
-    "config.json: littleArdiaSize must be a list of 2 numbers above 0",
+    "config.json: littleNillaSize must be a list of 2 numbers above 0",
   ]);
 });
 

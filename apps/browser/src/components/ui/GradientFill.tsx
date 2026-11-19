@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
-import { Surface } from "@ardia/shell";
+import { Surface } from "@nilla/shell";
 import { parseColor, toHex } from "../../lib/color";
 
 export type GradientStop = readonly [at: number, alpha: number];

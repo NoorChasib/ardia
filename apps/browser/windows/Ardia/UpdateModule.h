@@ -25,7 +25,7 @@
 #pragma comment(lib, "winhttp.lib")
 #pragma comment(lib, "bcrypt.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 namespace AppServices {
 
@@ -172,7 +172,7 @@ inline std::string BuildFile() noexcept {
   try {
     std::filesystem::path folder = AppFolder();
     if (folder.empty()) return {};
-    auto contents = Files::ReadAll(folder / L"Ardia.build.json");
+    auto contents = Files::ReadAll(folder / L"Nilla.build.json");
     if (!contents || contents->size() > kLargestBuildFileBytes || !Files::IsValidUtf8(*contents)) return {};
     return *contents;
   } catch (...) {
@@ -272,8 +272,8 @@ inline std::string Fetch(std::wstring const &address, uint64_t largest, Received
     if (path.empty()) path = L"/";
     bool secure = parts.nScheme == INTERNET_SCHEME_HTTPS;
 
-    Connection session{WinHttpOpen(L"Ardia", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0)};
-    if (!session) session.handle = WinHttpOpen(L"Ardia", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    Connection session{WinHttpOpen(L"Nilla", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0)};
+    if (!session) session.handle = WinHttpOpen(L"Nilla", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!session) return Failed("WinHttpOpen");
     WinHttpSetTimeouts(session.handle, 30000, 30000, 30000, 60000);
     Connection server{WinHttpConnect(session.handle, host.c_str(), parts.nPort, 0)};
@@ -423,7 +423,7 @@ inline Downloaded Download(std::wstring const &address, std::string const &sha25
       result.failure = "the updates folder is a link";
       return result;
     }
-    std::filesystem::path target = folder / (L"Ardia-Setup-" + Paths::Wide(sha256.substr(0, 16)) + L".exe");
+    std::filesystem::path target = folder / (L"Nilla-Setup-" + Paths::Wide(sha256.substr(0, 16)) + L".exe");
     if (AlreadyHere(target, sha256)) {
       result.path = Paths::Utf8(target.wstring());
       return result;
@@ -500,7 +500,7 @@ inline std::string RunInstaller(std::string const &chosen, std::string const &sh
 
 }
 
-REACT_MODULE(UpdateModule, L"ArdiaWindowsUpdate")
+REACT_MODULE(UpdateModule, L"NillaWindowsUpdate")
 struct UpdateModule {
   REACT_CONSTANT(cpu)
   const std::string cpu = AppUpdate::Cpu();
@@ -562,7 +562,7 @@ struct UpdateModule {
   void install(std::string path, std::string sha256, winrt::Microsoft::ReactNative::ReactPromise<bool> promise) noexcept {
     if (!AppUpdate::IsSha256(sha256)) return promise.Reject("The update has no usable SHA-256");
     if (AppLaunch::Background()) {
-      AppLaunch::Note(L"ArdiaWindowsUpdate: background instance, not running the installer");
+      AppLaunch::Note(L"NillaWindowsUpdate: background instance, not running the installer");
       return promise.Resolve(false);
     }
     OnAThread(promise, [path, sha256, promise]() noexcept {

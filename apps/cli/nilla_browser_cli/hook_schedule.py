@@ -2,7 +2,7 @@ import asyncio
 import datetime as dt
 import time
 
-from ardia_cli.hooks import DAYS
+from nilla_browser_cli.hooks import DAYS
 
 CHECK_INTERVAL = 20.0
 ON_TIME = 90.0

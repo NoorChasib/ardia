@@ -26,24 +26,24 @@ public class SitesModule: Module {
       try engine(args).setSiteSetting(profile: args.profile, origin: try args.text("origin"), type: try args.text("type"), value: try args.text("value"))
       reply.ok()
     },
-    "origins": { args, reply in ArdiaServices.siteSettingsOrigins(profile: args.profile) { reply.service($0, $1) } },
+    "origins": { args, reply in NillaServices.siteSettingsOrigins(profile: args.profile) { reply.service($0, $1) } },
     "reset": { args, reply in
-      ArdiaServices.resetSiteSettings(profile: args.profile, origin: try args.text("origin"))
+      NillaServices.resetSiteSettings(profile: args.profile, origin: try args.text("origin"))
       reply.ok()
     },
     "clearData": { args, reply in
       try engine(args).clearSiteData(profile: args.profile, origin: try args.text("origin")) { reply.service($0, $1) }
     },
-    "zoomLevels": { args, reply in ArdiaServices.zoomLevels(profile: args.profile) { reply.service($0, $1) } },
+    "zoomLevels": { args, reply in NillaServices.zoomLevels(profile: args.profile) { reply.service($0, $1) } },
     "setZoom": { args, reply in
-      ArdiaServices.setZoom(try args.double("zoom"), profile: args.profile, host: try args.text("host"))
+      NillaServices.setZoom(try args.double("zoom"), profile: args.profile, host: try args.text("host"))
       reply.ok()
     },
     "preloadPages": { args, reply in
-      ArdiaServices.preloadPages(profile: args.profile) { reply.service($0, $1) }
+      NillaServices.preloadPages(profile: args.profile) { reply.service($0, $1) }
     },
     "setPreloadPages": { args, reply in
-      ArdiaServices.setPreloadPages(try args.bool("on"), profile: args.profile) { reply.service($0, $1) }
+      NillaServices.setPreloadPages(try args.bool("on"), profile: args.profile) { reply.service($0, $1) }
     },
   ])
 }

@@ -1,13 +1,13 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.content.res.AssetManager
 import androidx.test.platform.app.InstrumentationRegistry
-import com.ardia.shared.ScriptEngine
-import com.ardia.shared.SharedScript
-import com.ardia.sync.core.FileKeyStore
-import com.ardia.sync.core.FolderStorage
-import com.ardia.sync.core.SyncKeys
-import com.ardia.sync.core.SyncVault
+import com.nilladigital.nilla.shared.ScriptEngine
+import com.nilladigital.nilla.shared.SharedScript
+import com.nilladigital.nilla.sync.core.FileKeyStore
+import com.nilladigital.nilla.sync.core.FolderStorage
+import com.nilladigital.nilla.sync.core.SyncKeys
+import com.nilladigital.nilla.sync.core.SyncVault
 import java.io.File
 import java.util.UUID
 import kotlin.random.Random
@@ -17,7 +17,7 @@ import org.json.JSONObject
 val testAssets: AssetManager get() = InstrumentationRegistry.getInstrumentation().targetContext.assets
 
 class Sandbox {
-    val root = File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "ardia-sync-${UUID.randomUUID()}")
+    val root = File(InstrumentationRegistry.getInstrumentation().targetContext.cacheDir, "nilla-sync-${UUID.randomUUID()}")
     val folder = File(root, "Nilla Sync")
     val state = File(root, "State")
     val keys = File(root, "Keys")
@@ -103,7 +103,7 @@ class FakeMac(folder: File, entropy: ByteArray, var clock: TestClock? = null) : 
     companion object {
         const val SOURCE = """
 (() => {
-  const S = globalThis.ArdiaSync;
+  const S = globalThis.NillaSync;
   const scopes = {};
   const stores = {};
   let clock = null;

@@ -111,7 +111,7 @@ export function ExpoSyncPage() {
             </Button>
           </Section>
           {devices.length ? (
-            <Section title="Devices" footer={noReceivers ? <Text>Update Ardia on your Mac to send tabs to it.</Text> : undefined}>
+            <Section title="Devices" footer={noReceivers ? <Text>Update Nilla on your Mac to send tabs to it.</Text> : undefined}>
               {devices.map((device) => {
                 const seen = deviceSeen(device, now);
                 return (

@@ -22,7 +22,7 @@ static NSPasteboard *IsolatedPasteboardWithName(id self, SEL _cmd, NSPasteboardN
 }
 
 static void IsolatePasteboard(NSString *dataDirectory) {
-  gPasteboardName = [@"com.ardia.scratch:" stringByAppendingString:dataDirectory];
+  gPasteboardName = [@"com.nilladigital.nilla.scratch:" stringByAppendingString:dataDirectory];
   Method withName = class_getClassMethod(NSPasteboard.class, @selector(pasteboardWithName:));
   gPasteboardWithName = method_getImplementation(withName);
   method_setImplementation(withName, (IMP)IsolatedPasteboardWithName);
@@ -30,18 +30,18 @@ static void IsolatePasteboard(NSString *dataDirectory) {
 }
 #endif
 
-@interface ArdiaIsolation : NSObject
+@interface NillaIsolation : NSObject
 @end
 
-@implementation ArdiaIsolation
+@implementation NillaIsolation
 
 + (void)load {
-  NSString *dataDirectory = ArdiaLaunchConfig.shared.dataDirectory;
+  NSString *dataDirectory = NillaLaunchConfig.shared.dataDirectory;
   if (!dataDirectory) return;
 #if DEBUG
   IsolatePasteboard(dataDirectory);
 #endif
-  NSString *domain = NSBundle.mainBundle.bundleIdentifier ?: @"com.ardia.browser";
+  NSString *domain = NSBundle.mainBundle.bundleIdentifier ?: @"com.nilladigital.nilla";
   gDefaults = [[NSUserDefaults alloc]
       initWithSuiteName:[[dataDirectory stringByAppendingPathComponent:@"Preferences"] stringByAppendingPathComponent:domain]];
   if (!gDefaults) return;

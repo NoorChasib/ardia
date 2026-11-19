@@ -1,4 +1,4 @@
-import { labLog, scanLab, scanner, ScanView, sync, type ScanPermission } from "@ardia/phone-native";
+import { labLog, scanLab, scanner, ScanView, sync, type ScanPermission } from "@nilla/phone-native";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 

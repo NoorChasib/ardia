@@ -7,7 +7,7 @@
 #include "Events.h"
 #include "MaterialSupport.h"
 
-namespace Ardia::Materials {
+namespace Nilla::Materials {
 
 struct GradientFailureSink {
   std::mutex lock;
@@ -33,7 +33,7 @@ inline void MarkGradientFailed() noexcept {
     std::scoped_lock guard{sink.lock};
     context = sink.context;
   }
-  if (context) EmitEvent(context, L"ArdiaMaterials", L"gradientFailed", winrt::Microsoft::ReactNative::JSValueObject{});
+  if (context) EmitEvent(context, L"NillaMaterials", L"gradientFailed", winrt::Microsoft::ReactNative::JSValueObject{});
 }
 
 }

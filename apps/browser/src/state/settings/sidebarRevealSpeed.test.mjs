@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-globalThis.acTestNativeModules = { ArdiaSharedFolders: { location: () => ({ path: "/scratch", iCloudAvailable: true, iCloudPath: "/scratch" }) } };
+globalThis.acTestNativeModules = { NillaSharedFolders: { location: () => ({ path: "/scratch", iCloudAvailable: true, iCloudPath: "/scratch" }) } };
 const { SETTING_SPECS, DEFAULT_SETTINGS, parseSettings } = await import("./settings.ts");
 const { isConfigSettingKey } = await import("./configAllowlist.ts");
 const { settingsSnapshot } = await import("../telemetry/settingsSnapshot.ts");

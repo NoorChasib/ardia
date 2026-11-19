@@ -75,7 +75,7 @@ await go("https://example.com/");
 check("a web page loads", (await evaluate("document.title")) === "Example Domain");
 
 const adScript = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-const adRequest = "https://ib.adnxs.com/ut/v3?ardia-smoke";
+const adRequest = "https://ib.adnxs.com/ut/v3?nilla-smoke";
 async function adFate(adUrl, run) {
   const ids = new Set();
   let fate;
@@ -189,7 +189,7 @@ adSteps.push(await adsOnPage());
 check("allowing ads on a site, then not, applies on the next load", adSteps.join(" → ") === "blocked → loaded → blocked", adSteps.join(" → "));
 
 await go("chrome://version");
-check("chrome://version", (await evaluate("document.body.innerText")).includes(`Ardia\t${chromiumVersion} (Official Build)`));
+check("chrome://version", (await evaluate("document.body.innerText")).includes(`Nilla\t${chromiumVersion} (Official Build)`));
 
 await send("Network.enable");
 await send("Network.emulateNetworkConditions", { offline: true, latency: 0, downloadThroughput: 0, uploadThroughput: 0 });
@@ -336,8 +336,8 @@ try {
 } catch (error) {
   console.log(`note: ${error.message}`);
 }
-check("a link from another app (a GURL Apple Event) opens in Little Ardia", !!linked && linkedPage,
-  linked ? `${linked}${linkedPage ? "" : ", but no page loaded"}` : "no Little Ardia within 10 s");
+check("a link from another app (a GURL Apple Event) opens in Little Nilla", !!linked && linkedPage,
+  linked ? `${linked}${linkedPage ? "" : ", but no page loaded"}` : "no Little Nilla within 10 s");
 
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} passed`);

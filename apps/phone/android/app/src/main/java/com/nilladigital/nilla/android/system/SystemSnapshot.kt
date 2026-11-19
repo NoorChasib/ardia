@@ -1,7 +1,7 @@
-package com.ardia.browser.android.system
+package com.nilladigital.nilla.android.system
 
 import android.content.Context
-import com.ardia.design.ProfileLook
+import com.nilladigital.nilla.design.ProfileLook
 import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject

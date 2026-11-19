@@ -28,7 +28,7 @@ export {
   type AppBadge,
 } from "@ardia/ardiacore";
 
-const Tabs = nativeModule("ArdiaTabs");
+const Tabs = nativeModule("NillaTabs");
 
 export const prepareTabTransfer = (tabId: string) => Tabs.prepareTransfer(tabId);
 export const releaseTabTransfer = (tabId: string) => Tabs.releaseTransfer(tabId);

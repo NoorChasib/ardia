@@ -32,11 +32,11 @@ public enum OpenURLInbox {
   private static func batches(_ urls: [String], _ pointer: NSPoint) -> [Batch] {
     var result: [Batch] = []
     for url in urls {
-      let source = ArdiaHost.senderOfOpenedURL(url).map { $0 as NSDictionary }
+      let source = NillaHost.senderOfOpenedURL(url).map { $0 as NSDictionary }
       if let last = result.last, sameSource(last.source, source) {
         result[result.count - 1].urls.append(url)
       } else {
-        let returnTo = LittleArdiaHandoff.shared.appForLink(sentBy: source?["bundleId"] as? String)
+        let returnTo = LittleNillaHandoff.shared.appForLink(sentBy: source?["bundleId"] as? String)
         result.append(Batch(urls: [url], pointer: pointer, source: source, returnTo: returnTo))
       }
     }

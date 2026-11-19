@@ -1,4 +1,4 @@
-import ArdiaSync
+import NillaSync
 import Foundation
 import Observation
 import SwiftData

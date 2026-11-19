@@ -48,12 +48,12 @@ public struct SearchWidgetContent: View {
   public var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack(alignment: .top) {
-        ArdiaLogoMark()
+        NillaLogoMark()
           .frame(width: SystemWidgetLayout.markSmall.width, height: SystemWidgetLayout.markSmall.height)
           .shadow(color: .black.opacity(onBackdrop ? 0.12 : 0.08), radius: 6, y: 3)
         Spacer(minLength: 0)
         if size != .small {
-          Text("Ardia")
+          Text("Nilla")
             .font(.system(.subheadline, design: .rounded, weight: .bold))
             .foregroundStyle(onBackdrop ? AnyShapeStyle(ink.opacity(0.85)) : AnyShapeStyle(SystemPalette.widgetAccent))
             .widgetAccentable()
@@ -161,7 +161,7 @@ public struct MacTabsWidgetContent: View {
     if !snapshot.isSyncEnabled {
       MacTabsEmptyView(
         title: "Sync With Your Mac",
-        message: "See the tabs you have open in Ardia on your Mac.",
+        message: "See the tabs you have open in Nilla on your Mac.",
         symbol: "laptopcomputer.and.iphone",
         size: size
       )
@@ -169,7 +169,7 @@ public struct MacTabsWidgetContent: View {
     } else if snapshot.macTabs.allSatisfy(\.tabs.isEmpty) {
       MacTabsEmptyView(
         title: "No Tabs Open on Your Mac",
-        message: "Tabs you open in Ardia on your Mac show up here.",
+        message: "Tabs you open in Nilla on your Mac show up here.",
         symbol: "laptopcomputer",
         size: size
       )
@@ -217,7 +217,7 @@ public struct MacTabsWidgetContent: View {
           .font(.caption.weight(.semibold))
           .lineLimit(1)
         Spacer(minLength: 0)
-        ArdiaLogoMark(outline: false)
+        NillaLogoMark(outline: false)
           .frame(width: 18, height: 14)
       }
       .foregroundStyle(SystemPalette.widgetAccent)
@@ -266,7 +266,7 @@ struct MacTabsEmptyView: View {
           .foregroundStyle(SystemPalette.widgetAccent)
           .widgetAccentable()
         Spacer(minLength: 0)
-        ArdiaLogoMark()
+        NillaLogoMark()
           .frame(width: 32, height: 26)
       }
       Spacer(minLength: 0)
@@ -345,7 +345,7 @@ public struct SearchLockScreenRectangular: View {
         .frame(width: 38, height: 38)
         .background(.fill.secondary, in: .circle)
       VStack(alignment: .leading, spacing: 0) {
-        Text("Ardia")
+        Text("Nilla")
           .font(.headline)
           .widgetAccentable()
         Text("Search the Web")
@@ -363,7 +363,7 @@ public struct SearchLockScreenInline: View {
   public init() {}
 
   public var body: some View {
-    Label("Search with Ardia", systemImage: "magnifyingglass")
+    Label("Search with Nilla", systemImage: "magnifyingglass")
       .widgetURL(SystemLink.search(query: nil).url)
   }
 }

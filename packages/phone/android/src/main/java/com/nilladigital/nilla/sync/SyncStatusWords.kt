@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 object SyncStatusText {
     const val RESET_MESSAGE = "This device is out of sync. Sync may have been reset from another device."

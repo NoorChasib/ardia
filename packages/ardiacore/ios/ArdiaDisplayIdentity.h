@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaDisplayIdentity : NSObject
+@interface NillaDisplayIdentity : NSObject
 
 + (nullable NSString *)identifierOfScreen:(nullable NSScreen *)screen NS_SWIFT_NAME(identifier(of:));
 + (nullable NSScreen *)screenWithIdentifier:(nullable NSString *)identifier NS_SWIFT_NAME(screen(withIdentifier:));

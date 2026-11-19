@@ -1,6 +1,6 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
-import com.ardia.sync.core.SyncKeys
+import com.nilladigital.nilla.sync.core.SyncKeys
 import java.io.File
 import java.io.IOException
 import java.nio.file.AtomicMoveNotSupportedException

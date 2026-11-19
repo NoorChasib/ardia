@@ -5,7 +5,7 @@ import { DeviceEventEmitter, turboModules } from "../test-native/reactNative.ts"
 
 const calls = [];
 const opening = new Map();
-turboModules.ArdiaEngineHost = {
+turboModules.NillaEngineHost = {
   available: () => true,
   hostCall: async (verb, argsJson, windowId) => {
     const args = JSON.parse(argsJson);
@@ -28,7 +28,7 @@ const shape = { x: 0, y: 0, width: 200, height: 100, radius: 0, holes: [] };
 const followed = (key) => calls.filter((call) => call.verb === "tab.call" && call.args.key === key && call.args.method === "focus").map((call) => call.args);
 const FOLLOWED = [{ follow: true, key: "", method: "focus", deferred: true }];
 const followedOnce = (key) => [{ ...FOLLOWED[0], key }];
-const emitTopic = (topic, payload) => DeviceEventEmitter.emit("ArdiaEngineHost:event", { topic, json: JSON.stringify(payload) });
+const emitTopic = (topic, payload) => DeviceEventEmitter.emit("NillaEngineHost:event", { topic, json: JSON.stringify(payload) });
 let focused = null;
 readFocusedFieldWith(() => focused);
 const mounted = [];

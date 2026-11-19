@@ -4,17 +4,17 @@ import { CHECK_EVERY_MS, FIRST_CHECK_AFTER_MS, UPDATE_CHECK_LOCK, UPDATE_PREFERE
 import { compareVersions, linuxReleases, newestRelease } from "./updateReleases.ts";
 import { takeUpdateCounts } from "../../browser/src/state/telemetry/updateCounts.ts";
 
-const page = (tag) => `https://github.com/ardia-browser/ardia/releases/tag/${tag}`;
-const release = (tag, { prerelease = false, draft = false, assets = [`Ardia-${tag.replace(/^v/, "")}-linux-x64.tar.xz`] } = {}) =>
+const page = (tag) => `https://github.com/NoorChasib/nilla/releases/tag/${tag}`;
+const release = (tag, { prerelease = false, draft = false, assets = [`Nilla-${tag.replace(/^v/, "")}-linux-x64.tar.xz`] } = {}) =>
   ({ tag_name: tag, html_url: page(tag), prerelease, draft, assets: assets.map((name) => ({ name })) });
 const LIST = [
   release("engine-0be922b5d707", { prerelease: true, assets: ["ArdiaCore-0be922b5d707-linux-x64.tar.xz"] }),
   release("v0.2.47-nightly.3", { prerelease: true }),
   release("v0.2.47-nightly.2", { prerelease: true }),
-  release("v0.2.46", { assets: ["Ardia-0.2.46.dmg", "Ardia-0.2.46-linux-x64.tar.xz", "Ardia-0.2.46-linux-x64.deb"] }),
-  release("v0.2.48", { assets: ["Ardia-0.2.48.dmg"] }),
+  release("v0.2.46", { assets: ["Nilla-0.2.46.dmg", "Nilla-0.2.46-linux-x64.tar.xz", "Nilla-0.2.46-linux-x64.deb"] }),
+  release("v0.2.48", { assets: ["Nilla-0.2.48.dmg"] }),
   release("v0.2.49", { draft: true }),
-  { ...release("v0.2.50"), html_url: "https://evil.example/ardia" },
+  { ...release("v0.2.50"), html_url: "https://evil.example/nilla" },
 ];
 
 test("release tags compare by version, nightly builds before their stable release", () => {
@@ -71,7 +71,7 @@ test("Check Now never reaches the engine's release list behind the Layer 1 gate,
   assert.equal(seen.requests, 0);
   assert.deepEqual(seen.asked, []);
   assert.deepEqual(seen.opened, []);
-  assert.deepEqual(seen.told, ["Ardia couldn't check for updates"]);
+  assert.deepEqual(seen.told, ["Nilla couldn't check for updates"]);
   const state = await updater.methods.updaterState();
   assert.equal(state.switchCheck.phase, "failed");
   assert.equal(state.automaticDownloads, false);
@@ -105,7 +105,7 @@ test("a failed check says so when asked, counts the failure and shows failed in 
   takeUpdateCounts();
   const { updater, seen } = harness({ status: 0, body: "" });
   await updater.methods.checkForUpdates();
-  assert.deepEqual(seen.told, ["Ardia couldn't check for updates"]);
+  assert.deepEqual(seen.told, ["Nilla couldn't check for updates"]);
   assert.equal((await updater.methods.updaterState()).switchCheck.phase, "failed");
   assert.equal(takeUpdateCounts().update_check_failures, 1);
 });
@@ -172,9 +172,9 @@ test("with no switches URL the switch refresh is off and never asks the native h
 test("a launch started with --no-sandbox says why once, in the window that ran the launch, and counts it", async () => {
   const { noticeUnsandboxedLaunch, sandboxNotice } = await import("./sandboxNotice.ts");
   assert.equal(sandboxNotice(undefined), null);
-  const reason = "Ardia was started with --no-sandbox";
-  assert.equal(sandboxNotice(reason).message, "Ardia was started with --no-sandbox. Start Ardia without --no-sandbox to turn the sandbox back on.");
-  assert.match(sandboxNotice("--no-sandbox was passed to chrome directly").message, /^--no-sandbox was passed to chrome directly\. Start Ardia without --no-sandbox/);
+  const reason = "Nilla was started with --no-sandbox";
+  assert.equal(sandboxNotice(reason).message, "Nilla was started with --no-sandbox. Start Nilla without --no-sandbox to turn the sandbox back on.");
+  assert.match(sandboxNotice("--no-sandbox was passed to chrome directly").message, /^--no-sandbox was passed to chrome directly\. Start Nilla without --no-sandbox/);
   takeUpdateCounts();
   const shown = [];
   const host = { bootstrap: { sandboxDecision: reason } };
@@ -188,7 +188,7 @@ test("a launch started with --no-sandbox says why once, in the window that ran t
   assert.deepEqual(shown, [], "the first-run onboarding covers toasts, so the notice waits for it to close");
   close();
   assert.equal(await pending, true);
-  assert.deepEqual(shown.map(([windowId, title]) => [windowId, title]), [["w1", "Ardia is running without Chromium's sandbox"]]);
+  assert.deepEqual(shown.map(([windowId, title]) => [windowId, title]), [["w1", "Nilla is running without Chromium's sandbox"]]);
   assert.equal(takeUpdateCounts().launches_without_sandbox, 1);
 });
 

@@ -1,2 +1,2 @@
 export { faviconsFor, fetchFavicon, storeFavicon } from "@ardia/ardiacore";
-export { iconAccent, iconTheme, type IconTheme } from "@ardia/shell";
+export { iconAccent, iconTheme, type IconTheme } from "@nilla/shell";

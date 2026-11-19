@@ -1,6 +1,6 @@
 import json
 
-from ardia_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse.errors import BrowseError, Usage
 
 SCRIPTS = """() => {
   const out = [];
@@ -21,7 +21,7 @@ FIELD_PREVIEW = 8
 
 
 def blocks_of(scripts: list[dict]) -> list[dict]:
-    from ardia_cli.browse import flowlog
+    from nilla_browser_cli.browse import flowlog
 
     found = []
     for script in scripts or []:
@@ -35,7 +35,7 @@ def blocks_of(scripts: list[dict]) -> list[dict]:
 
 
 def summary(block: dict) -> str:
-    from ardia_cli.browse import shape
+    from nilla_browser_cli.browse import shape
 
     value = block["value"]
     name = f"#{block['id']}" if block["id"] else block["kind"]
@@ -64,9 +64,9 @@ def pick_block(blocks: list[dict], wanted: str | None) -> dict:
 
 
 async def run(ctx, page, frame, options: dict):
-    from ardia_cli import command_metrics
-    from ardia_cli.browse import shape
-    from ardia_cli.browse.commands import Result, render_json
+    from nilla_browser_cli import command_metrics
+    from nilla_browser_cli.browse import shape
+    from nilla_browser_cli.browse.commands import Result, render_json
 
     scripts = await page.call(SCRIPTS, frame=frame, read=True)
     blocks = blocks_of(scripts)

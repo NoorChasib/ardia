@@ -1,5 +1,5 @@
-import ArdiaShared
-@preconcurrency import ArdiaSyncCore
+import NillaShared
+@preconcurrency import NillaSyncCore
 import Foundation
 
 final class SyncHost {

@@ -38,7 +38,7 @@ export function openInBrowserWindow(request: OpenWindowRequest, profile: string,
     clearTimeout(unadopted.get(adoptId)?.timer);
     unadopted.set(adoptId, { timer, giveUp });
   }
-  emitWhenListened("ArdiaTabs", "tabs", { name: "tabs.windowRequest", data: { request, profile, fromWindow } satisfies WindowRequest });
+  emitWhenListened("NillaTabs", "tabs", { name: "tabs.windowRequest", data: { request, profile, fromWindow } satisfies WindowRequest });
 }
 
 export function offeredTabAdopting(adoptId: string | undefined): (adopted: boolean) => void {

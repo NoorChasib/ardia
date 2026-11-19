@@ -22,7 +22,7 @@ const SHAPES = [
   },
 ] as const;
 
-export function ArdiaLogo({ width }: { width: number }) {
+export function NillaLogo({ width }: { width: number }) {
   const stroke = CANVAS.width * OUTLINE;
   const pad = stroke / 2 + 2;
   const box = `${CANVAS.left - pad} ${CANVAS.top - pad} ${CANVAS.width + pad * 2} ${CANVAS.height + pad * 2}`;

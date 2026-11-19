@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 internal class SyncEventRoute(
     private val inbox: PhoneInbox,

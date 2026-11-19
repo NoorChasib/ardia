@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals

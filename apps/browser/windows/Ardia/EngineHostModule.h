@@ -16,7 +16,7 @@
 #include "Paths.h"
 #include "WindowManager.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace EngineHostParts {
 
@@ -78,7 +78,7 @@ inline void OnEvent(void *context, const char *topic, const char *json) noexcept
   winrt::Microsoft::ReactNative::JSValueObject payload;
   payload["topic"] = std::string{topic ? topic : ""};
   payload["json"] = std::string{json ? json : ""};
-  EmitEvent(route->context, L"ArdiaEngineHost", L"event", std::move(payload));
+  EmitEvent(route->context, L"NillaEngineHost", L"event", std::move(payload));
 }
 
 inline void Install(EventRoute *route) noexcept {
@@ -169,7 +169,7 @@ inline std::string RemoveProfileFolder(std::string const &folder) noexcept {
 }
 }
 
-REACT_MODULE(EngineHostModule, L"ArdiaEngineHost")
+REACT_MODULE(EngineHostModule, L"NillaEngineHost")
 struct EngineHostModule {
   using Reply = EngineHostParts::Reply;
 

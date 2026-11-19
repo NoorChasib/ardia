@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 internal typealias AndroidPermissionGate = (Array<String>, (Map<String, Boolean>) -> Unit) -> Unit
 

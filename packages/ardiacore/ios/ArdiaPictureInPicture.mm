@@ -8,7 +8,7 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
 namespace {
 
@@ -17,8 +17,8 @@ void InstallMenuMonitor() {
   if (monitor) return;
   monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskRightMouseDown
                                                   handler:^NSEvent *(NSEvent *event) {
-                                                    ArdiaPiPController *controller =
-                                                        event.window ? [ArdiaPiPController forWindow:event.window] : nil;
+                                                    NillaPiPController *controller =
+                                                        event.window ? [NillaPiPController forWindow:event.window] : nil;
                                                     if (!controller) return event;
                                                     [NSMenu popUpContextMenu:[controller menu] withEvent:event forView:controller.overlay];
                                                     return nil;
@@ -26,13 +26,13 @@ void InstallMenuMonitor() {
 }
 
 double ClickSkipSeconds(NSWindow *window, NSPoint local) {
-  ArdiaPiPController *controller = [ArdiaPiPController forWindow:window];
-  if (!controller.view || controller.stashedEdge != ArdiaPiPEdgeNone) return 0;
-  return ardia_pip_seek::SkipSecondsAt(local.x, NSWidth(window.frame));
+  NillaPiPController *controller = [NillaPiPController forWindow:window];
+  if (!controller.view || controller.stashedEdge != NillaPiPEdgeNone) return 0;
+  return nilla_pip_seek::SkipSecondsAt(local.x, NSWidth(window.frame));
 }
 
 BOOL GrabsWindowBackground(NSWindow *window, NSEvent *event) {
-  if (!window || ![ArdiaPiPController forWindow:window] || (event.modifierFlags & NSEventModifierFlagControl)) return NO;
+  if (!window || ![NillaPiPController forWindow:window] || (event.modifierFlags & NSEventModifierFlagControl)) return NO;
   if (event.clickCount > 1 && !ClickSkipSeconds(window, event.locationInWindow)) return NO;
   if ([window respondsToSelector:@selector(_resizeDirectionForMouseLocation:)] &&
       [window _resizeDirectionForMouseLocation:event.locationInWindow] != -1)
@@ -41,7 +41,7 @@ BOOL GrabsWindowBackground(NSWindow *window, NSEvent *event) {
   return frameView && [frameView hitTest:event.locationInWindow] == frameView;
 }
 
-__weak ArdiaPiPController *gDragged;
+__weak NillaPiPController *gDragged;
 
 NSPoint gGrabLocal;
 
@@ -55,7 +55,7 @@ NSInteger gGrabClicks;
 
 void NoteGrabTravel(NSEvent *event) {
   const NSPoint mouse = PointerOf(event);
-  gGrabTravel = std::max(gGrabTravel, ardia_pip_seek::Travel(mouse.x - gGrabMouse.x, mouse.y - gGrabMouse.y));
+  gGrabTravel = std::max(gGrabTravel, nilla_pip_seek::Travel(mouse.x - gGrabMouse.x, mouse.y - gGrabMouse.y));
 }
 
 void InstallDragMonitor() {
@@ -65,8 +65,8 @@ void InstallDragMonitor() {
                                                   handler:^NSEvent *(NSEvent *event) {
                                                     if (event.type == NSEventTypeLeftMouseDown) {
                                                       NSWindow *window = event.window;
-                                                      ArdiaPiPController *grabbed =
-                                                          GrabsWindowBackground(window, event) ? [ArdiaPiPController forWindow:window] : nil;
+                                                      NillaPiPController *grabbed =
+                                                          GrabsWindowBackground(window, event) ? [NillaPiPController forWindow:window] : nil;
                                                       gDragged = grabbed;
                                                       if (!grabbed) return event;
                                                       [grabbed dragBegan:event];
@@ -75,18 +75,18 @@ void InstallDragMonitor() {
                                                       gGrabTravel = 0;
                                                       gGrabSkip = ClickSkipSeconds(window, event.locationInWindow);
                                                       gGrabClicks = event.clickCount;
-                                                      ardia_host::NotePointer(event, @"pipDrag");
+                                                      nilla_host::NotePointer(event, @"pipDrag");
                                                       return nil;
                                                     }
-                                                    ArdiaPiPController *dragged = gDragged;
+                                                    NillaPiPController *dragged = gDragged;
                                                     if (!dragged) return event;
                                                     NoteGrabTravel(event);
                                                     if (event.type == NSEventTypeLeftMouseUp) {
                                                       gDragged = nil;
                                                       [dragged dragEnded:event];
-                                                      if (gGrabSkip && ardia_pip_seek::IsClick(gGrabTravel))
+                                                      if (gGrabSkip && nilla_pip_seek::IsClick(gGrabTravel))
                                                         [dragged skipBy:gGrabSkip at:gGrabLocal clickCount:gGrabClicks];
-                                                      ardia_host::NotePointer(event, @"pipDrag");
+                                                      nilla_host::NotePointer(event, @"pipDrag");
                                                     } else {
                                                       [dragged dragMoved:event];
                                                     }
@@ -99,32 +99,32 @@ void InstallZoomMonitor() {
   if (monitor) return;
   monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskScrollWheel | NSEventMaskMagnify
                                                   handler:^NSEvent *(NSEvent *event) {
-                                                    return [ArdiaPiPController handleSwipe:event] || [ArdiaPiPZoom handle:event] ? nil : event;
+                                                    return [NillaPiPController handleSwipe:event] || [NillaPiPZoom handle:event] ? nil : event;
                                                   }];
 }
 
-bool Attach(ArdiaWebView *view, NSString *host) {
+bool Attach(NillaWebView *view, NSString *host) {
   for (NSWindow *window in NSApp.windows) {
-    ArdiaPiPController *controller = [ArdiaPiPController forWindow:window];
+    NillaPiPController *controller = [NillaPiPController forWindow:window];
     if (!IsChromeVideoPictureInPicture(window) && !(controller && window.visible)) continue;
     if (!window.hasShadow) continue;
     if (controller.view && controller.view.browserId != view.browserId) continue;
     BOOL fresh = !controller;
-    if (fresh) controller = [[ArdiaPiPController alloc] initWithWindow:window];
+    if (fresh) controller = [[NillaPiPController alloc] initWithWindow:window];
     controller.view = view;
     controller.host = host;
     [controller roundCorners];
     JoinFullScreenSpaces(window);
     PreventActivation(window);
     if (fresh) [view emit:@"pictureInPicture" payload:@{@"kind" : @"video", @"active" : @YES, @"fullScreenSpaces" : @(JoinsFullScreenSpaces(window)), @"leftApp" : @(view.leftAppInPictureInPicture), @"leftTab" : @(!view.seenByUser)}];
-    if (ardia_host::Background()) {
+    if (nilla_host::Background()) {
       window.alphaValue = 0;
       window.ignoresMouseEvents = YES;
     }
     InstallMenuMonitor();
     InstallDragMonitor();
     InstallZoomMonitor();
-    NSString *selfTest = ardia_host::Background() ? [ArdiaLaunchConfig.shared testValue:@"pipSelfTest"] : nil;
+    NSString *selfTest = nilla_host::Background() ? [NillaLaunchConfig.shared testValue:@"pipSelfTest"] : nil;
     if (fresh && [@[ @"close", @"backToTab" ] containsObject:selfTest]) [controller runButtonSelfTest:selfTest];
     else if (fresh && [selfTest isEqual:@"hover"]) [controller runHoverSelfTest];
     else if (fresh && selfTest) [controller runSelfTest];
@@ -142,7 +142,7 @@ NSString *DevShowAlpha(NSWindow *window, float alpha) {
   using SetAlpha = int (*)(int, int, float);
   auto connection = (MainConnection)dlsym(RTLD_DEFAULT, "CGSMainConnectionID");
   auto set = (SetAlpha)dlsym(RTLD_DEFAULT, "CGSSetWindowAlpha");
-  if (!ArdiaLaunchConfig.shared.testInstance) return @"test instances only";
+  if (!NillaLaunchConfig.shared.testInstance) return @"test instances only";
   if (!connection || !set) return @"no CGSSetWindowAlpha";
   return set(connection(), (int)window.windowNumber, alpha) == 0 ? @"started" : @"refused";
 }
@@ -175,7 +175,7 @@ NSString *DevJSON(NSDictionary *object) {
   return json ? [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding] : @"";
 }
 
-NSString *DevFraming(ArdiaPiPController *controller) {
+NSString *DevFraming(NillaPiPController *controller) {
   NSWindow *window = controller.window;
   NSView *content = window.contentView;
   NSView *compositor = DevFindView(content, @"ViewsCompositorSuperview");
@@ -212,24 +212,24 @@ NSString *DevLayerTree(NSWindow *window) {
 
 }
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 void WatchZoom() { InstallZoomMonitor(); }
 
 NSWindow *GrabbedWindow() { return gDragged.window; }
 
-void TabRequestedActivation(ArdiaWebView *view) {
+void TabRequestedActivation(NillaWebView *view) {
   for (NSWindow *window in NSApp.windows)
-    if ([ArdiaPiPController forWindow:window].view == view && window.visible && !window.hasShadow)
+    if ([NillaPiPController forWindow:window].view == view && window.visible && !window.hasShadow)
       return ActivateApp(@"Back to Tab (Chrome's button)");
 }
 
-void VideoEntered(ArdiaWebView *view, NSString *host) {
+void VideoEntered(NillaWebView *view, NSString *host) {
   __block int tries = 0;
   __block void (^look)(void);
-  __weak ArdiaWebView *weakView = view;
+  __weak NillaWebView *weakView = view;
   look = ^{
-    ArdiaWebView *strongView = weakView;
+    NillaWebView *strongView = weakView;
     if (!strongView || Attach(strongView, host) || ++tries >= 20) {
       look = nil;
       return;
@@ -239,12 +239,12 @@ void VideoEntered(ArdiaWebView *view, NSString *host) {
   look();
 }
 
-void DocumentEntered(ArdiaWebView *view) {
+void DocumentEntered(NillaWebView *view) {
   __block int tries = 0;
   __block void (^look)(void);
-  __weak ArdiaWebView *weakView = view;
+  __weak NillaWebView *weakView = view;
   look = ^{
-    ArdiaWebView *strongView = weakView;
+    NillaWebView *strongView = weakView;
     NSWindow *found = nil;
     for (NSWindow *window in NSApp.windows)
       if (window.visible && IsChromeDocumentPictureInPicture(window) && IsChromeFloatingWindow(window)) found = window;
@@ -263,12 +263,12 @@ void DocumentEntered(ArdiaWebView *view) {
 
 }
 
-@implementation ArdiaWebView (PictureInPictureDev)
+@implementation NillaWebView (PictureInPictureDev)
 
 + (NSArray<NSDictionary<NSString *, id> *> *)devPictureInPicture {
   NSMutableArray *list = [NSMutableArray array];
   for (NSWindow *window in NSApp.windows) {
-    ArdiaPiPController *controller = [ArdiaPiPController forWindow:window];
+    NillaPiPController *controller = [NillaPiPController forWindow:window];
     if (!controller && !(window.visible && window.level >= NSFloatingWindowLevel) && !IsChromeDocumentPictureInPicture(window))
       continue;
     CALayer *content = window.contentView.layer;
@@ -306,9 +306,9 @@ void DocumentEntered(ArdiaWebView *view) {
 }
 
 + (NSString *)devPictureInPictureAction:(NSString *)action {
-  ArdiaPiPController *controller = nil;
+  NillaPiPController *controller = nil;
   for (NSWindow *window in NSApp.windows)
-    if ([ArdiaPiPController forWindow:window] && window.visible) controller = [ArdiaPiPController forWindow:window];
+    if ([NillaPiPController forWindow:window] && window.visible) controller = [NillaPiPController forWindow:window];
   if (!controller) return @"";
   if ([action isEqual:@"selftest"]) [controller runSelfTest];
   else if ([@[ @"close", @"backToTab" ] containsObject:action]) [controller runButtonSelfTest:action];
@@ -317,7 +317,7 @@ void DocumentEntered(ArdiaWebView *view) {
   else if ([action hasPrefix:@"frame:"]) [controller.window setFrame:NSRectFromString([action substringFromIndex:6]) display:YES];
   else if ([action hasPrefix:@"alpha:"]) return DevShowAlpha(controller.window, [action substringFromIndex:6].floatValue);
   else if ([action hasPrefix:@"mouse:"]) [controller devMouse:[[action substringFromIndex:6] componentsSeparatedByString:@":"]];
-  else if ([action isEqual:@"stash"]) [controller stashAt:ArdiaPiPEdgeRight];
+  else if ([action isEqual:@"stash"]) [controller stashAt:NillaPiPEdgeRight];
   else if ([action isEqual:@"unstash"]) [controller unstash];
   else if ([action isEqual:@"keepOnTop"]) controller.keepOnTop = !controller.keepOnTop;
   else if ([action isEqual:@"handle"]) [controller.overlay.handle setHovered:!controller.overlay.handle.hovered];

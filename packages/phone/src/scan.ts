@@ -26,10 +26,10 @@ type ScanNative = {
   labFeed?(kind: "phrase" | "other"): Promise<number>;
 };
 
-const native = requireOptionalNativeModule<ScanNative>("ArdiaPhoneScan");
+const native = requireOptionalNativeModule<ScanNative>("NillaPhoneScan");
 
 let view: ComponentType<NativeScanProps> | undefined;
-const nativeView = () => (view ??= requireNativeViewManager<NativeScanProps>("ArdiaPhoneScan"));
+const nativeView = () => (view ??= requireNativeViewManager<NativeScanProps>("NillaPhoneScan"));
 
 export function ScanView({ onCode, onRejected, onError, ...rest }: ScanViewProps) {
   return createElement(nativeView(), {

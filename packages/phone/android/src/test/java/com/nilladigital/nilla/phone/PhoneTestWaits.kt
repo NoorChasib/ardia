@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 internal object PhoneTestWaits {
     fun until(timeoutMillis: Long = 5_000, condition: () -> Boolean) {

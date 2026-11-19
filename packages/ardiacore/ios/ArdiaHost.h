@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaHost : NSObject
+@interface NillaHost : NSObject
 
 @property(class, readonly) BOOL isStarted;
 @property(class, readonly) NSString *dataDirectory;
@@ -58,7 +58,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface ArdiaHost (Launch)
+@interface NillaHost (Launch)
 
 + (int)runWithArgc:(int)argc
               argv:(char *_Nullable *_Nonnull)argv

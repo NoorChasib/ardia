@@ -86,7 +86,7 @@ export function bundledPackages(sources: readonly string[]): PackageCredit[] {
     const manifestPath = [join(root, "package.json"), join(APP_DIR, root, "package.json"), join(REPO_DIR, root, "package.json")].find((path) => existsSync(path));
     if (!manifestPath) continue;
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-    if (String(manifest.name).startsWith("@ardia/")) continue;
+    if (String(manifest.name).startsWith("@nilla/")) continue;
     credits.set(`${manifest.name}@${manifest.version}`, {
       name: manifest.name,
       version: manifest.version,

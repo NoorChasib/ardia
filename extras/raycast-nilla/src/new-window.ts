@@ -1,6 +1,6 @@
 import { closeMainWindow, type LaunchProps } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
-import { newWindow, profileIdNamed } from "./ardia";
+import { newWindow, profileIdNamed } from "./nilla";
 
 export default async function Command(props: LaunchProps<{ arguments: { profile?: string } }>) {
   const name = props.arguments.profile?.trim();

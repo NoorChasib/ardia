@@ -1,4 +1,4 @@
-@preconcurrency import ArdiaSyncCore
+@preconcurrency import NillaSyncCore
 import Foundation
 
 public struct SyncConnectFlow: Equatable, Sendable {

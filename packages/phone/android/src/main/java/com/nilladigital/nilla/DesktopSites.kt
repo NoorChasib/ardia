@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 object DesktopSites {
     fun key(host: String): String {

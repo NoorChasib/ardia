@@ -11,7 +11,7 @@ const { consentedCount } = await import("./consentedCount.ts");
 const { noteFind } = await import("./findCounts.ts");
 const { notePagerSettle } = await import("./pagerCounts.ts");
 
-const CHANNEL = "ardia-test-hourly-extras-consent";
+const CHANNEL = "nilla-test-hourly-extras-consent";
 const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 const EXTRA_KEYS = ["find_opens", "find_steps", "profile_pager_settles", "profile_pager_settles_without_switch"];
 

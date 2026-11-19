@@ -1,5 +1,5 @@
 -keep class com.facebook.react.turbomodule.** { *; }
--keep class com.ardia.** { *; }
+-keep class com.nilladigital.nilla.** { *; }
 -keep class expo.modules.** { *; }
 -keep class com.swmansion.** { *; }
 -keep class com.th3rdwave.safeareacontext.** { *; }

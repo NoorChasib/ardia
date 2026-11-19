@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.io.File
 import java.util.concurrent.CountDownLatch
@@ -34,8 +34,8 @@ class MatcherSpeedTest {
         "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js" to "https://www.bbc.co.uk/news",
         "https://static.files.bbci.co.uk/core/bundle-service-bar.003e2cd.js" to "https://www.bbc.co.uk/news",
         "https://ichef.bbci.co.uk/news/480/cpsprodpb/abc/production/_1234_image.jpg.webp" to "https://www.bbc.co.uk/news",
-        "https://api.github.com/repos/ardia/ardia/issues?state=open&per_page=100" to "https://github.com/ardia",
-        "https://avatars.githubusercontent.com/u/123456?s=64&v=4" to "https://github.com/ardia",
+        "https://api.github.com/repos/nilla/nilla/issues?state=open&per_page=100" to "https://github.com/nilla",
+        "https://avatars.githubusercontent.com/u/123456?s=64&v=4" to "https://github.com/nilla",
         "https://www.youtube.com/s/player/abc123/player_ias.vflset/en_US/base.js" to "https://www.youtube.com/watch?v=xyz",
         "https://www.youtube.com/api/stats/ads?ver=2&ns=yt&event=2&device=1&content_v=xyz" to "https://www.youtube.com/watch?v=xyz",
         "https://rr3---sn-abc.googlevideo.com/videoplayback?expire=1731400000&ei=abc&ip=1.2.3.4&id=o-abc&itag=243&source=youtube&requiressl=yes" to "https://www.youtube.com/watch?v=xyz",
@@ -75,12 +75,12 @@ class MatcherSpeedTest {
         val p99 = samples[runs * 99 / 100] / 1000.0
         val worst = samples[runs - 1] / 1000.0
         println(
-            "ArdiaBlockingTiming lists=${loaded.description} parse=${loaded.parseMillis}ms build=${loaded.buildMillis}ms " +
+            "NillaBlockingTiming lists=${loaded.description} parse=${loaded.parseMillis}ms build=${loaded.buildMillis}ms " +
                 "rules block=${stats.blockRules} important=${stats.importantRules} exception=${stats.exceptionRules} unindexed=${stats.unindexedRules} " +
                 "selectors generic=${stats.genericSelectors} scoped=${stats.scopedSelectors}",
         )
         println(
-            "ArdiaBlockingTiming blocks(): mean=%.2fus median=%.2fus p99=%.2fus max=%.1fus blocked=%d/%d allocated=%.1f bytes/call regexRuns=%d"
+            "NillaBlockingTiming blocks(): mean=%.2fus median=%.2fus p99=%.2fus max=%.1fus blocked=%d/%d allocated=%.1f bytes/call regexRuns=%d"
                 .format(mean, median, p99, worst, blocked, runs, allocated.toDouble() / runs, regexRuns),
         )
         val perUrl = requests.indices.map { index ->
@@ -100,13 +100,13 @@ class MatcherSpeedTest {
             val regexRuns = context.regexRuns - runsBefore
             val globSteps = RequestContext.GLOB_STEPS_PER_REQUEST - context.globSteps
             println(
-                "ArdiaBlockingTiming slowest url best=%.2fus median=%.2fus regexRuns=%d globSteps=%d %s"
+                "NillaBlockingTiming slowest url best=%.2fus median=%.2fus regexRuns=%d globSteps=%d %s"
                     .format(best, middle, regexRuns, globSteps, requests[index].first.take(90)),
             )
         }
         val slowestBest = perUrl.maxOf { it.second }
         val css = engine.hiding("www.theguardian.com")!!
-        println("ArdiaBlockingTiming generic css=${css.generic.length} chars, site css=${css.specific.length} chars")
+        println("NillaBlockingTiming generic css=${css.generic.length} chars, site css=${css.specific.length} chars")
         assertTrue("median $median us", median < 25.0)
         assertTrue("slowest url at best $slowestBest us", slowestBest < 50.0)
         assertTrue("slowest url median ${perUrl.maxOf { it.third }} us", perUrl.maxOf { it.third } < 100.0)
@@ -154,7 +154,7 @@ class MatcherSpeedTest {
             scope.cancel()
             directory.close()
         }
-        println("ArdiaBlockingTiming concurrent calls=${calls.get()} mismatches=${mismatches.get()}")
+        println("NillaBlockingTiming concurrent calls=${calls.get()} mismatches=${mismatches.get()}")
         assertEquals(0, mismatches.get())
         assertEquals(threads * 3_000 * 2, calls.get())
     }
@@ -167,7 +167,7 @@ class MatcherSpeedTest {
     private class Loaded(val engine: FilterEngine, val description: String, val parseMillis: Long, val buildMillis: Long)
 
     private fun loadBigLists(): Loaded {
-        val directory = System.getProperty("ardia.blockingLists")?.let(::File)?.takeIf { it.isDirectory }
+        val directory = System.getProperty("nilla.blockingLists")?.let(::File)?.takeIf { it.isDirectory }
         val texts = if (directory != null) {
             listOf("easylist.txt" to BlockingCategory.ADS, "easyprivacy.txt" to BlockingCategory.TRACKERS, "fanboy-cookiemonster.txt" to BlockingCategory.COOKIE_BANNERS)
                 .map { (name, category) -> File(directory, name).readText() to category }

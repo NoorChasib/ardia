@@ -73,7 +73,7 @@ test("the native exit branch and the sight rule record their reasons without the
   }
   assert.match(note, /NSApp\.isActive/);
   assert.match(note, /isKeyWindow/);
-  assert.match(note, /ardia_host::NoteFocusChange\(/);
+  assert.match(note, /nilla_host::NoteFocusChange\(/);
 
   const update = body(pipNative, "- (void)updateAutoPictureInPicture");
   assert.match(update, /else if \(_reports\.seenByUser[^{]*\{\s*\[self notePictureInPictureSight:@"exit requested"\];\s*_reports\.autoPictureInPictureActive = NO;\s*\[self exitPictureInPicture\];/);

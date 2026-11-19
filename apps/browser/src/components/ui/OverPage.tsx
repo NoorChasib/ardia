@@ -1,4 +1,4 @@
-import { Surface } from "@ardia/shell";
+import { Surface } from "@nilla/shell";
 import { StyleSheet } from "react-native";
 
 export function OverPage({ radius }: { radius: number }) {

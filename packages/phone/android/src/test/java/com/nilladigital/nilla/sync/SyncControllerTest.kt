@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async

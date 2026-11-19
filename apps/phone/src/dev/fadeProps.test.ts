@@ -16,7 +16,7 @@ const declared = (path: string) => [...readFileSync(new URL(path, import.meta.ur
 test("Android's fade props never share a name with a React Native layout prop, which the new architecture hands to the view by the same name", () => {
   for (const name of Object.values(NATIVE_FADE_PROPS)) assert.equal(LAYOUT_PROPS.has(name), false, `${name} is a layout prop`);
   const sent = Object.keys(nativeFadeProps({ top: { length: 8 }, bottom: { length: 12, floor: 0.2 }, leading: { length: 4 }, trailing: { length: 6 } })).sort();
-  assert.deepEqual(sent, declared("../../../../packages/phone/android/src/main/java/com/ardia/phone/FadeModule.kt"), "what JS sends is exactly what the Android module declares");
+  assert.deepEqual(sent, declared("../../../../packages/phone/android/src/main/java/com/nilladigital/nilla/phone/FadeModule.kt"), "what JS sends is exactly what the Android module declares");
 });
 
 test("an edge left out is not sent, so a style's top or bottom never reaches a fade prop", () => {
@@ -25,5 +25,5 @@ test("an edge left out is not sent, so a style's top or bottom never reaches a f
 
 test("the iPhone module takes the safe names too, so both phones are sent the same props", () => {
   assert.deepEqual(declared("../../../../packages/phone/ios/FadeModule.swift"), Object.values(NATIVE_FADE_PROPS).sort());
-  assert.deepEqual(declared("../../../../packages/phone/ios/FadeModule.swift"), declared("../../../../packages/phone/android/src/main/java/com/ardia/phone/FadeModule.kt"));
+  assert.deepEqual(declared("../../../../packages/phone/ios/FadeModule.swift"), declared("../../../../packages/phone/android/src/main/java/com/nilladigital/nilla/phone/FadeModule.kt"));
 });

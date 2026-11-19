@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -54,9 +54,9 @@ class RegexComparisonTest {
         val javaOk = rules.filter { rule -> runCatching { java.util.regex.Pattern.compile(rule.source) }.isSuccess }
         val re2Ok = rules.filter { ListRegex.compile(it.source, it.matchCase) != null }
         val refusedNow = javaOk.filter { rule -> re2Ok.none { it === rule } }
-        println("ArdiaBlockingRegex $source: regex rules=${rules.size} java=${javaOk.size} re2=${re2Ok.size}")
-        refusedNow.forEach { println("ArdiaBlockingRegex accepted by java.util.regex, refused by RE2/J: ${it.line.take(160)}") }
-        rules.filter { rule -> javaOk.none { it === rule } }.forEach { println("ArdiaBlockingRegex refused by both: ${it.line.take(160)}") }
+        println("NillaBlockingRegex $source: regex rules=${rules.size} java=${javaOk.size} re2=${re2Ok.size}")
+        refusedNow.forEach { println("NillaBlockingRegex accepted by java.util.regex, refused by RE2/J: ${it.line.take(160)}") }
+        rules.filter { rule -> javaOk.none { it === rule } }.forEach { println("NillaBlockingRegex refused by both: ${it.line.take(160)}") }
 
         val both = re2Ok.filter { rule -> javaOk.any { it === rule } }
         var matchedPairs = 0
@@ -71,8 +71,8 @@ class RegexComparisonTest {
                 if (re2.matcher(url).find() != expected) mismatches += "${rule.line.take(100)} on $url"
             }
         }
-        println("ArdiaBlockingRegex corpus=${corpus.size} urls, rule/url pairs that match=$matchedPairs, java vs RE2/J mismatches=${mismatches.size}")
-        mismatches.forEach { println("ArdiaBlockingRegex mismatch: $it") }
+        println("NillaBlockingRegex corpus=${corpus.size} urls, rule/url pairs that match=$matchedPairs, java vs RE2/J mismatches=${mismatches.size}")
+        mismatches.forEach { println("NillaBlockingRegex mismatch: $it") }
         assertEquals(emptyList<String>(), mismatches)
         val blockRules = both.filter { !it.line.startsWith("@@") }
         val engine = engineOf(blockRules.joinToString("\n") { "/${it.source}/" + if (it.matchCase) "\$match-case" else "" })
@@ -82,7 +82,7 @@ class RegexComparisonTest {
             }
             engine.blocks(url, "https://page.test/") != expected
         }
-        println("ArdiaBlockingRegex engine with ${blockRules.size} real regex block rules vs java on the corpus: mismatches=${engineMismatches.size}")
+        println("NillaBlockingRegex engine with ${blockRules.size} real regex block rules vs java on the corpus: mismatches=${engineMismatches.size}")
         assertEquals(emptyList<String>(), engineMismatches)
         assertTrue(matchedPairs > 0)
     }
@@ -100,7 +100,7 @@ class RegexComparisonTest {
         val retained = runtime.totalMemory() - runtime.freeMemory() - before
         val programs = compiled.map { it.second.size }.sorted()
         println(
-            "ArdiaBlockingRegex $source: compiled ${compiled.size} rules in %.1f ms, program size median=%d p90=%d p99=%d max=%d, retained about %d KB"
+            "NillaBlockingRegex $source: compiled ${compiled.size} rules in %.1f ms, program size median=%d p90=%d p99=%d max=%d, retained about %d KB"
                 .format(compileMillis, programs[programs.size / 2], programs[programs.size * 9 / 10], programs[programs.size * 99 / 100], programs.last(), retained / 1024),
         )
         val scratch = RegexScratch()
@@ -124,7 +124,7 @@ class RegexComparisonTest {
         val runs = 5 * compiled.size * texts.size
         val perMatch = (bean.currentThreadCpuTime - cpuStart) / runs / 1000.0
         val allocated = bean.getThreadAllocatedBytes(thread) - allocatedBefore
-        println("ArdiaBlockingRegex metered match: cpu %.2f us per match over %d matches, %.2f bytes allocated per match".format(perMatch, runs, allocated.toDouble() / runs))
+        println("NillaBlockingRegex metered match: cpu %.2f us per match over %d matches, %.2f bytes allocated per match".format(perMatch, runs, allocated.toDouble() / runs))
         assertTrue(compileMillis < 5_000)
         assertTrue("cpu per match $perMatch us", perMatch < 100)
         assertTrue("allocated $allocated bytes", allocated.toDouble() / runs < 1)

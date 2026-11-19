@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -6,7 +6,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.ardia.sync.SyncPhase
+import com.nilladigital.nilla.sync.SyncPhase
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -29,9 +29,9 @@ object ShareSends {
     const val WAIT_MILLIS = 20_000L
     const val RESUME_AFTER_MILLIS = 60_000L
     private const val POLL_MILLIS = 250L
-    private const val PREFERENCES = "ardia-share-sends"
+    private const val PREFERENCES = "nilla-share-sends"
     private const val KEY = "pending"
-    private const val WORK = "ardia-share-resume"
+    private const val WORK = "nilla-share-resume"
 
     data class Pending(val key: String, val url: String, val title: String, val deviceId: String, val at: Long, val window: Long?)
 

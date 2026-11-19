@@ -1,6 +1,6 @@
-#import "ArdiaTryCatch.h"
+#import "NillaTryCatch.h"
 
-NSString *ArdiaTryCatch(NS_NOESCAPE void (^block)(void)) {
+NSString *NillaTryCatch(NS_NOESCAPE void (^block)(void)) {
   @try {
     block();
     return nil;

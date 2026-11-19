@@ -1,6 +1,6 @@
 import AppKit
 
-extension ArdiaWebView: PageTab {
+extension NillaWebView: PageTab {
   var selected: Bool {
     get { true }
     set {}

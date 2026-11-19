@@ -138,7 +138,7 @@ public enum BrowserStore {
       if FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupIdentifier) != nil {
         configuration = ModelConfiguration("Browser", schema: schema, groupContainer: .identifier(appGroupIdentifier))
       } else {
-        let support = URL.applicationSupportDirectory.appending(path: "Ardia", directoryHint: .isDirectory)
+        let support = URL.applicationSupportDirectory.appending(path: "Nilla", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: support, withIntermediateDirectories: true)
         configuration = ModelConfiguration(schema: schema, url: support.appending(path: "Browser.store"))
       }

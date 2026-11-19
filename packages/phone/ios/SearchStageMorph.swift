@@ -1,4 +1,4 @@
-import ArdiaDesign
+import NillaDesign
 import SwiftUI
 import UIKit
 
@@ -397,7 +397,7 @@ final class StageMorph {
   }
 
   @discardableResult
-  private static func run(_ curve: ArdiaDesign.MotionCurve, after delay: TimeInterval = 0, _ changes: @escaping () -> Void) -> UIViewPropertyAnimator {
+  private static func run(_ curve: NillaDesign.MotionCurve, after delay: TimeInterval = 0, _ changes: @escaping () -> Void) -> UIViewPropertyAnimator {
     let animator = curve.stageAnimator(changes)
     animator.startAnimation(afterDelay: delay)
     return animator

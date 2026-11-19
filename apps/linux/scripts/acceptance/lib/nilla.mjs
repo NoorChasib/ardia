@@ -54,7 +54,7 @@ export function launchEnvironment({ scratch, background = true, base = process.e
   return result;
 }
 
-export async function launchArdia({ executable, uiDir, scratch, background = true, ozone = "headless", extensions = false, extraArgs = [], env = {}, label = "ardia", startTimeout = 45000, coreDumps = true, spawnImpl = spawn }) {
+export async function launchNilla({ executable, uiDir, scratch, background = true, ozone = "headless", extensions = false, extraArgs = [], env = {}, label = "nilla", startTimeout = 45000, coreDumps = true, spawnImpl = spawn }) {
   await rm(join(scratch, "DevToolsActivePort"), { force: true });
   await mkdir(join(scratch, "home"), { recursive: true });
   const logPath = join(scratch, `${label}-${Date.now()}.log`);
@@ -146,7 +146,7 @@ export class ArdiaApp {
     for (const target of targets) {
       const session = await this.connect(target).catch(() => null);
       if (!session) continue;
-      const info = await evaluate(session, `(() => { const b = globalThis.__ardiaHost?.bootstrap; return b ? { windowId: b.windowId, profileId: b.profileId, pageProfile: b.pageProfile ?? null, startup: !!b.startup, utility: b.utility ?? null, privateWindow: !!b.privateWindow, ready: !!document.querySelector('[data-ardia-linux-window]') } : null })()`, { timeout: 3000 }).catch(() => null);
+      const info = await evaluate(session, `(() => { const b = globalThis.__ardiaHost?.bootstrap; return b ? { windowId: b.windowId, profileId: b.profileId, pageProfile: b.pageProfile ?? null, startup: !!b.startup, utility: b.utility ?? null, privateWindow: !!b.privateWindow, ready: !!document.querySelector('[data-nilla-linux-window]') } : null })()`, { timeout: 3000 }).catch(() => null);
       if (!info?.windowId) continue;
       shells.push({ target, session, ...info });
     }
@@ -243,7 +243,7 @@ export class Shell {
   }
 
   state(body, options) {
-    return this.eval(`(() => { const s = ardiaLinux.store.getState(); const windowId = ${js(this.windowId)}; ${body} })()`, options);
+    return this.eval(`(() => { const s = nillaLinux.store.getState(); const windowId = ${js(this.windowId)}; ${body} })()`, options);
   }
 
   async waitFor(expression, { timeout = 15000, label = expression } = {}) {
@@ -255,7 +255,7 @@ export class Shell {
   }
 
   command(command, arg) {
-    return this.eval(`ardiaLinux.emitCommand(${js({ command, windowId: this.windowId, ...(arg === undefined ? {} : { arg }) })}), true`);
+    return this.eval(`nillaLinux.emitCommand(${js({ command, windowId: this.windowId, ...(arg === undefined ? {} : { arg }) })}), true`);
   }
 
   invoke(method, args, options) {

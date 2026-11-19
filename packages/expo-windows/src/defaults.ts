@@ -1,20 +1,20 @@
 import { noteMissing } from "./missing";
 
 const ENGINE_ONLY: Record<string, string[]> = {
-  ArdiaHistory: ["query", "add", "import", "deleteUrls", "watch"],
-  ArdiaBookmarks: ["tree", "apply", "watch"],
-  ArdiaFavicons: ["get", "set"],
-  ArdiaTabs: ["lastTabPolicy"],
-  ArdiaEngine: ["batterySaver", "trimMemory", "openTaskManager", "cliControlStatus", "setCliControl", "setCliActiveTab", "cliTabTargets", "cliOwnsTab", "cliMoveOffscreen", "cliCloseOffscreenTabs"],
-  ArdiaExtensions: ["watchActions", "syncState", "syncApply"],
-  ArdiaDownloads: ["settings", "setSettings"],
+  NillaHistory: ["query", "add", "import", "deleteUrls", "watch"],
+  NillaBookmarks: ["tree", "apply", "watch"],
+  NillaFavicons: ["get", "set"],
+  NillaTabs: ["lastTabPolicy"],
+  NillaEngine: ["batterySaver", "trimMemory", "openTaskManager", "cliControlStatus", "setCliControl", "setCliActiveTab", "cliTabTargets", "cliOwnsTab", "cliMoveOffscreen", "cliCloseOffscreenTabs"],
+  NillaExtensions: ["watchActions", "syncState", "syncApply"],
+  NillaDownloads: ["settings", "setSettings"],
 };
 
 const ENGINE_ANSWERS: Record<string, Record<string, unknown>> = {
-  ArdiaTabs: { strips: { rev: 0, cmd: null, strips: [] }, routeLinkTabs: {} },
-  ArdiaExtensions: { list: { extensions: [] } },
-  ArdiaSearch: { engines: { list: { engines: [] } } },
-  ArdiaWindows: { list: [] },
+  NillaTabs: { strips: { rev: 0, cmd: null, strips: [] }, routeLinkTabs: {} },
+  NillaExtensions: { list: { extensions: [] } },
+  NillaSearch: { engines: { list: { engines: [] } } },
+  NillaWindows: { list: [] },
 };
 
 const engineDomains = Object.fromEntries(
@@ -33,14 +33,14 @@ const engineDomains = Object.fromEntries(
 
 export const moduleDefaults: Record<string, Record<string, unknown>> = {
   ...engineDomains,
-  ArdiaApp: { launchEnvironment: () => null, windowsApiVersion: 0, interfaceScale: () => 1, interfaceScaleRange: () => [1, 1], setInterfaceScale: async () => 1 },
-  ArdiaCalendar: { authorizationStatus: () => "notDetermined" },
-  ArdiaCli: {
+  NillaApp: { launchEnvironment: () => null, windowsApiVersion: 0, interfaceScale: () => 1, interfaceScaleRange: () => [1, 1], setInterfaceScale: async () => 1 },
+  NillaCalendar: { authorizationStatus: () => "notDetermined" },
+  NillaCli: {
     installedVersion: () => null,
     canInstallUnattended: () => false,
-    install: async () => ({ ok: false, appVersion: "", error: "The ardia command isn't offered on Windows yet.", lines: [] }),
+    install: async () => ({ ok: false, appVersion: "", error: "The nilla-browser command isn't offered on Windows yet.", lines: [] }),
   },
-  ArdiaGlassEffect: { isLiquidGlass: () => false },
-  ArdiaTranslate: { available: false, userLanguages: () => ["en"], languageName: (id: string) => id },
-  ArdiaUserScripts: { watch: () => {}, read: async () => ({ state: "empty" }), readStatus: async () => null },
+  NillaGlassEffect: { isLiquidGlass: () => false },
+  NillaTranslate: { available: false, userLanguages: () => ["en"], languageName: (id: string) => id },
+  NillaUserScripts: { watch: () => {}, read: async () => ({ state: "empty" }), readStatus: async () => null },
 };

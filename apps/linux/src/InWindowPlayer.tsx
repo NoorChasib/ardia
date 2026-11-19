@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type ReactElement } from "react";
 import { useCardAnchors } from "../../browser/src/state/windows/layout";
-import { ardiaHost } from "./host.ts";
+import { nillaHost } from "./host.ts";
 import { inputRegions, pageHoles, useInputRegion } from "./shellAbove";
 import { createPlayerHoles, cutClip, hitRects, nextFrameRunner } from "./playerHoles.ts";
 import {
@@ -88,7 +88,7 @@ function usePlayerHoles(root: HTMLElement | null, hole: Rect | null) {
       holes.clear();
       return;
     }
-    const desktop = root.closest(".ardia-desktop") as HTMLElement | null;
+    const desktop = root.closest(".nilla-desktop") as HTMLElement | null;
     if (!desktop) return;
     const apply = () => {
       const overlays = (inputRegions()?.overlayElements() ?? []).filter((element): element is HTMLElement => element instanceof HTMLElement && element !== root && !element.contains(root));
@@ -228,7 +228,7 @@ function PlayerFrame({ state, rect, area, hole, fade, onRect, interacting }: {
 
   const settle = (final: Rect) => {
     interacting.current = false;
-    void savePlayerFrame(frameOf(final, area), ardiaHost);
+    void savePlayerFrame(frameOf(final, area), nillaHost);
   };
 
   const throwTo = (target: Rect, velocity: Point) => {
@@ -291,7 +291,7 @@ function PlayerFrame({ state, rect, area, hole, fade, onRect, interacting }: {
       void sendPlayerCommand(state.player, "popOut", {
         at: { x: event.screenX, y: event.screenY },
         grab: { x: current.start.x - current.rect.x, y: current.start.y - current.rect.y },
-      }, ardiaHost);
+      }, nillaHost);
       return;
     }
     current.travel = Math.max(current.travel, Math.hypot(point.x - current.start.x, point.y - current.start.y));
@@ -327,7 +327,7 @@ function PlayerFrame({ state, rect, area, hole, fade, onRect, interacting }: {
     settle(rectRef.current);
   };
 
-  const command = (action: string, extra?: Record<string, unknown>) => void sendPlayerCommand(state.player, action, extra, ardiaHost);
+  const command = (action: string, extra?: Record<string, unknown>) => void sendPlayerCommand(state.player, action, extra, nillaHost);
   const position = positionAt(state.position, state.playing, performance.now());
   const duration = state.position?.duration ?? null;
   const fraction = position !== null && duration ? Math.min(1, Math.max(0, position / duration)) : 0;

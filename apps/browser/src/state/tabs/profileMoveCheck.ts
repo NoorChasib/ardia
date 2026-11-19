@@ -4,8 +4,8 @@ import { webviews } from "../../platform/webviews";
 import { httpPagesPort } from "../../platform/launchConfig";
 import { lastTabClosesWindow } from "../../platform/tabs";
 
-const STORAGE_KEY = "ardia-profile-check";
-const COOKIE = "ardiaProfileCheck";
+const STORAGE_KEY = "nilla-profile-check";
+const COOKIE = "nillaProfileCheck";
 const WAIT_MS = 20000;
 const POLL_MS = 100;
 const EVALUATE_MS = 5000;

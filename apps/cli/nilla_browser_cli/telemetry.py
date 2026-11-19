@@ -6,15 +6,15 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ardia_cli import __version__
+from nilla_browser_cli import __version__
 
 LOGS_URL: str | None = None
 INGEST_KEY_HEADER = "X-Ardia-Key"
 CLI_INGEST_KEY: str | None = None
 TEST_URL_ENV = "ARDIA_TELEMETRY_URL"
-EVENTS_SCOPE = "ardia.analytics"
-SERVICE_NAME = "ardia-cli"
-LIB = "ardia-cli"
+EVENTS_SCOPE = "nilla.analytics"
+SERVICE_NAME = "nilla-cli"
+LIB = "nilla-cli"
 CONSENT_FILE = "telemetry.json"
 FOLDER = "Telemetry"
 SPOOL = "cli-queue.jsonl"
@@ -101,7 +101,7 @@ def logs_url(env) -> str | None:
 
 
 def environment_for(root: Path) -> str:
-    from ardia_cli.endpoint import INSTALLED_DATA_DIR
+    from nilla_browser_cli.endpoint import INSTALLED_DATA_DIR
 
     if is_dev_build():
         return "dev"
@@ -118,7 +118,7 @@ def target(data_dir: str | None, test_endpoint: bool, env) -> Target | None:
     url = logs_url(env)
     if url is None:
         return None
-    from ardia_cli.endpoint import data_root
+    from nilla_browser_cli.endpoint import data_root
 
     root = Path(os.path.abspath(data_root(data_dir)))
     return Target(root, url, environment_for(root))
@@ -266,7 +266,7 @@ def spool_line(record: dict) -> bytes | None:
 
 
 def exception_record(error: BaseException, mechanism: str, fatal: bool, distinct_id: str, environment: str) -> dict | None:
-    from ardia_cli import telemetry_scrub
+    from nilla_browser_cli import telemetry_scrub
 
     properties = telemetry_scrub.exception_properties(error, mechanism, fatal)
     key = telemetry_scrub.exception_key(properties)
@@ -283,7 +283,7 @@ def flag_names(argv: list, allowed: frozenset) -> str:
 
 
 def browse_flags_allowed(name: str) -> frozenset:
-    from ardia_cli.browse import cli as browse_cli, help as browse_help
+    from nilla_browser_cli.browse import cli as browse_cli, help as browse_help
 
     usage = browse_help.COMMANDS.get(name, "")
     local = set(re.findall(r"(?<![\w-])(--?[a-z][a-z0-9-]*)", usage))
@@ -291,8 +291,8 @@ def browse_flags_allowed(name: str) -> frozenset:
 
 
 def browse_command(argv: list) -> tuple[str, frozenset]:
-    from ardia_cli.browse import cli as browse_cli
-    from ardia_cli.browse.errors import BrowseError
+    from nilla_browser_cli.browse import cli as browse_cli
+    from nilla_browser_cli.browse.errors import BrowseError
 
     try:
         _, rest = browse_cli.split_globals(argv)
@@ -335,7 +335,7 @@ def process_started_at() -> float | None:
 
 
 def timings(call: Call) -> dict:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     elapsed = (time.monotonic() - call.started) * 1000
     values = dict(call.metrics)
@@ -381,7 +381,7 @@ def note_browse(argv: list, command: str = "browse") -> None:
 
 
 def note_count(key: str, value) -> None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     if _call is not None:
         _call.metrics.update(command_metrics.clean({key: value}))
@@ -393,7 +393,7 @@ def note_error_code(code) -> None:
 
 
 def note_answer(answer) -> None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     if _call is None or not isinstance(answer, dict):
         return
@@ -437,7 +437,7 @@ def finish(status: int, error: BaseException | None = None) -> None:
     if call is None:
         return
     try:
-        from ardia_cli import usage
+        from nilla_browser_cli import usage
 
         usage.record(call, status, os.environ)
     except Exception:
@@ -477,7 +477,7 @@ def finish_before_exec() -> None:
 
 
 def report_exception(error: BaseException, mechanism: str, config: dict, fatal: bool = False) -> None:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     try:
         if not command_metrics.reporting_allowed():
@@ -501,13 +501,13 @@ def report_exception(error: BaseException, mechanism: str, config: dict, fatal: 
 
 
 def open_folder(root: Path, create: bool = True) -> int:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     return paths.open_private(root, FOLDER, create=create)
 
 
 def take_lock(name: str, dir_fd: int) -> int | None:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     return paths.take_lock(name, dir_fd)
 
@@ -523,7 +523,7 @@ def spool_lock(dir_fd: int) -> int | None:
 
 
 def read_lines(dir_fd: int) -> list[bytes]:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     try:
         fd = paths.open_private_file(SPOOL, dir_fd, os.O_RDONLY)
@@ -549,7 +549,7 @@ def newest(lines: list[bytes]) -> list[bytes]:
 
 
 def write_lines(dir_fd: int, lines: list[bytes]) -> None:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     if not lines:
         paths.unlink_quietly(SPOOL, dir_fd)
@@ -564,7 +564,7 @@ def write_lines(dir_fd: int, lines: list[bytes]) -> None:
 
 
 def append(root: Path, records: list[dict]) -> int | None:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     data = [line for line in map(spool_line, records) if line]
     dir_fd = open_folder(root)
@@ -597,7 +597,7 @@ def append(root: Path, records: list[dict]) -> int | None:
 def open_local_folder(root: Path) -> int:
     import stat
 
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     dir_fd = open_folder(root)
     try:
@@ -631,7 +631,7 @@ def local_files(dir_fd: int) -> list[tuple[str, int]]:
 
 
 def drop_oldest_lines(dir_fd: int, name: str, size: int, excess: int) -> int:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     fd = paths.open_private_file(name, dir_fd, os.O_RDONLY)
     try:
@@ -654,7 +654,7 @@ def drop_oldest_lines(dir_fd: int, name: str, size: int, excess: int) -> int:
 
 
 def prune_local(dir_fd: int, now: float) -> None:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     oldest_kept = local_name(now - (LOCAL_DAYS - 1) * 86400)
     files = []
@@ -675,7 +675,7 @@ def local_line(record: dict, sent: bool) -> bytes:
 
 
 def keep_local_copy(root: Path, records: list[dict], sent: bool, now: float | None = None) -> bool:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     now = time.time() if now is None else now
     data = b"".join(local_line(record, sent) for record in records)
@@ -717,7 +717,7 @@ def discard_spool(root: Path) -> None:
         return
     dir_fd = open_folder(root, create=False)
     try:
-        from ardia_cli.browse import paths
+        from nilla_browser_cli.browse import paths
 
         lock = spool_lock(dir_fd)
         if lock is None:
@@ -731,7 +731,7 @@ def discard_spool(root: Path) -> None:
 
 
 def read_state(dir_fd: int) -> dict:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     try:
         state = paths.read_private_json(FLUSH_STATE, dir_fd, {})
@@ -741,7 +741,7 @@ def read_state(dir_fd: int) -> dict:
 
 
 def write_state(dir_fd: int, failures: int, next_at: float) -> None:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     paths.write_private_json(FLUSH_STATE, dir_fd, {"failures": failures, "next_at": next_at})
 
@@ -770,7 +770,7 @@ def spawn_flusher(where: Target) -> None:
     import subprocess
 
     package_parent = str(Path(__file__).resolve().parent.parent)
-    code = f"import sys; sys.path.insert(0, {package_parent!r}); from ardia_cli import telemetry; telemetry.flush_main()"
+    code = f"import sys; sys.path.insert(0, {package_parent!r}); from nilla_browser_cli import telemetry; telemetry.flush_main()"
     process = subprocess.Popen(
         [sys.executable, "-I", "-c", code],
         stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True, close_fds=True, cwd="/",
@@ -814,7 +814,7 @@ def parse_lines(lines: list[bytes], install_id: str) -> list[dict]:
 
 
 def flush(root: Path, url: str, environment: str) -> str:
-    from ardia_cli.browse import paths
+    from nilla_browser_cli.browse import paths
 
     dir_fd = open_folder(root, create=False)
     try:
@@ -921,10 +921,10 @@ def post(url: str, body: bytes) -> int:
 
 def browse_names() -> tuple[dict, frozenset]:
     try:
-        from ardia_cli.browse import daemon, help as browse_help
+        from nilla_browser_cli.browse import daemon, help as browse_help
 
         daemon.load_commands()
-        from ardia_cli.browse.commands import ALIASES, COMMANDS, SKIPPED
+        from nilla_browser_cli.browse.commands import ALIASES, COMMANDS, SKIPPED
 
         return dict(ALIASES), frozenset(set(COMMANDS) | set(SKIPPED) | set(browse_help.COMMANDS) | {"auth", "help", "version"})
     except Exception:

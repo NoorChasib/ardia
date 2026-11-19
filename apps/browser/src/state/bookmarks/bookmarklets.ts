@@ -1,4 +1,4 @@
-import { isJavaScriptUrl, resolveInput } from "@ardia/core";
+import { isJavaScriptUrl, resolveInput } from "@nilla/core";
 import { webviews } from "../../platform/webviews";
 import { useBrowser } from "../browser/store";
 import { activeTabId, resolveWindowId } from "../browser/model";

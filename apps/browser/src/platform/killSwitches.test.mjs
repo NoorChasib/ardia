@@ -8,7 +8,7 @@ const SWITCHES_URL = "https://switches.example.test/switches.json";
 launch.services = { switchesUrl: SWITCHES_URL };
 const ks = await import("./killSwitches.ts");
 const { appServices, reloadLaunchConfigForTests } = await import("./launchConfig.ts");
-const { overrideServicesForTests, resetServicesForTests } = await import("@ardia/core/src/services.testing.ts");
+const { overrideServicesForTests, resetServicesForTests } = await import("@nilla/core/src/services.testing.ts");
 const { startKillSwitches } = await import("./killSwitchesLaunch.ts");
 const { firstWindowCommitted } = await import("../lib/afterFirstWindow.ts");
 

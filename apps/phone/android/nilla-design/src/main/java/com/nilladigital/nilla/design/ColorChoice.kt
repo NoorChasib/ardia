@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.border
@@ -58,7 +58,7 @@ fun ColorSwatch(color: Color, isSelected: Boolean, modifier: Modifier = Modifier
 @Composable
 fun ColorChoiceRow(look: ProfileLook, onChoose: (ProfileLook.Preset) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.padding(vertical = Spacing.hairline), verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
-        SettingsRowLabel(stringResource(R.string.ardia_color), ArdiaSymbols.paintpaletteFill, look.swatchColor)
+        SettingsRowLabel(stringResource(R.string.nilla_color), NillaSymbols.paintpaletteFill, look.swatchColor)
         Row(Modifier.fillMaxWidth()) {
             val selected = look.preset
             for (preset in ProfileLook.Preset.entries) {
@@ -95,7 +95,7 @@ fun MatchMyMacRow(colorChoice: String?, look: ProfileLook, onColorChoice: (Strin
             SettingsSwitch(checked = matches, onCheckedChange = { onColorChoice(ColorChoice.choiceAfterMatchToggle(it, look)) })
         },
     ) {
-        SettingsRowLabel(stringResource(R.string.ardia_match_my_mac), ArdiaSymbols.macbook, SettingsTint.neutral)
+        SettingsRowLabel(stringResource(R.string.nilla_match_my_mac), NillaSymbols.macbook, SettingsTint.neutral)
     }
 }
 

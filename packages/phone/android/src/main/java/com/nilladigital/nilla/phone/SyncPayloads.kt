@@ -1,18 +1,18 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.sync.BookmarkItem
-import com.ardia.sync.ConnectResult
-import com.ardia.sync.PhraseCheck
-import com.ardia.sync.PinnedSection
-import com.ardia.sync.PinnedTab
-import com.ardia.sync.ReceivedTab
-import com.ardia.sync.SyncPhase
-import com.ardia.sync.SyncSnapshot
-import com.ardia.sync.SyncState
-import com.ardia.sync.SyncStatusText
-import com.ardia.sync.SyncStatusWords
-import com.ardia.sync.SyncedDevice
-import com.ardia.sync.SyncedProfile
+import com.nilladigital.nilla.sync.BookmarkItem
+import com.nilladigital.nilla.sync.ConnectResult
+import com.nilladigital.nilla.sync.PhraseCheck
+import com.nilladigital.nilla.sync.PinnedSection
+import com.nilladigital.nilla.sync.PinnedTab
+import com.nilladigital.nilla.sync.ReceivedTab
+import com.nilladigital.nilla.sync.SyncPhase
+import com.nilladigital.nilla.sync.SyncSnapshot
+import com.nilladigital.nilla.sync.SyncState
+import com.nilladigital.nilla.sync.SyncStatusText
+import com.nilladigital.nilla.sync.SyncStatusWords
+import com.nilladigital.nilla.sync.SyncedDevice
+import com.nilladigital.nilla.sync.SyncedProfile
 
 object SyncPayloads {
     fun phase(phase: SyncPhase): String = when (phase) {
@@ -82,7 +82,7 @@ object SyncPayloads {
         "canReceiveTabs" to device.canReceiveTabs,
     )
 
-    fun look(look: com.ardia.sync.SyncedLook?): Map<String, Any?>? {
+    fun look(look: com.nilladigital.nilla.sync.SyncedLook?): Map<String, Any?>? {
         val style = look?.shownInterfaceStyle
         val appearance = look?.shownAppearance
         return if (style == null && appearance == null) null else mapOf("interfaceStyle" to style, "appearance" to appearance)

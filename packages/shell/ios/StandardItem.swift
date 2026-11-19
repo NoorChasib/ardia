@@ -19,7 +19,7 @@ final class StandardItem: NSMenuItem, Rebindable {
     let shortcut = MainMenu.keyEquivalent(key, mods)
     super.init(title: title, action: action, keyEquivalent: shortcut.key)
     keyEquivalentModifierMask = shortcut.mods
-    identifier = NSUserInterfaceItemIdentifier("ardia.shortcut." + shortcutId)
+    identifier = NSUserInterfaceItemIdentifier("nilla.shortcut." + shortcutId)
   }
 
   override init(title: String, action: Selector?, keyEquivalent: String) {
@@ -28,7 +28,7 @@ final class StandardItem: NSMenuItem, Rebindable {
     defaultKey = keyEquivalent
     defaultModifiers = .command
     super.init(title: title, action: action, keyEquivalent: keyEquivalent)
-    identifier = NSUserInterfaceItemIdentifier("ardia.shortcut." + shortcutId)
+    identifier = NSUserInterfaceItemIdentifier("nilla.shortcut." + shortcutId)
   }
 
   func aliasItems() -> [StandardItem] {

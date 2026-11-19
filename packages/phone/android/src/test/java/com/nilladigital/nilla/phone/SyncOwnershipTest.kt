@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.sync.FakeDevice
-import com.ardia.sync.ManualTimers
-import com.ardia.sync.RecordingScheduler
-import com.ardia.sync.SyncController
+import com.nilladigital.nilla.sync.FakeDevice
+import com.nilladigital.nilla.sync.ManualTimers
+import com.nilladigital.nilla.sync.RecordingScheduler
+import com.nilladigital.nilla.sync.SyncController
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger

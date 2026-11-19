@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertArrayEquals
@@ -63,11 +63,11 @@ class SymbolTest {
     @Test
     fun `every SF Symbol the iPhone app names has a vector that builds`() {
         for (name in iphoneSymbols) {
-            val vector = ArdiaSymbols.named(name)
+            val vector = NillaSymbols.named(name)
             assertNotNull(name, vector)
             assertEquals(name, 24f, vector!!.viewportWidth, 0f)
         }
-        assertEquals(null, ArdiaSymbols.named("not.a.symbol"))
+        assertEquals(null, NillaSymbols.named("not.a.symbol"))
     }
 
     @Test

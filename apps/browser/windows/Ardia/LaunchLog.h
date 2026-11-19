@@ -4,7 +4,7 @@
 
 #include "Paths.h"
 
-namespace Ardia {
+namespace Nilla {
 
 struct LaunchLog {
   static void OpenFromCommandLine() noexcept {

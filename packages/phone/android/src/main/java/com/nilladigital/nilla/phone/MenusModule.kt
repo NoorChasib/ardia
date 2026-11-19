@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.AlertDialog
 import android.content.Context
@@ -78,7 +78,7 @@ class ActionSheetRecord : Record {
 }
 
 internal object NativeMenuRules {
-    const val DRAWN_ARGUMENT = "ArdiaDrawnMenus"
+    const val DRAWN_ARGUMENT = "NillaDrawnMenus"
 
     data class Item(val id: String, val title: String, val subtitle: String?, val destructive: Boolean, val disabled: Boolean, val checked: Boolean, val children: List<Row>?)
 
@@ -313,7 +313,7 @@ class MenusModule : Module() {
     private fun nativeMenusShown(): Boolean = NativeMenuRules.nativeMenus(LaunchExtras.arguments(LaunchExtras.of(appContext.currentActivity?.intent)))
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneMenus")
+        Name("NillaPhoneMenus")
 
         Constants {
             val shown = nativeMenusShown()

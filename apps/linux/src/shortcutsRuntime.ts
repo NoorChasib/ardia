@@ -1,7 +1,7 @@
-import type { ShortcutModifier } from "@ardia-real/shell";
+import type { ShortcutModifier } from "@nilla-real/shell";
 import { useBrowser } from "../../browser/src/state/browser/store";
 import { emitNativeEvent, provideNativeModuleProvider } from "./shims/expo-modules-core";
-import { ardiaHost, reportHostError, type ArdiaHost } from "./host";
+import { nillaHost, reportHostError, type ArdiaHost } from "./host";
 import { keyboardCombo, linuxBindings, linuxNativeBindings, recordableShortcut, utilityBindings, type Binding } from "./shortcuts";
 
 let capturing = false;
@@ -22,7 +22,7 @@ export async function cancelShortcutRecording() {
   recording = null;
   if (!current) return;
   try {
-    await ardiaHost?.invoke("ArdiaShell.setShortcutRecording", { args: [false] });
+    await nillaHost?.invoke("ArdiaShell.setShortcutRecording", { args: [false] });
   } finally {
     current.resolve(null);
   }
@@ -32,7 +32,7 @@ export async function recordShortcut(): Promise<{ key: string; modifiers: Shortc
   await cancelShortcutRecording();
   return new Promise((resolve) => {
     recording = { resolve };
-    void ardiaHost?.invoke("ArdiaShell.setShortcutRecording", { args: [true] }).catch((error) => {
+    void nillaHost?.invoke("ArdiaShell.setShortcutRecording", { args: [true] }).catch((error) => {
       reportHostError(error);
       void cancelShortcutRecording();
     });

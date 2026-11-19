@@ -1,29 +1,29 @@
 import sys
 
-from ardia_cli import __version__
+from nilla_browser_cli import __version__
 
 DESCRIPTION = (
-    "Control a running Ardia from the terminal. ardia browse drives the browser (ardia browse --help); "
-    "ardia computer operates native Mac apps through the bundled cua-driver (ardia computer --help). "
-    "Agents: skip if an ardia skill is already in your context; otherwise run ardia --skill."
+    "Control a running Nilla from the terminal. nilla browse drives the browser (nilla browse --help); "
+    "nilla computer operates native Mac apps through the bundled cua-driver (nilla computer --help). "
+    "Agents: skip if a nilla skill is already in your context; otherwise run nilla --skill."
 )
 EPILOG = """\
 Shared options go before the command or after it, for the commands that take them:
   --port N        a plain DevTools server on 127.0.0.1:N (testing; $ARDIA_PORT)
   --ws URL        a browser WebSocket URL ($ARDIA_WS)
-  --data-dir DIR  the Ardia data dir ($ARDIA_DATA_DIR, else the installed app's)
+  --data-dir DIR  the Nilla data dir ($ARDIA_DATA_DIR, else the installed app's)
   --timeout S     and --json
 A flag wins over its environment variable.
 
 Examples:
-  ardia --port 9222 browse snapshot -i
-  ardia browse --port 9222 snapshot -i
-  ardia windows --json
-  ardia tabs --json
-  ardia groups create tab-1 tab-2 --name Work --icon 🚀
+  nilla --port 9222 browse snapshot -i
+  nilla-browser browse --port 9222 snapshot -i
+  nilla-browser windows --json
+  nilla-browser tabs --json
+  nilla-browser groups create tab-1 tab-2 --name Work --icon 🚀
 """
 SKILLS_DESCRIPTION = """\
-Install the ardia agent skill (SKILL.md and its references) so coding agents know how to drive Ardia.
+Install the nilla agent skill (SKILL.md and its references) so coding agents know how to drive Nilla.
 
 Targets and where they install (user level; --project uses the current directory):
   general       ~/.agents/skills            ./.agents/skills
@@ -33,21 +33,21 @@ Targets and where they install (user level; --project uses the current directory
   opencode      ~/.config/opencode/skills   ./.opencode/skills
 
 Next to each one it installs cua-driver's own skill (cua-driver, for computer use in native apps through
-ardia computer), pinned to the bundled driver; --no-cua skips it. A cua-driver skill that ardia didn't install, from
+nilla-browser computer), pinned to the bundled driver; --no-cua skips it. A cua-driver skill that nilla didn't install, from
 cua's own installer for one, is left alone.
 
-Installing or updating the CLI runs `ardia skills install --auto`: the skill goes to every coding agent found here
-(Claude Code, Codex, Cursor, opencode; general when none is), never over a folder ardia didn't write, and not again where
+Installing or updating the CLI runs `nilla-browser skills install --auto`: the skill goes to every coding agent found here
+(Claude Code, Codex, Cursor, opencode; general when none is), never over a folder nilla didn't write, and not again where
 the user removed it.
-Ardia remembers where it installed the skill, and each CLI update rewrites those copies (ardia skills refresh).
+Nilla remembers where it installed the skill, and each CLI update rewrites those copies (nilla skills refresh).
 """
 SHARED_VALUE_FLAGS = frozenset({"--port", "--ws", "--data-dir", "--timeout"})
 SHARED_BOOL_FLAGS = frozenset({"--json"})
 BROWSE_SHARED_FLAGS = frozenset({"--port", "--ws", "--data-dir", "--json"})
 REMOVED_COMMANDS = {
     "exec": (
-        "ardia: unknown command 'exec': it was removed. Drive the browser with ardia browse (ardia browse --help); "
-        "ardia pinned and ardia history read favorites and history; ardia run, windows and events reach Ardia's "
+        "nilla: unknown command 'exec': it was removed. Drive the browser with nilla browse (nilla browse --help); "
+        "nilla pinned and nilla history read favorites and history; nilla run, windows and events reach Nilla's "
         "commands, windows and events."
     ),
 }
@@ -119,10 +119,10 @@ def check_takes(parser, path: list[str], hoisted: list[str]) -> None:
 def browse_argv(hoisted: list[str], rest: list[str], env) -> list[str]:
     for name in flag_names(hoisted):
         if name not in BROWSE_SHARED_FLAGS:
-            raise UsageError(f"ardia browse doesn't take {name}")
+            raise UsageError(f"nilla browse doesn't take {name}")
     argv = hoisted + rest
-    from ardia_cli.browse.cli import split_globals
-    from ardia_cli.browse.errors import Usage
+    from nilla_browser_cli.browse.cli import split_globals
+    from nilla_browser_cli.browse.errors import Usage
 
     try:
         found, _ = split_globals(argv)
@@ -145,8 +145,8 @@ def run_browse(hoisted: list[str], rest: list[str]) -> int:
     except UsageError as error:
         sys.stderr.write(f"✗ {error}\n")
         return 1
-    from ardia_cli import telemetry
-    from ardia_cli.browse.cli import main as browse_main
+    from nilla_browser_cli import telemetry
+    from nilla_browser_cli.browse.cli import main as browse_main
 
     telemetry.note_browse(argv)
     return browse_main(argv)
@@ -155,9 +155,9 @@ def run_browse(hoisted: list[str], rest: list[str]) -> int:
 def run_notes(hoisted: list[str], rest: list[str]) -> int:
     import importlib
 
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
-    notes = importlib.import_module("ardia_cli.notes")
+    notes = importlib.import_module("nilla_browser_cli.notes")
 
     telemetry.note_browse(hoisted + rest, command="notes")
     return notes.main(hoisted + rest)
@@ -166,19 +166,19 @@ def run_notes(hoisted: list[str], rest: list[str]) -> int:
 def build_parser():
     import argparse
 
-    parser = argparse.ArgumentParser(prog="ardia", description=DESCRIPTION, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--version", action="version", version=f"ardia {__version__}")
-    parser.add_argument("--skill", action="store_true", help="print the agent skill that ships with this ardia (SKILL.md) and exit; same as ardia skills get")
+    parser = argparse.ArgumentParser(prog="nilla", description=DESCRIPTION, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--version", action="version", version=f"nilla {__version__}")
+    parser.add_argument("--skill", action="store_true", help="print the agent skill that ships with this nilla (SKILL.md) and exit; same as nilla skills get")
     commands = parser.add_subparsers(dest="command", metavar="<command>")
-    commands.add_parser("browse", help="drive the browser with agent-browser's commands (ardia browse --help)", add_help=False)
-    commands.add_parser("notes", help="read and write notes (ardia notes --help)", add_help=False)
-    commands.add_parser("computer", help="operate native Mac apps through the bundled cua-driver: computer use (ardia computer --help)", add_help=False)
+    commands.add_parser("browse", help="drive the browser with agent-browser's commands (nilla browse --help)", add_help=False)
+    commands.add_parser("notes", help="read and write notes (nilla notes --help)", add_help=False)
+    commands.add_parser("computer", help="operate native Mac apps through the bundled cua-driver: computer use (nilla computer --help)", add_help=False)
 
-    from ardia_cli import browsing_cli
+    from nilla_browser_cli import browsing_cli
 
     browsing_cli.add_parsers(commands, argparse.RawDescriptionHelpFormatter)
 
-    skills = commands.add_parser("skills", help="print or install the ardia agent skill")
+    skills = commands.add_parser("skills", help="print or install the nilla agent skill")
     skill_commands = skills.add_subparsers(dest="skills_command", metavar="<command>")
     install = skill_commands.add_parser(
         "install",
@@ -186,35 +186,35 @@ def build_parser():
         description=SKILLS_DESCRIPTION,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    from ardia_cli.skills import TARGETS
+    from nilla_browser_cli.skills import TARGETS
 
     install.add_argument("--target", action="append", choices=sorted(TARGETS), metavar="TARGET", help="general, codex, claude-code, cursor or opencode; repeat for several (default: general)")
     install.add_argument("--project", action="store_true", help="install into the current directory's project folders")
     install.add_argument("--no-cua", action="store_true", help="don't install cua-driver's computer-use skill next to it")
-    install.add_argument("--replace", action="store_true", help="replace an ardia folder that ardia didn't install (only that folder)")
-    install.add_argument("--auto", action="store_true", help="install for every coding agent found on this Mac (or general when none is), skipping folders ardia didn't write and copies the user removed")
+    install.add_argument("--replace", action="store_true", help="replace a nilla folder that nilla didn't install (only that folder)")
+    install.add_argument("--auto", action="store_true", help="install for every coding agent found on this Mac (or general when none is), skipping folders nilla didn't write and copies the user removed")
     skill_commands.add_parser("refresh", help="rewrite every copy of the skill installed before with this CLI's version")
-    get = skill_commands.add_parser("get", help="print the skill that ships with this ardia (SKILL.md) to stdout; writes nothing")
+    get = skill_commands.add_parser("get", help="print the skill that ships with this nilla (SKILL.md) to stdout; writes nothing")
     get.add_argument("--full", action="store_true", help="also print every file under references/, each after a --- <path> --- line")
-    skill_commands.add_parser("list", help="name and description of each skill that ships with this ardia")
+    skill_commands.add_parser("list", help="name and description of each skill that ships with this nilla")
 
-    from ardia_cli import scripts_cli
+    from nilla_browser_cli import scripts_cli
 
     scripts_cli.add_parser(commands, argparse.RawDescriptionHelpFormatter)
 
-    from ardia_cli import config_cli
+    from nilla_browser_cli import config_cli
 
     config_cli.add_parsers(commands, argparse.RawDescriptionHelpFormatter)
 
-    from ardia_cli import automation_cli
+    from nilla_browser_cli import automation_cli
 
     automation_cli.add_parsers(commands, argparse.RawDescriptionHelpFormatter)
 
-    from ardia_cli import workspace_cli
+    from nilla_browser_cli import workspace_cli
 
     workspace_cli.add_parsers(commands, argparse.RawDescriptionHelpFormatter)
 
-    from ardia_cli import feedback, star
+    from nilla_browser_cli import feedback, star
 
     feedback.add_parser(commands, argparse.RawDescriptionHelpFormatter)
     star.add_parser(commands, argparse.RawDescriptionHelpFormatter)
@@ -240,9 +240,9 @@ def option_names(parser, path: list[str]) -> set[str]:
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if argv == ["--version"]:
-        print(f"ardia {__version__}")
+        print(f"nilla {__version__}")
         return 0
-    from ardia_cli import printable, telemetry
+    from nilla_browser_cli import printable, telemetry
 
     try:
         index = take_shared(argv, 0, [])
@@ -254,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def run_to_closed_pipe(argv: list[str]) -> int:
-    from ardia_cli import printable, telemetry
+    from nilla_browser_cli import printable, telemetry
 
     try:
         status = run(argv)
@@ -267,7 +267,7 @@ def run_to_closed_pipe(argv: list[str]) -> int:
 
 
 def run(argv: list[str]) -> int:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     leading: list[str] = []
     try:
@@ -284,9 +284,9 @@ def run(argv: list[str]) -> int:
         return run_notes(leading, argv[index + 1:])
     if command == "computer":
         if leading:
-            sys.stderr.write(f"ardia: computer doesn't take {flag_names(leading)[0]}\n")
+            sys.stderr.write(f"nilla: computer doesn't take {flag_names(leading)[0]}\n")
             return 2
-        from ardia_cli import computer
+        from nilla_browser_cli import computer
 
         return computer.main(argv[index + 1:])
     parser = build_parser()
@@ -300,22 +300,22 @@ def run(argv: list[str]) -> int:
         return 2
     if not path and rest and not rest[0].startswith("-"):
         telemetry.note_error_code("removed_command" if rest[0] in REMOVED_COMMANDS else "unknown_command")
-        sys.stderr.write(REMOVED_COMMANDS.get(rest[0], f"ardia: unknown command '{rest[0]}' (see ardia --help)") + "\n")
+        sys.stderr.write(REMOVED_COMMANDS.get(rest[0], f"nilla: unknown command '{rest[0]}' (see nilla --help)") + "\n")
         return 2
     argv = path + hoisted + rest if path else rest
-    from ardia_cli.automation_cli import split_program
+    from nilla_browser_cli.automation_cli import split_program
 
     argv, program = split_program(argv)
     args = parser.parse_args(argv)
     args.program = program
     if args.command in ("pinned", "history"):
-        from ardia_cli import browsing_cli
+        from nilla_browser_cli import browsing_cli
 
         return browsing_cli.run(args)
     if args.command == "skills":
         if args.skills_command not in ("install", "refresh", "get", "list"):
             parser.parse_args(["skills", "--help"])
-        from ardia_cli import skills
+        from nilla_browser_cli import skills
 
         if args.skills_command == "get":
             return skills.print_skill(args.full)
@@ -327,27 +327,27 @@ def run(argv: list[str]) -> int:
             return skills.install_detected(not args.no_cua)
         return skills.install(args.target or ["general"], args.project, not args.no_cua, args.replace)
     if args.command == "scripts":
-        from ardia_cli import scripts_cli
+        from nilla_browser_cli import scripts_cli
 
         return scripts_cli.run(args, parser)
     if args.command in ("run", "commands", "windows", "events", "on", "hooks"):
-        from ardia_cli import automation_cli
+        from nilla_browser_cli import automation_cli
 
         return automation_cli.dispatch(args, parser)
     if args.command in ("tabs", "groups", "apply"):
-        from ardia_cli import workspace_cli
+        from nilla_browser_cli import workspace_cli
 
         return workspace_cli.run(args, parser)
     if args.command in ("config", "theme"):
-        from ardia_cli import config_cli
+        from nilla_browser_cli import config_cli
 
         return (config_cli.run_config if args.command == "config" else config_cli.run_theme)(args, parser)
     if args.command == "feedback":
-        from ardia_cli import feedback
+        from nilla_browser_cli import feedback
 
         return feedback.run(args)
     if args.command == "star":
-        from ardia_cli import star
+        from nilla_browser_cli import star
 
         return star.run(args)
     parser.print_help()

@@ -1,13 +1,13 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
-import com.ardia.sync.HistoryRemoval
-import com.ardia.sync.LocalBrowsingNotReady
-import com.ardia.sync.LocalBrowsingSource
-import com.ardia.sync.LocalTabRecord
-import com.ardia.sync.LocalVisitRecord
-import com.ardia.sync.ReceivedTab
+import com.nilladigital.nilla.sync.HistoryRemoval
+import com.nilladigital.nilla.sync.LocalBrowsingNotReady
+import com.nilladigital.nilla.sync.LocalBrowsingSource
+import com.nilladigital.nilla.sync.LocalTabRecord
+import com.nilladigital.nilla.sync.LocalVisitRecord
+import com.nilladigital.nilla.sync.ReceivedTab
 import java.io.File
 
 fun interface BrowserQuery {

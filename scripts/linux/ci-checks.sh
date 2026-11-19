@@ -47,7 +47,7 @@ check linux-test-graph bun run --cwd apps/linux test:graph
 check linux-acceptance-self-test bun run --cwd apps/linux acceptance:self-test
 check linux-build bun run --cwd apps/linux build
 check patches-build-tests python3 -m unittest discover -s engine/patches/build/tests
-check chromium-ardia-tests python3 -m unittest discover -s engine/chromium/src/chrome/browser/ardia/tests
+check chromium-nilla-tests python3 -m unittest discover -s engine/chromium/src/chrome/browser/ardia/tests
 check ardiacore-linux-bootstrap bun run test:engine-linux
 check linux-smoke-gate bun run test:linux-smoke
 check linux-ubo-seed bun run test:linux-ubo-seed

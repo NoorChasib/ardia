@@ -1,4 +1,4 @@
-import type { MotionCurve } from "@ardia/phone-native";
+import type { MotionCurve } from "@nilla/phone-native";
 import { spring } from "../ui/motion";
 
 export const tabGridLayout = {

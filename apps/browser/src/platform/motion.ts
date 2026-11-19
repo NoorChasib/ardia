@@ -1,3 +1,3 @@
-import type { MotionNative } from "@ardia/shell";
+import type { MotionNative } from "@nilla/shell";
 
 export const animationBursts: MotionNative = { onBurst: () => () => {} };

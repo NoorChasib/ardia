@@ -4,7 +4,7 @@ const HELP = `usage:
   bench.mjs report [--out DIR] [--run ID | --all] [--md FILE] [--control LABEL] [--residual-max PCT]
   bench.mjs noise [--out DIR] [--run ID] [--md FILE]
 
-Linux CPU/RAM benchmark for Ardia UI builds (--ardia-ui-dir) on one engine. Each launch gets a fresh copy of a
+Linux CPU/RAM benchmark for Nilla UI builds (--ardia-ui-dir) on one engine. Each launch gets a fresh copy of a
 per-build template profile, its own Xvfb (1920x1080x24) and fixture server, N fixture tabs created through the
 app's store, and the selected scenario windows. Launches interleave ABBA across builds. One JSON per launch lands
 in DIR/results; 'report' turns one run's results into markdown tables (the newest run unless --run ID; --all pools
@@ -36,7 +36,7 @@ run options:
                           child cgroup of this process's own delegated cgroup, for a run inside an external CPU
                           partition that confines user.slice to the other CPUs) or none (process-tree walk).
                           Default: $ARDIA_BENCH_SCOPE, else user
-  --lock FILE             flock file (default /tmp/ardia-perflab.lock); when $ARDIA_PERFLAB_LEASE names the same file
+  --lock FILE             flock file (default /tmp/nilla-perflab.lock); when $ARDIA_PERFLAB_LEASE names the same file
                           and $ARDIA_PARTITION_STATE exists, an external partition already holds it for the whole
                           partition and the run takes no lock of its own
   --lock-scope S          launch, block (default: one launch of every build, so each ABBA pair runs back to back)

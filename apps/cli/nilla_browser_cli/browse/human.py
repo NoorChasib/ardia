@@ -19,8 +19,8 @@ import math
 import random
 from dataclasses import dataclass
 
-from ardia_cli import cdp
-from ardia_cli.browse.errors import ConnectionLost, OutcomeUnknown
+from nilla_browser_cli import cdp
+from nilla_browser_cli.browse.errors import ConnectionLost, OutcomeUnknown
 
 BUTTON_MASK = {"left": 1, "right": 2, "middle": 4, "back": 8, "forward": 16}
 PRESSED_FORCE = 0.5
@@ -363,9 +363,9 @@ class Mouse:
         except cdp.ConnectionLost:
             raise ConnectionLost() from None
         except cdp.CommandTimeout:
-            raise OutcomeUnknown("the mouse input", "Ardia didn't answer an input event in time") from None
+            raise OutcomeUnknown("the mouse input", "Nilla didn't answer an input event in time") from None
         except cdp.CommandFailed as error:
-            from ardia_cli.browse.connection import failure
+            from nilla_browser_cli.browse.connection import failure
 
             raise failure(command["method"], error) from None
 

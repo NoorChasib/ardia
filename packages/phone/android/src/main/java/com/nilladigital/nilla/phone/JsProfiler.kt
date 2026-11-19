@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.Context
@@ -9,8 +9,8 @@ import com.facebook.react.ReactRootView
 import java.io.File
 
 object JsProfiler {
-    const val ACTION = "com.ardia.phone.JS_PROFILE"
-    const val START_ARGUMENT = "ArdiaProfileStart"
+    const val ACTION = "com.nilladigital.nilla.phone.JS_PROFILE"
+    const val START_ARGUMENT = "NillaProfileStart"
     const val START_HZ = 1000.0
     const val START_DUMP_AFTER_FIRST_SCREEN_MILLIS = 3000L
 
@@ -48,7 +48,7 @@ object JsProfiler {
             return false
         }
         val started = runCatching {
-            System.loadLibrary("ardiahermes")
+            System.loadLibrary("nillahermes")
             nativeStart(hz)
         }.getOrElse { failure ->
             Log.i("PAGELAB", "PAGELAB js profile: Hermes' sampling profiler would not start (${failure.javaClass.simpleName}: ${failure.message})")

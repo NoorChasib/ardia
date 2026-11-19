@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import android.content.ContentResolver
 import android.content.ContentValues

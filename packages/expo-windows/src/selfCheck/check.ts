@@ -1,4 +1,4 @@
-import type { SelfCheck } from "@ardia/shell";
+import type { SelfCheck } from "@nilla/shell";
 
 export type Check = SelfCheck;
 

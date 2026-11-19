@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { sfSymbol } from "./sfSymbols.ts";
 
-test("a Mac profile's SF Symbol becomes the app's symbol when it has one, as ArdiaSymbols.named does", () => {
+test("a Mac profile's SF Symbol becomes the app's symbol when it has one, as NillaSymbols.named does", () => {
   const known = (symbol: string) => ["laptop", "starFill", "folderFill"].includes(symbol);
   assert.equal(sfSymbol("laptopcomputer", known), "laptop");
   assert.equal(sfSymbol("star.fill", known), "starFill");

@@ -1,5 +1,5 @@
 {
-  "name": "@ardia/shell",
+  "name": "@nilla/shell",
   "version": "0.0.0",
   "private": true,
   "description": "Native window chrome, menu bar and shortcuts for the macOS browser",
@@ -7,7 +7,7 @@
   "types": "src/index.tsx",
   "scripts": {
     "check": "tsc -p .",
-    "test": "bun test --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./scripts/focusHandoff.test.mjs && swift test --scratch-path \"${TMPDIR:-/tmp}/ardia-shell-swiftpm\""
+    "test": "bun test --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./scripts/focusHandoff.test.mjs && swift test --scratch-path \"${TMPDIR:-/tmp}/nilla-shell-swiftpm\""
   },
   "peerDependencies": {
     "expo": "*",

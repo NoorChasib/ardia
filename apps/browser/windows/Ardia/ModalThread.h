@@ -18,7 +18,7 @@
 
 #include "LaunchLog.h"
 
-namespace Ardia::DialogParts {
+namespace Nilla::DialogParts {
 
 constexpr UINT OwnerWatchMs = 250;
 constexpr UINT StubbornEveryMs = 100;
@@ -312,7 +312,7 @@ inline bool BringModalForward(HWND owner) noexcept {
   return true;
 }
 
-constexpr wchar_t ModalParentClass[] = L"ArdiaModalParent";
+constexpr wchar_t ModalParentClass[] = L"NillaModalParent";
 
 inline LRESULT CALLBACK ModalParentProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept {
   if (message != ModalCancelMessage) return DefWindowProcW(window, message, wParam, lParam);

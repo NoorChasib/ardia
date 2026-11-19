@@ -53,11 +53,11 @@ public final class ContentBlocker {
     do {
       try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     } catch {
-      state = .failed(String(localized: "Ardia couldn’t set up content blocking. Restart Ardia to try again."))
+      state = .failed(String(localized: "Nilla couldn’t set up content blocking. Restart Nilla to try again."))
       return
     }
     guard let store = WKContentRuleListStore(url: directory.appending(path: "Store", directoryHint: .isDirectory)) else {
-      state = .failed(String(localized: "Ardia couldn’t set up content blocking. Restart Ardia to try again."))
+      state = .failed(String(localized: "Nilla couldn’t set up content blocking. Restart Nilla to try again."))
       return
     }
     self.store = store
@@ -131,7 +131,7 @@ public final class ContentBlocker {
     let key = ObjectIdentifier(controller)
     if controllers.contains(controller) { return }
     controllers.add(controller)
-    let world = WKContentWorld.world(name: "ArdiaBlocking")
+    let world = WKContentWorld.world(name: "NillaBlocking")
     controller.addScriptMessageHandler(BlockingMessageProxy(blocker: self, counter: counter), contentWorld: world, name: BlockingScripts.handlerName)
     controller.addUserScript(WKUserScript(source: BlockingScripts.counter, injectionTime: .atDocumentStart, forMainFrameOnly: true, in: world))
     controller.addUserScript(WKUserScript(source: BlockingScripts.consent, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: world))

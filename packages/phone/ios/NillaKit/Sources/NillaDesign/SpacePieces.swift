@@ -1,5 +1,5 @@
-import ArdiaBrowser
-import ArdiaSync
+import NillaBrowser
+import NillaSync
 import SwiftUI
 
 #if canImport(UIKit)

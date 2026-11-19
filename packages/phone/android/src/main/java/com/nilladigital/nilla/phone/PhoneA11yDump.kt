@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.BroadcastReceiver
@@ -13,11 +13,11 @@ import android.webkit.WebView
 import androidx.core.content.ContextCompat
 
 object PhoneA11yDump {
-    const val ACTION = "com.ardia.phone.A11Y_DUMP"
-    const val MEMORY_ACTION = "com.ardia.phone.MEMORY"
-    const val TRIM_ACTION = "com.ardia.phone.TRIM"
-    const val FRAMES_ACTION = "com.ardia.phone.FRAMES"
-    const val DECK_PARTS_ACTION = "com.ardia.phone.DECK_PARTS"
+    const val ACTION = "com.nilladigital.nilla.phone.A11Y_DUMP"
+    const val MEMORY_ACTION = "com.nilladigital.nilla.phone.MEMORY"
+    const val TRIM_ACTION = "com.nilladigital.nilla.phone.TRIM"
+    const val FRAMES_ACTION = "com.nilladigital.nilla.phone.FRAMES"
+    const val DECK_PARTS_ACTION = "com.nilladigital.nilla.phone.DECK_PARTS"
     private const val TAG = "PAGELAB"
     private const val PREFIX = "PAGELAB a11y "
 

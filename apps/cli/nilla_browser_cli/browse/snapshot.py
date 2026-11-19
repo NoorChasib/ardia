@@ -2,9 +2,9 @@ import asyncio
 from collections import Counter
 from dataclasses import dataclass, field
 
-from ardia_cli import command_metrics
-from ardia_cli.browse.errors import BrowseError
-from ardia_cli.browse.state import Ref
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.state import Ref
 
 INTERACTIVE = {
     "button", "link", "textbox", "searchbox", "checkbox", "radio", "combobox", "listbox", "option", "menuitem",
@@ -47,7 +47,7 @@ def _value(item) -> str:
 
 
 def clipped(text: str) -> str:
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     return redact(text)[:MAX_NAME]
 
@@ -339,10 +339,10 @@ def render(nodes: list[Node], interactive: bool = False, compact: bool = False, 
 async def clickable_map(page, frame: str) -> dict[int, list]:
     try:
         remote = await page.call(
-            "() => { const r = ardiaBrowse.clickables(); globalThis.ardiaBrowseHints = r.hints; return r.elements; }",
+            "() => { const r = nillaBrowse.clickables(); globalThis.nillaBrowseHints = r.hints; return r.elements; }",
             frame=frame, by_value=False, read=True,
         )
-        hints = await page.call("() => globalThis.ardiaBrowseHints", frame=frame, read=True)
+        hints = await page.call("() => globalThis.nillaBrowseHints", frame=frame, read=True)
         elements = await page.elements_from(remote, frame, "clickable")
     except BrowseError:
         return {}
@@ -381,14 +381,14 @@ async def frame_nodes(page, frame: str, scope_backend: int | None = None, scopes
 
 
 async def scope_elements(state, page, selector: str):
-    from ardia_cli.browse.state import parse_ref
+    from nilla_browser_cli.browse.state import parse_ref
 
     if parse_ref(selector):
         _, element = await state.locate(selector, page)
         return element.frame, [element]
     frame = state.frame_for(page) or page.main_frame
     try:
-        remote = await page.call("(s) => ardiaBrowse.queryAll(s)", selector, frame=frame, by_value=False, read=True)
+        remote = await page.call("(s) => nillaBrowse.queryAll(s)", selector, frame=frame, by_value=False, read=True)
     except BrowseError as error:
         raise BrowseError(f"Invalid selector {selector}: {error.message}") from None
     elements = await page.elements_from(remote, frame, selector, MAX_SCOPES)
@@ -504,7 +504,7 @@ async def take(state, page, interactive=False, compact=False, depth=None, select
     if full_text is not None:
         state.extras["full_snapshot"] = full_text
     if whole:
-        from ardia_cli.browse import changes
+        from nilla_browser_cli.browse import changes
 
         changes.note_shown(state, await changes.remember(state, page, nodes))
     return text, refs

@@ -1,4 +1,4 @@
-import { EVENTS_SCOPE, eventRecord, logsRequest, outcome } from "@ardia/core/src/telemetryWire.ts";
+import { EVENTS_SCOPE, eventRecord, logsRequest, outcome } from "@nilla/core/src/telemetryWire.ts";
 import {
   buildRecord,
   counted,

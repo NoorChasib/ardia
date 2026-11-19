@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Intent
 import android.net.Uri
@@ -44,7 +44,7 @@ class SyncOfferTest {
         assertTrue(cancelled.isEmpty())
         SyncOffer.forTests = false
         SyncOffer.retireBackground { cancelled += it }
-        assertEquals(listOf("ardia-sync", "ardia-sync-flush"), cancelled)
+        assertEquals(listOf("nilla-sync", "nilla-sync-flush"), cancelled)
     }
 
     private fun link(uri: String): Map<String, Any?>? = PhoneSystemLinks.link(Intent(Intent.ACTION_VIEW, Uri.parse(uri)))

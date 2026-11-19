@@ -2,7 +2,7 @@ import SwiftUI
 import WidgetKit
 
 @main
-struct ArdiaWidgets: WidgetBundle {
+struct NillaWidgets: WidgetBundle {
   var body: some Widget {
     SearchWidget()
     MacTabsWidget()

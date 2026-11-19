@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 
-namespace Ardia::Menus {
+namespace Nilla::Menus {
 
 enum Modifier : unsigned {
   ModifierControl = 1,
@@ -38,7 +38,7 @@ enum RowFlag : unsigned {
 
 enum class Expansion {
   None,
-  LittleArdiaProfiles,
+  LittleNillaProfiles,
   SwitchProfiles,
   Extensions,
 };
@@ -62,16 +62,16 @@ struct SystemRow {
 #define ARDIA_ELLIPSIS "\xE2\x80\xA6"
 
 inline constexpr CommandRow kCommandRows[] = {
-    {"openSettings", "Settings" ARDIA_ELLIPSIS, "Ardia", "cmd+,", "ctrl+,"},
-    {"importBrowserData", "Import from Another Browser" ARDIA_ELLIPSIS, "Ardia", "", ""},
+    {"openSettings", "Settings" ARDIA_ELLIPSIS, "Nilla", "cmd+,", "ctrl+,"},
+    {"importBrowserData", "Import from Another Browser" ARDIA_ELLIPSIS, "Nilla", "", ""},
 
     {"newTab", "New Tab", "File", "cmd+t", "ctrl+t"},
     {"newTabInGroup", "New Tab in Group", "File", "option+cmd+t|ctrl+cmd+c", "ctrl+alt+t|none"},
     {"newWindow", "New Window", "File", "cmd+n", "ctrl+n"},
     {"newIncognitoWindow", "New Incognito Window", "File", "shift+cmd+n", "ctrl+shift+n"},
-    {"newLittleArdia", "New Little Ardia Window", "File", "option+cmd+n", "ctrl+alt+n"},
-    {"", "", "File > New Little Ardia Window in Profile", "", "", 0, Expansion::LittleArdiaProfiles},
-    {"toggleOpenLinksInLittleArdia", "Open Links from Other Apps in Main Window", "File", "", ""},
+    {"newLittleNilla", "New Little Nilla Window", "File", "option+cmd+n", "ctrl+alt+n"},
+    {"", "", "File > New Little Nilla Window in Profile", "", "", 0, Expansion::LittleNillaProfiles},
+    {"toggleOpenLinksInLittleNilla", "Open Links from Other Apps in Main Window", "File", "", ""},
     {"reopenClosedTab", "Reopen Closed Tab", "File", "shift+cmd+t", "ctrl+shift+t"},
     {"reopenClosedWindow", "Reopen Closed Window", "File", "", ""},
     {"openFile", "Open File" ARDIA_ELLIPSIS, "File", "cmd+o", "ctrl+o"},

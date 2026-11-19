@@ -21,13 +21,13 @@ pass() { echo "ok: $1"; }
 fail() { echo "FAILED: $1"; failed=1; }
 
 cat > "$work/AndroidManifest.xml" <<'XML'
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ardia.signing.test" android:versionCode="1" android:versionName="1"><application /></manifest>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.nilladigital.nilla.signing.test" android:versionCode="1" android:versionName="1"><application /></manifest>
 XML
 "$tools/aapt2" link -o "$work/unsigned.apk" -I "$platform/android.jar" --manifest "$work/AndroidManifest.xml"
 "$tools/zipalign" -f 4 "$work/unsigned.apk" "$work/aligned.apk"
 
 password="test-$(openssl rand -hex 12)"
-alias_name="ardia"
+alias_name="nilla"
 mkdir -p "$work/keygen"
 STORE_PASSWORD="$password" keytool -genkeypair -storetype PKCS12 -keystore "$work/keygen/test.p12" -alias "$alias_name" -keyalg RSA -keysize 2048 -validity 2 \
   -dname "CN=signing test" -storepass:env STORE_PASSWORD -keypass:env STORE_PASSWORD > /dev/null 2>&1

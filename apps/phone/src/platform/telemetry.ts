@@ -1,14 +1,14 @@
-import { INGEST_KEY_HEADER } from "@ardia/core/src/ingestKeys.ts";
-import { services } from "@ardia/core/src/services.ts";
+import { INGEST_KEY_HEADER } from "@nilla/core/src/ingestKeys.ts";
+import { services } from "@nilla/core/src/services.ts";
 import Constants from "expo-constants";
 import { requireOptionalNativeModule, uuid } from "expo-modules-core";
 import { Platform } from "react-native";
 import { appVersionOf, osVersionOf, type DeviceFacts } from "../lib/telemetrySchema";
-import { system } from "@ardia/phone-native";
+import { system } from "@nilla/phone-native";
 
 export const JS_STARTED_AT = Date.now();
 
-const isLab = process.env.EXPO_PUBLIC_ARDIA_LAB === "true";
+const isLab = process.env.EXPO_PUBLIC_NILLA_LAB === "true";
 
 export const newTelemetryId = () => uuid.v4().toLowerCase();
 
@@ -30,7 +30,7 @@ export function deviceFacts(): DeviceFacts {
 
 type ProcessClock = { processStartedAt?: () => number | Promise<number> };
 
-const processClock = requireOptionalNativeModule<ProcessClock>("ArdiaPhoneSystem");
+const processClock = requireOptionalNativeModule<ProcessClock>("NillaPhoneSystem");
 
 export async function processStartedAt(): Promise<number | null> {
   try {

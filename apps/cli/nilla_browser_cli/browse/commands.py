@@ -11,9 +11,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from ardia_cli.browse import actions, changes, snapshot
-from ardia_cli.browse.errors import BrowseError, ConnectionLost, Gated, OutcomeUnknown, Usage
-from ardia_cli.browse.state import parse_ref, wait_until
+from nilla_browser_cli.browse import actions, changes, snapshot
+from nilla_browser_cli.browse.errors import BrowseError, ConnectionLost, Gated, OutcomeUnknown, Usage
+from nilla_browser_cli.browse.state import parse_ref, wait_until
 
 COMMANDS: dict = {}
 ALIASES = {
@@ -104,7 +104,7 @@ def parse(argv: list[str], flags: dict[str, str] | None = None, aliases: dict[st
 
 def need(positionals: list[str], count: int, usage: str):
     if len(positionals) < count:
-        raise Usage(f"Usage: ardia browse {usage}")
+        raise Usage(f"Usage: nilla browse {usage}")
 
 
 def normalize_url(url: str) -> str:
@@ -162,7 +162,7 @@ DROPPED_CONNECTION = re.compile(r"ERR_(EMPTY_RESPONSE|CONNECTION_(RESET|CLOSED|R
 
 
 def failed_navigation(ctx: Ctx, url: str, error_text: str) -> BrowseError:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     host = urlsplit(url).hostname or url
     message = f"Navigation to {url} failed: {error_text}"
@@ -183,12 +183,12 @@ def failed_navigation(ctx: Ctx, url: str, error_text: str) -> BrowseError:
     return BrowseError(message, code="navigation_failed")
 
 
-HTTPS_ONLY_NOTE = ("Ardia loads http:// addresses over https and blocks the page when the site has no working https, which is what this "
+HTTPS_ONLY_NOTE = ("Nilla loads http:// addresses over https and blocks the page when the site has no working https, which is what this "
                    "error usually means for an http:// address. Try the https:// address; if that fails too, say the site couldn't be reached")
 
 
 def site_silent(url: str, timeout: float, error: OutcomeUnknown) -> BrowseError:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     if "didn't answer Page.navigate" not in error.message:
         return error
@@ -202,7 +202,7 @@ def site_silent(url: str, timeout: float, error: OutcomeUnknown) -> BrowseError:
 
 
 def https_only_block(url: str, error_text: str) -> bool:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     blocked = "ERR_BLOCKED_BY_CLIENT" in error_text and url.lower().startswith("http://")
     if blocked:
@@ -211,13 +211,13 @@ def https_only_block(url: str, error_text: str) -> bool:
 
 
 async def navigate(ctx: Ctx, page, url: str, until: str = "load"):
-    from ardia_cli.browse import readpages
+    from nilla_browser_cli.browse import readpages
 
     if page.crashed:
         try:
             result = await page.send("Page.navigate", {"url": url}, timeout=ctx.timeout)
         except Gated:
-            raise BrowseError(f"Ardia's policy only lets the ardia command open web pages (http, https, data, about:blank); {url} isn't one", code="policy_refused") from None
+            raise BrowseError(f"Nilla's policy only lets the nilla-browser command open web pages (http, https, data, about:blank); {url} isn't one", code="policy_refused") from None
         except OutcomeUnknown as error:
             raise site_silent(url, ctx.timeout, error) from None
         if result.get("errorText"):
@@ -228,7 +228,7 @@ async def navigate(ctx: Ctx, page, url: str, until: str = "load"):
     try:
         result = await page.send("Page.navigate", {"url": url}, timeout=ctx.timeout)
     except Gated:
-        raise BrowseError(f"Ardia's policy only lets the ardia command open web pages (http, https, data, about:blank); {url} isn't one", code="policy_refused") from None
+        raise BrowseError(f"Nilla's policy only lets the nilla-browser command open web pages (http, https, data, about:blank); {url} isn't one", code="policy_refused") from None
     except OutcomeUnknown as error:
         raise site_silent(url, ctx.timeout, error) from None
     if result.get("errorText"):
@@ -241,7 +241,7 @@ async def navigate(ctx: Ctx, page, url: str, until: str = "load"):
         except BrowseError as error:
             if error.code != "timeout" or until != "load" or not await shows_content(page, loader):
                 raise
-            from ardia_cli import command_metrics
+            from nilla_browser_cli import command_metrics
 
             command_metrics.flag("open_still_loading", True)
             page.state.load_note = (f"The page hadn't finished loading after {ctx.timeout:g} s (something on it is still loading); "
@@ -265,7 +265,7 @@ async def new_tab(ctx: Ctx, url: str | None, label: str | None = None, window: b
     try:
         result = await state.browser.send("Target.createTarget", params)
     except Gated as error:
-        raise BrowseError(f"Ardia's policy refused to open a tab for the ardia command ({error.refusal})", code="policy_refused") from None
+        raise BrowseError(f"Nilla's policy refused to open a tab for the nilla-browser command ({error.refusal})", code="policy_refused") from None
     target_id = result["targetId"]
     state.opened.add(target_id)
     state.registry.note_opened(state.instance, target_id)
@@ -288,9 +288,9 @@ async def new_tab(ctx: Ctx, url: str | None, label: str | None = None, window: b
 
 
 OFFSCREEN_TIMEOUT = 10.0
-NEEDS_HIDDEN_TAB = ("`set viewport` works on a tab this session opened that has never been shown: Ardia takes it off-screen first, so "
+NEEDS_HIDDEN_TAB = ("`set viewport` works on a tab this session opened that has never been shown: Nilla takes it off-screen first, so "
                     "an emulated page is never on screen")
-OPEN_ONE = "Open one with `ardia browse open <url>` (without --show) and set its viewport there"
+OPEN_ONE = "Open one with `nilla-browser browse open <url>` (without --show) and set its viewport there"
 
 
 async def engine_offscreen(state, target_id: str) -> bool:
@@ -309,8 +309,8 @@ async def engine_offscreen(state, target_id: str) -> bool:
 
 
 async def go_offscreen(ctx: Ctx, page) -> bool:
-    from ardia_cli import control
-    from ardia_cli.browse import tabs
+    from nilla_browser_cli import control
+    from nilla_browser_cli.browse import tabs
 
     state = ctx.state
     if state.endpoint is None or state.endpoint.explicit:
@@ -319,15 +319,15 @@ async def go_offscreen(ctx: Ctx, page) -> bool:
         return True
     app_tab = (await tabs.app_tab_map(state)).get(page.target_id)
     if not app_tab:
-        raise BrowseError(f"{NEEDS_HIDDEN_TAB}. Ardia doesn't list this session's tab. {OPEN_ONE}", code="viewport_needs_hidden_tab")
+        raise BrowseError(f"{NEEDS_HIDDEN_TAB}. Nilla doesn't list this session's tab. {OPEN_ONE}", code="viewport_needs_hidden_tab")
     try:
         await tabs.app_call(state, "offscreen", {"tab": app_tab}, OFFSCREEN_TIMEOUT)
     except control.MethodError as error:
         if error.code == "unknown_method":
-            raise BrowseError("This Ardia can't take a tab off-screen for a viewport yet; update Ardia", code="viewport_unsupported") from None
+            raise BrowseError("This Nilla can't take a tab off-screen for a viewport yet; update Nilla", code="viewport_unsupported") from None
         raise BrowseError(f"{NEEDS_HIDDEN_TAB}. {error.message} {OPEN_ONE}", code="viewport_needs_hidden_tab") from None
     except control.Unreachable as error:
-        raise BrowseError(f"Couldn't ask Ardia to take the tab off-screen ({error})", code="viewport_unsupported") from None
+        raise BrowseError(f"Couldn't ask Nilla to take the tab off-screen ({error})", code="viewport_unsupported") from None
     state.set_offscreen(page.target_id, True)
     state.app_tabs.pop(page.target_id, None)
     return True
@@ -361,7 +361,7 @@ async def leave_offscreen(ctx: Ctx, page):
 
 def offscreen_note(state) -> str:
     tab = state.extras.pop("left_offscreen", None)
-    return f"\n→ The viewport ended and the page was reloaded in a new tab [{tab}]: Ardia never shows an emulated page" if tab else ""
+    return f"\n→ The viewport ended and the page was reloaded in a new tab [{tab}]: Nilla never shows an emulated page" if tab else ""
 
 
 async def show_tab(ctx: Ctx, page):
@@ -383,7 +383,7 @@ async def show_tab(ctx: Ctx, page):
             shown_since = None
             nudge = min(nudge, loop.time() + 0.2)
         if loop.time() >= deadline:
-            raise BrowseError("Ardia didn't show the tab; switch to it in Ardia, or try `ardia browse tab <id> --show` again")
+            raise BrowseError("Nilla didn't show the tab; switch to it in Nilla, or try `nilla-browser browse tab <id> --show` again")
         await asyncio.sleep(0.1)
 
 
@@ -398,7 +398,7 @@ async def tab_shown(state, page) -> bool | None:
 
 
 async def apply_open_options(ctx: Ctx, page):
-    from ardia_cli.browse import react
+    from nilla_browser_cli.browse import react
 
     for feature in ctx.options.get("enable") or []:
         if feature != "react-devtools":
@@ -409,7 +409,7 @@ async def apply_open_options(ctx: Ctx, page):
         source = Path(ctx.path(path)).read_text(encoding="utf-8")
         await add_init_script(ctx, page, source, None)
     if ctx.options.get("capture_console"):
-        from ardia_cli.browse import capture
+        from nilla_browser_cli.browse import capture
 
         await capture.activate(ctx, page, "console", page.enable_runtime)
         ctx.state.leases.add("console")
@@ -455,7 +455,7 @@ def refuse_on_borrowed(ctx: Ctx, page, what: str):
         tab = ctx.state.tab_id(borrowed)
         raise BrowseError(
             f"This session is using your tab [{tab}] (picked with `tab active`), so it won't {what} it. To drive that tab anyway, "
-            f"pick it with `ardia browse tab {tab}`; to browse on your own, use `ardia browse open <url>`",
+            f"pick it with `nilla-browser browse tab {tab}`; to browse on your own, use `nilla-browser browse open <url>`",
             data={"tabId": tab}, code="borrowed_tab",
         )
 
@@ -465,7 +465,7 @@ async def cmd_open(ctx: Ctx, argv):
     options, args = parse(argv, {"--enable": "multi", "--init-script": "multi", "--capture-console": "bool", "--headers": "value", "--label": "value", "--show": "bool",
                                  "--read": "bool"})
     if options.get("headers"):
-        raise Usage("ardia browse can't scope headers to an origin at launch; run `ardia browse set headers <json>` before `open`")
+        raise Usage("nilla browse can't scope headers to an origin at launch; run `nilla-browser browse set headers <json>` before `open`")
     ctx.options.setdefault("enable", []).extend(sum((value.split(",") for value in options.get("enable") or []), []))
     ctx.options.setdefault("init_scripts", []).extend(options.get("init_script") or [])
     if options.get("capture_console"):
@@ -507,7 +507,7 @@ async def cmd_open(ctx: Ctx, argv):
         tab = state.tab_id(page.target_id)
         data.update({"tabId": tab, "background": True, "takesInput": background})
         if borrowed:
-            from ardia_cli import command_metrics
+            from nilla_browser_cli import command_metrics
 
             left = state.tab_id(borrowed)
             data["left"] = left
@@ -517,9 +517,9 @@ async def cmd_open(ctx: Ctx, argv):
         else:
             where = f"→ Opened in its own background tab [{tab}]"
         if borrowed or not background:
-            text += f"\n{where}; " + ("it takes input without being shown" if background else f"this Ardia doesn't deliver input there. use: ardia browse tab {tab} --show (or open <url> --show)")
+            text += f"\n{where}; " + ("it takes input without being shown" if background else f"this Nilla doesn't deliver input there. use: nilla browse tab {tab} --show (or open <url> --show)")
     if options.get("read"):
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         command_metrics.flag("open_read", True)
         read = await cmd_read(ctx, [])
@@ -587,15 +587,15 @@ async def cmd_pushstate(ctx: Ctx, argv):
     need(args, 1, "pushstate <url>")
     page = await ctx.state.page()
     refuse_on_borrowed(ctx, page, "change the address of")
-    url = await page.call("(u) => ardiaBrowse.pushState(u)", args[0], frame=page.main_frame)
+    url = await page.call("(u) => nillaBrowse.pushState(u)", args[0], frame=page.main_frame)
     page.url = url
     return Result({"url": url}, url)
 
 
 @command("snapshot")
 async def cmd_snapshot(ctx: Ctx, argv):
-    from ardia_cli import notes
-    from ardia_cli.browse import flows
+    from nilla_browser_cli import notes
+    from nilla_browser_cli.browse import flows
 
     options, args = parse(
         argv,
@@ -635,13 +635,13 @@ async def cmd_snapshot(ctx: Ctx, argv):
 
 @command("notes")
 async def cmd_notes(ctx: Ctx, argv):
-    from ardia_cli import notes
+    from nilla_browser_cli import notes
 
     tab = None
     if "--tab" in argv:
         at = argv.index("--tab")
         if at + 1 >= len(argv):
-            raise Usage("--tab needs a tab id (t1, or the tab-… id `ardia windows` prints)")
+            raise Usage("--tab needs a tab id (t1, or the tab-… id `nilla-browser windows` prints)")
         tab, argv = argv[at + 1], argv[:at] + argv[at + 2:]
     request = notes.parse_args(argv)
     if request.text == "-":
@@ -750,11 +750,11 @@ async def cmd_fill(ctx: Ctx, argv):
         result.data["suggestions"] = [item["text"] for item in found]
         best = text if actions.unique_match(text, found) else found[0]["text"]
         result.text += (f"\n→ {len(found)} suggestion{'s' if len(found) != 1 else ''} showing, none picked. "
-                        f"To pick one: ardia browse select {args[0]} {shlex.quote(best)}")
+                        f"To pick one: nilla browse select {args[0]} {shlex.quote(best)}")
     result = changes.attach(result, report)
     if (text and not typeahead and not found and stored is None and text_before is not None and only_the_field_changed(report)
             and await is_input(page, element) and await page_text_mark(page, element) == text_before):
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         command_metrics.flag("fill_no_reaction_hint", True)
         result.text += NO_REACTION_HINT
@@ -790,7 +790,7 @@ async def page_text_mark(page, element):
 
 async def is_input(page, element) -> bool:
     try:
-        info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame, read=True)
+        info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame, read=True)
     except BrowseError:
         return False
     return info.get("tag") == "input" and (info.get("type") or "text") in ("text", "number", "search", "tel")
@@ -836,7 +836,7 @@ async def cmd_press(ctx: Ctx, argv):
         frame = element.frame or page.main_frame
 
         async def focus_and_press():
-            from ardia_cli import command_metrics
+            from nilla_browser_cli import command_metrics
 
             command_metrics.flag("press_targeted", True)
             await page.focus_element(element)
@@ -917,14 +917,14 @@ async def select_in(ctx: Ctx, page, element, selector: str, values: list[str], h
 
 
 async def field_name(page, element, selector: str) -> str:
-    names = await page.call("(el) => ardiaBrowse.labelText(el).concat([el.getAttribute('placeholder') || ''])", element, frame=element.frame, read=True)
+    names = await page.call("(el) => nillaBrowse.labelText(el).concat([el.getAttribute('placeholder') || ''])", element, frame=element.frame, read=True)
     name = next((" ".join(str(item).split()) for item in names or [] if str(item).strip()), "")
     return f'"{name}" ({selector})' if name else selector
 
 
 @command("drag")
 async def cmd_drag(ctx: Ctx, argv):
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     options, args = parse(argv, {"--no-humanize": "bool", "--before": "bool", "--after": "bool"})
     need(args, 2, "drag <source> <target> [--before|--after]")
@@ -961,7 +961,7 @@ def drag_text(outcome: dict) -> str:
     elif position:
         text += f"\nthe order didn't change: still {position['to']} of {position['count']}"
     if outcome.get("interceptionLeftOn"):
-        text += "\n  Ardia didn't confirm drag interception was turned off; it ends when this session disconnects (30 s idle)"
+        text += "\n  Nilla didn't confirm drag interception was turned off; it ends when this session disconnects (30 s idle)"
     return text
 
 
@@ -1109,7 +1109,7 @@ async def cmd_wait(ctx: Ctx, argv):
             return True
         if wanted_state == "detached":
             return False
-        visible = await found_page.call("(el) => ardiaBrowse.visible(el)", element, frame=element.frame)
+        visible = await found_page.call("(el) => nillaBrowse.visible(el)", element, frame=element.frame)
         return visible if wanted_state == "visible" else not visible
 
     await wait_until(selector_state, timeout, 0.1, f"{selector} to be {wanted_state}")
@@ -1143,7 +1143,7 @@ async def evaluate_main(page, expression: str, timeout: float = EVAL_TIMEOUT):
         description = (details.get("exception") or {}).get("description") or details.get("text") or "error"
         if "is not a valid selector" in description and UNQUOTED_ATTRIBUTE.search(description):
             description += ('\n  An attribute value with spaces or punctuation needs quotes in CSS: a[href*="/path/"], '
-                            '[aria-label="Two words"]. ardia browse\'s own selectors (click, find, get) quote it for you')
+                            '[aria-label="Two words"]. nilla browse\'s own selectors (click, find, get) quote it for you')
         raise BrowseError(f"Evaluation error: {description}", code="page_script_error")
     remote = result.get("result") or {}
     if remote.get("type") == "undefined":
@@ -1155,7 +1155,7 @@ async def evaluate_main(page, expression: str, timeout: float = EVAL_TIMEOUT):
 
 @command("eval")
 async def cmd_eval(ctx: Ctx, argv):
-    from ardia_cli.browse.script import MAX_TIMEOUT, parse_timeout
+    from nilla_browser_cli.browse.script import MAX_TIMEOUT, parse_timeout
 
     options, args = parse(argv, {"--base64": "bool", "--stdin": "bool", "--timeout": "value"}, {"-b": "--base64"})
     limit = parse_timeout(options["timeout"]) if options.get("timeout") else EVAL_TIMEOUT
@@ -1175,7 +1175,7 @@ async def cmd_eval(ctx: Ctx, argv):
     except OutcomeUnknown as error:
         if "didn't answer Runtime.evaluate" not in error.message:
             raise
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         command_metrics.flag("eval_timed_out", True)
         raise OutcomeUnknown("`eval`", f"The page's code didn't finish within {limit:g} s (eval waits for the promise it returns) and may still "
@@ -1184,7 +1184,7 @@ async def cmd_eval(ctx: Ctx, argv):
     origin = page.frames.get(page.main_frame, {}).get("origin") or ""
     text = render_json(value)
     if quoted:
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         command_metrics.flag("eval_selectors_quoted", True)
         text += "\n(quoted the attribute values in " + ", ".join(quoted) + ", which CSS needs for values with spaces or punctuation)"
@@ -1230,7 +1230,7 @@ async def cmd_get(ctx: Ctx, argv):
 
         parts = urlsplit(url)
         if not ctx.state.endpoint.explicit or parts.query or parts.username or parts.password or "token" in url.lower():
-            raise BrowseError("This CDP URL carries a control token, so ardia browse never prints it; drive the page with ardia browse commands (`eval` for JavaScript)")
+            raise BrowseError("This CDP URL carries a control token, so nilla browse never prints it; drive the page with nilla browse commands (`eval` for JavaScript)")
         return Result({"cdpUrl": url}, url)
     page = await ctx.state.page()
     if what == "title":
@@ -1242,7 +1242,7 @@ async def cmd_get(ctx: Ctx, argv):
     if what == "count":
         need(args, 2, "get count <selector>")
         frame = ctx.state.frame_for(page) or page.main_frame
-        count = await page.call("(s) => ardiaBrowse.queryAll(s).length", args[1], frame=frame, read=True)
+        count = await page.call("(s) => nillaBrowse.queryAll(s).length", args[1], frame=frame, read=True)
         return Result({"count": count, "selector": args[1]}, str(count))
     need(args, 2, f"get {what} <selector>")
     page, element = await resolve(ctx, args[1])
@@ -1262,7 +1262,7 @@ async def cmd_get(ctx: Ctx, argv):
         value = await page.call("(el, n) => el.getAttribute(n)", element, args[2], frame=element.frame)
         return Result({"attribute": args[2], "value": value}, "" if value is None else value, page_content=True)
     if what == "box":
-        from ardia_cli.browse.actions import frame_offset, rect
+        from nilla_browser_cli.browse.actions import frame_offset, rect
 
         box = await rect(page, element)
         ox, oy = await frame_offset(page, element.frame)
@@ -1271,7 +1271,7 @@ async def cmd_get(ctx: Ctx, argv):
         text = "\n".join(f"{key + ':':<8}{box[key]}" for key in ("x", "y", "width", "height"))
         return Result(box, text)
     if what == "styles":
-        styles = await page.call("(el) => ardiaBrowse.styles(el)", element, frame=element.frame)
+        styles = await page.call("(el) => nillaBrowse.styles(el)", element, frame=element.frame)
         return Result({"styles": styles}, "\n".join(f"{key}: {value}" for key, value in styles.items()))
     raise Usage(f"Unknown get subcommand: {what}")
 
@@ -1284,9 +1284,9 @@ async def cmd_is(ctx: Ctx, argv):
     page, element = await resolve(ctx, args[1])
     origin = page.frames.get(element.frame, {}).get("origin") or ""
     if what == "visible":
-        value = await page.call("(el) => ardiaBrowse.visible(el)", element, frame=element.frame)
+        value = await page.call("(el) => nillaBrowse.visible(el)", element, frame=element.frame)
     elif what in ("enabled", "checked"):
-        info = await page.call("(el) => ardiaBrowse.info(el)", element, frame=element.frame)
+        info = await page.call("(el) => nillaBrowse.info(el)", element, frame=element.frame)
         value = not info["disabled"] if what == "enabled" else info["checked"]
     else:
         raise Usage(f"Unknown is subcommand: {what} (visible, enabled, checked)")
@@ -1336,16 +1336,16 @@ async def cmd_find(ctx: Ctx, argv):
         if locator == "role":
             element, role, name = await find_role(ctx, page, frame, value, wanted_name, exact)
         elif locator == "text":
-            element = await page.element_from(await page.call("(t, e) => ardiaBrowse.findText(t, e)", value, exact, frame=frame, by_value=False, read=True), frame, f"text={value}")
+            element = await page.element_from(await page.call("(t, e) => nillaBrowse.findText(t, e)", value, exact, frame=frame, by_value=False, read=True), frame, f"text={value}")
         elif locator == "label":
-            element = await page.element_from(await page.call("(t, e) => ardiaBrowse.findLabel(t, e)", value, exact, frame=frame, by_value=False, read=True), frame, f"label={value}")
+            element = await page.element_from(await page.call("(t, e) => nillaBrowse.findLabel(t, e)", value, exact, frame=frame, by_value=False, read=True), frame, f"label={value}")
         elif locator in ("placeholder", "alt", "title"):
-            element = await page.element_from(await page.call("(a, t, e) => ardiaBrowse.findAttr(a, t, e)", locator, value, exact, frame=frame, by_value=False, read=True), frame, f"{locator}={value}")
+            element = await page.element_from(await page.call("(a, t, e) => nillaBrowse.findAttr(a, t, e)", locator, value, exact, frame=frame, by_value=False, read=True), frame, f"{locator}={value}")
         elif locator == "testid":
-            element = await page.element_from(await page.call("(t) => ardiaBrowse.findAttr('data-testid', t, true)", value, frame=frame, by_value=False, read=True), frame, f"testid={value}")
+            element = await page.element_from(await page.call("(t) => nillaBrowse.findAttr('data-testid', t, true)", value, frame=frame, by_value=False, read=True), frame, f"testid={value}")
         elif locator in ("first", "last", "nth"):
             position = {"first": 0, "last": -1}.get(locator, index if locator == "nth" else 0)
-            remote = await page.call("(s, i) => { const all = ardiaBrowse.queryAll(s); return all.at(i) || null; }", value, position, frame=frame, by_value=False, read=True)
+            remote = await page.call("(s, i) => { const all = nillaBrowse.queryAll(s); return all.at(i) || null; }", value, position, frame=frame, by_value=False, read=True)
             element = await page.element_from(remote, frame, f"{locator} {value}")
         else:
             raise Usage(f"Unknown locator: {locator} (role, text, label, placeholder, alt, title, testid, first, last, nth)")
@@ -1444,7 +1444,7 @@ def closest_names(wanted: str, names: list[str]) -> list[str]:
 
     ranked = sorted(range(len(names)), key=lambda index: (-likeness(names[index]), index))
     if ranked and likeness(names[ranked[0]]) >= CLOSE_ENOUGH:
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         command_metrics.flag("find_closest_names", True)
         return [names[index] for index in ranked[:MAX_CANDIDATES]]
@@ -1490,7 +1490,7 @@ async def cmd_tab(ctx: Ctx, argv):
     await state.connect()
     action = args[0] if args else "list"
     if action == "list":
-        from ardia_cli.browse import tabs as tab_registry
+        from nilla_browser_cli.browse import tabs as tab_registry
 
         await state.refresh_targets()
         tabs = state.describe_tabs(await tab_registry.app_tab_map(state))
@@ -1504,7 +1504,7 @@ async def cmd_tab(ctx: Ctx, argv):
         if target_id is None:
             raise BrowseError("This session has no current tab to close")
         if target_id not in state.opened:
-            raise BrowseError(f"Tab [{state.tab_id(target_id)}] is one of the user's tabs; ardia browse only closes tabs this session opened")
+            raise BrowseError(f"Tab [{state.tab_id(target_id)}] is one of the user's tabs; nilla browse only closes tabs this session opened")
         if not state.registry.reserve_close(state.instance, target_id):
             users = state.registry.others(state.instance)[1].get(target_id) or ["another session"]
             raise BrowseError(f"Tab [{state.tab_id(target_id)}] is in use by session {', '.join(users)}, so it stays open", code="tab_in_use")
@@ -1529,7 +1529,7 @@ async def cmd_tab(ctx: Ctx, argv):
         page = await show_tab(ctx, page)
         target_id = page.target_id
     title = await page_title(page)
-    from ardia_cli.browse import tabs as tab_registry
+    from nilla_browser_cli.browse import tabs as tab_registry
 
     await tab_registry.app_tab_map(state)
     data = {"tabId": state.tab_id(target_id), "appTabId": state.app_tabs.get(target_id), "targetId": target_id, "title": title, "url": page.url}
@@ -1552,7 +1552,7 @@ def tab_line(tab: dict, session: str) -> str:
 async def cmd_window(ctx: Ctx, argv):
     _, args = parse(argv)
     if not args or args[0] != "new":
-        raise Usage("Usage: ardia browse window new [url]")
+        raise Usage("Usage: nilla browse window new [url]")
     page = await new_tab(ctx, args[1] if len(args) > 1 else None, window=True)
     return Result({"tabId": ctx.state.tab_id(page.target_id), "url": page.url}, page.url or "about:blank")
 
@@ -1579,13 +1579,13 @@ async def cmd_frame(ctx: Ctx, argv):
         if not frame_id or frame_id not in page.frames:
             box = await actions.element_box(page, element) if frame_id else None
             if box is None:
-                raise BrowseError(f"{target} isn't an iframe this tab can reach (ardia browse doesn't attach cross-process iframes)")
-            from ardia_cli import command_metrics
+                raise BrowseError(f"{target} isn't an iframe this tab can reach (nilla browse doesn't attach cross-process iframes)")
+            from nilla_browser_cli import command_metrics
 
             command_metrics.flag("frame_cross_process_box", True)
             left, top, right, bottom = (round(value) for value in box)
             raise BrowseError(
-                f"{target} is a cross-process iframe, which ardia browse can't enter, but the mouse reaches it: it sits at "
+                f"{target} is a cross-process iframe, which nilla browse can't enter, but the mouse reaches it: it sits at "
                 f"{left},{top} to {right},{bottom} in the viewport. Click a point inside it with `mouse move <x> <y>`, "
                 "`mouse down` and `mouse up` (in one batch), then `screenshot` to see what changed",
                 data={"box": [left, top, right, bottom]}, code="cross_process_frame",
@@ -1606,7 +1606,7 @@ async def cmd_dialog(ctx: Ctx, argv):
         return Result({"hasDialog": True, "type": dialog.get("type"), "message": dialog.get("message"), "defaultPrompt": dialog.get("defaultPrompt")},
                       f"Dialog open: {dialog.get('type')} {json.dumps(dialog.get('message', ''), ensure_ascii=False)}", page_content=True)
     if action not in ("accept", "dismiss"):
-        raise Usage("Usage: ardia browse dialog accept [text] | dismiss | status")
+        raise Usage("Usage: nilla browse dialog accept [text] | dismiss | status")
     if not dialog:
         raise BrowseError("No dialog is currently open")
     params = {"accept": action == "accept"}
@@ -1634,12 +1634,12 @@ async def cmd_storage(ctx: Ctx, argv):
     frame = ctx.state.frame_for(page) or page.main_frame
     if op == "set":
         need(rest, 2, f"storage {kind} set <key> <value>")
-        await page.call("(k, o, key, v) => ardiaBrowse.storage(k, o, key, v)", kind, "set", rest[0], " ".join(rest[1:]), frame=frame)
+        await page.call("(k, o, key, v) => nillaBrowse.storage(k, o, key, v)", kind, "set", rest[0], " ".join(rest[1:]), frame=frame)
         return Result({"set": rest[0]})
     if op in ("clear", "remove"):
-        await page.call("(k, o, key) => ardiaBrowse.storage(k, o, key)", kind, op, rest[0] if rest else None, frame=frame)
+        await page.call("(k, o, key) => nillaBrowse.storage(k, o, key)", kind, op, rest[0] if rest else None, frame=frame)
         return Result({op: True}, "✓ Storage cleared" if op == "clear" else "✓ Done")
-    data = await page.call("(k, o, key) => ardiaBrowse.storage(k, o, key)", kind, "get", rest[0] if rest else None, frame=frame, read=True)
+    data = await page.call("(k, o, key) => nillaBrowse.storage(k, o, key)", kind, "get", rest[0] if rest else None, frame=frame, read=True)
     text = "\n".join(f"{key}: {value}" for key, value in data.items()) or "(empty)"
     return Result({"data": data}, text, page_content=True)
 
@@ -1749,7 +1749,7 @@ async def cmd_set(ctx: Ctx, argv):
             await overridden(page, "Emulation.setDeviceMetricsOverride", {"width": width, "height": height, "deviceScaleFactor": scale, "mobile": False})
             if not offscreen:
                 ctx.state.leases.add("emulation")
-            from ardia_cli import command_metrics
+            from nilla_browser_cli import command_metrics
 
             command_metrics.flag("viewport_set", True)
             return Result({"width": width, "height": height, "deviceScaleFactor": scale, "mobile": False})
@@ -1785,7 +1785,7 @@ async def cmd_set(ctx: Ctx, argv):
             return Result({"headers": sorted(headers)})
         if setting in ("credentials", "auth"):
             need(args, 3, "set credentials <user> <pass>")
-            from ardia_cli.browse import capture
+            from nilla_browser_cli.browse import capture
 
             await capture.enable_credentials(ctx, page, args[1], args[2])
             return Result({"username": args[1]})
@@ -1815,7 +1815,7 @@ async def cmd_state(ctx: Ctx, argv):
     try:
         if args[0] == "save":
             cookies = (await page.send("Network.getAllCookies")).get("cookies") or []
-            local = await page.call("() => ardiaBrowse.storage('local', 'get')", frame=page.main_frame, read=True)
+            local = await page.call("() => nillaBrowse.storage('local', 'get')", frame=page.main_frame, read=True)
             origin = page.frames.get(page.main_frame, {}).get("origin")
             fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
@@ -1829,18 +1829,18 @@ async def cmd_state(ctx: Ctx, argv):
             for entry in saved.get("origins") or []:
                 if entry.get("origin") == origin:
                     for item in entry.get("localStorage") or []:
-                        await page.call("(k, v) => ardiaBrowse.storage('local', 'set', k, v)", item["name"], item["value"], frame=page.main_frame)
+                        await page.call("(k, v) => nillaBrowse.storage('local', 'set', k, v)", item["name"], item["value"], frame=page.main_frame)
             return Result({"path": args[1]}, f"✓ State loaded from {args[1]}")
     except Gated as error:
         raise error.during(f"state {args[0]}") from None
-    raise Usage("Usage: ardia browse state save|load <path>")
+    raise Usage("Usage: nilla browse state save|load <path>")
 
 
 async def wait_download(ctx: Ctx, trigger, destination: str | None, timeout: float) -> str:
     import tempfile
 
     await ctx.state.connect()
-    folder = os.path.dirname(destination) if destination else tempfile.mkdtemp(prefix="ardia-browse-download-")
+    folder = os.path.dirname(destination) if destination else tempfile.mkdtemp(prefix="nilla-browse-download-")
     try:
         await ctx.state.browser.send("Browser.setDownloadBehavior", {"behavior": "allowAndName", "downloadPath": folder, "eventsEnabled": True})
     except Gated as error:
@@ -1891,7 +1891,7 @@ FETCH_BYTES = """async (url, limit) => {
 
 
 async def fetch_again(ctx: Ctx, url: str) -> bytes:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     remote = ("The browser saved the file on its own machine (a browser reached with --ws on another host), "
               "and fetching it again from the page failed")
@@ -1969,7 +1969,7 @@ async def cmd_addinitscript(ctx: Ctx, argv):
     options, args = parse(argv, {"--stdin": "bool"})
     source = ctx.stdin if options.get("stdin") else " ".join(args)
     if not source:
-        raise Usage("Usage: ardia browse addinitscript <js> | --stdin")
+        raise Usage("Usage: nilla browse addinitscript <js> | --stdin")
     page = await ctx.state.page()
     refuse_on_borrowed(ctx, page, "add a script to")
     identifier = await add_init_script(ctx, page, source, None)
@@ -1995,11 +1995,11 @@ async def cmd_removeinitscript(ctx: Ctx, argv):
 
 @command("read")
 async def cmd_read(ctx: Ctx, argv):
-    from ardia_cli.browse import readpages, readurl
+    from nilla_browser_cli.browse import readpages, readurl
 
     options, args = parse(argv, readpages.flags(), readpages.ALIASES)
     if options.get("data"):
-        from ardia_cli.browse import pagedata
+        from nilla_browser_cli.browse import pagedata
 
         if args or options.get("links") is not None:
             raise Usage("read --data reads this tab's embedded JSON; open the page first, then run `read --data`")
@@ -2017,7 +2017,7 @@ async def cmd_read(ctx: Ctx, argv):
     page = await ctx.state.page()
     frame = ctx.state.frame_for(page) or page.main_frame
     selector = options.get("selector")
-    from ardia_cli.browse import pdftext
+    from nilla_browser_cli.browse import pdftext
 
     if frame == page.main_frame and await pdftext.page_is_pdf(page):
         content = readurl.post_process(await pdftext.page_text(page), options)
@@ -2027,7 +2027,7 @@ async def cmd_read(ctx: Ctx, argv):
     if selector:
         content, empty_note = await read_scoped(page, frame, selector)
     else:
-        content = await page.call("() => ardiaBrowse.readable()", frame=frame, read=True)
+        content = await page.call("() => nillaBrowse.readable()", frame=frame, read=True)
     content = readurl.post_process(content, options)
     readpages.note_virtualized(content)
     scope = "" if options.get("selector") else await page_scope(page, frame)
@@ -2039,17 +2039,17 @@ async def cmd_read(ctx: Ctx, argv):
 
 
 def render_json(value) -> str:
-    from ardia_cli.browse.script import render_json as render
+    from nilla_browser_cli.browse.script import render_json as render
 
     return render(value)
 
 
-READ_SCOPED = "(s) => { const found = ardiaBrowse.queryAll(s); return {matched: found.length, text: found.map((el) => ardiaBrowse.readable(el)).filter(Boolean).join('\\n\\n')}; }"
+READ_SCOPED = "(s) => { const found = nillaBrowse.queryAll(s); return {matched: found.length, text: found.map((el) => nillaBrowse.readable(el)).filter(Boolean).join('\\n\\n')}; }"
 
 
 async def read_scoped(page, frame, selector: str) -> tuple[str, str]:
-    from ardia_cli import command_metrics
-    from ardia_cli.browse.readpages import THIN_POLL, THIN_WAIT
+    from nilla_browser_cli import command_metrics
+    from nilla_browser_cli.browse.readpages import THIN_POLL, THIN_WAIT
 
     loop = asyncio.get_running_loop()
     deadline = loop.time() + THIN_WAIT
@@ -2081,10 +2081,10 @@ async def read_scoped(page, frame, selector: str) -> tuple[str, str]:
 
 
 async def page_scope(page, frame) -> str:
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     try:
-        scope = await page.call("() => ardiaBrowse.scope()", frame=frame, read=True)
+        scope = await page.call("() => nillaBrowse.scope()", frame=frame, read=True)
     except BrowseError:
         return ""
     if scope:
@@ -2094,7 +2094,7 @@ async def page_scope(page, frame) -> str:
 
 @command("script")
 async def cmd_script(ctx: Ctx, argv):
-    from ardia_cli.browse import script
+    from nilla_browser_cli.browse import script
 
     options, _ = parse(argv, {"--timeout": "value", "--stdin": "bool"})
     return await script.run(ctx, ctx.stdin or "", script.parse_timeout(options.get("timeout")))
@@ -2106,8 +2106,8 @@ async def cmd_vitals(ctx: Ctx, argv):
     page = await current_or_new(ctx) if args else await ctx.state.page()
     if args:
         await navigate(ctx, page, normalize_url(args[0]))
-    data = await page.call("() => ardiaBrowse.vitals()", frame=page.main_frame, read=True)
-    from ardia_cli.browse import react
+    data = await page.call("() => nillaBrowse.vitals()", frame=page.main_frame, read=True)
+    from nilla_browser_cli.browse import react
 
     data["hydration"] = await react.hydration(page) if "react" in page.init_scripts.values() else None
 
@@ -2126,7 +2126,7 @@ async def cmd_vitals(ctx: Ctx, argv):
 
 @command("diff")
 async def cmd_diff(ctx: Ctx, argv):
-    from ardia_cli.browse import media
+    from nilla_browser_cli.browse import media
 
     _, args = parse(argv[:1])
     need(args, 1, "diff snapshot|screenshot|url ...")
@@ -2189,7 +2189,7 @@ async def cmd_session(ctx: Ctx, argv):
 
 
 def batch_out(item: list[str], name: str) -> tuple[list[str], str | None]:
-    from ardia_cli.browse import outfile
+    from nilla_browser_cli.browse import outfile
 
     if name not in outfile.TAKES_OUT:
         return item, None
@@ -2197,8 +2197,8 @@ def batch_out(item: list[str], name: str) -> tuple[list[str], str | None]:
 
 
 def save_batch_line(ctx: Ctx, name: str, result, path: str) -> str:
-    from ardia_cli import command_metrics
-    from ardia_cli.browse import outfile
+    from nilla_browser_cli import command_metrics
+    from nilla_browser_cli.browse import outfile
 
     if name in outfile.AS_TEXT:
         text, summary = result.text or "", "its text"
@@ -2217,8 +2217,8 @@ def save_batch_line(ctx: Ctx, name: str, result, path: str) -> str:
 
 
 def save_batch(ctx: Ctx, path: str, text: str, outcomes: list[dict]) -> str:
-    from ardia_cli import command_metrics
-    from ardia_cli.browse import outfile
+    from nilla_browser_cli import command_metrics
+    from nilla_browser_cli.browse import outfile
 
     failed = [f"✗ {' '.join(outcome['command'])}: {outcome['error']}" for outcome in outcomes if not outcome["success"]]
     if not text.strip():
@@ -2245,7 +2245,7 @@ async def cmd_batch(ctx: Ctx, argv):
         if not isinstance(argv_item, list) or not all(isinstance(item, str) for item in argv_item):
             raise Usage(f"A batch command must be a JSON array of strings or a command line: {line}")
         runs.append(argv_item)
-    from ardia_cli.browse.daemon import run_one
+    from nilla_browser_cli.browse.daemon import run_one
 
     names = [ALIASES.get(item[0], item[0]) if item else "" for item in runs]
     closing = bool(names) and names[-1] == "close" and not runs[-1][1:] and "close" not in names[:-1]
@@ -2325,7 +2325,7 @@ def value_only(text: str | None) -> bool:
 
 
 def compact_batch_lines(outcomes: list[dict]):
-    from ardia_cli import command_metrics
+    from nilla_browser_cli import command_metrics
 
     succeeded = [index for index, outcome in enumerate(outcomes) if outcome["success"]]
     if len(succeeded) < 2:
@@ -2347,10 +2347,10 @@ def compact_batch_lines(outcomes: list[dict]):
 
 
 FETCHING = re.compile(r"\bfetch\s*\(|\bXMLHttpRequest\b|\bnew\s+DOMParser\b|\bwindow\.open\s*\(")
-FETCH_HINT = ("→ tip: to read other pages, `ardia browse read <url> <url>…` (or `read --links <pattern>` for this page's links) reads "
-              "them in one call, through your logins and after their scripts run; `ardia browse script` loops over pages with clicks and fills")
-PAGE_BY_PAGE_HINT = ("→ tip: reading page after page? `ardia browse read <url> <url>…` reads many in one call (`read --links <pattern>` "
-                     "takes every matching link on this page), and `ardia browse script` loops over pages that need clicks")
+FETCH_HINT = ("→ tip: to read other pages, `nilla-browser browse read <url> <url>…` (or `read --links <pattern>` for this page's links) reads "
+              "them in one call, through your logins and after their scripts run; `nilla-browser browse script` loops over pages with clicks and fills")
+PAGE_BY_PAGE_HINT = ("→ tip: reading page after page? `nilla-browser browse read <url> <url>…` reads many in one call (`read --links <pattern>` "
+                     "takes every matching link on this page), and `nilla-browser browse script` loops over pages that need clicks")
 PAGE_BY_PAGE = 3
 
 
@@ -2395,7 +2395,7 @@ def batch_extras(ctx) -> dict:
 
 
 def batch_line_options(item: list[str]) -> tuple[list[str], dict]:
-    from ardia_cli.browse import cli as browse_cli
+    from nilla_browser_cli.browse import cli as browse_cli
 
     found, rest = browse_cli.split_globals(item)
     unusable = sorted(f"--{key.replace('_', '-')}" for key in found if key not in LINE_OPTIONS and key not in ("no_humanize", "json"))
@@ -2418,19 +2418,19 @@ def boundary(text: str) -> str:
 
 
 SKIPPED = {
-    "connect": "ardia browse always drives the running Ardia (pick the endpoint with --data-dir, --port or --ws)",
-    "inspect": "opening DevTools on the user's tab isn't something the ardia command does",
-    "install": "Ardia is the browser; there's nothing to install",
-    "upgrade": "Ardia updates the ardia command itself",
-    "doctor": "run `ardia browse session info` instead",
-    "dashboard": "not part of ardia browse",
-    "chat": "Ardia has no AI features, by the owner's decision",
-    "mcp": "not part of ardia browse",
-    "profiles": "ardia browse never reads browser profiles",
-    "confirm": "action confirmation (--confirm-actions) isn't part of ardia browse",
-    "deny": "action confirmation (--confirm-actions) isn't part of ardia browse",
+    "connect": "nilla browse always drives the running Nilla (pick the endpoint with --data-dir, --port or --ws)",
+    "inspect": "opening DevTools on the user's tab isn't something the nilla-browser command does",
+    "install": "Nilla is the browser; there's nothing to install",
+    "upgrade": "Nilla updates the nilla-browser command itself",
+    "doctor": "run `nilla-browser browse session info` instead",
+    "dashboard": "not part of nilla browse",
+    "chat": "Nilla has no AI features, by the owner's decision",
+    "mcp": "not part of nilla browse",
+    "profiles": "nilla browse never reads browser profiles",
+    "confirm": "action confirmation (--confirm-actions) isn't part of nilla browse",
+    "deny": "action confirmation (--confirm-actions) isn't part of nilla browse",
     "swipe": "iOS isn't supported",
     "tap": "iOS isn't supported",
     "device": "iOS isn't supported",
-    "skills": "use `ardia --skill` (or `ardia skills get --full`) to print the skill, `ardia skills install` to copy it",
+    "skills": "use `nilla --skill` (or `nilla-browser skills get --full`) to print the skill, `nilla-browser skills install` to copy it",
 }

@@ -4,11 +4,11 @@
 
 #include <cmath>
 
-using namespace ardia_window;
+using namespace nilla_window;
 
 namespace {
 
-NSDictionary *ProbeFrame(NSWindow *window, ArdiaWindowFullScreen *state, CFTimeInterval start, NSSize before) {
+NSDictionary *ProbeFrame(NSWindow *window, NillaWindowFullScreen *state, CFTimeInterval start, NSSize before) {
   NSView *content = window.contentView;
   CALayer *layer = content.layer;
   if (!layer) return nil;
@@ -85,7 +85,7 @@ NSDictionary *ProbeFrame(NSWindow *window, ArdiaWindowFullScreen *state, CFTimeI
 
 }
 
-@implementation ArdiaChromeWindowHost (DevFullScreenProbe)
+@implementation NillaChromeWindowHost (DevFullScreenProbe)
 
 + (NSString *)devFullScreenProbe:(NSString *)argument window:(NSWindow *)window {
   static NSMutableArray *frames;
@@ -94,8 +94,8 @@ NSDictionary *ProbeFrame(NSWindow *window, ArdiaWindowFullScreen *state, CFTimeI
     NSData *json = [NSJSONSerialization dataWithJSONObject:frames ?: @[] options:0 error:nil];
     return json ? [[NSString alloc] initWithData:json encoding:NSUTF8StringEncoding] : @"[]";
   }
-  ArdiaCoreWindow *coreWindow = [ArdiaWindowController forNSWindow:window].coreWindow;
-  ArdiaWindowFullScreen *state = coreWindow ? [ArdiaWindowFullScreen ofWindow:coreWindow create:YES] : nil;
+  ArdiaCoreWindow *coreWindow = [NillaWindowController forNSWindow:window].coreWindow;
+  NillaWindowFullScreen *state = coreWindow ? [NillaWindowFullScreen ofWindow:coreWindow create:YES] : nil;
   if (!state) return @"not an ArdiaCore window";
   [timer invalidate];
   frames = [NSMutableArray array];

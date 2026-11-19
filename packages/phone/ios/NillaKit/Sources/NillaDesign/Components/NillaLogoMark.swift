@@ -1,6 +1,6 @@
 import SwiftUI
 
-public struct ArdiaLogoMark: View {
+public struct NillaLogoMark: View {
   public var outline: Bool
   public var outlineWeight: CGFloat
 
@@ -96,7 +96,7 @@ public struct FidgetLogo: View {
   public var body: some View {
     GeometryReader { proxy in
       let center = CGPoint(x: proxy.size.width / 2, y: proxy.size.height / 2)
-      ArdiaLogoMark(outlineWeight: 0.05)
+      NillaLogoMark(outlineWeight: 0.05)
         .shadow(color: .black.opacity(0.22), radius: 14, y: 6)
         .rotationEffect(angle)
         .frame(width: proxy.size.width, height: proxy.size.height)
@@ -105,7 +105,7 @@ public struct FidgetLogo: View {
     }
     .sensoryFeedback(.impact(weight: .light, intensity: 0.5), trigger: spins)
     .accessibilityElement()
-    .accessibilityLabel("Ardia")
+    .accessibilityLabel("Nilla")
     .accessibilityAddTraits(.isImage)
   }
 
@@ -154,8 +154,8 @@ public struct FidgetLogo: View {
 
 #Preview("Logo") {
   VStack(spacing: 32) {
-    ArdiaLogoMark().frame(width: 140)
-    ArdiaLogoMark(outline: false).frame(width: 140)
+    NillaLogoMark().frame(width: 140)
+    NillaLogoMark(outline: false).frame(width: 140)
     FidgetLogo().frame(width: 140, height: 120)
   }
   .padding(40)

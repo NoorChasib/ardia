@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -46,17 +46,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ardia.browser.BrowserUrl
-import com.ardia.design.ArdiaSymbols
-import com.ardia.design.ArdiaType
-import com.ardia.design.ColorMath
-import com.ardia.design.FaviconPixels
-import com.ardia.design.HttpFaviconFetcher
-import com.ardia.design.LocalArdiaDarkTheme
-import com.ardia.design.Palette
-import com.ardia.design.ProfileLook
-import com.ardia.design.SystemPalette
-import com.ardia.design.parseHexColor
+import com.nilladigital.nilla.BrowserUrl
+import com.nilladigital.nilla.design.NillaSymbols
+import com.nilladigital.nilla.design.NillaType
+import com.nilladigital.nilla.design.ColorMath
+import com.nilladigital.nilla.design.FaviconPixels
+import com.nilladigital.nilla.design.HttpFaviconFetcher
+import com.nilladigital.nilla.design.LocalNillaDarkTheme
+import com.nilladigital.nilla.design.Palette
+import com.nilladigital.nilla.design.ProfileLook
+import com.nilladigital.nilla.design.SystemPalette
+import com.nilladigital.nilla.design.parseHexColor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -96,9 +96,9 @@ internal object SpaceRules {
         return mapOf("light" to hex(light), "dark" to hex(dark))
     }
 
-    fun symbol(name: String?): String? = name?.takeIf { it.isNotEmpty() && ArdiaSymbols.named(it) != null }
+    fun symbol(name: String?): String? = name?.takeIf { it.isNotEmpty() && NillaSymbols.named(it) != null }
 
-    fun filled(symbol: String): String = if (symbol.endsWith(".fill") || ArdiaSymbols.named("$symbol.fill") == null) symbol else "$symbol.fill"
+    fun filled(symbol: String): String = if (symbol.endsWith(".fill") || NillaSymbols.named("$symbol.fill") == null) symbol else "$symbol.fill"
 
     fun initial(name: String): String {
         val trimmed = name.trim()
@@ -116,7 +116,7 @@ internal object SpaceRules {
     fun menuSymbol(name: String, icon: String?): String {
         symbol(icon)?.let { return filled(it) }
         val squared = "${initial(name).lowercase()}.square.fill"
-        return if (ArdiaSymbols.named(squared) != null) squared else "square.fill"
+        return if (NillaSymbols.named(squared) != null) squared else "square.fill"
     }
 
     fun tones(color: String?, themeColors: List<String>, themeDarkColors: List<String>?, dark: Boolean, increasedContrast: Boolean): List<Color> {
@@ -163,14 +163,14 @@ class PinnedTileItem(val key: String, val title: String, val url: String, val ic
 
 @Composable
 internal fun Modifier.lookSurface(shape: Shape): Modifier {
-    val dark = LocalArdiaDarkTheme.current
+    val dark = LocalNillaDarkTheme.current
     return clip(shape).background(SettingsLook.look.surface.resolve(dark), shape).border(0.5.dp, SpaceInk.hairline(dark), shape)
 }
 
 @Composable
 internal fun SpaceGlyphFace(name: String, icon: String?, size: Dp = SpaceRules.badge) {
-    val dark = LocalArdiaDarkTheme.current
-    val symbol = SpaceRules.symbol(icon)?.let(SpaceRules::filled)?.let(ArdiaSymbols::named)
+    val dark = LocalNillaDarkTheme.current
+    val symbol = SpaceRules.symbol(icon)?.let(SpaceRules::filled)?.let(NillaSymbols::named)
     val emoji = SpaceRules.emoji(icon)
     when {
         symbol != null -> Box(Modifier.size(width = size * 1.25f, height = size), contentAlignment = Alignment.Center) {
@@ -185,21 +185,21 @@ internal fun SpaceGlyphFace(name: String, icon: String?, size: Dp = SpaceRules.b
 
 @Composable
 internal fun SpaceTitleFace(name: String, icon: String?, showsChevron: Boolean, modifier: Modifier) {
-    val dark = LocalArdiaDarkTheme.current
+    val dark = LocalNillaDarkTheme.current
     Row(
         modifier.heightIn(min = SpaceRules.hitTarget).semantics(mergeDescendants = true) { contentDescription = name },
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SpaceGlyphFace(name, icon)
-        Text(name, style = ArdiaType.headline, color = SpaceInk.headerText(dark), maxLines = 1)
-        if (showsChevron) Icon(ArdiaSymbols.chevronDown, null, Modifier.size(12.dp), tint = SystemPalette.secondaryLabel.resolve(dark))
+        Text(name, style = NillaType.headline, color = SpaceInk.headerText(dark), maxLines = 1)
+        if (showsChevron) Icon(NillaSymbols.chevronDown, null, Modifier.size(12.dp), tint = SystemPalette.secondaryLabel.resolve(dark))
     }
 }
 
 @Composable
 internal fun SpacePageDotsFace(count: Int, index: Int, modifier: Modifier) {
-    val dark = LocalArdiaDarkTheme.current
+    val dark = LocalNillaDarkTheme.current
     Row(modifier.semantics(mergeDescendants = true) { contentDescription = "Space ${index + 1} of $count" }, horizontalArrangement = Arrangement.spacedBy(SpaceRules.pageDotSpacing - SpaceRules.pageDot)) {
         repeat(maxOf(count, 0)) { dot ->
             val colour by animateColorAsState(if (dot == index) SpaceInk.badgeInk(dark) else SpaceInk.pageDot(dark), tween(200), label = "pageDot")
@@ -210,7 +210,7 @@ internal fun SpacePageDotsFace(count: Int, index: Int, modifier: Modifier) {
 
 @Composable
 internal fun GlassCircleFace(symbol: String, label: String, diameter: Dp, modifier: Modifier, onPress: () -> Unit) {
-    val dark = LocalArdiaDarkTheme.current
+    val dark = LocalNillaDarkTheme.current
     Box(
         modifier
             .size(diameter)
@@ -228,7 +228,7 @@ internal fun GlassCircleFace(symbol: String, label: String, diameter: Dp, modifi
 
 @Composable
 internal fun SettingsShortcutsFace(shortcuts: List<Pair<String, String>>, modifier: Modifier, onPress: (String) -> Unit) {
-    val dark = LocalArdiaDarkTheme.current
+    val dark = LocalNillaDarkTheme.current
     val large = LocalDensity.current.fontScale >= ACCESSIBILITY_FONT_SCALE
     val button: @Composable (Modifier, Pair<String, String>) -> Unit = { place, (id, title) ->
         Box(
@@ -240,7 +240,7 @@ internal fun SettingsShortcutsFace(shortcuts: List<Pair<String, String>>, modifi
                 .semantics { role = Role.Button },
             contentAlignment = Alignment.Center,
         ) {
-            Text(title, style = ArdiaType.body, fontWeight = FontWeight.Medium, color = SystemPalette.label.resolve(dark))
+            Text(title, style = NillaType.body, fontWeight = FontWeight.Medium, color = SystemPalette.label.resolve(dark))
         }
     }
     if (large) {
@@ -267,7 +267,7 @@ internal fun PinnedTilesFace(tiles: List<PinnedTileItem>, modifier: Modifier, on
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PinnedTileFace(tile: PinnedTileItem, modifier: Modifier, onOpen: (String, String) -> Unit) {
-    val dark = LocalArdiaDarkTheme.current
+    val dark = LocalNillaDarkTheme.current
     var menu by remember { mutableStateOf(false) }
     val folder = tile.folder?.takeIf { it.isNotEmpty() }
     val label = SpaceRules.tileLabel(tile.title, tile.url)
@@ -283,10 +283,10 @@ private fun PinnedTileFace(tile: PinnedTileItem, modifier: Modifier, onOpen: (St
             },
         contentAlignment = Alignment.Center,
     ) {
-        val symbol = SpaceRules.symbol(tile.icon)?.let(ArdiaSymbols::named)
+        val symbol = SpaceRules.symbol(tile.icon)?.let(NillaSymbols::named)
         val emoji = SpaceRules.emoji(tile.icon)
         when {
-            folder != null -> Icon(ArdiaSymbols.folderFill, null, Modifier.size(SpaceRules.tileIcon * 0.95f), tint = Palette.formAccent.resolve(dark).copy(alpha = 0.55f))
+            folder != null -> Icon(NillaSymbols.folderFill, null, Modifier.size(SpaceRules.tileIcon * 0.95f), tint = Palette.formAccent.resolve(dark).copy(alpha = 0.55f))
             symbol != null -> Icon(symbol, null, Modifier.size(SpaceRules.tileIcon * 0.9f), tint = SystemPalette.secondaryLabel.resolve(dark))
             emoji != null -> Text(emoji, fontSize = SpaceRules.tileIcon.value.sp)
             else -> TileFavicon(tile.url, label)
@@ -317,7 +317,7 @@ private fun PinnedTileFace(tile: PinnedTileItem, modifier: Modifier, onOpen: (St
 
 @Composable
 private fun TileFavicon(url: String, label: String) {
-    val dark = LocalArdiaDarkTheme.current
+    val dark = LocalNillaDarkTheme.current
     val side = with(LocalDensity.current) { SpaceRules.tileIcon.roundToPx() * 2 }
     val picture by produceState<ImageBitmap?>(TileFavicons.known(url), url) {
         if (value == null) value = TileFavicons.load(url, side)
@@ -326,7 +326,7 @@ private fun TileFavicon(url: String, label: String) {
     if (shown != null) {
         Image(shown, null, Modifier.size(SpaceRules.tileIcon).clip(RoundedCornerShape(4.dp)))
     } else {
-        Text(SpaceRules.initial(label), style = ArdiaType.callout, fontWeight = FontWeight.SemiBold, color = SystemPalette.secondaryLabel.resolve(dark))
+        Text(SpaceRules.initial(label), style = NillaType.callout, fontWeight = FontWeight.SemiBold, color = SystemPalette.secondaryLabel.resolve(dark))
     }
 }
 

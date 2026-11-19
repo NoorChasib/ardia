@@ -25,12 +25,12 @@ export type FilterListInfo = BlockingState["lists"][number];
 
 export const useBlocking = create<{ state: BlockingState | null; busy: boolean }>()(() => ({ state: null, busy: false }));
 
-export type AppLinkChoice = "ardia" | "app";
+export type AppLinkChoice = "nilla" | "app";
 
 export const useEngines = create<{ engines: { id: string; name: string }[]; nightShade: NightShadeMode; appLinks: AppLinkChoice }>()(() => ({
   engines: [],
   nightShade: "disabled",
-  appLinks: "ardia",
+  appLinks: "nilla",
 }));
 
 const quietly = (call: () => Promise<unknown>) => void settled(call, undefined);
@@ -60,7 +60,7 @@ export async function refreshSettings() {
     settled(() => pages.appLinksDefault(), false),
   ]);
   if (state) useBlocking.setState({ state });
-  useEngines.setState({ engines, nightShade: shade?.defaultMode ?? "disabled", appLinks: opensApps ? "app" : "ardia" });
+  useEngines.setState({ engines, nightShade: shade?.defaultMode ?? "disabled", appLinks: opensApps ? "app" : "nilla" });
 }
 
 export function setSearchEngine(id: string) {
@@ -154,7 +154,7 @@ export function exportOpenTabs() {
     showToast("No Open Tabs", "warning");
     return;
   }
-  quietly(() => shareText(urls.join("\n"), "Open Tabs from Ardia"));
+  quietly(() => shareText(urls.join("\n"), "Open Tabs from Nilla"));
 }
 
 export function openFromSettings(url: string) {

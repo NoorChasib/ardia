@@ -1,5 +1,5 @@
 import Testing
-@testable import ArdiaBrowser
+@testable import NillaBrowser
 
 @MainActor
 final class PermissionGate {

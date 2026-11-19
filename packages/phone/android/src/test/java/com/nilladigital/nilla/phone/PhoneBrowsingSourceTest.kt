@@ -1,6 +1,6 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.sync.ReceivedTab
+import com.nilladigital.nilla.sync.ReceivedTab
 import java.io.File
 import java.nio.file.Files
 import org.junit.Assert.assertEquals

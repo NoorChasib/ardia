@@ -12,7 +12,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from ardia_cli import caller, cli, endpoint, star, telemetry, usage
+from nilla_browser_cli import caller, cli, endpoint, star, telemetry, usage
 from test_telemetry import CLEARED, Stub, scratch_dir
 
 
@@ -78,7 +78,7 @@ class UsageRecordTest(Case):
             locked.assert_not_called()
 
     def test_runs_through_the_cli_quietly(self):
-        with mock.patch("ardia_cli.browse.cli.main", return_value=0):
+        with mock.patch("nilla_browser_cli.browse.cli.main", return_value=0):
             for at in (0, 7200):
                 with mock.patch.object(usage.time, "time", return_value=at):
                     status, out, err = self.run_cli("browse", "open" if at == 0 else "click", "https://a.test")
@@ -121,13 +121,13 @@ class StarTest(Case):
         self.assertIn("Starred", out)
         self.assertEqual(usage.read(self.home)["star"]["via"], "gh")
 
-    def test_opens_the_page_in_a_new_ardia_tab_when_gh_isnt_signed_in(self):
+    def test_opens_the_page_in_a_new_nilla_tab_when_gh_isnt_signed_in(self):
         run, calls = self.fake_run((4, 0))
         status, out, _ = self.star(run, lambda name: "/usr/local/bin/gh", data_dir="/tmp/d")
         self.assertEqual(status, 0)
         self.assertEqual(len(calls), 2)
         browse = calls[1]
-        self.assertEqual(browse[:4], [sys.executable, "-I", "-m", "ardia_cli"])
+        self.assertEqual(browse[:4], [sys.executable, "-I", "-m", "nilla_browser_cli"])
         self.assertEqual(browse[4:], ["--data-dir", "/tmp/d", "browse", "--session", star.SESSION, "open", star.URL, "--show"])
         self.assertIn("Ask the user to click Star", out)
         self.assertEqual(usage.read(self.home)["star"]["via"], "browser")
@@ -154,7 +154,7 @@ class StarTest(Case):
 
         status, out, _ = self.star(run, lambda name: "/usr/bin/gh")
         self.assertEqual(status, 0)
-        self.assertIn("new Ardia tab", out)
+        self.assertIn("new Nilla tab", out)
 
     def test_star_command_is_wired_into_the_cli(self):
         with mock.patch.object(star, "star_with_gh", return_value=True) as gh:

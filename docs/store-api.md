@@ -64,10 +64,10 @@ store but through `storeAction` wrappers in each domain's `actions.ts` (`newTab`
 ## Actions
 - Windows: `createWindow`, `closeWindow`, `switchProfile`, `moveTabsToWindow`, `returnRefusedMove`, `moveTabToProfile`,
   `mergeAllWindows`, `reopenClosed` / `reopenClosedTab` / `reopenClosedWindow`, `restoreClosed`.
-  Little Ardia (Little Arc): `createWindow({ small: true, url })` makes a `kind: "small"` window with one tab (state/windows/small.ts),
+  Little Nilla (Little Arc): `createWindow({ small: true, url })` makes a `kind: "small"` window with one tab (state/windows/small.ts),
   in `lastActiveProfile(s)` unless `profileId` says otherwise; never private.
   `newTab` into it goes to `mainWindowFor(s, profileId)`; `resolveWindowId(s, null)` never picks it; closing it records a
-  `ClosedTab` with `small: true` that reopens in a new Little Ardia; it isn't saved with the session.
+  `ClosedTab` with `small: true` that reopens in a new Little Nilla; it isn't saved with the session.
 - Tabs: `newTab(windowId, { url, background, adoptId, openerId, profileId, pinned, index })`, `closeTabs(ids, { lastClosesWindow })`
   and `closeTab(id)` (the same path with `lastClosesWindow`, for ⌘W and ✕), `activate`, `navigate`, `updateTab(id, patch, live?)` (the live patch lands in the same store update), `updateLive`,
   `togglePin`, `moveTab`, `moveTabBy(id, ±1)` (both within the tab's pin section), `duplicateTab`. The engine's page reports go through `navigated(id, { url, title }, live)` and
@@ -158,7 +158,7 @@ that act on it: translate's detection, the web store's script, a screen-share re
 
 ## Live tabs: Chrome's tab strips (state/tabs/chromeTabs.ts, state/tabs/liveTabs.ts, packages/ardiacore/src/tabs.ts)
 
-One writer per fact. The store owns the **workspace**: sidebar order, pins, groups, splits, Little Ardia, unloaded
+One writer per fact. The store owns the **workspace**: sidebar order, pins, groups, splits, Little Nilla, unloaded
 and parked tiles, and which tab each window shows per profile (`activeTabIds`). Chrome's `TabStripModel` owns
 the **live tabs**: which tabs each Chrome window ("strip": one per engine profile per app window) has, their order,
 the active one, pins (and groups, once the engine reports them). JS never writes a live fact and never guesses who
@@ -278,7 +278,7 @@ ordered transaction that names its cause. There are no echo windows, timers or "
 ## ardia:// URLs (core appUrls.ts, like Dia's dia:// and Brave's brave://)
 - **The app's form is `ardia://`**, everywhere: `tab.url`, `navigation.url`, history, bookmarks,
   closed tabs, the bar, AppleScript. Nothing in the store is `chrome://`.
-  - Input: `resolveInput` / `fixupUrl` turn `chrome://x`, `chrome:x`, `about:x` and `ardia:x` into
+  - Input: `resolveInput` / `fixupUrl` turn `chrome://x`, `chrome:x`, `about:x` and `nilla:x` into
     `ardia://x`. about:blank and about:srcdoc stay as they are.
   - The engine boundary is packages/ardiacore `WebView`. Loading maps `ardia://` → `chrome://`
     (`url` prop, `loadUrl`). Reporting maps `chrome://` → `ardia://` (navigation, open-window,
@@ -305,5 +305,5 @@ ordered transaction that names its cause. There are no echo windows, timers or "
   (state/tabs/tabs.ts). That covers every way a URL gets in: the bar, bookmarks, history, AppleScript,
   opened URLs and links. A restored tab at `ardia://settings/…` loads Chrome's page.
 - The OS doesn't route `ardia:` to us. Like Dia and Brave, the app doesn't register the scheme,
-  so a web page can't open `ardia://quit` through Launch Services. `open -a Ardia 'ardia://version'`
+  so a web page can't open `ardia://quit` through Launch Services. `open -a Nilla 'ardia://version'`
   and AppleScript work, because those go to the app directly.

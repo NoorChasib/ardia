@@ -2,7 +2,7 @@ import { useEffect, useRef, type ComponentProps } from "react";
 import { haptics } from "../../state/app/haptics";
 import { StyleSheet, View, type ViewInstance } from "react-native";
 import { noteDeckBarTop, watchDeckBar } from "../../state/toasts/store";
-import type { FrostVariant } from "@ardia/phone-native";
+import type { FrostVariant } from "@nilla/phone-native";
 import { browseLayout, capsule, LookGlass, PressScale, Symbol, tabsLayout, usesGlass, useTheme, type SymbolName } from "../ui";
 
 export type DeckBarFrost = { source: string; variant: FrostVariant; incognito?: boolean };

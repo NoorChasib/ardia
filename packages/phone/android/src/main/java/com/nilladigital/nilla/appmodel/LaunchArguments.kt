@@ -1,4 +1,4 @@
-package com.ardia.appmodel
+package com.nilladigital.nilla.appmodel
 
 import android.content.Intent
 import android.os.Bundle
@@ -37,7 +37,7 @@ data class LaunchArguments(
         const val DEFAULT_DELAY_SECONDS = 6.0
         const val DEFAULT_STEP_GAP_SECONDS = 1.5
 
-        const val ARDIA_DEMO = "ArdiaDemo"
+        const val ARDIA_DEMO = "NillaDemo"
         const val BROWSE_OPEN = "BrowseOpen"
         const val BROWSE_QUERY = "BrowseQuery"
         const val BROWSE_SURFACE = "BrowseSurface"
@@ -52,14 +52,14 @@ data class LaunchArguments(
         const val BROWSE_OVERLAY = "BrowseOverlay"
         const val BROWSE_STEPS = "BrowseSteps"
         const val BROWSE_STEP_GAP = "BrowseStepGap"
-        const val ARDIA_DECK = "ArdiaDeck"
-        const val ARDIA_ONBOARDING = "ArdiaOnboarding"
-        const val ARDIA_OPEN_SHEET = "ArdiaOpenSheet"
-        const val ARDIA_OPEN_SETTINGS = "ArdiaOpenSettings"
-        const val ARDIA_RESTING_START = "ArdiaRestingStart"
-        const val ARDIA_COLOR = "ArdiaColor"
-        const val ARDIA_TOAST = "ArdiaToast"
-        const val ARDIA_TRUSTED_SITES = "ArdiaTrustedSites"
+        const val ARDIA_DECK = "NillaDeck"
+        const val ARDIA_ONBOARDING = "NillaOnboarding"
+        const val ARDIA_OPEN_SHEET = "NillaOpenSheet"
+        const val ARDIA_OPEN_SETTINGS = "NillaOpenSettings"
+        const val ARDIA_RESTING_START = "NillaRestingStart"
+        const val ARDIA_COLOR = "NillaColor"
+        const val ARDIA_TOAST = "NillaToast"
+        const val ARDIA_TRUSTED_SITES = "NillaTrustedSites"
         const val BROWSE_PAGER_FREEZE = "BrowsePagerFreeze"
         const val BROWSE_PAGER_SCRIPT = "BrowsePagerScript"
         const val BROWSE_LOAD_FREEZE = "BrowseLoadFreeze"

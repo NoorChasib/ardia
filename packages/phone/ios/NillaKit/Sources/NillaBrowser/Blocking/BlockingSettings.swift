@@ -6,7 +6,7 @@ public enum BlockingCategory: String, CaseIterable, Codable, Sendable {
   case trackers
   case cookieBanners
 
-  var identifier: String { "ardia.\(rawValue)" }
+  var identifier: String { "nilla.\(rawValue)" }
 }
 
 @MainActor

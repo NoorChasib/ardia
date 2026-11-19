@@ -6,12 +6,12 @@ GraphQL over POST) can't be saved; do it in the page. The session records every 
 loaded; nothing needs turning on.
 
 ```sh
-ardia browse open https://shop.example.com/search
-ardia browse fill "#q" kettle
-ardia browse click "#go"
-ardia browse flow steps                      # what each step loaded: s3r1 GET …/api/search?q=kettle 200 json
-ardia browse flow save search --description "Search the shop"
-ardia browse flow run search --param q=toaster --fields title,price --limit 5
+nilla-browser browse open https://shop.example.com/search
+nilla-browser browse fill "#q" kettle
+nilla-browser browse click "#go"
+nilla-browser browse flow steps                      # what each step loaded: s3r1 GET …/api/search?q=kettle 200 json
+nilla-browser browse flow save search --description "Search the shop"
+nilla-browser browse flow run search --param q=toaster --fields title,price --limit 5
 ```
 
 - `flow save <name>` saves the steps since the last save, from the last `open`. Typed text and URL query values the
@@ -31,7 +31,7 @@ ardia browse flow run search --param q=toaster --fields title,price --limit 5
 
 | code | do |
 | --- | --- |
-| `auth_expired`, `redirected` | ask the user to sign in again in Ardia and rerun, or do the task in the page |
+| `auth_expired`, `redirected` | ask the user to sign in again in Nilla and rerun, or do the task in the page |
 | `blocked`, `rate_limited` | wait, or do the task in the page |
 | `drifted` | the site changed: do it in the page and `flow save` again |
 | `fetch_failed`, `fetch_interrupted`, `http_error` | do the task in the page (after `fetch_interrupted`, check whether it went through) |

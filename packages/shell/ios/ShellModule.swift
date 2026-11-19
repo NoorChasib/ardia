@@ -11,7 +11,7 @@ public class ShellModule: Module {
   private var flagsMonitor: Any?
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaShell")
+    Name("NillaShell")
     Events(ShellEvents.Channel.openURLs.rawValue, ShellEvents.Channel.app.rawValue)
 
     OnCreate {
@@ -33,7 +33,7 @@ public class ShellModule: Module {
         self.flagsMonitor = nil
         if Self.quitCancelledOwner == ObjectIdentifier(self) {
           Self.quitCancelledOwner = nil
-          ArdiaHost.quitCancelledHandler = nil
+          NillaHost.quitCancelledHandler = nil
         }
         ShellEvents.retire(self)
       }
@@ -43,9 +43,9 @@ public class ShellModule: Module {
           ShellEvents.send(.app, ["type": "appearance", "dark": ShellModule.isDark])
         }
         self.observeForSidebar()
-        LittleArdiaHandoff.shared.start()
-        LittleArdiaHotKey.shared.start()
-        ArdiaHost.quitCancelledHandler = { ShellEvents.send(.app, ["type": "quitCancelled"]) }
+        LittleNillaHandoff.shared.start()
+        LittleNillaHotKey.shared.start()
+        NillaHost.quitCancelledHandler = { ShellEvents.send(.app, ["type": "quitCancelled"]) }
         Self.quitCancelledOwner = ObjectIdentifier(self)
       }
     }

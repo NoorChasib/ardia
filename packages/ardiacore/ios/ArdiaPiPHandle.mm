@@ -4,9 +4,9 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
-@implementation ArdiaPiPHandle {
+@implementation NillaPiPHandle {
   NSImageView *_chevron;
 }
 
@@ -23,9 +23,9 @@ using namespace ardia_pip;
   return self;
 }
 
-- (void)setEdge:(ArdiaPiPEdge)edge {
+- (void)setEdge:(NillaPiPEdge)edge {
   _edge = edge;
-  NSString *name = edge == ArdiaPiPEdgeLeft ? @"chevron.compact.right" : @"chevron.compact.left";
+  NSString *name = edge == NillaPiPEdgeLeft ? @"chevron.compact.right" : @"chevron.compact.left";
   _chevron.image = [NSImage imageWithSystemSymbolName:name accessibilityDescription:@"Show Picture in Picture"];
   self.needsLayout = YES;
 }

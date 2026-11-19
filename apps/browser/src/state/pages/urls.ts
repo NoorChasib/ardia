@@ -1,4 +1,4 @@
-import { appUrlRoute, type AppPageHost } from "@ardia/core";
+import { appUrlRoute, type AppPageHost } from "@nilla/core";
 import { focus } from "../browser/actions";
 import { useBrowser } from "../browser/store";
 import { activeTabId, resolveWindowId, viewTabIds } from "../browser/model";

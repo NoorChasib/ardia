@@ -1,6 +1,6 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
-import type { FolderInfo, SealedLogin } from "@ardia/sync";
-import { ownSyncFoldersOnly } from "@ardia/sync/src/upstreamSyncFolder.ts";
+import type { FolderInfo, SealedLogin } from "@nilla/sync";
+import { ownSyncFoldersOnly } from "@nilla/sync/src/upstreamSyncFolder.ts";
 import { originalProfile } from "../engine/domains/calling";
 import type { DialogsModule, SystemModule, WindowsHostModule, WindowsSyncModule } from "../nativeModuleTypes";
 import { base32 } from "./base32";
@@ -9,7 +9,7 @@ import { base64, grayscalePng } from "./png";
 import { qrCode, utf8 } from "./qr";
 import { syncVault, type FileCounts, type SyncContract } from "./vault";
 
-export const NATIVE_SYNC = "ArdiaWindowsSync";
+export const NATIVE_SYNC = "NillaWindowsSync";
 
 const FOLDER_NAME = "Nilla Sync";
 const QR_SCALE = 8;
@@ -36,9 +36,9 @@ function qrDataUrl(words: string[]): string {
 export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "takeFileCounts">>) | null {
   const native = TurboModuleRegistry.get<WindowsSyncModule>(NATIVE_SYNC);
   if (!native) return null;
-  const dialogs = () => TurboModuleRegistry.get<TurboModule & DialogsModule>("ArdiaDialogs");
-  const system = () => TurboModuleRegistry.get<TurboModule & SystemModule>("ArdiaSystem");
-  const host = () => TurboModuleRegistry.get<TurboModule & WindowsHostModule>("ArdiaWindowsHost");
+  const dialogs = () => TurboModuleRegistry.get<TurboModule & DialogsModule>("NillaDialogs");
+  const system = () => TurboModuleRegistry.get<TurboModule & SystemModule>("NillaSystem");
+  const host = () => TurboModuleRegistry.get<TurboModule & WindowsHostModule>("NillaWindowsHost");
   const constants: ReturnType<WindowsSyncModule["getConstants"]> = native.getConstants?.() ?? {};
   const text = (value: unknown) => (typeof value === "string" ? value : "");
   const oneDrive = text(constants.oneDriveFolder);

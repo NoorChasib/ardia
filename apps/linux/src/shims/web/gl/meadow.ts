@@ -5,7 +5,7 @@ export type MeadowPoster = { state: string; file: string; aspect: number; horizo
 export type MeadowScene = { setNight(night: boolean): void; dispose(): void };
 
 type Scene = { dispose(): void; travelTo(cycle: number): void };
-type Site = { night: number; dusk: number; sunriseFrom: number; sunriseTo: number; createMeadow: typeof import("@ardia-site/meadow/scene").createMeadow; startSunrise(hero: HTMLElement): void; resetSunrise(): void };
+type Site = { night: number; dusk: number; sunriseFrom: number; sunriseTo: number; createMeadow: typeof import("@nilla-site/meadow/scene").createMeadow; startSunrise(hero: HTMLElement): void; resetSunrise(): void };
 
 const HANDOFF_MS = 400;
 const HANDOFF_EASE = "cubic-bezier(0.37, 0, 0.63, 1)";
@@ -74,7 +74,7 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className: strin
 function heroTitle() {
   const line = (inner: HTMLElement) => element("span", "line", { display: "block" }, [inner]);
   const icon = element("span", "icon", { display: "block", width: "96px", height: "96px" });
-  const wordmark = element("span", "wordmark", { display: "block", fontSize: "64px", fontWeight: "200", letterSpacing: "-1.5px" }, [document.createTextNode("Ardia")]);
+  const wordmark = element("span", "wordmark", { display: "block", fontSize: "64px", fontWeight: "200", letterSpacing: "-1.5px" }, [document.createTextNode("Nilla")]);
   const tagline = element("span", "tagline", { display: "block", fontSize: "17px", fontWeight: "300" }, [document.createTextNode("Your new home on the internet")]);
   return element(
     "div",
@@ -86,9 +86,9 @@ function heroTitle() {
 
 async function loadSite(): Promise<Site> {
   const [{ createMeadow }, { startSunrise, resetSunrise }, cycle] = await Promise.all([
-    import("@ardia-site/meadow/scene"),
-    import("@ardia-site/meadow/clock"),
-    import("@ardia-site/meadow/cycle"),
+    import("@nilla-site/meadow/scene"),
+    import("@nilla-site/meadow/clock"),
+    import("@nilla-site/meadow/cycle"),
   ]);
   return { createMeadow, startSunrise, resetSunrise, night: cycle.CYCLE_STOPS[2] ?? cycle.SUNRISE_TO, dusk: cycle.MOON_RANGE[0], sunriseFrom: cycle.SUNRISE_FROM, sunriseTo: cycle.SUNRISE_TO };
 }

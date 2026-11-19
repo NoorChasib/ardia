@@ -18,7 +18,7 @@ type SpeechNative = {
   addListener(eventName: "onSpeech", listener: (event: SpeechEvent) => void): Subscription;
 };
 
-const native = requireOptionalNativeModule<SpeechNative>("ArdiaPhoneSpeech");
+const native = requireOptionalNativeModule<SpeechNative>("NillaPhoneSpeech");
 
 export const canUseSpeech = () => native !== null;
 

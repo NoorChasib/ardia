@@ -12,7 +12,7 @@
     <uses-feature android:name="android.hardware.location" android:required="false" />
     <application android:usesCleartextTraffic="true">
         <provider
-            android:name="com.ardia.browsing.CaptureFileProvider"
+            android:name="com.nilladigital.nilla.browsing.CaptureFileProvider"
             android:authorities="${applicationId}.browsing.captures"
             android:exported="false"
             android:grantUriPermissions="true">

@@ -8,7 +8,7 @@
 
 #import <objc/message.h>
 
-namespace ardia_host {
+namespace nilla_host {
 
 NSString *DescribeFocusWindow(NSWindow *window) {
   if (!window) return @"none";
@@ -23,12 +23,12 @@ NSString *DescribeFocusWindow(NSWindow *window) {
   if (window.canBecomeMainWindow) [flags addObject:@"canMain"];
   if (window.parentWindow) [flags addObject:[NSString stringWithFormat:@"parent#%ld", (long)window.parentWindow.windowNumber]];
   if (window.attachedSheet) [flags addObject:@"sheet"];
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
-  NSString *role = ardia_content_blocker::IsHiddenPageWindow(window) ? @" blocker-page"
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
+  NSString *role = nilla_content_blocker::IsHiddenPageWindow(window) ? @" blocker-page"
                    : !controller                                     ? @""
                    : controller.standalone || controller.stray || controller.coreWindow.internal ? @" internal"
                    : controller.root                                 ? @" browser"
-                                                                     : @" ardia";
+                                                                     : @" nilla";
   NSNumber *preventsKey = [window respondsToSelector:NSSelectorFromString(@"preventKeyWindow")] ? [window valueForKey:@"preventKeyWindow"] : nil;
   if (preventsKey.boolValue) [flags addObject:@"preventKey"];
   if (window.isVisible && !window.isOnActiveSpace) [flags addObject:@"otherSpace"];
@@ -69,8 +69,8 @@ void NoteFocusChange(NSString *what, NSWindow *window) {
 
 namespace {
 
-ardia_pointer::Trace &PointerTrace() {
-  static ardia_pointer::Trace trace;
+nilla_pointer::Trace &PointerTrace() {
+  static nilla_pointer::Trace trace;
   return trace;
 }
 
@@ -86,7 +86,7 @@ NSArray<NSString *> *PointerLines() {
   [lines addObject:[NSString stringWithFormat:@"pointer buttons 0x%lx, run loop mode %@", (unsigned long)NSEvent.pressedMouseButtons,
                                               NSRunLoop.currentRunLoop.currentMode ?: @"none"]];
   [lines addObject:[@"pointer " stringByAppendingString:@(PointerTrace().LoopLine(now).c_str())]];
-  [lines addObject:[@"pointer pip grabbed " stringByAppendingString:DescribeFocusWindow(ardia_pip::GrabbedWindow())]];
+  [lines addObject:[@"pointer pip grabbed " stringByAppendingString:DescribeFocusWindow(nilla_pip::GrabbedWindow())]];
   [lines addObject:[@"pointer modal " stringByAppendingString:DescribeFocusWindow(NSApp.modalWindow)]];
   NSArray<NSWindow *> *ordered = NSApp.orderedWindows;
   for (NSWindow *window in NSApp.windows) {
@@ -104,8 +104,8 @@ NSArray<NSString *> *PointerLines() {
 }
 
 bool IsBrowserWindow(NSWindow *window) {
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
-  return controller.root && !ardia_content_blocker::IsHiddenPageWindow(window) &&
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
+  return controller.root && !nilla_content_blocker::IsHiddenPageWindow(window) &&
          !(controller.standalone || controller.stray || controller.coreWindow.internal);
 }
 
@@ -141,7 +141,7 @@ NSArray<NSString *> *BrowserWindowLines(NSWindow *window) {
   NSString *move = PageMoveResult(window, WindowCentre(window), NO);
   NSMutableArray<NSString *> *lines = [NSMutableArray array];
   [lines addObject:[prefix stringByAppendingFormat:@"page move at centre %@", move.length ? move : @"no page view"]];
-  NSString *(^handoff)(NSWindow *) = ArdiaChromeWindowHost.focusHandoffSummaryHandler;
+  NSString *(^handoff)(NSWindow *) = NillaChromeWindowHost.focusHandoffSummaryHandler;
   if (handoff) [lines addObject:[prefix stringByAppendingString:handoff(window)]];
   return lines;
 }
@@ -189,7 +189,7 @@ void NotePointer(NSEvent *event, NSString *swallowedBy) {
   const bool down = event.type == NSEventTypeLeftMouseDown;
   if (!down && event.type != NSEventTypeLeftMouseUp) return;
   const std::string by = swallowedBy.UTF8String ?: "";
-  ardia_pointer::Trace &trace = PointerTrace();
+  nilla_pointer::Trace &trace = PointerTrace();
   if (trace.Merge(event.timestamp, down, by)) return;
   NSWindow *window = event.window;
   NSView *frameView = window.contentView.superview;
@@ -203,17 +203,17 @@ void ReportLongPressLoop(const std::string &names, bool stillOpen) {
   const NSUInteger buttons = NSEvent.pressedMouseButtons;
   NSString *joined = @(names.c_str());
   NSLog(@"[ardiacore] press loop %@ %@ after %.0fs, pressed buttons 0x%lx", joined, stillOpen ? @"still open" : @"ended",
-        ardia_pointer::kLongLoopSeconds, (unsigned long)buttons);
+        nilla_pointer::kLongLoopSeconds, (unsigned long)buttons);
   NSArray<NSString *> *loops = [joined componentsSeparatedByString:@">"];
   NSDictionary *payload = @{@"loop" : loops.firstObject ?: @"", @"inner" : loops.lastObject ?: @"", @"open" : @(stillOpen), @"buttonsHeld" : @(buttons != 0)};
-  dispatch_async(dispatch_get_main_queue(), ^{ [ArdiaEvents emit:@"engine.pressLoopLong" data:payload]; });
+  dispatch_async(dispatch_get_main_queue(), ^{ [NillaEvents emit:@"engine.pressLoopLong" data:payload]; });
 }
 
 }
 
 void BeginPressLoop(NSString *name) {
   const unsigned long generation = PointerTrace().BeginLoop(name.UTF8String ?: "unnamed", Uptime());
-  const int64_t delay = (int64_t)((ardia_pointer::kLongLoopSeconds + 0.1) * NSEC_PER_SEC);
+  const int64_t delay = (int64_t)((nilla_pointer::kLongLoopSeconds + 0.1) * NSEC_PER_SEC);
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, delay), dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
     std::string open;
     if (PointerTrace().TakeLongLoop(generation, Uptime(), &open)) ReportLongPressLoop(open, true);
@@ -236,7 +236,7 @@ NSString *FocusState() {
   for (NSWindow *window in NSApp.windows) {
     if (window == key || window == main || !(window.isVisible || window.canBecomeKeyWindow)) continue;
     NSString *line = [@"window " stringByAppendingString:DescribeFocusWindow(window)];
-    if ([ArdiaWindowController forNSWindow:window].root)
+    if ([NillaWindowController forNSWindow:window].root)
       line = [line stringByAppendingFormat:@", responder %@", DescribeFocusResponder(window.firstResponder)];
     [lines addObject:line];
   }

@@ -1,7 +1,7 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.appmodel.SystemLink
-import com.ardia.sync.WorkManagerSyncScheduler
+import com.nilladigital.nilla.appmodel.SystemLink
+import com.nilladigital.nilla.sync.WorkManagerSyncScheduler
 
 object SyncOffer {
     @Volatile

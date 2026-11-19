@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 object ScanAccess {
     data class Answer(val status: String, val canAskAgain: Boolean)

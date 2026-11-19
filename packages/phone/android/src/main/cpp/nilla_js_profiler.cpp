@@ -12,14 +12,14 @@ facebook::hermes::IHermesRootAPI *hermesRoot() {
 
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_com_ardia_phone_JsProfiler_nativeStart(JNIEnv *, jclass, jdouble hz) {
+extern "C" JNIEXPORT jboolean JNICALL Java_com_nilladigital_nilla_phone_JsProfiler_nativeStart(JNIEnv *, jclass, jdouble hz) {
   auto *root = hermesRoot();
   if (root == nullptr) return JNI_FALSE;
   root->enableSamplingProfiler(hz);
   return JNI_TRUE;
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_com_ardia_phone_JsProfiler_nativeStop(JNIEnv *env, jclass, jstring path) {
+extern "C" JNIEXPORT jboolean JNICALL Java_com_nilladigital_nilla_phone_JsProfiler_nativeStop(JNIEnv *env, jclass, jstring path) {
   auto *root = hermesRoot();
   if (root == nullptr) return JNI_FALSE;
   root->disableSamplingProfiler();

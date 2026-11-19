@@ -49,7 +49,7 @@ onIos("on iPhone Settings is a native stack whose root lists main's rows in main
     PHONE_SHARING_COPY.toggle,
     PHONE_SHARING_COPY.whatsSent,
     "Show Onboarding",
-    "About Ardia",
+    "About Nilla",
   ]);
   const links = hosts(root, (props) => typeof props.value === "string" && !("path" in props)).map((node) => node.props.value);
   expect(links).toEqual(["sync", "appearance", "siteSettings", "defaultBrowser", "searchEngine", "clearData", "whatsSent", "about"]);

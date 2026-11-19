@@ -73,7 +73,7 @@ const whole = (values: Record<string, LaunchValue>, key: string): number | null 
 };
 
 export function parseLaunchArguments(values: Record<string, LaunchValue>): LaunchArguments {
-  const isDemo = flag(values, "ArdiaDemo");
+  const isDemo = flag(values, "NillaDemo");
   return {
     isDemo,
     browseOpen: text(values, "BrowseOpen"),
@@ -94,24 +94,24 @@ export function parseLaunchArguments(values: Record<string, LaunchValue>): Launc
       .filter((step) => /^-?\d+$/.test(step))
       .map(Number),
     browseStepGapMs: (number(values, "BrowseStepGap") ?? LAUNCH_TIMING.stepGapSeconds) * 1000,
-    deckScript: text(values, "ArdiaDeck"),
-    showsOnboarding: flag(values, "ArdiaOnboarding"),
-    openSheet: text(values, "ArdiaOpenSheet"),
-    opensSettings: flag(values, "ArdiaOpenSettings"),
-    settingsPage: text(values, "ArdiaSettingsPage"),
-    restingStart: flag(values, "ArdiaRestingStart"),
-    color: text(values, "ArdiaColor"),
-    interfaceStyle: text(values, "ArdiaInterfaceStyle"),
-    colorScheme: text(values, "ArdiaColorScheme"),
-    toast: text(values, "ArdiaToast"),
-    trustedSitesSample: flag(values, "ArdiaTrustedSites"),
+    deckScript: text(values, "NillaDeck"),
+    showsOnboarding: flag(values, "NillaOnboarding"),
+    openSheet: text(values, "NillaOpenSheet"),
+    opensSettings: flag(values, "NillaOpenSettings"),
+    settingsPage: text(values, "NillaSettingsPage"),
+    restingStart: flag(values, "NillaRestingStart"),
+    color: text(values, "NillaColor"),
+    interfaceStyle: text(values, "NillaInterfaceStyle"),
+    colorScheme: text(values, "NillaColorScheme"),
+    toast: text(values, "NillaToast"),
+    trustedSitesSample: flag(values, "NillaTrustedSites"),
     pagerFreeze: isDemo ? number(values, "BrowsePagerFreeze") : null,
     pagerScript: isDemo && flag(values, "BrowsePagerScript"),
     loadFreeze: isDemo ? number(values, "BrowseLoadFreeze") : null,
-    demoScale: isDemo ? Math.max(0, whole(values, "ArdiaDemoScale") ?? 0) : 0,
-    openingCard: flag(values, "ArdiaOpeningCard"),
-    oneContainerScroll: flag(values, "ArdiaOneContainerScroll"),
-    redesign: flag(values, "ArdiaRedesign"),
+    demoScale: isDemo ? Math.max(0, whole(values, "NillaDemoScale") ?? 0) : 0,
+    openingCard: flag(values, "NillaOpeningCard"),
+    oneContainerScroll: flag(values, "NillaOneContainerScroll"),
+    redesign: flag(values, "NillaRedesign"),
   };
 }
 

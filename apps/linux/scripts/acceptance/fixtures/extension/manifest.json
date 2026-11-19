@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Ardia Acceptance Fixture",
+  "name": "Nilla Acceptance Fixture",
   "version": "1.0",
   "description": "Exercises the toolbar action, popup, side panel and omnibox keyword.",
   "icons": { "16": "icon.png", "48": "icon.png", "128": "icon.png" },
@@ -8,5 +8,5 @@
   "side_panel": { "default_path": "panel.html" },
   "permissions": ["sidePanel", "tabs"],
   "background": { "service_worker": "background.js" },
-  "omnibox": { "keyword": "ardiafixture" }
+  "omnibox": { "keyword": "nillafixture" }
 }

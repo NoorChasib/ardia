@@ -1,7 +1,7 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.sync.BookmarkItem
-import com.ardia.sync.SyncSnapshot
+import com.nilladigital.nilla.sync.BookmarkItem
+import com.nilladigital.nilla.sync.SyncSnapshot
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

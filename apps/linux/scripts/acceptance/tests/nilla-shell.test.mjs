@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import vm from "node:vm";
 import { after, before, describe, it } from "node:test";
-import { launchArdia, launchArguments, launchEnvironment } from "../lib/ardia.mjs";
+import { launchNilla, launchArguments, launchEnvironment } from "../lib/nilla.mjs";
 import { startMockCdp } from "./mock-cdp.mjs";
 
 function fakeShell({ windowId, startup = false, utility = null }) {
@@ -35,9 +35,9 @@ function fakeShell({ windowId, startup = false, utility = null }) {
     },
   };
   const context = vm.createContext({
-    ardiaLinux: { store: { getState: () => state }, emitCommand: (event) => commands.push(event) },
+    nillaLinux: { store: { getState: () => state }, emitCommand: (event) => commands.push(event) },
     __ardiaHost: host,
-    document: { querySelector: (selector) => (selector === "[data-ardia-linux-window]" ? {} : null), body: { innerText: `window ${windowId}` } },
+    document: { querySelector: (selector) => (selector === "[data-nilla-linux-window]" ? {} : null), body: { innerText: `window ${windowId}` } },
     globalThis: undefined,
     JSON,
     Promise,
@@ -56,7 +56,7 @@ async function evaluateIn(context, expression) {
   }
 }
 
-describe("Ardia launch plumbing and shell driver against a mock host", () => {
+describe("Nilla launch plumbing and shell driver against a mock host", () => {
   let mock;
   let scratch;
   const shells = {
@@ -67,13 +67,13 @@ describe("Ardia launch plumbing and shell driver against a mock host", () => {
   let sleeper;
 
   before(async () => {
-    scratch = await mkdtemp(join(tmpdir(), "ardia-acceptance-mock-"));
+    scratch = await mkdtemp(join(tmpdir(), "nilla-acceptance-mock-"));
     mock = await startMockCdp({
       targets: [
         { id: "shell-second", type: "page", url: "chrome://ardia/index.html" },
         { id: "shell-main", type: "page", url: "chrome://ardia/index.html" },
         { id: "shell-settings", type: "page", url: "chrome://ardia/index.html" },
-        { id: "page-1", type: "page", url: "http://plain.ardia.test/page/1" },
+        { id: "page-1", type: "page", url: "http://plain.nilla.test/page/1" },
       ],
       handlers: {
         "Runtime.evaluate": (params, { targetId }) => {
@@ -113,7 +113,7 @@ describe("Ardia launch plumbing and shell driver against a mock host", () => {
   });
 
   it("launches, finds shells by bootstrap and prefers the startup window", async () => {
-    const app = await launchArdia({ executable: "/bin/true", scratch, spawnImpl: fakeSpawn(), startTimeout: 5000 });
+    const app = await launchNilla({ executable: "/bin/true", scratch, spawnImpl: fakeSpawn(), startTimeout: 5000 });
     try {
       const found = await app.shells();
       assert.deepEqual(found.map((s) => s.windowId).sort(), ["main", "second", "settings"]);
@@ -122,8 +122,8 @@ describe("Ardia launch plumbing and shell driver against a mock host", () => {
       const second = await app.shell("second", { timeout: 3000 });
       assert.equal(second.windowId, "second");
       assert.deepEqual(await main.windowIds(), ["main", "second"]);
-      const id = await main.newTab("http://plain.ardia.test/page/2");
-      const tab = await main.waitTabUrl(id, (url) => url === "http://plain.ardia.test/page/2", { timeout: 2000 });
+      const id = await main.newTab("http://plain.nilla.test/page/2");
+      const tab = await main.waitTabUrl(id, (url) => url === "http://plain.nilla.test/page/2", { timeout: 2000 });
       assert.equal(tab.windowId, "main");
       assert.equal(await main.activeTabId(), "t1");
       await main.command("findNext");
@@ -149,8 +149,8 @@ describe("Ardia launch plumbing and shell driver against a mock host", () => {
       seen.push([executable, args]);
       return fakeSpawn(false)(executable, args, options);
     };
-    await assert.rejects(launchArdia({ executable: "/opt/ardia/bin/ardia", scratch, spawnImpl: recording, coreDumps: false, startTimeout: 10000 }), /exited/);
-    await assert.rejects(launchArdia({ executable: "/opt/ardia/bin/ardia", scratch, spawnImpl: recording, startTimeout: 10000 }), /exited/);
+    await assert.rejects(launchNilla({ executable: "/opt/ardia/bin/ardia", scratch, spawnImpl: recording, coreDumps: false, startTimeout: 10000 }), /exited/);
+    await assert.rejects(launchNilla({ executable: "/opt/ardia/bin/ardia", scratch, spawnImpl: recording, startTimeout: 10000 }), /exited/);
     assert.equal(seen[0][0], "/bin/sh");
     assert.deepEqual(seen[0][1].slice(0, 3), ["-c", 'ulimit -c 0; exec "$0" "$@"', "/opt/ardia/bin/ardia"]);
     assert.ok(seen[0][1].includes(`--user-data-dir=${scratch}`));
@@ -158,6 +158,6 @@ describe("Ardia launch plumbing and shell driver against a mock host", () => {
   });
 
   it("fails fast when the browser exits before DevTools starts", async () => {
-    await assert.rejects(launchArdia({ executable: "/bin/true", scratch, spawnImpl: fakeSpawn(false), startTimeout: 10000 }), /exited/);
+    await assert.rejects(launchNilla({ executable: "/bin/true", scratch, spawnImpl: fakeSpawn(false), startTimeout: 10000 }), /exited/);
   });
 });

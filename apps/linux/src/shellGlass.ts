@@ -7,10 +7,10 @@ import { intersection, type Rect } from "./inputRegions.ts";
 export const GlassOptIn = createContext(false);
 export const GlassInside = createContext(false);
 
-export const GLASS_ATTRIBUTE = "data-ardia-glass";
-export const GLASS_ID_ATTRIBUTE = "data-ardia-glass-id";
-export const VISUAL_EFFECT_ATTRIBUTE = "data-ardia-visual-effect";
-export const GLASS_DIAGNOSTIC_CLASS = "ardia-glass-diagnostic";
+export const GLASS_ATTRIBUTE = "data-nilla-glass";
+export const GLASS_ID_ATTRIBUTE = "data-nilla-glass-id";
+export const VISUAL_EFFECT_ATTRIBUTE = "data-nilla-visual-effect";
+export const GLASS_DIAGNOSTIC_CLASS = "nilla-glass-diagnostic";
 export const GLASS_TINT_SHARE = 0.85;
 export const GLASS_FILL_PROPERTY = "--ardia-glass-fill";
 export const GLASS_BACKDROP = `blur(${GLASS_BLUR}px) saturate(180%)`;
@@ -101,7 +101,7 @@ function afterimage(element: Element, geometry: GlassGeometry) {
     zIndex: "2147483000",
   });
   ghost.setAttribute("aria-hidden", "true");
-  ghost.dataset.ardiaGlassAfterimage = "";
+  ghost.dataset.nillaGlassAfterimage = "";
   document.body.appendChild(ghost);
   return () => ghost.remove();
 }

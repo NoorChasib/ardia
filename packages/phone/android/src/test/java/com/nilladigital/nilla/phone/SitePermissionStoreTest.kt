@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
-import com.ardia.browser.SiteOrigin
-import com.ardia.browser.SitePermission
+import com.nilladigital.nilla.SiteOrigin
+import com.nilladigital.nilla.SitePermission
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

@@ -1,13 +1,13 @@
-package com.ardia.browser.android.system
+package com.nilladigital.nilla.android.system
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import com.ardia.browser.BrowserUrl
-import com.ardia.sync.SyncSnapshot
-import com.ardia.sync.SyncState
-import com.ardia.sync.SyncedDevice
-import com.ardia.sync.SyncedProfile
+import com.nilladigital.nilla.BrowserUrl
+import com.nilladigital.nilla.sync.SyncSnapshot
+import com.nilladigital.nilla.sync.SyncState
+import com.nilladigital.nilla.sync.SyncedDevice
+import com.nilladigital.nilla.sync.SyncedProfile
 import java.io.ByteArrayOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
@@ -62,9 +62,9 @@ class SystemSnapshotExporter(private val context: Context, private val store: Sy
         if (!saved) return
         last = snapshot
         if (!publishes) return
-        ArdiaWidgets.refreshMacTabs(context)
-        if (snapshot.look != previous.look) ArdiaWidgets.refreshSearch(context)
-        if (fetchFavicons(snapshot) > 0) ArdiaWidgets.refreshMacTabs(context)
+        NillaWidgets.refreshMacTabs(context)
+        if (snapshot.look != previous.look) NillaWidgets.refreshSearch(context)
+        if (fetchFavicons(snapshot) > 0) NillaWidgets.refreshMacTabs(context)
     }
 
     private suspend fun fetchFavicons(snapshot: SystemSnapshot): Int = withContext(Dispatchers.IO) {

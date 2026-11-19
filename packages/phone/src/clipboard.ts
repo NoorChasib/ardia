@@ -4,7 +4,7 @@ export type ClipboardOffer = "link" | "text";
 
 type ClipboardNative = { offer(): Promise<ClipboardOffer | null> };
 
-const native = requireOptionalNativeModule<ClipboardNative>("ArdiaPhoneClipboard");
+const native = requireOptionalNativeModule<ClipboardNative>("NillaPhoneClipboard");
 
 export const clipboard = {
   offer: async (): Promise<ClipboardOffer | null> => (native ? native.offer() : null),

@@ -1,4 +1,4 @@
-package com.ardia.sync.core
+package com.nilladigital.nilla.sync.core
 
 class SyncVault(val storage: SyncStorage, val keys: SyncKeys) {
     data class File(val id: String, val payload: ByteArray)

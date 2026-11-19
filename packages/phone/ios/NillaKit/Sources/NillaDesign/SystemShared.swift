@@ -1,5 +1,5 @@
-import ArdiaBrowser
-import ArdiaSync
+import NillaBrowser
+import NillaSync
 import Foundation
 
 public enum SystemLink: Equatable, Sendable {

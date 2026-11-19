@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -13,7 +13,7 @@ import expo.modules.kotlin.views.ExpoView
 
 class AccessibilityModule : Module() {
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneAccessibility")
+        Name("NillaPhoneAccessibility")
 
         View(ScrollActionsView::class) {
             Name("ScrollActions")

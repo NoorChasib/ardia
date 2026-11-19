@@ -1,6 +1,6 @@
 import asyncio
 
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.errors import BrowseError
 
 CLOSE_TIMEOUT = 3.0
 GONE_WAIT = 2.0
@@ -23,7 +23,7 @@ async def settle_then_cancel(task):
 
 
 async def create(state, owned: list[str]) -> str:
-    from ardia_cli.browse.errors import Gated
+    from nilla_browser_cli.browse.errors import Gated
 
     registry = state.registry
     slot = registry.reserve_temporary(state.instance)
@@ -34,7 +34,7 @@ async def create(state, owned: list[str]) -> str:
         except BaseException as error:
             give_back(state, slot)
             if isinstance(error, Gated):
-                raise BrowseError(f"Ardia's policy refused to open a tab for the ardia command ({error.refusal})") from None
+                raise BrowseError(f"Nilla's policy refused to open a tab for the nilla-browser command ({error.refusal})") from None
             raise
         target_id = result["targetId"]
         try:

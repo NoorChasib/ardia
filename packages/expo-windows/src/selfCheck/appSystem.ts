@@ -1,14 +1,14 @@
-import type { DocumentsNative, SystemSignalsNative, UpdaterNative } from "@ardia/shell";
+import type { DocumentsNative, SystemSignalsNative, UpdaterNative } from "@nilla/shell";
 import { TurboModuleRegistry } from "react-native";
 import { requireNativeModule } from "../modules";
 import type { AppModule, SystemModule, WindowsUpdateConstants, WindowsUpdateModule } from "../nativeModuleTypes";
 import { readBuild } from "../updater/manifest";
 import { expectTrue, type Check } from "./check";
 
-const app = () => requireNativeModule<AppModule>("ArdiaApp");
-const system = () => requireNativeModule<SystemModule>("ArdiaSystem");
-const signals = () => requireNativeModule<SystemSignalsNative>("ArdiaSystemSignals");
-const documents = () => requireNativeModule<DocumentsNative>("ArdiaDocuments");
+const app = () => requireNativeModule<AppModule>("NillaApp");
+const system = () => requireNativeModule<SystemModule>("NillaSystem");
+const signals = () => requireNativeModule<SystemSignalsNative>("NillaSystemSignals");
+const documents = () => requireNativeModule<DocumentsNative>("NillaDocuments");
 
 const FILE_SETTLE_MS = 5000;
 const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -25,7 +25,7 @@ async function untilFileExists(path: string, wanted: boolean) {
 const ARCHES = ["x64", "arm64"];
 
 const buildFile = () => {
-  const constants = TurboModuleRegistry.get<WindowsUpdateModule>("ArdiaWindowsUpdate")?.getConstants?.();
+  const constants = TurboModuleRegistry.get<WindowsUpdateModule>("NillaWindowsUpdate")?.getConstants?.();
   return typeof constants?.buildFile === "string" ? readBuild(constants.buildFile) : null;
 };
 
@@ -39,7 +39,7 @@ const dataDirectory = () => {
 
 export const checks: Check[] = [
   {
-    name: "ArdiaApp.launchConfig reads the CI instance",
+    name: "NillaApp.launchConfig reads the CI instance",
     run() {
       const config = app().launchConfig();
       expectTrue(typeof config.configDirectory === "string" && config.configDirectory.length > 0, "configDirectory is empty");
@@ -55,7 +55,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaApp.systemInfo is sane",
+    name: "NillaApp.systemInfo is sane",
     run() {
       const info = app().systemInfo();
       expectTrue(typeof info.osVersion === "string" && info.osVersion.length > 0 && info.osVersion !== "0.0.0", `osVersion is ${JSON.stringify(info.osVersion)}`);
@@ -69,19 +69,19 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaApp.systemInfo names this build, its CPU and Windows for telemetry",
+    name: "NillaApp.systemInfo names this build, its CPU and Windows for telemetry",
     run() {
       const info = app().systemInfo();
       expectTrue(ARCHES.includes(info.arch), `arch is ${JSON.stringify(info.arch)}`);
       expectTrue(/^\d+\.\d+\.\d+$/.test(info.osVersion), `osVersion is ${JSON.stringify(info.osVersion)}`);
       const stamped = buildFile();
       if (!stamped) return;
-      expectTrue(info.appVersion === stamped.version, `appVersion is ${JSON.stringify(info.appVersion)}, Ardia.build.json says ${stamped.version}`);
-      expectTrue(info.appBuild === String(stamped.build), `appBuild is ${JSON.stringify(info.appBuild)}, Ardia.build.json says ${stamped.build}`);
+      expectTrue(info.appVersion === stamped.version, `appVersion is ${JSON.stringify(info.appVersion)}, Nilla.build.json says ${stamped.version}`);
+      expectTrue(info.appBuild === String(stamped.build), `appBuild is ${JSON.stringify(info.appBuild)}, Nilla.build.json says ${stamped.build}`);
     },
   },
   {
-    name: "ArdiaApp.hardwareInfo and diagnosticsSample answer with numbers",
+    name: "NillaApp.hardwareInfo and diagnosticsSample answer with numbers",
     async run() {
       const hardware = await app().hardwareInfo();
       expectTrue(typeof hardware.chip === "string", `chip is ${JSON.stringify(hardware.chip)}`);
@@ -95,7 +95,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaApp answers the inert calls",
+    name: "NillaApp answers the inert calls",
     async run() {
       const reports = await app().crashReports(0);
       expectTrue(Array.isArray(reports) && reports.length === 0, `crashReports is ${JSON.stringify(reports)}`);
@@ -107,7 +107,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaSystem.fileExists sees the data directory",
+    name: "NillaSystem.fileExists sees the data directory",
     run() {
       expectTrue(system().backgroundInstance === true, `backgroundInstance is ${JSON.stringify(system().backgroundInstance)} under ARDIA_BACKGROUND=1`);
       const directory = dataDirectory();
@@ -118,7 +118,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaSystem.launchAtLoginStatus and isDefaultBrowser answer",
+    name: "NillaSystem.launchAtLoginStatus and isDefaultBrowser answer",
     async run() {
       const status = await system().launchAtLoginStatus();
       expectTrue(["enabled", "requiresApproval", "notRegistered", "notFound"].includes(status), `launchAtLoginStatus is ${JSON.stringify(status)}`);
@@ -128,7 +128,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaSystem.defaultBrowserState names Ardia's ProgID and agrees with isDefaultBrowser",
+    name: "NillaSystem.defaultBrowserState names Nilla's ProgID and agrees with isDefaultBrowser",
     async run() {
       const state = system().defaultBrowserState();
       expectTrue(state.progId === "ArdiaHTM", `progId is ${JSON.stringify(state.progId)}`);
@@ -136,12 +136,12 @@ export const checks: Check[] = [
       for (const scheme of ["http", "https"] as const) expectTrue(state[scheme] === null || typeof state[scheme] === "string", `${scheme} is ${JSON.stringify(state[scheme])}`);
       expectTrue(state.command === null || typeof state.command === "string", `command is ${JSON.stringify(state.command)}`);
       expectTrue(state.page.startsWith("ms-settings:defaultapps"), `page is ${JSON.stringify(state.page)}`);
-      expectTrue(!state.isDefault || state.registeredHere, "isDefault without the ProgID pointing at this Ardia.exe");
+      expectTrue(!state.isDefault || state.registeredHere, "isDefault without the ProgID pointing at this Nilla.exe");
       expectTrue((await system().isDefaultBrowser()) === state.isDefault, "isDefaultBrowser disagrees with defaultBrowserState");
     },
   },
   {
-    name: "ArdiaSystem.fileIcon returns a PNG data URL or null",
+    name: "NillaSystem.fileIcon returns a PNG data URL or null",
     async run() {
       const directory = dataDirectory();
       for (const path of [directory, `${directory}\\missing.txt`]) {
@@ -151,7 +151,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaSystem file actions answer without opening anything",
+    name: "NillaSystem file actions answer without opening anything",
     async run() {
       const missing = `${dataDirectory()}\\missing-${Date.now().toString(36)}`;
       expectTrue((await system().openFile(missing)) === false, "openFile of a missing file is not false");
@@ -162,7 +162,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaSystem moves a file to the Recycle Bin",
+    name: "NillaSystem moves a file to the Recycle Bin",
     async run() {
       const name = `self-check-trash-${Date.now().toString(36)}.txt`;
       const path = `${dataDirectory()}\\${name}`;
@@ -173,9 +173,9 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaWindowsUpdate knows this build and refuses other addresses",
+    name: "NillaWindowsUpdate knows this build and refuses other addresses",
     async run() {
-      const update = requireNativeModule<Omit<WindowsUpdateModule, "getConstants"> & WindowsUpdateConstants & { feed?: unknown; publishedUnder?: unknown }>("ArdiaWindowsUpdate");
+      const update = requireNativeModule<Omit<WindowsUpdateModule, "getConstants"> & WindowsUpdateConstants & { feed?: unknown; publishedUnder?: unknown }>("NillaWindowsUpdate");
       expectTrue(update.cpu === "x64" || update.cpu === "arm64", `cpu is ${JSON.stringify(update.cpu)}`);
       expectTrue(typeof update.installed === "boolean", `installed is ${JSON.stringify(update.installed)}`);
       expectTrue(typeof update.buildFile === "string", `buildFile is ${JSON.stringify(update.buildFile)}`);
@@ -190,12 +190,12 @@ export const checks: Check[] = [
       };
       await refused("a feed from another site", update.fetchText("https://example.com/windows-update.json"));
       await refused("a feed that climbs out of the releases", update.fetchText(`${published}../../../../other/repo/releases/download/x/windows-update.json`));
-      await refused("an installer from another site", update.download("https://example.com/Ardia-Setup.exe", "a".repeat(64), 10));
-      await refused("an installer from a host that only starts like the trusted one", update.download(`${published.replace(/^(https?:\/\/[^/]+)/, "$1.neighbour.example")}Ardia-Setup.exe`, "a".repeat(64), 10));
+      await refused("an installer from another site", update.download("https://example.com/Nilla-Setup.exe", "a".repeat(64), 10));
+      await refused("an installer from a host that only starts like the trusted one", update.download(`${published.replace(/^(https?:\/\/[^/]+)/, "$1.neighbour.example")}Nilla-Setup.exe`, "a".repeat(64), 10));
       await refused("a feed other than the one set up", update.fetchText(`${published}another-feed.json`));
-      await refused("an installer with no SHA-256", update.download(`${published}windows-alpha/Ardia-Setup-x64.exe`, "", 10));
-      await refused("an installer with no size", update.download(`${published}windows-alpha/Ardia-Setup-x64.exe`, "a".repeat(64), 0));
-      const state = await requireNativeModule<Pick<UpdaterNative, "updaterState">>("ArdiaUpdater").updaterState();
+      await refused("an installer with no SHA-256", update.download(`${published}windows-alpha/Nilla-Setup-x64.exe`, "", 10));
+      await refused("an installer with no size", update.download(`${published}windows-alpha/Nilla-Setup-x64.exe`, "a".repeat(64), 0));
+      const state = await requireNativeModule<Pick<UpdaterNative, "updaterState">>("NillaUpdater").updaterState();
       expectTrue(state.available === true, "the updater says it is not built in");
       expectTrue(state.configured === (updatesSetUp && update.installed === true && typeof update.buildFile === "string" && update.buildFile.length > 0), `configured is ${String(state.configured)}`);
       if (!updatesSetUp) {
@@ -205,7 +205,7 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "ArdiaSystemSignals posts sleep and wake",
+    name: "NillaSystemSignals posts sleep and wake",
     async run() {
       const seen: string[] = [];
       const subscription = signals().addListener("onSystemSignal", (signal) => void seen.push(signal.type));

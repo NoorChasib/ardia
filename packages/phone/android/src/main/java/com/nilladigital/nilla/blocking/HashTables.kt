@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 internal object HostHash {
     private const val OFFSET = -0x340d631b7bdddcdbL

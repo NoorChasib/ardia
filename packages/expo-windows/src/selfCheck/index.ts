@@ -1,4 +1,4 @@
-import type { AppNative } from "@ardia/shell";
+import type { AppNative } from "@nilla/shell";
 import { requireNativeModule } from "../modules";
 import type { Check } from "./check";
 import { checks as appSystemChecks } from "./appSystem";
@@ -53,16 +53,16 @@ const message = (error: unknown) => (error instanceof Error ? error.message : St
 export async function runSelfCheck() {
   let passed = 0;
   let failed = 0;
-  const only = requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().test.selfCheckOnly;
+  const only = requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().test.selfCheckOnly;
   for (const check of stageChecks() ?? [...areas.flat(), ...registeredChecks()].filter((each) => !only || each.name.startsWith(only))) {
     try {
       await check.run();
       passed += 1;
-      console.info(`[ardia windows] self-check pass: ${check.name}`);
+      console.info(`[nilla windows] self-check pass: ${check.name}`);
     } catch (error) {
       failed += 1;
-      console.info(`[ardia windows] self-check FAIL: ${check.name}: ${message(error)}`);
+      console.info(`[nilla windows] self-check FAIL: ${check.name}: ${message(error)}`);
     }
   }
-  console.info(`[ardia windows] self-check done: ${passed} passed, ${failed} failed`);
+  console.info(`[nilla windows] self-check done: ${passed} passed, ${failed} failed`);
 }

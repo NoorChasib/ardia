@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -13,7 +13,7 @@ class DownloadsModule : Module() {
     private val context: Context get() = appContext.reactContext ?: throw CodedException("ERR_NO_CONTEXT", "The app context is gone", null)
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneDownloads")
+        Name("NillaPhoneDownloads")
 
         Events("onDownloadEvent")
 

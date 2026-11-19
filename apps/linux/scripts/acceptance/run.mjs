@@ -2,7 +2,7 @@ import { constants } from "node:fs";
 import { access, mkdir, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { closeAllApps, killAllAppsNow } from "./lib/ardia.mjs";
+import { closeAllApps, killAllAppsNow } from "./lib/nilla.mjs";
 import { parseArgs, USAGE, UsageError } from "./lib/cli.mjs";
 import { startFixtures } from "./lib/fixtures.mjs";
 import { buildReport, exitCode, formatLine } from "./lib/report.mjs";
@@ -51,12 +51,12 @@ async function main() {
     return 2;
   }
   const log = options.quiet ? () => {} : (line) => process.stderr.write(`${line}\n`);
-  const resultsDir = options.results ?? (await mkdtemp(join(tmpdir(), "ardia-acceptance-")));
+  const resultsDir = options.results ?? (await mkdtemp(join(tmpdir(), "nilla-acceptance-")));
   await mkdir(resultsDir, { recursive: true });
   const scratchRoot = join(resultsDir, "scratch");
   await mkdir(scratchRoot, { recursive: true });
   const startedAt = new Date().toISOString();
-  log(`Ardia acceptance: ${scenarios.length} scenarios, evidence in ${resultsDir}`);
+  log(`Nilla acceptance: ${scenarios.length} scenarios, evidence in ${resultsDir}`);
   const tls = await generateTls(join(resultsDir, "tls"));
   const fixtures = await startFixtures({ tls });
   let results = [];

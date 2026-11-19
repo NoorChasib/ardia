@@ -6,7 +6,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { test } from "node:test";
 import { cleanupActiveScenarios, createContext, runScenario, ScenarioAbort } from "../lib/scenario.mjs";
 
-const scratchRoot = () => mkdtemp(join(tmpdir(), "ardia-lifecycle-"));
+const scratchRoot = () => mkdtemp(join(tmpdir(), "nilla-lifecycle-"));
 
 test("a scenario past its deadline runs its deferred stops and refuses to launch, check or defer more", async () => {
   const root = await scratchRoot();

@@ -1,4 +1,4 @@
-import type { WindowsNative } from "@ardia/shell";
+import type { WindowsNative } from "@nilla/shell";
 import { engineAvailable, hostCall, onEngineTopic } from "../engine/host";
 import { requireNativeModule } from "../modules";
 import { httpPagesPort } from "./engineBackForward";
@@ -15,7 +15,7 @@ const TITLE = "sleep page";
 export const LINKS_TITLE = "links page";
 const OPENS_LIVE_PAGE = 100;
 const EVENT_MS = 8000;
-const POPUP_NAME = "ardia-sleep-check-popup";
+const POPUP_NAME = "nilla-sleep-check-popup";
 const LOAD_MS = 20000;
 const DEVTOOLS_GONE_MS = 3000;
 const POLL_MS = 100;
@@ -30,7 +30,7 @@ type Listed = Pick<ListedTab, "key" | "title"> & { loading?: boolean; discarded?
 export const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export const firstWindow = async () => {
-  const ids = await requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows").windowIds();
+  const ids = await requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows").windowIds();
   expectTrue(ids.length > 0, "no window is open to host a page");
   return ids[0]!;
 };
@@ -56,7 +56,7 @@ const CALL_MS = 15000;
 
 export async function timedCall<Result = unknown>(verb: string, args: Record<string, unknown> = {}, windowId = ""): Promise<Result> {
   const what = `${verb} ${String(args.key ?? "")}`.trim();
-  console.info(`[ardia windows] self-check step: ${what}`);
+  console.info(`[nilla windows] self-check step: ${what}`);
   let timer: ReturnType<typeof setTimeout> | undefined;
   const late = new Promise<never>((_, reject) => {
     timer = setTimeout(() => reject(new Error(`${what} gave no answer within ${CALL_MS} ms`)), CALL_MS);
@@ -232,7 +232,7 @@ const sleepChecks: Check[] = [
           expectEqual(tab.fromClick, true, "the woken page's link script saw the click (fromClick)");
           const ask = heard("tab", (event) => event.key === page && event.name === "externalApp", "an app-link ask from a click");
           await click(page!, 110, 150);
-          expectEqual((await ask).data?.url, "ardia-sleep-check-link:woke", "the app-link ask");
+          expectEqual((await ask).data?.url, "nilla-sleep-check-link:woke", "the app-link ask");
         },
         "links",
         LINKS_TITLE,

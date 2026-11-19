@@ -1,7 +1,7 @@
 import json
 
-from ardia_cli.browse.commands import Result, command, evaluate_main, need, parse
-from ardia_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse.commands import Result, command, evaluate_main, need, parse
+from nilla_browser_cli.browse.errors import BrowseError, Usage
 
 HOOK = r"""
 (() => {
@@ -141,7 +141,7 @@ HOOK = r"""
 async def react_call(ctx, expression: str):
     page = await ctx.state.page()
     if "react" not in page.init_scripts.values():
-        raise BrowseError("React commands need the hook installed before the page loads: `ardia browse open --enable react-devtools <url>`")
+        raise BrowseError("React commands need the hook installed before the page loads: `nilla-browser browse open --enable react-devtools <url>`")
     ready = await evaluate_main(page, "!!(window.__ardiaReact && window.__ardiaReact.ready())")
     if not ready:
         raise BrowseError("No React root has committed in this page yet (is it a React app, and was it loaded after `--enable react-devtools`?)")
@@ -168,7 +168,7 @@ async def cmd_react(ctx, argv):
         need(args, 2, "react inspect <id>")
         data = await react_call(ctx, f"window.__ardiaReact.inspect({int(args[1])})")
         if data is None:
-            raise BrowseError(f"No fiber {args[1]}; run `ardia browse react tree` for current ids")
+            raise BrowseError(f"No fiber {args[1]}; run `nilla-browser browse react tree` for current ids")
         return Result(data, json.dumps(data, ensure_ascii=False, indent=2), page_content=True)
     if action == "renders":
         need(args, 2, "react renders start|stop")
@@ -180,7 +180,7 @@ async def cmd_react(ctx, argv):
             lines = [f"commits: {data['commits']}  duration: {data['durationMs']:.0f}ms"]
             lines += [f"{row['count']:>5}  {row['name']}" for row in data["components"][:50]]
             return Result(data, "\n".join(lines))
-        raise Usage("Usage: ardia browse react renders start|stop")
+        raise Usage("Usage: nilla browse react renders start|stop")
     if action == "suspense":
         rows = await react_call(ctx, "window.__ardiaReact.suspense()")
         if options.get("only_dynamic"):

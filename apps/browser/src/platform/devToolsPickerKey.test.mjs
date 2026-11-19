@@ -14,7 +14,7 @@ test("a reserved key goes to the main menu only after a focused Developer Tools 
   const hook = bodyOf(read("ArdiaWindowController.mm"), "- (BOOL)window:(ArdiaCoreWindow *)window preHandleKeyEvent:");
   const keeps = hook.indexOf("KeepsReservedKeyInDevTools(window.window, event)");
   const refusal = hook.indexOf("return NO;");
-  const menu = hook.indexOf("ArdiaPerformReservedKey(event)");
+  const menu = hook.indexOf("NillaPerformReservedKey(event)");
   assert.ok(keeps >= 0, "preHandleKeyEvent must ask KeepsReservedKeyInDevTools");
   assert.ok(keeps < refusal && refusal < menu, "a key Developer Tools keeps is refused before the main menu can run it");
 });

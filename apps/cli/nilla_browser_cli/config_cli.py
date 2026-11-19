@@ -7,16 +7,16 @@ import sys
 import textwrap
 from pathlib import Path
 
-from ardia_cli import config_files as files
-from ardia_cli import endpoint
-from ardia_cli.config_files import ConfigError, Places
-from ardia_cli.printable import complain, say
-from ardia_cli.schema_check import Problem, describe, did_you_mean, ecma_pattern, format_path, show, validate
+from nilla_browser_cli import config_files as files
+from nilla_browser_cli import endpoint
+from nilla_browser_cli.config_files import ConfigError, Places
+from nilla_browser_cli.printable import complain, say
+from nilla_browser_cli.schema_check import Problem, describe, did_you_mean, ecma_pattern, format_path, show, validate
 
 CONFIG_DESCRIPTION = """\
-Set Ardia up from {folder}/config.json, dotfiles style. Ardia reads the file at launch and whenever it
-changes, and never writes it; these commands edit it for you and check it against the schema Ardia writes.
-None of them need Ardia running.
+Set Nilla up from {folder}/config.json, dotfiles style. Nilla reads the file at launch and whenever it
+changes, and never writes it; these commands edit it for you and check it against the schema Nilla writes.
+None of them need Nilla running.
 
 The config folder is {folder}, or <data dir>/config with --data-dir or $ARDIA_DATA_DIR. Keys, allowed
 values and defaults come from config.schema.json in the config folder, else <data dir>/config-schema/ (the named
@@ -27,7 +27,7 @@ Commands:
   init               create the folder, config.json and the schemas (never overwrites)
   get [KEY]          print a setting from the file, or the whole file
   set KEY VALUE      check VALUE and write it (KEY is a setting or shortcuts.<command id>)
-  unset KEY          take a key out of the file (Ardia keeps its current value)
+  unset KEY          take a key out of the file (Nilla keeps its current value)
   list               every setting: allowed values, default and the file's value
   edit               open config.json in $VISUAL, $EDITOR or {fallback}, then check it
   check              check config.json and the theme it names
@@ -37,21 +37,21 @@ Exit status: 0 done, 1 a check failed or the input is wrong.
 THEME_DESCRIPTION = """\
 Themes live in <config folder>/themes/NAME.json: a "dark" and a "light" block of colour roles, and "type"
 (fonts, text sizes, weights), "metrics" (row heights, sidebar width, corner radii), "layout" (sidebar parts to
-hide or move) and "icons" (SF Symbols to swap). Every key is optional; a block left out is Ardia's own look.
-config.json's "theme" picks one; saving the active theme restyles Ardia at once.
+hide or move) and "icons" (SF Symbols to swap). Every key is optional; a block left out is Nilla's own look.
+config.json's "theme" picks one; saving the active theme restyles Nilla at once.
 
 Colours: #RGB, #RRGGBB, #RRGGBBAA, rgb(r,g,b) or rgba(r,g,b,a) (r, g, b 0-255, a 0-1). grain and the ...Opacity
 roles take numbers 0-1, the ...Radius roles 0-100, tabSelectedBorder a list of two colours. Ranges and defaults
-for the other blocks are in theme.schema.json; ardia theme check reports each bad key in Ardia's words.
+for the other blocks are in theme.schema.json; nilla theme check reports each bad key in Nilla's words.
 
 Commands:
   new NAME [--from THEME]   write themes/NAME.json with every role and look key (never overwrites)
-  use NAME|none             make NAME the active theme, or go back to Ardia's own
+  use NAME|none             make NAME the active theme, or go back to Nilla's own
   list                      the themes, the active one marked
   check [NAME|FILE]         check a theme (default: the active one)
   get [KEY]                 print a key from the theme, or the whole file
-  set KEY VALUE             check VALUE and write it; a running Ardia restyles at once
-  unset KEY                 take a key out of the theme (Ardia's own value comes back)
+  set KEY VALUE             check VALUE and write it; a running Nilla restyles at once
+  unset KEY                 take a key out of the theme (Nilla's own value comes back)
 
 get, set and unset work on the active theme, or on --theme NAME. KEY is a dotted path: dark.accent,
 type.sizes.body, metrics.radius.row, layout.hide, icons.chevron.down (after icons. it's one SF Symbol name).
@@ -61,32 +61,32 @@ Exit status: 0 done, 1 a check failed or the input is wrong.
 """
 SET_DESCRIPTION = """\
 Write one setting to config.json. VALUE is parsed as JSON, else taken as a string, and checked against the schema
-first. The file is rewritten even when it already holds the value, so a running Ardia applies it again.
+first. The file is rewritten even when it already holds the value, so a running Nilla applies it again.
 
 Examples:
-  ardia config set tabLayout top
-  ardia config set glassTintAmount 0.5
-  ardia config set shortcuts.newTab cmd+shift+n
-  ardia config set shortcuts.reopenClosedTab ''
+  nilla-browser config set tabLayout top
+  nilla-browser config set glassTintAmount 0.5
+  nilla-browser config set shortcuts.newTab cmd+shift+n
+  nilla-browser config set shortcuts.reopenClosedTab ''
 """
 THEME_SET_DESCRIPTION = """\
-Write one key to a theme (default: the active one); a running Ardia restyles at once. KEY is a dotted path whose
+Write one key to a theme (default: the active one); a running Nilla restyles at once. KEY is a dotted path whose
 first part is dark, light, type, metrics, layout or icons. Under icons, everything after icons. is one SF Symbol
 name (icons.chevron.down). VALUE is parsed as JSON, else taken as a string, and checked against theme.schema.json
 first; a value that fails leaves the file as it was. The file is rewritten even when it already holds the value, so
-a running Ardia applies it again. With no active theme and no --theme, it creates themes/custom.json and makes it
+a running Nilla applies it again. With no active theme and no --theme, it creates themes/custom.json and makes it
 the active theme.
 
 Examples:
-  ardia theme set dark.accent '#FF9F5A'
-  ardia theme set type.family "Avenir Next"
-  ardia theme set type.sizes.body 14
-  ardia theme set metrics.rowHeight 40
-  ardia theme set metrics.radius.row 14
-  ardia theme set layout.hide '["navButtons"]'
-  ardia theme set layout.addressField bottom
-  ardia theme set icons.plus plus.circle
-  ardia theme set --theme nord light.accent '#5E81AC'
+  nilla-browser theme set dark.accent '#FF9F5A'
+  nilla-browser theme set type.family "Avenir Next"
+  nilla-browser theme set type.sizes.body 14
+  nilla-browser theme set metrics.rowHeight 40
+  nilla-browser theme set metrics.radius.row 14
+  nilla-browser theme set layout.hide '["navButtons"]'
+  nilla-browser theme set layout.addressField bottom
+  nilla-browser theme set icons.plus plus.circle
+  nilla-browser theme set --theme nord light.accent '#5E81AC'
 """
 SHORTCUT_HELP = (
     "Shortcuts are one string per command: modifiers cmd, opt (option, alt), ctrl (control), shift, fn, joined with +,"
@@ -100,11 +100,11 @@ FOLDER_SHOWN = f"{endpoint.LINUX_DATA_DIR_SHOWN}/config" if endpoint.LINUX else 
 EDITOR_FALLBACK = "xdg-open (vi with no display)" if endpoint.LINUX else "vi"
 CONFIG_DESCRIPTION = CONFIG_DESCRIPTION.replace("{folder}", FOLDER_SHOWN).replace("{fallback}", EDITOR_FALLBACK)
 EDIT_HELP = (
-    ("open config.json in $VISUAL or $EDITOR and check it, else with xdg-open", "Open config.json (created first if needed) in $VISUAL or $EDITOR, wait for the editor to exit, then\ncheck it like ardia config check. With neither set, in a desktop session it opens the file with xdg-open, which\nreturns at once, so run ardia config check once you've saved it; with no display or no xdg-open it uses vi.")
+    ("open config.json in $VISUAL or $EDITOR and check it, else with xdg-open", "Open config.json (created first if needed) in $VISUAL or $EDITOR, wait for the editor to exit, then\ncheck it like nilla config check. With neither set, in a desktop session it opens the file with xdg-open, which\nreturns at once, so run nilla config check once you've saved it; with no display or no xdg-open it uses vi.")
     if endpoint.LINUX
-    else ("open config.json in $VISUAL, $EDITOR, else vi, then check it", "Open config.json (created first if needed) in $VISUAL, $EDITOR, else vi, wait for the editor to exit, then\ncheck it like ardia config check.")
+    else ("open config.json in $VISUAL, $EDITOR, else vi, then check it", "Open config.json (created first if needed) in $VISUAL, $EDITOR, else vi, wait for the editor to exit, then\ncheck it like nilla config check.")
 )
-DATA_DIR_HELP = f"the Ardia data dir; the config folder is <DIR>/config (default: $ARDIA_DATA_DIR, else {FOLDER_SHOWN})"
+DATA_DIR_HELP = f"the Nilla data dir; the config folder is <DIR>/config (default: $ARDIA_DATA_DIR, else {FOLDER_SHOWN})"
 CHANNEL = r"\s*(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\s*"
 ALPHA = r"\s*(?:0|1|0?\.[0-9]+|1\.0+)\s*"
 COLOUR = re.compile(
@@ -186,19 +186,19 @@ def add_parsers(commands, formatter):
         return parser
 
     command("path", "print the config folder")
-    command("init", "create the config folder, config.json and the schemas Ardia wrote; never overwrites a file")
+    command("init", "create the config folder, config.json and the schemas Nilla wrote; never overwrites a file")
     get = command("get", "print a setting from config.json, or the whole file", "Print a setting from config.json (exit 1 when the file doesn't set it), or the whole file.\nKEY is a setting name or shortcuts.<command id>.")
     get.add_argument("key", nargs="?", metavar="KEY", help="a setting name or shortcuts.<command id>")
     get.add_argument("--json", action="store_true", help="print JSON")
     put = command("set", "check a value and write it to config.json", SET_DESCRIPTION + "\n" + textwrap.fill(SHORTCUT_HELP, 116))
     put.add_argument("key", metavar="KEY", help="a setting name or shortcuts.<command id>")
     put.add_argument("value", metavar="VALUE", help="JSON, else a plain string")
-    unset = command("unset", "take a key out of config.json", "Take a key out of config.json. Ardia keeps the value it has; to go back to the default, set the default.")
+    unset = command("unset", "take a key out of config.json", "Take a key out of config.json. Nilla keeps the value it has; to go back to the default, set the default.")
     unset.add_argument("key", metavar="KEY", help="a setting name or shortcuts.<command id>")
     listing = command("list", "list every setting with its allowed values, default and file value")
     listing.add_argument("--json", action="store_true", help="print JSON")
     command("edit", *EDIT_HELP)
-    check = command("check", "check config.json and the theme it names", "Check config.json and the theme it names, the way Ardia reads them. Exit 1 on any problem.")
+    check = command("check", "check config.json and the theme it names", "Check config.json and the theme it names, the way Nilla reads them. Exit 1 on any problem.")
     check.add_argument("--json", action="store_true", help="print JSON")
 
     theme = commands.add_parser("theme", help="make, pick, edit and check themes", description=THEME_DESCRIPTION, formatter_class=formatter)
@@ -209,25 +209,25 @@ def add_parsers(commands, formatter):
         parser.add_argument("--data-dir", metavar="DIR", help=DATA_DIR_HELP)
         return parser
 
-    new = theme_command("new", "write themes/NAME.json with every colour role and look key", "Write themes/NAME.json with every dark and light colour role and the type, metrics, layout and icons\nblocks, from Ardia's defaults or from another theme (its values win, key by key). Names use lowercase\nletters, digits, - and _. It never overwrites a file.")
+    new = theme_command("new", "write themes/NAME.json with every colour role and look key", "Write themes/NAME.json with every dark and light colour role and the type, metrics, layout and icons\nblocks, from Nilla's defaults or from another theme (its values win, key by key). Names use lowercase\nletters, digits, - and _. It never overwrites a file.")
     new.add_argument("name", metavar="NAME", help="the theme's name")
-    new.add_argument("--from", dest="source", metavar="THEME", help="start from this theme instead of Ardia's defaults")
-    use = theme_command("use", "make a theme the active one", "Set theme in config.json (created first if needed). none goes back to Ardia's own palette.")
+    new.add_argument("--from", dest="source", metavar="THEME", help="start from this theme instead of Nilla's defaults")
+    use = theme_command("use", "make a theme the active one", "Set theme in config.json (created first if needed). none goes back to Nilla's own palette.")
     use.add_argument("name", metavar="NAME", help="a theme name, or none")
     tlist = theme_command("list", "list the themes, the active one marked with *")
     tlist.add_argument("--json", action="store_true", help="print JSON")
     tcheck = theme_command("check", "check a theme", "Check a theme by name or file (default: the active one). Exit 1 on any problem.")
     tcheck.add_argument("target", nargs="?", metavar="NAME|FILE", help="a theme name or a path to a theme file")
     tcheck.add_argument("--json", action="store_true", help="print JSON")
-    tget = theme_command("get", "print a key from the theme, or the whole file", "Print a key from a theme (default: the active one), or the whole file. Exit 1 when the file doesn't set\nthe key; the message gives Ardia's default when the schema has one.")
+    tget = theme_command("get", "print a key from the theme, or the whole file", "Print a key from a theme (default: the active one), or the whole file. Exit 1 when the file doesn't set\nthe key; the message gives Nilla's default when the schema has one.")
     tget.add_argument("key", nargs="?", metavar="KEY", help=THEME_KEY_HELP)
     tget.add_argument("--theme", metavar="NAME", help=THEME_HELP)
     tget.add_argument("--json", action="store_true", help="print JSON")
-    tset = theme_command("set", "check a value and write it to the theme; Ardia restyles at once", THEME_SET_DESCRIPTION)
+    tset = theme_command("set", "check a value and write it to the theme; Nilla restyles at once", THEME_SET_DESCRIPTION)
     tset.add_argument("key", metavar="KEY", help=THEME_KEY_HELP)
     tset.add_argument("value", metavar="VALUE", help="JSON, else a plain string")
     tset.add_argument("--theme", metavar="NAME", help=THEME_HELP)
-    tunset = theme_command("unset", "take a key out of the theme", "Take a key out of a theme (default: the active one) and drop the blocks it leaves empty. Ardia goes back\nto its own value for that key.")
+    tunset = theme_command("unset", "take a key out of the theme", "Take a key out of a theme (default: the active one) and drop the blocks it leaves empty. Nilla goes back\nto its own value for that key.")
     tunset.add_argument("key", metavar="KEY", help=THEME_KEY_HELP)
     tunset.add_argument("--theme", metavar="NAME", help=THEME_HELP)
     return config, theme
@@ -239,7 +239,7 @@ def run_config(args, parser) -> int:
     if handler is None:
         parser.parse_args(["config", "--help"])
         return 0
-    return guarded("ardia config", handler, args)
+    return guarded("nilla config", handler, args)
 
 
 def run_theme(args, parser) -> int:
@@ -248,11 +248,11 @@ def run_theme(args, parser) -> int:
     if handler is None:
         parser.parse_args(["theme", "--help"])
         return 0
-    return guarded("ardia theme", handler, args)
+    return guarded("nilla theme", handler, args)
 
 
 def note_error(code: str) -> None:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     telemetry.note_error_code(code)
 
@@ -297,7 +297,7 @@ def config_init(args, where: Places) -> int:
             files.read_object(source, str(source))
             text = files.read_text(source)
         except FileNotFoundError:
-            complain(f"ardia config: no {name} in {source.parent} yet; Ardia writes it at launch and copies it here")
+            complain(f"nilla config: no {name} in {source.parent} yet; Nilla writes it at launch and copies it here")
             continue
         create(target, text)
     return 0
@@ -321,14 +321,14 @@ def split_key(key: str) -> list[str]:
 def config_schema(where: Places) -> files.Schema:
     found = files.find_schema(where, files.CONFIG_SCHEMA)
     if found.warning:
-        complain(f"ardia config: {found.warning}")
+        complain(f"nilla config: {found.warning}")
     return found
 
 
 def check_key(parts: list[str], specs: dict) -> None:
     top = parts[0]
     if top in files.RESERVED_SETTINGS:
-        raise ConfigError(f"{top} can't be set from config.json; change it in Ardia's Settings")
+        raise ConfigError(f"{top} can't be set from config.json; change it in Nilla's Settings")
     if "." in top and not specs.get(top):
         raise ConfigError(f"{top} isn't a setting; only shortcuts.<command id> takes a dot")
     if specs and top not in specs:
@@ -385,7 +385,7 @@ def config_set(args, where: Places) -> int:
         first_problems = first_problems or problems
     if chosen is None and first_problems:
         for problem in first_problems:
-            complain(f"ardia config: {problem.message}")
+            complain(f"nilla config: {problem.message}")
         return 1
     if chosen is None:
         chosen = candidates[0]
@@ -404,9 +404,9 @@ def config_set(args, where: Places) -> int:
     document = files.with_key(document, "settings", settings)
     files.save_config(where, document, created)
     if created:
-        complain(f"ardia config: created {where.config}")
+        complain(f"nilla config: created {where.config}")
     if schema.document is None:
-        complain(f"ardia config: no {files.CONFIG_SCHEMA} found (Ardia writes one at launch), so {args.key} was written without checking it")
+        complain(f"nilla config: no {files.CONFIG_SCHEMA} found (Nilla writes one at launch), so {args.key} was written without checking it")
     say(f"{args.key} = {json.dumps(chosen, ensure_ascii=False)}")
     return 0
 
@@ -439,7 +439,7 @@ def config_unset(args, where: Places) -> int:
         settings["shortcuts"] = holder
     document["settings"] = settings
     files.save_config(where, document, False)
-    say(f"removed {args.key}; Ardia keeps its current value")
+    say(f"removed {args.key}; Nilla keeps its current value")
     return 0
 
 
@@ -448,7 +448,7 @@ def config_get(args, where: Places) -> int:
         try:
             text = files.read_text(where.config)
         except FileNotFoundError:
-            raise ConfigError(f"there's no {where.config} yet (ardia config init creates it)") from None
+            raise ConfigError(f"there's no {where.config} yet (nilla config init creates it)") from None
         if args.json:
             try:
                 document = files.parse_json(text)
@@ -468,9 +468,9 @@ def config_get(args, where: Places) -> int:
             if specs and parts[0] not in specs and parts[0] not in files.RESERVED_SETTINGS:
                 raise ConfigError(f"unknown setting {parts[0]}{did_you_mean(parts[0], specs)}")
             default = files.sub(specs.get(parts[0]), "default") if len(parts) == 1 else None
-            hint = f" (Ardia's default: {cell(default)})" if len(parts) == 1 and isinstance(specs.get(parts[0]), dict) and "default" in specs[parts[0]] else ""
+            hint = f" (Nilla's default: {cell(default)})" if len(parts) == 1 and isinstance(specs.get(parts[0]), dict) and "default" in specs[parts[0]] else ""
             note_error("not_set")
-            complain(f"ardia config: config.json doesn't set {args.key}{hint}")
+            complain(f"nilla config: config.json doesn't set {args.key}{hint}")
             return 1
         value = value[part]
     say(json.dumps(value, ensure_ascii=False) if args.json or not isinstance(value, str) else value)
@@ -491,7 +491,7 @@ def config_list(args, where: Places) -> int:
         settings = document.get("settings") or {}
     except ConfigError as error:
         if where.config.exists() or os.path.lexists(where.config):
-            complain(f"ardia config: {error}")
+            complain(f"nilla config: {error}")
         settings = {}
     rows = []
     for key, spec in specs.items():
@@ -505,9 +505,9 @@ def config_list(args, where: Places) -> int:
         rows.append(row)
     for key, value in settings.items():
         if key not in specs:
-            rows.append({"key": key, "allowed": "not a setting Ardia reads from the file" if specs or key in files.RESERVED_SETTINGS else "unknown (no schema)", "value": value})
+            rows.append({"key": key, "allowed": "not a setting Nilla reads from the file" if specs or key in files.RESERVED_SETTINGS else "unknown (no schema)", "value": value})
     if schema.document is None:
-        complain(f"ardia config: no {files.CONFIG_SCHEMA} found (Ardia writes one at launch); listing only what config.json sets")
+        complain(f"nilla config: no {files.CONFIG_SCHEMA} found (Nilla writes one at launch); listing only what config.json sets")
     if args.json:
         say(json.dumps({"schema": str(schema.path) if schema.path else None, "settings": rows}, indent=2, ensure_ascii=False))
         return 0
@@ -551,10 +551,10 @@ def config_edit(args, where: Places) -> int:
     except OSError as error:
         raise ConfigError(f"couldn't start {command[0]}: {error.strerror or error}") from None
     if status != 0:
-        complain(f"ardia config: {command[0]} exited with status {status}")
+        complain(f"nilla config: {command[0]} exited with status {status}")
         return 1
     if not waits:
-        say(f"opened {where.config} with {os.path.basename(command[0])}; run ardia config check once you've saved it (set $VISUAL or $EDITOR to edit here)")
+        say(f"opened {where.config} with {os.path.basename(command[0])}; run nilla config check once you've saved it (set $VISUAL or $EDITOR to edit here)")
         return 0
     args.json = False
     return config_check(args, where)
@@ -570,7 +570,7 @@ def config_problems(document, schema: dict | None) -> list[Problem]:
         settings = {}
     for key in settings:
         if key in files.RESERVED_SETTINGS:
-            problems.append(Problem((key,), f"{key} can't be set from config.json; Ardia ignores it"))
+            problems.append(Problem((key,), f"{key} can't be set from config.json; Nilla ignores it"))
     allowed = {k: v for k, v in settings.items() if k not in files.RESERVED_SETTINGS}
     if schema is not None:
         problems += validate(allowed, files.settings_schema(schema), (), False, noun="setting")
@@ -821,12 +821,12 @@ def config_check(args, where: Places) -> int:
     themes = files.find_schema(where, files.THEME_SCHEMA)
     warnings += [w for w in (config.warning, themes.warning) if w]
     if config.document is None:
-        warnings.append(f"no {files.CONFIG_SCHEMA} found (Ardia writes one at launch), so settings were checked only for syntax, shortcuts and the theme name")
+        warnings.append(f"no {files.CONFIG_SCHEMA} found (Nilla writes one at launch), so settings were checked only for syntax, shortcuts and the theme name")
     results = []
     try:
         document = files.read_json(where.config, files.CONFIG_FILE)
     except FileNotFoundError:
-        raise ConfigError(f"there's no {where.config} yet (ardia config init creates it)") from None
+        raise ConfigError(f"there's no {where.config} yet (nilla config init creates it)") from None
     except ConfigError as error:
         results.append((where.config, files.CONFIG_FILE, [Problem((), str(error))]))
         return report(results, warnings, args.json)
@@ -855,9 +855,9 @@ def theme_new(args, where: Places) -> int:
         raise ConfigError(f"{target} already exists")
     schema = files.find_schema(where, files.THEME_SCHEMA)
     if schema.warning:
-        complain(f"ardia theme: {schema.warning}")
+        complain(f"nilla theme: {schema.warning}")
     if args.source is None and schema.document is None:
-        raise ConfigError(f"no {files.THEME_SCHEMA} found, so Ardia's colours aren't known yet; open Ardia once (it writes the schema), or use --from THEME")
+        raise ConfigError(f"no {files.THEME_SCHEMA} found, so Nilla's colours aren't known yet; open Nilla once (it writes the schema), or use --from THEME")
     source = {}
     if args.source is not None:
         files.check_theme_name(args.source)
@@ -895,7 +895,7 @@ def theme_use(args, where: Places) -> int:
         path = existing_theme(where, name)
     activate(where, name)
     if name is None:
-        say("theme: none (Ardia's own palette)")
+        say("theme: none (Nilla's own palette)")
         return 0
     schema = files.find_schema(where, files.THEME_SCHEMA)
     for problem in check_theme_file(where, path, schema.document):
@@ -908,7 +908,7 @@ def existing_theme(where: Places, name: str) -> Path:
     files.check_theme_name(name)
     path = where.theme(name)
     if not path.exists():
-        raise ConfigError(f"no theme named {name} in {where.themes}{did_you_mean(name, files.theme_names(where))} (ardia theme new {name} makes one)")
+        raise ConfigError(f"no theme named {name} in {where.themes}{did_you_mean(name, files.theme_names(where))} (nilla theme new {name} makes one)")
     return path
 
 
@@ -917,7 +917,7 @@ def activate(where: Places, name: str | None) -> None:
     document = files.with_key(document, "theme", name, after="$schema")
     files.save_config(where, document, created)
     if created:
-        complain(f"ardia theme: created {where.config}")
+        complain(f"nilla theme: created {where.config}")
 
 
 def active_theme(where: Places):
@@ -933,7 +933,7 @@ def theme_list(args, where: Places) -> int:
     try:
         active = active_theme(where)
     except ConfigError as error:
-        complain(f"ardia theme: {error}")
+        complain(f"nilla theme: {error}")
         active = None
     names = files.theme_names(where)
     missing = active is not None and active not in names
@@ -946,7 +946,7 @@ def theme_list(args, where: Places) -> int:
     if missing:
         say(f"* {active} (missing: no {where.show(where.theme(active))})")
     if not names and not missing:
-        complain(f"ardia theme: no themes in {where.themes} yet (ardia theme new NAME makes one)")
+        complain(f"nilla theme: no themes in {where.themes} yet (nilla theme new NAME makes one)")
     return 0
 
 
@@ -984,7 +984,7 @@ def theme_key(key: str) -> tuple:
 def theme_schema(where: Places) -> files.Schema:
     found = files.find_schema(where, files.THEME_SCHEMA)
     if found.warning:
-        complain(f"ardia theme: {found.warning}")
+        complain(f"nilla theme: {found.warning}")
     return found
 
 
@@ -1056,7 +1056,7 @@ def chosen_theme(args, where: Places) -> str | None:
 def named_theme(args, where: Places) -> tuple[str, Path]:
     name = chosen_theme(args, where)
     if name is None:
-        raise ConfigError("config.json names no theme; pass --theme NAME (ardia theme list shows them)")
+        raise ConfigError("config.json names no theme; pass --theme NAME (nilla theme list shows them)")
     return name, existing_theme(where, name)
 
 
@@ -1069,7 +1069,7 @@ def theme_set(args, where: Places) -> int:
         name = CUSTOM_THEME
         target = where.theme(name)
         if os.path.lexists(target):
-            raise ConfigError(f"config.json names no theme and {where.show(target)} already exists; ardia theme use {name} makes it active, or pass --theme NAME")
+            raise ConfigError(f"config.json names no theme and {where.show(target)} already exists; nilla theme use {name} makes it active, or pass --theme NAME")
         files.load_config(where, create=True)
         document = {"$schema": f"../{files.THEME_SCHEMA}"}
     else:
@@ -1092,7 +1092,7 @@ def theme_set(args, where: Places) -> int:
     if chosen is NO_DEFAULT:
         note_error("invalid_value")
         for problem in first_problems:
-            complain(f"ardia theme: {problem.message}")
+            complain(f"nilla theme: {problem.message}")
         return 1
     if creating:
         where.themes.mkdir(parents=True, exist_ok=True)
@@ -1105,7 +1105,7 @@ def theme_set(args, where: Places) -> int:
         except (ConfigError, OSError):
             remove_if_unchanged(target, updated)
             raise
-        complain(f"ardia theme: no theme was active, so this created {label} and made it the active theme")
+        complain(f"nilla theme: no theme was active, so this created {label} and made it the active theme")
     else:
         files.write_json(target, updated)
         if args.theme is not None:
@@ -1114,9 +1114,9 @@ def theme_set(args, where: Places) -> int:
             except ConfigError:
                 active = name
             if active != name:
-                complain(f"ardia theme: {name} isn't the active theme, so Ardia won't show this until ardia theme use {name}")
+                complain(f"nilla theme: {name} isn't the active theme, so Nilla won't show this until nilla theme use {name}")
     if schema.document is None:
-        complain(f"ardia theme: no {files.THEME_SCHEMA} found (Ardia writes one at launch), so {args.key} was written without checking it")
+        complain(f"nilla theme: no {files.THEME_SCHEMA} found (Nilla writes one at launch), so {args.key} was written without checking it")
     say(f"{args.key} = {json.dumps(chosen, ensure_ascii=False)}")
     return 0
 
@@ -1151,9 +1151,9 @@ def theme_get(args, where: Places) -> int:
         if unknown:
             raise ConfigError(unknown)
         default = look_default(spec) if spec is not None else NO_DEFAULT
-        hint = f" (Ardia's default: {cell(default)})" if default is not NO_DEFAULT else ""
+        hint = f" (Nilla's default: {cell(default)})" if default is not NO_DEFAULT else ""
         note_error("not_set")
-        complain(f"ardia theme: {label} doesn't set {args.key}{hint}")
+        complain(f"nilla theme: {label} doesn't set {args.key}{hint}")
         return 1
     say(json.dumps(value, ensure_ascii=False) if args.json or not isinstance(value, str) else value)
     return 0
@@ -1182,5 +1182,5 @@ def theme_unset(args, where: Places) -> int:
             break
         del holders[depth - 1][path[depth - 1]]
     files.write_json(target, document)
-    say(f"removed {args.key}; Ardia uses its own value for it")
+    say(f"removed {args.key}; Nilla uses its own value for it")
     return 0

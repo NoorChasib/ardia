@@ -2,9 +2,9 @@ import asyncio
 import json
 import re
 
-from ardia_cli import command_metrics
-from ardia_cli.browse.errors import BrowseError, ConnectionLost, OutcomeUnknown, Usage
-from ardia_cli.browse.readpages import MAX_LIMIT
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse.errors import BrowseError, ConnectionLost, OutcomeUnknown, Usage
+from nilla_browser_cli.browse.readpages import MAX_LIMIT
 
 DEFAULT_TIMEOUT = 90.0
 READ_HINT_OPENS = 3
@@ -13,10 +13,10 @@ MAX_SOURCE = 1024 * 1024
 STATE_LIMIT = 16 * 1024 * 1024
 LOG_LIMIT = 1024 * 1024
 CONTROL_TIMEOUT = 20.0
-SOURCE_URL = "ardia-script.js"
+SOURCE_URL = "nilla-script.js"
 REFUSED = ("close", "script", "batch")
 FATAL = ("outcome_unknown", "connection_lost")
-TITLE = "ardia browse script"
+TITLE = "nilla browse script"
 
 CONTROLLER = r"""
 (() => {
@@ -81,7 +81,7 @@ CONTROLLER = r"""
 })()
 """
 
-WORKER = r"""const SOURCE = "ardia-script.js";
+WORKER = r"""const SOURCE = "nilla-script.js";
 const OFFSET = %(offset)d;
 const READ_BATCH = %(read_batch)d;
 const STATE_LIMIT = %(state_limit)d;
@@ -320,12 +320,12 @@ def page_world_hint(text: str, command) -> str | None:
         return None
     if PAGE_GLOBAL.search(text):
         return ("the script runs outside the page, so it has no document or window: put page code in "
-                "page.evaluate(() => …), or use `ardia browse eval`")
+                "page.evaluate(() => …), or use `nilla-browser browse eval`")
     return None
 
 
 def failure(message: str, logs: list[str], data: dict, code: str | None = None) -> BrowseError:
-    from ardia_cli.redact import redact
+    from nilla_browser_cli.redact import redact
 
     logs = [redact(line) for line in logs]
     body = redact(message)
@@ -335,8 +335,8 @@ def failure(message: str, logs: list[str], data: dict, code: str | None = None) 
 
 
 async def open_controller(state, owned: list[str]):
-    from ardia_cli.browse import temptabs
-    from ardia_cli.browse.page import Page
+    from nilla_browser_cli.browse import temptabs
+    from nilla_browser_cli.browse.page import Page
 
     target_id = await temptabs.create(state, owned)
     page = state.pages[target_id] = Page(state, target_id)
@@ -376,7 +376,7 @@ async def start(page, handle: str, source: str, state: str = "{}"):
 def split_command_line(argv: list[str]) -> list[str]:
     import shlex
 
-    from ardia_cli.browse.commands import ALIASES, COMMANDS
+    from nilla_browser_cli.browse.commands import ALIASES, COMMANDS
 
     if len(argv) != 1 or not argv[0].strip() or argv[0].split()[0] == argv[0]:
         return argv
@@ -391,8 +391,8 @@ def split_command_line(argv: list[str]) -> list[str]:
 
 
 async def answer_call(ctx, argv) -> dict:
-    from ardia_cli.browse.commands import ALIASES, Ctx
-    from ardia_cli.browse.daemon import run_one
+    from nilla_browser_cli.browse.commands import ALIASES, Ctx
+    from nilla_browser_cli.browse.daemon import run_one
 
     if not isinstance(argv, list) or not argv or not all(isinstance(word, str) for word in argv):
         return {"ok": False, "error": "browse() takes a command and its arguments as strings", "code": "usage"}
@@ -447,7 +447,7 @@ def kept_preview(state_text) -> str:
         return ""
     if len(state_text) <= STATE_PREVIEW_CHARS:
         return state_text
-    return f"{state_text[:STATE_PREVIEW_CHARS]}… ({len(state_text):,} characters in all; `ardia browse script 'return state' --out <file>` saves it)"
+    return f"{state_text[:STATE_PREVIEW_CHARS]}… ({len(state_text):,} characters in all; `nilla-browser browse script 'return state' --out <file>` saves it)"
 
 
 def timed_out(seconds: float, current: dict, source: str, logs: list[str], kept: str = "", done: list | None = None, state_text: str | None = None) -> BrowseError:
@@ -459,7 +459,7 @@ def timed_out(seconds: float, current: dict, source: str, logs: list[str], kept:
     line = source_line(source, current.get("line"))
     if line:
         where += f" at line {line}"
-    from ardia_cli.browse.commands import ALIASES, MUTATING
+    from nilla_browser_cli.browse.commands import ALIASES, MUTATING
 
     name = ALIASES.get((current.get("argv") or [""])[0], (current.get("argv") or [""])[0])
     unknown = "; that command was cut off, so its outcome is unknown" if name in MUTATING else ""
@@ -476,18 +476,18 @@ def timed_out(seconds: float, current: dict, source: str, logs: list[str], kept:
     if opened >= READ_HINT_OPENS:
         command_metrics.flag("script_timeout_read_hint", True)
         message += (f". It opened {opened} pages one after another; to take text from many pages, "
-                    "`ardia browse read <url> <url> …` (or `await read(urls)` here) loads them side by side, each with its own time limit")
+                    "`nilla-browser browse read <url> <url> …` (or `await read(urls)` here) loads them side by side, each with its own time limit")
     return failure(message, logs, {"line": line, "command": current.get("argv")}, "timeout")
 
 
 async def run(ctx, source: str, seconds: float):
-    from ardia_cli.browse.commands import Result
+    from nilla_browser_cli.browse.commands import Result
 
     if not source.strip():
-        raise Usage("Usage: ardia browse script [file.js] (or the script on stdin: ardia browse script <<'EOF' … EOF)")
+        raise Usage("Usage: nilla browse script [file.js] (or the script on stdin: nilla browse script <<'EOF' … EOF)")
     if len(source) > MAX_SOURCE:
         raise Usage(f"The script is over {MAX_SOURCE // 1024} KB")
-    from ardia_cli.browse import temptabs
+    from nilla_browser_cli.browse import temptabs
 
     state = ctx.state
     await state.connect()

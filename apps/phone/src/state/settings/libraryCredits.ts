@@ -4,10 +4,10 @@ export type LibraryCredit = { name: string; detail: string; license: string; url
 
 export const IPHONE_NATIVE_CREDITS: LibraryCredit[] = [
   {
-    name: "ArdiaKit and ArdiaSyncCore",
-    detail: "Ardia’s own iPhone code: ArdiaShared, ArdiaSync, ArdiaBrowser, ArdiaDesign, ArdiaSyncCore",
+    name: "NillaKit and NillaSyncCore",
+    detail: "Nilla’s own iPhone code: NillaShared, NillaSync, NillaBrowser, NillaDesign, NillaSyncCore",
     license: "Apache-2.0",
-    url: "https://github.com/mantrakp04/ardia",
+    url: "https://github.com/NoorChasib/nilla",
   },
 ];
 

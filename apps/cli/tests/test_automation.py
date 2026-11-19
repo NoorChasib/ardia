@@ -19,9 +19,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import automation_cli, cli, control, endpoint, hooks, upstream
+from nilla_browser_cli import automation_cli, cli, control, endpoint, hooks, upstream
 
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 COMMANDS = [
     {"id": "newTab", "title": "New Tab", "scope": "window", "variants": None},
     {"id": "selectTab", "title": "Select Tab", "scope": "window", "variants": ["1", "2", "3"]},
@@ -60,7 +60,7 @@ def event(name, **data):
     return {"event": name, "time": 1730400000000, "data": data}
 
 
-class FakeArdia:
+class FakeNilla:
     def __init__(self, path: Path):
         self.path = path
         self.requests = []
@@ -132,7 +132,7 @@ class FakeArdia:
                 return None
             return {"id": ident, **reply}
         if method == "hello":
-            return {"id": ident, "result": {"app": "Ardia", "version": "0.2.44", "protocol": 1}}
+            return {"id": ident, "result": {"app": "Nilla", "version": "0.2.44", "protocol": 1}}
         if method == "commands":
             return {"id": ident, "result": COMMANDS}
         if method == "windows":
@@ -218,8 +218,8 @@ class Base(unittest.TestCase):
             self.addCleanup(patch.stop)
         self.socket = self.data / control.SOCKET_FILE
 
-    def serve(self) -> FakeArdia:
-        server = FakeArdia(self.socket).start()
+    def serve(self) -> FakeNilla:
+        server = FakeNilla(self.socket).start()
         self.addCleanup(server.stop)
         return server
 
@@ -246,7 +246,7 @@ class Discovery(Base):
         self.assertIn("isn't a socket", err)
 
     def test_symlink_is_not_a_socket(self):
-        server = FakeArdia(self.temp / "real.sock").start()
+        server = FakeNilla(self.temp / "real.sock").start()
         self.addCleanup(server.stop)
         os.symlink(self.temp / "real.sock", self.socket)
         status, _, err = self.run_cli("windows")
@@ -306,12 +306,12 @@ class Discovery(Base):
         self.assertNotIn("may or may not", err)
         self.assertNotIn("run", [m for m, _ in server.requests])
 
-    def test_not_ardia(self):
+    def test_not_nilla(self):
         server = self.serve()
         server.replies["hello"] = lambda params: {"result": {"app": "Other"}}
         status, _, err = self.run_cli("windows")
         self.assertEqual(status, 2)
-        self.assertIn("something other than Ardia", err)
+        self.assertIn("something other than Nilla", err)
 
 
 class Methods(Base):
@@ -325,8 +325,8 @@ class Methods(Base):
         self.assertEqual(runs, [{"command": "newTab"}, {"command": "selectTab", "arg": "2", "window": 1}, {"command": "selectTab", "arg": "3"}])
         self.assertEqual(server.requests[0][0], "hello")
 
-    def test_hello_names_the_caller_and_announce_tells_ardia(self):
-        from ardia_cli import caller
+    def test_hello_names_the_caller_and_announce_tells_nilla(self):
+        from nilla_browser_cli import caller
 
         server = self.serve()
         claude = caller.Caller("Claude Code")
@@ -341,7 +341,7 @@ class Methods(Base):
         self.assertEqual([m for m, _ in server.requests if m == "caller"], ["caller", "caller"])
 
     def test_announce_never_fails_the_command(self):
-        from ardia_cli import caller
+        from nilla_browser_cli import caller
 
         started = time.monotonic()
         asyncio.run(control.announce(self.temp / "missing.sock", caller.Caller("Codex")))
@@ -614,13 +614,13 @@ class On(Base):
             status, _, err = self.run_cli("on", "tab.opened", "--", sys.executable, "-I", "-c", RECORDER, str(self.out))
         self.assertEqual(status, 130)
         self.assertEqual(len(self.records()), 1)
-        self.assertIn("lost Ardia", err)
+        self.assertIn("lost Nilla", err)
         self.assertIn("events in between may have been missed", err)
 
-    def test_waits_for_ardia_then_connects(self):
+    def test_waits_for_nilla_then_connects(self):
         def later():
             time.sleep(0.3)
-            server = FakeArdia(self.socket).start()
+            server = FakeNilla(self.socket).start()
             self.addCleanup(server.stop)
             server.subscribed.wait(5)
             os.kill(os.getpid(), signal.SIGINT)
@@ -630,7 +630,7 @@ class On(Base):
             status, _, err = self.run_cli("on", "tab.opened", "--", "true")
         self.assertEqual(status, 130)
         self.assertEqual(err.count("retrying"), 1)
-        self.assertIn("connected to Ardia 0.2.44", err)
+        self.assertIn("connected to Nilla 0.2.44", err)
 
 
 class Running(unittest.TestCase):
@@ -1007,7 +1007,7 @@ class LaunchAgent(Base):
         self.assertEqual(self.calls[-1], ["bootout", f"gui/{uid}/com.nilladigital.nilla.hooks"])
 
     def test_never_touches_the_upstream_agent_and_uses_nillas_own_homes(self):
-        from ardia_cli import usage
+        from nilla_browser_cli import usage
 
         agents = self.home / "Library" / "LaunchAgents"
         agents.mkdir(parents=True)
@@ -1089,7 +1089,7 @@ class LaunchAgent(Base):
             with self.subTest(verb=verb), self.installed_env(), mock.patch.object(hooks, "launchctl", side_effect=stuck):
                 status, _, err = self.run_cli("hooks", verb)
             self.assertEqual(status, 1)
-            self.assertEqual(err.strip().splitlines()[-1], f"ardia hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/{hooks.LABEL}")
+            self.assertEqual(err.strip().splitlines()[-1], f"nilla hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/{hooks.LABEL}")
             self.assertNotIn("Traceback", err)
 
     def test_list_reports_hooks(self):
@@ -1110,7 +1110,7 @@ class LaunchAgent(Base):
         self.assertIn("fresh  [command]  on app.launched  command newTab", out)
         self.assertIn("standup  [scheduled]  at 09:55 on mon,fri  command openSettings", out)
         self.assertIn("hourly  [scheduled]  every 1h  run ~/bin/tick  timeout 60s", out)
-        self.assertIn("strip  [decide]  on tab.opening  answers in Ardia (rewrite)", out)
+        self.assertIn("strip  [decide]  on tab.opening  answers in Nilla (rewrite)", out)
         self.assertIn("ask  [decide]  on link.opening  run ~/bin/route", out)
         self.assertIn("jira  [omnibox]  omnibox Jira (keyword j)  run ~/bin/jira", out)
         self.assertIn("not installed", out)
@@ -1125,7 +1125,7 @@ class Help(Base):
         for argv in (["run", "--help"], ["events", "--help"], ["on", "--help"], ["hooks", "--help"], ["hooks", "install", "--help"], ["commands", "--help"], ["windows", "--help"]):
             status, out, _ = self.run_cli(*argv)
             self.assertEqual(status, 0, argv)
-            self.assertIn("usage: ardia", out)
+            self.assertIn("usage: nilla", out)
 
 
 if __name__ == "__main__":

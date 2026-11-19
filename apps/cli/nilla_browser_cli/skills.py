@@ -7,10 +7,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-SKILL_NAME = "ardia"
+SKILL_NAME = "nilla"
 CUA_SKILL = "cua-driver"
 COMPANIONS = (CUA_SKILL,)
-MARKER = ".ardia-skill"
+MARKER = ".nilla-skill"
 TARGETS = {
     "general": (".agents/skills", ".agents/skills"),
     "codex": (".agents/skills", ".agents/skills"),
@@ -69,7 +69,7 @@ def skill_text(full: bool = False) -> str:
 
 
 def print_skill(full: bool = False) -> int:
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     text = skill_text(full)
     telemetry.note_count("output_chars", len(text))
@@ -106,7 +106,7 @@ def read_marker(folder: Path, skill: str = SKILL_NAME) -> dict | None:
         data = json.loads(marker.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
-    if not isinstance(data, dict) or data.get("vendor") != "ardia" or not isinstance(data.get("files"), list):
+    if not isinstance(data, dict) or data.get("vendor") != "nilla" or not isinstance(data.get("files"), list):
         return None
     if data.get("skill", SKILL_NAME) != skill:
         return None
@@ -160,7 +160,7 @@ def real_parent(folder: Path, name: str) -> Path:
 
 def write_file(folder: Path, name: str, data: bytes) -> None:
     parent = real_parent(folder, name)
-    handle, staging = tempfile.mkstemp(prefix=".ardia-skill-", dir=parent)
+    handle, staging = tempfile.mkstemp(prefix=".nilla-skill-", dir=parent)
     try:
         with os.fdopen(handle, "wb") as out:
             out.write(data)
@@ -201,7 +201,7 @@ def install_into(folder: Path, companions: list[str] | None = None, adopt: bool 
             companions = (read_marker(folder) or {}).get("companions")
     elif folder.is_symlink() or folder.exists():
         if not replace:
-            raise FileExistsError(f"{folder} exists and isn't a copy ardia installed; move it away, or replace that folder with --replace")
+            raise FileExistsError(f"{folder} exists and isn't a copy nilla installed; move it away, or replace that folder with --replace")
         if folder.is_symlink() or not folder.is_dir():
             folder.unlink()
         else:
@@ -211,9 +211,9 @@ def install_into(folder: Path, companions: list[str] | None = None, adopt: bool 
         folder.mkdir(parents=True)
     source = skill_source()
     pack = {name: (source / name).read_bytes() for name in shipped_files()}
-    from ardia_cli import __version__
+    from nilla_browser_cli import __version__
 
-    marker = {"vendor": "ardia", "version": __version__}
+    marker = {"vendor": "nilla", "version": __version__}
     if isinstance(companions, list):
         marker["companions"] = [name for name in companions if name in COMPANIONS]
     write_pack(folder, previous, pack, marker)
@@ -232,24 +232,24 @@ def companion_folder(folder: Path) -> Path:
 
 
 def install_companion(folder: Path) -> str:
-    from ardia_cli import computer
+    from nilla_browser_cli import computer
 
     previous: list[str] = []
     if folder.is_symlink() or folder.exists():
         owned = None if folder.is_symlink() or not folder.is_dir() else marked_files(folder, CUA_SKILL)
         if owned is None:
-            return f"kept {folder}: a {CUA_SKILL} skill is already there and ardia didn't install it (cua-driver's own installer?)"
+            return f"kept {folder}: a {CUA_SKILL} skill is already there and nilla didn't install it (cua-driver's own installer?)"
         previous = owned
     pack = computer.skill_pack()
     if not folder.exists():
         folder.mkdir(parents=True)
-    marker = {"vendor": "ardia", "skill": CUA_SKILL, "upstream": f"trycua/cua cua-driver-rs-v{computer.VERSION}", "version": computer.VERSION}
+    marker = {"vendor": "nilla", "skill": CUA_SKILL, "upstream": f"trycua/cua cua-driver-rs-v{computer.VERSION}", "version": computer.VERSION}
     write_pack(folder, previous, pack, marker)
     return f"{CUA_SKILL} {computer.VERSION}: {folder}"
 
 
 def companion_line(folder: Path) -> tuple[str, int]:
-    from ardia_cli import computer
+    from nilla_browser_cli import computer
 
     try:
         return install_companion(folder), 0
@@ -258,7 +258,7 @@ def companion_line(folder: Path) -> tuple[str, int]:
 
 
 def record_path() -> Path:
-    from ardia_cli import usage
+    from nilla_browser_cli import usage
 
     return usage.cli_home() / "skills.json"
 
@@ -332,10 +332,10 @@ def install_detected(computer_use: bool = True) -> int:
             print(f"{target}: skipped {folder}: removed after an earlier install")
             continue
         if exists and owned_files(folder) is None:
-            print(f"{target}: skipped {folder}: not installed by ardia")
+            print(f"{target}: skipped {folder}: not installed by nilla")
             continue
         targets.append(target)
-    from ardia_cli import telemetry
+    from nilla_browser_cli import telemetry
 
     telemetry.note_count("skills_installed", len(targets))
     telemetry.note_count("skills_skipped", len(detected_targets()) - len(targets))
@@ -350,7 +350,7 @@ def refresh() -> int:
         if not (folder.is_symlink() or folder.exists()):
             continue
         if owned_files(folder) is None:
-            print(f"skipped {folder}: not installed by ardia skills install (no {MARKER} marker)")
+            print(f"skipped {folder}: not installed by nilla skills install (no {MARKER} marker)")
             continue
         kept.append(folder)
         try:

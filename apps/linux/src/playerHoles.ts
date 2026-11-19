@@ -68,7 +68,7 @@ export function domHoleDeps(isLayer: (element: Element) => boolean, mine: (eleme
       const { x, y, width, height } = element.getBoundingClientRect();
       return { x, y, width, height };
     },
-    paints: (element) => !transparent(getComputedStyle(element).backgroundColor) || element.classList.contains("ardia-hole-host"),
+    paints: (element) => !transparent(getComputedStyle(element).backgroundColor) || element.classList.contains("nilla-hole-host"),
     managed: (element) => isLayer(element),
     clippedElsewhere: (element) => !mine(element) && getComputedStyle(element).clipPath !== "none",
   };

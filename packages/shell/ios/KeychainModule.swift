@@ -7,7 +7,7 @@ public class KeychainModule: Module {
   private static let service = "Nilla Connected Accounts"
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaKeychain")
+    Name("NillaKeychain")
 
     AsyncFunction("get") { (account: String) -> String? in
       if let store = IsolatedSecrets.shared { return store.get(account) }
@@ -30,7 +30,7 @@ public class KeychainModule: Module {
       if status == errSecItemNotFound {
         var add = Self.query(account)
         add[kSecValueData as String] = data
-        add[kSecAttrLabel as String] = "Ardia: \(account)"
+        add[kSecAttrLabel as String] = "Nilla: \(account)"
         status = SecItemAdd(add as CFDictionary, nil)
       } else if status != errSecSuccess {
         SecItemDelete(Self.query(account) as CFDictionary)

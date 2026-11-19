@@ -4,7 +4,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/linux/syntax-check-156.sh [--src DIR] [--out DIR] [--work DIR] [--jobs N] [--no-overlay] [--full] [FILTER...]
 
-Runs clang -fsyntax-only over the Linux-built Ardia sources (engine/ardiacore-linux/src/ardia/{linux,core}
+Runs clang -fsyntax-only over the Linux-built Nilla sources (engine/ardiacore-linux/src/ardia/{linux,core}
 and the Linux sources of engine/chromium/src/chrome/browser/ardia) with the compile flags of a Chromium 156
 output directory, reading that tree only.
 
@@ -14,7 +14,7 @@ Before checking it stages everything the 156 tree lacks into the work dir:
   overlay/  copies of the tree files our engine/patches series touches, with every Linux-applicable
             hunk the tree does not have yet applied to the copy
 
-  --src DIR      Chromium src (default ~/ardia-linux-build-156/chromium_git/chromium/src)
+  --src DIR      Chromium src (default ~/nilla-linux-build-156/chromium_git/chromium/src)
   --out DIR      output dir with the ninja files (default <src>/out/Release_GN_linux_x64)
   --work DIR     scratch dir, recreated on each run, must be outside <src> (default /tmp/v157)
   --jobs N       parallel clang processes, run under nice -n 10 (default 4)
@@ -26,7 +26,7 @@ Exits 0 when every file passes.
 EOF
 }
 root=$(cd "$(dirname "$0")/../.." && pwd -P)
-src="$HOME/ardia-linux-build-156/chromium_git/chromium/src"
+src="$HOME/nilla-linux-build-156/chromium_git/chromium/src"
 out=""
 work=/tmp/v157
 jobs=4

@@ -27,7 +27,7 @@ const ZEN = {
 
 let zen = ZEN;
 globalThis.acTestNativeModules = {
-  ArdiaImport: {
+  NillaImport: {
     addListener: () => ({ remove() {} }),
     isBrowserUnlocked: () => true,
     forgetUnlockedKeys() {},
@@ -82,7 +82,7 @@ const dataOf = (name) => dataIdOf(S().profiles[named(name) ?? "default"]);
 
 const ALL = ["work", "home", "money", "side", "study", "lab"];
 
-test("each Zen profile's spaces land in their own Ardia profiles, never all in the first one", async () => {
+test("each Zen profile's spaces land in their own Nilla profiles, never all in the first one", async () => {
   await importZen(Object.keys(ZEN), ALL);
   assert.deepEqual(
     S().profileOrder.map((id) => S().profiles[id].name),

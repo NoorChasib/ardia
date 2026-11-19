@@ -3,7 +3,7 @@
 
 static const NSTimeInterval kPageDrawWait = 0.4;
 
-@implementation ArdiaPageDrawWait {
+@implementation NillaPageDrawWait {
   __weak ArdiaCoreTab *_tab;
   NSInteger (^_test)(BOOL fullScreen, BOOL fills);
   void (^_done)(void);
@@ -12,12 +12,12 @@ static const NSTimeInterval kPageDrawWait = 0.4;
 + (void)tab:(ArdiaCoreTab *)tab draws:(NSInteger (^)(BOOL fullScreen, BOOL fills))test then:(void (^)(void))done {
   NSView *page = tab.view;
   if (!page.window || page.isHiddenOrHasHiddenAncestor) return done();
-  ArdiaPageDrawWait *wait = [ArdiaPageDrawWait new];
+  NillaPageDrawWait *wait = [NillaPageDrawWait new];
   wait->_tab = tab;
   wait->_test = test;
   wait->_done = done;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kPageDrawWait * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    if (wait->_done && [ArdiaLaunchConfig.shared traced:@"visibility"]) NSLog(@"[ardiacore-vis] full screen: the page didn't draw in time");
+    if (wait->_done && [NillaLaunchConfig.shared traced:@"visibility"]) NSLog(@"[ardiacore-vis] full screen: the page didn't draw in time");
     [wait finish];
   });
   [wait ask];
@@ -35,7 +35,7 @@ static const NSTimeInterval kPageDrawWait = 0.4;
   if (!_done) return;
   if (!page.window) return [self finish];
   const NSSize asked = [page convertRect:page.bounds toView:nil].size;
-  __weak ArdiaPageDrawWait *weakSelf = self;
+  __weak NillaPageDrawWait *weakSelf = self;
   [tab evaluate:@"requestAnimationFrame(() => requestAnimationFrame(() => post('result', JSON.stringify("
                 @"[innerWidth * devicePixelRatio, innerHeight * devicePixelRatio, !!document.fullscreenElement]))))"
      completion:^(NSString *json) {
@@ -58,7 +58,7 @@ static const NSTimeInterval kPageDrawWait = 0.4;
   const BOOL sized = NSEqualSizes(asked, now) && fabs([drawn[0] doubleValue] - pixels.width) <= 2 &&
                      fabs([drawn[1] doubleValue] - pixels.height) <= 2;
   const NSInteger drew = sized ? _test([drawn[2] boolValue], fills) : 0;
-  if ([ArdiaLaunchConfig.shared traced:@"visibility"])
+  if ([NillaLaunchConfig.shared traced:@"visibility"])
     NSLog(@"[ardiacore-vis] full screen: page drew %@, its view %@ (fills=%d) -> %ld", json, NSStringFromSize(pixels), fills, (long)drew);
   if (drew) return [self finish];
   [self ask];

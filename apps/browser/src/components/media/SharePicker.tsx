@@ -200,7 +200,7 @@ function ScreenRecordingNeeded() {
   return (
     <View style={NOTICE}>
       <Text size="small" tone="textSecondary">
-        To share a window or your entire screen, turn on Ardia in System Settings › Privacy & Security › Screen Recording, then quit and reopen Ardia.
+        To share a window or your entire screen, turn on Nilla in System Settings › Privacy & Security › Screen Recording, then quit and reopen Nilla.
       </Text>
       <Button variant="pill" title="Open System Settings" onPress={() => void askForScreenRecording()} />
     </View>

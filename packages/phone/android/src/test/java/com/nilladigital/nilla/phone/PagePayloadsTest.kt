@@ -1,8 +1,8 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.browser.PageRequest
-import com.ardia.browser.SitePermission
-import com.ardia.browser.VisitKind
+import com.nilladigital.nilla.PageRequest
+import com.nilladigital.nilla.SitePermission
+import com.nilladigital.nilla.VisitKind
 import expo.modules.kotlin.exception.CodedException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals

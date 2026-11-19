@@ -11,7 +11,7 @@ type BudgetNative = {
   cancelSampleFrames?: () => void;
 };
 
-const native = requireOptionalNativeModule<BudgetNative>("ArdiaPhoneLook");
+const native = requireOptionalNativeModule<BudgetNative>("NillaPhoneLook");
 
 let current: BudgetState | null = null;
 let appliedAtLaunch: "full" | "degraded" = "full";

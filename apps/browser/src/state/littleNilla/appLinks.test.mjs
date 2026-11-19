@@ -15,7 +15,7 @@ function mainWindow(settings) {
   S().newTab(main, { url: "https://c.example/", background: true });
   S().activate(b);
   S().setFocusedWindow(main);
-  S().updateSettings({ openLinksInLittleArdia: false, ...settings });
+  S().updateSettings({ openLinksInLittleNilla: false, ...settings });
   return main;
 }
 
@@ -37,7 +37,7 @@ for (const [start, setUp] of [
 ]) {
   test(`with it on and ${start}, several app links keep their order`, async () => {
     S().hydrate({ profiles: { default: PERSONAL }, profileOrder: ["default"], windows: {}, tabs: {} });
-    S().updateSettings({ openLinksInLittleArdia: false, appLinksFirst: true });
+    S().updateSettings({ openLinksInLittleNilla: false, appLinksFirst: true });
     setUp();
     await opened(["https://one.example/", "https://two.example/", "https://three.example/"]);
     const [main] = Object.keys(S().windows);
@@ -51,8 +51,8 @@ test("with it off, app links follow Add new tabs as before", async () => {
   assert.deepEqual(urlsOf(main), ["https://pinned.example/", "https://b.example/", "https://c.example/", "https://one.example/"]);
 });
 
-test("each Little Ardia a link opens remembers the app that sent its link, even when two arrive together", async () => {
-  mainWindow({ openLinksInLittleArdia: true });
+test("each Little Nilla a link opens remembers the app that sent its link, even when two arrive together", async () => {
+  mainWindow({ openLinksInLittleNilla: true });
   openExternalUrls(["https://slack.example/"], undefined, { bundleId: "com.tinyspeck.slackmacgap", appName: "Slack" });
   openExternalUrls(["https://mail.example/"], undefined, { bundleId: "com.apple.mail", appName: "Mail" });
   await new Promise((resolve) => setImmediate(resolve));
@@ -63,7 +63,7 @@ test("each Little Ardia a link opens remembers the app that sent its link, even 
 });
 
 test("a link whose sender isn't an app still remembers the app it came from, and that beats the sender", async () => {
-  mainWindow({ openLinksInLittleArdia: true });
+  mainWindow({ openLinksInLittleNilla: true });
   openExternalUrls(["https://terminal.example/"], undefined, { bundleId: null, appName: "open" }, "com.apple.Terminal");
   openExternalUrls(["https://helper.example/"], undefined, { bundleId: "com.tinyspeck.slackmacgap.helper", appName: "Slack Helper" }, "com.tinyspeck.slackmacgap");
   await new Promise((resolve) => setImmediate(resolve));

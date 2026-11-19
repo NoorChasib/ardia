@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.browser.ErrorPages
-import com.ardia.browser.NetworkFailure
-import com.ardia.browser.PageLoadFailure
-import com.ardia.browser.PageTone
+import com.nilladigital.nilla.ErrorPages
+import com.nilladigital.nilla.NetworkFailure
+import com.nilladigital.nilla.PageLoadFailure
+import com.nilladigital.nilla.PageTone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

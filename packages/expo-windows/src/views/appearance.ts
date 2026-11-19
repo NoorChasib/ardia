@@ -1,6 +1,6 @@
 import { useContext, useSyncExternalStore } from "react";
 import { useColorScheme } from "react-native";
-import type { ShellNative } from "@ardia/shell";
+import type { ShellNative } from "@nilla/shell";
 import { WindowIdContext } from "../engine/windowId";
 import { requireNativeModule } from "../modules";
 import { isWindowDark } from "../windowDark";
@@ -21,7 +21,7 @@ function start() {
   if (started) return;
   started = true;
   try {
-    const shell = requireNativeModule<Pick<ShellNative, "isDarkAppearance" | "addListener">>("ArdiaShell");
+    const shell = requireNativeModule<Pick<ShellNative, "isDarkAppearance" | "addListener">>("NillaShell");
     shell.addListener("onAppEvent", (event) => {
       if (event?.type !== "appearance" || typeof event.dark !== "boolean") return;
       heardEvent = true;

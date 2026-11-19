@@ -100,7 +100,7 @@ function Get-ClassNames($files) {
   return $names
 }
 
-$scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("ardia-host-manifest-" + [guid]::NewGuid().ToString("N"))
+$scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("nilla-host-manifest-" + [guid]::NewGuid().ToString("N"))
 $failed = $null
 try {
   if (-not (Test-Path -LiteralPath $From -PathType Leaf)) { throw "'$From' does not exist" }

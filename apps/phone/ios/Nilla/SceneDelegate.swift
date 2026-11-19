@@ -1,4 +1,4 @@
-internal import ArdiaPhoneNative
+internal import NillaPhoneNative
 internal import Expo
 import React
 import UIKit

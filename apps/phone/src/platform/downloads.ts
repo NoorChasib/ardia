@@ -1,2 +1,2 @@
-export { downloads } from "@ardia/phone-native";
-export type { DownloadEvent, DownloadProgress } from "@ardia/phone-native";
+export { downloads } from "@nilla/phone-native";
+export type { DownloadEvent, DownloadProgress } from "@nilla/phone-native";

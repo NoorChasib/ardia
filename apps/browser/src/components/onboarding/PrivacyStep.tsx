@@ -1,4 +1,4 @@
-import { engineHost } from "@ardia/core";
+import { engineHost } from "@nilla/core";
 import { StyleSheet, View } from "react-native";
 import { searchEngines } from "../../state/settings/settings";
 import { useSettings } from "../../state/browser/hooks";
@@ -126,7 +126,7 @@ function Receipt({ on }: { on: boolean }) {
       }}
     >
       <Text size="caption" weight="bold" color={colors.title} style={[mono, { letterSpacing: tracking.wide, textAlign: "center" }]}>
-        ARDIA
+        NILLA
       </Text>
       <Text color={colors.subtitle} style={[onboardingType.receiptSmall, mono, { textAlign: "center", marginTop: space.xs }]}>
         ITEMIZED. UNLIKE SOME EXPENSES.

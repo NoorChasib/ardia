@@ -5,14 +5,14 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
-@implementation ArdiaPiPController (SelfTest)
+@implementation NillaPiPController (SelfTest)
 
 - (NSString *)snapshot:(NSString *)name {
   NSWindow *window = _window;
-  NSString *dir = ArdiaLaunchConfig.shared.dataDirectory ?: @"/tmp";
-  NSView *content = ArdiaWindowRootView(window);
+  NSString *dir = NillaLaunchConfig.shared.dataDirectory ?: @"/tmp";
+  NSView *content = NillaWindowRootView(window);
   NSSize size = content.bounds.size;
   NSBitmapImageRep *rep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:nil pixelsWide:size.width * 2 pixelsHigh:size.height * 2
                                                                 bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO
@@ -48,7 +48,7 @@ using namespace ardia_pip;
     [steps addObject:step];
     NSLog(@"[pip-selftest] %@ %@ %@", name, pass ? @"PASS" : @"FAIL", step);
   };
-  NSString *dir = ArdiaLaunchConfig.shared.dataDirectory ?: @"/tmp";
+  NSString *dir = NillaLaunchConfig.shared.dataDirectory ?: @"/tmp";
   auto snapshot = [=](NSString *name) { [self snapshot:name]; };
   auto write = [=] {
     NSString *path = [dir stringByAppendingPathComponent:@"pip-selftest.json"];
@@ -70,7 +70,7 @@ using namespace ardia_pip;
     [self settle];
   };
 
-  record(@"attached", self.overlay.superview == ArdiaWindowRootView(window) && [ArdiaWindowRootView(window).subviews.lastObject isEqual:self.overlay],
+  record(@"attached", self.overlay.superview == NillaWindowRootView(window) && [NillaWindowRootView(window).subviews.lastObject isEqual:self.overlay],
          @{@"level" : @(window.level), @"keepOnTop" : @(self.keepOnTop), @"shadow" : @(window.hasShadow)});
   after(0.6, ^{
     record(@"nothing of ours at rest", self.overlay.handle.hidden && [self.overlay hitTest:NSMakePoint(20, 20)] == nil, nil);
@@ -85,7 +85,7 @@ using namespace ardia_pip;
     dragTo(NSMaxX(visibleRight) - NSWidth(window.frame) * 0.3);
   });
   after(2.2, ^{
-    record(@"drag past right edge stashes", self.stashedEdge == ArdiaPiPEdgeRight &&
+    record(@"drag past right edge stashes", self.stashedEdge == NillaPiPEdgeRight &&
                                                  fabs(NSMinX(window.frame) - (NSMaxX(visibleRight) - kPeek)) < 0.5 &&
                                                  !self.overlay.handle.hidden && self.overlay.handle.alphaValue > 0.99,
            @{@"handle" : NSStringFromRect(self.overlay.handle.frame)});
@@ -93,17 +93,17 @@ using namespace ardia_pip;
     [window setFrameOrigin:NSMakePoint(NSMaxX(visibleRight) - NSWidth(window.frame) - 40, NSMinY(window.frame))];
   });
   after(3.4, ^{
-    record(@"Chrome's move re-stashes", self.stashedEdge == ArdiaPiPEdgeRight && fabs(NSMinX(window.frame) - (NSMaxX(visibleRight) - kPeek)) < 0.5, nil);
+    record(@"Chrome's move re-stashes", self.stashedEdge == NillaPiPEdgeRight && fabs(NSMinX(window.frame) - (NSMaxX(visibleRight) - kPeek)) < 0.5, nil);
     self.overlay.handle.onClick();
   });
   after(4.6, ^{
-    record(@"handle click brings it back", self.stashedEdge == ArdiaPiPEdgeNone && self.overlay.handle.hidden &&
+    record(@"handle click brings it back", self.stashedEdge == NillaPiPEdgeNone && self.overlay.handle.hidden &&
                                                 fabs(NSMaxX(window.frame) - (NSMaxX(visibleRight) - kReturnMargin)) < 0.5,
            nil);
     dragTo(NSMinX(visibleLeft) - NSWidth(window.frame) * 0.7);
   });
   after(5.8, ^{
-    record(@"drag past left edge stashes", self.stashedEdge == ArdiaPiPEdgeLeft &&
+    record(@"drag past left edge stashes", self.stashedEdge == NillaPiPEdgeLeft &&
                                                 fabs(NSMaxX(window.frame) - (NSMinX(visibleLeft) + kPeek)) < 0.5 &&
                                                 NSMinX(self.overlay.handle.frame) == NSWidth(self.overlay.bounds) - kPeek,
            @{@"handle" : NSStringFromRect(self.overlay.handle.frame)});
@@ -111,7 +111,7 @@ using namespace ardia_pip;
     dragTo(NSMinX(visibleLeft) + 100);
   });
   after(7.0, ^{
-    record(@"drag out of the stash", self.stashedEdge == ArdiaPiPEdgeNone && fabs(NSMinX(window.frame) - (NSMinX(visibleLeft) + 100)) < 0.5, nil);
+    record(@"drag out of the stash", self.stashedEdge == NillaPiPEdgeNone && fabs(NSMinX(window.frame) - (NSMinX(visibleLeft) + 100)) < 0.5, nil);
     NSArray *saved = [NSArray arrayWithContentsOfFile:[dir stringByAppendingPathComponent:@"Chromium/ArdiaPictureInPicture.plist"]];
     NSRect frame = window.frame;
     CGFloat top = NSMaxY(NSScreen.screens.firstObject.frame) - NSMaxY(frame);
@@ -144,7 +144,7 @@ using namespace ardia_pip;
 
 - (void)runButtonSelfTest:(NSString *)button {
   NSWindow *window = _window;
-  NSString *dir = ArdiaLaunchConfig.shared.dataDirectory ?: @"/tmp";
+  NSString *dir = NillaLaunchConfig.shared.dataDirectory ?: @"/tmp";
   CGFloat center = kButtonMargin + kButtonSize / 2;
   NSPoint point = NSMakePoint([button isEqual:@"close"] ? NSWidth(window.frame) - center : center, NSHeight(window.frame) - center);
   auto event = [=](NSEventType type) {
@@ -179,8 +179,8 @@ using namespace ardia_pip;
 
 - (void)runHoverSelfTest {
   NSWindow *window = _window;
-  NSString *dir = ArdiaLaunchConfig.shared.dataDirectory ?: @"/tmp";
-  NSString *where = [ArdiaLaunchConfig.shared testValue:@"pipHover"];
+  NSString *dir = NillaLaunchConfig.shared.dataDirectory ?: @"/tmp";
+  NSString *where = [NillaLaunchConfig.shared testValue:@"pipHover"];
   CGFloat center = kButtonMargin + kButtonSize / 2;
   NSSize size = window.frame.size;
   NSPoint point = [where isEqual:@"close"]  ? NSMakePoint(size.width - center, size.height - center)

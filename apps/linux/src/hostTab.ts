@@ -122,7 +122,7 @@ export class HostTab {
     claims.set(host, owners);
     const early: { id: string; event: HostTabEvent }[] = [];
     const deliver = (event: HostTabEvent) => {
-      try { onEvent(event); } catch (error) { console.error("[ardia host] tab listener failed", error); }
+      try { onEvent(event); } catch (error) { console.error("[nilla host] tab listener failed", error); }
     };
     this.unsubscribe = routeTabEvents(host, this.claim, !!this.page, (id, payload) => {
       if (this.disposed || (this.identity && owners.get(this.key) !== this)) return;
@@ -142,7 +142,7 @@ export class HostTab {
       const identity = await invokeHost<HostTabIdentity>("tab.create", {
         ...options, adoptId: nativeAdoptId(options.adoptId, host), claim: this.claim, ...(previousClaim ? { previousClaim } : {}), profile: hostProfile(options.profile, host), url: options.url ?? "about:blank",
       }, host);
-      if (!Number.isInteger(identity?.browserId) || identity.browserId <= 0 || !Number.isInteger(identity.chromeTabId) || identity.chromeTabId <= 0) throw new Error("Invalid Ardia tab identity");
+      if (!Number.isInteger(identity?.browserId) || identity.browserId <= 0 || !Number.isInteger(identity.chromeTabId) || identity.chromeTabId <= 0) throw new Error("Invalid Nilla tab identity");
       this.identity = identity;
       owners.set(this.key, this);
       recoveryClaims.get(host)?.delete(this.key);
@@ -154,7 +154,7 @@ export class HostTab {
           this.disposed = true;
           this.unsubscribe();
           this.detach();
-          throw new Error("Invalid Ardia page lease");
+          throw new Error("Invalid Nilla page lease");
         }
         deliver({ type: "ready", browserId: identity.browserId, chromeTabId: identity.chromeTabId });
       } else if (owners.get(this.key) === this) {
@@ -182,7 +182,7 @@ export class HostTab {
   async command<T = unknown>(command: string, args: unknown[] = []): Promise<T> {
     await this.ready;
     const send = async () => {
-      if (this.disposed || !this.identity || claims.get(this.host)?.get(this.key) !== this) throw new Error(`Ardia tab released: ${this.key}`);
+      if (this.disposed || !this.identity || claims.get(this.host)?.get(this.key) !== this) throw new Error(`Nilla tab released: ${this.key}`);
       return invokeHost<T>("tab.command", { id: this.identity.browserId, claim: this.claim, command, args }, this.host);
     };
     return UNORDERED_COMMANDS.has(command) ? send() : enqueueTab(this.host, this.key, send);
@@ -242,9 +242,9 @@ export class HostTab {
         else keepRecoveryClaim(this.host, this.key, this.claim);
       }
       noteTabRelease(outcome);
-      if (outcome === "failed") console.error("[ardia host] release failed", failure);
+      if (outcome === "failed") console.error("[nilla host] release failed", failure);
     }).catch((error) => {
-      console.error("[ardia host] release failed", error);
+      console.error("[nilla host] release failed", error);
     });
   }
 
@@ -265,7 +265,7 @@ export function showInPlaceOf(from: HostTab, to: HostTab): boolean {
   const send = (method: string, args: Record<string, unknown>, undo: () => void) => {
     void new Promise((resolve) => resolve(to.host.invoke(method, args))).catch((error: unknown) => {
       undo();
-      console.error("[ardia host] early tab switch failed", error);
+      console.error("[nilla host] early tab switch failed", error);
     });
   };
   to.lastViewport = JSON.stringify(shown);

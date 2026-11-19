@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.Context
@@ -25,7 +25,7 @@ object LookBudget {
         if (FrameSampler.cancel() && PhoneLab.isOn) android.util.Log.i("PAGELAB", "PAGELAB look budget: the sample under way is dropped, the screen turned or resized")
     }
 
-    private const val PREFERENCES = "ardia-look-budget"
+    private const val PREFERENCES = "nilla-look-budget"
     private const val KEY_STATE = "state"
     private const val KEY_FORCED = "forced"
 
@@ -60,7 +60,7 @@ object LookBudget {
         val app = context.applicationContext ?: context
         val info = runCatching { app.packageManager.getPackageInfo(app.packageName, 0) }.getOrNull()
         val code = if (info == null) 0L else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) info.longVersionCode else @Suppress("DEPRECATION") info.versionCode.toLong()
-        val commitId = app.resources.getIdentifier("ardia_build_commit", "string", app.packageName)
+        val commitId = app.resources.getIdentifier("nilla_build_commit", "string", app.packageName)
         val commit = if (commitId != 0) runCatching { app.getString(commitId) }.getOrNull() else null
         return listOfNotNull(info?.versionName ?: "?", code.toString(), commit?.take(12)).joinToString(" ")
     }
@@ -272,7 +272,7 @@ internal object FrameSampler {
         }
         val refreshRate = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) activity.display?.refreshRate else null) ?: @Suppress("DEPRECATION") activity.windowManager.defaultDisplay.refreshRate
         val interval = 1_000_000_000.0 / refreshRate.coerceAtLeast(1f)
-        val thread = HandlerThread("ardia-frame-sampler").apply { start() }
+        val thread = HandlerThread("nilla-frame-sampler").apply { start() }
         val handler = Handler(thread.looper)
         var listener: Window.OnFrameMetricsAvailableListener? = null
         val reports = object : FrameReports {

@@ -42,7 +42,7 @@ test("a full set of choices survives a round trip in a short code", () => {
 
 test("every onboarding layout, look and tab key is in the code, and nothing private is", () => {
   assert.deepEqual([...SETUP_SETTING_KEYS].sort(), Object.keys(ARC.settings).sort());
-  for (const key of ["searchEngine", "customSearchUrl", "openLinksInLittleArdia", "shortcuts", "mutedSites"]) {
+  for (const key of ["searchEngine", "customSearchUrl", "openLinksInLittleNilla", "shortcuts", "mutedSites"]) {
     assert.ok(!SETUP_SETTING_KEYS.includes(key), `${key} stays out of setup codes`);
   }
 });
@@ -74,12 +74,12 @@ test("garbage fails with a friendly message", () => {
   assert.deepEqual(decodeSetupCode("   "), { ok: false, error: SETUP_CODE_ERRORS.empty });
   assert.deepEqual(decodeSetupCode("hello there"), { ok: false, error: SETUP_CODE_ERRORS.shape });
   assert.deepEqual(decodeSetupCode("https://ardia.dev/?code=1"), { ok: false, error: SETUP_CODE_ERRORS.shape });
-  assert.deepEqual(decodeSetupCode("ardia01-t0-00"), { ok: false, error: SETUP_CODE_ERRORS.shape });
-  assert.deepEqual(decodeSetupCode(`ardia1-${"t0".repeat(SETUP_CODE_MAX_LENGTH)}-00`), { ok: false, error: SETUP_CODE_ERRORS.shape });
-  assert.deepEqual(decodeSetupCode("ardia2-t0-00"), { ok: false, error: SETUP_CODE_ERRORS.newer });
-  assert.deepEqual(decodeSetupCode("ardia1-"), { ok: false, error: SETUP_CODE_ERRORS.damaged });
-  assert.deepEqual(decodeSetupCode("ardia1-t0"), { ok: false, error: SETUP_CODE_ERRORS.damaged });
-  for (const bad of ["ardia1-{\"t\":0}-00", "ardia1-<script>-00", "ardia1-t0;alert(1)-00", "ardia1-t-00", "ardia1-00-00"]) {
+  assert.deepEqual(decodeSetupCode("nilla01-t0-00"), { ok: false, error: SETUP_CODE_ERRORS.shape });
+  assert.deepEqual(decodeSetupCode(`nilla1-${"t0".repeat(SETUP_CODE_MAX_LENGTH)}-00`), { ok: false, error: SETUP_CODE_ERRORS.shape });
+  assert.deepEqual(decodeSetupCode("nilla2-t0-00"), { ok: false, error: SETUP_CODE_ERRORS.newer });
+  assert.deepEqual(decodeSetupCode("nilla1-"), { ok: false, error: SETUP_CODE_ERRORS.damaged });
+  assert.deepEqual(decodeSetupCode("nilla1-t0"), { ok: false, error: SETUP_CODE_ERRORS.damaged });
+  for (const bad of ["nilla1-{\"t\":0}-00", "nilla1-<script>-00", "nilla1-t0;alert(1)-00", "nilla1-t-00", "nilla1-00-00"]) {
     const result = decodeSetupCode(bad);
     assert.equal(result.ok, false, bad);
   }

@@ -45,7 +45,7 @@ test("nothing for a page the engine doesn't load at launch", () => {
   assert.equal(launchTab(S(), "gone"), null);
   assert.equal(launchTab({ ...S(), settings: { ...S().settings, restoreSession: false } }, "w1"), null, "a session the user doesn't restore");
   assert.equal(launchTab({ ...S(), windows: { w1: { ...S().windows.w1, kind: "private" } } }, "w1"), null, "private");
-  assert.equal(launchTab({ ...S(), windows: { w1: { ...S().windows.w1, kind: "small" } } }, "w1"), null, "Little Ardia");
+  assert.equal(launchTab({ ...S(), windows: { w1: { ...S().windows.w1, kind: "small" } } }, "w1"), null, "Little Nilla");
 });
 
 test("session.json's hint is what the next launch claims", () => {

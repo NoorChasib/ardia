@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.SharedPreferences
-import com.ardia.browser.BrowserUrl
-import com.ardia.browser.NightShadeMode
-import com.ardia.browser.SitePreferences
+import com.nilladigital.nilla.BrowserUrl
+import com.nilladigital.nilla.NightShadeMode
+import com.nilladigital.nilla.SitePreferences
 import org.json.JSONObject
 
 class PhoneSitePreferences(private val store: SharedPreferences) : SitePreferences {

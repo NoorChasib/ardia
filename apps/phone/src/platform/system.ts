@@ -1,4 +1,4 @@
-import { clipboard, system as nativeSystem, type ClipboardOffer } from "@ardia/phone-native";
+import { clipboard, system as nativeSystem, type ClipboardOffer } from "@nilla/phone-native";
 import { getStringAsync, hasStringAsync, setStringAsync } from "expo-clipboard";
 import { requireOptionalNativeModule } from "expo-modules-core";
 import { AndroidHaptics, impactAsync, ImpactFeedbackStyle, notificationAsync, NotificationFeedbackType, performAndroidHapticsAsync, selectionAsync } from "expo-haptics";
@@ -49,7 +49,7 @@ export const shareText = (text: string, title: string) => Share.share({ message:
 
 export const pasteText = () => getStringAsync();
 
-const readsClipOffers = requireOptionalNativeModule("ArdiaPhoneClipboard") !== null;
+const readsClipOffers = requireOptionalNativeModule("NillaPhoneClipboard") !== null;
 
 export async function clipboardOffer(): Promise<ClipboardOffer | null> {
   if (readsClipOffers) return clipboard.offer();

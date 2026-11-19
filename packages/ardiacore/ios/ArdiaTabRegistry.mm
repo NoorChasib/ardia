@@ -5,7 +5,7 @@
 
 namespace {
 
-NSMapTable<ArdiaCoreTab *, ArdiaWebView *> *Views() {
+NSMapTable<ArdiaCoreTab *, NillaWebView *> *Views() {
   static NSMapTable *views = [NSMapTable weakToWeakObjectsMapTable];
   return views;
 }
@@ -24,14 +24,14 @@ constexpr int64_t kOfferSeconds = 30;
 
 }
 
-@implementation ArdiaTabRegistry
+@implementation NillaTabRegistry
 
-+ (void)setView:(ArdiaWebView *)view forTab:(ArdiaCoreTab *)tab {
++ (void)setView:(NillaWebView *)view forTab:(ArdiaCoreTab *)tab {
   if (view) [Views() setObject:view forKey:tab];
   else [Views() removeObjectForKey:tab];
 }
 
-+ (ArdiaWebView *)viewForTab:(ArdiaCoreTab *)tab {
++ (NillaWebView *)viewForTab:(ArdiaCoreTab *)tab {
   return [Views() objectForKey:tab];
 }
 
@@ -40,12 +40,12 @@ constexpr int64_t kOfferSeconds = 30;
 }
 
 + (NSString *)offerTab:(ArdiaCoreTab *)tab prefix:(NSString *)prefix {
-  NSString *adoptId = [NSString stringWithFormat:@"%@:%d", prefix, ardia_host::BrowserId(tab)];
+  NSString *adoptId = [NSString stringWithFormat:@"%@:%d", prefix, nilla_host::BrowserId(tab)];
   Offered()[adoptId] = tab;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kOfferSeconds * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
     if (Offered()[adoptId] != tab) return;
     [Offered() removeObjectForKey:adoptId];
-    if (![ArdiaTabRegistry viewForTab:tab]) [tab close];
+    if (![NillaTabRegistry viewForTab:tab]) [tab close];
   });
   return adoptId;
 }
@@ -79,7 +79,7 @@ constexpr int64_t kOfferSeconds = 30;
 
 @end
 
-namespace ardia_host {
+namespace nilla_host {
 
 namespace {
 const void *kBrowserIdKey = &kBrowserIdKey;
@@ -105,7 +105,7 @@ ArdiaCoreTab *TabWithBrowserId(int browserId) {
 }
 
 NSString *AppTabIdOf(ArdiaCoreTab *tab) {
-  NSString *tabId = tab ? [ArdiaTabRegistry viewForTab:tab].transferKey : nil;
+  NSString *tabId = tab ? [NillaTabRegistry viewForTab:tab].transferKey : nil;
   return tabId.length ? tabId : nil;
 }
 
@@ -152,7 +152,7 @@ void ReleaseHeldEvents(ArdiaCoreTab *tab) {
   for (NSArray *event in held) {
     NSMutableDictionary *payload = [event[1] mutableCopy];
     payload[@"tabId"] = tabId;
-    [ArdiaEvents emit:event[0] data:payload];
+    [NillaEvents emit:event[0] data:payload];
   }
 }
 

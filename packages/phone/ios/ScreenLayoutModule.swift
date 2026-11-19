@@ -4,7 +4,7 @@ import UIKit
 
 public final class ScreenLayoutModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneScreenLayout")
+    Name("NillaPhoneScreenLayout")
 
     Function("forcedCanvas") { () -> String? in
       ScreenLayoutProbeView.forcedMode?.rawValue
@@ -17,7 +17,7 @@ public final class ScreenLayoutModule: Module {
 }
 
 final class ScreenLayoutProbeView: ExpoView {
-  static let forcedMode: DuoCanvas.Mode? = PhoneTestBuild.isOn ? UserDefaults.standard.string(forKey: "ArdiaDuoCanvas").flatMap(DuoCanvas.Mode.init(argument:)) : nil
+  static let forcedMode: DuoCanvas.Mode? = PhoneTestBuild.isOn ? UserDefaults.standard.string(forKey: "NillaDuoCanvas").flatMap(DuoCanvas.Mode.init(argument:)) : nil
 
   let onLayoutChange = EventDispatcher()
   private let host = UIHostingController(rootView: FoldProbe(onChange: { _, _ in }))

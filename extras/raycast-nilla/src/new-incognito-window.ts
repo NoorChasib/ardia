@@ -1,6 +1,6 @@
 import { closeMainWindow } from "@raycast/api";
 import { showFailureToast } from "@raycast/utils";
-import { newWindow } from "./ardia";
+import { newWindow } from "./nilla";
 
 export default async function Command() {
   try {

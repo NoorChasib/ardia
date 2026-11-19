@@ -23,10 +23,10 @@ Everything here is drawn from code, so nothing is painted by hand and every size
 
 | Output | Slot |
 | --- | --- |
-| `icons/macos/AppIcon.icon` | `apps/browser/macos/Ardia-macOS/AppIcon.icon`: the macOS 26 icon. The fill is the sky's middle colour; the sun and the two hills are separate layers, so macOS draws the dark, clear and tinted looks from them (check them in Icon Composer on a Mac) |
-| `icons/macos/AppIcon-Dev.icon` | `apps/browser/macos/Ardia-macOS/AppIcon-Dev.icon` (development builds, `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Dev`) |
-| `icons/macos/AppIcon.appiconset` | `apps/browser/macos/Ardia-macOS/Assets.xcassets/AppIcon.appiconset` (Apple's template with its shadow, 16 to 1024 px) |
-| `icons/macos/variants/AppIconVariant-<id>.imageset` | `apps/browser/macos/Ardia-macOS/Assets.xcassets/`: the picker's 23 alternates (`packages/shell/ios/AppIcons.swift`), each drawn whole |
+| `icons/macos/AppIcon.icon` | `apps/browser/macos/Nilla-macOS/AppIcon.icon`: the macOS 26 icon. The fill is the sky's middle colour; the sun and the two hills are separate layers, so macOS draws the dark, clear and tinted looks from them (check them in Icon Composer on a Mac) |
+| `icons/macos/AppIcon-Dev.icon` | `apps/browser/macos/Nilla-macOS/AppIcon-Dev.icon` (development builds, `ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-Dev`) |
+| `icons/macos/AppIcon.appiconset` | `apps/browser/macos/Nilla-macOS/Assets.xcassets/AppIcon.appiconset` (Apple's template with its shadow, 16 to 1024 px) |
+| `icons/macos/variants/AppIconVariant-<id>.imageset` | `apps/browser/macos/Nilla-macOS/Assets.xcassets/`: the picker's 23 alternates (`packages/shell/ios/AppIcons.swift`), each drawn whole |
 | `icons/macos/app-icon-512.png` | `apps/browser/assets/app-icon.png`, the app's own UI icon (drawn at 132 pt at most) |
 | `icons/ntp/ntp-mark[-<colour>]-{back,front,sun}[@2x].png` | `apps/browser/assets/`: the New Tab page's hills, one set per profile colour, three layers that rise one after another |
 | `icons/ntp/new-tab-mark[@2x].png` | `apps/browser/assets/`: the New Tab favicon, one colour (drawn tinted), hills split and the sun cut free |
@@ -36,7 +36,7 @@ Everything here is drawn from code, so nothing is painted by hand and every size
 | `icons/phone/ios/OpenInNilla.png` | the share extension's icon in `apps/phone/ios/Action/Assets.xcassets/AppIcon.appiconset` |
 | `icons/phone/AppIconPreview.png`, `icons/phone/appIconPreview.png` | `apps/phone/ios/App/Assets.xcassets/AppIconPreview.imageset` and `apps/phone/assets/appIconPreview.png` |
 | `icons/phone/android/` | `apps/phone/android/app/src/main/res/`: the adaptive icon (sky gradient background, sun and hills foreground bleeding to the 108 dp edge, monochrome for themed icons) |
-| `icons/extras/raycast-icon.png` | `extras/raycast-ardia/assets/icon.png` |
+| `icons/extras/raycast-icon.png` | `extras/raycast-nilla/assets/icon.png` |
 | `icons/engine/**` | Chromium's product logos and `mac/app.icns`. They belong to `engine/` and ship with the first Nilla engine builds, as does `Assets.car`, which needs `actool` on a Mac |
 
 To check a change, build into a scratch folder and compare each output with its slot byte for byte.

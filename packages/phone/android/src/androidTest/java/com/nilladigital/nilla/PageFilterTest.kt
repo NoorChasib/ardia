@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.util.concurrent.atomic.AtomicInteger
@@ -82,7 +82,7 @@ class PageFilterTest {
             shaded.server.page(
                 "/light",
                 "<body style=\"background:#fff\"><p>Light</p><script>let tries = 0; const check = setInterval(() => {" +
-                    " if (document.getElementById('ardia-night-shade')) { document.title = 'shaded'; clearInterval(check) }" +
+                    " if (document.getElementById('nilla-night-shade')) { document.title = 'shaded'; clearInterval(check) }" +
                     " else if (++tries > 150) { document.title = 'plain'; clearInterval(check) } }, 100)</script></body>",
             )
             val page = shaded.open("tab", "/light")

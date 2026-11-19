@@ -4,7 +4,7 @@ import { requireNativeModule } from "expo-modules-core";
 
 const { filterListAddress, filterListLabel, setBlockingCategory, setFilterList } = await import("./contentBlocking.ts");
 
-const native = requireNativeModule("ArdiaContentBlocker");
+const native = requireNativeModule("NillaContentBlocker");
 const calls = [];
 const call = native.call;
 native.call = (verb, profile, json) => {

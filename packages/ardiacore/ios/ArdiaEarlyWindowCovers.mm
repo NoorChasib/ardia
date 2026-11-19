@@ -14,7 +14,7 @@
 #include <initializer_list>
 #include <mach/mach.h>
 
-using namespace ardia_early_window;
+using namespace nilla_early_window;
 
 namespace {
 
@@ -30,9 +30,9 @@ constexpr double kWatchAfterAdoptionSeconds = 10;
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
-void DropCover(ArdiaEarlyShown *s) {
+void DropCover(NillaEarlyShown *s) {
   if (s.contentObserver) [NSNotificationCenter.defaultCenter removeObserver:s.contentObserver];
   s.contentObserver = nil;
   ArdiaCoreTab *tab = s.tab;
@@ -48,16 +48,16 @@ void DropCover(ArdiaEarlyShown *s) {
   [CATransaction commit];
   if (s.shielded || s.expectedURL) {
     NSView *host = tab.view.superview;
-    NSString *shown = [host isKindOfClass:ArdiaWebView.class] ? ((ArdiaWebView *)host).shownURL : nil;
+    NSString *shown = [host isKindOfClass:NillaWebView.class] ? ((NillaWebView *)host).shownURL : nil;
     CarryShield(tab, inputBlock, shown.length ? shown : (s.expectedURL ?: gLaunchURL));
   }
-  else if (tab && !tab.closed && [tab.view.superview isKindOfClass:ArdiaWebView.class]) {
+  else if (tab && !tab.closed && [tab.view.superview isKindOfClass:NillaWebView.class]) {
     [Watched() addObject:tab];
     __weak ArdiaCoreTab *watched = tab;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kWatchAfterAdoptionSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
       if (ArdiaCoreTab *still = watched) [Watched() removeObject:still];
     });
-    [ArdiaEarlyWindow page:tab shownURL:((ArdiaWebView *)tab.view.superview).shownURL];
+    [NillaEarlyWindow page:tab shownURL:((NillaWebView *)tab.view.superview).shownURL];
   }
 }
 
@@ -70,7 +70,7 @@ void TrimAfterHandoff() {
   if (trimmed) return;
   trimmed = true;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kTrimAfterHandoffSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    [ArdiaEngineBridge call:@"ac_memory_trim" profile:@"" args:nil completion:^(NSString *) {}];
+    [NillaEngineBridge call:@"ac_memory_trim" profile:@"" args:nil completion:^(NSString *) {}];
   });
 }
 
@@ -81,9 +81,9 @@ void RemovePicture(NSView *picture) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
-void ClearRootFill(ArdiaEarlyShown *s, NSView *root) {
+void ClearRootFill(NillaEarlyShown *s, NSView *root) {
   if (s.rootFillCleared || (!s.picture && !s.backdrop) || ![root respondsToSelector:@selector(setBackgroundColor:)]) return;
   id fill = [root valueForKey:@"backgroundColor"];
   s.rootFill = [fill isKindOfClass:NSColor.class] ? fill : nil;
@@ -141,9 +141,9 @@ void ReleaseOnceCovered(NSView *picture, NSView *backdrop, NSView *root, NSColor
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
-void DropPictures(ArdiaEarlyShown *s) {
+void DropPictures(NillaEarlyShown *s) {
   ReleasePictures(s.picture, s.backdrop, s.rootFillCleared ? s.root : nil, s.rootFill);
   s.picture = nil;
   s.backdrop = nil;
@@ -151,7 +151,7 @@ void DropPictures(ArdiaEarlyShown *s) {
   s.rootFill = nil;
 }
 
-void HandOffPictures(ArdiaEarlyShown *s) {
+void HandOffPictures(NillaEarlyShown *s) {
   if (s.picture || s.backdrop)
     ReleaseOnceCovered(s.picture, s.backdrop, s.root, s.rootFill, s.rootFillCleared, CACurrentMediaTime() + kCoveredFailSafeSeconds);
   s.picture = nil;
@@ -160,7 +160,7 @@ void HandOffPictures(ArdiaEarlyShown *s) {
   s.rootFill = nil;
 }
 
-void Forget(ArdiaEarlyShown *s) {
+void Forget(NillaEarlyShown *s) {
   DropCover(s);
   if (s.closeObserver) [NSNotificationCenter.defaultCenter removeObserver:s.closeObserver];
   s.closeObserver = nil;
@@ -169,14 +169,14 @@ void Forget(ArdiaEarlyShown *s) {
   if (!Shown().count) TrimAfterHandoff();
 }
 
-void Abandon(ArdiaEarlyShown *s) {
+void Abandon(NillaEarlyShown *s) {
   NSWindow *window = s.window;
   const BOOL unclaimed = !s.claimed;
   DropPictures(s);
   Forget(s);
   if (!unclaimed || !window) return;
   [window orderOut:nil];
-  [ArdiaChromeWindowHost closeWindow:window];
+  [NillaChromeWindowHost closeWindow:window];
 }
 
 NSView *Cover(NSView *host, NSDictionary *layout, NSRect *pageRect) {
@@ -203,7 +203,7 @@ NSView *Cover(NSView *host, NSDictionary *layout, NSRect *pageRect) {
   return cover;
 }
 
-void Shield(ArdiaEarlyShown *s) {
+void Shield(NillaEarlyShown *s) {
   s.shielded = YES;
   s.inputBlock = [s.tab suppressInput];
   ReleaseFocusFrom(s.tab.view);
@@ -218,7 +218,7 @@ void ApplyLights(NSWindow *window, NSDictionary *layout) {
   if (![lights isKindOfClass:NSArray.class] || lights.count < 2 || lights.count > 3) return;
   for (id part in lights)
     if (![part isKindOfClass:NSNumber.class]) return;
-  [ArdiaChromeWindowHost setTrafficLightsCenter:[NSValue valueWithPoint:NSMakePoint([lights[0] doubleValue], [lights[1] doubleValue])]
+  [NillaChromeWindowHost setTrafficLightsCenter:[NSValue valueWithPoint:NSMakePoint([lights[0] doubleValue], [lights[1] doubleValue])]
                                        trailing:lights.count == 3 && [lights[2] boolValue]
                                        inWindow:window];
 }

@@ -1,17 +1,17 @@
 #import <AppKit/AppKit.h>
 
 @class ArdiaCoreTab;
-@class ArdiaSavedSession;
+@class NillaSavedSession;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaEarlyWindow : NSObject
+@interface NillaEarlyWindow : NSObject
 + (void)setDataDirectory:(nullable NSString *)directory;
 + (void)noteLayoutChangeIn:(nullable NSWindow *)window;
 + (void)recordNow;
-+ (void)prefetchForSession:(nullable ArdiaSavedSession *)session;
++ (void)prefetchForSession:(nullable NillaSavedSession *)session;
 + (void)discardPrefetch;
-+ (BOOL)canShowWindow:(NSString *)windowId session:(ArdiaSavedSession *)session;
++ (BOOL)canShowWindow:(NSString *)windowId session:(NillaSavedSession *)session;
 + (BOOL)showWindow:(NSString *)windowId
              frame:(NSArray<NSNumber *> *)frame
            display:(nullable NSString *)display
@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)rootEmbedded:(NSView *)root inWindow:(NSWindow *)window;
 @end
 
-@interface ArdiaEarlyWindow (Pages)
+@interface NillaEarlyWindow (Pages)
 + (void)pageMoved:(ArdiaCoreTab *)tab;
 + (void)pageNavigated:(nullable ArdiaCoreTab *)tab launchURL:(nullable NSString *)launchURL;
 + (BOOL)veils:(nullable ArdiaCoreTab *)tab;

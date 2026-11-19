@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.browser.BrowserUrl
-import com.ardia.design.FaviconPixels
-import com.ardia.design.FaviconTone
-import com.ardia.design.HttpFaviconFetcher
+import com.nilladigital.nilla.BrowserUrl
+import com.nilladigital.nilla.design.FaviconPixels
+import com.nilladigital.nilla.design.FaviconTone
+import com.nilladigital.nilla.design.HttpFaviconFetcher
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -14,7 +14,7 @@ class FaviconModule : Module() {
     private val fetcher = HttpFaviconFetcher()
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneFavicons")
+        Name("NillaPhoneFavicons")
 
         AsyncFunction("look") Coroutine { url: String, dark: Boolean ->
             val tone = tone(url) ?: return@Coroutine null

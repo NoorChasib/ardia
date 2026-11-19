@@ -1,5 +1,5 @@
 {
-  "name": "@ardia/linux",
+  "name": "@nilla/linux",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,12 +18,12 @@
     "bench": "node scripts/perf/bench.mjs"
   },
   "dependencies": {
-    "@ardia/core": "workspace:*",
+    "@nilla/core": "workspace:*",
     "@ardia/ardiacore": "workspace:*",
-    "@ardia/import": "workspace:*",
-    "@ardia/shaders": "workspace:*",
-    "@ardia/shell": "workspace:*",
-    "@ardia/sync": "workspace:*",
+    "@nilla/import": "workspace:*",
+    "@nilla/shaders": "workspace:*",
+    "@nilla/shell": "workspace:*",
+    "@nilla/sync": "workspace:*",
     "react": "19.1.4",
     "react-dom": "19.1.4",
     "react-native-web": "^0.21.1",

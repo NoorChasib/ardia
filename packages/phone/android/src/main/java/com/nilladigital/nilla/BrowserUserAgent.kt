@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 object BrowserUserAgent {
     private const val FALLBACK_CHROME_MAJOR = "140"

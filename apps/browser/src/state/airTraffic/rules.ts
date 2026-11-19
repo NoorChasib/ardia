@@ -1,4 +1,4 @@
-import { displayHost } from "@ardia/core";
+import { displayHost } from "@nilla/core";
 import { isFields } from "../../lib/decode";
 import { sourceMatches, type LinkSource } from "../../lib/linkSource";
 import { globMatches, matchesUrl, parseMatchPattern, type MatchSpec } from "../../lib/matchPattern";
@@ -10,7 +10,7 @@ export const AIR_TRAFFIC_VERSION = 2;
 export const MAX_AIR_TRAFFIC_RULES = 100;
 const MIGRATIONS: Migrations = { 0: unchanged, 1: unchanged };
 
-export const OPEN_AS = ["tab", "window", "littleArdia"] as const;
+export const OPEN_AS = ["tab", "window", "littleNilla"] as const;
 export type OpenAs = (typeof OPEN_AS)[number];
 export type SourceApp = { bundleId: string | null; name: string };
 export type LinkTextKind = "contains" | "equals";

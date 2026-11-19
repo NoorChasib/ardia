@@ -3,16 +3,16 @@
 #import "ArdiaNowPlaying.h"
 #import "ArdiaTabLifecycle.h"
 
-enum class ArdiaPageFocus { Unknown, Page, DevTools, Elsewhere };
+enum class NillaPageFocus { Unknown, Page, DevTools, Elsewhere };
 
-@class ArdiaWebView;
+@class NillaWebView;
 
-struct ArdiaRequests {
+struct NillaRequests {
   BOOL loadedOnce{};
   NSString *requestedURL;
 };
 
-struct ArdiaSentReports {
+struct NillaSentReports {
   BOOL navigationQueued{};
   NSDictionary *navigation;
   NSString *favicon;
@@ -23,38 +23,38 @@ struct ArdiaSentReports {
   BOOL progressQueued{};
 };
 
-struct ArdiaLeave {
+struct NillaLeave {
   BOOL active{};
   NSUInteger generation{};
 };
 
-struct ArdiaFrameHold {
+struct NillaFrameHold {
   BOOL awaiting{};
   NSUInteger generation{};
   NSArray *mark;
   __weak NSView *pane;
   CGFloat paneZ{};
   BOOL holding{};
-  __weak ArdiaWebView *holdingFor;
+  __weak NillaWebView *holdingFor;
   NSUInteger holdGeneration{};
-  __weak ArdiaWebView *tookOverFrom;
+  __weak NillaWebView *tookOverFrom;
   CFTimeInterval tookOverAt{};
 };
 
-struct ArdiaStandIn {
+struct NillaStandIn {
   __weak NSView *page;
   ArdiaCoreTab *tab;
-  __weak ArdiaWebView *lender;
+  __weak NillaWebView *lender;
   BOOL closes{};
   BOOL leaving{};
   float opacity{};
   NSUInteger generation{};
-  __weak ArdiaWebView *lentTo;
+  __weak NillaWebView *lentTo;
 };
 
-enum class ArdiaHeldPageEnd { Painted, Loaded, Pressed, TimedOut, Detached };
+enum class NillaHeldPageEnd { Painted, Loaded, Pressed, TimedOut, Detached };
 
-struct ArdiaFirstPaint {
+struct NillaFirstPaint {
   BOOL created{};
   BOOL held{};
   BOOL settled{};
@@ -65,7 +65,7 @@ struct ArdiaFirstPaint {
   NSUInteger generation{};
 };
 
-struct ArdiaReveal {
+struct NillaReveal {
   BOOL active{};
   NSUInteger generation{};
   __weak NSView *loweredPane;
@@ -74,12 +74,12 @@ struct ArdiaReveal {
   NSUInteger frontGeneration{};
 };
 
-struct ArdiaPageReports {
+struct NillaPageReports {
   NSString *theme;
   NSString *themeSource;
   NSInteger blockedCount{};
   NSString *lastBlocked;
-  ArdiaNowPlaying *nowPlaying;
+  NillaNowPlaying *nowPlaying;
   NSMutableDictionary<NSString *, NSString *> *notificationFrames;
   NSMutableDictionary<NSString *, NSDictionary *> *displayRequests;
   double pinchScale{};
@@ -92,7 +92,7 @@ struct ArdiaPageReports {
   BOOL playedForAutoPictureInPicture{};
 };
 
-struct ArdiaCommits {
+struct NillaCommits {
   __weak ArdiaCoreTab *tab;
   NSString *url;
   double at{};
@@ -100,8 +100,8 @@ struct ArdiaCommits {
   int documents{};
 };
 
-struct ArdiaPageFocusState {
-  ArdiaPageFocus page{ArdiaPageFocus::Unknown};
+struct NillaPageFocusState {
+  NillaPageFocus page{NillaPageFocus::Unknown};
   __weak NSView *devTools;
   __weak NSView *elsewhere;
   BOOL onActivate{};
@@ -110,21 +110,21 @@ struct ArdiaPageFocusState {
   __weak NSWindow *activatedIn;
 };
 
-@interface ArdiaWebView () <ArdiaCoreTabDelegate> {
-  __weak id<ArdiaWebViewDelegate> _delegate;
-  ArdiaTabLifecycle _life;
-  ArdiaRequests _requests;
-  ArdiaSentReports _sent;
-  ArdiaLeave _leave;
-  ArdiaFrameHold _frameHold;
+@interface NillaWebView () <ArdiaCoreTabDelegate> {
+  __weak id<NillaWebViewDelegate> _delegate;
+  NillaTabLifecycle _life;
+  NillaRequests _requests;
+  NillaSentReports _sent;
+  NillaLeave _leave;
+  NillaFrameHold _frameHold;
   void (^_swapReport)(BOOL heldTimedOut);
   CFTimeInterval _swapReportAt;
-  ArdiaStandIn _standIn;
-  ArdiaFirstPaint _firstPaint;
-  ArdiaReveal _reveal;
-  ArdiaPageFocusState _focus;
-  ArdiaPageReports _reports;
-  ArdiaCommits _commits;
+  NillaStandIn _standIn;
+  NillaFirstPaint _firstPaint;
+  NillaReveal _reveal;
+  NillaPageFocusState _focus;
+  NillaPageReports _reports;
+  NillaCommits _commits;
   NSString *_profile;
   NSString *_initialURL;
   NSString *_adoptId;
@@ -152,30 +152,30 @@ struct ArdiaPageFocusState {
   id _sightObserver;
   id _interfaceScaleObserver;
 }
-- (ArdiaWindowController *)controller;
+- (NillaWindowController *)controller;
 - (void)emit:(NSString *)name payload:(NSDictionary *)payload;
 @end
 
-typedef NS_ENUM(NSInteger, ArdiaTransfer) {
-  ArdiaTransferNone,
-  ArdiaTransferTaken,
-  ArdiaTransferHeld,
+typedef NS_ENUM(NSInteger, NillaTransfer) {
+  NillaTransferNone,
+  NillaTransferTaken,
+  NillaTransferHeld,
 };
 
-@interface ArdiaWebView (TransferInternal)
+@interface NillaWebView (TransferInternal)
 + (BOOL)keepTransfersOfWindow:(NSWindow *)window;
-+ (void)retryPagesInWindow:(ArdiaWindowController *)controller;
++ (void)retryPagesInWindow:(NillaWindowController *)controller;
 - (void)waitForWindow;
 - (BOOL)takeLinkTab:(NSString *)adoptId;
 - (void)ensureTab;
 - (BOOL)cloneTab:(NSString *)sourceKey profile:(ArdiaCoreProfile *)profile;
 - (BOOL)canTake:(ArdiaCoreTab *)tab;
-- (ArdiaTransfer)takeTransferredTab;
+- (NillaTransfer)takeTransferredTab;
 - (void)bindRestoreKey;
 - (void)forgetRestoreKey;
 @end
 
-@interface ArdiaWebView (TabInternal)
+@interface NillaWebView (TabInternal)
 - (ArdiaCoreAdoption)adoptIntoWindow;
 - (ArdiaCoreAdoption)windowTakes:(ArdiaCoreTab *)tab;
 - (void)adoptMovedPage;
@@ -203,7 +203,7 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (void)dropDevTools;
 @end
 
-@interface ArdiaWebView (PaintingInternal)
+@interface NillaWebView (PaintingInternal)
 + (void)sleepNeighbourPagesIn:(NSWindow *)window after:(CFTimeInterval)delay;
 + (void)repaintWarmPagesIn:(NSWindow *)window;
 + (void)noteShown:(ArdiaCoreTab *)tab;
@@ -227,15 +227,15 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (void)takeFocusFromLingeringPane;
 @end
 
-@interface ArdiaWebView (FirstPaintInternal)
+@interface NillaWebView (FirstPaintInternal)
 - (void)holdPageUntilPainted:(BOOL)created;
 - (void)holdCreatedPageShown;
-- (void)showHeldPage:(ArdiaHeldPageEnd)end;
+- (void)showHeldPage:(NillaHeldPageEnd)end;
 - (void)showHeldPageOnNextFrame;
 - (void)showHeldPageAfterLoad;
 @end
 
-@interface ArdiaWebView (StandInInternal)
+@interface NillaWebView (StandInInternal)
 - (void)lendPageToSuccessor;
 - (void)reclaimLentPage;
 - (BOOL)closesLentTab:(ArdiaCoreTab *)tab;
@@ -243,8 +243,8 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (void)finishStandIn;
 @end
 
-@interface ArdiaWebView (FocusInternal)
-+ (ArdiaWebView *)holding:(id)responder;
+@interface NillaWebView (FocusInternal)
++ (NillaWebView *)holding:(id)responder;
 - (void)storePageFocus;
 - (void)storePageFocusFrom:(NSResponder *)responder;
 - (void)requestFocusRestore;
@@ -256,8 +256,8 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (void)focusAfterLoad;
 @end
 
-@interface ArdiaWebView (RevealsInternal)
-+ (void)dropRevealsInWindow:(NSWindow *)window except:(ArdiaWebView *)keep;
+@interface NillaWebView (RevealsInternal)
++ (void)dropRevealsInWindow:(NSWindow *)window except:(NillaWebView *)keep;
 - (BOOL)onlyShownInWindow;
 - (void)frontPage:(NSView *)page profile:(ArdiaCoreProfile *)profile;
 - (void)dropFront;
@@ -267,7 +267,7 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (void)settleRevealsInWindow;
 @end
 
-@interface ArdiaWebView (PageMessagesInternal)
+@interface NillaWebView (PageMessagesInternal)
 - (void)noteScriptFrame:(NSString *)frameId main:(BOOL)main;
 - (void)forgetScriptFrame:(NSString *)frameId;
 - (void)pushSelectionPopover;
@@ -275,14 +275,14 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (void)resetPageMedia;
 @end
 
-@interface ArdiaWebView (PeekInternal)
+@interface NillaWebView (PeekInternal)
 - (void)pushPeekModifier;
 - (BOOL)peeksLinksToOtherSites;
 - (void)fallBackFromPeek:(NSDictionary *)dict url:(NSString *)url frame:(NSString *)frameId reason:(NSString *)reason test:(BOOL)test;
 - (void)peekLink:(NSDictionary *)dict frame:(NSString *)frameId main:(BOOL)main;
 @end
 
-@interface ArdiaWebView (PictureInPictureInternal)
+@interface NillaWebView (PictureInPictureInternal)
 - (void)traceManualPictureInPicture:(NSString *)what;
 - (void)traceAutoPictureInPicture:(NSString *)what;
 - (void)notePictureInPictureSight:(NSString *)what;
@@ -295,7 +295,7 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 + (BOOL)playsForAutoPictureInPictureInWindow:(NSWindow *)window;
 @end
 
-@interface ArdiaWebView (NavigationInternal)
+@interface NillaWebView (NavigationInternal)
 - (void)emitNavigation;
 - (void)queueNavigation;
 - (NSString *)committedURL;
@@ -306,7 +306,7 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (BOOL)skipsNavigationDownload:(NSString *)url userInitiated:(BOOL)userInitiated;
 @end
 
-@interface ArdiaWebView (PageCommandsInternal)
+@interface NillaWebView (PageCommandsInternal)
 - (void)emitMedia;
 - (void)emitZoom;
 - (void)runChromeCommand:(int)command;
@@ -314,18 +314,18 @@ typedef NS_ENUM(NSInteger, ArdiaTransfer) {
 - (BOOL)awaitsFirstDocument;
 @end
 
-@interface ArdiaWebView (InputMonitorsInternal)
+@interface NillaWebView (InputMonitorsInternal)
 + (BOOL)prewarmForMouseEvent:(NSEvent *)event;
 - (BOOL)canWakeFrames;
 - (void)commandWheelFromPage:(NSDictionary *)reply;
 @end
 
-namespace ardia_web_view {
+namespace nilla_web_view {
 
 constexpr CFTimeInterval kNeighbourPagesAwakeSeconds = 10;
 
 bool TraceVisibility();
-NSHashTable<ArdiaWebView *> *LiveViews();
+NSHashTable<NillaWebView *> *LiveViews();
 bool SamePage(NSString *a, NSString *b);
 NSString *OriginOf(NSString *url);
 NSString *VerifiedOrigin(NSString *origin);
@@ -354,14 +354,14 @@ void InstallPeekMonitor();
 BOOL PeekTracing();
 void PeekTrace(NSDictionary *entry);
 NSString *SplitLinkModifier();
-NSString *PeekConfigJSON(ArdiaWebView *view);
-NSDictionary *_Nullable RecentClickPoint(ArdiaWebView *view);
+NSString *PeekConfigJSON(NillaWebView *view);
+NSDictionary *_Nullable RecentClickPoint(NillaWebView *view);
 
 NSPoint RootPointFromWindow(NSWindow *window, NSPoint inWindow);
 NSRect RootRectFromWindow(NSWindow *window, NSRect inWindow);
 CGFloat RootPointsPerLocalPoint(NSView *view);
 BOOL MayHoldUserActivation(NSWindow *window);
-BOOL TakeShiftClick(ArdiaWebView *view);
+BOOL TakeShiftClick(NillaWebView *view);
 
 void InstallControlPressMonitor();
 BOOL TracingPictureInPicture();

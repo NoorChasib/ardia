@@ -1,24 +1,24 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Base64
 import android.webkit.WebView
-import com.ardia.browser.BrowserUrl
-import com.ardia.browser.CaptureRoute
-import com.ardia.browser.DevelopmentWebViewEngine
-import com.ardia.browser.DownloadFailure
-import com.ardia.browser.DownloadOutcome
-import com.ardia.browser.DownloadProgress
-import com.ardia.browser.Page
-import com.ardia.browser.PageEvent
-import com.ardia.browser.PageSetup
-import com.ardia.browser.PopupRequest
-import com.ardia.browser.PrivatePagesUnavailableException
-import com.ardia.browser.SystemDownloads
-import com.ardia.browser.VisitKind
-import com.ardia.browser.WebViewPage
+import com.nilladigital.nilla.BrowserUrl
+import com.nilladigital.nilla.CaptureRoute
+import com.nilladigital.nilla.DevelopmentWebViewEngine
+import com.nilladigital.nilla.DownloadFailure
+import com.nilladigital.nilla.DownloadOutcome
+import com.nilladigital.nilla.DownloadProgress
+import com.nilladigital.nilla.Page
+import com.nilladigital.nilla.PageEvent
+import com.nilladigital.nilla.PageSetup
+import com.nilladigital.nilla.PopupRequest
+import com.nilladigital.nilla.PrivatePagesUnavailableException
+import com.nilladigital.nilla.SystemDownloads
+import com.nilladigital.nilla.VisitKind
+import com.nilladigital.nilla.WebViewPage
 import expo.modules.kotlin.exception.CodedException
 import java.lang.ref.WeakReference
 import java.util.UUID
@@ -78,7 +78,7 @@ object PhonePages {
 
     @Synchronized
     fun engine(context: Context): DevelopmentWebViewEngine = shared ?: run {
-        if (UpgradeGate.pending(context)) throw CodedException("ERR_IMPORT_PENDING", "The import from the previous Ardia app has not finished", null)
+        if (UpgradeGate.pending(context)) throw CodedException("ERR_IMPORT_PENDING", "The import from the previous Nilla app has not finished", null)
         create(context.applicationContext)
     }
 
@@ -346,10 +346,10 @@ object PhonePages {
     }
 
 
-    private fun gateThenSend(page: Page, request: com.ardia.browser.PageRequest?) {
+    private fun gateThenSend(page: Page, request: com.nilladigital.nilla.PageRequest?) {
         val id = page.id
         val kind = request?.kind
-        if (request == null || kind !is com.ardia.browser.PageRequest.Kind.Permission) {
+        if (request == null || kind !is com.nilladigital.nilla.PageRequest.Kind.Permission) {
             permissionAsks.drop(id)
             send(id, "page.request", "request" to request?.let { PagePayloads.request(app, it) })
             return
@@ -392,7 +392,7 @@ object PhonePages {
             launch { page.find.drop(1).filter { it == null || it.isDone }.collect { send(id, "page.find", "result" to PagePayloads.find(it)) } }
             launch { page.request.collect { request -> gateThenSend(page, request) } }
             launch {
-                var shown: com.ardia.browser.FullscreenVideo? = null
+                var shown: com.nilladigital.nilla.FullscreenVideo? = null
                 page.fullscreen.drop(1).collect { video ->
                     if (video != null) {
                         fullscreen.show(host?.get(), video)
@@ -487,5 +487,5 @@ object PhonePages {
     private fun privatePagesUnavailable() =
         CodedException("ERR_PRIVATE_PAGES_UNAVAILABLE", "Private pages need a WebView with multi-profile support", null)
 
-    private const val SITE_PREFERENCES = "ardia-site-preferences"
+    private const val SITE_PREFERENCES = "nilla-site-preferences"
 }

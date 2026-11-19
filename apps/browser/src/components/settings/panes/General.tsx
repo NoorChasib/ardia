@@ -27,7 +27,7 @@ import { PaneSubPage } from "./PaneSubPage";
 import { SyncSection } from "./SyncSection";
 import { UpdatesSection } from "./UpdatesSection";
 
-const APP = "Ardia";
+const APP = "Nilla";
 
 export function GeneralPane({ detail }: SettingsPlace) {
   if (detail === SETTINGS_DETAIL.filterLists) return <FilterListsPage />;
@@ -185,7 +185,7 @@ function ContentBlockingSection() {
     if (!on && c === "ads") {
       const { confirmed } = await confirm({
         title: "Turn Off Ad Blocker?",
-        message: "Ardia's Ad Blocker hides ads so pages load faster and feel cleaner.",
+        message: "Nilla's Ad Blocker hides ads so pages load faster and feel cleaner.",
         confirmTitle: "Turn Off",
       });
       if (!confirmed) return refresh();

@@ -6,11 +6,11 @@
   "normal_pressure_only": true,
   "memory_headroom_pct": 10,
   "clean_run_scratch": true,
-  "results": "~/ardia-scratch/bench-others/results/landing-bumcp-1",
+  "results": "~/nilla-scratch/bench-others/results/landing-bumcp-1",
   "contenders": [
     {"id": "browseruse-mcp-codex", "label": "Browser Use MCP + Codex (GPT-6.1 Sol)", "kind": "browseruse", "tool": "mcp",
-     "venv": "/Users/mantrapatel/ardia-scratch/browser-use-agent/venv", "agent": "codex", "model": "gpt-6.1-sol", "effort": "high"},
+     "venv": "/Users/mantrapatel/nilla-scratch/browser-use-agent/venv", "agent": "codex", "model": "gpt-6.1-sol", "effort": "high"},
     {"id": "browseruse-mcp-claude", "label": "Browser Use MCP + Claude Code (Opus 5.5)", "kind": "browseruse", "tool": "mcp",
-     "venv": "/Users/mantrapatel/ardia-scratch/browser-use-agent/venv", "agent": "claude", "model": "claude-opus-5-5", "effort": "high"}
+     "venv": "/Users/mantrapatel/nilla-scratch/browser-use-agent/venv", "agent": "claude", "model": "claude-opus-5-5", "effort": "high"}
   ]
 }

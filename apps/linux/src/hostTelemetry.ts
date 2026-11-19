@@ -29,7 +29,7 @@ const END_TIMEOUT_MS = 2_000;
 const RESET_TIMEOUT_MS = 10_000;
 const WINDOW_USAGE_MS = 60 * 60 * 1000;
 
-const report = (error: unknown) => console.warn("[ardia linux] telemetry", error);
+const report = (error: unknown) => console.warn("[nilla linux] telemetry", error);
 
 export function hostTelemetrySend(host: ArdiaHost) {
   return async (body: string) => {

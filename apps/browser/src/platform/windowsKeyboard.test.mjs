@@ -4,7 +4,7 @@ import { turboModules } from "../test-native/reactNative.ts";
 
 const calls = [];
 let showGate = null;
-turboModules.ArdiaEngineHost = {
+turboModules.NillaEngineHost = {
   available: () => true,
   hostCall: async (verb, argsJson, windowId) => {
     calls.push({ verb, args: JSON.parse(argsJson), windowId });

@@ -60,7 +60,7 @@ end;
 
 function AppInUse: Boolean;
 begin
-  Result := InUse(ExpandConstant('{app}\Ardia.exe')) or InUse(ExpandConstant('{app}\chrome.dll')) or InUse(ExpandConstant('{app}\ArdiaApp.dll'));
+  Result := InUse(ExpandConstant('{app}\Nilla.exe')) or InUse(ExpandConstant('{app}\chrome.dll')) or InUse(ExpandConstant('{app}\ArdiaApp.dll'));
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;

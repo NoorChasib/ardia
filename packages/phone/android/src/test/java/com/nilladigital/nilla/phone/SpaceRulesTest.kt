@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals

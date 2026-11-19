@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import ArdiaImportCore
+@testable import NillaImportCore
 
 final class SQLiteSnapshotTests: XCTestCase {
   private var folder: URL!
@@ -33,11 +33,11 @@ final class SQLiteSnapshotTests: XCTestCase {
 
   func testCopiesLeftByAnImportThatNeverFinishedAreRemovedAndLiveOnesStay() throws {
     let now = Date()
-    let dead = try copyFolder("ardia-import-\(try exitedPid())-\(UUID().uuidString)")
-    let live = try copyFolder("ardia-import-\(getpid())-\(UUID().uuidString)")
-    let oldUnnamed = try copyFolder("ardia-import-\(UUID().uuidString)", modified: now.addingTimeInterval(-7200))
-    let freshUnnamed = try copyFolder("ardia-import-\(UUID().uuidString)", modified: now.addingTimeInterval(-60))
-    let unrelated = try copyFolder("ardia-import-swiftpm", modified: now.addingTimeInterval(-86_400))
+    let dead = try copyFolder("nilla-import-\(try exitedPid())-\(UUID().uuidString)")
+    let live = try copyFolder("nilla-import-\(getpid())-\(UUID().uuidString)")
+    let oldUnnamed = try copyFolder("nilla-import-\(UUID().uuidString)", modified: now.addingTimeInterval(-7200))
+    let freshUnnamed = try copyFolder("nilla-import-\(UUID().uuidString)", modified: now.addingTimeInterval(-60))
+    let unrelated = try copyFolder("nilla-import-swiftpm", modified: now.addingTimeInterval(-86_400))
 
     SQLiteSnapshot.removeLeftovers(in: folder, now: now)
 
@@ -49,13 +49,13 @@ final class SQLiteSnapshotTests: XCTestCase {
   }
 
   func testACopyIsNamedForItsProcessAndGoesWithIt() throws {
-    let before = Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("ardia-import-\(getpid())-") })
+    let before = Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("nilla-import-\(getpid())-") })
     var snapshot: SQLiteSnapshot? = try SQLiteSnapshot(copying: Fixtures.support("Google/Chrome/Default/History"))
-    let during = Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("ardia-import-\(getpid())-") })
+    let during = Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("nilla-import-\(getpid())-") })
     XCTAssertEqual(during.subtracting(before).count, 1)
     XCTAssertTrue(snapshot?.tableExists("urls") ?? false)
     snapshot = nil
-    let after = Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("ardia-import-\(getpid())-") })
+    let after = Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("nilla-import-\(getpid())-") })
     XCTAssertEqual(after, before)
   }
 

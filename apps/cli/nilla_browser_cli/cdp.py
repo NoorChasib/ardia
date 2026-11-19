@@ -3,9 +3,9 @@ import itertools
 import json
 import logging
 
-from ardia_cli import guard
+from nilla_browser_cli import guard
 
-log = logging.getLogger("ardia_cli.cdp")
+log = logging.getLogger("nilla_browser_cli.cdp")
 
 
 class CdpError(Exception):
@@ -100,7 +100,7 @@ class Connection:
             raise ConnectionLost()
 
     async def execute_command(self, command: dict, timeout: float = 60) -> dict:
-        from ardia_cli import wsclient
+        from nilla_browser_cli import wsclient
 
         guard.check_command(command)
         self._usable()
@@ -125,7 +125,7 @@ class Connection:
         return reply
 
     async def execute_command_nowait(self, command: dict) -> None:
-        from ardia_cli import wsclient
+        from nilla_browser_cli import wsclient
 
         guard.check_command(command)
         self._usable()

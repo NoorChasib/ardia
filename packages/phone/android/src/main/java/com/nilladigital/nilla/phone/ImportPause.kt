@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 class ImportPause(
     requested: String?,
@@ -16,7 +16,7 @@ class ImportPause(
     }
 
     companion object {
-        const val EXTRA = "ArdiaImportPause"
+        const val EXTRA = "NillaImportPause"
         const val DEFAULT_SECONDS = 20
         private val STEPS = mapOf("afterReceipt" to "settingsStart", "afterSettings" to "settingsDone", "beforeMarker" to "beforeMarker")
 

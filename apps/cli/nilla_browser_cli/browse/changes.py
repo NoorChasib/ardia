@@ -5,10 +5,10 @@ import shlex
 from dataclasses import dataclass, field
 from urllib.parse import parse_qsl, unquote, urlsplit
 
-from ardia_cli import command_metrics
-from ardia_cli.browse import flowlog, snapshot
-from ardia_cli.redact import redact
-from ardia_cli.browse.errors import BrowseError, CdpError, ConnectionLost, Gated
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse import flowlog, snapshot
+from nilla_browser_cli.redact import redact
+from nilla_browser_cli.browse.errors import BrowseError, CdpError, ConnectionLost, Gated
 
 SETTLE_LIMIT = 1.5
 REACTION_WINDOW = 0.6
@@ -166,7 +166,7 @@ TEXT_JS = r"""(budget, ...anchors) => {
     flush();
   };
   for (const root of roots) { walk(root, false); flush(); }
-  globalThis.ardiaBrowseTextEls = els;
+  globalThis.nillaBrowseTextEls = els;
   const where = (el) => {
     if (el.id) return "#" + CSS.escape(el.id);
     const tag = el.tagName.toLowerCase(), role = el.getAttribute("role");
@@ -731,10 +731,10 @@ async def watch_reaction(state, page, react):
     try:
         if element is not None:
             frame = element.frame
-            started = await reaction_call(page, "(el, id) => ardiaBrowse.watchReaction(el, id)", element, watch_id, frame=frame,
+            started = await reaction_call(page, "(el, id) => nillaBrowse.watchReaction(el, id)", element, watch_id, frame=frame,
                                           timeout=REACTION_CALL_TIMEOUT)
         else:
-            started = await reaction_call(page, "(id) => ardiaBrowse.watchReaction(null, id)", watch_id, frame=frame,
+            started = await reaction_call(page, "(id) => nillaBrowse.watchReaction(null, id)", watch_id, frame=frame,
                                           timeout=REACTION_CALL_TIMEOUT)
     except (BrowseError, asyncio.TimeoutError):
         return
@@ -743,8 +743,8 @@ async def watch_reaction(state, page, react):
 
 
 def reaction_waits(name: str | None, argv) -> bool:
-    from ardia_cli.browse.commands import parse
-    from ardia_cli.browse.errors import Usage
+    from nilla_browser_cli.browse.commands import parse
+    from nilla_browser_cli.browse.errors import Usage
 
     if name in ("keyboard", "keydown", "keyup", "tab", "notes", "frame") or name == "get" and list(argv[:1]) in (["url"], ["title"]):
         return False
@@ -772,7 +772,7 @@ async def settle_reaction(state, name: str | None = None, argv=()):
     try:
         while loop.time() < deadline:
             budget = max(min(REACTION_CALL_TIMEOUT, deadline - loop.time()), 0.05)
-            watch = await reaction_call(page, "(id) => ardiaBrowse.reactionState(id)", watch_id, frame=frame, timeout=budget)
+            watch = await reaction_call(page, "(id) => nillaBrowse.reactionState(id)", watch_id, frame=frame, timeout=budget)
             if not watch:
                 return
             reacted = watch["sinceLast"] is not None
@@ -789,7 +789,7 @@ async def settle_reaction(state, name: str | None = None, argv=()):
         return
     finally:
         with contextlib.suppress(BrowseError, asyncio.TimeoutError):
-            await reaction_call(page, "(id) => ardiaBrowse.unwatchReaction(id)", watch_id, frame=frame, timeout=REACTION_CALL_TIMEOUT)
+            await reaction_call(page, "(id) => nillaBrowse.unwatchReaction(id)", watch_id, frame=frame, timeout=REACTION_CALL_TIMEOUT)
 
 
 async def observe(ctx, page, run, react=None):
@@ -954,7 +954,7 @@ async def page_text(state, page, frame: str, budget: int, anchors: list, refs: d
     names = found.get("names") or []
     marked = []
     if kinds:
-        remote = await page.call("() => globalThis.ardiaBrowseTextEls", frame=frame, by_value=False, read=True)
+        remote = await page.call("() => globalThis.nillaBrowseTextEls", frame=frame, by_value=False, read=True)
         marked = await page.elements_from(remote, frame, "text", MAX_TEXT_MARKS)
     inline: set[str] = set()
     inner: dict[int, str] = {}
@@ -1014,8 +1014,8 @@ async def frame_of(page, element) -> str | None:
 def arrival_notes(state, before: View | None, after: View) -> str | None:
     from pathlib import Path
 
-    from ardia_cli import notes
-    from ardia_cli.browse import flows
+    from nilla_browser_cli import notes
+    from nilla_browser_cli.browse import flows
 
     root = state.config.get("data_root") if isinstance(getattr(state, "config", None), dict) else None
     if not root or (before is not None and notes.page_site(before.url) == notes.page_site(after.url)):

@@ -12,9 +12,9 @@
 #include "NativeModules.h"
 #include "WindowManager.h"
 
-namespace Ardia {
+namespace Nilla {
 
-REACT_MODULE(MenusModule, L"ArdiaMenus")
+REACT_MODULE(MenusModule, L"NillaMenus")
 struct MenusModule {
   using JSValue = winrt::Microsoft::ReactNative::JSValue;
   using JSValueObject = winrt::Microsoft::ReactNative::JSValueObject;
@@ -51,7 +51,7 @@ struct MenusModule {
           if (usable) Menus::TrackOnThisThread(*popup, true);
           if (DialogParts::Stopping()) return;
           RunOnUI(context, [context, popup, promise]() noexcept {
-            if (DialogParts::ModalRegistry::Shared().withheldResign.exchange(false) && !Menus::ForegroundIsOurs()) EmitEvent(context, L"ArdiaShell", L"onAppEvent", JSValueObject{{"type", "resignActive"}});
+            if (DialogParts::ModalRegistry::Shared().withheldResign.exchange(false) && !Menus::ForegroundIsOurs()) EmitEvent(context, L"NillaShell", L"onAppEvent", JSValueObject{{"type", "resignActive"}});
             Menus::MenuKeyboard::Shared().ReconcileAfterMenu();
             std::optional<std::string> chosen = Menus::ChoiceOf(*popup);
             if (popup->pageLeft) Menus::MenuKeyboard::Shared().GivePageBackAfterMenu(*popup->pageLeft, chosen.has_value());

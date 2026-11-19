@@ -71,8 +71,8 @@ void CloseOpenTab(ArdiaCoreTab *tab) {
 void ExpireLaunchTabUnlessShown(ArdiaCoreTab *tab) {
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kLaunchTabSeconds * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
     if (gLaunchTab != tab) return;
-    if ([ArdiaEarlyWindow holdsPage:tab]) return ExpireLaunchTabUnlessShown(tab);
-    [ArdiaTabParking claimLaunchTab:@"" url:@"" profile:@""];
+    if ([NillaEarlyWindow holdsPage:tab]) return ExpireLaunchTabUnlessShown(tab);
+    [NillaTabParking claimLaunchTab:@"" url:@"" profile:@""];
   });
 }
 
@@ -81,14 +81,14 @@ void CloseLinkTabs() {
   [LinkTabs() removeAllObjects];
   [LinkURLs() removeAllObjects];
   for (ArdiaCoreTab *tab in left) {
-    [ArdiaEarlyWindow dropPage:tab];
+    [NillaEarlyWindow dropPage:tab];
     CloseOpenTab(tab);
   }
 }
 
 }
 
-@implementation ArdiaTabParking
+@implementation NillaTabParking
 
 + (void)park:(ArdiaCoreTab *)tab forKey:(NSString *)key {
   [ParkingView() addSubview:tab.view];
@@ -117,7 +117,7 @@ void CloseLinkTabs() {
 
 + (BOOL)launchWasClosed:(NSString *)key {
   ArdiaCoreTab *tab = Parked()[key];
-  id<ArdiaParkedPageHolder> held = tab ? objc_getAssociatedObject(tab, &kHolderKey) : nil;
+  id<NillaParkedPageHolder> held = tab ? objc_getAssociatedObject(tab, &kHolderKey) : nil;
   if (held && (tab.closed || held.closedByChrome)) {
     [Parked() removeObjectForKey:key];
     [ClosedLaunch() addObject:key];
@@ -125,10 +125,10 @@ void CloseLinkTabs() {
   return [ClosedLaunch() containsObject:key];
 }
 
-+ (BOOL)rehomeFromWindow:(ArdiaWindowController *)closing {
++ (BOOL)rehomeFromWindow:(NillaWindowController *)closing {
   for (ArdiaCoreTab *tab in Parked().allValues) {
-    if (tab.closed || [ArdiaWindowController holding:tab] != closing || !tab.profile) continue;
-    ArdiaWindowController *keeper = [ArdiaWindowController strayWindowForProfile:tab.profile];
+    if (tab.closed || [NillaWindowController holding:tab] != closing || !tab.profile) continue;
+    NillaWindowController *keeper = [NillaWindowController strayWindowForProfile:tab.profile];
     keeper.hostChanges++;
     closing.hostChanges++;
     const ArdiaCoreAdoption adoption = [keeper.coreWindow adoptTab:tab];
@@ -140,14 +140,14 @@ void CloseLinkTabs() {
   return YES;
 }
 
-+ (void)keepOffscreen:(ArdiaCoreTab *)tab holder:(id<ArdiaParkedPageHolder>)holder {
++ (void)keepOffscreen:(ArdiaCoreTab *)tab holder:(id<NillaParkedPageHolder>)holder {
   [ParkingView() addSubview:tab.view];
   objc_setAssociatedObject(tab, &kHolderKey, holder, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   tab.delegate = holder;
 }
 
-+ (id<ArdiaParkedPageHolder>)takeHolderOfTab:(ArdiaCoreTab *)tab {
-  id<ArdiaParkedPageHolder> holder = objc_getAssociatedObject(tab, &kHolderKey);
++ (id<NillaParkedPageHolder>)takeHolderOfTab:(ArdiaCoreTab *)tab {
+  id<NillaParkedPageHolder> holder = objc_getAssociatedObject(tab, &kHolderKey);
   objc_setAssociatedObject(tab, &kHolderKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   return holder;
 }
@@ -192,7 +192,7 @@ void CloseLinkTabs() {
                       [gLaunchProfile isEqualToString:name ?: @""] && !Parked()[key];
     gLaunchTab = nil;
     gLaunchKey = gLaunchURL = gLaunchProfile = nil;
-    if (!same) [ArdiaEarlyWindow dropPage:tab];
+    if (!same) [NillaEarlyWindow dropPage:tab];
     if (!same) return CloseOpenTab(tab);
     Parked()[key] = tab;
   };
@@ -236,7 +236,7 @@ void CloseLinkTabs() {
     if (NSString *url = LinkURLs()[index]) [DismissedLinks() addObject:url];
     [DismissedLinkMarks() addObject:[NSString stringWithFormat:@"link:%@", index]];
     [LinkURLs() removeObjectForKey:index];
-    [ArdiaEarlyWindow dropPage:tab];
+    [NillaEarlyWindow dropPage:tab];
     CloseOpenTab(tab);
     return;
   }
@@ -286,7 +286,7 @@ void CloseLinkTabs() {
 
 + (void)discardTab:(ArdiaCoreTab *)tab forKey:(NSString *)key {
   if (Parked()[key] == tab) [Parked() removeObjectForKey:key];
-  [ArdiaEarlyWindow dropPage:tab];
+  [NillaEarlyWindow dropPage:tab];
   CloseOpenTab(tab);
 }
 

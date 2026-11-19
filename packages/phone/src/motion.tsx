@@ -27,10 +27,10 @@ const reportsNearEnd = Platform.OS === "android";
 
 export const motionReportsNearEnd = () => reportsNearEnd && motionRunsInRenderServer();
 
-const native = requireOptionalNativeModule<{ runsInRenderServer?: boolean }>("ArdiaPhoneMotion");
+const native = requireOptionalNativeModule<{ runsInRenderServer?: boolean }>("NillaPhoneMotion");
 
 let nativeView: ComponentType<NativeProps> | undefined;
-const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("ArdiaPhoneMotion"));
+const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("NillaPhoneMotion"));
 
 export const motionRunsInRenderServer = () => native?.runsInRenderServer === true;
 

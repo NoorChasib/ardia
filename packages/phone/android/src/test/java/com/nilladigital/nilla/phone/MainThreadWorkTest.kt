@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -34,11 +34,11 @@ class MainThreadWorkTest {
         message(">>>>> Dispatching to Handler (com.facebook.react.bridge.queue.MessageQueueThreadHandler) {77c} null: 0", 6_200_000)
         message(">>>>> Dispatching to Handler (android.os.Handler) {12} android.widget.Editor\$Blink@3b: 0", 900_000)
         message(">>>>> Dispatching to Handler (android.view.Choreographer\$FrameHandler) {c} android.view.Choreographer\$FrameDisplayEventReceiver@9: 0", 9_000_000)
-        message(">>>>> Dispatching to Handler (android.os.Handler) {12} com.ardia.phone.SceneWork\$Companion\$background\$1\$toMain\$1@5: 0", 100_000)
+        message(">>>>> Dispatching to Handler (android.os.Handler) {12} com.nilladigital.nilla.phone.SceneWork\$Companion\$background\$1\$toMain\$1@5: 0", 100_000)
         assertEquals("the frame is not one of the counted messages", 4L, work.messages)
         assertEquals(7_600_000L, work.nanos)
         assertEquals(
-            listOf("com.facebook.react.bridge.queue.MessageQueueThreadHandler what 0", "android.os.Handler android.widget.Editor\$Blink", "ardia deck tick"),
+            listOf("com.facebook.react.bridge.queue.MessageQueueThreadHandler what 0", "android.os.Handler android.widget.Editor\$Blink", "nilla deck tick"),
             work.longestMessages.map { it.name },
         )
         assertEquals(listOf(6_200_000L, 900_000L, 400_000L), work.longestMessages.map { it.nanos })

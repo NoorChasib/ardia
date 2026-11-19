@@ -1,11 +1,11 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Intent
-import com.ardia.appmodel.LaunchArguments
-import com.ardia.browser.BuildConfig
+import com.nilladigital.nilla.appmodel.LaunchArguments
+import com.nilladigital.nilla.BuildConfig
 
 object LaunchExtras {
-    private val prefixes = listOf("Ardia", "Browse")
+    private val prefixes = listOf("Nilla", "Browse")
 
     val allowedInThisBuild: Boolean get() = PhoneLab.isOn || BuildConfig.DEBUG
 

@@ -1,6 +1,6 @@
-import type { SwipeEvent, SwipeStep } from "@ardia-real/ardiacore";
+import type { SwipeEvent, SwipeStep } from "@nilla-real/ardiacore";
 import type { Pager, PagerArea, PagerInput } from "./pager";
-import { ardiaHost, type ArdiaHost } from "../../../host";
+import { nillaHost, type ArdiaHost } from "../../../host";
 
 const START_DISTANCE = 4;
 const START_DOMINANCE = 1.5;
@@ -372,7 +372,7 @@ export function onPageSwipe(value: unknown, timestamp = performance.now() / 1000
   }
 }
 
-export function listenForPageSwipes(host: ArdiaHost | undefined = ardiaHost) {
+export function listenForPageSwipes(host: ArdiaHost | undefined = nillaHost) {
   return host?.onEvent((module, event, payload) => {
     if (module === "ArdiaShell" && event === "onPageSwipe") onPageSwipe(payload);
   });

@@ -11,8 +11,8 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import cli, config_cli, config_files, endpoint
-from ardia_cli.schema_check import validate
+from nilla_browser_cli import cli, config_cli, config_files, endpoint
+from nilla_browser_cli.schema_check import validate
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 CONFIG_SCHEMA = json.loads((FIXTURES / "config.schema.json").read_text())
@@ -72,7 +72,7 @@ def without_descriptions(node):
 
 class Sandbox(unittest.TestCase):
     def setUp(self):
-        self.temp = Path(tempfile.mkdtemp(prefix="ardia-config-test-")).resolve()
+        self.temp = Path(tempfile.mkdtemp(prefix="nilla-config-test-")).resolve()
         self.home = self.temp / "home"
         self.data = self.temp / "data"
         self.installed = self.temp / "installed"
@@ -151,7 +151,7 @@ class Paths(Sandbox):
             self.ok("config", "set", "tabLayout", "top")
         self.assertEqual(sorted(p.name for p in (self.home / ".config").iterdir()), ["nilla"])
         self.assertTrue((self.home / ".config" / "nilla" / "config.json").is_file())
-        from ardia_cli import automation_cli
+        from nilla_browser_cli import automation_cli
 
         self.assertEqual(automation_cli.agent_words(linux=False)["config_folder"], "~/.config/nilla")
 
@@ -312,14 +312,14 @@ class SetGetUnset(Sandbox):
     def test_symlinked_config_written_through(self):
         dotfiles = self.temp / "dotfiles"
         dotfiles.mkdir()
-        real = dotfiles / "ardia.json"
+        real = dotfiles / "nilla.json"
         real.write_text('{"settings": {}}\n')
         self.folder.mkdir(parents=True)
         os.symlink(real, self.folder / "config.json")
         self.ok("config", "set", "tabLayout", "top")
         self.assertTrue((self.folder / "config.json").is_symlink())
         self.assertEqual(json.loads(real.read_text())["settings"], {"tabLayout": "top"})
-        self.assertEqual([p.name for p in dotfiles.iterdir()], ["ardia.json"])
+        self.assertEqual([p.name for p in dotfiles.iterdir()], ["nilla.json"])
         self.assertEqual([p.name for p in self.folder.iterdir()], ["config.json"])
 
     def test_huge_numbers_are_strings_or_refused(self):
@@ -435,9 +435,9 @@ class Validation(unittest.TestCase):
             ({"mutedSites": ["a.com", 3]}, "mutedSites[1] must be a string"),
             ({"mutedSites": "a.com"}, "mutedSites must be a list of strings"),
             ({"keepActiveSites": ["a", "b", "c", "d"]}, "keepActiveSites must have at most 3 items"),
-            ({"littleArdiaSize": [900]}, "littleArdiaSize must have at least 2 items"),
-            ({"littleArdiaSize": [900, 0]}, "littleArdiaSize[1] must be more than 0"),
-            ({"littleArdiaSize": [900, 640, 1]}, "littleArdiaSize must have at most 2 items"),
+            ({"littleNillaSize": [900]}, "littleNillaSize must have at least 2 items"),
+            ({"littleNillaSize": [900, 0]}, "littleNillaSize[1] must be more than 0"),
+            ({"littleNillaSize": [900, 640, 1]}, "littleNillaSize must have at most 2 items"),
             ({"neverTranslateSites": {"fr": "x.com"}}, "neverTranslateSites.fr must be a list of strings"),
             ({"sitePermissions": {}}, "sitePermissions needs camera"),
             ({"sitePermissions": {"camera": "on"}}, "sitePermissions.camera must be true or false"),
@@ -471,7 +471,7 @@ class Validation(unittest.TestCase):
             self.assertIsNone(config_files.shortcut_problem(value), value)
 
     def test_unknown_keywords_ignored(self):
-        self.assertFalse(validate("x", {"type": "string", "format": "uri", "x-ardia": True, "$ref": "#/nowhere"}))
+        self.assertFalse(validate("x", {"type": "string", "format": "uri", "x-nilla": True, "$ref": "#/nowhere"}))
 
     def test_theme_values(self):
         colour = "must be a colour (#RGB, #RRGGBB, #RRGGBBAA, or rgb or rgba with r, g, b from 0 to 255 and a from 0 to 1)"
@@ -852,7 +852,7 @@ class ThemeKeys(Sandbox):
         self.assertIsNone(self.config()["theme"])
         self.write_theme({"dark": {}}, "custom", active=False)
         _, err = self.fails("theme", "set", "metrics.rowHeight", "40")
-        self.assertIn("ardia theme use custom", err)
+        self.assertIn("nilla theme use custom", err)
         self.assertEqual(self.theme("custom"), {"dark": {}})
 
     def test_get_and_unset_need_a_theme(self):
@@ -871,7 +871,7 @@ class ThemeKeys(Sandbox):
     def test_unset_drops_empty_blocks(self):
         self.write_theme({"$schema": "../theme.schema.json", "dark": {"accent": "#111111"}, "metrics": {"radius": {"row": 12}, "rowGap": 2}})
         out, _ = self.ok("theme", "unset", "metrics.radius.row")
-        self.assertEqual(out, "removed metrics.radius.row; Ardia uses its own value for it\n")
+        self.assertEqual(out, "removed metrics.radius.row; Nilla uses its own value for it\n")
         self.assertEqual(self.theme(), {"$schema": "../theme.schema.json", "dark": {"accent": "#111111"}, "metrics": {"rowGap": 2}})
         self.ok("theme", "unset", "metrics.rowGap")
         self.ok("theme", "unset", "dark.accent")
@@ -889,11 +889,11 @@ class ThemeKeys(Sandbox):
         self.assertEqual(out, '"#111111"\n')
         out, err = self.fails("theme", "get", "metrics.rowHeight")
         self.assertEqual(out, "")
-        self.assertIn("themes/nord.json doesn't set metrics.rowHeight (Ardia's default: 34)", err)
+        self.assertIn("themes/nord.json doesn't set metrics.rowHeight (Nilla's default: 34)", err)
         _, err = self.fails("theme", "get", "light.accent")
-        self.assertIn("(Ardia's default: #6395FC)", err)
+        self.assertIn("(Nilla's default: #6395FC)", err)
         _, err = self.fails("theme", "get", "metrics.radius.sheet")
-        self.assertIn("(Ardia's default: 16)", err)
+        self.assertIn("(Nilla's default: 16)", err)
         _, err = self.fails("theme", "get", "type.family")
         self.assertTrue(err.rstrip().endswith("doesn't set type.family"), err)
         _, err = self.fails("theme", "get", "icons.plus")
@@ -933,7 +933,7 @@ class ThemeKeysWithoutSchema(Sandbox):
         self.assertIn("written without checking", err)
         self.assertEqual(json.loads((themes / "nord.json").read_text()), {"dark": {"accent": "anything"}})
         _, err = self.fails("theme", "get", "metrics.rowHeight")
-        self.assertIn("(Ardia's default: 34)", err)
+        self.assertIn("(Nilla's default: 34)", err)
 
 
 class Edit(Sandbox):
@@ -977,7 +977,7 @@ class NoConnection(Sandbox):
         for argv in (["config", "--help"], ["theme", "--help"], ["config", "set", "--help"], ["theme", "new", "--help"], ["theme", "set", "--help"], ["theme", "get", "--help"], ["theme", "unset", "--help"]):
             status, out, _ = self.run_cli(*argv)
             self.assertEqual(status, 0)
-            self.assertIn("usage: ardia", out)
+            self.assertIn("usage: nilla", out)
 
 
 if __name__ == "__main__":

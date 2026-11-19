@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useState, type ReactNode } from "react";
-import type { NativeSurfaceProps } from "@ardia/shell";
+import type { NativeSurfaceProps } from "@nilla/shell";
 import { StyleSheet, View, type ViewStyle } from "react-native";
 import { usePageCover } from "../engine/usePageCover";
 import { parseColor, rgbaString, sampleStops, type Rgba } from "./color";

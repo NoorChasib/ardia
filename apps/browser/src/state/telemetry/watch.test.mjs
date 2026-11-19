@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { after, beforeEach, test } from "node:test";
 
 globalThis.__DEV__ = false;
-const { overrideServicesForTests } = await import("@ardia/core/src/services.testing.ts");
+const { overrideServicesForTests } = await import("@nilla/core/src/services.testing.ts");
 overrideServicesForTests({ telemetryUrl: "https://logs.example.test/v1/logs", ingestKeys: { app: "app-key", cli: "cli-key", site: "site-key" } });
 const stub = await import("../../test-native/index.ts");
 Object.assign(stub.appInfo, { appVersion: "0.3.0", appBuild: "300", osVersion: "27.0.1", arch: "arm64", isolatedInstance: false });

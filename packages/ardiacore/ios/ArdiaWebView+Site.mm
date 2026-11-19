@@ -2,15 +2,15 @@
 #import "ArdiaRuntime.h"
 #import "ArdiaServices.h"
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
 namespace {
 constexpr NSSize kExtensionPopupMinimum = {25, 25};
 constexpr NSSize kExtensionPopupMaximum = {800, 600};
 }
 
-@implementation ArdiaWebView (Site)
+@implementation NillaWebView (Site)
 
 - (void)tabDidChangeSecurity:(ArdiaCoreTab *)tab {
   if (NSDictionary *info = tab.securityInfo) [self emit:@"security" payload:info];
@@ -48,14 +48,14 @@ constexpr NSSize kExtensionPopupMaximum = {800, 600};
   [self emit:@"preferredSize" payload:@{@"width" : @(width * rootPerPage), @"height" : @(height * rootPerPage)}];
 }
 
-- (void)clearSiteData:(ArdiaServiceReply)reply {
+- (void)clearSiteData:(NillaServiceReply)reply {
   NSString *origin = OriginOf(_tab.url);
   if (!origin) return reply(@{@"cookies" : @NO, @"storage" : @NO}, nil);
-  [ArdiaServices clearSiteData:_profile origin:origin reply:reply];
+  [NillaServices clearSiteData:_profile origin:origin reply:reply];
 }
 
 - (void)resolvePasswordPrompt:(NSString *)action username:(NSString *)username password:(NSString *)password {
-  [ardia_host::PasswordPromptTab(self, _tab) resolvePasswordPrompt:action username:username password:password];
+  [nilla_host::PasswordPromptTab(self, _tab) resolvePasswordPrompt:action username:username password:password];
 }
 
 - (void)resolveAutofillPrompt:(NSInteger)promptId action:(NSString *)action {

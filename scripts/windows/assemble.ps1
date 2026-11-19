@@ -11,7 +11,7 @@ $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "vc-runtime.ps1")
 
 $notShipped = @(".pdb", ".lib", ".exp", ".ilk", ".iobj", ".ipdb", ".winmd")
-$launcher = "Ardia.exe"
+$launcher = "Nilla.exe"
 $engineLauncher = "chrome.exe"
 $library = "ArdiaApp.dll"
 $engineNotes = "RUN.txt"
@@ -72,7 +72,7 @@ Move-Item -LiteralPath (Join-Path $outRoot $engineLauncher) -Destination (Join-P
 & (Join-Path $PSScriptRoot "host-manifest.ps1") -From (Join-Path $appRoot $library) -To (Join-Path $outRoot $launcher)
 if ($LASTEXITCODE -ne 0) { throw "the launcher did not get the app's manifest entries" }
 & (Join-Path $PSScriptRoot "launcher-identity.ps1") -Icon $appIcon -To (Join-Path $outRoot $launcher)
-if ($LASTEXITCODE -ne 0) { throw "the launcher did not get Ardia's icon and name" }
+if ($LASTEXITCODE -ne 0) { throw "the launcher did not get Nilla's icon and name" }
 
 $launcherImage = Read-PeImage ([System.IO.File]::ReadAllBytes((Join-Path $outRoot $launcher)))
 if (-not $launcherImage -or @("x64", "arm64") -notcontains $launcherImage.Cpu) { throw "$launcher is not an x64 or ARM64 program" }
@@ -81,8 +81,8 @@ Add-VcRuntime $outRoot $launcherImage.Cpu $VcRedist
 if ($Build -gt 0) {
   if (-not $Version) { $Version = & (Join-Path $PSScriptRoot "project-version.ps1") }
   $identity = [ordered]@{ version = $Version; build = $Build } | ConvertTo-Json -Compress
-  [System.IO.File]::WriteAllText((Join-Path $outRoot "Ardia.build.json"), $identity, (New-Object System.Text.UTF8Encoding $false))
-  Write-Host "assemble: this is Ardia $Version, build $Build"
+  [System.IO.File]::WriteAllText((Join-Path $outRoot "Nilla.build.json"), $identity, (New-Object System.Text.UTF8Encoding $false))
+  Write-Host "assemble: this is Nilla $Version, build $Build"
 }
 
 Write-Host "assemble: $($engineFiles.Count) engine files and $appCount app files in $outRoot"

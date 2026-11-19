@@ -1,4 +1,4 @@
-package com.ardia.browser
+package com.nilladigital.nilla
 
 import android.content.Context
 import android.os.Build
@@ -59,7 +59,7 @@ class SystemDownloadsTest {
         fileName = fileName,
         mimeType = mimeType,
         contentLength = -1,
-        userAgent = "ArdiaTest",
+        userAgent = "NillaTest",
         contentDisposition = null,
         referer = null,
         isPrivate = isPrivate,
@@ -88,7 +88,7 @@ class SystemDownloadsTest {
         assertEquals("session=secret", first.headers["cookie"])
         assertEquals("localhost:${server.port}", second.headers["host"])
         assertNull(second.headers["cookie"])
-        assertEquals("ArdiaTest", second.headers["user-agent"])
+        assertEquals("NillaTest", second.headers["user-agent"])
     }
 
     private fun relativePath(outcome: DownloadOutcome): String? {

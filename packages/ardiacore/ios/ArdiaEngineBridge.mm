@@ -8,14 +8,14 @@
 
 #include "../../../engine/chromium/src/chrome/browser/ardia/public/ac_engine.h"
 
-using namespace ardia_runtime;
+using namespace nilla_runtime;
 
-@interface ArdiaSecretReply : NSObject
+@interface NillaSecretReply : NSObject
 - (instancetype)initWithCompletion:(void (^)(NSDictionary *))completion;
 - (void)settle:(NSDictionary *)reply;
 @end
 
-@implementation ArdiaSecretReply {
+@implementation NillaSecretReply {
   void (^_completion)(NSDictionary *);
 }
 
@@ -56,7 +56,7 @@ void Replied(void *context, const char *json) {
 }
 
 void RepliedSecret(void *context, const char *json) {
-  ArdiaSecretReply *reply = (__bridge_transfer ArdiaSecretReply *)context;
+  NillaSecretReply *reply = (__bridge_transfer NillaSecretReply *)context;
   if (!json) return [reply settle:nil];
   NSMutableData *bytes = [NSMutableData dataWithBytes:json length:strlen(json)];
   id parsed = [NSJSONSerialization JSONObjectWithData:bytes options:0 error:nil];
@@ -71,9 +71,9 @@ NSString *RealPath(NSString *path) {
 
 NSString *ProfileNamed(NSString *dir) {
   NSString *real = RealPath(dir);
-  for (ArdiaCoreProfile *profile in ardia_host::LoadedProfiles())
-    if (!profile.offTheRecord && [RealPath(profile.path) isEqualToString:real]) return ardia_host::ProfileName(profile);
-  return ardia_host::ProfileNameOfDirectoryName(real.lastPathComponent);
+  for (ArdiaCoreProfile *profile in nilla_host::LoadedProfiles())
+    if (!profile.offTheRecord && [RealPath(profile.path) isEqualToString:real]) return nilla_host::ProfileName(profile);
+  return nilla_host::ProfileNameOfDirectoryName(real.lastPathComponent);
 }
 
 NSMutableDictionary<NSString *, NSMutableArray *> *Observers() {
@@ -89,7 +89,7 @@ void FlushForwards() {
   NSArray<NSArray *> *events = gPendingForwards;
   gPendingForwards = nil;
   for (NSArray *event in events)
-    [ArdiaEvents emit:AppEventOfTopic(event[0]) data:event[1]];
+    [NillaEvents emit:AppEventOfTopic(event[0]) data:event[1]];
 }
 
 void Forward(NSString *topic, NSDictionary *payload) {
@@ -128,23 +128,23 @@ void InstallSink() {
 
 }
 
-@implementation ArdiaEngineBridge
+@implementation NillaEngineBridge
 
 + (void)call:(NSString *)name profile:(NSString *)profile args:(NSString *)args completion:(void (^)(NSString *))completion {
   auto call = (ac_engine_call_t)Symbol(name.UTF8String);
   if (!call) return completion(JSONText(@{@"error" : [NSString stringWithFormat:@"the engine has no %@", name]}));
-  if (ardia_host::IsPrivateProfile(profile)) {
+  if (nilla_host::IsPrivateProfile(profile)) {
     NSData *bytes = [(args.length ? args : @"{}") dataUsingEncoding:NSUTF8StringEncoding];
     NSMutableDictionary *parsed = [[NSJSONSerialization JSONObjectWithData:bytes options:0 error:nil] mutableCopy];
     if (![parsed isKindOfClass:NSMutableDictionary.class]) return completion(JSONText(@{@"error" : @"bad arguments"}));
     parsed[@"offTheRecord"] = @YES;
     args = JSONText(parsed);
   }
-  NSString *data = ardia_host::OriginalProfileName(profile);
+  NSString *data = nilla_host::OriginalProfileName(profile);
   void (^done)(NSString *) = [completion copy];
   NSString *argsCopy = [args copy];
-  ardia_host::WithProfile(data, ^(ArdiaCoreProfile *p) {
-    if (!p || !ArdiaHost.isStarted) return done(JSONText(@{@"error" : @"profile not loaded"}));
+  nilla_host::WithProfile(data, ^(ArdiaCoreProfile *p) {
+    if (!p || !NillaHost.isStarted) return done(JSONText(@{@"error" : @"profile not loaded"}));
     call(p.path.UTF8String, argsCopy.UTF8String, Replied, (__bridge_retained void *)done);
   });
 }
@@ -154,14 +154,14 @@ void InstallSink() {
   void (^wipe)(void) = ^{ WipeSecret(secret); };
   auto call = (ac_engine_call_t)Symbol(name.UTF8String);
   const char *bytes = (const char *)secret.bytes;
-  if (!call || ardia_host::IsPrivateProfile(profile) || !secret.length || bytes[secret.length - 1] != 0) {
+  if (!call || nilla_host::IsPrivateProfile(profile) || !secret.length || bytes[secret.length - 1] != 0) {
     wipe();
     return completion(JSONText(@{@"error" : !call ? [NSString stringWithFormat:@"the engine has no %@", name]
-                                     : ardia_host::IsPrivateProfile(profile) ? @"private profile" : @"bad arguments"}));
+                                     : nilla_host::IsPrivateProfile(profile) ? @"private profile" : @"bad arguments"}));
   }
   void (^done)(NSString *) = [completion copy];
-  ardia_host::WithProfile(profile ?: @"", ^(ArdiaCoreProfile *p) {
-    if (!p || !ArdiaHost.isStarted || p.offTheRecord) {
+  nilla_host::WithProfile(profile ?: @"", ^(ArdiaCoreProfile *p) {
+    if (!p || !NillaHost.isStarted || p.offTheRecord) {
       wipe();
       return done(JSONText(@{@"error" : @"profile not loaded"}));
     }
@@ -174,14 +174,14 @@ void InstallSink() {
                    profile:(NSString *)profile
                    timeout:(NSTimeInterval)timeout
                 completion:(void (^)(NSDictionary<NSString *, id> *))completion {
-  ArdiaSecretReply *reply = [[ArdiaSecretReply alloc] initWithCompletion:completion];
+  NillaSecretReply *reply = [[NillaSecretReply alloc] initWithCompletion:completion];
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
     [reply settle:nil];
   });
   auto call = (ac_engine_call_t)Symbol(name.UTF8String);
-  if (!call || ardia_host::IsPrivateProfile(profile)) return [reply settle:nil];
-  ardia_host::WithProfile(profile ?: @"", ^(ArdiaCoreProfile *p) {
-    if (!p || !ArdiaHost.isStarted || p.offTheRecord) return [reply settle:nil];
+  if (!call || nilla_host::IsPrivateProfile(profile)) return [reply settle:nil];
+  nilla_host::WithProfile(profile ?: @"", ^(ArdiaCoreProfile *p) {
+    if (!p || !NillaHost.isStarted || p.offTheRecord) return [reply settle:nil];
     call(p.path.UTF8String, "{}", RepliedSecret, (__bridge_retained void *)reply);
   });
 }

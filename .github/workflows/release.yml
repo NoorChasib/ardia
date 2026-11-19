@@ -64,14 +64,14 @@ jobs:
           check() { if [ "$DRY_RUN" = true ]; then echo "::warning::$* (a real release would stop here)"; else fail "$*"; fi; }
           . scripts/lib/releases.sh
           channel=$(channel_of "$VERSION") || fail "$VERSION is neither <major>.<minor>.<patch> nor <next stable>-nightly.<n>"
-          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' apps/browser/macos/Ardia.xcodeproj/project.pbxproj | sort -u)
+          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' apps/browser/macos/Nilla.xcodeproj/project.pbxproj | sort -u)
           [ "$project" = "$VERSION" ] || check "MARKETING_VERSION is $project: commit the bump to $VERSION first"
           [ -f "docs/release-notes/$VERSION.md" ] || check "no docs/release-notes/$VERSION.md: write and commit the notes first"
           if gh release view "v$VERSION" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then check "v$VERSION is already published"; fi
           tree=$(engine/engine-key.sh)
           echo "tree=$tree" >> "$GITHUB_OUTPUT"
           {
-            echo "### Ardia $VERSION ($channel)"
+            echo "### Nilla $VERSION ($channel)"
             echo "- commit \`$GITHUB_SHA\`, engine tree \`${tree:0:12}\`"
             if [ "$DRY_RUN" = true ]; then echo "- dry run: a release candidate, nothing published"; else echo "- publishes"; fi
             if [ "$IPHONE" = true ]; then echo "- iPhone: $(apple_version_of "$VERSION"), $([ "$DRY_RUN" = true ] && echo "built and signed, not uploaded" || echo "sent to TestFlight after the Mac release")"; fi
@@ -161,7 +161,7 @@ jobs:
         run: pod install
       - name: Tree is clean
         run: |
-          pbx=apps/browser/macos/Ardia.xcodeproj/project.pbxproj
+          pbx=apps/browser/macos/Nilla.xcodeproj/project.pbxproj
           unquote() { sed -E 's/^[-+]//; s/"//g'; }
           removed=$(git diff -U0 -- "$pbx" | { grep '^-[^-]' || true; } | unquote)
           added=$(git diff -U0 -- "$pbx" | { grep '^+[^+]' || true; } | unquote)
@@ -191,7 +191,7 @@ jobs:
         env:
           DIST: ${{ steps.paths.outputs.dist }}
         run: |
-          COPYFILE_DISABLE=1 tar --no-mac-metadata -cf "$RUNNER_TEMP/build.tar" -C "$DIST" Ardia.xcarchive provenance.txt \
+          COPYFILE_DISABLE=1 tar --no-mac-metadata -cf "$RUNNER_TEMP/build.tar" -C "$DIST" Nilla.xcarchive provenance.txt \
             "ardia-cli-$VERSION-macos-arm64.tar.gz" "ardia-cli-$VERSION-macos-arm64.tar.gz.sha256"
       - if: always() && steps.cas.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -297,8 +297,8 @@ jobs:
         with:
           name: release
           path: |
-            ${{ steps.paths.outputs.dist }}/Ardia-${{ inputs.version }}.dmg
-            ${{ steps.paths.outputs.dist }}/Ardia-${{ inputs.version }}.zip
+            ${{ steps.paths.outputs.dist }}/Nilla-${{ inputs.version }}.dmg
+            ${{ steps.paths.outputs.dist }}/Nilla-${{ inputs.version }}.zip
             ${{ steps.paths.outputs.dist }}/appcast.xml
             ${{ steps.paths.outputs.dist }}/release-notes.md
             ${{ steps.paths.outputs.dist }}/provenance.txt
@@ -358,12 +358,12 @@ jobs:
         with:
           name: linux
           path: |
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.tar.xz
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.tar.xz.sha256
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.deb
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.deb.sha256
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.AppImage
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.AppImage.sha256
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.tar.xz
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.tar.xz.sha256
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.deb
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.deb.sha256
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.AppImage
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.AppImage.sha256
             ${{ runner.temp }}/linux/ardia-cli-${{ inputs.version }}-linux-x64.tar.gz
             ${{ runner.temp }}/linux/ardia-cli-${{ inputs.version }}-linux-x64.tar.gz.sha256
             ${{ runner.temp }}/linux/provenance.txt

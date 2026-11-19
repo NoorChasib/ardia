@@ -30,7 +30,7 @@ final class MeadowView: ExpoView {
     super.init(appContext: appContext)
     clip.wantsLayer = true
     clip.layer?.masksToBounds = true
-    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .ArdiaInterfaceScaleDidChange, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .NillaInterfaceScaleDidChange, object: nil)
     poster.wantsLayer = true
     poster.layer?.contentsGravity = .resize
     clip.addSubview(poster)

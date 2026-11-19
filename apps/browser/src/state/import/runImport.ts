@@ -1,4 +1,4 @@
-import { ardiaError } from "@ardia/core";
+import { nillaError } from "@nilla/core";
 import { orWarn } from "../../lib/fallback";
 import { confirm } from "../app/system";
 import { plural } from "../browser/model";
@@ -103,7 +103,7 @@ async function destination(target: string, index: number, name: string, color?: 
 type AppTabs = { result: DiaTabsResult } | { note: string };
 
 const NOT_BROUGHT = "Dia's tabs couldn't be brought over:";
-const SIDEBAR_UNREAD = "Dia's sidebar file couldn't be read, so Ardia asked Dia for its open and pinned tabs: their folders, custom names and split views stay in Dia.";
+const SIDEBAR_UNREAD = "Dia's sidebar file couldn't be read, so Nilla asked Dia for its open and pinned tabs: their folders, custom names and split views stay in Dia.";
 const FAVORITES_LOCKED = "Dia's Favorites weren't imported: they're in its sidebar file, which needs the keychain access you skipped.";
 
 function readAppTabs(): Promise<AppTabs> {
@@ -112,9 +112,9 @@ function readAppTabs(): Promise<AppTabs> {
     .then(
       (result): AppTabs => (result.windowCount ? { result } : { note: `${NOT_BROUGHT} Dia had no windows open.` }),
       (e: unknown): AppTabs => {
-        const { code } = ardiaError(e);
+        const { code } = nillaError(e);
         if (code === "locked")
-          return { note: `${NOT_BROUGHT} macOS didn't allow Ardia to ask Dia for them. Allow it in System Settings › Privacy & Security › Automation, then import again.` };
+          return { note: `${NOT_BROUGHT} macOS didn't allow Nilla to ask Dia for them. Allow it in System Settings › Privacy & Security › Automation, then import again.` };
         return { note: `${NOT_BROUGHT} ${code === "notRunning" ? "Dia didn't open." : "Dia didn't answer."}` };
       },
     );
@@ -235,7 +235,7 @@ export async function runImport(wanted: ReadonlySet<ImportKind>, withoutKey = fa
         },
       });
     } catch (e) {
-      if (ardiaError(e).code === "cancelled") return;
+      if (nillaError(e).code === "cancelled") return;
       if (readsSidebarFile(profile) && fromApp.length) {
         result = nothingRead(source.id, profile.id, profileKinds);
       } else {

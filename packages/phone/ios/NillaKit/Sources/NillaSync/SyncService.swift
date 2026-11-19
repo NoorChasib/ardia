@@ -1,4 +1,4 @@
-@preconcurrency import ArdiaSyncCore
+@preconcurrency import NillaSyncCore
 import Foundation
 import Observation
 #if canImport(UIKit)
@@ -37,9 +37,9 @@ public enum ConnectResult: Equatable, Sendable {
     case .invalidPhrase(let message): message
     case .mismatch: "This recovery phrase doesn’t match the synced data in this folder. Check the phrase, or choose the folder your other devices sync to."
     case .noSyncData: "There’s no synced data in this folder yet. Choose the folder your other devices sync to, or wait for it to finish downloading."
-    case .folderUnavailable: "Ardia can’t open this folder. Choose the Nilla Sync folder in iCloud Drive."
+    case .folderUnavailable: "Nilla can’t open this folder. Choose the Nilla Sync folder in iCloud Drive."
     case .keychainFailed: "Couldn’t save the sync key in your Keychain."
-    case .busy: "Ardia is still turning off sync. Try again in a moment."
+    case .busy: "Nilla is still turning off sync. Try again in a moment."
     }
   }
 }
@@ -842,11 +842,11 @@ public final class SyncService {
     }
   }
 
-  static let stalledMessage = "Ardia couldn’t read or write the sync folder. It will try again."
-  static let unavailableMessage = "Ardia can’t read its sync data right now. It will try again."
-  static let localNotReadyMessage = "Ardia is still moving your tabs and history. Sync starts when it’s done."
-  static let localDataMessage = "Ardia couldn’t read this phone’s tabs and history. It will try again."
-  static let localWriteMessage = "Ardia couldn’t save what your other devices sent. It will try again."
+  static let stalledMessage = "Nilla couldn’t read or write the sync folder. It will try again."
+  static let unavailableMessage = "Nilla can’t read its sync data right now. It will try again."
+  static let localNotReadyMessage = "Nilla is still moving your tabs and history. Sync starts when it’s done."
+  static let localDataMessage = "Nilla couldn’t read this phone’s tabs and history. It will try again."
+  static let localWriteMessage = "Nilla couldn’t save what your other devices sent. It will try again."
 
   private static let relative: RelativeDateTimeFormatter = {
     let formatter = RelativeDateTimeFormatter()

@@ -1,5 +1,5 @@
 import { forwardRef, memo, useMemo } from "react";
-import type { ThemeSwatchProps, WindowBackdropProps } from "@ardia/shaders";
+import type { ThemeSwatchProps, WindowBackdropProps } from "@nilla/shaders";
 import { StyleSheet, View } from "react-native";
 import { Bands } from "./Bands";
 import { adjustingLightness, flatStops, hslToRgb, parseColor, rgbaString, type Rgba } from "./color";

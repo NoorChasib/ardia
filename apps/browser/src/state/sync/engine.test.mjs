@@ -11,7 +11,7 @@ let readFails = false;
 const knownAtRead = [];
 let ids = 0;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => `dev${++ids}`,
     deviceName: () => "Test Mac",
     createPhrase: async () => true,
@@ -165,7 +165,7 @@ test("a sent tab isn't opened while the Mac is quitting, so it can't land after 
 
 test("a tab sent to this Mac opens once, behind the current tab of the window showing its profile, and the send is deleted", async () => {
   reset();
-  const { Clock } = await import("@ardia/sync");
+  const { Clock } = await import("@nilla/sync");
   const engine = await import("./engine.ts?receive");
   engine.startSync();
   assert.ok("ok" in (await engine.turnOnSync("/sync")));
@@ -218,7 +218,7 @@ test("a Keychain unlock that fails outright reads as stalled with its error inst
   first.startSync();
   assert.ok("ok" in (await first.turnOnSync("/sync")));
   await first.syncNow();
-  const native = globalThis.acTestNativeModules.ArdiaSync;
+  const native = globalThis.acTestNativeModules.NillaSync;
   const unlock = native.unlock;
   native.unlock = async () => {
     throw new Error("The Keychain couldn't be read");
@@ -242,7 +242,7 @@ test("a missing sync key reads as locked and asks for the phrase, and a cycle wh
   first.startSync();
   assert.ok("ok" in (await first.turnOnSync("/sync")));
   await first.syncNow();
-  const native = globalThis.acTestNativeModules.ArdiaSync;
+  const native = globalThis.acTestNativeModules.NillaSync;
   const { unlock, chainStatus } = native;
   native.unlock = async () => false;
   native.chainStatus = async () => {

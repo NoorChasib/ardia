@@ -1,12 +1,12 @@
 #import "ArdiaCore.h"
 
-@class ArdiaWebView;
+@class NillaWebView;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaTabRegistry : NSObject
-+ (void)setView:(nullable ArdiaWebView *)view forTab:(ArdiaCoreTab *)tab;
-+ (nullable ArdiaWebView *)viewForTab:(ArdiaCoreTab *)tab;
+@interface NillaTabRegistry : NSObject
++ (void)setView:(nullable NillaWebView *)view forTab:(ArdiaCoreTab *)tab;
++ (nullable NillaWebView *)viewForTab:(ArdiaCoreTab *)tab;
 + (NSString *)offerTab:(ArdiaCoreTab *)tab;
 + (NSString *)offerTab:(ArdiaCoreTab *)tab prefix:(NSString *)prefix;
 + (nullable ArdiaCoreTab *)takeOffered:(NSString *)adoptId;

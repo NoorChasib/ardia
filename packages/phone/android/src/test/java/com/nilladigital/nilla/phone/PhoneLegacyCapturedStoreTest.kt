@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import java.io.File
@@ -80,8 +80,8 @@ class PhoneLegacyCapturedStoreTest {
             "databases/browser.db",
             "databases/browser.db-wal",
             "databases/browser.db-shm",
-            "shared_prefs/ardia.browser.xml",
-            "shared_prefs/ardia.blocking.xml",
+            "shared_prefs/nilla.browser.xml",
+            "shared_prefs/nilla.blocking.xml",
         )
     }
 }

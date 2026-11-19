@@ -1,4 +1,4 @@
-import type { SearchScope } from "@ardia/core";
+import type { SearchScope } from "@nilla/core";
 import { useBrowser } from "../browser/store";
 import { activeTabId } from "../browser/model";
 import { shownPeek } from "../peek/peek";

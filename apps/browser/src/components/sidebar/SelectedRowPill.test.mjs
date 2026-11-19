@@ -40,7 +40,7 @@ test("judging the selected row again with the same answer queues no state update
 
 test("the pill still appears when the selected row scrolls out of the list and goes when it comes back, one update each way", (t) => {
   S().hydrate({ profiles: { default: PERSONAL }, profileOrder: ["default"] });
-  const w = S().createWindow({ url: "https://one.ardia.test/" });
+  const w = S().createWindow({ url: "https://one.nilla.test/" });
   S().setFocusedWindow(w);
   let scrollY = 0;
   const geometry = { current: { viewport: 500, regions: new Proxy({}, { get: () => 0 }), newTabAtTop: false, tilesFixed: false, edgeLift: 0 } };
@@ -63,7 +63,7 @@ test("the pill still appears when the selected row scrolls out of the list and g
   assert.equal(mounted.value.away, null);
   assert.deepEqual(sets, ["above", null]);
   for (let i = 0; i < 10; i++) {
-    S().newTab(w, { url: `https://more-${i}.ardia.test/`, background: true });
+    S().newTab(w, { url: `https://more-${i}.nilla.test/`, background: true });
     for (const run of frames.splice(0)) run();
   }
   assert.equal(mounted.value.away, null);

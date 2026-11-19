@@ -35,14 +35,14 @@ public enum SwipeNavigationMode: String, Codable, Sendable, CaseIterable, Identi
 }
 
 public enum AppLinkPreference: String, Codable, Sendable, CaseIterable, Identifiable {
-  case ardia
+  case nilla
   case app
 
   public var id: String { rawValue }
 
   public var title: String {
     switch self {
-    case .ardia: String(localized: "Ardia")
+    case .nilla: String(localized: "Nilla")
     case .app: String(localized: "App")
     }
   }
@@ -124,7 +124,7 @@ public final class BrowsingPreferences {
     self.defaults = defaults
     nightShade = defaults.string(forKey: Self.keys.nightShade).flatMap(NightShadeMode.init(rawValue:)) ?? .disabled
     swipeNavigation = defaults.string(forKey: Self.keys.swipe).flatMap(SwipeNavigationMode.init(rawValue:)) ?? .anywhere
-    appLinks = defaults.string(forKey: Self.keys.appLinks).flatMap(AppLinkPreference.init(rawValue:)) ?? .ardia
+    appLinks = defaults.string(forKey: Self.keys.appLinks).flatMap(AppLinkPreference.init(rawValue:)) ?? .nilla
     searchSuggestions = defaults.object(forKey: Self.keys.suggestions) as? Bool ?? true
     searchEngineID = defaults.string(forKey: Self.keys.engine) ?? "google"
     translateLanguage = defaults.string(forKey: Self.keys.translateLanguage).flatMap { PageTranslation.isLanguageCode($0) ? $0 : nil }

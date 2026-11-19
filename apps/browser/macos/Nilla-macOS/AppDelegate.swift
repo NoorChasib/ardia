@@ -2,7 +2,7 @@ import AppKit
 import ArdiaCore
 import Expo
 import React
-import ArdiaShell
+import NillaShell
 import ReactAppDependencyProvider
 
 final class AppDelegate: ExpoAppDelegate {

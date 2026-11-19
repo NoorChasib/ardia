@@ -2,7 +2,7 @@
 
 #import <CommonCrypto/CommonDigest.h>
 
-namespace ardia_extensions {
+namespace nilla_extensions {
 
 namespace {
 

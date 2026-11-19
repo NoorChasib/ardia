@@ -1,8 +1,8 @@
-import ArdiaDesign
+import NillaDesign
 import SwiftUI
 import UIKit
 
-final class OpenInArdiaViewController: UIViewController {
+final class OpenInNillaViewController: UIViewController {
   private var didStart = false
 
   override func viewDidLoad() {
@@ -28,7 +28,7 @@ final class OpenInArdiaViewController: UIViewController {
       return
     }
     SystemStore.shared?.enqueue(SystemInboxItem(action: .open, url: url.absoluteString, title: page.title))
-    show(OpenFallbackView(message: String(localized: "This page opens the next time you open Ardia."), done: finish))
+    show(OpenFallbackView(message: String(localized: "This page opens the next time you open Nilla."), done: finish))
   }
 
   private func show(_ content: OpenFallbackView) {
@@ -62,7 +62,7 @@ struct OpenFallbackView: View {
 
   private var card: some View {
     VStack(spacing: Spacing.medium) {
-      ArdiaLogoMark()
+      NillaLogoMark()
         .frame(width: 64, height: 52)
       Text(message)
         .font(.headline)
@@ -87,5 +87,5 @@ struct OpenFallbackView: View {
 }
 
 #Preview("Fallback") {
-  OpenFallbackView(message: "This page opens the next time you open Ardia.", done: {})
+  OpenFallbackView(message: "This page opens the next time you open Nilla.", done: {})
 }

@@ -1,5 +1,5 @@
 import { TurboModuleRegistry } from "react-native";
-import type { AppNative, DocumentsNative } from "@ardia/shell";
+import type { AppNative, DocumentsNative } from "@nilla/shell";
 import { join } from "../import/host";
 import { nativeImportHost } from "../import/nativeHost";
 import { requireNativeModule } from "../modules";
@@ -7,14 +7,14 @@ import { expectEqual, expectTrue, type Check } from "./check";
 
 export const host = () => {
   const made = nativeImportHost();
-  expectTrue(made, "ArdiaWindowsImport has no Windows module");
+  expectTrue(made, "NillaWindowsImport has no Windows module");
   return made;
 };
 
-const documents = () => requireNativeModule<DocumentsNative>("ArdiaDocuments");
+const documents = () => requireNativeModule<DocumentsNative>("NillaDocuments");
 
 export const dataFolder = () => {
-  const folder = requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().dataDirectory;
+  const folder = requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().dataDirectory;
   expectTrue(typeof folder === "string" && folder.length > 0, "the instance has no data folder");
   return folder;
 };
@@ -31,7 +31,7 @@ export const checks: Check[] = [
   {
     name: "import: the user's data folders are known and a folder lists its files",
     async run() {
-      expectTrue(TurboModuleRegistry.get("ArdiaWindowsImport"), "ArdiaWindowsImport is not registered");
+      expectTrue(TurboModuleRegistry.get("NillaWindowsImport"), "NillaWindowsImport is not registered");
       const native = host();
       expectTrue(/^[A-Za-z]:\\/.test(native.localAppData) && /^[A-Za-z]:\\/.test(native.roamingAppData), `folders are ${native.localAppData} and ${native.roamingAppData}`);
       const name = `${unique("list")}.json`;

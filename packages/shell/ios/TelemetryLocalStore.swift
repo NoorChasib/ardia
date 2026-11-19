@@ -17,7 +17,7 @@ enum TelemetryLocalStore {
     let lines: Int
   }
 
-  private static let queue = DispatchQueue(label: "ardia.telemetry-local", qos: .utility)
+  private static let queue = DispatchQueue(label: "nilla.telemetry-local", qos: .utility)
   private static let dayPattern = try! NSRegularExpression(pattern: "^\\d{4}-\\d{2}-\\d{2}$")
   private static let appFilePattern = try! NSRegularExpression(pattern: "^(\\d{4}-\\d{2}-\\d{2})\\.jsonl$")
   private static let cliFilePattern = try! NSRegularExpression(pattern: "^cli-\\d{4}-\\d{2}-\\d{2}\\.jsonl$")
@@ -277,7 +277,7 @@ enum TelemetryLocalStore {
         return done(nil)
       }
       try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-      let base = "Ardia data \(utcDay(now))"
+      let base = "Nilla data \(utcDay(now))"
       var url = dir.appendingPathComponent("\(base).jsonl")
       var n = 2
       while FileManager.default.fileExists(atPath: url.path) {

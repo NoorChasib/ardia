@@ -18,7 +18,7 @@ class Unreachable(BrowseError):
 class ConnectionLost(BrowseError):
     exit_code = 2
 
-    def __init__(self, message: str = "Ardia closed the connection (Stop was pressed, control was turned off, or Ardia quit)"):
+    def __init__(self, message: str = "Nilla closed the connection (Stop was pressed, control was turned off, or Nilla quit)"):
         super().__init__(message, code="connection_lost")
 
 
@@ -31,18 +31,18 @@ class OutcomeUnknown(BrowseError):
 
 class StaleRef(BrowseError):
     def __init__(self, ref: str, why: str):
-        fix = "use that ref" if "is now @" in why else "Run `ardia browse snapshot -i` again and use the new refs"
+        fix = "use that ref" if "is now @" in why else "Run `nilla-browser browse snapshot -i` again and use the new refs"
         super().__init__(f"Stale ref @{ref}: {why}. {fix[0].upper() + fix[1:]}", code="stale_ref")
 
 
-NOT_A_WEB_TAB = "the tab is gone, isn't a web page (an Ardia or extension page), or is in a window Ardia keeps for itself"
+NOT_A_WEB_TAB = "the tab is gone, isn't a web page (a Nilla or extension page), or is in a window Nilla keeps for itself"
 REFUSAL_HINTS = {
     "to that target": NOT_A_WEB_TAB,
     "on that target": NOT_A_WEB_TAB,
     "to that URL": "only http, https, data and about:blank pages can be opened",
-    "on a tab the ardia command didn't open": "the viewport can be set only on a tab this command opened: `ardia browse open <url>`, then set it there",
+    "on a tab the ardia command didn't open": "the viewport can be set only on a tab this command opened: `nilla-browser browse open <url>`, then set it there",
     "with that option": "only a width, a height, a scale and mobile can be set",
-    "on a tab that isn't off-screen": "Ardia sets a viewport only on a tab it has taken off-screen, which `ardia browse set viewport <w> <h>` does for a tab this session opened and never showed",
+    "on a tab that isn't off-screen": "Nilla sets a viewport only on a tab it has taken off-screen, which `nilla-browser browse set viewport <w> <h>` does for a tab this session opened and never showed",
 }
 
 
@@ -61,10 +61,10 @@ class Gated(BrowseError):
         what = f"`{command}` needs {method}" if command else f"{method} is needed"
         if self.reason:
             hint = REFUSAL_HINTS.get(self.reason)
-            message = f"{what}, which Ardia allows for the ardia command, but not {self.reason} ({self.refusal})" + (f": {hint}" if hint else "")
+            message = f"{what}, which Nilla allows for the nilla-browser command, but not {self.reason} ({self.refusal})" + (f": {hint}" if hint else "")
         else:
             message = (
-                f"{what}, which Ardia's ardia-command policy refuses ({self.refusal}). "
+                f"{what}, which Nilla's nilla-command policy refuses ({self.refusal}). "
                 "It works once the engine's token policy allows it; until then only a plain DevTools test "
                 "server (--port) accepts it"
             )

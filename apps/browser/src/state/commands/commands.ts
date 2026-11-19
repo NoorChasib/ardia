@@ -2,7 +2,7 @@ import { copyText } from "../../platform/clipboard";
 import { openExternalURL } from "../../platform/app";
 import { pickFiles, prompt } from "../../platform/dialogs";
 import type { CommandEvent } from "../../platform/commands";
-import { markdownLink } from "@ardia/core";
+import { markdownLink } from "@nilla/core";
 import { useBrowser } from "../browser/store";
 import { requestCreateProfile } from "../profiles/createProfileRequest";
 import { activeTabId, bookmarkProfileId, isPinnedRow, resolveWindowId } from "../browser/model";
@@ -40,7 +40,7 @@ import { runReaderCommand } from "../reader/reader";
 import { goBack, goForward } from "../tabs/navigation";
 import { awaitsFirstPage } from "../tabs/pendingAddress";
 import { focusSplitPane, openSplitPane } from "../splits/actions";
-import { isAppCommand, LITTLE_ARDIA_PAGE_COMMANDS, settingChange, variantArg } from "./commandCatalog";
+import { isAppCommand, LITTLE_NILLA_PAGE_COMMANDS, settingChange, variantArg } from "./commandCatalog";
 import { APP_COMMAND_HANDLERS } from "./appCommands";
 import { runSidebarCommand } from "../sidebar/commands";
 import { numberedTabs } from "../sidebar/entries";
@@ -56,13 +56,13 @@ import { noteSelectionClosedByKey } from "../telemetry/usage";
 import { noteUrlCopied } from "../telemetry/urlCopies";
 import { isSmall, mainWindowFor, newWindowProfile, originalProfile } from "../windows/small";
 import {
-  closeLittleArdia,
-  cycleLittleArdiaProfile,
-  moveLittleArdiaToProfile,
+  closeLittleNilla,
+  cycleLittleNillaProfile,
+  moveLittleNillaToProfile,
   openInMainWindow,
-  openLittleArdia,
-  openLittleArdiaProfileMenu,
-} from "../littleArdia/actions";
+  openLittleNilla,
+  openLittleNillaProfileMenu,
+} from "../littleNilla/actions";
 import { runPeekCommand } from "../peek/actions";
 import { peekTabId } from "../peek/peek";
 import { expectFocus, findFocus } from "../focus/focusClaims";
@@ -86,7 +86,7 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent, 
   }
   const targeted = targetTab && s.tabs[targetTab] && (!requested || s.tabs[targetTab]!.windowId === requested) ? targetTab : null;
   if (targetTab && !targeted) throw new NoCommandWindowError(`Tab ${targetTab} isn't open in that window.`);
-  if (!targeted && isSmall(s, requested) && runLittleArdiaCommand(command, arg, requested!)) return;
+  if (!targeted && isSmall(s, requested) && runLittleNillaCommand(command, arg, requested!)) return;
   if (!targeted && runPeekCommand(command, resolveWindowId(s, requested) ?? "")) return;
   const settings = settingChange(command, arg, s.settings);
   if (settings) return s.updateSettings(settings);
@@ -96,10 +96,10 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent, 
       return void openWindow({ profileId: arg ?? newWindowProfile(s, requested) });
     case "newIncognitoWindow":
       return void openWindow({ kind: "private", profileId: originalProfile(s, s.windows[requested ?? ""]) });
-    case "newLittleArdia":
-      return void openLittleArdia(undefined, arg ?? undefined);
-    case "toggleOpenLinksInLittleArdia":
-      return s.updateSettings({ openLinksInLittleArdia: !s.settings.openLinksInLittleArdia });
+    case "newLittleNilla":
+      return void openLittleNilla(undefined, arg ?? undefined);
+    case "toggleOpenLinksInLittleNilla":
+      return s.updateSettings({ openLinksInLittleNilla: !s.settings.openLinksInLittleNilla });
     case "reopenClosedWindow":
       return s.reopenClosedWindow();
     case "toggleAddressBar":
@@ -126,7 +126,7 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent, 
   }
 
   const invokedFrom = requested;
-  if (!targeted && isSmall(s, requested) && !LITTLE_ARDIA_PAGE_COMMANDS.has(command)) {
+  if (!targeted && isSmall(s, requested) && !LITTLE_NILLA_PAGE_COMMANDS.has(command)) {
     requested = mainWindowFor(s, s.windows[requested!]!.profileId) ?? null;
     if (!requested && strictWindow) throw new NoCommandWindowError(`${command} needs a main window and none is open.`);
     if (requested) focus(requested);
@@ -148,7 +148,7 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent, 
     }
     return;
   }
-  const tabId = targeted ?? ((LITTLE_ARDIA_PAGE_COMMANDS.has(command) && peekTabId(s, windowId)) || activeTabId(s, windowId));
+  const tabId = targeted ?? ((LITTLE_NILLA_PAGE_COMMANDS.has(command) && peekTabId(s, windowId)) || activeTabId(s, windowId));
   const tab = tabId ? s.tabs[tabId] : undefined;
   const page = tab?.url ? tab : undefined;
   const web = tabId ? webviews.get(tabId) : undefined;
@@ -342,14 +342,14 @@ export function runCommand({ command, arg, windowId: requested }: CommandEvent, 
   }
 }
 
-function runLittleArdiaCommand(command: string, arg: string | null | undefined, windowId: string): boolean {
+function runLittleNillaCommand(command: string, arg: string | null | undefined, windowId: string): boolean {
   const s = useBrowser.getState();
   const tabId = activeTabId(s, windowId);
   const tab = tabId ? s.tabs[tabId] : undefined;
   switch (command) {
     case "closeTab":
       if (s.windowUi[windowId]?.panel.open && tab?.url) s.closePanel(windowId);
-      else closeLittleArdia(windowId);
+      else closeLittleNilla(windowId);
       return true;
     case "focusCommandBar":
       s.openPanel(windowId, tab?.url ?? "");
@@ -358,16 +358,16 @@ function runLittleArdiaCommand(command: string, arg: string | null | undefined, 
       openInMainWindow(windowId);
       return true;
     case "switchProfile":
-      if (arg) moveLittleArdiaToProfile(windowId, arg);
+      if (arg) moveLittleNillaToProfile(windowId, arg);
       return true;
     case "nextProfile":
-      cycleLittleArdiaProfile(windowId, 1);
+      cycleLittleNillaProfile(windowId, 1);
       return true;
     case "previousProfile":
-      cycleLittleArdiaProfile(windowId, -1);
+      cycleLittleNillaProfile(windowId, -1);
       return true;
     case "openProfileMenu":
-      void openLittleArdiaProfileMenu(windowId);
+      void openLittleNillaProfileMenu(windowId);
       return true;
   }
   return false;

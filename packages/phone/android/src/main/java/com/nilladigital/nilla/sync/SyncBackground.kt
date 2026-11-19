@@ -1,4 +1,4 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
 import android.content.Context
 import androidx.work.Constraints
@@ -58,8 +58,8 @@ class WorkManagerSyncScheduler(context: Context) : SyncBackgroundScheduler {
     }
 
     companion object {
-        const val PERIODIC_WORK = "ardia-sync"
-        const val FLUSH_WORK = "ardia-sync-flush"
+        const val PERIODIC_WORK = "nilla-sync"
+        const val FLUSH_WORK = "nilla-sync-flush"
         const val INTERVAL_MINUTES = 15L
 
         val periodicConstraints: Constraints = Constraints.Builder()

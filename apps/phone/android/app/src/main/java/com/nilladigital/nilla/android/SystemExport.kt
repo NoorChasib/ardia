@@ -1,12 +1,12 @@
-package com.ardia.browser.android
+package com.nilladigital.nilla.android
 
 import android.content.Context
-import com.ardia.browser.android.system.ArdiaWidgets
-import com.ardia.browser.android.system.SystemSnapshotExporter
-import com.ardia.browser.android.system.SystemSnapshots
-import com.ardia.browser.android.system.SystemStore
-import com.ardia.phone.NightChange
-import com.ardia.phone.PhoneSync
+import com.nilladigital.nilla.android.system.NillaWidgets
+import com.nilladigital.nilla.android.system.SystemSnapshotExporter
+import com.nilladigital.nilla.android.system.SystemSnapshots
+import com.nilladigital.nilla.android.system.SystemStore
+import com.nilladigital.nilla.phone.NightChange
+import com.nilladigital.nilla.phone.PhoneSync
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -26,7 +26,7 @@ object SystemExport {
                 sync ?: return@collectLatest
                 val demo = PhoneSync.isDemo
                 val exporter = SystemSnapshotExporter(app, if (demo) SystemStore.demo(app) else SystemStore.shared(app), publishes = !demo)
-                combine(sync.state, sync.snapshot, sync.selectedProfile, com.ardia.phone.WidgetColorChoice.flow(app)) { state, snapshot, selected, colorChoice -> SystemSnapshots.of(state, snapshot, selected, colorChoice) }
+                combine(sync.state, sync.snapshot, sync.selectedProfile, com.nilladigital.nilla.phone.WidgetColorChoice.flow(app)) { state, snapshot, selected, colorChoice -> SystemSnapshots.of(state, snapshot, selected, colorChoice) }
                     .distinctUntilChanged()
                     .collectLatest { runCatching { exporter.export(it) } }
             }
@@ -39,8 +39,8 @@ object SystemExport {
         if (!night.changed(uiMode)) return
         val app = context.applicationContext
         scope.launch {
-            ArdiaWidgets.refreshSearch(app)
-            ArdiaWidgets.refreshMacTabs(app)
+            NillaWidgets.refreshSearch(app)
+            NillaWidgets.refreshMacTabs(app)
         }
     }
 }

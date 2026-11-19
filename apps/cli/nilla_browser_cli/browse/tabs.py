@@ -9,7 +9,7 @@ import secrets
 import time
 from pathlib import Path
 
-from ardia_cli.browse import paths
+from nilla_browser_cli.browse import paths
 
 LOCK = "tabs.lock"
 STALE_FILE_SECONDS = 3 * 24 * 3600
@@ -24,7 +24,7 @@ WINDOWS_TIMEOUT = 3.0
 
 
 def control_socket(state) -> Path | None:
-    from ardia_cli import control, endpoint as endpoints
+    from nilla_browser_cli import control, endpoint as endpoints
 
     found = state.endpoint
     source = getattr(found, "source", None)
@@ -39,7 +39,7 @@ def control_socket(state) -> Path | None:
 
 
 async def app_windows(state) -> list | None:
-    from ardia_cli import control
+    from nilla_browser_cli import control
 
     path = control_socket(state)
     if path is None:
@@ -60,7 +60,7 @@ async def app_windows(state) -> list | None:
 
 
 async def app_call(state, method: str, params: dict, timeout: float = WINDOWS_TIMEOUT):
-    from ardia_cli import control
+    from nilla_browser_cli import control
 
     path = control_socket(state)
     if path is None:
@@ -94,9 +94,9 @@ async def where_app_has(state, target_id: str) -> str | None:
         return None
     row = next((row for row in rows if row.get("targetId") == target_id), None)
     if row is None:
-        return ("`ardia windows` lists no tab with that page: Ardia closed it, unloaded it, or keeps it in a private window "
+        return ("`nilla-browser windows` lists no tab with that page: Nilla closed it, unloaded it, or keeps it in a private window "
                 "or one of its own")
-    return f"Ardia has it open as {row['id']} at {row.get('url') or 'no address yet'}"
+    return f"Nilla has it open as {row['id']} at {row.get('url') or 'no address yet'}"
 
 
 async def app_tab_map(state) -> dict[str, str]:
@@ -112,31 +112,31 @@ async def app_tab_map(state) -> dict[str, str]:
 async def app_tab_target(state, app_tab: str) -> dict:
     windows = await app_windows(state)
     if windows is None:
-        return {"error": f"Couldn't read Ardia's tab list to look up {app_tab}; use the [tN] ids `ardia browse tab list` prints", "code": "tab_not_found"}
+        return {"error": f"Couldn't read Nilla's tab list to look up {app_tab}; use the [tN] ids `nilla-browser browse tab list` prints", "code": "tab_not_found"}
     rows = app_tab_rows(windows)
     tab = next((row for row in rows if row["id"] == app_tab), None)
     if tab is None:
-        return {"error": f"Ardia has no tab {app_tab} (`ardia windows` lists them; private windows are left out)", "code": "tab_not_found"}
+        return {"error": f"Nilla has no tab {app_tab} (`nilla-browser windows` lists them; private windows are left out)", "code": "tab_not_found"}
     if not reports_targets(rows):
-        return {"error": f"This Ardia doesn't say which page belongs to {app_tab} (an update adds it); use the [tN] ids `ardia browse tab list` prints",
+        return {"error": f"This Nilla doesn't say which page belongs to {app_tab} (an update adds it); use the [tN] ids `nilla-browser browse tab list` prints",
                 "code": "tab_not_found"}
     target = tab.get("targetId")
     if not isinstance(target, str):
-        return {"error": f"{app_tab} is open in Ardia but its page isn't loaded (Ardia keeps background tabs asleep until they're shown), "
-                         "so there's nothing to drive yet; click it in Ardia, or `ardia browse open <url>` for a copy",
+        return {"error": f"{app_tab} is open in Nilla but its page isn't loaded (Nilla keeps background tabs asleep until they're shown), "
+                         "so there's nothing to drive yet; click it in Nilla, or `nilla-browser browse open <url>` for a copy",
                 "code": "tab_asleep", "asleep": True}
     if target not in state.target_infos:
-        return {"error": f"{app_tab}'s page isn't one the ardia command can drive (an Ardia page, or not a web page)", "code": "tab_not_found"}
+        return {"error": f"{app_tab}'s page isn't one the nilla-browser command can drive (a Nilla page, or not a web page)", "code": "tab_not_found"}
     state.app_tabs[target] = app_tab
     state.app_generations[target] = tab.get("pageGeneration")
     return {"target": target, "url": tab.get("url"), "title": tab.get("title"), "generation": tab.get("pageGeneration")}
 
 
 def temporary_limit():
-    from ardia_cli.browse.errors import BrowseError
+    from nilla_browser_cli.browse.errors import BrowseError
 
-    return BrowseError(f"Ardia already has {MAX_TEMPORARIES} tabs open for ardia browse reads and scripts; let them finish, or end "
-                       "idle sessions with `ardia browse close --all`", code="temporary_limit")
+    return BrowseError(f"Nilla already has {MAX_TEMPORARIES} tabs open for nilla browse reads and scripts; let them finish, or end "
+                       "idle sessions with `nilla-browser browse close --all`", code="temporary_limit")
 
 
 class Registry:
@@ -230,7 +230,7 @@ class Registry:
                     ids.pop(target, None)
             size = self.encoded_size(data)
         if size > FILE_BUDGET:
-            from ardia_cli.browse.errors import BrowseError
+            from nilla_browser_cli.browse.errors import BrowseError
 
             raise BrowseError(f"The tab registry would be {size:,} bytes with only owned tabs left (the limit is {FILE_BUDGET:,})", code="registry_full")
 
@@ -331,7 +331,7 @@ class Registry:
     def note_using(self, instance: str | None, target: str | None):
         if self.browse_fd is None:
             return
-        from ardia_cli.browse.errors import BrowseError
+        from nilla_browser_cli.browse.errors import BrowseError
 
         with self._open(instance) as data:
             if target is None:

@@ -4,7 +4,7 @@ import urllib.error
 import urllib.request
 from urllib.parse import urljoin, urlsplit, urlunsplit
 
-from ardia_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.errors import BrowseError
 
 FLAGS = {"--raw": "bool", "--require-md": "bool", "--llms": "value", "--outline": "bool", "--filter": "value", "--timeout": "value"}
 MAX_BODY = 8 * 1024 * 1024
@@ -81,7 +81,7 @@ def fetch(url: str, timeout: float, accept: str = "text/markdown, text/plain;q=0
     parts = urlsplit(url)
     if parts.scheme not in ("http", "https"):
         raise BrowseError(f"read fetches http(s) URLs only, not {url}")
-    request = urllib.request.Request(url, headers={"Accept": accept, "User-Agent": "ardia-browse-read/1"})
+    request = urllib.request.Request(url, headers={"Accept": accept, "User-Agent": "nilla-browse-read/1"})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             body = response.read(MAX_BODY + 1)
@@ -94,7 +94,7 @@ def fetch(url: str, timeout: float, accept: str = "text/markdown, text/plain;q=0
         raise BrowseError(f"Couldn't fetch {url}: {getattr(error, 'reason', error)}") from None
     kind = content_type.split(";")[0].strip().lower()
     if kind == "application/pdf" or body.startswith(b"%PDF"):
-        from ardia_cli.browse import pdftext
+        from nilla_browser_cli.browse import pdftext
 
         if len(body) > MAX_BODY:
             raise BrowseError(f"{url} is a PDF over {MAX_BODY} bytes; read it in a tab instead (drop --http)")
@@ -143,7 +143,7 @@ def nearest_llms(url: str, timeout: float, name: str = "llms.txt"):
 
 
 def run(url: str, options: dict, global_options: dict):
-    from ardia_cli.browse.commands import Result, normalize_url
+    from nilla_browser_cli.browse.commands import Result, normalize_url
 
     url = normalize_url(url)
     timeout = float(options.get("timeout") or 10000) / 1000

@@ -11,7 +11,7 @@
 #include <atomic>
 #include <cmath>
 
-@interface CATransaction (ArdiaFieldTimingPrivate)
+@interface CATransaction (NillaFieldTimingPrivate)
 + (void)addCommitHandler:(void (^)(void))block forPhase:(unsigned int)phase;
 @end
 
@@ -29,7 +29,7 @@ NSMutableArray<NSArray *> *gMarks;
 id gInputMonitor;
 
 double EventTime(NSEvent *event) {
-  return ArdiaFieldNow() - (NSProcessInfo.processInfo.systemUptime - event.timestamp) * 1000;
+  return NillaFieldNow() - (NSProcessInfo.processInfo.systemUptime - event.timestamp) * 1000;
 }
 
 void SetEnabled(bool enabled) {
@@ -46,7 +46,7 @@ void SetEnabled(bool enabled) {
       [NSEvent removeMonitor:gInputMonitor];
       gInputMonitor = nil;
     }
-    ArdiaWebViewsSetFieldTiming(gEnabled);
+    NillaWebViewsSetFieldTiming(gEnabled);
   });
   if (enabled) return;
   os_unfair_lock_lock(&gLock);
@@ -56,15 +56,15 @@ void SetEnabled(bool enabled) {
 
 }
 
-BOOL ArdiaFieldTimingEnabled(void) {
+BOOL NillaFieldTimingEnabled(void) {
   return gEnabled;
 }
 
-double ArdiaFieldNow(void) {
+double NillaFieldNow(void) {
   return NSDate.date.timeIntervalSince1970 * 1000;
 }
 
-void ArdiaFieldMark(NSString *key, NSString *kind, double at) {
+void NillaFieldMark(NSString *key, NSString *kind, double at) {
   if (!gEnabled || !key.length || !std::isfinite(at)) return;
   NSArray *mark = @[ key, kind, @(round(at * 10) / 10) ];
   os_unfair_lock_lock(&gLock);
@@ -74,23 +74,23 @@ void ArdiaFieldMark(NSString *key, NSString *kind, double at) {
   os_unfair_lock_unlock(&gLock);
 }
 
-void ArdiaFieldMarkNow(NSString *key, NSString *kind) {
-  if (gEnabled) ArdiaFieldMark(key, kind, ArdiaFieldNow());
+void NillaFieldMarkNow(NSString *key, NSString *kind) {
+  if (gEnabled) NillaFieldMark(key, kind, NillaFieldNow());
 }
 
-void ArdiaFieldMarkAtCommit(NSString *key, NSString *kind) {
+void NillaFieldMarkAtCommit(NSString *key, NSString *kind) {
   if (!gEnabled || !key.length) return;
   NSString *k = [key copy];
   if ([CATransaction respondsToSelector:@selector(addCommitHandler:forPhase:)])
-    [CATransaction addCommitHandler:^{ ArdiaFieldMark(k, kind, ArdiaFieldNow()); } forPhase:kPostCommit];
+    [CATransaction addCommitHandler:^{ NillaFieldMark(k, kind, NillaFieldNow()); } forPhase:kPostCommit];
   else
-    ArdiaFieldMark(k, kind, ArdiaFieldNow());
+    NillaFieldMark(k, kind, NillaFieldNow());
 }
 
-@interface ArdiaFieldTimingModule : NSObject <RCTBridgeModule, RCTInvalidating>
+@interface NillaFieldTimingModule : NSObject <RCTBridgeModule, RCTInvalidating>
 @end
 
-@implementation ArdiaFieldTimingModule
+@implementation NillaFieldTimingModule
 
 @synthesize bridge = _bridge;
 
@@ -118,7 +118,7 @@ RCT_EXPORT_METHOD(markFrame : (NSString *)key kind : (NSString *)kind) {
   if (!gEnabled) return;
   NSString *k = [key copy], *what = [kind copy];
   [_bridge.uiManager addUIBlock:^(__unused RCTUIManager *manager, __unused NSDictionary *registry) {
-    ArdiaFieldMarkAtCommit(k, what);
+    NillaFieldMarkAtCommit(k, what);
   }];
 }
 

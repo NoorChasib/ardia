@@ -13,7 +13,7 @@ const source = {
   tabs: [],
   history: [
     { url: "https://github.com/", title: "GitHub", favicon: null, visits: 12, lastVisit: now - 2000 },
-    { url: "https://github.com/ardia/ardia/issues", title: "Issues · ardia", favicon: null, visits: 8, lastVisit: now - 3000 },
+    { url: "https://github.com/nilla/nilla/issues", title: "Issues · nilla", favicon: null, visits: 8, lastVisit: now - 3000 },
     { url: "https://gist.github.com/", title: "Gists", favicon: null, visits: 3, lastVisit: now - 4000 },
   ],
 };

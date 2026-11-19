@@ -4,9 +4,9 @@ import json
 import time
 from dataclasses import dataclass, field
 
-from ardia_cli.browse.errors import BrowseError, CdpError, CdpTimeout, Gated, NotFocusable, OutcomeUnknown, PageBusy
-from ardia_cli.browse.inputs import Input
-from ardia_cli.browse.js import LIBRARY
+from nilla_browser_cli.browse.errors import BrowseError, CdpError, CdpTimeout, Gated, NotFocusable, OutcomeUnknown, PageBusy
+from nilla_browser_cli.browse.inputs import Input
+from nilla_browser_cli.browse.js import LIBRARY
 
 FOCUS_INSIDE = """(el) => {
   const fields = 'input:not([type=hidden]):not([disabled]), textarea:not([disabled]), select:not([disabled]), [contenteditable=""], [contenteditable=true], [tabindex]:not([tabindex="-1"])';
@@ -16,7 +16,7 @@ FOCUS_INSIDE = """(el) => {
   return !!active && active !== document.body && (active === el || el.contains(active));
 }"""
 
-WORLD_NAME = "ardia-browse"
+WORLD_NAME = "nilla-browse"
 CONSOLE_LIMIT = 1000
 ERROR_LIMIT = 500
 REQUEST_LIMIT = 1000
@@ -27,17 +27,17 @@ HEADER_VALUE_LIMIT = 8 * 1024
 HEADERS_LIMIT = 64 * 1024
 REQUEST_BYTES = 32 * 1024 * 1024
 HIDDEN_TAB = (
-    "[{tab}] is a background tab, and this Ardia doesn't deliver mouse or keyboard input to background tabs. "
-    "use: ardia browse tab {tab} --show (or open <url> --show)"
+    "[{tab}] is a background tab, and this Nilla doesn't deliver mouse or keyboard input to background tabs. "
+    "use: nilla browse tab {tab} --show (or open <url> --show)"
 )
 LIVE_WAIT = 0.5
-DETACHED = "Ardia detached this tab from the ardia command while it was in use (the tab closed, crashed, went to sleep or moved to a window Ardia keeps for itself). Run the command again"
-CRASHED = "This tab's page crashed. `ardia browse reload` brings it back; `ardia browse close` or `tab close` closes it"
+DETACHED = "Nilla detached this tab from the nilla-browser command while it was in use (the tab closed, crashed, went to sleep or moved to a window Nilla keeps for itself). Run the command again"
+CRASHED = "This tab's page crashed. `nilla-browser browse reload` brings it back; `nilla-browser browse close` or `tab close` closes it"
 CRASH_PROBE = 5.0
 BUSY_PROBE = 3.0
 BUSY_MEMORY = 120.0
 BUSY_WHY = ("the page's own scripts are keeping its tab busy, so it isn't answering. While it stays that way, commands on this tab give up "
-            "after {probe:g} s instead of waiting; `ardia browse reload` it, or work from a lighter page (search results, the site's own API, "
+            "after {probe:g} s instead of waiting; `nilla-browser browse reload` it, or work from a lighter page (search results, the site's own API, "
             "or `read --http <url>`)")
 CRASH_SAFE = frozenset({"Inspector.enable", "Page.reload", "Page.navigate"})
 SETUP_NAMES = {
@@ -177,8 +177,8 @@ class Page:
         try:
             result = await browser.send("Target.attachToTarget", {"targetId": self.target_id, "flatten": True})
         except Gated as error:
-            from ardia_cli import command_metrics
-            from ardia_cli.browse import tabs
+            from nilla_browser_cli import command_metrics
+            from nilla_browser_cli.browse import tabs
 
             command_metrics.flag("attach_refused", True)
             raise error.during(None, await tabs.where_app_has(self.state, self.target_id) if error.reason else None) from None
@@ -223,7 +223,7 @@ class Page:
         self.needs_enable = False
 
     async def still_busy(self, method: str):
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         try:
             await self.browser.send("Runtime.evaluate", {"expression": "1", "returnByValue": True}, self.session_id, BUSY_PROBE)
@@ -235,7 +235,7 @@ class Page:
         self.unanswered_at = 0.0
 
     async def keep_awake(self):
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         endpoint = self.state.endpoint
         if endpoint is None or not endpoint.explicit:
@@ -248,7 +248,7 @@ class Page:
         command_metrics.flag("tab_kept_awake", True)
 
     async def restore_setup(self):
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         self.needs_restore = False
         lost = []
@@ -288,7 +288,7 @@ class Page:
         if lost:
             command_metrics.flag("setup_restore_failed", True)
             raise BrowseError(
-                f"Ardia detached this tab from the ardia command and it was attached again, but {', '.join(lost)} couldn't be put back, "
+                f"Nilla detached this tab from the nilla-browser command and it was attached again, but {', '.join(lost)} couldn't be put back, "
                 "so they are off now. Set them again (addinitscript, set …, network route) and run the command again",
                 data={"lost": lost}, code="setup_lost",
             )
@@ -299,7 +299,7 @@ class Page:
         config = getattr(self.state, "config", None) or {}
         if config.get("browse_fd") is None or not config.get("key"):
             return
-        from ardia_cli.browse import claims
+        from nilla_browser_cli.browse import claims
 
         try:
             claims.release(config["browse_fd"], config["key"], self.target_id, "route")
@@ -318,8 +318,8 @@ class Page:
         await self.recovered(timeout)
 
     async def recovered(self, timeout: float):
-        from ardia_cli import command_metrics
-        from ardia_cli.browse.state import wait_until
+        from nilla_browser_cli import command_metrics
+        from nilla_browser_cli.browse.state import wait_until
 
         command_metrics.flag("crashed_reloaded", True)
         self.crashed = False
@@ -340,7 +340,7 @@ class Page:
             call.cancel()
 
     async def send(self, method: str, params: dict | None = None, input_event: bool = False, timeout: float = 30, mutation: bool = False):
-        from ardia_cli.browse.connection import is_mutation
+        from nilla_browser_cli.browse.connection import is_mutation
 
         if self.session_id is None:
             raise BrowseError(DETACHED, code="tab_detached")
@@ -356,14 +356,14 @@ class Page:
             if call not in self.dropped:
                 raise
             if input_event or mutation or is_mutation(method):
-                raise OutcomeUnknown(f"`{method}`", f"Ardia detached the tab before it answered {method}") from None
+                raise OutcomeUnknown(f"`{method}`", f"Nilla detached the tab before it answered {method}") from None
             if self.crashed:
                 raise BrowseError(CRASHED, code="tab_crashed") from None
             raise BrowseError(DETACHED, code="tab_detached") from None
         except CdpTimeout:
             self.unanswered_at = time.monotonic()
             if input_event or mutation or is_mutation(method):
-                raise OutcomeUnknown(f"`{method}`", f"Ardia didn't answer {method} in {timeout:g}s after it was sent") from None
+                raise OutcomeUnknown(f"`{method}`", f"Nilla didn't answer {method} in {timeout:g}s after it was sent") from None
             raise PageBusy(method, timeout, BUSY_WHY.format(probe=BUSY_PROBE)) from None
         finally:
             self.calls.discard(call)
@@ -401,7 +401,7 @@ class Page:
         if frame_id not in self.frames:
             await self.refresh_frames()
             if frame_id not in self.frames:
-                raise BrowseError("That frame is gone. Run `ardia browse frame main` or snapshot again", code="frame_gone")
+                raise BrowseError("That frame is gone. Run `nilla-browser browse frame main` or snapshot again", code="frame_gone")
         loader = self.loader(frame_id)
         cached = self.worlds.get(frame_id)
         if cached and cached[0] == loader:
@@ -453,7 +453,7 @@ class Page:
         raise BrowseError("the page navigated while reading it; try again", code="page_navigated")
 
     async def rehome(self, args, context) -> bool:
-        from ardia_cli import command_metrics
+        from nilla_browser_cli import command_metrics
 
         elements = [arg for arg in args if isinstance(arg, Element)]
         if not elements:
@@ -527,7 +527,7 @@ class Page:
     async def require_visible(self):
         if not await self.takes_input():
             tab = self.state.tab_id(self.target_id)
-            raise BrowseError(self.show_hint(), data={"tabId": tab, "use": f"ardia browse tab {tab} --show"}, code="tab_hidden")
+            raise BrowseError(self.show_hint(), data={"tabId": tab, "use": f"nilla browse tab {tab} --show"}, code="tab_hidden")
 
     async def focus_element(self, element: Element):
         try:
@@ -541,7 +541,7 @@ class Page:
                 landed = False
             if not landed:
                 raise NotFocusable(element.label) from None
-            from ardia_cli import command_metrics
+            from nilla_browser_cli import command_metrics
 
             command_metrics.flag("focused_inner_field", True)
 

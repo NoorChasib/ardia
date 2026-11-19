@@ -133,7 +133,7 @@ export function otlpEvents(host, port = 4318) {
     async send(id, ingest, body) {
       const res = await fetch(`http://${host}:${port}/v1/logs`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Ardia-Ingest": ingest },
+        headers: { "Content-Type": "application/json", "X-Nilla-Ingest": ingest },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(10_000),
       });
@@ -164,7 +164,7 @@ export function githubIssues(token, repo, apiBase = "https://api.github.com") {
           Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
           "Content-Type": "application/json",
-          "User-Agent": "ardia-feedback",
+          "User-Agent": "nilla-feedback",
           "X-GitHub-Api-Version": "2022-11-28",
         },
         body: JSON.stringify({ title, body, labels }),

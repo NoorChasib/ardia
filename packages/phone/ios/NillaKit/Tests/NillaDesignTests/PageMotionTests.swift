@@ -1,6 +1,6 @@
 import CoreGraphics
 import Testing
-@testable import ArdiaDesign
+@testable import NillaDesign
 
 struct LoadProgressTests {
   @Test func fastLoadNeverShows() {

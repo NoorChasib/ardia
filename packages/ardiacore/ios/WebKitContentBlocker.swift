@@ -4,9 +4,9 @@ import WebKit
 
 final class WebKitContentBlocker {
   static let shared = WebKitContentBlocker()
-  static let changed = Notification.Name("ArdiaContentBlockerDidChange")
+  static let changed = Notification.Name("NillaContentBlockerDidChange")
 
-  private static let settingsWriter = DispatchQueue(label: "ardia.webkit-content-blocker.settings", qos: .utility)
+  private static let settingsWriter = DispatchQueue(label: "nilla.webkit-content-blocker.settings", qos: .utility)
   private static let format = "f3"
   private static let ruleBudget = 140_000
   private static let ignoreTopDocuments =
@@ -44,7 +44,7 @@ final class WebKitContentBlocker {
     .flatMap { try? Data(contentsOf: $0.appendingPathComponent("rulesets.json")) }
     .flatMap { try? JSONDecoder().decode(Bundled.self, from: $0) }
   private var base: URL {
-    URL(fileURLWithPath: (ArdiaHost.dataDirectory as NSString).deletingLastPathComponent).appendingPathComponent("WebKit Content Rules")
+    URL(fileURLWithPath: (NillaHost.dataDirectory as NSString).deletingLastPathComponent).appendingPathComponent("WebKit Content Rules")
   }
   private lazy var store: WKContentRuleListStore? = {
     let url = base.appendingPathComponent("Store")
@@ -116,7 +116,7 @@ final class WebKitContentBlocker {
       if Thread.isMainThread { self?.noteChange(info) } else { DispatchQueue.main.async { self?.noteChange(info) } }
     }
     reselect()
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { ArdiaContentBlocker.state { _ in } }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { NillaContentBlocker.state { _ in } }
   }
 
   private func noteChange(_ info: [AnyHashable: Any]) {
@@ -182,7 +182,7 @@ final class WebKitContentBlocker {
   private func load(_ rulesets: [String], key wanted: String) {
     guard let store else { return }
     loadingKey = wanted
-    let prefix = "ardia-ubol-\(wanted)-"
+    let prefix = "nilla-ubol-\(wanted)-"
     store.getAvailableContentRuleListIdentifiers { [weak self] identifiers in
       guard let self else { return }
       guard wanted == self.desiredKey else {
@@ -235,7 +235,7 @@ final class WebKitContentBlocker {
         var left = encoded.count
         var failure: String?
         for (index, json) in encoded.enumerated() {
-          let identifier = "ardia-ubol-\(key)-\(index)of\(encoded.count)"
+          let identifier = "nilla-ubol-\(key)-\(index)of\(encoded.count)"
           store.compileContentRuleList(forIdentifier: identifier, encodedContentRuleList: json) { list, error in
             if let list { made[index] = list } else { failure = failure ?? error?.localizedDescription ?? "failed" }
             left -= 1
@@ -313,7 +313,7 @@ final class WebKitContentBlocker {
 
   private func removeStale(keeping keys: [String]) {
     guard let store else { return }
-    let prefixes = keys.filter { !$0.isEmpty }.map { "ardia-ubol-\($0)-" }
+    let prefixes = keys.filter { !$0.isEmpty }.map { "nilla-ubol-\($0)-" }
     store.getAvailableContentRuleListIdentifiers { identifiers in
       for identifier in identifiers ?? [] where !prefixes.contains(where: identifier.hasPrefix) {
         store.removeContentRuleList(forIdentifier: identifier) { _ in }

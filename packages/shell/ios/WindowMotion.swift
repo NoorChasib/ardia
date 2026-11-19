@@ -10,8 +10,8 @@ enum WindowMotion {
     static let main = Style(entranceDuration: 0.25, exitDuration: 0.18, entranceScale: 0.98, exitScale: 0.99)
   }
   private static let settleAfter: TimeInterval = 0.5
-  private static let entranceKey = "ardia.window.entrance"
-  private static let exitKey = "ardia.window.exit"
+  private static let entranceKey = "nilla.window.entrance"
+  private static let exitKey = "nilla.window.exit"
   private static let curve = CAMediaTimingFunction(controlPoints: 0.23, 1, 0.32, 1)
 
   private final class Look {

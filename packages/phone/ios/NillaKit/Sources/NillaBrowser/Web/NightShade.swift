@@ -1,12 +1,12 @@
 import Foundation
 
 enum PageScripts {
-  static let handlerName = "ardiaPage"
+  static let handlerName = "nillaPage"
 
   static let nightShade = #"""
   (() => {
     if (window.__ardiaNightShade) return;
-    const STYLE_ID = "ardia-night-shade";
+    const STYLE_ID = "nilla-night-shade";
     const CSS = "html{filter:invert(1) hue-rotate(180deg)!important;background-color:#fff!important}" +
       "img,video,canvas,picture,iframe,embed,object,svg image,[style*=\"background-image\"]{filter:invert(1) hue-rotate(180deg)!important}" +
       "picture img{filter:none!important}";
@@ -55,7 +55,7 @@ enum PageScripts {
     window.__ardiaNightShade = (next) => { mode = next; evaluate(); };
     prefersDark.addEventListener("change", evaluate);
     const ask = async () => {
-      try { mode = await window.webkit.messageHandlers.ardiaPage.postMessage({ type: "nightShade" }) || "disabled"; } catch (e) { mode = "disabled"; }
+      try { mode = await window.webkit.messageHandlers.nillaPage.postMessage({ type: "nightShade" }) || "disabled"; } catch (e) { mode = "disabled"; }
       evaluate();
     };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ask, { once: true });

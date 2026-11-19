@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.content.Context
 import android.graphics.Canvas
@@ -9,11 +9,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.widget.FrameLayout
-import com.ardia.browser.Page
-import com.ardia.browser.PageColors
-import com.ardia.browser.PageState
-import com.ardia.browser.ErrorPages
-import com.ardia.browser.PageTone
+import com.nilladigital.nilla.Page
+import com.nilladigital.nilla.PageColors
+import com.nilladigital.nilla.PageState
+import com.nilladigital.nilla.ErrorPages
+import com.nilladigital.nilla.PageTone
 import expo.modules.kotlin.AppContext
 import expo.modules.kotlin.exception.CodedException
 import expo.modules.kotlin.viewevent.EventDispatcher

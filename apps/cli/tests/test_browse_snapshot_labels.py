@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli.browse.snapshot import Node, render
+from nilla_browser_cli.browse.snapshot import Node, render
 
 
 def card(title: str, ref: str) -> Node:

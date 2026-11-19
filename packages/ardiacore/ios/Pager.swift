@@ -161,7 +161,7 @@ final class Pager {
     #endif
     switch input {
     case "prepare":
-      announceActivity { ArdiaWebView.wakeNeighbourPages(in: $0, seconds: 1, committed: false) }
+      announceActivity { NillaWebView.wakeNeighbourPages(in: $0, seconds: 1, committed: false) }
       if phase == .settling {
         stopSpring()
         phase = .holding
@@ -173,7 +173,7 @@ final class Pager {
       } else if phase == .tracking, drag.area === area {
         release(velocity: 0, cancelled: false)
       } else {
-        announceActivity { ArdiaWebView.releaseNeighbourPages(in: $0) }
+        announceActivity { NillaWebView.releaseNeighbourPages(in: $0) }
       }
     case "began":
       begin(area)
@@ -224,7 +224,7 @@ final class Pager {
     let nearest = min(max(Int(x.rounded()), drag.lo), drag.hi)
     if nearest != drag.detent {
       drag.detent = nearest
-      ArdiaSwipe.performHaptic("alignment")
+      NillaSwipe.performHaptic("alignment")
     }
     publish()
     emitPosition()
@@ -388,7 +388,7 @@ final class Pager {
     for area in areas.allObjects { area.onPagerState(event) }
   }
 
-  private func announceActivity(_ tell: (NSWindow) -> Void = { ArdiaWebView.wakeNeighbourPages(in: $0) }) {
+  private func announceActivity(_ tell: (NSWindow) -> Void = { NillaWebView.wakeNeighbourPages(in: $0) }) {
     var windows: [NSWindow] = []
     for case let window? in areas.allObjects.map(\.window) where !windows.contains(where: { $0 === window }) { windows.append(window) }
     windows.forEach(tell)

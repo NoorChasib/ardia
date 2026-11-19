@@ -34,12 +34,12 @@ headers of ours, no query string, no ID, a 5 s timeout, 4 KB at most. The answer
 (`switches-cache.json`) and used offline; a failed or odd answer leaves the cache as it was. The same file goes to
 everyone, so it can't tell one Mac from another. Disclosed in Settings › What's Sent (“Even with sharing off”) and next to
 the update check in Settings › General (`state/telemetry/copy.ts`, `switchFile`). On Linux the engine's
-`ArdiaShell.fetchKillSwitches` stays behind the Layer 1 gate whatever the URL says.
+`NillaShell.fetchKillSwitches` stays behind the Layer 1 gate whatever the URL says.
 
 ## For a bench or a test instance
 
 `ARDIA_SWITCHES="newTabPrewarm=off,lazySidebarRows=off"` sets a launch's values over everything else, in every build.
-`ArdiaLaunchConfig` parses it once; native code asks it (`switchOn:`, `experimentOn:`), JS through
+`NillaLaunchConfig` parses it once; native code asks it (`switchOn:`, `experimentOn:`), JS through
 `platform/launchConfig.ts`, and the engine's browser process gets it as `--ardia-switches`. A test instance fetches only
 when its services snapshot sets `switchesUrl` (`ARDIA_TEST="services=<path>"`, `docs/services.md`).
 

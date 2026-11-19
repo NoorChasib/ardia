@@ -1,6 +1,6 @@
-package com.ardia.sync
+package com.nilladigital.nilla.sync
 
-import com.ardia.sync.core.Base32
+import com.nilladigital.nilla.sync.core.Base32
 import java.io.File
 
 object SyncFolders {

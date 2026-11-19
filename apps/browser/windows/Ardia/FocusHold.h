@@ -15,7 +15,7 @@
 #include "Paths.h"
 #include "WindowManager.h"
 
-namespace Ardia::Menus {
+namespace Nilla::Menus {
 
 struct FocusHold {
   static constexpr size_t kCapacity = 64;
@@ -118,9 +118,9 @@ struct FocusHold {
     WNDCLASSW type{};
     type.lpfnWndProc = &FocusHold::MessageProc;
     type.hInstance = GetModuleHandleW(nullptr);
-    type.lpszClassName = L"ArdiaFocusHold";
+    type.lpszClassName = L"NillaFocusHold";
     RegisterClassW(&type);
-    messages = CreateWindowExW(0, L"ArdiaFocusHold", L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, type.hInstance, nullptr);
+    messages = CreateWindowExW(0, L"NillaFocusHold", L"", 0, 0, 0, 0, 0, HWND_MESSAGE, nullptr, type.hInstance, nullptr);
     return messages;
   }
 

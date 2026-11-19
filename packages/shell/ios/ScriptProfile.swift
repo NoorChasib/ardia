@@ -1,6 +1,6 @@
 import AppKit
 
-@objc(ArdiaScriptProfile)
+@objc(NillaScriptProfile)
 final class ScriptProfile: NSObject {
   @objc let uniqueID: String
 

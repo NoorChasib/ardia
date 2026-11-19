@@ -36,8 +36,8 @@ const mockSeen: { props: StageProps | null } = { props: null };
 const mockFocus = jest.fn();
 const mockSetText = jest.fn();
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual("@nilla/phone-native");
   const React = jest.requireActual<typeof import("react")>("react");
   const native = jest.requireActual<typeof import("react-native")>("react-native");
   const onIPhone = () => native.Platform.OS === "ios";
@@ -177,7 +177,7 @@ onIPhone("the field takes the keyboard as soon as the stage has presented, as ma
 
 onIPhone("a page's long address opens selected and showing its start, as main's field: the native field selects it all when the stage's focus lands, not at mount", () => {
   const root = page();
-  act(() => presentSearch("page", "https://en.wikipedia.org/w/index.php?title=Pastel_de_nata&utm_medium=search&utm_source=ardia"));
+  act(() => presentSearch("page", "https://en.wikipedia.org/w/index.php?title=Pastel_de_nata&utm_medium=search&utm_source=nilla"));
   expect(field(root)!.props.selectsAllOnFocus).toBe(true);
 });
 

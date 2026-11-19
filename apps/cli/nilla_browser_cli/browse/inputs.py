@@ -1,8 +1,8 @@
 import asyncio
 import random
 
-from ardia_cli.browse.errors import ConnectionLost, OutcomeUnknown, Usage
-from ardia_cli.browse.human import CHAR_TO_KEY_INFO, Keyboard, Mouse
+from nilla_browser_cli.browse.errors import ConnectionLost, OutcomeUnknown, Usage
+from nilla_browser_cli.browse.human import CHAR_TO_KEY_INFO, Keyboard, Mouse
 
 RELEASE_TIMEOUT = 2.0
 MODIFIER_BITS = {"Alt": 1, "Control": 2, "Meta": 4, "Shift": 8}

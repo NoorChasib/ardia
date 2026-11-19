@@ -11,8 +11,8 @@ const telemetry = require("../state/telemetry/telemetry") as typeof import("../s
 
 const mockField = { native: true, setText: [] as [string, boolean][], focused: 0, blurred: 0 };
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual("@nilla/phone-native");
   const { forwardRef, useImperativeHandle, createElement } = jest.requireActual("react");
   const { View } = jest.requireActual("react-native");
   const CompletingField = forwardRef(function CompletingField(props: Record<string, unknown>, ref: unknown) {

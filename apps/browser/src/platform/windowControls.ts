@@ -1,4 +1,4 @@
-import type { CaptionRegion } from "@ardia/shell";
+import type { CaptionRegion } from "@nilla/shell";
 
 export type { CaptionRegion };
 

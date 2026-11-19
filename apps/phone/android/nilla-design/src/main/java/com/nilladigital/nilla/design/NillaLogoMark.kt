@@ -1,4 +1,4 @@
-package com.ardia.design
+package com.nilladigital.nilla.design
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
@@ -82,9 +82,9 @@ object LogoGeometry {
 
     val shapes: List<LogoShape> by lazy {
         listOf(
-            LogoShape(sun, ardiaColor(0xFFCB45), ardiaColor(0xF5A812)),
-            LogoShape(backHill, ardiaColor(0x8DAF63), ardiaColor(0x5E7D3E)),
-            LogoShape(frontHill, ardiaColor(0x17604B), ardiaColor(0x063528)),
+            LogoShape(sun, nillaColor(0xFFCB45), nillaColor(0xF5A812)),
+            LogoShape(backHill, nillaColor(0x8DAF63), nillaColor(0x5E7D3E)),
+            LogoShape(frontHill, nillaColor(0x17604B), nillaColor(0x063528)),
         )
     }
 
@@ -107,7 +107,7 @@ object LogoGeometry {
 }
 
 @Composable
-fun ArdiaLogoMark(modifier: Modifier = Modifier, outline: Boolean = true, outlineWeight: Float = 0.075f) {
+fun NillaLogoMark(modifier: Modifier = Modifier, outline: Boolean = true, outlineWeight: Float = 0.075f) {
     Canvas(modifier.aspectRatio(LogoGeometry.aspectRatio).clearAndSetSemantics {}) { drawLogo(outline, outlineWeight) }
 }
 
@@ -130,7 +130,7 @@ internal fun DrawScope.drawLogo(outline: Boolean, outlineWeight: Float) {
 }
 
 @Composable
-fun FidgetLogo(modifier: Modifier = Modifier, contentDescription: String = "Ardia") {
+fun FidgetLogo(modifier: Modifier = Modifier, contentDescription: String = "Nilla") {
     val reduceMotion = LocalReduceMotion.current
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()

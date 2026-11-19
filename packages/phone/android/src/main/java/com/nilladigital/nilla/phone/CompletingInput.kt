@@ -1,9 +1,9 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import com.ardia.search.CompletingFieldState
-import com.ardia.store.CompletionOffer
+import com.nilladigital.nilla.search.CompletingFieldState
+import com.nilladigital.nilla.store.CompletionOffer
 
 class CompletingInput(initial: String = "") {
     data class Applied(val text: String, val selectionStart: Int, val selectionEnd: Int, val typedChanged: Boolean, val suffixChanged: Boolean)

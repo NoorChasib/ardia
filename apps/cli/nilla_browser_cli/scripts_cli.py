@@ -2,14 +2,14 @@ import json
 import sys
 from pathlib import Path
 
-from ardia_cli.printable import complain, say
-from ardia_cli import endpoint
+from nilla_browser_cli.printable import complain, say
+from nilla_browser_cli import endpoint
 
 SCRIPTS_DESCRIPTION = """\
-Write userscripts in TypeScript or JavaScript, test them against real pages, and install them so Ardia runs them.
+Write userscripts in TypeScript or JavaScript, test them against real pages, and install them so Nilla runs them.
 
 A script is a .ts or .js file (a .user.js from Violentmonkey or Tampermonkey works as is) that starts with a
-// ==UserScript== block. Keys Ardia reads:
+// ==UserScript== block. Keys Nilla reads:
   @name @namespace @version @description
   @match, @exclude-match        Chrome match patterns (https://*.example.com/*, <all_urls>)
   @include, @exclude            globs over the whole URL: * any run, ? zero or one character, \\ escapes (http(s) only)
@@ -18,12 +18,12 @@ A script is a .ts or .js file (a .user.js from Violentmonkey or Tampermonkey wor
   @noframes                     top frame only (default: every frame)
 @grant other than none, @require and @resource are ignored with a warning: there are no GM_* APIs, and relative
 imports are bundled by esbuild instead (one IIFE, recent Chrome, not minified; types are stripped, not checked; no
-tsconfig.json is read). Imports must stay inside the script's own folder, and nothing from Ardia's data folder.
+tsconfig.json is read). Imports must stay inside the script's own folder, and nothing from Nilla's data folder.
 
 Commands:
   new NAME           scaffold NAME.user.ts in the current directory
   test FILE          run it once in a background tab of its own and report what it did
-  install FILE       build it and have Ardia run it (needs "Let the ardia command control Ardia" on)
+  install FILE       build it and have Nilla run it (needs "Let the nilla-browser command control Nilla" on)
   uninstall NAME     remove an installed script by @name or id
   list               the installed scripts
 """
@@ -37,29 +37,29 @@ and in iframes, and the --expect value. After the script ran and the page loaded
 reports an unhandled promise rejection about a second late), retrying --expect (a JavaScript expression, awaited,
 in the page's world) until it's truthy. The tab closes at the end unless --keep.
 
-@inject-into content runs in the page's world here (ardia command connections can't create isolated worlds), with
+@inject-into content runs in the page's world here (nilla command connections can't create isolated worlds), with
 a warning.
 
 Exit status: 0 the script ran without uncaught exceptions and --expect was truthy, 1 otherwise (build error, the
-page didn't match, an exception, a falsy --expect), 2 Ardia can't be reached.
+page didn't match, an exception, a falsy --expect), 2 Nilla can't be reached.
 
 Examples:
-  ardia scripts test hide-sidebar.user.ts
-  ardia scripts test dark.user.ts --url https://github.com/ --expect 'document.documentElement.dataset.dark'
-  ardia scripts test x.user.ts --wait 5 --screenshot /tmp/x.png --json
+  nilla-browser scripts test hide-sidebar.user.ts
+  nilla-browser scripts test dark.user.ts --url https://github.com/ --expect 'document.documentElement.dataset.dark'
+  nilla-browser scripts test x.user.ts --wait 5 --screenshot /tmp/x.png --json
 """
 INSTALL_DESCRIPTION = """\
 Build FILE and install it: the CLI keeps a copy under <data dir>/Scripts/scripts/<id>/ and regenerates the
-Ardia Scripts extension (<data dir>/Scripts/extension/), which Ardia loads into every profile. Installing a script
-with the same @name again updates it. Then it waits up to 10 s for Ardia to report each profile.
+Ardia Scripts extension (<data dir>/Scripts/extension/), which Nilla loads into every profile. Installing a script
+with the same @name again updates it. Then it waits up to 10 s for Nilla to report each profile.
 
-Exit status: 0 loaded (or Ardia quit and loads it on its next launch), 1 a build or load error, 2 Ardia isn't
-running or "Let the ardia command control Ardia" is off, 3 Ardia didn't answer in 10 s (the outcome is unknown).
+Exit status: 0 loaded (or Nilla quit and loads it on its next launch), 1 a build or load error, 2 Nilla isn't
+running or "Let the nilla-browser command control Nilla" is off, 3 Nilla didn't answer in 10 s (the outcome is unknown).
 """
 NEW_TEMPLATE = """\
 // ==UserScript==
 // @name        {name}
-// @namespace   ardia
+// @namespace   nilla
 // @version     0.1.0
 // @description {name}
 {matches}// @run-at      document-end
@@ -70,11 +70,11 @@ console.log({quoted}, "ran on", location.href);
 """
 ENDPOINT_EPILOG = """\
 Endpoint: --ws, else --port (plain DevTools servers only), else $ARDIA_CDP_URL, else
-<data dir>/Chromium/ArdiaControl.json with --data-dir or $ARDIA_DATA_DIR, else the installed Ardia's.
+<data dir>/Chromium/ArdiaControl.json with --data-dir or $ARDIA_DATA_DIR, else the installed Nilla's.
 """
 if endpoint.LINUX:
     ENDPOINT_EPILOG = ENDPOINT_EPILOG.replace("<data dir>/Chromium/ArdiaControl.json", "<data dir>/ArdiaControl.json").replace(
-        "else the installed Ardia's.", f"else {endpoint.LINUX_DATA_DIR_SHOWN}\nwith $ARDIA_CONFIG_HOME set; with neither variable set it refuses."
+        "else the installed Nilla's.", f"else {endpoint.LINUX_DATA_DIR_SHOWN}\nwith $ARDIA_CONFIG_HOME set; with neither variable set it refuses."
     )
 UNKNOWN_EXIT = 3
 
@@ -102,33 +102,33 @@ def add_parser(commands, formatter):
     test.add_argument("--json", action="store_true", help="print the report as JSON")
     add_endpoint_arguments(test)
 
-    install = sub.add_parser("install", help="install a script so Ardia runs it", description=INSTALL_DESCRIPTION, formatter_class=formatter)
+    install = sub.add_parser("install", help="install a script so Nilla runs it", description=INSTALL_DESCRIPTION, formatter_class=formatter)
     install.add_argument("file", metavar="FILE", help="the .ts or .js userscript")
-    install.add_argument("--data-dir", metavar="DIR", help="the Ardia data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
+    install.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
 
     uninstall = sub.add_parser("uninstall", help="remove an installed script", description="Remove an installed script by its @name or id. Exit status as for install.")
-    uninstall.add_argument("name", metavar="NAME", help="the script's @name or id (see ardia scripts list)")
-    uninstall.add_argument("--data-dir", metavar="DIR", help="the Ardia data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
+    uninstall.add_argument("name", metavar="NAME", help="the script's @name or id (see nilla scripts list)")
+    uninstall.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
 
-    listing = sub.add_parser("list", help="list the installed scripts", description="List the installed scripts and what Ardia last reported about them.")
+    listing = sub.add_parser("list", help="list the installed scripts", description="List the installed scripts and what Nilla last reported about them.")
     listing.add_argument("--json", action="store_true", help="print JSON")
-    listing.add_argument("--data-dir", metavar="DIR", help="the Ardia data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
+    listing.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
     return scripts
 
 
 def add_endpoint_arguments(parser):
-    parser.add_argument("--data-dir", metavar="DIR", help="the Ardia data dir to find (default: $ARDIA_DATA_DIR, else the installed app's)")
+    parser.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir to find (default: $ARDIA_DATA_DIR, else the installed app's)")
     parser.add_argument("--port", type=int, metavar="N", help="a plain DevTools server on 127.0.0.1:N (testing)")
     parser.add_argument("--ws", metavar="URL", help="a browser WebSocket URL")
 
 
 def run(args, parser) -> int:
-    from ardia_cli.endpoint import DataDirUnset
+    from nilla_browser_cli.endpoint import DataDirUnset
 
     try:
         return run_command(args, parser)
     except DataDirUnset as error:
-        complain(f"ardia scripts: {error}")
+        complain(f"nilla scripts: {error}")
         return 2
 
 
@@ -137,7 +137,7 @@ def run_command(args, parser) -> int:
     if command == "new":
         return new(args)
     if command == "test":
-        from ardia_cli import redact
+        from nilla_browser_cli import redact
 
         out = sys.stdout = redact.RedactingStream(sys.stdout)
         err = sys.stderr = redact.RedactingStream(sys.stderr)
@@ -156,11 +156,11 @@ def run_command(args, parser) -> int:
 
 
 def new(args) -> int:
-    from ardia_cli.userscript import ScriptError, check_match, slug
+    from nilla_browser_cli.userscript import ScriptError, check_match, slug
 
     name = args.name.strip()
     if not name or "\n" in name:
-        complain("ardia scripts new: give the script a name")
+        complain("nilla scripts new: give the script a name")
         return 1
     stem = name if all(c.isalnum() or c in "-_." for c in name) else slug(name)
     path = Path.cwd() / f"{stem}.user.ts"
@@ -169,17 +169,17 @@ def new(args) -> int:
         for pattern in patterns:
             check_match(pattern, "match")
     except ScriptError as error:
-        complain(f"ardia scripts new: {error}")
+        complain(f"nilla scripts new: {error}")
         return 1
     matches = "".join(f"// @match       {pattern}\n" for pattern in patterns)
     try:
         with open(path, "x", encoding="utf-8") as handle:
             handle.write(NEW_TEMPLATE.format(name=name, matches=matches, quoted=json.dumps(name)))
     except FileExistsError:
-        complain(f"ardia scripts new: {path} already exists")
+        complain(f"nilla scripts new: {path} already exists")
         return 1
     except OSError as error:
-        complain(f"ardia scripts new: {error}")
+        complain(f"nilla scripts new: {error}")
         return 1
     say(str(path))
     return 0
@@ -188,9 +188,9 @@ def new(args) -> int:
 def test(args) -> int:
     import asyncio
 
-    from ardia_cli import scripts_test
-    from ardia_cli.endpoint import EndpointError, data_root, resolve
-    from ardia_cli.userscript import ScriptError, build, default_url, url_runs
+    from nilla_browser_cli import scripts_test
+    from nilla_browser_cli.endpoint import EndpointError, data_root, resolve
+    from nilla_browser_cli.userscript import ScriptError, build, default_url, url_runs
 
     try:
         built = build(args.file, sourcemap=True, data_dirs=[data_root(args.data_dir)])
@@ -210,10 +210,10 @@ def test(args) -> int:
         complain(f"ardia: {error}")
         return 2
     except KeyboardInterrupt:
-        complain("ardia scripts test: interrupted")
+        complain("nilla scripts test: interrupted")
         return 130
     except asyncio.CancelledError:
-        complain("ardia scripts test: terminated")
+        complain("nilla scripts test: terminated")
         return 143
     if args.json:
         say(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
@@ -226,14 +226,14 @@ def report_build_error(args, message: str) -> int:
     if getattr(args, "json", False):
         say(json.dumps({"ok": False, "ran": False, "script": args.file, "error": message}, indent=2, ensure_ascii=False))
     else:
-        complain(f"ardia scripts: {message}")
+        complain(f"nilla scripts: {message}")
     return 1
 
 
 def change(args) -> int:
-    from ardia_cli.endpoint import EndpointError, data_root, require_control
-    from ardia_cli.scripts_store import Store, StoreError
-    from ardia_cli.userscript import ScriptError, build
+    from nilla_browser_cli.endpoint import EndpointError, data_root, require_control
+    from nilla_browser_cli.scripts_store import Store, StoreError
+    from nilla_browser_cli.userscript import ScriptError, build
 
     root = data_root(args.data_dir)
     built = None
@@ -241,12 +241,12 @@ def change(args) -> int:
         try:
             built = build(args.file, data_dirs=[root])
         except ScriptError as error:
-            complain(f"ardia scripts: {error}")
+            complain(f"nilla scripts: {error}")
             return 1
         for warning in built.meta.warnings + built.warnings:
             say(f"warning: {warning}")
         if not built.meta.matches and not built.meta.includes:
-            complain("ardia scripts: add an @match or @include line so the script runs somewhere")
+            complain("nilla scripts: add an @match or @include line so the script runs somewhere")
             return 1
     try:
         require_control(root)
@@ -263,7 +263,7 @@ def change(args) -> int:
                 found = store.find(args.name)
                 if found is None:
                     names = ", ".join(m.get("name", m["id"]) for m in store.installed()) or "none"
-                    complain(f"ardia scripts: no installed script is named {args.name!r} (installed: {names})")
+                    complain(f"nilla scripts: no installed script is named {args.name!r} (installed: {names})")
                     return 1
                 record, generation = store.apply(remove=found["id"])
                 summary = f"uninstalled {record.get('name')} ({record['id']})"
@@ -280,18 +280,18 @@ def change(args) -> int:
 
         outcome, status = store.wait_status(generation, alive)
     except (StoreError, OSError) as error:
-        complain(f"ardia scripts: {error}")
+        complain(f"nilla scripts: {error}")
         return 1
     finally:
         store.close()
     if outcome == "quit":
-        say("Ardia quit (or control was turned off) before applying it; it applies the change on its next launch")
+        say("Nilla quit (or control was turned off) before applying it; it applies the change on its next launch")
         return 0
     if outcome == "timeout":
-        say(f"Ardia hasn't reported generation {generation} after 10 s: the outcome is unknown, it may still be applying it (see ardia scripts list)")
+        say(f"Nilla hasn't reported generation {generation} after 10 s: the outcome is unknown, it may still be applying it (see nilla scripts list)")
         return UNKNOWN_EXIT
     if outcome == "superseded":
-        say(f"a newer change (generation {status.get('generation')}) replaced this one; Ardia reported that one:")
+        say(f"a newer change (generation {status.get('generation')}) replaced this one; Nilla reported that one:")
         removed_all = False
     return print_profiles(status, removed_all)
 
@@ -306,7 +306,7 @@ def profile_lines(status: dict, removed: bool = False) -> tuple[list[str], bool]
     profiles = status.get("profiles") if isinstance(status, dict) else None
     lines, failed = [], False
     if not isinstance(profiles, dict) or not profiles:
-        return ["Ardia reported no profiles"], False
+        return ["Nilla reported no profiles"], False
     for name, result in profiles.items():
         if not isinstance(result, dict):
             lines.append(f"{name}: unknown result")
@@ -332,8 +332,8 @@ def print_profiles(status: dict, removed: bool = False) -> int:
 
 
 def listing(args) -> int:
-    from ardia_cli.endpoint import EndpointError, data_root, explicit_data_root, require_control
-    from ardia_cli.scripts_store import Store, StoreError, repair_if_present
+    from nilla_browser_cli.endpoint import EndpointError, data_root, explicit_data_root, require_control
+    from nilla_browser_cli.scripts_store import Store, StoreError, repair_if_present
 
     root = data_root(args.data_dir)
     trusted = explicit_data_root(args.data_dir) is not None
@@ -348,7 +348,7 @@ def listing(args) -> int:
         try:
             note = repair_if_present(root)
         except (StoreError, OSError) as error:
-            complain(f"ardia scripts: can't check the installed scripts ({error})")
+            complain(f"nilla scripts: can't check the installed scripts ({error})")
             return 1
         if note and not args.json:
             say(f"repaired: {note}")
@@ -360,7 +360,7 @@ def listing(args) -> int:
         status = store.status()
         removed = generation > 0 and not store.extension_present()
     except (StoreError, OSError) as error:
-        complain(f"ardia scripts: {error}")
+        complain(f"nilla scripts: {error}")
         return 1
     finally:
         store.close()
@@ -376,9 +376,9 @@ def listing(args) -> int:
         reported = status.get("generation") if status else None
         if reported == generation:
             lines, _ = profile_lines(status, removed)
-            say(f"generation {generation}, reported by Ardia:")
+            say(f"generation {generation}, reported by Nilla:")
             for line in lines:
                 say(f"  {line}")
         else:
-            say(f"generation {generation}, not reported by Ardia yet" + (f" (it last reported {reported})" if reported else ""))
+            say(f"generation {generation}, not reported by Nilla yet" + (f" (it last reported {reported})" if reported else ""))
     return 0

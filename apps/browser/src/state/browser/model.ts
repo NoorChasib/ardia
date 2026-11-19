@@ -1,4 +1,4 @@
-import { appUrlOrigin, displayHost } from "@ardia/core";
+import { appUrlOrigin, displayHost } from "@nilla/core";
 import { singleLine } from "../../lib/singleLine";
 import type { BrowserState } from "./store";
 import { DEFAULT_PROFILE_ID } from "../settings/settings";

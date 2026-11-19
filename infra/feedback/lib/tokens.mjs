@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 export const UPLOAD_TOKEN_TTL_MS = 24 * 60 * 60 * 1000;
 
 function signature(secret, id, expiresSec) {
-  return createHmac("sha256", secret).update(`ardia-feedback-upload:${id}:${expiresSec}`).digest();
+  return createHmac("sha256", secret).update(`nilla-feedback-upload:${id}:${expiresSec}`).digest();
 }
 
 export function issueUploadToken(secret, id, expiresAtMs) {

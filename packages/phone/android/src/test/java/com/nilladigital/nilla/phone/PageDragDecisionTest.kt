@@ -1,7 +1,7 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
-import com.ardia.browser.TouchScrollers
-import com.ardia.browsing.SwipeDirection
+import com.nilladigital.nilla.TouchScrollers
+import com.nilladigital.nilla.browsing.SwipeDirection
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

@@ -1,4 +1,4 @@
-package com.ardia.shared
+package com.nilladigital.nilla.shared
 
 import android.content.res.AssetManager
 import androidx.annotation.Keep
@@ -81,7 +81,7 @@ class ScriptEngine(
 
     companion object {
         init {
-            System.loadLibrary("ardiahermes")
+            System.loadLibrary("nillahermes")
         }
 
         val bytecodeVersion: Int get() = nativeBytecodeVersion()

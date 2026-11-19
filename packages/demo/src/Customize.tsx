@@ -12,16 +12,16 @@ export function Customize() {
     return () => clearTimeout(timer);
   }, [copied]);
   return (
-    <div className="ardia-customize">
-      <button type="button" className="ardia-customize-button" disabled={state.active} onMouseDown={(e) => e.preventDefault()} onClick={startCustomize}>
+    <div className="nilla-customize">
+      <button type="button" className="nilla-customize-button" disabled={state.active} onMouseDown={(e) => e.preventDefault()} onClick={startCustomize}>
         {state.code ? "Customize again" : "Customize it"}
       </button>
       {state.code ? (
         <>
-          <code className="ardia-customize-code">{state.code}</code>
+          <code className="nilla-customize-code">{state.code}</code>
           <button
             type="button"
-            className="ardia-customize-copy"
+            className="nilla-customize-copy"
             onClick={() => {
               copySetupCode(state.code!);
               setCopied(true);

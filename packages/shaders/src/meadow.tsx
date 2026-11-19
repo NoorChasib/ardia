@@ -8,6 +8,6 @@ type NativeMeadowProps = ViewProps & { night: boolean; onTone?: (event: { native
 let NativeMeadow: ComponentType<NativeMeadowProps> | null = null;
 
 export function Meadow({ onTone, intro: _drawnByTheApp, onIntro: _neverSent, ...props }: MeadowProps) {
-  NativeMeadow ??= requireNativeViewManager<NativeMeadowProps>("ArdiaMeadow");
+  NativeMeadow ??= requireNativeViewManager<NativeMeadowProps>("NillaMeadow");
   return <NativeMeadow pointerEvents="none" {...props} onTone={onTone ? (event) => onTone(event.nativeEvent) : undefined} />;
 }

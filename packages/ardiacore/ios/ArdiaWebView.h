@@ -2,15 +2,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class ArdiaWebView;
+@class NillaWebView;
 
-@protocol ArdiaWebViewDelegate <NSObject>
-- (void)webView:(ArdiaWebView *)view event:(NSString *)name payload:(NSDictionary<NSString *, id> *)payload;
+@protocol NillaWebViewDelegate <NSObject>
+- (void)webView:(NillaWebView *)view event:(NSString *)name payload:(NSDictionary<NSString *, id> *)payload;
 @end
 
-@interface ArdiaWebView : NSView
+@interface NillaWebView : NSView
 
-@property (nonatomic, weak, nullable) id<ArdiaWebViewDelegate> delegate;
+@property (nonatomic, weak, nullable) id<NillaWebViewDelegate> delegate;
 @property (nonatomic, copy) NSString *profile;
 @property (nonatomic, copy, nullable) NSString *initialURL;
 @property (nonatomic, copy, nullable) NSString *adoptId;
@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @end
 
-@interface ArdiaWebView (Transfer)
+@interface NillaWebView (Transfer)
 + (void)prepareTransfer:(NSString *)transferKey;
 + (void)releaseTransfer:(NSString *)transferKey;
 + (void)startLaunchTab:(NSString *)transferKey url:(NSString *)url profile:(NSString *)profile;
@@ -53,7 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)closeBrowser;
 @end
 
-@interface ArdiaWebView (Tab)
+@interface NillaWebView (Tab)
 + (void)setLittleArdiaOpensNewTabLinks:(BOOL)enabled NS_SWIFT_NAME(setLittleArdiaOpensNewTabLinks(_:));
 + (void)setPopupsOpenAsTabs:(BOOL)enabled NS_SWIFT_NAME(setPopupsOpenAsTabs(_:));
 - (void)resolveUnresponsive:(BOOL)terminate NS_SWIFT_NAME(resolveUnresponsive(terminate:));
@@ -61,28 +61,28 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSArray<NSNumber *> *)sleepIfHiddenFor:(NSTimeInterval)seconds NS_SWIFT_NAME(sleepIfHidden(for:));
 @end
 
-@interface ArdiaWebView (Reveals)
+@interface NillaWebView (Reveals)
 + (void)revealTab:(NSString *)transferKey;
 + (void)dropTabReveals:(NSString *)transferKey;
 + (void)revealOffered:(NSString *)adoptId over:(NSString *)transferKey;
 + (BOOL)discardOffered:(NSString *)adoptId;
 @end
 
-@interface ArdiaWebView (Focus)
+@interface NillaWebView (Focus)
 + (void)keepOutgoingFocusFrom:(NSResponder *)responder NS_SWIFT_NAME(keepOutgoingFocus(from:));
 + (void)endOutgoingFocusFrom:(NSResponder *)responder NS_SWIFT_NAME(endOutgoingFocus(from:));
 + (BOOL)focusVisiblePageIn:(NSWindow *)window NS_SWIFT_NAME(focusVisiblePage(in:));
 - (void)focusPage;
 @end
 
-@interface ArdiaWebView (NeighbourPages)
+@interface NillaWebView (NeighbourPages)
 + (void)wakeNeighbourPagesIn:(NSWindow *)window NS_SWIFT_NAME(wakeNeighbourPages(in:));
 + (void)wakeNeighbourPagesIn:(NSWindow *)window seconds:(CFTimeInterval)seconds committed:(BOOL)committed
     NS_SWIFT_NAME(wakeNeighbourPages(in:seconds:committed:));
 + (void)releaseNeighbourPagesIn:(NSWindow *)window NS_SWIFT_NAME(releaseNeighbourPages(in:));
 @end
 
-@interface ArdiaWebView (InputMonitors)
+@interface NillaWebView (InputMonitors)
 + (void)installScrollZoom;
 + (void)installSwitchPrewarm;
 + (void)setCommandScrollZoomEnabled:(BOOL)enabled NS_SWIFT_NAME(setCommandScrollZoomEnabled(_:));
@@ -90,7 +90,7 @@ NS_ASSUME_NONNULL_BEGIN
                                browser:(int)browserId NS_SWIFT_NAME(devScrollZoom(_:browserId:));
 @end
 
-@interface ArdiaWebView (Recording)
+@interface NillaWebView (Recording)
 - (void)copyRecordingPicture:(void (^)(CGImageRef _Nullable picture))completion NS_SWIFT_NAME(copyRecordingPicture(_:));
 @property (nonatomic, readonly) BOOL recordingShowsPage;
 + (NSArray<NSWindow *> *)recordingPictureInPictureWindowsOfWindow:(NSWindow *)window NS_SWIFT_NAME(recordingPictureInPictureWindows(of:));
@@ -101,7 +101,7 @@ NS_ASSUME_NONNULL_BEGIN
                           completion:(void (^)(CGImageRef _Nullable picture))completion NS_SWIFT_NAME(copyRecordingPicture(of:_:));
 @end
 
-@interface ArdiaWebView (PageMessages)
+@interface NillaWebView (PageMessages)
 + (void)setDisplayMediaPicker:(BOOL)enabled;
 + (void)setSelectionPopoverEnabled:(BOOL)enabled NS_SWIFT_NAME(setSelectionPopoverEnabled(_:));
 + (void)setBlockAutoplayEverywhere:(BOOL)enabled NS_SWIFT_NAME(setBlockAutoplayEverywhere(_:));
@@ -109,20 +109,20 @@ NS_ASSUME_NONNULL_BEGIN
     NS_SWIFT_NAME(resolveDisplayMedia(_:sourceId:audio:));
 @end
 
-@interface ArdiaWebView (Peek)
+@interface NillaWebView (Peek)
 + (void)setPeekModifier:(NSString *)modifier;
 + (void)setSplitLinkModifier:(NSString *)modifier;
 + (void)setPeekOtherSiteTabs:(NSArray<NSString *> *)tabIds;
 + (BOOL)devPostPeekMouseUp:(NSString *)keys over:(NSString *)transferKey;
 @end
 
-@interface ArdiaWebView (ContextMenu)
+@interface NillaWebView (ContextMenu)
 + (void)setSearchEngineName:(NSString *)name;
 + (void)removeSharedImage:(NSURL *)file NS_SWIFT_NAME(removeSharedImage(_:));
 + (void)removeSharedImages;
 @end
 
-@interface ArdiaWebView (PictureInPicture)
+@interface NillaWebView (PictureInPicture)
 + (void)setAutoPictureInPictureEnabled:(BOOL)enabled NS_SWIFT_NAME(setAutoPictureInPictureEnabled(_:));
 + (void)setVideoUpscalingEnabled:(BOOL)enabled NS_SWIFT_NAME(setVideoUpscalingEnabled(_:));
 + (void)setVideoUpscalingTestConditions:(NSDictionary<NSString *, NSNumber *> *)conditions
@@ -136,16 +136,16 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)exitPictureInPicture;
 @end
 
-@interface ArdiaWebView (FirstPaint)
+@interface NillaWebView (FirstPaint)
 + (NSDictionary<NSString *, NSNumber *> *)takeFirstPaintHolds;
 @end
 
-@interface ArdiaWebView (PictureInPictureDev)
+@interface NillaWebView (PictureInPictureDev)
 + (NSArray<NSDictionary<NSString *, id> *> *)devPictureInPicture NS_SWIFT_NAME(devPictureInPicture());
 + (NSString *)devPictureInPictureAction:(NSString *)action NS_SWIFT_NAME(devPictureInPictureAction(_:));
 @end
 
-@interface ArdiaWebView (Navigation)
+@interface NillaWebView (Navigation)
 - (void)loadURL:(NSString *)url userInitiated:(BOOL)userInitiated NS_SWIFT_NAME(loadURL(_:userInitiated:));
 - (void)goBack;
 - (void)goForward;
@@ -156,7 +156,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)openBlockedPopup:(NSString *)popupId always:(BOOL)always NS_SWIFT_NAME(openBlockedPopup(_:always:));
 @end
 
-@interface ArdiaWebView (PageCommands)
+@interface NillaWebView (PageCommands)
 - (void)setMuted:(BOOL)muted;
 - (void)setZoomFactor:(double)factor;
 - (void)zoomStep:(NSInteger)direction NS_SWIFT_NAME(zoomStep(_:));
@@ -181,7 +181,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)seekPictureInPictureBy:(double)seconds;
 @end
 
-@interface ArdiaWebView (Site)
+@interface NillaWebView (Site)
 - (void)securityInfo:(void (^)(NSDictionary<NSString *, id> *info))completion NS_SWIFT_NAME(securityInfo(_:));
 - (void)pageCookies:(NSArray<NSString *> *)urls
          completion:(void (^)(NSArray<NSDictionary<NSString *, id> *> *_Nullable cookies))completion

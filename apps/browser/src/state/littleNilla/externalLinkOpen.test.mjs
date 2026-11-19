@@ -15,16 +15,16 @@ test("off, every link from another app opens as a tab", () => {
     assert.equal(externalLinkOpen(false, urls), "tab", urls.join(" "));
 });
 
-test("on, one web page opens in Little Ardia and anything else as tabs", () => {
-  assert.equal(externalLinkOpen(true, ["https://a.example/"]), "littleArdia");
-  assert.equal(externalLinkOpen(true, ["file:///tmp/a.html"]), "littleArdia");
+test("on, one web page opens in Little Nilla and anything else as tabs", () => {
+  assert.equal(externalLinkOpen(true, ["https://a.example/"]), "littleNilla");
+  assert.equal(externalLinkOpen(true, ["file:///tmp/a.html"]), "littleNilla");
   assert.equal(externalLinkOpen(true, ["https://a.example/", "https://b.example/"]), "tab");
   assert.equal(externalLinkOpen(true, ["mailto:x@example.com"]), "tab");
   assert.equal(externalLinkOpen(true, []), "tab");
 });
 
 test("an opening rule's choice wins over the setting both ways", () => {
-  assert.equal(externalLinkOpen(false, ["https://a.example/"], "littleArdia"), "littleArdia");
+  assert.equal(externalLinkOpen(false, ["https://a.example/"], "littleNilla"), "littleNilla");
   assert.equal(externalLinkOpen(true, ["https://a.example/"], "tab"), "tab");
   assert.equal(externalLinkOpen(false, ["https://a.example/"], "window"), "window");
 });
@@ -46,7 +46,7 @@ async function open(url) {
 const STATES = {
   "a main window": () => S().createWindow({ url: "https://home.example/" }),
   "no window": () => null,
-  "Little Ardia in front": () => {
+  "Little Nilla in front": () => {
     const main = S().createWindow({ url: "https://home.example/" });
     S().createWindow({ kind: "small", url: "https://little.example/" });
     return main;
@@ -62,7 +62,7 @@ const STATES = {
 for (const [name, setUp] of Object.entries(STATES)) {
   test(`off with ${name}, a link from another app opens as a tab of a main window`, async () => {
     const target = fresh(setUp);
-    S().updateSettings({ openLinksInLittleArdia: false });
+    S().updateSettings({ openLinksInLittleNilla: false });
     const before = smalls().length;
     const tab = await open(`https://link.example/${encodeURIComponent(name)}`);
     assert.ok(tab, "the link opened");
@@ -74,13 +74,13 @@ for (const [name, setUp] of Object.entries(STATES)) {
 
 test("the setting applies to the next link at once, both ways", async () => {
   fresh(() => S().createWindow({ url: "https://home.example/" }));
-  S().updateSettings({ openLinksInLittleArdia: true });
+  S().updateSettings({ openLinksInLittleNilla: true });
   await open("https://one.example/");
   assert.equal(smalls().length, 1);
-  S().updateSettings({ openLinksInLittleArdia: false });
+  S().updateSettings({ openLinksInLittleNilla: false });
   assert.equal(S().windows[(await open("https://two.example/")).windowId].kind, "main");
   assert.equal(smalls().length, 1);
-  S().updateSettings({ openLinksInLittleArdia: true });
+  S().updateSettings({ openLinksInLittleNilla: true });
   await open("https://three.example/");
   assert.equal(smalls().length, 2);
 });

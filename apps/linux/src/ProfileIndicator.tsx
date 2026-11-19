@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef } from "react";
-import { Symbol } from "@ardia/shell";
+import { Symbol } from "@nilla/shell";
 import { openProfileMenu } from "../../browser/src/state/browser/actions";
 import { AppMenuButton } from "./AppMenuButton";
 import { profileNameColor, useTheme } from "../../browser/src/components/ui/theme";
@@ -32,10 +32,10 @@ export function ProfileIndicator({ room }: { room: number }) {
   }, [name]);
   const color = !incognito && profile ? profileNameColor(profile, theme.dark) : theme.textPrimary;
   return (
-    <div className="ardia-profile-controls" data-ardia-profile-controls style={{ width, color }}>
-      <span ref={measure} className="ardia-current-space-measure" aria-hidden>{name}</span>
+    <div className="nilla-profile-controls" data-nilla-profile-controls style={{ width, color }}>
+      <span ref={measure} className="nilla-current-space-measure" aria-hidden>{name}</span>
       {shown ? (
-        <button className="ardia-header-button ardia-current-space" data-ardia-current-space={profile?.id} aria-label={`Current space: ${name}`} title={name} style={{ width: nameWidth }} onClick={(event) => {
+        <button className="nilla-header-button nilla-current-space" data-nilla-current-space={profile?.id} aria-label={`Current space: ${name}`} title={name} style={{ width: nameWidth }} onClick={(event) => {
           const button = event.currentTarget;
           const openedByPointer = !button.matches(":focus-visible");
           void Promise.resolve(openProfileMenu(windowId)).finally(() => {

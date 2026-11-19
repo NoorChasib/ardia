@@ -5,7 +5,7 @@ export type Release = { version: string; url: string; prerelease: boolean };
 const VERSION = /^(\d+)\.(\d+)\.(\d+)(?:-(nightly)\.(\d+))?$/;
 const TAG = /^v?(\d+\.\d+\.\d+(?:-nightly\.\d+)?)$/;
 const LINUX_ASSET = /-linux-x64\.(?:tar\.xz|deb|AppImage)$/;
-const RELEASE_PAGE = /^https:\/\/github\.com\/ardia-browser\/ardia\/releases\/tag\/[\w.-]+$/;
+const RELEASE_PAGE = /^https:\/\/github\.com\/NoorChasib\/nilla\/releases\/tag\/[\w.-]+$/;
 
 export const isAppVersion = (version: unknown): version is string => typeof version === "string" && VERSION.test(version);
 

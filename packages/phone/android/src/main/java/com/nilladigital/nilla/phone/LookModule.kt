@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import expo.modules.kotlin.Promise
 import expo.modules.kotlin.functions.Queues
@@ -14,7 +14,7 @@ class LookModule : Module() {
     private var systemLookObserver: SystemLookObserver? = null
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneLook")
+        Name("NillaPhoneLook")
 
         Events(SYSTEM_LOOK_CHANGED)
 
@@ -199,7 +199,7 @@ class LookModule : Module() {
 
         View(FilmGrainView::class) {
             Name("FilmGrain")
-            Prop("opacity") { view: FilmGrainView, value: Float? -> view.opacity = value ?: com.ardia.design.ProfileBackdropStyle.LIGHT_GRAIN }
+            Prop("opacity") { view: FilmGrainView, value: Float? -> view.opacity = value ?: com.nilladigital.nilla.design.ProfileBackdropStyle.LIGHT_GRAIN }
             OnViewDidUpdateProps { view -> view.update() }
         }
 

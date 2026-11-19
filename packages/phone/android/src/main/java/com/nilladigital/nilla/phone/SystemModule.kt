@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import android.os.Build
 import android.view.WindowManager
@@ -10,7 +10,7 @@ class SystemModule : Module() {
     private var listener: PhoneSystemLinks.Listener? = null
 
     override fun definition() = ModuleDefinition {
-        Name("ArdiaPhoneSystem")
+        Name("NillaPhoneSystem")
 
         Function("labLog") { line: String ->
             if (PhoneLab.isOn) android.util.Log.i("PAGELAB", line)

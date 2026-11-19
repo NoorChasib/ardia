@@ -24,6 +24,6 @@ export type MeadowPageState =
 
 export type MeadowPageReport = { states: MeadowPageState[]; frames: number; ms: number };
 
-export const MEADOW_PAGE_CONFIG_ID = "ardia-intro";
+export const MEADOW_PAGE_CONFIG_ID = "nilla-intro";
 
-export const MEADOW_PAGE_API = "ardiaIntro";
+export const MEADOW_PAGE_API = "nillaIntro";

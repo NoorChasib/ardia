@@ -1,6 +1,6 @@
 #if canImport(UIKit)
-import ArdiaBrowser
-import ArdiaSync
+import NillaBrowser
+import NillaSync
 import Foundation
 import UIKit
 import WidgetKit

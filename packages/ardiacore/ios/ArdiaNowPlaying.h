@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaNowPlaying : NSObject
+@interface NillaNowPlaying : NSObject
 
 @property(nonatomic, readonly, nullable) NSString *frame;
 @property(nonatomic, readonly, nullable) NSDictionary *selected;

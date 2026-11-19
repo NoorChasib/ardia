@@ -6,7 +6,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from ardia_cli import endpoint
+from nilla_browser_cli import endpoint
 
 CONFIG_FILE = "config.json"
 CONFIG_SCHEMA = "config.schema.json"
@@ -253,7 +253,7 @@ def load_config(where: Places, create: bool = False) -> tuple[dict, bool]:
         if os.path.lexists(where.config):
             raise ConfigError(f"{where.config} is a link to {os.readlink(where.config)}, which doesn't exist") from None
         if not create:
-            raise ConfigError(f"there's no {where.config} yet (ardia config init creates it)") from None
+            raise ConfigError(f"there's no {where.config} yet (nilla config init creates it)") from None
         return new_config(), True
     if "settings" in document and not isinstance(document["settings"], dict):
         raise ConfigError(f"{CONFIG_FILE}: settings must be an object")
@@ -314,7 +314,7 @@ SHORTCUT_GLYPHS = "⌘⌥⌃⇧🌐"
 
 
 def shortcut_problem(value) -> str | None:
-    from ardia_cli.schema_check import did_you_mean
+    from nilla_browser_cli.schema_check import did_you_mean
 
     if not isinstance(value, str) or value == "" or any(g in value for g in SHORTCUT_GLYPHS):
         return None

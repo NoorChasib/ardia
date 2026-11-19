@@ -8,8 +8,8 @@ export function sandboxNotice(decision: string | undefined): { title: string; me
   if (!decision) return null;
   const reason = decision.replace(/\s+/g, " ").trim().slice(0, 300);
   return {
-    title: "Ardia is running without Chromium's sandbox",
-    message: `${reason}. Start Ardia without --no-sandbox to turn the sandbox back on.`,
+    title: "Nilla is running without Chromium's sandbox",
+    message: `${reason}. Start Nilla without --no-sandbox to turn the sandbox back on.`,
   };
 }
 

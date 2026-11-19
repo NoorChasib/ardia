@@ -1,4 +1,4 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import java.io.File
 import java.nio.file.Files
@@ -10,7 +10,7 @@ internal object PhoneTestDatabase {
         Class.forName("org.sqlite.JDBC")
     }
 
-    private val schemaFile = File(System.getProperty("ardia.phoneSchema") ?: error("ardia.phoneSchema isn't set"))
+    private val schemaFile = File(System.getProperty("nilla.phoneSchema") ?: error("nilla.phoneSchema isn't set"))
 
     fun schema(): List<String> {
         val source = schemaFile.readText()

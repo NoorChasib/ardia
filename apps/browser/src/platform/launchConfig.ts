@@ -1,5 +1,5 @@
-import { nativeModule, type LaunchConfig } from "@ardia/shell";
-import { replaceServices, services, type Services } from "@ardia/core/src/services.ts";
+import { nativeModule, type LaunchConfig } from "@nilla/shell";
+import { replaceServices, services, type Services } from "@nilla/core/src/services.ts";
 
 let config: (LaunchConfig & { services?: unknown }) | null = null;
 
@@ -11,7 +11,7 @@ function adoptLaunchServices(snapshot: unknown) {
 
 const current = (): LaunchConfig => {
   if (config) return config;
-  config = nativeModule("ArdiaApp").launchConfig() as LaunchConfig & { services?: unknown };
+  config = nativeModule("NillaApp").launchConfig() as LaunchConfig & { services?: unknown };
   adoptLaunchServices(config.services);
   return config;
 };

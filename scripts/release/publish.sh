@@ -25,8 +25,8 @@ run() {
 }
 
 channel="$(channel_of "$version")"
-dmg="$dist/Ardia-$version.dmg"
-zip="$dist/Ardia-$version.zip"
+dmg="$dist/Nilla-$version.dmg"
+zip="$dist/Nilla-$version.zip"
 feed="$dist/appcast.xml"
 cli="$dist/ardia-cli-$version-macos-arm64.tar.gz"
 
@@ -37,10 +37,10 @@ for file in "$dmg" "$zip" "$feed" "$cli" "$cli.sha256"; do
 done
 linux="$dist/linux"
 if [ -d "$linux" ]; then
-  linux_package="$linux/Ardia-$version-linux-x64.tar.xz"
+  linux_package="$linux/Nilla-$version-linux-x64.tar.xz"
   linux_cli="$linux/ardia-cli-$version-linux-x64.tar.gz"
-  linux_deb="$linux/Ardia-$version-linux-x64.deb"
-  linux_appimage="$linux/Ardia-$version-linux-x64.AppImage"
+  linux_deb="$linux/Nilla-$version-linux-x64.deb"
+  linux_appimage="$linux/Nilla-$version-linux-x64.AppImage"
   for file in "$linux_package" "$linux_package.sha256" "$linux_deb" "$linux_deb.sha256" "$linux_appimage" "$linux_appimage.sha256" "$linux_cli" "$linux_cli.sha256"; do
     [ -f "$file" ] || die "$linux has no $(basename "$file") (scripts/linux/release.sh $version first, or remove $linux to publish without Linux)"
     assets+=("$file")
@@ -59,20 +59,20 @@ windows="$dist/windows"
 if [ -d "$windows" ]; then
   windows_assets=()
   for cpu in x64 arm64; do
-    windows_setup="Ardia-$version-windows-$cpu-setup.exe"
+    windows_setup="Nilla-$version-windows-$cpu-setup.exe"
     for file in "$windows/$windows_setup" "$windows/$windows_setup.sha256"; do
       [ -f "$file" ] || die "$windows has no $(basename "$file") (the Release workflow's windows job makes them, or remove $windows to publish without Windows)"
     done
     windows_assets+=("$windows_setup")
   done
-  windows_source="Ardia-$version-windows-source.tar.xz"
+  windows_source="Nilla-$version-windows-source.tar.xz"
   for file in "$windows/$windows_source" "$windows/$windows_source.sha256"; do
     [ -f "$file" ] || die "$windows has no $(basename "$file"): the installers ship only beside their engine's source"
   done
   windows_assets+=("$windows_source")
-  stamped_version="$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' "$windows/Ardia.build.json" 2>/dev/null)" \
-    || die "$windows has no readable Ardia.build.json"
-  [ "$stamped_version" = "$version" ] || die "the Windows installers in $windows are Ardia $stamped_version, not $version"
+  stamped_version="$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1]))["version"])' "$windows/Nilla.build.json" 2>/dev/null)" \
+    || die "$windows has no readable Nilla.build.json"
+  [ "$stamped_version" = "$version" ] || die "the Windows installers in $windows are Nilla $stamped_version, not $version"
   (cd "$windows" && for file in "${windows_assets[@]}"; do shasum -a 256 -c --quiet "$file.sha256" || exit 1; done) \
     || die "the Windows files in $windows don't match their .sha256 files"
   for file in "${windows_assets[@]}"; do assets+=("$windows/$file" "$windows/$file.sha256"); done
@@ -118,7 +118,7 @@ if [ "$channel" = nightly ]; then
 else
   release_flags=(--latest)
 fi
-run gh release create "v$version" -R "$REPO" "${release_flags[@]}" --verify-tag --title "Ardia $version" \
+run gh release create "v$version" -R "$REPO" "${release_flags[@]}" --verify-tag --title "Nilla $version" \
   --notes-file "$dist/release-notes.md" "${assets[@]}"
 if [ "$channel" = nightly ]; then
   run gh release upload "$stable_tag" -R "$REPO" --clobber "$merged"

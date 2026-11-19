@@ -1,10 +1,10 @@
-package com.ardia.phone
+package com.nilladigital.nilla.phone
 
 import androidx.compose.foundation.shape.CircleShape
-import com.ardia.design.ArdiaSymbols
-import com.ardia.design.ProfileLook
-import com.ardia.design.SettingsTint
-import com.ardia.design.SetupStepProgress
+import com.nilladigital.nilla.design.NillaSymbols
+import com.nilladigital.nilla.design.ProfileLook
+import com.nilladigital.nilla.design.SettingsTint
+import com.nilladigital.nilla.design.SetupStepProgress
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
@@ -37,11 +37,11 @@ class SettingsUITest {
 
     @Test
     fun everySymbolMainsSettingsUseIsDrawnRatherThanTheFallback() {
-        val fallback = ArdiaSymbols.gearshape
+        val fallback = NillaSymbols.gearshape
         val missing = symbolsMainsSettingsUse.filter { SettingsSymbols.vector(it) === fallback }
         assertTrue("drawn by the gear fallback: $missing", missing.isEmpty())
-        assertSame(ArdiaSymbols.handWaveFill, SettingsSymbols.vector("hand.wave.fill"))
-        assertSame(ArdiaSymbols.line3HorizontalDecrease, SettingsSymbols.vector("line.3.horizontal.decrease"))
+        assertSame(NillaSymbols.handWaveFill, SettingsSymbols.vector("hand.wave.fill"))
+        assertSame(NillaSymbols.line3HorizontalDecrease, SettingsSymbols.vector("line.3.horizontal.decrease"))
         assertSame("an unknown name draws the gear", fallback, SettingsSymbols.vector("no.such.symbol"))
         assertNotSame(fallback, SettingsSymbols.vector("globe"))
     }
@@ -58,7 +58,7 @@ class SettingsUITest {
     @Test
     fun theModifiersRegisteredAreTheOnesTheJavaScriptCreates() {
         assertEquals(
-            listOf("ardia.navigationBarBackButtonHidden", "ardia.minListRowHeight", "ardia.spaceBackdrop", "ardia.settingsChrome", "ardia.settingsPage", "ardia.chromeSurface", "ardia.settingsSwitchStyle", "ardia.pressableStyle", "ardia.legibleInk", "ardia.profileLook", "ardia.contentMargins"),
+            listOf("nilla.navigationBarBackButtonHidden", "nilla.minListRowHeight", "nilla.spaceBackdrop", "nilla.settingsChrome", "nilla.settingsPage", "nilla.chromeSurface", "nilla.settingsSwitchStyle", "nilla.pressableStyle", "nilla.legibleInk", "nilla.profileLook", "nilla.contentMargins"),
             SettingsUIModifiers.names,
         )
     }

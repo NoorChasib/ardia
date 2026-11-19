@@ -15,7 +15,7 @@ import type {
   ImportResult,
   ImportWarning,
   WrittenCounts,
-} from "@ardia/import";
+} from "@nilla/import";
 
 export type { BookmarkNode, BookmarkRole, Credential, ImportedTab, ImportKind, WrittenCounts };
 

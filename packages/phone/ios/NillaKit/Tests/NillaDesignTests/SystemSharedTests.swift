@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import ArdiaDesign
+@testable import NillaDesign
 
 struct SystemLinkTests {
   @Test(arguments: [

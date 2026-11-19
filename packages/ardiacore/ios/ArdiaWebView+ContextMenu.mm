@@ -7,8 +7,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
 namespace {
 
@@ -70,9 +70,9 @@ NSString *MenuTitle(NSString *label) {
 constexpr int64_t kSharedImageLifetime = 3600;
 
 NSString *SharedImagesRoot() {
-  ArdiaLaunchConfig *config = ArdiaLaunchConfig.shared;
+  NillaLaunchConfig *config = NillaLaunchConfig.shared;
   NSString *base = config.isolated && config.dataDirectory.length ? config.dataDirectory : NSTemporaryDirectory();
-  return [base stringByAppendingPathComponent:@"Ardia Shared Images"].stringByStandardizingPath;
+  return [base stringByAppendingPathComponent:@"Nilla Shared Images"].stringByStandardizingPath;
 }
 
 bool IsPrivateDirectory(NSString *path) {
@@ -178,7 +178,7 @@ NSURL *SharedImageFile(NSData *image, NSString *mimeType, NSString *source) {
     return nil;
   }
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kSharedImageLifetime * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-    [ArdiaWebView removeSharedImage:file];
+    [NillaWebView removeSharedImage:file];
   });
   return file;
 }
@@ -198,7 +198,7 @@ NSDictionary *FindMenuItem(NSArray *items, NSString *label) {
 }
 }
 
-@implementation ArdiaWebView (ContextMenu)
+@implementation NillaWebView (ContextMenu)
 
 + (void)setSearchEngineName:(NSString *)name {
   gSearchEngineName = name.length ? [name copy] : @"Google";
@@ -257,7 +257,7 @@ NSDictionary *FindMenuItem(NSArray *items, NSString *label) {
 }
 
 - (void)tab:(ArdiaCoreTab *)tab didShowAutofillSuggestions:(NSArray<NSDictionary<NSString *, NSString *> *> *)items {
-  NoteEvent(ardia_host::BrowserId(tab), @"autofillSuggestions", @{@"items" : items ?: @[]});
+  NoteEvent(nilla_host::BrowserId(tab), @"autofillSuggestions", @{@"items" : items ?: @[]});
 }
 
 - (void)tab:(ArdiaCoreTab *)tab didShowContextMenu:(NSArray<NSDictionary *> *)items {
@@ -266,14 +266,14 @@ NSDictionary *FindMenuItem(NSArray *items, NSString *label) {
 
 - (NSDictionary<NSString *, id> *)tab:(ArdiaCoreTab *)tab runContextMenu:(NSDictionary<NSString *, id> *)menu {
   NSArray *items = Field<NSArray>(menu, @"items") ?: @[];
-  NoteEvent(ardia_host::BrowserId(tab), @"contextMenu", @{@"items" : items});
-  ArdiaLaunchConfig *config = ArdiaLaunchConfig.shared;
+  NoteEvent(nilla_host::BrowserId(tab), @"contextMenu", @{@"items" : items});
+  NillaLaunchConfig *config = NillaLaunchConfig.shared;
   if (![config testFlag:@"contextMenu"]) {
-    if (ardia_host::Background()) {
+    if (nilla_host::Background()) {
       NSMutableArray<NSString *> *titles = [NSMutableArray array];
       for (NSDictionary *item in items)
         if (MenuItemType(item) != kMenuSeparator && Field<NSString>(item, @"label").length) [titles addObject:MenuTitle(item[@"label"])];
-      ardia_host::LogActivation([NSString stringWithFormat:@"context menu (not shown): %@", [titles componentsJoinedByString:@" | "]]);
+      nilla_host::LogActivation([NSString stringWithFormat:@"context menu (not shown): %@", [titles componentsJoinedByString:@" | "]]);
     }
     return nil;
   }

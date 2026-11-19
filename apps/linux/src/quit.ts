@@ -1,9 +1,9 @@
-import type { ConfirmOptions, DialogsNative } from "@ardia-real/shell";
+import type { ConfirmOptions, DialogsNative } from "@nilla-real/shell";
 import { useBrowser } from "../../browser/src/state/browser/store";
 import { hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
 
 export const QUIT_COMMAND = "quit";
-export const QUIT_LOCK = "ardia.linux.quit";
+export const QUIT_LOCK = "nilla.linux.quit";
 
 export type QuitOutcome = "quitting" | "cancelled" | "busy";
 export type QuitAsk = DialogsNative["confirm"];
@@ -66,7 +66,7 @@ export function createHostQuit(host: ArdiaHost, ask: QuitAsk, locks: QuitLocks |
   if (!QUIT_ROUTES.every((method) => hostSupports(method, host)))
     return () => Promise.reject(quitError("ERR_UNAVAILABLE", "Quitting isn't available in this Linux build"));
   return createLinuxQuit({
-    appName: () => "Ardia",
+    appName: () => "Nilla",
     warnBeforeQuitting: () => useBrowser.getState().settings.warnBeforeQuitting,
     stopWarning: () => useBrowser.getState().updateSettings({ warnBeforeQuitting: false }),
     ask,

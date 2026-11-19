@@ -18,7 +18,7 @@ type BlockingNative = {
 };
 
 let loaded: BlockingNative | undefined;
-const native = () => (loaded ??= requireNativeModule<BlockingNative>("ArdiaPhoneBlocking"));
+const native = () => (loaded ??= requireNativeModule<BlockingNative>("NillaPhoneBlocking"));
 
 export const blocking = {
   state: () => native().state(),

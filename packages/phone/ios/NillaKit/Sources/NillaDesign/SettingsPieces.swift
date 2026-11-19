@@ -113,7 +113,7 @@ public struct LegibleInk: ShapeStyle {
 }
 
 public extension ShapeStyle where Self == LegibleInk {
-  static func ardiaInk(_ tint: Color) -> LegibleInk { LegibleInk(tint: tint) }
+  static func nillaInk(_ tint: Color) -> LegibleInk { LegibleInk(tint: tint) }
 }
 
 nonisolated extension Color.Resolved {
@@ -138,11 +138,11 @@ nonisolated extension Color.Resolved {
 }
 
 public extension View {
-  func ardiaSettingsPage(_ title: LocalizedStringKey) -> some View {
+  func nillaSettingsPage(_ title: LocalizedStringKey) -> some View {
     modifier(SettingsPageTitle(title: title))
   }
 
-  func ardiaSettingsChrome() -> some View {
+  func nillaSettingsChrome() -> some View {
     modifier(SettingsChrome())
   }
 }

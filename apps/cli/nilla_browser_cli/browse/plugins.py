@@ -5,8 +5,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from ardia_cli.browse import paths
-from ardia_cli.browse.errors import BrowseError, Usage
+from nilla_browser_cli.browse import paths
+from nilla_browser_cli.browse.errors import BrowseError, Usage
 
 PROTOCOL = "agent-browser.plugin.v1"
 REGISTRY = "registry.json"
@@ -44,7 +44,7 @@ def find(root, name: str) -> dict:
     for plugin in registry(root):
         if plugin["name"] == name:
             return plugin
-    raise BrowseError(f"No plugin named {name}; add one with `ardia browse plugin add <ref>`")
+    raise BrowseError(f"No plugin named {name}; add one with `nilla-browser browse plugin add <ref>`")
 
 
 def run_tool(argv: list[str], timeout: float = 300) -> str:

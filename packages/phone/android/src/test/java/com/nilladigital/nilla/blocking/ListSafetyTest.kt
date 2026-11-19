@@ -1,4 +1,4 @@
-package com.ardia.blocking
+package com.nilladigital.nilla.blocking
 
 import java.io.File
 import java.util.zip.CRC32
@@ -56,13 +56,13 @@ class ListSafetyTest {
                 slowest = maxOf(slowest, elapsed)
             }
         }
-        println("ArdiaBlockingTiming slowest hostile regex request on a 30000-char url: %.2f ms of cpu".format(slowest))
+        println("NillaBlockingTiming slowest hostile regex request on a 30000-char url: %.2f ms of cpu".format(slowest))
         val source = reviewerRule.substring(1, reviewerRule.length - 1)
         val direct = com.google.re2j.Pattern.compile(ListRegex.withoutCaptures(source))
         val input = "a".repeat(30_000)
         direct.matcher(input).find()
         val elapsed = millis { direct.matcher(input).find() }
-        println("ArdiaBlockingTiming reviewer pattern on the whole 30000-char input without the url cap: %.2f ms".format(elapsed))
+        println("NillaBlockingTiming reviewer pattern on the whole 30000-char input without the url cap: %.2f ms".format(elapsed))
         assertTrue("took $elapsed ms", elapsed < 100)
     }
 
@@ -113,7 +113,7 @@ class ListSafetyTest {
                 val skipped = context.regexRulesSkipped - skippedBefore
                 val used = ListRegex.stepsFor(url.length) - maxOf(context.regexScratch.steps, 0)
                 println(
-                    "ArdiaBlockingTiming %s x%d on a %d-char url: one rule costs %d steps; ran %d, skipped %d, steps %d of %d, cpu %.2f ms, wall %.2f ms"
+                    "NillaBlockingTiming %s x%d on a %d-char url: one rule costs %d steps; ran %d, skipped %d, steps %d of %d, cpu %.2f ms, wall %.2f ms"
                         .format(name, count, url.length, oneRun, runs, skipped, used, ListRegex.stepsFor(url.length), cpu, elapsed),
                 )
                 val admitted = minOf(count, ListRegex.MAX_UNINDEXED_PER_LIST)
@@ -155,7 +155,7 @@ class ListSafetyTest {
         val skipped = context.regexRulesSkipped - skippedBefore
         val used = budget - maxOf(context.regexScratch.steps, 0)
         println(
-            "ArdiaBlockingTiming reviewer list of 10000 untokened rules: %d admitted, one rule costs %d steps, ran %d, skipped %d, steps %d of %d, cpu %.2f ms, wall %.2f ms"
+            "NillaBlockingTiming reviewer list of 10000 untokened rules: %d admitted, one rule costs %d steps, ran %d, skipped %d, steps %d of %d, cpu %.2f ms, wall %.2f ms"
                 .format(parsed.network.size, oneRun, runs, skipped, used, budget, cpu, wall),
         )
         assertTrue(oneRun < budget)
@@ -185,7 +185,7 @@ class ListSafetyTest {
         val cpu = (bean.currentThreadCpuTime - cpuBefore) / 1_000_000.0
         val runs = context.regexRuns - runsBefore
         val budget = ListRegex.stepsFor(url.length)
-        println("ArdiaBlockingTiming 5000 domain-scoped regex rules on their site: ran %d of 5000, steps used %d of %d, cpu %.2f ms".format(runs, budget - maxOf(context.regexScratch.steps, 0), budget, cpu))
+        println("NillaBlockingTiming 5000 domain-scoped regex rules on their site: ran %d of 5000, steps used %d of %d, cpu %.2f ms".format(runs, budget - maxOf(context.regexScratch.steps, 0), budget, cpu))
         assertTrue(runs <= budget / ListRegex.STEPS_PER_RULE_CHECK)
         assertTrue("cpu $cpu ms", cpu < 150)
         assertFalse(engine.blocks(url, "https://elsewhere.test/"))
@@ -295,7 +295,7 @@ class ListSafetyTest {
         TempDirectory().use { directory ->
             val file = File(directory.file, "huge.txt")
             file.bufferedWriter().use { out -> for (index in 0 until 2_000_000) out.append("||x").append(index.toString()).append(".test^\n") }
-            println("ArdiaBlockingTiming hostile list ${file.length() / 1_000_000.0} MB on disk")
+            println("NillaBlockingTiming hostile list ${file.length() / 1_000_000.0} MB on disk")
             val elapsed = millis {
                 try {
                     file.bufferedReader().use { FilterParser.parse(it, "huge") }
@@ -303,7 +303,7 @@ class ListSafetyTest {
                 } catch (error: FilterListTooLargeException) {
                 }
             }
-            println("ArdiaBlockingTiming hostile list refused after %.0f ms".format(elapsed))
+            println("NillaBlockingTiming hostile list refused after %.0f ms".format(elapsed))
 
             val runtime = Runtime.getRuntime()
             System.gc()
@@ -312,7 +312,7 @@ class ListSafetyTest {
             val parsed = FilterParser.parse(atLimit, "at-limit")
             System.gc()
             val retained = runtime.totalMemory() - runtime.freeMemory() - before - atLimit.length * 2L
-            println("ArdiaBlockingTiming a list at the ${parsed.network.size}-rule budget retains about ${retained / 1_000_000} MB")
+            println("NillaBlockingTiming a list at the ${parsed.network.size}-rule budget retains about ${retained / 1_000_000} MB")
             assertEquals(ListBudget().maxRulesPerList, parsed.network.size)
             assertTrue("retained $retained bytes", retained < 120_000_000)
         }
