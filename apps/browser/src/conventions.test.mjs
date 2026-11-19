@@ -571,7 +571,7 @@ function filesNamingTheUpstream() {
 
 const CREDITS = [
   ["NOTICE", /^Ardia\nCopyright 2026 Mantra Patel$/m, "keeps Ardia's NOTICE block"],
-  ["README.md", /^## Acknowledgements\n[\s\S]*\[Ardia\]\(https:\/\/github\.com\/ardia-browser\/ardia\)[\s\S]*by Mantra Patel and its contributors/m, "thanks Ardia, Mantra Patel and its contributors"],
+  ["README.md", /^## Acknowledgements\n(?:(?!\n#)[\s\S])*\[Ardia\]\(https:\/\/github\.com\/ardia-browser\/ardia\)(?:(?!\n#)[\s\S])*by Mantra Patel and its contributors/m, "thanks Ardia, Mantra Patel and its contributors"],
   ["apps/browser/src/state/app/legalNotice.ts", /"Based on Ardia, © 2026 Mantra Patel\."/, "says About is based on Ardia"],
   ["packages/shell/ios/AppUpdater.swift", /Based on Ardia, © 2026 Mantra Patel\./, "says the Mac About panel is based on Ardia"],
   ["apps/phone/src/components/settings/DataPages.tsx", /\{ name: "Ardia", use: "[^"]+", license: "Apache License 2\.0", url: "https:\/\/github\.com\/ardia-browser\/ardia" \}/, "lists Ardia in the phone's open source licences"],
@@ -773,6 +773,9 @@ if (process.argv.includes("--write-baseline")) {
   });
   test("Nilla keeps its credit to Ardia", () => {
     for (const [path, credit, what] of CREDITS) assert.match(readFileSync(ROOT + path, "utf8"), credit, `${path} ${what}`);
+    const [readmePath, readmeCredit] = CREDITS.find(([path]) => path === "README.md");
+    const creditMovedOut = readFileSync(ROOT + readmePath, "utf8").replace("## Acknowledgements\n", "## Acknowledgements\n\nNo credits here.\n\n## Engine source\n");
+    assert.doesNotMatch(creditMovedOut, readmeCredit, "the README credit counts only inside its Acknowledgements section");
   });
   test("conventions hold, except what the baseline lists", (t) => {
     const baseline = JSON.parse(readFileSync(ROOT + BASELINE_PATH, "utf8"));
