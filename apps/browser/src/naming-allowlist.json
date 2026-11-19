@@ -48,7 +48,8 @@
    "apps/browser/src/conventions-baseline.json",
    "apps/phone/src/state/settings/credits.json",
    "scripts/dmg/DS_Store",
-   "scripts/dmg/background.tiff"
+   "scripts/dmg/background.tiff",
+   "apps/browser/src/naming-allowlist.json"
   ],
   "generated": [
    "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-core.js",
@@ -320,7 +321,8 @@
    "apps/browser/src/conventions-baseline.json",
    "apps/phone/src/state/settings/credits.json",
    "scripts/dmg/DS_Store",
-   "scripts/dmg/background.tiff"
+   "scripts/dmg/background.tiff",
+   "apps/browser/src/naming-allowlist.json"
   ],
   "componentMaps": [
    {
