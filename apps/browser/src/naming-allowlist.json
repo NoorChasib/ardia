@@ -1466,7 +1466,7 @@
    "id": "N-linux-tarball-folder",
    "class": "N",
    "mechanism": "class",
-   "regex": "(?<=\\./)ardia(?=/install\\.sh)",
+   "regex": "(?<=\\./)ardia(?=/install\\.sh)|(?<=<extracted>/)ardia(?=/bin/ardia)",
    "scope": [
     "apps/linux/*",
     "scripts/linux/*",
@@ -1481,6 +1481,16 @@
     "docs/releasing.md"
    ],
    "why": "The Linux tarball's top folder ardia/ (package.py arcname), written as ./ardia/install.sh where the docs say how to install it (council C4)."
+  },
+  {
+   "id": "N-cli-launcher-doc",
+   "class": "N",
+   "mechanism": "class",
+   "regex": "(?<=current/bin/)ardia(?![A-Za-z0-9_-])",
+   "scope": [
+    "docs/*.md"
+   ],
+   "why": "The CLI home's launcher current/bin/ardia (hooks.py and install.sh), which the hooks LaunchAgent runs; the docs name it as the code does (council C4)."
   },
   {
    "id": "V-conventions-file-names",

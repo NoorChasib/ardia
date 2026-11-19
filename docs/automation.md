@@ -597,7 +597,7 @@ The runner fires them and passes a `schedule.fired` event (it never comes from N
 - No overlapping runs: if the hook's previous run is still going or waiting, that firing is skipped and logged.
 
 - `hooks install` writes the user LaunchAgent `com.nilladigital.nilla.hooks` (`ProgramArguments` = the installed `nilla-browser` launcher's
-  stable path, `$ARDIA_CLI_HOME/current/bin/nilla`, then `hooks run --log ~/Library/Logs/Nilla/hooks.log`;
+  stable path, `$ARDIA_CLI_HOME/current/bin/ardia`, then `hooks run --log ~/Library/Logs/Nilla/hooks.log`;
   `RunAtLoad`, `KeepAlive`, `ProcessType` `Background`; `WorkingDirectory` the home folder; `EnvironmentVariables`
   with the installing shell's `PATH` and `ARDIA_DATA_DIR` set to empty) and loads it with `launchctl bootout` then
   `bootstrap gui/<uid>` (bootstrap retried twice). The data dir is pinned by the empty `ARDIA_DATA_DIR`, not by

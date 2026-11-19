@@ -758,7 +758,7 @@ Against a built package:
 
 ```bash
 node scripts/linux/smoke.mjs --package <nilla-linux-x64.tar.xz> --results <dir>
-bun run acceptance:linux <extracted>/nilla/bin/ardia
+bun run acceptance:linux <extracted>/ardia/bin/ardia
 ```
 
 - **Smoke gate.** Twelve checks: libraries resolve; the shell renders the packaged UI; the bootstrap reports
