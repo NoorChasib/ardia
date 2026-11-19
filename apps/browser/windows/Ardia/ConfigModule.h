@@ -87,6 +87,10 @@ inline Reading ReadRegularFile(std::filesystem::path const &path, bool stamped =
     return result;
   }
   Reading result{"unreadable", std::nullopt, std::nullopt};
+  if (TestGate::OpenedInsideUpstream(file)) {
+    CloseHandle(file);
+    return result;
+  }
   if (stamped) result.stamp = HandleStamp(file);
   BY_HANDLE_FILE_INFORMATION info{};
   if (!GetFileInformationByHandle(file, &info)) {

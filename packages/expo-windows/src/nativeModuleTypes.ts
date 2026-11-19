@@ -114,7 +114,7 @@ export type DialogsModule = DialogsNative & {
 
 export type SystemSignalsModule = SystemSignalsNative & { powerState(): PowerReading };
 
-export type SyncFolderState = Pick<FolderInfo, "exists" | "writable" | "hasSyncData">;
+export type SyncFolderState = Pick<FolderInfo, "exists" | "writable" | "hasSyncData"> & { resolved: boolean };
 
 export type WindowsSyncModule = TurboModule &
   VaultNative &

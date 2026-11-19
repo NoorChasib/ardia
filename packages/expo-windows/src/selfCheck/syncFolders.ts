@@ -6,6 +6,7 @@ import { NATIVE_SYNC } from "../sync";
 import { expectTrue, type Check } from "./check";
 
 const SYNC_ALIAS_FIXTURES = "sync-aliases";
+const MADE_PREFIX = "made-";
 const UPSTREAM = UPSTREAM_SYNC_FOLDER;
 const UPSTREAM_SHORT_NAME = `${UPSTREAM.replace(/\s/g, "").slice(0, 6).toUpperCase()}~1`;
 
@@ -24,13 +25,13 @@ const fixtures = async () => {
   return base;
 };
 
-type Answer = { refused: true; message: string } | { refused: false; exists: boolean };
+type Answer = { refused: true; message: string } | { refused: false; exists: boolean; resolved: boolean };
 
 const answer = (path: string): Promise<Answer> =>
   sync()
     .folderState(path)
     .then(
-      (state): Answer => ({ refused: false, exists: state.exists }),
+      (state): Answer => ({ refused: false, exists: state.exists, resolved: state.resolved }),
       (error: unknown): Answer => ({ refused: true, message: error instanceof Error ? error.message : String(error) }),
     );
 
@@ -40,10 +41,9 @@ async function expectRefused(path: string, what: string) {
   expectTrue(got.message === UPSTREAM_SYNC_REFUSAL, `${what} was refused with ${JSON.stringify(got.message)}`);
 }
 
-async function expectRefusedIfThere(path: string, what: string) {
-  const got = await answer(path);
-  if (!got.refused && !got.exists) return console.info(`[nilla windows] self-check note: ${what} isn't on this volume, so nothing to refuse`);
-  expectTrue(got.refused && got.message === UPSTREAM_SYNC_REFUSAL, `${what} (${path}) was probed instead of refused`);
+async function expectRefusedIfMade(base: string, fixture: string, path: string, what: string) {
+  if (!(await system().fileExists(`${base}\\${MADE_PREFIX}${fixture}`))) return console.info(`[nilla windows] self-check note: the launch smoke couldn't make ${what} here, so nothing to refuse`);
+  await expectRefused(path, what);
 }
 
 export const checks: Check[] = [
@@ -52,7 +52,7 @@ export const checks: Check[] = [
     async run() {
       const base = await fixtures();
       const own = await answer(`${base}\\Nilla Sync`);
-      expectTrue(!own.refused && own.exists, `Nilla's own sync folder answered ${JSON.stringify(own)}`);
+      expectTrue(!own.refused && own.exists && own.resolved, `Nilla's own sync folder answered ${JSON.stringify(own)}`);
       await expectRefused(`${base}\\${UPSTREAM}`, "the upstream Sync folder by its name");
       await expectRefused(`${base}\\${UPSTREAM.toUpperCase()}`, "the upstream Sync folder in other case");
       await expectRefused(`${base}\\${UPSTREAM}.`, "the upstream Sync folder with a trailing dot");
@@ -61,8 +61,10 @@ export const checks: Check[] = [
       await expectRefused(`${base}\\Nilla Sync\\..\\${UPSTREAM}`, "the upstream Sync folder reached through ..");
       await expectRefused(`${base}\\junction`, "a junction to the upstream Sync folder");
       await expectRefused(`${base}\\junction\\inner`, "a folder inside a junction to the upstream Sync folder");
-      await expectRefusedIfThere(`${base}\\symlink`, "a symbolic link to the upstream Sync folder");
-      await expectRefusedIfThere(`${base}\\${UPSTREAM_SHORT_NAME}`, "the 8.3 short name of the upstream Sync folder");
+      await expectRefusedIfMade(base, "symlink", `${base}\\symlink`, "a symbolic link to the upstream Sync folder");
+      await expectRefusedIfMade(base, `short-name-${UPSTREAM_SHORT_NAME}`, `${base}\\${UPSTREAM_SHORT_NAME}`, "the 8.3 short name of the upstream Sync folder");
+      const dangling = await answer(`${base}\\dangling\\inner`);
+      expectTrue(!dangling.refused && !dangling.resolved, `a folder under a dangling link answered ${JSON.stringify(dangling)}, not unresolved`);
     },
   },
 ];

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -179,6 +180,28 @@ inline SyncFiles::Read ReadAt(HANDLE directory, std::wstring const &name) {
   if (!tag || IsLinkTag(*tag)) return SyncFiles::Read{State::Busy, {}};
   if (SyncFiles::IsPlaceholder(tag->FileAttributes)) return SyncFiles::Read{State::Placeholder, {}};
   return SyncFiles::ReadOpened(opened.handle.get());
+}
+
+inline bool SameFile(HANDLE first, HANDLE second) noexcept {
+  FILE_ID_INFO a{};
+  FILE_ID_INFO b{};
+  if (!GetFileInformationByHandleEx(first, FileIdInfo, &a, sizeof(a)) || !GetFileInformationByHandleEx(second, FileIdInfo, &b, sizeof(b))) return false;
+  return a.VolumeSerialNumber == b.VolumeSerialNumber && memcmp(&a.FileId, &b.FileId, sizeof(a.FileId)) == 0;
+}
+
+inline bool FetchAt(HANDLE directory, std::wstring const &name) {
+  Opened pinned = OpenAt(directory, name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, OpenExisting, FileOnly | NoFollow | NoRecall);
+  if (!pinned.handle) return false;
+  std::optional<FILE_ATTRIBUTE_TAG_INFO> tag = TagOf(pinned.handle.get());
+  if (!tag || IsLinkTag(*tag)) return false;
+  Opened file = OpenAt(directory, name, GENERIC_READ | FILE_READ_ATTRIBUTES, ShareAll, OpenExisting, FileOnly | SequentialOnly);
+  if (!file.handle || !SameFile(pinned.handle.get(), file.handle.get())) return false;
+  std::vector<char> buffer(64 * 1024);
+  DWORD done = 0;
+  while (::ReadFile(file.handle.get(), buffer.data(), static_cast<DWORD>(buffer.size()), &done, nullptr) && done > 0) {
+  }
+  std::optional<FILE_ATTRIBUTE_TAG_INFO> after = TagOf(pinned.handle.get());
+  return after && !SyncFiles::IsPlaceholder(after->FileAttributes);
 }
 
 using SetInformation = NTSTATUS(NTAPI *)(HANDLE, PIO_STATUS_BLOCK, PVOID, ULONG, ULONG);

@@ -8,6 +8,7 @@ const { UPSTREAM_SYNC_FOLDER, UPSTREAM_SYNC_REFUSAL, UpstreamSyncFolderError } =
 
 const native = (name) => readFileSync(new URL(`../../../windows/Ardia/${name}`, import.meta.url), "utf8");
 const LINKED = "C:\\Users\\me\\Documents\\Nilla Sync";
+const UNRESOLVED = "\\\\offline\\share\\Nilla Sync";
 
 function fakeWindows(pickedFolder) {
   const probed = [];
@@ -16,7 +17,9 @@ function fakeWindows(pickedFolder) {
     getConstants: () => ({ oneDriveFolder: "", documentsFolder: "C:\\Users\\me\\Documents", computerName: "PC" }),
     folderState: (path) => {
       probed.push(path);
-      return path === LINKED ? Promise.reject(new Error(UPSTREAM_SYNC_REFUSAL)) : Promise.resolve({ exists: true, writable: true, hasSyncData: false });
+      if (path === LINKED) return Promise.reject(new Error(UPSTREAM_SYNC_REFUSAL));
+      if (path === UNRESOLVED) return Promise.resolve({ exists: false, writable: false, hasSyncData: false, resolved: false });
+      return Promise.resolve({ exists: true, writable: true, hasSyncData: false, resolved: true });
     },
   };
   turboModules.NillaDialogs = {
@@ -39,6 +42,15 @@ test("a picked folder the native side says leads to the upstream Sync folder is 
   const { seeded } = fakeWindows(LINKED);
   await assert.rejects(windowsSync().chooseFolder("D:\\Elsewhere\\Mine"), UpstreamSyncFolderError);
   assert.deepEqual(seeded, ["D:\\Elsewhere\\Mine"]);
+});
+
+test("a folder the native side can't resolve never seeds the picker and is refused when picked", async () => {
+  const first = fakeWindows("D:\\Elsewhere\\Mine");
+  assert.equal(await windowsSync().chooseFolder(UNRESOLVED), "D:\\Elsewhere\\Mine");
+  assert.deepEqual(first.seeded, [null]);
+  const second = fakeWindows(UNRESOLVED);
+  await assert.rejects(windowsSync().chooseFolder("D:\\Elsewhere\\Mine"), UpstreamSyncFolderError);
+  assert.deepEqual(second.seeded, ["D:\\Elsewhere\\Mine"]);
 });
 
 test("the Windows sync module resolves a folder through handles before it probes, reads or writes it", () => {
@@ -64,6 +76,15 @@ test("the Windows sync module resolves a folder through handles before it probes
   const probe = module.slice(module.indexOf("REACT_METHOD(folderState)"), module.indexOf("REACT_METHOD(readPasswords)"));
   assert.ok(probe.indexOf("SyncHandles::OwnerOf(folder)") > 0 && probe.indexOf("SyncHandles::OwnerOf(folder)") < probe.indexOf("SyncFiles::IsDirectory(folder)"), "folderState resolves before it probes");
   assert.match(probe, /if \(owner == SyncHandles::Owner::Upstream\) return promise\.Reject\(SyncHandles::UpstreamRefusal\);/);
+  assert.match(probe, /state\["resolved"\] = owner == SyncHandles::Owner::Own;/);
+
+  const hydrate = vault.slice(vault.indexOf("inline void Hydrate("), vault.indexOf("struct PhraseAnswer"));
+  assert.match(hydrate, /std::optional<SyncHandles::Handle> held = ScopeOf\(folder, keys, scope, false\);/, "hydration walks the chain and scope through checked handles");
+  assert.match(hydrate, /SyncHandles::FetchAt\(scopeFolder->get\(\), name\)/);
+  assert.doesNotMatch(vault, /ScopePath|FilePath\(/, "no vault file is reached by a joined path");
+  assert.match(handles, /Opened file = OpenAt\(directory, name, GENERIC_READ \| FILE_READ_ATTRIBUTES, ShareAll, OpenExisting, FileOnly \| SequentialOnly\);\n  if \(!file\.handle \|\| !SameFile\(pinned\.handle\.get\(\), file\.handle\.get\(\)\)\) return false;/);
+  const files = native("SyncFiles.h");
+  assert.doesNotMatch(files.slice(files.indexOf("class Hydrator")), /CreateFileW\(/, "the hydrator opens nothing by path");
 });
 
 test("the self-check asks the native side about every alias of the upstream Sync folder the launch smoke makes", () => {
@@ -75,5 +96,11 @@ test("the self-check asks the native side about every alias of the upstream Sync
   }
   assert.match(smoke, /New-Item -ItemType Junction -Path \(Join-Path \$syncAliases "junction"\) -Target \$upstreamSync/);
   assert.match(check, /\$\{UPSTREAM_SHORT_NAME\}/);
+  assert.match(check, /expectRefusedIfMade\(base, "symlink", /);
+  assert.match(check, /expectRefusedIfMade\(base, `short-name-\$\{UPSTREAM_SHORT_NAME\}`, /);
+  assert.match(smoke, /New-Item -ItemType File -Force -Path \(Join-Path \$syncAliases "made-symlink"\)/);
+  assert.match(smoke, /Join-Path \$syncAliases "made-short-name-\$upstreamShortName"/);
+  assert.match(smoke, /New-Item -ItemType Junction -Path \(Join-Path \$syncAliases "dangling"\)/);
+  assert.doesNotMatch(check, /!got\.refused && !got\.exists/, "a skip comes from the fixture, never from the answer under test");
   assert.match(readFileSync(new URL("../../../../../packages/expo-windows/src/selfCheck/index.ts", import.meta.url), "utf8"), /syncChecks, syncFolderChecks,/);
 });

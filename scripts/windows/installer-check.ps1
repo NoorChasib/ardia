@@ -66,6 +66,33 @@ function Get-RunningFromInstall {
   return ,@(Get-Process -ErrorAction SilentlyContinue | Where-Object { $_.Path -and $_.Path.StartsWith("$folder\", [System.StringComparison]::OrdinalIgnoreCase) } | ForEach-Object { "$($_.ProcessName) ($($_.Id))" })
 }
 
+function Start-StartWatch {
+  $id = "installer-check-starts-" + [guid]::NewGuid().ToString("N")
+  try {
+    Register-CimIndicationEvent -ClassName Win32_ProcessStartTrace -SourceIdentifier $id -ErrorAction Stop | Out-Null
+    return [pscustomobject]@{ Id = $id; Kind = "trace" }
+  } catch {
+    Write-Host "installer-check: no process start trace here ($($_.Exception.Message)), so it polls process creation every 0.2 s and can miss a shorter start"
+    Register-CimIndicationEvent -Query "SELECT * FROM __InstanceCreationEvent WITHIN 0.2 WHERE TargetInstance ISA 'Win32_Process'" -SourceIdentifier $id -ErrorAction Stop | Out-Null
+    return [pscustomobject]@{ Id = $id; Kind = "poll" }
+  }
+}
+
+function Stop-StartWatch([object]$Watch) {
+  Start-Sleep -Seconds 1
+  $started = @()
+  foreach ($raised in @(Get-Event -SourceIdentifier $Watch.Id -ErrorAction SilentlyContinue)) {
+    $new = $raised.SourceEventArgs.NewEvent
+    if ($Watch.Kind -eq "trace") { $name = $new.ProcessName; $id = $new.ProcessID; $path = "" }
+    else { $name = $new.TargetInstance.Name; $id = $new.TargetInstance.ProcessId; $path = $new.TargetInstance.ExecutablePath }
+    if (($launchers -contains $name) -or ($path -and $path.StartsWith("$folder\", [System.StringComparison]::OrdinalIgnoreCase))) { $started += "$name ($id)" }
+  }
+  Unregister-Event -SourceIdentifier $Watch.Id -ErrorAction SilentlyContinue
+  Get-Event -SourceIdentifier $Watch.Id -ErrorAction SilentlyContinue | Remove-Event
+  Write-Host "installer-check: watched every process start ($($Watch.Kind)), $($started.Count) from the install"
+  return ,@($started)
+}
+
 function Assert-Nothing([object[]]$Found, [string]$What) {
   if ($Found.Count) { throw "$What`: $($Found -join ', ')" }
 }
@@ -83,7 +110,10 @@ Assert-Nothing (Get-Registrations) "a browser registration is already here befor
 Assert-Nothing (Get-Shortcuts) "a shortcut is already here before the install"
 $nillaDataBefore = Test-Path -LiteralPath $nillaData
 
+$launchers = @("Nilla.exe")
+$installWatch = Start-StartWatch
 Invoke-Quietly (Resolve-Path -LiteralPath $Setup).Path "the installer"
+$launchers = @(@("Nilla.exe") + @(Get-ChildItem -LiteralPath $folder -Recurse -File -Filter "*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -ine "unins000.exe" } | ForEach-Object { $_.Name }) | Sort-Object -Unique)
 $missing = @($shipped | Where-Object { -not (Test-Path -LiteralPath (Join-Path $folder $_) -PathType Leaf) })
 if ($missing.Count) { throw "the install in $folder lacks $($missing -join ', ')" }
 if (Get-ChildItem -LiteralPath $folder -Recurse -File -Force -Filter "Ardia.test-build" | Select-Object -First 1) { throw "the install in $folder carries an Ardia.test-build marker: a build people install must ignore test keys" }
@@ -103,6 +133,7 @@ if (-not $displayIcon -or -not (Test-Path -LiteralPath $displayIcon -PathType Le
 if ($LASTEXITCODE -ne 0) { throw "the installed Nilla.exe does not carry Nilla's icon and name" }
 Start-Sleep -Seconds 3
 Assert-Nothing (Get-RunningFromInstall) "the installer started the app, which only nilla-dev-run.ps1 may start"
+Assert-Nothing (Stop-StartWatch $installWatch) "the installer started the app, even if it has exited since; only nilla-dev-run.ps1 may start it"
 Assert-Nothing (Get-Registrations) "the installer registered Nilla with Windows"
 Assert-Nothing (Get-Shortcuts) "the installer made a shortcut, which would start the app without ARDIA_DATA_DIR"
 Assert-Nothing (Get-UpstreamFolders) "the install made Ardia's folders"
@@ -110,9 +141,11 @@ if (Test-Path -LiteralPath $upstreamEntry) { throw "the install wrote Ardia's un
 $count = @(Get-ChildItem -LiteralPath $folder -Recurse -File).Count
 Write-Host "installer-check: installed Nilla $($installed.DisplayVersion), $count files in $folder, with no shortcut, no registration and no start"
 
+$uninstallWatch = Start-StartWatch
 Invoke-Quietly (Join-Path $folder "unins000.exe") "the uninstaller"
 $deadline = (Get-Date).AddSeconds(30)
 while ((Get-Date) -lt $deadline -and ((Test-Path -LiteralPath $folder) -or (Test-Path -LiteralPath $entry))) { Start-Sleep -Milliseconds 500 }
+Assert-Nothing (Stop-StartWatch $uninstallWatch) "the uninstaller started the app"
 if (Test-Path -LiteralPath $folder) { throw "the uninstaller left $(@(Get-ChildItem -LiteralPath $folder -Recurse -File).Count) files in $folder" }
 if (Test-Path -LiteralPath $entry) { throw "the uninstaller left its uninstall entry" }
 Assert-Nothing (Get-Registrations) "the uninstaller left a browser registration"

@@ -51,7 +51,7 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
   const leadsToOwnFolder = async (path: string) =>
     !isUpstreamSyncFolder(path) &&
     (await native.folderState(path).then(
-      () => true,
+      (state) => state.resolved !== false,
       () => false,
     ));
 

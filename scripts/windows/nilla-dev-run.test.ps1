@@ -43,6 +43,8 @@ function Expect-Allowed([string]$Case, [string]$DataDir) {
 try {
   New-Item -ItemType Junction -Path (Join-Path $root "alias") -Target $ardia | Out-Null
   New-Item -ItemType Junction -Path (Join-Path $root "scratch\Chromium") -Target $ardia | Out-Null
+  New-Item -ItemType Directory -Force -Path (Join-Path $root "configured") | Out-Null
+  New-Item -ItemType Junction -Path (Join-Path $root "configured\config") -Target (Join-Path $roaming "Ardia") | Out-Null
 
   Expect-Refused "Ardia's data folder" $ardia
   Expect-Refused "a folder inside Ardia's data folder that doesn't exist yet" (Join-Path $ardia "User Data\more")
@@ -52,6 +54,7 @@ try {
   Expect-Refused "a junction to Ardia's data folder" (Join-Path $root "alias")
   Expect-Refused "a folder under a junction to Ardia's data folder" (Join-Path $root "alias\new")
   Expect-Refused "a scratch folder whose Chromium is a junction to Ardia's data folder" (Join-Path $root "scratch")
+  Expect-Refused "a scratch folder whose config is a junction to Ardia's roaming folder" (Join-Path $root "configured")
   Expect-Refused "Ardia's data folder as an extended path" "\\?\$ardia"
   Expect-Refused "Ardia's data folder with a trailing dot" "$ardia."
   Expect-Refused "Ardia's data folder with a trailing space" "$ardia "
@@ -77,7 +80,7 @@ try {
   Expect-Allowed "Nilla's own folder beside Ardia's" (Join-Path $local "Nilla")
   Expect-Allowed "a folder whose name starts like Ardia's" (Join-Path $local "Ardia Two")
 } finally {
-  foreach ($link in @("alias", "scratch\Chromium", "linked", "dangling")) {
+  foreach ($link in @("alias", "scratch\Chromium", "configured\config", "linked", "dangling")) {
     $path = Join-Path $root $link
     if (Test-Path -LiteralPath $path) { (Get-Item -LiteralPath $path -Force).Delete() }
     elseif (Get-Item -LiteralPath $path -Force -ErrorAction SilentlyContinue) { (Get-Item -LiteralPath $path -Force).Delete() }

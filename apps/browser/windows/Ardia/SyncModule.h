@@ -259,6 +259,7 @@ struct SyncModule {
       state["exists"] = exists;
       state["writable"] = writable;
       state["hasSyncData"] = exists && SyncFiles::HasTagFolder(folder);
+      state["resolved"] = owner == SyncHandles::Owner::Own;
       promise.Resolve(winrt::Microsoft::ReactNative::JSValue{std::move(state)});
     }).detach();
   }

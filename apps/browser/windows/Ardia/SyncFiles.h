@@ -4,6 +4,7 @@
 #include <chrono>
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -237,15 +238,15 @@ class Hydrator {
     return *shared;
   }
 
-  void Request(std::wstring path) {
+  void Request(std::wstring key, std::function<bool()> fetch) {
     std::lock_guard<std::mutex> guard(m_lock);
     auto now = std::chrono::steady_clock::now();
-    auto tried = m_tried.find(path);
+    auto tried = m_tried.find(key);
     if (tried != m_tried.end() && now - tried->second < HydrateRetry) return;
     if (m_queue.size() >= LongestHydrateQueue) return;
-    m_tried[path] = now;
+    m_tried[key] = now;
     if (m_tried.size() > LongestHydrateQueue * 16) m_tried.clear();
-    m_queue.push_back(std::move(path));
+    m_queue.push_back(std::move(fetch));
     if (m_running) return;
     m_running = true;
     std::thread([this]() noexcept { Drain(); }).detach();
@@ -256,44 +257,27 @@ class Hydrator {
  private:
   void Drain() noexcept {
     while (true) {
-      std::wstring path;
+      std::function<bool()> fetch;
       {
         std::lock_guard<std::mutex> guard(m_lock);
         if (m_queue.empty()) {
           m_running = false;
           return;
         }
-        path = std::move(m_queue.front());
+        fetch = std::move(m_queue.front());
         m_queue.pop_front();
       }
-      if (Fetch(path)) m_hydrated++;
+      bool fetched = false;
+      try {
+        fetched = fetch();
+      } catch (...) {
+      }
+      if (fetched) m_hydrated++;
     }
-  }
-
-  static bool Fetch(std::wstring const &path) noexcept {
-    HANDLE pinned = CreateFileW(path.c_str(), FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_OPEN_NO_RECALL, nullptr);
-    if (pinned == INVALID_HANDLE_VALUE) return false;
-    if (IsLink(pinned)) {
-      CloseHandle(pinned);
-      return false;
-    }
-    HANDLE file = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
-    if (file == INVALID_HANDLE_VALUE) {
-      CloseHandle(pinned);
-      return false;
-    }
-    std::vector<char> buffer(64 * 1024);
-    DWORD done = 0;
-    while (::ReadFile(file, buffer.data(), static_cast<DWORD>(buffer.size()), &done, nullptr) && done > 0) {
-    }
-    CloseHandle(file);
-    bool fetched = !IsPlaceholder(GetFileAttributesW(path.c_str()));
-    CloseHandle(pinned);
-    return fetched;
   }
 
   std::mutex m_lock;
-  std::deque<std::wstring> m_queue;
+  std::deque<std::function<bool()>> m_queue;
   std::map<std::wstring, std::chrono::steady_clock::time_point> m_tried;
   bool m_running = false;
   std::atomic<uint32_t> m_hydrated{0};

@@ -98,17 +98,6 @@ inline SyncHandles::OpenedFolder OpenOwnRoot(std::string const &folder) {
 
 inline std::wstring ChainPath(std::string const &folder, Keys const &keys) { return Folder(folder) + L"\\" + Paths::Wide(keys.ChainTag()); }
 
-inline std::wstring ScopePath(std::string const &folder, Keys const &keys, std::string const &scope) {
-  std::optional<std::string> tag = keys.ScopeTag(scope);
-  if (!tag) throw Failure("no scope tag");
-  return ChainPath(folder, keys) + L"\\" + Paths::Wide(*tag);
-}
-
-inline std::wstring FilePath(std::wstring const &scopePath, std::string const &id) {
-  if (!SyncCrypto::IsTag(id)) throw Failure("not a sync file id");
-  return scopePath + L"\\" + Paths::Wide(id) + std::wstring{SyncFiles::VaultExtension};
-}
-
 inline std::wstring Name(std::string const &tag) { return Paths::Wide(tag); }
 
 inline SyncHandles::Handle RootOf(std::string const &folder) {
@@ -230,9 +219,12 @@ inline std::string Remove(std::string const &folder, Keys const &keys, std::stri
 }
 
 inline void Hydrate(std::string const &folder, Keys const &keys, std::string const &scope, std::string const &id) {
-  std::wstring scopePath = ScopePath(folder, keys, scope);
-  if (SyncFiles::ProbePath(scopePath) != SyncFiles::Probe::Directory) return;
-  SyncFiles::Hydrator::Shared().Request(FilePath(scopePath, id));
+  std::wstring name = FileName(id);
+  std::optional<SyncHandles::Handle> held = ScopeOf(folder, keys, scope, false);
+  if (!held) return;
+  auto scopeFolder = std::make_shared<SyncHandles::Handle>(std::move(*held));
+  std::wstring key = Paths::Wide(folder) + L"|" + Name(keys.ChainTag()) + L"|" + Name(*keys.ScopeTag(scope)) + L"|" + name;
+  SyncFiles::Hydrator::Shared().Request(std::move(key), [scopeFolder, name]() { return SyncHandles::FetchAt(scopeFolder->get(), name); });
 }
 
 struct PhraseAnswer {

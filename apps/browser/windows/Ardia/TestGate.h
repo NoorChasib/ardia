@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <shlobj.h>
 
@@ -30,13 +31,21 @@ inline bool Overlaps(std::wstring_view a, std::wstring_view b) noexcept {
   return WithinOrSame(a, b) || WithinOrSame(b, a);
 }
 
-inline std::wstring RealFolderClash(std::initializer_list<std::filesystem::path> checked, std::wstring_view variable) noexcept {
-  std::filesystem::path const realFolders[] = {
+inline std::vector<std::filesystem::path> UpstreamFolders() noexcept {
+  return {
       Paths::UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Ardia",
       Paths::UserFolder(FOLDERID_RoamingAppData, L"APPDATA") / L"Ardia",
-      Paths::UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Nilla",
-      Paths::UserFolder(FOLDERID_RoamingAppData, L"APPDATA") / L"Nilla",
   };
+}
+
+inline std::vector<std::filesystem::path> RealFolders() noexcept {
+  std::vector<std::filesystem::path> folders = UpstreamFolders();
+  folders.push_back(Paths::UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Nilla");
+  folders.push_back(Paths::UserFolder(FOLDERID_RoamingAppData, L"APPDATA") / L"Nilla");
+  return folders;
+}
+
+inline std::wstring ClashWith(std::vector<std::filesystem::path> const &realFolders, std::initializer_list<std::filesystem::path> checked, std::wstring_view variable) noexcept {
   for (std::filesystem::path const &real : realFolders) {
     std::optional<std::wstring> canonicalReal = CanonicalPath(real);
     if (!canonicalReal) return L"the real profile folder can't be resolved";
@@ -48,6 +57,24 @@ inline std::wstring RealFolderClash(std::initializer_list<std::filesystem::path>
     }
   }
   return {};
+}
+
+inline std::wstring RealFolderClash(std::initializer_list<std::filesystem::path> checked, std::wstring_view variable) noexcept {
+  return ClashWith(RealFolders(), checked, variable);
+}
+
+inline std::wstring UpstreamClash(std::initializer_list<std::filesystem::path> checked, std::wstring_view variable) noexcept {
+  return ClashWith(UpstreamFolders(), checked, variable);
+}
+
+inline bool OpenedInsideUpstream(HANDLE opened) noexcept {
+  std::optional<std::wstring> final = Paths::FinalPathOf(opened, VOLUME_NAME_GUID);
+  if (!final) return true;
+  for (std::filesystem::path const &upstream : UpstreamFolders()) {
+    std::optional<std::wstring> canonical = CanonicalPath(upstream);
+    if (!canonical || WithinOrSame(*final, *canonical)) return true;
+  }
+  return false;
 }
 
 inline std::filesystem::path RunningFolder() noexcept {

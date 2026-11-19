@@ -94,7 +94,7 @@ function Get-UpstreamFolders {
 }
 
 function Assert-ApartFromUpstream([string]$Data, [string[]]$Upstream) {
-  foreach ($used in @($Data, [System.IO.Path]::Combine($Data, "Chromium"), [System.IO.Path]::Combine($Data, "Sync"))) {
+  foreach ($used in @($Data, [System.IO.Path]::Combine($Data, "Chromium"), [System.IO.Path]::Combine($Data, "Sync"), [System.IO.Path]::Combine($Data, "config"))) {
     $canonical = Resolve-Canonical $used "the data folder"
     foreach ($ardia in $Upstream) {
       if ([NillaDevRunPaths]::WithinOrSame($canonical, $ardia) -or [NillaDevRunPaths]::WithinOrSame($ardia, $canonical)) {

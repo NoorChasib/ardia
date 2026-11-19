@@ -1372,7 +1372,17 @@ $syncAliases = Join-Path $env:ARDIA_DATA_DIR "sync-aliases"
 $upstreamSync = Join-Path $syncAliases "Ardia Sync"
 New-Item -ItemType Directory -Force -Path $upstreamSync, (Join-Path $syncAliases "Nilla Sync") | Out-Null
 New-Item -ItemType Junction -Path (Join-Path $syncAliases "junction") -Target $upstreamSync | Out-Null
-try { New-Item -ItemType SymbolicLink -Path (Join-Path $syncAliases "symlink") -Target $upstreamSync -ErrorAction Stop | Out-Null } catch { Write-Host "sync aliases: no symbolic link to Ardia Sync here ($($_.Exception.Message))" }
+try {
+  New-Item -ItemType SymbolicLink -Path (Join-Path $syncAliases "symlink") -Target $upstreamSync -ErrorAction Stop | Out-Null
+  New-Item -ItemType File -Force -Path (Join-Path $syncAliases "made-symlink") | Out-Null
+} catch { Write-Host "sync aliases: no symbolic link to Ardia Sync here ($($_.Exception.Message))" }
+$gone = Join-Path $syncAliases "gone"
+New-Item -ItemType Directory -Force -Path $gone | Out-Null
+New-Item -ItemType Junction -Path (Join-Path $syncAliases "dangling") -Target $gone | Out-Null
+Remove-Item -LiteralPath $gone -Force
+$upstreamShortName = (New-Object -ComObject Scripting.FileSystemObject).GetFolder($upstreamSync).ShortName
+if ($upstreamShortName -and $upstreamShortName -ne (Split-Path -Leaf $upstreamSync)) { New-Item -ItemType File -Force -Path (Join-Path $syncAliases "made-short-name-$upstreamShortName") | Out-Null }
+else { Write-Host "sync aliases: this volume gave the upstream Sync folder no 8.3 short name" }
 $importFixtures = Join-Path $env:ARDIA_DATA_DIR "import-fixtures"
 $fixtureProfiles = Join-Path $PSScriptRoot "..\..\packages\import\fixtures\home\Library\Application Support"
 foreach ($fixture in @(@("firefox", "Firefox\Profiles\abcd1234.default-release"), @("work", "Firefox\Profiles\zzzz9999.work"), @("zen", "zen\Profiles\zen12345.Default (release)"), @("chrome", "Google\Chrome\Default"))) {
@@ -1699,6 +1709,8 @@ function Test-ATestInstance([string]$DataDirectory, [string]$Case) {
     if (-not $engine) { $script:failures += "the engine said nothing about the test gate with $Case"; return }
     Write-Host "engine test gate, $Case`: $($engine.Line)"
     if ($engine.Line -notmatch "a test instance; remote debugging port: $gatePort; ardiacore test instance: yes; reauth=granted honoured: yes$") { $script:failures += "the engine refused the test instance or reauth=granted with $Case" }
+    $app = Wait-GateLine $run $caseLog "app test gate: a test instance"
+    if ($app) { Write-Host "app test gate, $Case`: $($app.Line)" } else { $script:failures += "the app's own gate refused, or said nothing about, $Case" }
     $deadline = (Get-Date).AddSeconds(20)
     while ((Get-Date) -lt $deadline -and -not (Test-PortOpen $gatePort)) { Start-Sleep -Milliseconds 500 }
     try {
@@ -1706,6 +1718,24 @@ function Test-ATestInstance([string]$DataDirectory, [string]$Case) {
       Write-Host "remote debugging, $Case`: $($version.Browser)"
     } catch { $script:failures += "remote debugging didn't answer on port $gatePort with $Case" }
   } finally { Stop-GateLaunch $run }
+}
+
+function Get-FolderPrint([string]$Folder) {
+  return (@(Get-ChildItem -LiteralPath $Folder -Recurse -File -Force -ErrorAction SilentlyContinue | Sort-Object FullName | ForEach-Object { "$($_.FullName.Substring($Folder.Length)) $((Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash)" }) -join "`n")
+}
+
+function Test-ConfigKeptApart([string]$DataDirectory, [string]$Protected, [string]$Case) {
+  $before = Get-FolderPrint $Protected
+  $savedConfig = $env:ARDIA_CONFIG_DIR
+  $env:ARDIA_CONFIG_DIR = ""
+  try { $run, $caseLog = Start-GateLaunch $DataDirectory $Case "" } finally { $env:ARDIA_CONFIG_DIR = $savedConfig }
+  try {
+    $ignored = Wait-GateLine $run $caseLog "config folder ignored: "
+    if ($ignored) { Write-Host "config folder, $Case`: $($ignored.Line)" } else { $script:failures += "the app used, or said nothing about, $Case" }
+    $deadline = (Get-Date).AddSeconds(15)
+    while ((Get-Date) -lt $deadline -and -not $run.HasExited) { Start-Sleep -Milliseconds 500 }
+  } finally { Stop-GateLaunch $run }
+  if ((Get-FolderPrint $Protected) -ne $before) { $script:failures += "the app changed the protected folder through $Case" }
 }
 
 if ($Part -ne "launch") {
@@ -1736,6 +1766,18 @@ if ($env:GITHUB_ACTIONS -eq "true") {
     try { Test-RefusedByTheApp $ownJunction "a junction to Nilla's own profile folder" } finally { (Get-Item -LiteralPath $ownJunction).Delete() }
   } finally {
     foreach ($own in $madeOwnFolders) { Remove-Item -LiteralPath $own -Recurse -Force -ErrorAction SilentlyContinue }
+  }
+  $protectedConfig = Join-Path $realProfile "config"
+  New-Item -ItemType Directory -Force -Path $protectedConfig | Out-Null
+  Set-Content -LiteralPath (Join-Path $protectedConfig "config.json") -Value '{"protectedBySmoke": true}' -Encoding utf8
+  $roamingOwn = Join-Path $env:APPDATA "Nilla"
+  $madeRoamingOwn = -not (Test-Path -LiteralPath $roamingOwn)
+  $linkedConfig = Join-Path (New-DataDirectory "gate-config-junction") "config"
+  New-Item -ItemType Junction -Path $linkedConfig -Target $protectedConfig | Out-Null
+  try { Test-ConfigKeptApart (Split-Path -Parent $linkedConfig) $protectedConfig "a config folder that is a junction into the real profile folder" } finally {
+    (Get-Item -LiteralPath $linkedConfig).Delete()
+    Remove-Item -LiteralPath $protectedConfig -Recurse -Force -ErrorAction SilentlyContinue
+    if ($madeRoamingOwn) { Remove-Item -LiteralPath $roamingOwn -Recurse -Force -ErrorAction SilentlyContinue }
   }
 }
 if ($withEngine -and $env:GITHUB_ACTIONS -eq "true") {
