@@ -15,7 +15,7 @@ import { showToast } from "../../browser/src/state/app/toasts";
 import { engineInfo, systemInfo } from "../../browser/src/platform/app";
 import { appServices } from "../../browser/src/platform/launchConfig";
 import { openUrls } from "../../browser/src/state/browser/actions";
-import { BASED_ON_NILLA, LEGAL_NOTICE, sourceLinks } from "../../browser/src/state/app/legalNotice";
+import { FORK_CREDIT, LEGAL_NOTICE, sourceLinks } from "../../browser/src/state/app/legalNotice";
 import "./linkShareSurface";
 
 const hiddenCommands = () => {
@@ -31,7 +31,7 @@ async function showAbout(windowId: string) {
   const engine = await engineInfo().catch(() => null);
   const chromium = engine?.chromiumVersion ? `Chromium ${engine.chromiumVersion}. ` : "";
   const { source } = sourceLinks();
-  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, `${chromium}${LEGAL_NOTICE} ${BASED_ON_NILLA} Source: ${source}`, {
+  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, `${chromium}${LEGAL_NOTICE} ${FORK_CREDIT} Source: ${source}`, {
     sticky: true,
     action: { title: "Source and Licenses", run: () => openUrls([source, "chrome://credits"], windowId) },
   });
