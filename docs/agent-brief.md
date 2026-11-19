@@ -258,13 +258,15 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
     (`http://localhost:<port>/json`, `Runtime.evaluate`, `Page.captureScreenshot`). A `ARDIA_BACKGROUND` instance's windows answer NO to
     `-[NSWindow isOccluded]` (`ArdiaHost+Launch.mm`), so a covered window shows a tab at once instead of after Chrome's 1 s
     occlusion delay; launch with `--instance allowOcclusion` to test occlusion itself.
-  - CDP (`ARDIA_REMOTE_DEBUGGING_PORT`), argv and `ARDIA_INSTANCE` `chromiumSwitches` only reach Chrome where it runs on its mock
-    keychain: a scratch `ARDIA_DATA_DIR`, or a build without a team signature (ad hoc copies such as carryover.sh's). A
-    team-signed build on its real data dir forwards none of them (`ArdiaHost+Launch.mm`), and its browser process removes
-    every switch that opens the profile to outside control (remote debugging, unpacked extensions, automation, proxies,
-    certificate overrides, net-log), also after chrome://flags have been applied, and unsets `SSLKEYLOGFILE`
-    (`ac_main_delegate.cc`), so nothing drives or records the real profile, with its real Safe Storage key; Chrome 136
-    did the same for its default profile.
+  - CDP (`ARDIA_REMOTE_DEBUGGING_PORT`), argv and `ARDIA_INSTANCE` `chromiumSwitches` reach Chrome in every Layer 1
+    build that starts, because every Layer 1 launch runs Chrome on its mock keychain (`NillaLaunchConfig`
+    `engineSwitches`). A team-signed build (Apple Development or Developer ID) refuses to start, before it chooses a
+    data dir (`ArdiaHost+Launch.mm`): under the mock keychain today's engine turns off its real-profile gate, the one
+    that removes every switch opening the profile to outside control (remote debugging, unpacked extensions,
+    automation, proxies, certificate overrides, net-log) and unsets `SSLKEYLOGFILE` (`ac_main_delegate.cc`). So test
+    with a build signed without a team (`Nilla.xcconfig` ships `NILLA_TEAM_ID` empty; `AdHoc.xcconfig`; carryover.sh's
+    ad hoc copies) on a scratch `ARDIA_DATA_DIR`; a signed build on a real profile, with its own Safe Storage key,
+    waits for Layer 2 and Nilla's own engines.
   - Native UI: `screencapture -l <windowID> -o` (find the id with CGWindowList by owner PID; a test window's layer is negative). It captures the
     window's own content even while the owner's windows cover it, which a test window's always may. Wrap every capture in `timeout 20`: with the screen locked they can hang instead of failing.
     For the New Tab intro, launch with `--test shadersKeyWindow` (it only plays in a key window).
@@ -303,7 +305,7 @@ The only variables the app and engine read, through `NillaLaunchConfig` (`packag
 | | `downloadsDir=<dir>` | Chrome's default download folder for this launch, never written to the profile |
 | | `updateFeed=<url>` | Sparkle's feed; a scratch instance checks for updates only with one |
 | | `allowAudio` · `allowOcclusion` | Background mode keeps sound · keeps Chrome's occlusion |
-| | `releaseNotes` | Opens the release notes as after an update (works on a Developer ID build: the release smoke) |
+| | `releaseNotes` | Opens the release notes as after an update (the release smoke's check; a Developer ID build refuses to start in Layer 1, so the smoke waits for Layer 2) |
 | | `cliHome=<dir>` · `cliBinDir=<dir>` · `cliUrl=<url>` | Where the `nilla-browser` command installs, links and downloads from (`docs/cli.md`); a test instance installs only with the first two |
 | | `syncFolder=<dir>` | The sync folder (`packages/sync/scripts/e2e.mjs`) |
 | | `sharedFolders=<dir>` | Where Share Folder… creates shared folders and where Add Shared Folder… starts (`iCloud Drive › Nilla Shared` otherwise; a scratch data dir uses `<data dir>/Nilla Shared`), `docs/shared-folders.md` |

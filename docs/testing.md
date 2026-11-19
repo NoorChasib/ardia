@@ -98,7 +98,8 @@ METRO_PORT=8081 node packages/ardiacore/scripts/acceptance.mjs apps/browser/buil
 ```
 
 The app (bundle id `com.nilladigital.nilla`, Apple Development signing with the hardened runtime in
-Debug; `scripts/release.sh` signs releases with Developer ID). A Debug build refuses to start without
+Debug; `scripts/release.sh` signs releases with Developer ID). In Layer 1 a build signed with a team refuses to start
+(`docs/agent-brief.md`), so leave `NILLA_TEAM_ID` empty or build with `AdHoc.xcconfig`. A Debug build refuses to start without
 `ARDIA_DATA_DIR` (it never falls back to a real profile). A test run hands it its Metro in `ARDIA_INSTANCE` `jsLocation`
 (that launch's argument domain, never written); never `defaults write com.nilladigital.nilla`, the installed app's. Its build stages a copy of the engine framework
 (`packages/ardiacore/scripts/stage-framework.sh`, under the chromium lock, into `ARDIACORE_STAGE_DIR`), links that, and
