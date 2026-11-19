@@ -190,7 +190,7 @@ async function deckStep({ kind, argument }: DeckStep) {
       }
       return;
     default:
-      console.log(`ardia-launch deck step ${kind} is unknown; skipped`);
+      console.log(`nilla-launch deck step ${kind} is unknown; skipped`);
   }
 }
 
