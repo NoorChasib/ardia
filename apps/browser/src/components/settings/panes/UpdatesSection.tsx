@@ -12,7 +12,7 @@ import { useResource } from "../../../state/settings/resources";
 import { UI_LOCALE } from "../../../lib/uiLocale";
 import { Group, Row, SectionHeader } from "../Form";
 import { setting } from "../settingsIndex";
-import { BASED_ON_NILLA, LEGAL_NOTICE, sourceLinks } from "../../../state/app/legalNotice";
+import { FORK_CREDIT, LEGAL_NOTICE, sourceLinks } from "../../../state/app/legalNotice";
 
 const APP = "Nilla";
 
@@ -95,7 +95,7 @@ function VersionDetails({ status }: { status: string | null }) {
         </Text>
       ) : null}
       <Text size="caption" tone="textSecondary" style={DETAIL()}>
-        {`${LEGAL_NOTICE} ${BASED_ON_NILLA}`}
+        {`${LEGAL_NOTICE} ${FORK_CREDIT}`}
       </Text>
       <View style={LINKS}>
         <Button variant="text" look="link" pad="none" title="Source code" onPress={() => openUrls([sourceLinks().source])} />

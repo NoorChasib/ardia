@@ -2,7 +2,9 @@ import { appServices } from "../../platform/launchConfig";
 
 export const LEGAL_NOTICE = "Nilla is free software under the GNU General Public License v3, with ABSOLUTELY NO WARRANTY.";
 
-export const BASED_ON_NILLA = "Based on Ardia, © 2026 Mantra Patel.";
+export const FORK_CREDIT = "Based on Ardia, © 2026 Mantra Patel.";
+
+export const BASED_ON_NILLA = FORK_CREDIT;
 
 const SOURCE_REF = "main";
 
