@@ -118,7 +118,8 @@ function audit(modules = REQUIRED) {
 }
 
 test("every shared native method resolves to a callable on Linux and reaches a Linux adapter, an advertised or routed native method, or the explicit allow-to-reject list", () => {
-  assert.deepEqual(REQUIRED.filter(({ module }) => hostModuleName(module) === "ArdiaShell").map(({ module }) => module).sort(), ["ArdiaAppWindows", "ArdiaDialogs", "ArdiaFocus", "ArdiaMenus", "ArdiaShell"]);
+  assert.deepEqual(REQUIRED.filter(({ module }) => !/^Nilla[A-Z]/.test(module)).map(({ module }) => module), []);
+  assert.deepEqual(REQUIRED.filter(({ module }) => hostModuleName(module) === "ArdiaShell").map(({ module }) => module).sort(), ["NillaAppWindows", "NillaDialogs", "NillaFocus", "NillaMenus", "NillaShell"]);
   assert.deepEqual(audit(), { missing: [], unchecked: [] });
 });
 
@@ -128,14 +129,14 @@ test("a Linux fallback only stands in for a native shell method the host doesn't
 });
 
 test("a method added to a shared module type without a Linux path fails the audit", () => {
-  const app = REQUIRED.find(({ module }) => module === "ArdiaApp");
-  const shell = REQUIRED.find(({ module }) => module === "ArdiaShell");
-  assert.deepEqual(audit([{ module: "ArdiaApp", methods: [...app.methods, "bogusAppMethod"] }, { module: "ArdiaShell", methods: [...shell.methods, "bogusShellMethod"] }]).unchecked, ["ArdiaApp.bogusAppMethod", "ArdiaShell.bogusShellMethod"]);
+  const app = REQUIRED.find(({ module }) => module === "NillaApp");
+  const shell = REQUIRED.find(({ module }) => module === "NillaShell");
+  assert.deepEqual(audit([{ module: "NillaApp", methods: [...app.methods, "bogusAppMethod"] }, { module: "NillaShell", methods: [...shell.methods, "bogusShellMethod"] }]).unchecked, ["NillaApp.bogusAppMethod", "NillaShell.bogusShellMethod"]);
 });
 
 test("the allow-to-reject list names only methods that still reach the native host unadvertised", () => {
   const host = linuxHost();
-  const declared = new Set(REQUIRED.flatMap(({ module, methods }) => methods.map((method) => `${module}.${method}`)));
+  const declared = new Set(REQUIRED.flatMap(({ module, methods }) => methods.map((method) => `${hostModuleName(module, method)}.${method}`)));
   const stale = [...ALLOWED_TO_REJECT].filter((name) => {
     const [module, method] = name.split(".");
     return !declared.has(name) || !reachesNativeHostUnchecked(resolveHostModule(host, module, method)) || advertised.includes(name) || routedNatively.has(name);

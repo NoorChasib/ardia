@@ -2,6 +2,7 @@ import type { LaunchConfig } from "../../../packages/shell/src/app";
 import type { HydrateData } from "../../browser/src/state/browser/store";
 import type { BrowserWindow, Tab } from "../../browser/src/state/browser/types";
 import type { UnclaimedTab } from "./unclaimedTabs.ts";
+import { engineCallName } from "./engineModuleNames.ts";
 import { gatedError, gateHost, isGatedForAnyHost } from "./layer1Gate.ts";
 
 export type HostListener = (module: string, event: string, payload: unknown) => void;
@@ -44,13 +45,15 @@ export function hostProfile(profile: string | undefined, host: ArdiaHost = nilla
   return profile || host.bootstrap.profileId;
 }
 
-export function invokeHost<T = unknown>(method: string, args: Record<string, unknown>, host: ArdiaHost = nillaHost!): Promise<T> {
+export function invokeHost<T = unknown>(appMethod: string, args: Record<string, unknown>, host: ArdiaHost = nillaHost!): Promise<T> {
+  const method = engineCallName(appMethod);
   if (!host) return Promise.reject(new Error(`Nilla host unavailable: ${method}`));
   if (isGatedForAnyHost(method)) return Promise.reject(gatedError(method));
   return Promise.resolve().then(() => host.invoke(method, args)) as Promise<T>;
 }
 
-export function hostSupports(method: string, host: ArdiaHost = nillaHost!) {
+export function hostSupports(appMethod: string, host: ArdiaHost = nillaHost!) {
+  const method = engineCallName(appMethod);
   return !isGatedForAnyHost(method) && !!host?.bootstrap.capabilities?.includes(method);
 }
 
@@ -59,11 +62,12 @@ export type HostInputRegions = { pages: HostRect[]; overlays: HostRect[] };
 export const INPUT_REGIONS_METHOD = "shell.inputRegions";
 
 export function hostModuleMethod(module: string, method: string, host: ArdiaHost = nillaHost!) {
-  const name = `${module}.${method}`;
+  const name = engineCallName(`${module}.${method}`);
   return (...args: unknown[]) => (isGatedForAnyHost(name) ? Promise.reject(gatedError(name)) : invokeHost(name, { args }, host));
 }
 
-export function callHost(name: string, profile: string, args: string | null, host: ArdiaHost = nillaHost!) {
+export function callHost(appName: string, profile: string, args: string | null, host: ArdiaHost = nillaHost!) {
+  const name = engineCallName(appName);
   if (!host) return Promise.reject(new Error(`Nilla host unavailable: ${name}`));
   if (isGatedForAnyHost(name)) return Promise.reject(gatedError(name));
   if (typeof profile !== "string") return Promise.reject(Object.assign(new Error("Profile must be a string"), { code: "ERR_ENGINE" }));

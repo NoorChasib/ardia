@@ -8,13 +8,16 @@ import { runInNewContext } from "node:vm";
 const bootstrap = readFileSync(new URL("../../../engine/ardiacore-linux/src/ardia/linux/bootstrap.js", import.meta.url), "utf8");
 const hostModules = new URL("./hostModules.ts", import.meta.url).href;
 const hostEvents = new URL("./hostEvents.ts", import.meta.url).href;
+const engineModuleNames = new URL("./engineModuleNames.ts", import.meta.url).href;
 
 const nativeShim = `data:text/javascript,${encodeURIComponent(`
 import { resolveHostModule } from ${JSON.stringify(hostModules)};
 import { createNativeEvents } from ${JSON.stringify(hostEvents)};
+import { engineModuleName } from ${JSON.stringify(engineModuleNames)};
 const events = createNativeEvents();
 globalThis.__promptsHost.onEvent((module, event, payload) => events.emit(module, event, payload));
-export function requireNativeModule(name) {
+export function requireNativeModule(appName) {
+  const name = engineModuleName(appName);
   return new Proxy({}, { get(_target, key) {
     if (key === "addListener") return (event, listener) => events.add(name, event, listener);
     return resolveHostModule(globalThis.__promptsHost, name, key);

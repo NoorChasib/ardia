@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
+import { engineModuleName } from "./engineModuleNames.ts";
 import { resolveHostModule } from "./hostModules.ts";
 import { CREDENTIAL_CAPABILITIES, autofillStatus, credentialNotice, credentialNoticeTitle, credentialStorage, passwordStatus } from "./hostCredentials.ts";
 import { randomBytes } from "node:crypto";
@@ -89,8 +90,8 @@ context.top = context;
 runInNewContext(bootstrap, context);
 const host = context.__ardiaHost;
 
-const moduleFor = (name) => new Proxy({}, { get: (_target, key) => (typeof key === "string" ? resolveHostModule(host, name, key) : undefined) });
-globalThis.acTestNativeModules = { ArdiaPasswords: moduleFor("ArdiaPasswords"), ArdiaAutofill: moduleFor("ArdiaAutofill") };
+const moduleFor = (name) => new Proxy({}, { get: (_target, key) => (typeof key === "string" ? resolveHostModule(host, engineModuleName(name), key) : undefined) });
+globalThis.acTestNativeModules = { NillaPasswords: moduleFor("NillaPasswords"), NillaAutofill: moduleFor("NillaAutofill") };
 const originalConsole = { log: console.log, warn: console.warn, error: console.error };
 Object.assign(console, { log: capture, warn: capture, error: capture });
 const passwords = await import("../../browser/src/platform/passwords.ts");

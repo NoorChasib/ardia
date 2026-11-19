@@ -322,7 +322,7 @@ const APP_SIDE_OBJC_CLASS =
   /@(?:interface|implementation|protocol)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*\b(?!\s*[(;])|(?<!@)\b(?:class|struct|enum|protocol|actor|typealias)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*|@objc\(\s*(?:AC[A-Z]|ArdiaCore[A-Z])\w*\s*\)/g;
 const IMPORT_SPEC =
   /\b(?:import|export)\b[^;"'`]*?\bfrom\s*(["'])([^"'\n]+)\1|\bimport\s*(?:\(\s*)?(["'])([^"'\n]+)\3|\brequire\s*\(\s*(["'])([^"'\n]+)\5/g;
-const NATIVE_PACKAGE = /^(?:@nilla\/(?:ardiacore|shell|shaders|import|sync)(?:\/.*)?|expo-modules-core)$/;
+const NATIVE_PACKAGE = /^(?:@ardia\/ardiacore(?:\/.*)?|@nilla\/(?:shell|shaders|import|sync)(?:\/.*)?|expo-modules-core)$/;
 const NATIVE_GLOBAL = /\bNativeModules\b(?!\s*[,}])|\brequireNative(?:Module|Component|ViewManager)\s*\(/g;
 const COMPONENT_FILE = /^[A-Z][A-Za-z0-9]*(?:\.(?:web|native|macos|ios|windows|linux))?\.tsx$/;
 const MODULE_FILE = /^[a-z][A-Za-z0-9]*(?:\.(?:web|native|macos|ios|windows|linux))?\.(?:ts|mjs)$/;
@@ -620,6 +620,14 @@ if (process.argv.includes("--write-baseline")) {
   test("a forward declaration of the engine's ArdiaCore classes isn't an app-side class", () => {
     assert.deepEqual(violationsOf("packages/hello/ios/HelloWindow.h", "@class ArdiaCoreTab;\n"), {});
     assert.deepEqual(violationsOf("packages/hello/ios/HelloWindow.h", "@interface ArdiaCoreHello : NSObject\n@end\n"), { naming: 1 });
+  });
+  test("a component importing a native package is reported, the engine package and subpaths included", () => {
+    const imports = (spec) => violationsOf("apps/browser/src/components/hello/Hello.tsx", `import { thing } from "${spec}";\n`);
+    for (const spec of ["@ardia/ardiacore", "@ardia/ardiacore/sub", "@nilla/shell", "@nilla/shell/sub", "@nilla/sync", "@nilla/shaders", "@nilla/import", "expo-modules-core"]) {
+      assert.deepEqual(imports(spec), { "native-calls": 1 }, spec);
+    }
+    for (const spec of ["@nilla/core", "@nilla/ardiacore", "@ardia/shell"]) assert.deepEqual(imports(spec), {}, spec);
+    assert.deepEqual(violationsOf("apps/browser/src/platform/hello.ts", 'import { thing } from "@nilla/shell/sub";\n'), {});
   });
   test("components neither write a store nor subscribe to the workspace store directly", () => {
     const component = (body) => violationsOf("apps/browser/src/components/hello/Hello.tsx", `${body}\n`);

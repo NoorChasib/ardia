@@ -66,8 +66,8 @@ test("one click on Close shows one confirmation through Linux's own close coordi
     barrier,
     cancelled: barrier.cancelled,
   });
-  const previous = stub.shellNativeModules.ArdiaAppWindows.closeWindow;
-  stub.shellNativeModules.ArdiaAppWindows.closeWindow = (id) => coordinator.closeWindow(id);
+  const previous = stub.shellNativeModules.NillaAppWindows.closeWindow;
+  stub.shellNativeModules.NillaAppWindows.closeWindow = (id) => coordinator.closeWindow(id);
   const until = async (done) => { for (let i = 0; i < 50 && !done(); i++) await settle(); };
   try {
     const { closeFromWindowControls } = await import("./captionControls.ts");
@@ -83,7 +83,7 @@ test("one click on Close shows one confirmation through Linux's own close coordi
     assert.deepEqual(asked, ["Close 2 tabs?", "Close 2 tabs?"], "one confirmation per click");
     assert.equal(drained.length, 1);
   } finally {
-    stub.shellNativeModules.ArdiaAppWindows.closeWindow = previous;
+    stub.shellNativeModules.NillaAppWindows.closeWindow = previous;
   }
 });
 

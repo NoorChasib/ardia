@@ -5,8 +5,8 @@ import { createHostDialogs } from "./hostDialogs.ts";
 const { shellNativeModules } = await import("../../browser/src/test-native/shell.ts");
 let current;
 globalThis.acTestNativeModules = {
-  ArdiaDialogs: {
-    ...shellNativeModules.ArdiaDialogs,
+  NillaDialogs: {
+    ...shellNativeModules.NillaDialogs,
     confirm: (options) => current.confirm(options),
     prompt: (options) => current.prompt(options),
   },

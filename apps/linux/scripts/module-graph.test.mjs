@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
-import { build } from "vite";
+import { build, resolveConfig } from "vite";
 import { inputAdapters, rawBookmarkAdapter } from "../inputAdapters.ts";
 
 const nodeBinary = process.versions.bun ? "node" : process.execPath;
@@ -302,3 +303,23 @@ test("Linux shell exports and shared package Expo dialogs use one adapter", () =
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /share the production adapter/);
 });
+
+const shimmedPackages = [
+  ["@ardia/ardiacore", "ardiacore.tsx"],
+  ["@nilla/shell", "shell.tsx"],
+  ["@nilla/sync", "sync.tsx"],
+  ["@nilla/shaders", "shaders.tsx"],
+  ["@nilla/import", "import.tsx"],
+];
+
+for (const [app, appRoot] of [["Linux", root], ["demo", `${repo}packages/demo/`]]) {
+  test(`${app} resolves the engine package and the renamed native packages to its shims, and @nilla/core to the workspace package`, { timeout: 60000 }, async () => {
+    const config = await resolveConfig({ root: appRoot, configFile: `${appRoot}vite.config.ts`, logLevel: "error" }, "build");
+    const resolve = config.createResolver();
+    const importer = `${browser}platform/nativeApi.ts`;
+    for (const [spec, shim] of shimmedPackages) assert.equal(await resolve(spec, importer), `${appRoot}src/shims/${shim}`, spec);
+    for (const spec of ["@ardia/shell", "@nilla/ardiacore", "@ardia/sync"]) assert.ok(!(await resolve(spec, importer))?.startsWith(`${appRoot}src/shims/`), spec);
+    const core = await resolve("@nilla/core", importer);
+    assert.ok(core && realpathSync(core) === `${repo}packages/core/src/index.ts`, core);
+  });
+}

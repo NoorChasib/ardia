@@ -1,3 +1,4 @@
+import { engineCallName } from "./engineModuleNames.ts";
 import type { ArdiaHost } from "./host.ts";
 
 export const GATED_METHODS: ReadonlySet<string> = new Set([
@@ -14,11 +15,14 @@ export const GATED_METHODS: ReadonlySet<string> = new Set([
 
 export const GATED_MODULES: readonly string[] = ["ArdiaSync", "ArdiaLive"];
 
-export const isGated = (name: string) => GATED_METHODS.has(name) || GATED_MODULES.some((module) => name.startsWith(`${module}.`));
+export const isGated = (appName: string) => {
+  const name = engineCallName(appName);
+  return GATED_METHODS.has(name) || GATED_MODULES.some((module) => name.startsWith(`${module}.`));
+};
 
 export const ENGINE_DRIVEN_MODULES: readonly string[] = ["ArdiaLive"];
 
-export const isGatedForAnyHost = (name: string) => isGated(name) && !ENGINE_DRIVEN_MODULES.some((module) => name.startsWith(`${module}.`));
+export const isGatedForAnyHost = (name: string) => isGated(name) && !ENGINE_DRIVEN_MODULES.some((module) => engineCallName(name).startsWith(`${module}.`));
 
 export const gatedError = (name: string) => Object.assign(new Error(`${name} is off in this build of Nilla`), { code: "ERR_UNSUPPORTED" });
 
@@ -46,8 +50,8 @@ export function gateHost<T extends ArdiaHost | undefined>(host: T): T {
   const gated = new Proxy({} as ArdiaHost, {
     get(_target, key) {
       if (key === "bootstrap") return bootstrap;
-      if (key === "invoke") return (method: string, args: Record<string, unknown>) => (isGated(method) ? Promise.reject(gatedError(method)) : source.invoke(method, args));
-      if (key === "call") return (name: string, profile: string, args: string | null) => (isGated(name) ? Promise.reject(gatedError(name)) : source.call(name, profile, args));
+      if (key === "invoke") return (method: string, args: Record<string, unknown>) => (isGated(method) ? Promise.reject(gatedError(method)) : source.invoke(engineCallName(method), args));
+      if (key === "call") return (name: string, profile: string, args: string | null) => (isGated(name) ? Promise.reject(gatedError(name)) : source.call(engineCallName(name), profile, args));
       const value = Reflect.get(source, key);
       return typeof value === "function" ? value.bind(source) : value;
     },

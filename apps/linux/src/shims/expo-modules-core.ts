@@ -3,6 +3,7 @@ import { View } from "react-native-web";
 import { noteMissing } from "./missing";
 import { nillaHost, hostSupports } from "../host";
 import { createNativeEvents } from "../hostEvents";
+import { engineModuleName } from "../engineModuleNames";
 import { resolveHostModule } from "../hostModules";
 import { sidebarEdgeEvent } from "../shellMethods";
 import { sidebarEdgeReported } from "../sidebarRevealBand";
@@ -68,7 +69,8 @@ const SHELL_PARTS = ["ArdiaAppWindows", "ArdiaFocus", "ArdiaMenus", "ArdiaDialog
 const APP_PARTS = ["ArdiaUpdater", "ArdiaNotifications", "ArdiaScripting", "ArdiaDev"];
 const SHELL_DOCUMENT_METHODS = ["readDocument", "writeDocument", "saveDocument", "documentSaved", "removeDocument", "refreshDocument", "deleteDocument"];
 
-export function hostModuleName(name: string, method?: string): string {
+export function hostModuleName(appName: string, method?: string): string {
+  const name = engineModuleName(appName);
   if (SHELL_PARTS.includes(name)) return "ArdiaShell";
   if (APP_PARTS.includes(name)) return "ArdiaApp";
   if (name === "ArdiaDocuments" && method !== undefined && SHELL_DOCUMENT_METHODS.includes(method)) return "ArdiaShell";
