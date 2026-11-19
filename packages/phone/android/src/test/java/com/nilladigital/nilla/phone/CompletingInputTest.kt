@@ -80,9 +80,9 @@ class CompletingInputTest {
     @Test
     fun settingTheTextReplacesItWithOptionalSelectAll() {
         type("goo")
-        val set = input.reset("ardia.dev", selectsAll = true)
+        val set = input.reset("swift.org", selectsAll = true)
         assertEquals(0, set.selectionStart)
         assertEquals(9, set.selectionEnd)
-        assertEquals("ardia.dev", input.typed)
+        assertEquals("swift.org", input.typed)
     }
 }

@@ -97,7 +97,7 @@ class SyncWordsTest {
         assertEquals(phrase, SyncJoin.phraseFromCode("  $phrase\n"))
         val kit = words.withIndex().joinToString("\n") { "${it.index + 1}. ${it.value.uppercase()}" }
         assertEquals(kit, SyncJoin.phraseFromCode(kit))
-        assertNull(SyncJoin.phraseFromCode("https://ardia.dev/"))
+        assertNull(SyncJoin.phraseFromCode("https://example.com/"))
         assertNull(SyncJoin.phraseFromCode(words.dropLast(1).joinToString(" ")))
         assertNull(SyncJoin.phraseFromCode(""))
         val swapped = words.toMutableList().apply { add(0, removeAt(1)) }

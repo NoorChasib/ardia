@@ -150,7 +150,7 @@ async function findApp() {
 }
 
 function ours(text) {
-  return /nilla|netnyahoo/i.test(text ?? "");
+  return /nilla/i.test(text ?? "");
 }
 
 async function listBuilds(appId, build) {

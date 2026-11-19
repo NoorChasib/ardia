@@ -2,7 +2,7 @@ import { labLog, CompletingField, completingFieldIsNative, type CompletingFieldH
 import { useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-const CANDIDATES = ["google.com", "github.com", "gmail.com", "wikipedia.org", "ardia.dev", "news.ycombinator.com"];
+const CANDIDATES = ["google.com", "github.com", "gmail.com", "wikipedia.org", "swift.org", "news.ycombinator.com"];
 
 const offerFor = (typed: string): CompletionOffer | null => {
   if (!typed) return null;
@@ -64,7 +64,7 @@ export function CompletionLab({ note }: { note: (line: string) => void }) {
       <View style={styles.row}>
         <Button label="Focus" onPress={() => field.current?.focus()} />
         <Button label="Blur" onPress={() => field.current?.blur()} />
-        <Button label="Set ardia.dev" onPress={() => field.current?.setText("ardia.dev", true)} />
+        <Button label="Set swift.org" onPress={() => field.current?.setText("swift.org", true)} />
         <Button label="Clear" onPress={() => field.current?.setText("", false)} />
       </View>
     </View>
