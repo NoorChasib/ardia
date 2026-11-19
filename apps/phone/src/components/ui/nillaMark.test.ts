@@ -63,6 +63,6 @@ for (const [platform, source] of Object.entries(twins) as [keyof typeof PLATFORM
     for (const ink of [NILLA_MARK_INK.sun, NILLA_MARK_INK.backHill, NILLA_MARK_INK.frontHill]) assert.ok(source.includes(`0x${ink.slice(1)}`), `${ink} in ${platform}`);
     assert.ok(source.includes(platform === "swift" ? "CGRect(x: 100, y: 260, width: 824, height: 664)" : "Rect(100f, 260f, 924f, 924f)"), `canvas in ${platform}`);
     assert.ok(source.includes(platform === "swift" ? "CGRect(x: 222, y: 260, width: 224, height: 224)" : "Rect(222f, 260f, 446f, 484f)"), `sun in ${platform}`);
-    assert.ok(!/0xFFCB45|0x17604B|432, y: 192|432f, 192f/.test(source), `no Ardia mark left in ${platform}`);
+    assert.ok(!/0xFFCB45|0x17604B|432, y: 192|432f, 192f/.test(source), `no earlier mark left in ${platform}`);
   });
 }
