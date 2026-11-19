@@ -2,6 +2,9 @@ import Foundation
 
 public enum UpstreamSyncFolder {
   public static let name = "Ardia Sync"
+  public static let sharedName = "Ardia Shared"
+  public static let sharedRefusal = "That folder is in Ardia's Shared folder. Nilla keeps its shared folders apart from Ardia's, so choose another folder."
+  public static let sharedRefusedCode = "ERR_UPSTREAM_SHARED_FOLDER"
   public static let refusal = "That folder is Ardia's Sync folder. Nilla keeps its sync data apart from Ardia's, so choose another folder."
   public static let unresolved = "Nilla couldn't tell where that folder leads, so it won't use it for sync. Choose another folder."
   public static let refusedCode = "ERR_UPSTREAM_SYNC_FOLDER"
@@ -18,18 +21,43 @@ public enum UpstreamSyncFolder {
   }
 
   public static func namesUpstream(_ component: String) -> Bool {
+    names(component, [name])
+  }
+
+  static func names(_ component: String, _ upstream: [String]) -> Bool {
     var folded = component.precomposedStringWithCanonicalMapping.trimmingCharacters(in: .whitespacesAndNewlines)
     while let last = folded.last, last == "." || last == " " { folded.removeLast() }
-    return folded.compare(name, options: [.caseInsensitive], range: nil, locale: nil) == .orderedSame
+    return upstream.contains { folded.compare($0, options: [.caseInsensitive], range: nil, locale: nil) == .orderedSame }
   }
 
   public static func check(_ path: String, cwd: String = FileManager.default.currentDirectoryPath) -> Verdict {
+    check(path, cwd: cwd, upstream: [name])
+  }
+
+  public static func checkShared(_ path: String, cwd: String = FileManager.default.currentDirectoryPath) -> Verdict {
+    check(path, cwd: cwd, upstream: [sharedName, name])
+  }
+
+  public static let sharedUnresolved = "Nilla couldn't tell where that folder leads, so it won't share it. Choose another folder."
+
+  public static func sharedRefusalMessage(_ path: String) -> String {
+    checkShared(path) == .unresolved ? sharedUnresolved : sharedRefusal
+  }
+
+  public static func ownShared(_ path: String) throws -> URL {
+    let verdict = checkShared(path)
+    guard case .own(let url) = verdict else { throw Refused(verdict: verdict) }
+    return url
+  }
+
+  static func check(_ path: String, cwd: String, upstream: [String]) -> Verdict {
     guard !path.isEmpty, !path.contains("\0") else { return .unresolved }
     let absolute = path.hasPrefix("/") ? path : (cwd as NSString).appendingPathComponent(path)
     let given = (absolute as NSString).pathComponents
-    if given.contains(where: namesUpstream) { return .upstream }
+    let named = { (component: String) in names(component, upstream) }
+    if given.contains(where: named) { return .upstream }
     guard let resolved = resolve(given) else { return .unresolved }
-    if resolved.contains(where: namesUpstream) { return .upstream }
+    if resolved.contains(where: named) { return .upstream }
     return .own(URL(fileURLWithPath: NSString.path(withComponents: resolved), isDirectory: true))
   }
 

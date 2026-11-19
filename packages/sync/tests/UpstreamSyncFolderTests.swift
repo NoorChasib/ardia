@@ -105,6 +105,30 @@ final class UpstreamSyncFolderTests: XCTestCase {
     XCTAssertThrowsError(try UpstreamSyncFolder.readEntry(scope.appendingPathComponent("\(linked).\(SyncVault.fileExtension)")))
   }
 
+  func testSharedFoldersStayOutOfArdiasSharedAndSyncFolders() throws {
+    let shared = root.appendingPathComponent("iCloud/\(UpstreamSyncFolder.sharedName)/Team", isDirectory: true)
+    try fileManager.createDirectory(at: shared, withIntermediateDirectories: true)
+    let alias = try link("Team alias", to: shared)
+    func sharedVerdict(_ path: String) -> String {
+      switch UpstreamSyncFolder.checkShared(path) {
+      case .own: return "own"
+      case .upstream: return "upstream"
+      case .unresolved: return "unresolved"
+      }
+    }
+    XCTAssertEqual(sharedVerdict(shared.path), "upstream")
+    XCTAssertEqual(sharedVerdict(shared.deletingLastPathComponent().path.lowercased()), "upstream")
+    XCTAssertEqual(sharedVerdict(alias.path), "upstream")
+    XCTAssertEqual(sharedVerdict(alias.appendingPathComponent("New").path), "upstream")
+    XCTAssertEqual(sharedVerdict(upstream.path), "upstream")
+    XCTAssertEqual(sharedVerdict(own.path + "/missing/../../\(UpstreamSyncFolder.sharedName)"), "upstream")
+    XCTAssertEqual(sharedVerdict(own.path + "/missing/../../Team alias"), "unresolved")
+    XCTAssertEqual(sharedVerdict(root.appendingPathComponent("iCloud/Nilla Shared/Team").path), "own")
+    XCTAssertThrowsError(try UpstreamSyncFolder.ownShared(alias.path))
+    XCTAssertEqual(UpstreamSyncFolder.sharedRefusalMessage(alias.path), UpstreamSyncFolder.sharedRefusal)
+    XCTAssertEqual(verdict(shared.path), "own")
+  }
+
   func testAVaultWithAChainLinkedIntoTheUpstreamFolderNeverTouchesIt() throws {
     let keys = SyncKeys(entropy: Data(count: 32))
     let vault = SyncVault(folder: own, keys: keys)
