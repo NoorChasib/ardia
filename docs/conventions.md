@@ -255,6 +255,28 @@ writeDocument(DOC, versionedJson(data, VERSION));
   checks every match in `git grep`, and that the credits stay: `NOTICE`'s upstream block, the README's
   Acknowledgements, the About notice, the phone's licences row and the Raycast extension's contributors.
 
+### Names that stay Ardia until Layer 2
+
+Today's prebuilt engines read, write or draw these names, so they keep their spelling until Nilla's own engines exist
+(AGENTS.md has the longer list; the allowlist is the exact one):
+- the engine itself: `engine/`, `scripts/windows/engine/`, the offline game, `docs/brand/ardia/`;
+- the `ArdiaCore` interface: `packages/ardiacore`, `@ardia/ardiacore`, `ac_*`, `AC*` classes and Info.plist keys,
+  `ARDIACORE_*`;
+- every `ARDIA_*` variable and `--ardia-*` switch;
+- files the engine meets the app at: `ArdiaControl.json`, `ArdiaControl.sock`, "Ardia Tab History",
+  `ArdiaPictureInPicture.plist`;
+- page globals, events and hooks: `__ardiaHost`, `__ardia*`, `ardiaOffscreen`, `ardia-reveal`, `ardia-pip-*`,
+  `ardia.window.small`, `ArdiaGlass`;
+- routes and schemes: `ardia://`, `/ardia-oauth`, `chrome://ardia/`, `ardia-ui-dir`;
+- Linux: the wire names (`Ardia<Module>.<method>`), `APP_NAME = "Ardia"` in `apps/linux/src/importUnlock.ts` (the
+  keyring app id the engine registers), `Package: ardia`, `bin/ardia`, `lib/ardia/`, `ardia.desktop`,
+  `dev.ardia.linux`;
+- Windows: `ArdiaApp.dll`, the `ArdiaApp*` exports, `Ardia.test-build`, the folder `apps/browser/windows/Ardia` and
+  `Ardia.ico`;
+- the `X-Ardia-Key` header and the CLI tarball layout (`ardia-cli-<v>/`, `bin/ardia`);
+- text the engine draws: chrome://credits, the Chrome Web Store's "Add to Ardia" button and the engine's own error
+  messages ("Ardia couldn't take that tab off-screen.", the `ardia: ` prefix).
+
 ## Translation layer (JS ↔ Expo modules ↔ ArdiaCore ↔ `ac_*`)
 
 - **One way to call the engine:** `engine.call("downloads.pause", args)`, typed from one table
