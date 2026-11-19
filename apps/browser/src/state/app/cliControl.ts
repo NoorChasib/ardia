@@ -136,6 +136,8 @@ export function noteSocketServing(serving: boolean) {
   updateIndicator(useCli.getState());
 }
 
+export const cliInstallerAvailable = () => canInstallCliUnattended();
+
 let running: Promise<CliInstallResult> | null = null;
 
 export function installCliInBackground(reason: CliInstallReason): Promise<CliInstallResult> {
