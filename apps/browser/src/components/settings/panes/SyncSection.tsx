@@ -109,7 +109,7 @@ function SyncOff({ info }: { info: FolderInfo | null }) {
           icon={<SyncIcon on={false} />}
           anchor="general.sync"
           description={
-            status === "reset" && error
+            (status === "reset" || status === "off") && error
               ? error
               : hasData
                 ? "This folder has synced data already. To sync with your other devices, enter the recovery phrase from one of them."

@@ -1,5 +1,6 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
 import type { FolderInfo, SealedLogin } from "@ardia/sync";
+import { ownSyncFoldersOnly } from "@ardia/sync/src/upstreamSyncFolder.ts";
 import { originalProfile } from "../engine/domains/calling";
 import type { DialogsModule, SystemModule, WindowsHostModule, WindowsSyncModule } from "../nativeModuleTypes";
 import { base32 } from "./base32";
@@ -10,7 +11,7 @@ import { syncVault, type FileCounts, type SyncContract } from "./vault";
 
 export const NATIVE_SYNC = "ArdiaWindowsSync";
 
-const FOLDER_NAME = "Ardia Sync";
+const FOLDER_NAME = "Nilla Sync";
 const QR_SCALE = 8;
 const QR_BORDER = 1;
 
@@ -49,7 +50,7 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
 
   const kitBytes = (words: string[], format: "pdf" | "text") => (format === "text" ? utf8(kitText(words, new Date(), deviceName)) : kitPdf(words, new Date(), deviceName));
 
-  return {
+  return ownSyncFoldersOnly({
     async folderInfo(path: string | null): Promise<FolderInfo> {
       const chosen = path ?? defaultFolder;
       const state = await native.folderState(chosen);
@@ -114,5 +115,5 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
       counts.busy = 0;
       return taken;
     },
-  };
+  });
 }

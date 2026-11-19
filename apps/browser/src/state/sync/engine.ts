@@ -1,13 +1,4 @@
-import {
-  emptyScope,
-  EXTENSION_PREFIX,
-  folderTransport,
-  syncScope,
-  SyncNative,
-  visible,
-  type FolderInfo,
-  type PhraseResult,
-} from "../../platform/sync";
+import { emptyScope, EXTENSION_PREFIX, folderTransport, isUpstreamSyncFolder, syncScope, SyncNative, UpstreamSyncFolderError, visible, type FolderInfo, type PhraseResult } from "../../platform/sync";
 import { create } from "zustand";
 import { useBrowser } from "../browser/store";
 import { engineProfile } from "../browser/model";
@@ -74,7 +65,8 @@ export function takeSnapshotWrites() {
 
 function load() {
   const loaded = read();
-  if (loaded) doc = loaded;
+  if (!loaded) return;
+  doc = loaded.folder && isUpstreamSyncFolder(loaded.folder) ? { ...emptyDoc(), types: loaded.types } : loaded;
 }
 
 function publishUi(patch: Partial<SyncUi> = {}) {
@@ -239,11 +231,18 @@ function setSyncFolder(path: string) {
   if (doc.enabled) return;
   doc.folder = path;
   save();
-  publishUi();
+  publishUi({ error: null });
 }
 
 export async function chooseSyncFolder(): Promise<string | null> {
-  const picked = (await SyncNative?.chooseFolder(doc.folder)) ?? null;
+  let picked: string | null;
+  try {
+    picked = (await SyncNative?.chooseFolder(doc.folder)) ?? null;
+  } catch (error) {
+    if (!(error instanceof UpstreamSyncFolderError)) throw error;
+    publishUi({ error: error.message });
+    return null;
+  }
   if (picked) setSyncFolder(picked);
   return picked;
 }
