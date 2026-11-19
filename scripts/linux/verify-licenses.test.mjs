@@ -44,21 +44,27 @@ const deb = has("dpkg-deb") ? join(scratch, "Nilla.deb") : null;
 const extracted = join(scratch, "extracted");
 mkdirSync(extracted);
 assert.equal(spawnSync("tar", ["-xJf", tarball, "-C", extracted]).status, 0);
-const packageRoot = join(extracted, "ardia");
+const [topFolder, ...others] = readdirSync(extracted);
+assert.deepEqual(others, []);
+const packageRoot = join(extracted, topFolder);
+const desktopFile = readdirSync(join(packageRoot, "share/applications")).find((name) => name.endsWith(".desktop"));
+const desktop = readFileSync(join(packageRoot, "share/applications", desktopFile), "utf8");
+const iconName = /^Icon=(.+)$/m.exec(desktop)[1];
 
 const verify = (...args) => spawnSync("python3", ["-I", verifier, ...args], { encoding: "utf8" });
 
 test("the tarball carries every licence text, byte for byte, in lib/ardia/licenses and share/doc/nilla", () => {
   const result = verify("--tarball", tarball);
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /^ok {3}tarball .*5 licence texts in ardia\/lib\/ardia\/licenses, ardia\/share\/doc\/nilla$/m);
+  assert.ok(result.stdout.startsWith("ok   tarball "), result.stdout);
+  assert.ok(result.stdout.trimEnd().endsWith("5 licence texts in lib/ardia/licenses, share/doc/nilla"), result.stdout);
   for (const folder of ["lib/ardia/licenses", "share/doc/nilla"]) {
     assert.deepEqual(readdirSync(join(packageRoot, folder)).sort(), Object.keys(TEXTS).sort());
     for (const [name, source] of Object.entries(TEXTS)) assert.deepEqual(readFileSync(join(packageRoot, folder, name)), readFileSync(join(repo, source)), `${folder}/${name}`);
   }
 });
 
-test("the .deb carries them under /usr and names Nilla in its metadata while the package stays ardia", { skip: !deb && "dpkg-deb is not installed" }, () => {
+test("the .deb carries them under /usr and names Nilla in its metadata while the package keeps the engine's name", { skip: !deb && "dpkg-deb is not installed" }, () => {
   const result = verify("--deb", deb);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const fields = spawnSync("dpkg-deb", ["-f", deb, "Package", "Maintainer", "Homepage", "Description"], { encoding: "utf8" }).stdout;
@@ -76,7 +82,7 @@ test("install.sh stages the licence texts and every icon size, and an Arch packa
   assert.equal(staged.status, 0, staged.stdout + staged.stderr);
   for (const size of readdirSync(join(repo, "scripts/linux/icons/hicolor"))) {
     const [source] = readdirSync(join(repo, "scripts/linux/icons/hicolor", size, "apps"));
-    const name = `ardia${source.slice(source.lastIndexOf("."))}`;
+    const name = `${iconName}${source.slice(source.lastIndexOf("."))}`;
     assert.deepEqual(readFileSync(join(destdir, "usr/share/icons/hicolor", size, "apps", name)), readFileSync(join(repo, "scripts/linux/icons/hicolor", size, "apps", source)), `${size}/${name}`);
   }
   const pkgdir = join(scratch, "pkg");
@@ -84,11 +90,12 @@ test("install.sh stages the licence texts and every icon size, and an Arch packa
   const script = 'set -euo pipefail; source "$1"; srcdir="$2"; pkgdir="$3"; cd "$srcdir"; package';
   const arch = spawnSync("bash", ["-c", script, "pkgbuild", join(here, "arch/PKGBUILD"), extracted, pkgdir], { encoding: "utf8" });
   assert.equal(arch.status, 0, arch.stdout + arch.stderr);
-  const archive = join(scratch, "ardia-bin-0.1.0-1-x86_64.pkg.tar.xz");
+  const archive = join(scratch, "nilla-test-0.1.0-1-x86_64.pkg.tar.xz");
   assert.equal(spawnSync("tar", ["-cJf", archive, "-C", pkgdir, "usr"]).status, 0);
   const result = verify("--arch", archive);
   assert.equal(result.status, 0, result.stdout + result.stderr);
-  assert.match(result.stdout, /usr\/share\/licenses\/ardia-bin$/m);
+  const pkgname = /^pkgname=(\S+)$/m.exec(readFileSync(join(here, "arch/PKGBUILD"), "utf8"))[1];
+  assert.ok(result.stdout.trimEnd().endsWith(`usr/share/licenses/${pkgname}`), result.stdout);
   assert.match(readFileSync(join(here, "arch/PKGBUILD"), "utf8"), /^license=\('GPL-3\.0-only' 'Apache-2\.0'\)$/m);
 });
 
@@ -117,18 +124,17 @@ test("a changed, missing, extra or wrongly moded text fails, and naming no packa
   spawnSync("chmod", ["0600", join(broken, "share/doc/nilla/LICENSE")]);
   const result = verify("--staged", broken);
   assert.equal(result.status, 1);
-  assert.match(result.stdout, /lib\/ardia\/licenses\/NOTICE differs from NOTICE/);
+  assert.ok(result.stdout.includes("lib/ardia/licenses/NOTICE differs from NOTICE"), result.stdout);
   assert.match(result.stdout, /share\/doc\/nilla\/bangs-LICENSE is missing/);
   assert.match(result.stdout, /share\/doc\/nilla\/README is not one of the licence texts/);
   assert.match(result.stdout, /share\/doc\/nilla\/LICENSE has mode 0o600/);
   assert.equal(verify().status, 2);
 });
 
-test("the package's desktop entry says Nilla while its command, icon and window class keep the engine's ardia names", () => {
-  const desktop = readFileSync(join(packageRoot, "share/applications/ardia.desktop"), "utf8");
+test("the package's desktop entry says Nilla while its command, icon and window class keep the engine's names", () => {
   assert.match(desktop, /^Name=Nilla$/m);
   assert.match(desktop, /^Exec=ardia %U$/m);
   assert.match(desktop, /^Icon=ardia$/m);
   assert.match(desktop, /^StartupWMClass=ardia$/m);
-  assert.deepEqual(readFileSync(join(packageRoot, "share/icons/hicolor/256x256/apps/ardia.png")), readFileSync(join(repo, "scripts/linux/icons/hicolor/256x256/apps/nilla.png")));
+  assert.deepEqual(readFileSync(join(packageRoot, `share/icons/hicolor/256x256/apps/${iconName}.png`)), readFileSync(join(repo, "scripts/linux/icons/hicolor/256x256/apps/nilla.png")));
 });

@@ -2,6 +2,7 @@
 import argparse
 import io
 import pathlib
+import re
 import shutil
 import stat
 import struct
@@ -17,12 +18,15 @@ TEXTS = {
     'bangs-LICENSE': 'third_party/bangs/LICENSE',
     'symbols-THIRD_PARTY_NOTICES.txt': 'apps/linux/src/shims/web/symbols/THIRD_PARTY_NOTICES.txt',
 }
+ARCH_PACKAGE = re.search(r'^pkgname=(\S+)$', (REPO / 'scripts/linux/arch/PKGBUILD').read_text(), re.M)[1]
+RUNTIME_TEXTS = 'lib/ardia/licenses'
+DOC_TEXTS = 'share/doc/nilla'
 FOLDERS = {
-    'tarball': ('ardia/lib/ardia/licenses', 'ardia/share/doc/nilla'),
-    'deb': ('usr/lib/ardia/licenses', 'usr/share/doc/nilla'),
-    'appimage': ('lib/ardia/licenses', 'share/doc/nilla'),
-    'arch': ('usr/lib/ardia/licenses', 'usr/share/doc/nilla', 'usr/share/licenses/ardia-bin'),
-    'staged': ('lib/ardia/licenses', 'share/doc/nilla'),
+    'tarball': (RUNTIME_TEXTS, DOC_TEXTS),
+    'deb': (f'usr/{RUNTIME_TEXTS}', f'usr/{DOC_TEXTS}'),
+    'appimage': (RUNTIME_TEXTS, DOC_TEXTS),
+    'arch': (f'usr/{RUNTIME_TEXTS}', f'usr/{DOC_TEXTS}', f'usr/share/licenses/{ARCH_PACKAGE}'),
+    'staged': (RUNTIME_TEXTS, DOC_TEXTS),
 }
 SQUASHFS_MAGIC = b'hsqs'
 DESCRIPTION = '''Checks that Nilla's Linux packages carry the licence texts byte for byte: LICENSE,
@@ -30,12 +34,12 @@ LICENSE.Apache-2.0, NOTICE, third_party/bangs/LICENSE as bangs-LICENSE and the L
 symbol notices as symbols-THIRD_PARTY_NOTICES.txt, each a regular 0644 file, with nothing
 else beside them.
 
-  tarball   ardia/lib/ardia/licenses and ardia/share/doc/nilla (tarfile)
+  tarball   lib/ardia/licenses and share/doc/nilla under its one top folder (tarfile)
   deb       usr/lib/ardia/licenses and usr/share/doc/nilla (dpkg-deb --fsys-tarfile)
   appimage  lib/ardia/licenses and share/doc/nilla (unsquashfs at the runtime's end;
             nothing in the image runs)
-  arch      usr/lib/ardia/licenses, usr/share/doc/nilla and usr/share/licenses/ardia-bin
-            (a .pkg.tar.zst or .pkg.tar.xz, read with tarfile)
+  arch      usr/lib/ardia/licenses, usr/share/doc/nilla and usr/share/licenses/<pkgname>
+            (pkgname from scripts/linux/arch/PKGBUILD; a .pkg.tar.zst or .pkg.tar.xz, read with tarfile)
   staged    lib/ardia/licenses and share/doc/nilla under an install root
             (install.sh --destdir D --prefix P gives D/P; an Arch pkgdir gives pkgdir/usr)
 
@@ -74,6 +78,13 @@ def read_tar(path):
             return tar_listing(archive)
     except (tarfile.TarError, OSError, EOFError) as error:
         raise Problem(f'{path} is not a readable tar archive: {error}') from None
+
+
+def under_top_folder(found, path):
+    tops = {name.split('/', 1)[0] for name in found}
+    if len(tops) != 1:
+        raise Problem(f'{path} has {len(tops)} top-level entries, not one folder')
+    return {name.split('/', 1)[1]: entry for name, entry in found.items() if '/' in name}
 
 
 def read_deb(path):
@@ -172,6 +183,8 @@ def verify(kind, path, texts):
         found = read_appimage(path, folders)
     elif kind == 'staged':
         found = read_staged(path)
+    elif kind == 'tarball':
+        found = under_top_folder(read_tar(path), path)
     else:
         found = read_tar(path)
     return problems_in(found, folders, texts)
