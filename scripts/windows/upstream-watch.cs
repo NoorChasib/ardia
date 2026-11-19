@@ -114,6 +114,7 @@ namespace NillaWatch {
     TcpListener listener;
     long connections;
     [ThreadStatic] static long connection;
+    [ThreadStatic] static Dictionary<string, object> client;
 
     public int Port { get; private set; }
     public Func<string, int, IPEndPoint> Redirect { get; set; }
@@ -161,6 +162,7 @@ namespace NillaWatch {
     public void Record(Dictionary<string, object> entry) {
       entry["ts"] = Math.Round(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0, 3);
       if (connection > 0 && !entry.ContainsKey("conn")) entry["conn"] = connection;
+      if (client != null) foreach (var pair in client) if (!entry.ContainsKey(pair.Key)) entry[pair.Key] = pair.Value;
       string line = JsonSerializer.Serialize(entry) + "\n";
       lock (logGate) {
         File.AppendAllText(logPath, line, new UTF8Encoding(false));
@@ -255,6 +257,16 @@ namespace NillaWatch {
       return origin;
     }
 
+    static string DialledAddress(TcpClient origin) {
+      try {
+        IPAddress address = ((IPEndPoint)origin.Client.RemoteEndPoint).Address;
+        if (address.IsIPv4MappedToIPv6) address = address.MapToIPv4();
+        return address.ToString();
+      } catch (Exception) {
+        return "";
+      }
+    }
+
     static void Pipe(Stream from, Stream to, ManualResetEvent done) {
       try {
         from.CopyTo(to, 65536);
@@ -295,11 +307,12 @@ namespace NillaWatch {
       }
     }
 
-    void Handle(TcpClient client) {
+    void Handle(TcpClient accepted) {
       connection = Interlocked.Increment(ref connections);
-      using (client) {
-        client.NoDelay = true;
-        NetworkStream stream = client.GetStream();
+      client = Clients.Describe(accepted.Client.RemoteEndPoint as IPEndPoint, Port);
+      using (accepted) {
+        accepted.NoDelay = true;
+        NetworkStream stream = accepted.GetStream();
         Head head = null;
         try {
           head = ReadHead(stream);
@@ -331,6 +344,7 @@ namespace NillaWatch {
       TcpClient origin;
       try {
         origin = Dial(host, uri.Port);
+        entry["origin_address"] = DialledAddress(origin);
       } catch (Exception error) {
         entry["action"] = "origin unreachable: " + error.Message;
         Record(entry);
@@ -371,6 +385,7 @@ namespace NillaWatch {
       TcpClient origin;
       try {
         origin = Dial(host, port);
+        entry["origin_address"] = DialledAddress(origin);
       } catch (Exception error) {
         entry["action"] = "origin unreachable: " + error.Message;
         Record(entry);
@@ -420,6 +435,7 @@ namespace NillaWatch {
         TcpClient origin;
         try {
           origin = Dial(host, port);
+          entry["origin_address"] = DialledAddress(origin);
         } catch (Exception error) {
           entry["action"] = "origin unreachable: " + error.Message;
           Record(entry);
@@ -468,6 +484,111 @@ namespace NillaWatch {
         var name = new StringBuilder(32768);
         int size = name.Capacity;
         return QueryFullProcessImageName(process, 0, name, ref size) ? name.ToString(0, size) : null;
+      } finally {
+        CloseHandle(process);
+      }
+    }
+  }
+
+  public static class Clients {
+    [DllImport("iphlpapi.dll", SetLastError = true)]
+    static extern uint GetExtendedTcpTable(IntPtr table, ref int size, bool sorted, int family, int tableClass, int reserved);
+
+    [DllImport("ntdll.dll")]
+    static extern int NtQueryInformationProcess(IntPtr process, int infoClass, IntPtr info, int length, out int returned);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern IntPtr OpenProcess(int access, bool inherit, int id);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    static extern bool CloseHandle(IntPtr handle);
+
+    const int InterNetwork = 2;
+    const int OwnerPidConnections = 4;
+    const uint InsufficientBuffer = 122;
+    const int CommandLineInformation = 60;
+    const int LengthMismatch = unchecked((int)0xC0000004);
+    const int BufferTooSmall = unchecked((int)0xC0000023);
+    const int QueryLimitedInformation = 0x1000;
+
+    public static Dictionary<string, object> Describe(IPEndPoint peer, int listenerPort) {
+      var described = new Dictionary<string, object> { { "client_pid", 0 }, { "client", "" }, { "client_type", "" }, { "client_service", "" } };
+      try {
+        if (!OperatingSystem.IsWindows()) throw new PlatformNotSupportedException("the client's process can only be read on Windows");
+        if (peer == null) throw new InvalidOperationException("the connection has no peer address");
+        int id = OwnerOf(peer, listenerPort);
+        described["client_pid"] = id;
+        string image = Processes.ImagePath(id);
+        if (image == null) throw new Win32Exception(Marshal.GetLastWin32Error(), "the image path of process " + id + " could not be read");
+        described["client"] = image;
+        string commandLine = CommandLineOf(id);
+        described["client_type"] = Switch(commandLine, "type");
+        described["client_service"] = Switch(commandLine, "utility-sub-type");
+      } catch (Exception error) {
+        described["client_error"] = error.GetType().Name + ": " + error.Message;
+      }
+      return described;
+    }
+
+    public static string Switch(string commandLine, string name) {
+      Match found = Regex.Match(commandLine ?? "", "(?:^|\\s)\"?--" + Regex.Escape(name) + "=([^\\s\"]*)");
+      return found.Success ? found.Groups[1].Value : "";
+    }
+
+    static int Port(int raw) {
+      return ((raw & 0xff) << 8) | ((raw >> 8) & 0xff);
+    }
+
+    static int OwnerOf(IPEndPoint peer, int listenerPort) {
+      IPAddress wanted = peer.Address.IsIPv4MappedToIPv6 ? peer.Address.MapToIPv4() : peer.Address;
+      if (wanted.AddressFamily != AddressFamily.InterNetwork) throw new NotSupportedException("the client " + peer + " is not an IPv4 peer");
+      int size = 0;
+      uint status = GetExtendedTcpTable(IntPtr.Zero, ref size, false, InterNetwork, OwnerPidConnections, 0);
+      for (int attempt = 0; attempt < 4; attempt++) {
+        IntPtr table = Marshal.AllocHGlobal(size);
+        try {
+          status = GetExtendedTcpTable(table, ref size, false, InterNetwork, OwnerPidConnections, 0);
+          if (status == InsufficientBuffer) continue;
+          if (status != 0) throw new Win32Exception((int)status, "the TCP table could not be read");
+          int count = Marshal.ReadInt32(table);
+          for (int row = 0; row < count; row++) {
+            int at = 4 + row * 24;
+            var local = new IPAddress((long)(uint)Marshal.ReadInt32(table, at + 4));
+            int localPort = Port(Marshal.ReadInt32(table, at + 8));
+            int remotePort = Port(Marshal.ReadInt32(table, at + 16));
+            if (localPort == peer.Port && remotePort == listenerPort && local.Equals(wanted)) return Marshal.ReadInt32(table, at + 20);
+          }
+          throw new InvalidOperationException("no process owns the client end " + peer);
+        } finally {
+          Marshal.FreeHGlobal(table);
+        }
+      }
+      throw new Win32Exception((int)status, "the TCP table kept growing");
+    }
+
+    static string CommandLineOf(int id) {
+      IntPtr process = OpenProcess(QueryLimitedInformation, false, id);
+      if (process == IntPtr.Zero) throw new Win32Exception(Marshal.GetLastWin32Error(), "process " + id + " could not be opened");
+      try {
+        int length = 4096;
+        for (int attempt = 0; attempt < 4; attempt++) {
+          IntPtr buffer = Marshal.AllocHGlobal(length);
+          try {
+            int returned;
+            int status = NtQueryInformationProcess(process, CommandLineInformation, buffer, length, out returned);
+            if (status == LengthMismatch || status == BufferTooSmall) {
+              length = Math.Max(returned, length * 2);
+              continue;
+            }
+            if (status != 0) throw new Win32Exception("the command line of process " + id + " could not be read (status 0x" + status.ToString("x8") + ")");
+            int bytes = (ushort)Marshal.ReadInt16(buffer);
+            IntPtr text = Marshal.ReadIntPtr(buffer, IntPtr.Size);
+            return bytes == 0 || text == IntPtr.Zero ? "" : Marshal.PtrToStringUni(text, bytes / 2);
+          } finally {
+            Marshal.FreeHGlobal(buffer);
+          }
+        }
+        throw new Win32Exception("the command line of process " + id + " kept growing");
       } finally {
         CloseHandle(process);
       }

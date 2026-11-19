@@ -410,7 +410,7 @@ jobs:
           ASSEMBLED: ${{ steps.assemble.outcome }}
         run: |
           $probe = if ($env:ASSEMBLED -eq 'success') { "${{ runner.temp }}/engine/chrome.exe" } else { "" }
-          scripts/windows/upstream-watch.ps1 -Start -Out "${{ runner.temp }}/no-upstream" -State "${{ runner.temp }}/no-upstream-state" -Program "$env:APP", "${{ runner.temp }}/Nilla" -ProgramFile "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe" -Installed (Join-Path $env:LOCALAPPDATA "Programs\Nilla") -Probe $probe
+          scripts/windows/upstream-watch.ps1 -Start -Out "${{ runner.temp }}/no-upstream" -State "${{ runner.temp }}/no-upstream-state" -Program "$env:APP", "${{ runner.temp }}/Nilla" -ProgramFile "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe" -Installed (Join-Path $env:LOCALAPPDATA "Programs\Nilla") -EngineProgram "${{ runner.temp }}/Nilla/Nilla.exe", (Join-Path $env:LOCALAPPDATA "Programs\Nilla\Nilla.exe") -Probe $probe
       - name: Launch it
         if: ${{ !cancelled() && steps.watch.outcome == 'success' && (env.FULL == 'true' || steps.assemble.outcome != 'success' || env.COMPILED == 'true') }}
         timeout-minutes: 12

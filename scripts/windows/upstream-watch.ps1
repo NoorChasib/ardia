@@ -7,6 +7,7 @@ param(
   [Parameter(ParameterSetName = "Start")][string[]]$Program = @(),
   [Parameter(ParameterSetName = "Start")][string[]]$ProgramFile = @(),
   [Parameter(ParameterSetName = "Start")][string]$Installed = "",
+  [Parameter(ParameterSetName = "Start")][string[]]$EngineProgram = @(),
   [Parameter(ParameterSetName = "Start")][string]$Probe = "",
   [Parameter(ParameterSetName = "Start")][string]$ProbeUrl = "https://github.com/robots.txt"
 )
@@ -178,7 +179,9 @@ function Invoke-Probe([string]$Engine, [string]$Url) {
     Start-Sleep -Milliseconds 500
   } while ((Get-Date) -lt $deadline)
   Remove-Item -LiteralPath $probeProfile -Recurse -Force -ErrorAction SilentlyContinue
-  if ($seen) { return "path seen: $($seen.method) $($target.Host)$($seen.path), $($seen.action)" }
+  $engineImage = [System.IO.Path]::GetFullPath($Engine)
+  if ($seen -and -not (Test-ChromiumClient $seen @($engineImage))) { return "the request for $($target.Host)$($seen.path) came from $(Get-ClientName $seen), not the network service of $engineImage, so it shows nothing about Chromium's trust in the watch" }
+  if ($seen) { return "path seen: $($seen.method) $($target.Host)$($seen.path), $($seen.action), from $(Get-ClientName $seen)" }
   $tls = @($rows | Where-Object { $_.event -eq "tls-failed-client" }) | Select-Object -First 1
   if ($tls) { return "Chromium refused the watch's certificate authority for $($target.Host) ($($tls.error)), so GitHub paths can't be read" }
   if ($rows.Count) { return "Chromium reached $($target.Host) through the watch, but no request for $($target.PathAndQuery) was logged" }
@@ -199,11 +202,6 @@ function Get-Events([hashtable]$Filter, [string]$XPath, [string]$LogName) {
     if ("$($_.FullyQualifiedErrorId)" -like "NoMatchingEventsFound*") { return @() }
     throw
   }
-}
-
-function Test-WatchedName([string]$Leaf, [string[]]$Names) {
-  foreach ($name in $Names) { if ($Leaf -like $name) { return $true } }
-  return $false
 }
 
 function Get-Addresses([string]$Results) {
@@ -235,6 +233,7 @@ if ($Start) {
     systemProxy = $false
     systemProxyCheck = ""
     probe = ""
+    engines = @()
     startProblems = @()
   }
   Save-Watch $watch
@@ -295,6 +294,7 @@ if ($Start) {
       Save-Watch $watch
     }
 
+    $watch.engines = @(@($Probe) + @($EngineProgram) | Where-Object { $_ } | ForEach-Object { [System.IO.Path]::GetFullPath($_) } | Sort-Object -Unique)
     if ($Probe) {
       $watch.probe = try { Invoke-Probe $Probe $ProbeUrl } catch { "could not run: $($_.Exception.Message)" }
       if ($watch.probe -notlike "path seen*") { $watch.startProblems += "Chromium probe: $($watch.probe)" }
@@ -346,41 +346,6 @@ $startedUtc = if ($watch.started -is [datetime]) { $watch.started.ToUniversalTim
 $since = $startedUtc.ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
 $names = @($watch.names)
 
-$dnsRows = [System.Collections.Generic.List[object]]::new()
-$namesByAddress = @{}
-try {
-  foreach ($record in (Get-Events -Filter @{ LogName = $dnsLog; Id = 3006, 3008, 3020; StartTime = $startedUtc.ToLocalTime() })) {
-    $data = Get-EventData $record
-    $name = "$($data['QueryName'])".Trim()
-    if (-not $name) { continue }
-    $addresses = @(Get-Addresses "$($data['QueryResults'])$($data['Result'])")
-    foreach ($address in $addresses) {
-      if (-not $namesByAddress.ContainsKey($address)) { $namesByAddress[$address] = [System.Collections.Generic.HashSet[string]]::new() }
-      $null = $namesByAddress[$address].Add($name.ToLowerInvariant())
-    }
-    $dnsRows.Add([ordered]@{ ts = $record.TimeCreated.ToUniversalTime().ToString("o"); id = $record.Id; pid = $record.ProcessId; name = $name; addresses = $addresses })
-  }
-} catch { $problems += "the DNS client log could not be read: $_" }
-
-$connections = [System.Collections.Generic.List[object]]::new()
-try {
-  $outbound = "*[System[(EventID=5156 or EventID=5157) and TimeCreated[@SystemTime>='$since']]] and *[EventData[Data[@Name='Direction']='%%14593']]"
-  $remote = "*[System[(EventID=5156 or EventID=5157) and TimeCreated[@SystemTime>='$since']]] and *[EventData[Data[@Name='Direction']='%%14593' and Data[@Name='DestAddress']!='127.0.0.1' and Data[@Name='DestAddress']!='::1']]"
-  try { $records = Get-Events -XPath $remote -LogName Security } catch { $records = Get-Events -XPath $outbound -LogName Security }
-  foreach ($record in $records) {
-    $data = Get-EventData $record
-    if (@("127.0.0.1", "::1") -contains "$($data['DestAddress'])") { continue }
-    $application = "$($data['Application'])"
-    $leaf = ($application -split "\\")[-1].ToLowerInvariant()
-    if (-not (Test-WatchedName $leaf $names)) { continue }
-    $address = "$($data['DestAddress'])"
-    $known = if ($namesByAddress.ContainsKey($address)) { @($namesByAddress[$address]) } else { @() }
-    $connections.Add([ordered]@{ ts = $record.TimeCreated.ToUniversalTime().ToString("o"); outcome = $(if ($record.Id -eq 5157) { "blocked" } else { "allowed" }); application = $application; pid = $data['ProcessID']; address = $address; port = $data['DestPort']; protocol = $data['Protocol']; names = $known })
-  }
-} catch { $problems += "the connection audit could not be read: $_" }
-
-$problems += @(Stop-Logging $watch)
-
 $proxyRows = @()
 if (Test-Path -LiteralPath $proxyLog) {
   $proxyRows = @(Get-Content -LiteralPath $proxyLog | Where-Object { $_ } | ForEach-Object { try { $_ | ConvertFrom-Json } catch { $null } } | Where-Object { $_ })
@@ -388,7 +353,33 @@ if (Test-Path -LiteralPath $proxyLog) {
   $problems += "the proxy wrote no log"
 }
 
-$judged = Get-ProxyVerdict $proxyRows -ChromiumTrustsTheWatch:("$($watch.probe)" -like "path seen*")
+$dnsRows = [System.Collections.Generic.List[object]]::new()
+try {
+  foreach ($record in (Get-Events -Filter @{ LogName = $dnsLog; Id = 3006, 3008, 3020; StartTime = $startedUtc.ToLocalTime() })) {
+    $data = Get-EventData $record
+    $name = "$($data['QueryName'])".Trim()
+    if (-not $name) { continue }
+    $addresses = @(Get-Addresses "$($data['QueryResults'])$($data['Result'])")
+    $dnsRows.Add([ordered]@{ ts = $record.TimeCreated.ToUniversalTime().ToString("o"); id = $record.Id; pid = $record.ProcessId; name = $name; addresses = $addresses })
+  }
+} catch { $problems += "the DNS client log could not be read: $_" }
+$namesByAddress = Get-NamesByAddress @($dnsRows) $proxyRows
+
+$connections = [System.Collections.Generic.List[object]]::new()
+try {
+  $outbound = "*[System[(EventID=5156 or EventID=5157) and TimeCreated[@SystemTime>='$since']]] and *[EventData[Data[@Name='Direction']='%%14593']]"
+  $remote = "*[System[(EventID=5156 or EventID=5157) and TimeCreated[@SystemTime>='$since']]] and *[EventData[Data[@Name='Direction']='%%14593' and Data[@Name='DestAddress']!='127.0.0.1' and Data[@Name='DestAddress']!='::1']]"
+  try { $records = Get-Events -XPath $remote -LogName Security } catch { $records = Get-Events -XPath $outbound -LogName Security }
+  foreach ($record in $records) {
+    $row = ConvertTo-ConnectionRow ([ordered]@{ Id = $record.Id; TimeCreated = $record.TimeCreated; Data = (Get-EventData $record) }) $names $namesByAddress
+    if ($row) { $connections.Add($row) }
+  }
+} catch { $problems += "the connection audit could not be read: $_" }
+
+$problems += @(Stop-Logging $watch)
+
+$trustedEngines = if ("$($watch.probe)" -like "path seen*") { @($watch.engines | Where-Object { $_ }) } else { @() }
+$judged = Get-ProxyVerdict $proxyRows -TrustedEngines $trustedEngines
 $upstream = $judged.upstream
 $allowed = $judged.allowed
 $github = $judged.unclassified
@@ -401,11 +392,10 @@ foreach ($row in $dnsRows) {
   $verdict = [NillaWatch.Rules]::ClassifyHost($row.name)
   if ($verdict[0] -eq "upstream") { $upstream.Add([ordered]@{ source = "dns (event $($row.id), process $($row.pid))"; what = $row.name; why = $verdict[1]; action = "looked up" }) }
 }
-foreach ($row in $connections) {
-  $verdicts = @($row.names | ForEach-Object { [NillaWatch.Rules]::ClassifyHost($_)[0] })
-  $entry = [ordered]@{ source = "connection audit"; what = "$($row.outcome) $($row.application) -> $($row.address):$($row.port) ($(if ($row.names.Count) { $row.names -join ', ' } else { 'no DNS name seen' }))"; why = "bypassed the proxy"; action = $row.outcome }
-  if ($verdicts -contains "upstream") { $upstream.Add($entry) } elseif ($verdicts -contains "github-unknown-path") { $github.Add($entry) } elseif ($row.outcome -eq "allowed" -and -not (Test-LinkOnly $row.address)) { $problems += "a watched program reached $($row.address):$($row.port) around the proxy and was not blocked ($(Split-Path -Leaf $row.application), $(if ($row.names.Count) { $row.names -join ', ' } else { 'no DNS name seen' }))" }
-}
+$bypassed = Get-ConnectionVerdict @($connections)
+foreach ($entry in $bypassed.upstream) { $upstream.Add($entry) }
+foreach ($entry in $bypassed.unclassified) { $github.Add($entry) }
+$problems += @($bypassed.unverified)
 foreach ($entry in $github) { $problems += "a GitHub contact could not be classified: $($entry.source) $($entry.what) ($($entry.why))" }
 $problems = @(@($watch.startProblems | Where-Object { $_ }) + $problems)
 $unverifiedRows = @(
