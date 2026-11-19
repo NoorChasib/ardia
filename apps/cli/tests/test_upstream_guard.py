@@ -380,6 +380,32 @@ class CliHomes(Guarded):
         self.assertFalse((self.home / "Library").exists())
         self.assert_untouched()
 
+    def test_only_a_plain_mark_file_makes_a_cli_home_nillas_own(self):
+        elsewhere = self.temp / "elsewhere-mark"
+        elsewhere.write_text("")
+        marks = {
+            "dangling link": lambda mark: mark.symlink_to(self.temp / "no-such-mark"),
+            "link to a file": lambda mark: mark.symlink_to(elsewhere),
+            "relative link": lambda mark: mark.symlink_to("0.0.1/bin/ardia"),
+            "folder": lambda mark: mark.mkdir(),
+            "pipe": lambda mark: os.mkfifo(mark),
+        }
+        for name, plant_mark in marks.items():
+            with self.subTest(mark=name):
+                home = self.plant(self.temp / f"foreign-{name.replace(' ', '-')}", False, True)
+                plant_mark(home / upstream.CLI_HOME_MARK)
+                before = snapshot(home)
+                self.assertFalse(upstream.marks_own_cli_home(home))
+                self.assertTrue(upstream.installed_elsewhere(home))
+                with self.assertRaisesRegex(endpoint.UpstreamFolder, "didn't install for nilla-browser"):
+                    usage.owned_cli_home(home)
+                with mock.patch.dict(os.environ, {"ARDIA_CLI_HOME": str(home), "ARDIA_CONFIG_HOME": str(self.temp / "nilla-config")}), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", self.temp / "nilla-config" / "ardia"):
+                    with self.assertRaises((endpoint.UpstreamFolder, hooks.HooksError)):
+                        hooks.agent_paths(linux=True).owned_launcher()
+                with self.assertRaises(endpoint.UpstreamFolder):
+                    computer.trusted_launcher({"ARDIA_CLI_HOME": str(home)})
+                self.assertEqual(snapshot(home), before)
+
     def test_a_marked_cli_home_of_nillas_own_is_used(self):
         own = self.plant(self.temp / "nilla-cli", True, True)
         self.assertEqual(usage.cli_home({"ARDIA_CLI_HOME": str(own)}), own)

@@ -105,10 +105,15 @@ def _exists(path: Path) -> bool:
     return _lstat(os.fspath(path)) is not None
 
 
+def marks_own_cli_home(cli_home) -> bool:
+    status = _lstat(os.fspath(Path(cli_home) / CLI_HOME_MARK))
+    return status is not None and stat.S_ISREG(status.st_mode)
+
+
 def installed_elsewhere(cli_home) -> bool:
     home = Path(resolved(cli_home))
     status = _lstat(os.fspath(home))
-    if status is None or not stat.S_ISDIR(status.st_mode) or _exists(home / CLI_HOME_MARK):
+    if status is None or not stat.S_ISDIR(status.st_mode) or marks_own_cli_home(home):
         return False
     if _exists(home / "current"):
         return True

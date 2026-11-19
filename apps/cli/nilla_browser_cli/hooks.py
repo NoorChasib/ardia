@@ -1065,7 +1065,7 @@ class AgentPaths:
 
     def owned_launcher(self) -> Path:
         launcher = self.launcher
-        if not (self.cli_home / upstream.CLI_HOME_MARK).is_file():
+        if not upstream.marks_own_cli_home(self.cli_home):
             raise HooksError(f"{self.cli_home} has no {upstream.CLI_HOME_MARK}, so install.sh didn't make it for nilla-browser; hooks never run a command from it")
         try:
             inside = launcher.resolve(strict=True).is_relative_to(self.cli_home.resolve(strict=True))

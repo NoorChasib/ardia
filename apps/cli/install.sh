@@ -355,7 +355,7 @@ check_tree() {
 
 installed_elsewhere() {
   [ -d "$cli_home" ] || return 1
-  [ -e "$cli_home/.nilla-cli" ] && return 1
+  [ -f "$cli_home/.nilla-cli" ] && ! [ -L "$cli_home/.nilla-cli" ] && return 1
   if [ -e "$cli_home/current" ] || [ -L "$cli_home/current" ]; then
     return 0
   fi
