@@ -118,25 +118,25 @@ export const checks: Check[] = [
     },
   },
   {
-    name: "NillaSystem.launchAtLoginStatus and isDefaultBrowser answer",
+    name: "NillaSystem.launchAtLoginStatus and isDefaultBrowser report nothing registered in a development build",
     async run() {
       const status = await system().launchAtLoginStatus();
-      expectTrue(["enabled", "requiresApproval", "notRegistered", "notFound"].includes(status), `launchAtLoginStatus is ${JSON.stringify(status)}`);
-      expectTrue(typeof (await system().isDefaultBrowser()) === "boolean", "isDefaultBrowser is not a boolean");
+      expectTrue(status === "notFound", `launchAtLoginStatus is ${JSON.stringify(status)}, not "notFound"`);
+      expectTrue((await system().isDefaultBrowser()) === false, "isDefaultBrowser is not false");
       await system().setLaunchAtLogin(true);
       expectTrue((await system().launchAtLoginStatus()) === status, "setLaunchAtLogin changed the status from a background instance");
     },
   },
   {
-    name: "NillaSystem.defaultBrowserState names Nilla's ProgID and agrees with isDefaultBrowser",
+    name: "NillaSystem.defaultBrowserState names no ProgID and only the Settings page in a development build",
     async run() {
       const state = system().defaultBrowserState();
-      expectTrue(state.progId === "ArdiaHTM", `progId is ${JSON.stringify(state.progId)}`);
-      expectTrue(typeof state.registeredHere === "boolean" && typeof state.isDefault === "boolean", `registeredHere ${JSON.stringify(state.registeredHere)}, isDefault ${JSON.stringify(state.isDefault)}`);
-      for (const scheme of ["http", "https"] as const) expectTrue(state[scheme] === null || typeof state[scheme] === "string", `${scheme} is ${JSON.stringify(state[scheme])}`);
-      expectTrue(state.command === null || typeof state.command === "string", `command is ${JSON.stringify(state.command)}`);
-      expectTrue(state.page.startsWith("ms-settings:defaultapps"), `page is ${JSON.stringify(state.page)}`);
-      expectTrue(!state.isDefault || state.registeredHere, "isDefault without the ProgID pointing at this Nilla.exe");
+      expectTrue(state.progId === "", `progId is ${JSON.stringify(state.progId)}, not ""`);
+      expectTrue(state.command === null, `command is ${JSON.stringify(state.command)}, not null`);
+      expectTrue(state.registeredHere === false, `registeredHere is ${JSON.stringify(state.registeredHere)}, not false`);
+      expectTrue(state.isDefault === false, `isDefault is ${JSON.stringify(state.isDefault)}, not false`);
+      for (const scheme of ["http", "https"] as const) expectTrue(state[scheme] === null, `${scheme} is ${JSON.stringify(state[scheme])}, not null`);
+      expectTrue(state.page === "ms-settings:defaultapps", `page is ${JSON.stringify(state.page)}, not "ms-settings:defaultapps"`);
       expectTrue((await system().isDefaultBrowser()) === state.isDefault, "isDefaultBrowser disagrees with defaultBrowserState");
     },
   },
