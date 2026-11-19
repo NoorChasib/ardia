@@ -1,7 +1,7 @@
 # Testing
 
 `bun run test` at the root runs every package's tests through Turbo, then `bun run test:root` over
-`extras/raycast-nilla/src/scripts.test.ts`, `scripts/**/*.test.mjs` and `apps/site/src/**/*.test.ts`. Turbo caches the
+`extras/raycast-nilla/src/scripts.test.ts` and `scripts/**/*.test.mjs`. Turbo caches the
 results; a cold run spends most of its time in `swift test`'s first build. `bun run test:portable` runs the portable workspace and root tests, the ones that need
 no Mac; the Linux host tests and native fixtures run through `scripts/linux/ci-checks.sh`. Each package also runs its own:
 
@@ -15,7 +15,6 @@ no Mac; the Linux host tests and native fixtures run through `scripts/linux/ci-c
 | `packages/shaders` | `bun run --cwd packages/shaders test` | `scripts/meadow.mjs --check` |
 | `packages/ardiacore` | `bun run --cwd packages/ardiacore test` | The tests of the engine API table, page events and the WebKit page script, then the native programs in `tests/`, each compiled with `clang++` (the transfer ledger under ThreadSanitizer) |
 | `extras/raycast-nilla` | `bun run test:root` | The AppleScript quoting and parsing |
-| `.github/vouch` | `bun run test:vouch` | The vouch bot's labels and gates |
 
 `apps/browser` runs its TypeScript with the real `@nilla/shell` and `@ardia/ardiacore` code and swaps only the native
 side. Under `bun test`, `src/test-preload.mjs` does it with `mock.module`; under Node, `src/test-loader.mjs` does the
@@ -53,7 +52,7 @@ holds the rest.
 
 | Check | Run | Guards |
 | --- | --- | --- |
-| Release smoke test | `.claude/skills/release/scripts/smoke.sh` (the `release` skill) | Every release, whole |
+| Release smoke test | `scripts/release/smoke.sh` | A release build, whole |
 | Shortcuts | `node apps/browser/scripts/shortcuts-test.mjs <Debug app>` | Every shortcut in every focus (0.2.8: ⌘1–9 were swallowed outside a page) |
 | Profile swipes | `node apps/browser/scripts/profile-swipe-test.mjs <Debug app>` | The native pager's races (0.2.14–0.2.18 fixes) |
 | Tab dragging | `node apps/browser/scripts/tab-drag-test.mjs <Debug app>` | Dragging in the top tab strip moves the tab, never the window (0.2.18); the empty strip moves it over its whole height and a double-click zooms (0.2.25); the empty sidebar under the rows moves it too, and a double-click there still opens a tab; a chip click whose pointer drifts up to 9 pt still opens the tab, a split pane's too; a tab's hover card shows under the strip after 0.5 s, moves to the next tab at once, takes no presses and leaves the tabs beside it untouched |
@@ -227,7 +226,7 @@ unless `releaseNotes`.
 
 A Release or RC build starts the dev harness (`dev-eval.js`) only when `$ARDIA_DATA_DIR/perf-probe` exists in a
 test instance (`src/state/app/perfProbe.ts`): `: > "$ARDIA_DATA_DIR/perf-probe"` before launch, as
-`.claude/skills/release/scripts/smoke.sh` does.
+`scripts/release/smoke.sh` does.
 
 Input and capture hooks on `ac.shell`, from the `NillaDev` module (Debug builds only: in a Release build the module has no functions), for driving
 the app as a person would rather than writing a new helper:

@@ -1592,7 +1592,7 @@ one about 26 MB, 76 MB installed. `ardia --version` takes about 10 ms; the first
 bytecode cache, later ones about 0.15 s.
 
 `scripts/release.sh` builds it into the release's dist dir after the export and writes its digest to
-`Nilla.app/Contents/Resources/ardia-cli.sha256` before the app is signed. The release skill's `publish.sh` uploads the
+`Nilla.app/Contents/Resources/ardia-cli.sha256` before the app is signed. `scripts/release/publish.sh` uploads the
 tarball and its `.sha256`.
 
 ## Test

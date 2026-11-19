@@ -8,7 +8,7 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
 
 | Piece | What it does |
 | --- | --- |
-| [`.github/workflows/linux.yml`](../.github/workflows/linux.yml) | Runs on pull requests, pushes to `main` and by hand: a vouch `gate` job, then a `checks` job and a `package` job on `ubuntu-24.04` |
+| [`.github/workflows/linux.yml`](../.github/workflows/linux.yml) | Runs on pull requests, pushes to `main` and by hand: a `checks` job and a `package` job on `ubuntu-24.04` |
 | [`.github/actions/linux-setup`](../.github/actions/linux-setup/action.yml) | Ubuntu packages for the fixtures (clang, dbus, NSS tools, gnome-keyring, PyGObject), Bun from `package.json`'s `packageManager` and Node 24 through [`.github/actions/bun-install`](../.github/actions/bun-install/action.yml), its cache of `~/.bun/install/cache`, and `bun install --frozen-lockfile` |
 | [`scripts/linux/ci-checks.sh`](../scripts/linux/ci-checks.sh) | The engine-free checks; the `engine/ardiacore-linux/tests` modules run in parallel because the suite takes well over five minutes serially |
 | [`scripts/linux/publish-engine.sh`](../scripts/linux/publish-engine.sh) | Builder side: stages, strips and archives an engine from a Chromium out dir; `--upload` publishes it and adds its table row |
@@ -207,8 +207,5 @@ with `release.sh` and uploads them by hand.
   `apps/browser`, `apps/cli`, `packages`, `engine`, `scripts/linux`, `scripts/lib`, `scripts/agent/locked`,
   `infra/feedback/lib`, `patches`, the workspace manifests and lockfile, the Linux setup action and the workflow itself.
   Mac-only changes elsewhere skip it. It can still be started by hand, with `exact` to require this commit's engine.
-- **Gate.** Like `ios.yml` and `android.yml`, a `gate` job runs `vouch.gate` first, and both jobs need it. An unvouched
-  author's pull request waits until a maintainer comments `vouch` or adds `run-ci`; `linux.yml` is in
-  `GATED_WORKFLOWS` (`.github/vouch/vouch.cjs`), so that re-runs its skipped run. Pushes and manual runs always build.
 - **No engine.** With no published engine for this commit's key or the 200 engine commits before it, `package` fails
   and says to publish one.

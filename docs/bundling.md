@@ -12,14 +12,11 @@ latest release of the package into a global cache and run that, unpinned.
 | Target | Tool | Entry point | Output compared with the build from before Bun |
 |---|---|---|---|
 | `apps/linux` (the Linux UI) | Vite 7 | `bun run --cwd apps/linux build`, `dev`, `preview` | `dist` byte-identical (72 files) |
-| `packages/demo` (the site's demo) | Vite 7 | `bun run --cwd packages/demo build`, `dev` | `dist` byte-identical (71 files) |
+| `packages/demo` (the web demo) | Vite 7 | `bun run --cwd packages/demo build`, `dev` | `dist` byte-identical (71 files) |
 | `packages/shaders` meadow | esbuild (JS API) | `bun run --cwd packages/shaders meadow`, `test`, `meadow --check` | `--check` passes under Node and Bun |
-| `apps/site` | Astro | `bun run --cwd apps/site build`, `dev`, `check`; `infra/site/deploy.sh build` | `astro check` 0 errors |
-| `apps/dashboard` | Vite 8 + TanStack Start | `bun run --cwd apps/dashboard build`, `dev`; its Docker image installs and builds with Bun | image serves `GET /` |
 | macOS app JS (`apps/browser`) | Metro + Hermes | `bun run dev` (Metro), `bun x --no-install react-native bundle …`; Xcode's bundle phase | bundle byte-identical |
 | Windows app JS | Metro + Hermes | `bun run --cwd apps/browser bundle:windows`; `bun x --no-install react-native run-windows …` | bundle byte-identical |
 | Phone (Expo) | Metro | `bun run --cwd apps/phone dev`; the bundle export installs with `bun install --offline` | same modules, name@version for name@version |
-| `apps/videos` | Remotion (webpack) | `bun run --cwd apps/videos render <id>`, `studio`; `deliver.sh` | `check` 0 errors |
 | `nilla-browser` userscripts | an esbuild binary `apps/cli/scripts/build.sh` pins | the `nilla-browser` command, on the user's machine | userscript tests pass |
 | `apps/cli/bench` fixtures | `bun x esbuild@<pinned>` | `node apps/cli/bench/tasks/build.mjs` | n/a |
 
@@ -79,11 +76,6 @@ Hermes bytecode, and the bundle phases of Xcode (`react-native-xcode.sh`) and MS
 Each is its own build system on Vite or webpack (server and SPA output, content collections, Remotion's webpack config
 with `require.context`). Each is started through `bun run` and runs on Node.
 
-- `apps/site`'s `astro check` uses the TypeScript 6 API: `@astrojs/check` needs it, so the site aliases `typescript` to
-  `@typescript/typescript6`.
-- `apps/dashboard`'s `check` first runs `scripts/route-tree.mjs`, which calls `vite.resolveConfig` so TanStack's router
-  generator writes the gitignored `routeTree.gen.ts`. Its Docker image installs, builds and prunes with Bun
-  (`bun prune --production`) and serves on Node.
 
 ## The CLI's userscript bundler
 
