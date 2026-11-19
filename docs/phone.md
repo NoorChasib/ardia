@@ -319,12 +319,10 @@ off in the lab`.
     From sync12 a frost over a page is solid by default (`path=solid (page under the frost, solid page mode)`):
     blurring a page records its WebView into an offscreen layer, which blanked the page for 3 to 4 frames on the
     M3, and the Compose app never blurs a page. The lab's Page frost live is there for comparison only.
-26. **Telemetry, nothing while off:** watch `adb logcat -s PAGELAB | grep telemetry`. With sharing off (a fresh
-    install starts off), use the app for a minute, background it and come back: no `PAGELAB telemetry posted`
-    line. Turn on "Share anonymous usage stats" in Settings, background the app: lines appear
-    (`POST ardia.dev/otel/v1/logs -> 200`). Turn it off: no more lines. The same switch is on onboarding's last
-    steps (Settings › Show Onboarding). Settings › What’s Sent lists what is counted. A lab release build sends to
-    ardia.dev with environment test.
+26. **Telemetry, nothing sent:** watch `adb logcat -s PAGELAB | grep telemetry`. Use the app for a minute,
+    background it and come back: no `PAGELAB telemetry posted` line. Layer 1 has no collector (`docs/services.md`),
+    so the same holds with sharing on, from Settings or onboarding's last steps (Settings › Show Onboarding), and in a
+    lab release build. Settings › What’s Sent lists what is counted.
 27. **Memory after tabs close** (the lab broadcasts here and below, MEMORY, FRAMES, TRIM and DECK_PARTS, are
     answered while Nilla is in front. From sync20d its receiver also stays registered in the background, but
     Android 14 and later, and MIUI's freezer, hold a broadcast to a cached app until it is back on screen. For the
@@ -1993,7 +1991,7 @@ commit, as `release-ios` takes it.
 
 **Why an Android release can't move the Mac's.**
 - **The repo's consumers.** Every one that wants the Mac's current release asks for GitHub's "latest": the Sparkle feed
-  (`releases/latest/download/appcast.xml`, also behind ardia.dev's nginx), `scripts/lib/releases.sh`'s
+  (`releases/latest/download/appcast.xml`, once a feed is set up), `scripts/lib/releases.sh`'s
   `latest_stable_tag` (used by `publish.sh` and `rollout-everyone.sh`), `release.yml`'s feed checks, the site's
   Releases link and the CLI installer.
 - **GitHub never makes a draft or a prerelease "latest".** The repo already shows it: newer `engine-*`,
@@ -2938,8 +2936,8 @@ Clear Browsing Data: a "Time Range" `Picker`; "Clear" section of `Toggle`s Histo
 Archived Tabs; destructive "Clear Data…" with a `ProgressView`, confirmed by a `confirmationDialog`.
 
 Default Browser: an explanation page with "How to change your default browser" and an "Open Nilla in Settings"
-button. About: `AppIconPreview` (72 pt, 22.5% continuous corners, a 0.5 pt hairline) and "Nilla", three `Link` rows
-(ardia.dev, Release Notes, Source Code), a footer, "Open Source Licenses" (each credit a `LabeledContent` and a
+button. About: `AppIconPreview` (72 pt, 22.5% continuous corners, a 0.5 pt hairline) and "Nilla", one `Link` row
+(Source Code, the repo), a footer, "Open Source Licenses" (each credit a `LabeledContent` and a
 `Link`).
 
 What Expo UI doesn't have and we add through its extension path (`ExpoUIView` views and

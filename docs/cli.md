@@ -1282,13 +1282,14 @@ silently stops CLI telemetry. Nothing is sent when the file is missing, unreadab
 --version` records nothing.
 
 The wire format is the app's: OTLP log records (`otlp.ts` `eventRecord`/`logsRequest`) posted as `application/json`
-to `https://ardia.dev/otel/v1/logs`, scope `nilla.analytics`, resource `service.name` `nilla-cli`, so they land in
-`telemetry.events` with `source = 'nilla-cli'`. Every event carries `$lib` `nilla-cli`, `cli_version`, `$os_version`,
+to the collector `telemetry.LOGS_URL` names (`None` in Layer 1, so nothing is posted; `docs/services.md`), scope
+`nilla.analytics`, resource `service.name` `nilla-cli`. Every event carries `$lib` `nilla-cli`, `cli_version`, `$os_version`,
 `arch`, `python_version`, `$environment` (`production` for the installed app's data dir, `test` for any other, `dev`
 from a checkout), `$geoip_disable`, `$process_person_profile: false` and `$session_id`: the app's `sessionId` from
 `telemetry.json` while it says `sessionOpen`, else one UUIDv7 per CLI process. During a watch, events also carry
-`watch_report` (`FB-…`). Every post sends `X-Ardia-Key` with the CLI's public ingest key (`CLI_INGEST_KEY` in
-`telemetry.py`, the same value as `packages/core/src/ingestKeys.ts`; a test keeps them equal).
+`watch_report` (`FB-…`). A post sends `X-Ardia-Key` with the CLI's public ingest key when `CLI_INGEST_KEY` in
+`telemetry.py` is set (the CLI's mirror of `services.ingestKeys.cli`; `tests/test_feedback.py` keeps them equal), and no
+key header otherwise.
 
 - `cli_command`, one per run: `command` (the first command word; `unknown` for a word it doesn't know, `none` for
   bare `nilla-browser` and `--help`), `subcommand` (the second word; for `browse`, the browse command, or `other` when it
@@ -1322,7 +1323,7 @@ from the page. Reports from `nilla-browser feedback` don't go through this pipel
 
 Every event it builds, sent or not, is also appended to a 7-day local copy, `<data dir>/Telemetry/local/cli-<UTC
 day>.jsonl` (folder 0700 when the CLI makes it; the app shares it, so one it made without group or other write access
-is used too), one record per line with `sent` true when it was queued for ardia.dev and false when sharing is off
+is used too), one record per line with `sent` true when it was queued for the collector and false when sharing is off
 (`distinct_id` is then `local`). Files older than 7 days are deleted and the total is capped at 4 MB, oldest lines
 first, on every append, under `cli-local.lock`. It's written whenever the command would send if sharing were on, so
 the opt-outs, test endpoints and a checkout above keep no copy either. It leaves the Mac only as the normal events
@@ -1341,7 +1342,7 @@ sends it. Turning sharing off in the app stops new events at once; what's alread
 run.
 
 `ARDIA_TELEMETRY_URL` is for tests only: a loopback `http://` URL (`127.0.0.1`, `localhost` or `[::1]`) gets the
-posts instead of ardia.dev, from a checkout too, and any other value turns telemetry off. `tests/test_telemetry.py`
+posts, from a checkout too and with no collector set, and any other value turns telemetry off. `tests/test_telemetry.py`
 runs against a local stub with fixture data dirs.
 
 ## Feedback and the star nudge
@@ -1355,8 +1356,9 @@ scrubbing; `--kind` is `bug` (the default), `slow`, `idea` or `other`; `--comman
 Sending a report is consent for that report, so it goes out whether or not the app's sharing is on. With sharing on
 (`telemetry.json` for `--data-dir`, `$ARDIA_DATA_DIR` or the installed app's data dir; from a checkout, only an
 explicit data dir is read) the report carries the install id, so it joins that install's events; otherwise a one-time
-UUIDv4 made for that report. `session_id` is the same one the events carry. It posts to `https://ardia.dev/api/feedback`
-with `X-Ardia-Key` (the CLI key): `kind`, `title`, `description`, `source: "cli"`, `install_id`, `session_id`,
+UUIDv4 made for that report. `session_id` is the same one the events carry. It posts to the feedback service
+`feedback.FEEDBACK_URL` names (`None` in Layer 1: the command keeps the report and prints "Open an issue instead:" with
+`feedback.ISSUE_URL`), with `X-Ardia-Key` when the CLI has a key: `kind`, `title`, `description`, `source: "cli"`, `install_id`, `session_id`,
 `app_version` and `app_build` (the app's `lastVersion`/`lastBuild` from `telemetry.json`), `channel`, `os_version`,
 `arch`, `cli_version`, `watch_days: 0`, `diagnostics` (`agent`, the caller name the control pill shows from
 `caller.py`; `about_command`, scrubbed and capped at 300; `recent_commands`, the last five command names this CLI home
@@ -1390,18 +1392,19 @@ A title or description with nothing left but those placeholders is refused (exit
 When it isn't sent, the report is kept, scrubbed, in `$ARDIA_CLI_HOME/Usage/feedback.jsonl` (newest 200, with the
 reason and any reference the service gave), and the line says exactly why: `DO_NOT_TRACK=… is set`,
 `ARDIA_TELEMETRY=… is set`, `ARDIA_PORT points nilla-browser at a test browser` (any of the test endpoint variables), a
-checkout build (`0.0.0.dev0`, which never sends to ardia.dev), an `ARDIA_FEEDBACK_URL` that isn't loopback, the daily
+build with no feedback service set up, a checkout build (`0.0.0.dev0`, which never sends to a feedback service), an
+`ARDIA_FEEDBACK_URL` that isn't loopback, the daily
 limit, the network failing (with the system's reason), or the service's HTTP status and message. At most 20 reports a
 rolling day go out per CLI home, and the same kind, title and description twice in a day is sent once
 (`$ARDIA_CLI_HOME/Usage/usage.json`, under `usage.lock`); a report that fails gives its slot back, and when another
 `nilla-browser` holds that lock the report is kept with that reason. From a checkout without `ARDIA_CLI_HOME`, nothing is
 counted or saved, and the line says so.
 
-`ARDIA_FEEDBACK_URL` is for tests: a loopback `http://` URL gets the reports instead of ardia.dev, from a checkout too
+`ARDIA_FEEDBACK_URL` is for tests: a loopback `http://` URL gets the reports, from a checkout too and with no service set up
 (an origin alone gets `/api/feedback` added); any other value keeps reports on the Mac. `tests/test_feedback.py` runs
 against a stub of the service and, when `node` is there, against `node infra/feedback/server.mjs --local <tmp dir>`.
 
-The owner reads them on dash.ardia.dev › Feedback, and each opens a GitHub issue.
+Where `infra/feedback` runs (`docs/feedback.md`), each report it takes opens a GitHub issue.
 
 Every command (but `feedback` and `star`) also leaves its name and, when it failed, its exit code in that state's
 `recent` list (five at most), for the next report's `recent_commands`. From a checkout (`0.0.0.dev0`) nothing is recorded

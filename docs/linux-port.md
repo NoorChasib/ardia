@@ -22,7 +22,7 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
 | `scripts/linux` | Build, package, install, engine publish and fetch, smoke gate, CI checks, the polkit policy and the Arch `PKGBUILD`. |
 | `.github/workflows/linux.yml` | The Linux workflow ([linux-ci.md](linux-ci.md)). |
 
-`packages/demo` (the ardia.dev web demo) has no Linux code and nothing under `apps/linux` imports it.
+`packages/demo` (the web demo) has no Linux code and nothing under `apps/linux` imports it.
 
 ## Architecture
 
@@ -88,8 +88,8 @@ The acceptance suite is in [linux-acceptance.md](linux-acceptance.md) and CI in 
   swatches, preview and colour pad) is drawn by the shell (`shims/shaders.tsx`, `shims/web/gl/themeSwatch.ts`): the
   same 17 Oklab samples and start and end points as `ArcGradientLayer`, the third colour's overlay, the hue pad, and
   `GrainLayer`'s four tiles from the same generator.
-- **Onboarding meadow.** `Meadow` (the intro's scene) runs ardia.dev's own meadow (`apps/site/src/scripts/meadow`,
-  the source the Mac's `ios/Meadow/index.html` is built from) straight in the shell, since the shell CSP allows no
+- **Onboarding meadow.** `Meadow` (the intro's scene) runs the meadow scene's source
+  (`packages/shaders/meadow-src/scripts/meadow`, the source the Mac's `ios/Meadow/index.html` is built from) straight in the shell, since the shell CSP allows no
   frames (`shims/web/gl/meadow.ts`, imported as `@nilla-site/meadow/*` and compiled by `vite.config.ts` without the
   site's Astro tsconfig). It loads as its own chunk when the intro mounts, shows the Mac's dawn poster for the window's
   shape (morning with reduced motion, none at night) until the first frame, cross-fades in over 0.4 s, and reports
@@ -752,8 +752,9 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
 - **What it does.** Check Now and the app menu ask before opening the release page; an automatic check (30 s after
   launch, then every 6 h, in one window, never in a hidden instance or a build without `lib/ardia/VERSION`) offers a
   newer release once as a toast. Nilla doesn't install updates on Linux, so "Automatically update Nilla" is hidden.
-- **Kill switches.** `ArdiaShell.fetchKillSwitches` fetches `ardia.dev/switches.json` (at most 16 KiB) once per
-  browser process for every window, and the shared refresh runs under the Mac's rule (automatic checks on).
+- **Kill switches.** `ArdiaShell.fetchKillSwitches` would fetch the engine's compiled-in upstream switches file
+  (at most 16 KiB) once per browser process for every window, under the Mac's rule (automatic checks on). Layer 1's
+  gate (`layer1Gate.ts`, `docs/services.md` › Linux) refuses the call, so Linux uses the local defaults.
 - **Telemetry.** `update_checks_asked`, `update_checks_automatic`, `update_check_failures`, `update_checks_found`,
   `update_release_page_opens`, `kill_switch_refreshes`, `kill_switch_refresh_failures`.
 
@@ -1490,8 +1491,9 @@ It works as on the Mac ([cli.md](cli.md), [automation.md](automation.md)); what 
   `handleTelemetryOp`); the owner saves, announces, and every window re-reads the document. The asking window shows a
   sharing answer at once and falls back to the saved state if no owner answers within 10 s.
 - **Sending.** The shell can't fetch, so the shared client posts through `ArdiaTelemetry.post` (`ac_linux_telemetry.cc`):
-  native sends the OTLP body to the fixed `https://ardia.dev/otel/v1/logs` with the app's ingest key, over the system
-  network context with no cookies, and answers the HTTP status (0 for a network error). JS keeps its queue, batching and
+  native would send the OTLP body to the engine's compiled-in upstream collector with the app's ingest key, over the
+  system network context with no cookies, and answer the HTTP status (0 for a network error). Layer 1's gate refuses
+  `ArdiaTelemetry.post`, so nothing is sent until Nilla's own Linux engine lands. JS keeps its queue, batching and
   backoff. Events carry `$os: Linux` and `os.type: linux`; the `nilla-browser` command reports the same on Linux.
 - **One owner.** Every window runs its own copy of the UI, so one browser window holds the `nilla.linux.telemetry` lock
   and runs the client (queue, flush, hourly usage, the daily ping) (`telemetryLeader.ts`). The others, utility windows
@@ -1723,7 +1725,7 @@ answer at once on the Mac and with a promise here, so the shell has to opt in.
 - **Gzip.** `gzipFile(source, destination, removeSource)` and `gzipText(text, destination)` write the same gzip
   stream as the Mac (zlib, level 6) and answer the bytes written. Text is capped at 64 MiB.
 - **Sending.** The shell can't reach the network, so the JSON requests the Mac sends with `fetch` are a native call
-  too: `post(url, body, headers)` for `https://ardia.dev/api/feedback` and `…/<id>/complete`, with a body of at most
+  too: `post(url, body, headers)` for the feedback endpoint and `…/<id>/complete`, with a body of at most
   128 KiB. `upload(id, url, method, headers, path)` sends one draft file with `PUT` to
   `…/<id>/files/<name>`, where the name and its size cap are the service's (`recording.mp4` 100 MiB,
   `trace.json.gz` 50 MiB, `local-events.jsonl.gz`, `crash-<n>.ips` and `attachment-<n>.<ext>` 10 MiB), and
@@ -1970,8 +1972,9 @@ These were open at the time of the PR.
   to Nilla through a Settings or Import window sends no `focus` window event, so the shell counts Nilla as inactive
   until a browser window is active again.
 - **Problem reports.** The sheet opens only with an engine that advertises `report.files` and `report.send`, and
-  has no recording, trace or crash reports. The engine only accepts `https://ardia.dev/api/feedback`:
-  there is no override for a local feedback server, and a background instance sends nothing, so the sheet can't be
+  has no recording, trace or crash reports. The engine only accepts its compiled-in upstream endpoint, which
+  Layer 1's gate refuses (`report.send` is dropped, so the sheet doesn't open on Linux); there is no override for a
+  local feedback server, and a background instance sends nothing, so the sheet can't be
   exercised end to end from a hidden instance yet.
 - **Crash reports.** Only x86-64 dumps get frames, and frames are named only from the symbols archive the engine was
   published with (`scripts/linux/symbolize.py`). An engine older than `crash.dumps` answers no crash reports.
