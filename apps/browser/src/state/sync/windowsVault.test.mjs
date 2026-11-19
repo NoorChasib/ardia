@@ -51,7 +51,7 @@ test("a vault the Mac wrote reads on Windows, with its passwords sealed before t
     if (file.scope === "app") {
       const login = got.records["pw:1"].v;
       assert.equal(keys.openPassword(login.s, login.o, login.u), expected.records["pw:1"].v.p);
-      assert.equal(keys.openPassword(got["pw:2"].v.s, "https://ardia.dev", "grace"), "battery staple");
+      assert.equal(keys.openPassword(got["pw:2"].v.s, expected["pw:2"].v.o, expected["pw:2"].v.u), expected["pw:2"].v.p);
     } else assert.deepEqual(got, expected);
   }
 });
@@ -90,7 +90,7 @@ test("online-only and busy files wait instead of counting as damaged, and a file
   const folder = scratch();
   cpSync(join(interop, "mac"), folder, { recursive: true });
   const [app, profile] = mac.files;
-  const native = nativeDouble(keys, { placeholders: new Set([`${app.id}.nns`]), busy: new Set([`${profile.id}.nns`]) });
+  const native = nativeDouble(keys, { placeholders: new Set([`${app.id}.nls`]), busy: new Set([`${profile.id}.nls`]) });
   const tally = counts();
   const vault = syncVault(native, tally);
   const first = await vault.read(folder, app.scope, []);
