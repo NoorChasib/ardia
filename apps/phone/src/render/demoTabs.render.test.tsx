@@ -271,7 +271,7 @@ test("a sync-demo session never changes the real tab store: tabs, saved states, 
   expect(next.telemetry.usageToday().counts.tabs_opened).toBe(7);
 });
 
-test("an NillaDemo launch keeps today's single in-memory store: the tabs come from the same seeded database as the rest, and the real file is never opened", () => {
+test("a NillaDemo launch keeps today's single in-memory store: the tabs come from the same seeded database as the rest, and the real file is never opened", () => {
   const { DEMO_OPEN } = require("../state/app/demoSeed") as typeof import("../state/app/demoSeed");
   const demo = launch({ syncDemo: true, nillaDemo: true });
   demo.browse.startBrowser();
