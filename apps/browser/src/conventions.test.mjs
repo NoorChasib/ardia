@@ -492,7 +492,7 @@ function findViolations(files) {
 const NAMING_ALLOWLIST_PATH = `${APP_SRC}naming-allowlist.json`;
 const RESIDUAL_NAME = /ardia|netnyahoo/gi;
 const RESIDUAL_GATE_FILE = `${APP_SRC}conventions.test.mjs`;
-const KEPT_PATH_GROUPS = ["frozen", "keep", "lead", "generated", "finalByD", "skipTree"];
+const KEPT_PATH_GROUPS = ["frozen", "keep", "lead", "generated", "skipTree"];
 const KEPT_PATHS = ["docs/audit/*", RESIDUAL_GATE_FILE];
 
 const globRegex = (glob) => new RegExp(`^${glob.replace(/[.+^${}()|\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".")}$`);
@@ -522,7 +522,7 @@ function namingAllowlist(document) {
   ];
   const beforeRename = (path) => unmoved.reduce((moved, [pattern, before]) => moved.replace(pattern, before), path);
   const matches = (globs, path) => (globs ?? []).some((glob) => globRegex(glob).test(path) || globRegex(glob).test(beforeRename(path)));
-  const keptPaths = [...KEPT_PATH_GROUPS.flatMap((group) => document.paths[group]), ...Object.keys(document.paths.skipHand), ...KEPT_PATHS];
+  const keptPaths = [...KEPT_PATH_GROUPS.flatMap((group) => document.paths[group]), ...KEPT_PATHS];
   const entries = document.protect.map((entry) => ({ entry, pattern: protectedPattern(entry) }));
   return {
     kept: (path) => matches(keptPaths, path),
@@ -567,6 +567,116 @@ function filesNamingTheUpstream() {
   const listed = spawnSync("git", ["grep", "--untracked", "-I", "-l", "-z", "-i", "-E", RESIDUAL_NAME.source], { cwd: ROOT, maxBuffer: 1 << 30 });
   if (listed.status > 1) throw new Error(`git grep: ${listed.stderr}`);
   return listed.stdout.toString().split("\0").filter((path) => path && existsSync(ROOT + path)).map((path) => [path, readFileSync(ROOT + path, "utf8")]);
+}
+
+function staleLines(document) {
+  return document.lines
+    .filter((line) => !existsSync(ROOT + line.path) || !readFileSync(ROOT + line.path, "utf8").split("\n").includes(line.text))
+    .map((line) => `${line.id} (${line.path}): ${line.text.trim().slice(0, 120)}`);
+}
+
+const ENGINE_CONTRACT = [
+  {
+    name: "the instance switch prefix ardia-",
+    engine: ["engine/ardiacore/src/ardia/core/ac_launch_switches.cc", /const std::string name = "ardia-" \+ std::string\(key\);/],
+    app: [
+      ["packages/ardiacore/ios/ArdiaHost+Launch.mm", /!\[sw hasPrefix:@"ardia-"\]/],
+      ["packages/ardiacore/ios/ArdiaHost+Launch.mm", /!strncmp\(arg, "--ardia-", 8\)/],
+      ["packages/ardiacore/ios/ArdiaLaunchConfig.mm", /@"--ardia-%@=%@"/],
+      ["scripts/lib/launchEnv.mjs", /"--ardia-apply-profile-gate"/],
+    ],
+  },
+  {
+    name: "the CLI control socket ArdiaControl.sock",
+    engine: ["engine/ardiacore-linux/src/ardia/linux/ac_linux_control_core.h", /kSocketName\[\] = "ArdiaControl\.sock";/],
+    app: [
+      ["apps/cli/nilla_browser_cli/control.py", /^SOCKET_FILE = "ArdiaControl\.sock"$/m],
+      ["packages/shell/ios/ControlSocket.swift", /static let socketName = "ArdiaControl\.sock"/],
+    ],
+  },
+  {
+    name: "the CLI control file ArdiaControl.json",
+    engine: ["engine/chromium/src/chrome/browser/ardia/ac_cli_control.cc", /kControlFileName\[\] = "ArdiaControl\.json";/],
+    app: [["apps/cli/nilla_browser_cli/endpoint.py", /^CONTROL_FILE = "ArdiaControl\.json"$/m]],
+  },
+  {
+    name: "the Little window identifier ardia.window.small",
+    engine: ["engine/ardiacore/src/ardia/core/ac_video_upscaling.mm", /kLittleArdiaWindow = @"ardia\.window\.small";/],
+    app: [["packages/ardiacore/ios/ArdiaEarlyWindow.mm", /little\.window\.identifier = @"ardia\.window\.small";/]],
+  },
+  {
+    name: "the Windows app library ArdiaApp.dll",
+    engine: ["scripts/windows/engine/src/ardia/win/main.cc", /path\.append\(L"ArdiaApp\.dll"\);/],
+    app: [
+      ["apps/browser/windows/NillaLauncher/Launcher.cpp", /directory \+ L"ArdiaApp\.dll";/],
+      ["scripts/windows/assemble.ps1", /^\$library = "ArdiaApp\.dll"$/m],
+    ],
+  },
+  ...["ArdiaAppStart", "ArdiaAppPreTranslateMessage", "ArdiaAppStop", "ArdiaAppStartFailure"].map((symbol) => ({
+    name: `the Windows app export ${symbol}`,
+    engine: ["scripts/windows/engine/src/ardia/win/main.cc", new RegExp(`GetProcAddress\\((?:app\\.)?module, "${symbol}"\\)`)],
+    app: [["apps/browser/windows/Ardia/Nilla.cpp", new RegExp(`__declspec\\(dllexport\\) [^\\n(]*\\b${symbol}\\(`)]],
+  })),
+  {
+    name: "the Windows test-build marker Ardia.test-build",
+    engine: ["scripts/windows/engine/src/ardia/win/test_gate.h", /kTestBuildMarker\[\] = L"Ardia\.test-build";/],
+    app: [
+      ["apps/browser/windows/Ardia/TestGate.h", /TestBuildMarker\[\] = L"Ardia\.test-build";/],
+      ["scripts/windows/assemble.ps1", /-ieq "Ardia\.test-build"/],
+    ],
+  },
+  {
+    name: 'the Windows profile folder prefix "Ardia "',
+    engine: ["scripts/windows/engine/src/ardia/win/profiles.cc", /kDirectoryPrefix\[\] = "Ardia ";/],
+    app: [
+      ["apps/browser/windows/Ardia/EngineHostModule.h", /ProfileFolderPrefix = "Ardia ";/],
+      ["packages/expo-windows/src/engine/domains/profiles.ts", /const FOLDER_PREFIX = "Ardia ";/],
+    ],
+  },
+  {
+    name: "the ingest key header X-Ardia-Key",
+    engine: ["engine/ardiacore-linux/src/ardia/linux/ac_linux_telemetry.cc", /SetHeader\("X-Ardia-Key", ingest_key\)/],
+    app: [
+      ["packages/core/src/ingestKeys.ts", /^export const INGEST_KEY_HEADER = "X-Ardia-Key";$/m],
+      ["apps/cli/nilla_browser_cli/telemetry.py", /^INGEST_KEY_HEADER = "X-Ardia-Key"$/m],
+    ],
+  },
+  {
+    name: "the video upscaler trace events ArdiaVSR.*",
+    engine: ["engine/ardiacore/src/ardia/core/ac_video_upscaler.mm", /TRACE_EVENT_INSTANT0\("gpu", "ArdiaVSR\.GateOpen"/],
+    app: [
+      ["apps/browser/scripts/video-upscaling-test.mjs", /String\(e\.name\)\.startsWith\("ArdiaVSR"\)/],
+      ["apps/browser/scripts/video-upscaling-test.mjs", /e\.name === `ArdiaVSR\.\$\{n\}`/],
+    ],
+  },
+  {
+    name: "the product name Ardia on chrome://version",
+    engine: ["engine/patches/build/ardia_namesub.py", /\(r'\(\?<!\[\/\._0-9\]\)Helium\(\?!\[A-Z0-9_\]\)', 'Ardia'\)/],
+    app: [
+      ["packages/ardiacore/scripts/acceptance.mjs", /!\/\^Ardia\\t\/\.test\(product/],
+      ["scripts/release/smoke.mjs", /includes\(`Ardia\\t\$\{chromiumVersion\} \(Official Build\)`\)/],
+    ],
+  },
+  {
+    name: "the engine source list ardia_sources",
+    engine: ["engine/chromium/src/chrome/browser/ardia/BUILD.gn", /^ardia_sources = \[/m],
+    app: [["scripts/linux/syntax_check_156.py", /re\.search\(r"ardia_sources = \\\[\(\.\*\?\)\\\]", gn, re\.S\)/]],
+  },
+  {
+    name: "the upstream engine repo the fetch defaults name",
+    engine: ["scripts/linux/fetch-engine.sh", /^repo=\$\{ARDIACORE_PREBUILT_REPO:-ardia-browser\/ardia\}$/m],
+    app: [["scripts/lib/releases.sh", /^ENGINE_REPO="ardia-browser\/ardia"$/m]],
+  },
+];
+
+function engineContractProblems(read) {
+  const problems = [];
+  for (const { name, engine, app } of ENGINE_CONTRACT) {
+    const [enginePath, enginePattern] = engine;
+    if (!enginePattern.test(read(enginePath) ?? "")) problems.push(`${name}: ${enginePath} no longer holds it; update the app side with the engine`);
+    for (const [path, pattern] of app) if (!pattern.test(read(path) ?? "")) problems.push(`${name}: ${path} must hold the engine's spelling`);
+  }
+  return problems;
 }
 
 const CREDITS = [
@@ -741,7 +851,7 @@ if (process.argv.includes("--write-baseline")) {
   });
   test("the residual-name gate covers a name only with an allowlist entry, a kept path or a protected token", () => {
     const allowlist = namingAllowlist({
-      paths: { frozen: ["engine/*"], keep: [], lead: [], generated: [], finalByD: [], skipTree: [], skipHand: { "scripts/linux/package.py": "C-linux" } },
+      paths: { frozen: ["engine/*"], keep: [], lead: [], generated: [], finalByD: ["README.md"], skipTree: [], skipHand: { "scripts/linux/package.py": "C-linux" } },
       moves: { componentMaps: [{ match: "^apps/cli/ardia_cli$", replace: "nilla_browser_cli" }], componentCase: [["Ardia", "Nilla"], ["ardia", "nilla"]] },
       protect: [
         { id: "env", regex: "ARDIA_[A-Z_]*" },
@@ -754,6 +864,7 @@ if (process.argv.includes("--write-baseline")) {
     const files = [
       ["engine/x.cc", "ardia"],
       ["scripts/linux/package.py", "ardia"],
+      ["README.md", "Ardia"],
       ["apps/browser/src/a.ts", "ARDIA_DATA_DIR ArdiaCoreTab NillaShell"],
       ["apps/linux/src/b.ts", '"ArdiaShell.quit"'],
       ["apps/cli/nilla_browser_cli/upstream.py", "an installed Ardia"],
@@ -761,6 +872,8 @@ if (process.argv.includes("--write-baseline")) {
       ["apps/browser/src/c.ts", 'const a = "ArdiaShell";\nconst b = "Netnyahoo";'],
     ];
     assert.deepEqual(residualNames(allowlist, files), [
+      "scripts/linux/package.py:1: ardia",
+      "README.md:1: Ardia",
       'apps/browser/src/state/report/actions.ts:2: const other = "https://ardia.dev";',
       'apps/browser/src/c.ts:1: const a = "ArdiaShell";',
       'apps/browser/src/c.ts:2: const b = "Netnyahoo";',
@@ -770,6 +883,18 @@ if (process.argv.includes("--write-baseline")) {
     const allowlist = namingAllowlist(JSON.parse(readFileSync(ROOT + NAMING_ALLOWLIST_PATH, "utf8")));
     const uncovered = residualNames(allowlist, filesNamingTheUpstream());
     assert.equal(uncovered.length, 0, `Names outside ${NAMING_ALLOWLIST_PATH} (docs/conventions.md › Names):\n${uncovered.join("\n")}`);
+  });
+  test("every naming allowlist line is still in its file", () => {
+    const stale = staleLines(JSON.parse(readFileSync(ROOT + NAMING_ALLOWLIST_PATH, "utf8")));
+    assert.equal(stale.length, 0, `Lines entries in ${NAMING_ALLOWLIST_PATH} that no longer match a line (regenerate the allowlist):\n${stale.join("\n")}`);
+  });
+  test("the app keeps every name today's engines read, spelled as the engines spell it", () => {
+    const read = (path) => (existsSync(ROOT + path) ? readFileSync(ROOT + path, "utf8") : undefined);
+    const problems = engineContractProblems(read);
+    assert.equal(problems.length, 0, `Engine contract (docs/conventions.md › Names):\n${problems.join("\n")}`);
+    const renamed = (path) => read(path)?.replace(/Ardia/g, "Nilla").replace(/ardia/g, "nilla");
+    const broken = engineContractProblems((path) => (path.startsWith("engine/") || path.startsWith("scripts/windows/engine/") || path === "scripts/linux/fetch-engine.sh" ? read(path) : renamed(path)));
+    assert.equal(broken.length, ENGINE_CONTRACT.reduce((sum, { app }) => sum + app.length, 0), `a renamed app side fails every row:\n${broken.join("\n")}`);
   });
   test("Nilla keeps its credit to Ardia", () => {
     for (const [path, credit, what] of CREDITS) assert.match(readFileSync(ROOT + path, "utf8"), credit, `${path} ${what}`);

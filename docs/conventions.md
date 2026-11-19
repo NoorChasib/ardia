@@ -251,10 +251,16 @@ writeDocument(DOC, versionedJson(data, VERSION));
 - The engine's exported ObjC API is `ArdiaCore*`; engine C/C++ is `ac_*`.
 - No `Cef*`/`CEF`/`cef` names, no `AC*` or app-side `ArdiaCore*` classes in `packages/*/ios`.
 - No upstream name (the app Nilla forked, or the name before it) outside what `apps/browser/src/naming-allowlist.json`
-  keeps: its protected names and tokens (the engine interface, credits, history, the upstream prebuilt engine) and its
-  path classes (frozen, kept, lead-owned, generated and hand-edited files, `docs/audit/`). `conventions.test.mjs`
-  checks every match in `git grep`, and that the credits stay: `NOTICE`'s upstream block, the README's
-  Acknowledgements, the About notice, the phone's licences row and the Raycast extension's contributors.
+  keeps: its protected names and tokens (the engine interface, credits, history, the upstream prebuilt engine), its
+  reviewed whole lines (each must still be in its file) and its path classes (frozen, kept, lead-owned and generated
+  files, `docs/audit/`). No hand-edited file is exempt as a whole. `conventions.test.mjs` checks every match in
+  `git grep`, and that the credits stay: `NOTICE`'s upstream block, the README's Acknowledgements, the About notice,
+  the phone's licences row and the Raycast extension's contributors.
+- The other way round, `ENGINE_CONTRACT` in `conventions.test.mjs` lists the names today's engines read (the `ardia-`
+  switch prefix, `ArdiaControl.sock` and `.json`, `ardia.window.small`, `ArdiaApp.dll` and its exports,
+  `Ardia.test-build`, the `"Ardia "` profile prefix, `X-Ardia-Key`, `ArdiaVSR.*`, the chrome://version product,
+  `ardia_sources`, the upstream `ENGINE_REPO`), each with the engine file that defines it and the app files that must
+  spell it the same way, so a rename that turns one of them into Nilla fails.
 
 ### Names that stay Ardia until Layer 2
 
