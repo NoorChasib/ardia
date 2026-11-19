@@ -38,9 +38,9 @@ test("left down and up are recorded by a passive monitor", () => {
 
 test("the press loops open and close the flag", () => {
   const clickOrDrag = dragRegion.slice(dragRegion.indexOf("private func clickOrDrag"));
-  assert.match(clickOrDrag, /ArdiaHost\.beginPressLoop\("windowDragRegion"\)\s*defer \{ ArdiaHost\.endPressLoop\(\) \}/);
+  assert.match(clickOrDrag, /NillaHost\.beginPressLoop\("windowDragRegion"\)\s*defer \{ NillaHost\.endPressLoop\(\) \}/);
   const press = dragRegion.slice(0, dragRegion.indexOf("private func clickOrDrag"));
-  assert.match(press, /ArdiaHost\.beginPressLoop\("windowDragRegion"\)\s*defer \{ ArdiaHost\.endPressLoop\(\) \}\s*window\.performDrag\(with: event\)/);
+  assert.match(press, /NillaHost\.beginPressLoop\("windowDragRegion"\)\s*defer \{ NillaHost\.endPressLoop\(\) \}\s*window\.performDrag\(with: event\)/);
   const follow = windowMove.slice(windowMove.indexOf("static func follow"));
   assert.ok(follow.indexOf("following = true") < follow.indexOf('NillaHost.beginPressLoop("windowMove")'));
   assert.ok(follow.indexOf('NillaHost.beginPressLoop("windowMove")') < follow.indexOf("NillaHost.endPressLoop()"));
@@ -48,9 +48,9 @@ test("the press loops open and close the flag", () => {
 });
 
 test("the swallowing monitors report the events they consume", () => {
-  assert.equal(dragRegion.match(/ArdiaHost\.notePointer\(event, swallowedBy: "windowDragRegion"\)/g).length, 2);
+  assert.equal(dragRegion.match(/NillaHost\.notePointer\(event, swallowedBy: "windowDragRegion"\)/g).length, 2);
   const clickOrDrag = dragRegion.slice(dragRegion.indexOf("private func clickOrDrag"));
-  assert.match(clickOrDrag, /if next\.type == \.leftMouseUp \{\s*ArdiaHost\.notePointer\(next, swallowedBy: "windowDragRegion"\)\s*break/);
+  assert.match(clickOrDrag, /if next\.type == \.leftMouseUp \{\s*NillaHost\.notePointer\(next, swallowedBy: "windowDragRegion"\)\s*break/);
   assert.equal(pip.match(/nilla_host::NotePointer\(event, @"pipDrag"\)/g).length, 2);
   assert.match(pipHeader, /NSWindow \*GrabbedWindow\(\);/);
   assert.match(pip, /NSWindow \*GrabbedWindow\(\) \{ return gDragged\.window; \}/);

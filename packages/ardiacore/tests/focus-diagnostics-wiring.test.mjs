@@ -47,7 +47,7 @@ test("Copy Diagnostics lists, per browser window, its number, the page's mouse-i
   assert.match(lines, /@"browser #%ld ", \(long\)window\.windowNumber/);
   assert.match(lines, /PageMoveResult\(window, WindowCentre\(window\), NO\)/);
   assert.match(lines, /@"page move at centre %@", move\.length \? move : @"no page view"/);
-  assert.match(lines, /ArdiaChromeWindowHost\.focusHandoffSummaryHandler/);
+  assert.match(lines, /NillaChromeWindowHost\.focusHandoffSummaryHandler/);
   assert.match(lines, /handoff\(window\)/);
   assert.doesNotMatch(lines, /activeSummary/);
 });
@@ -69,7 +69,7 @@ test("a window's key epoch and paste gate are read from FocusHandoff without cha
   assert.match(summary, /paste gate \\\(state\), \\\(gate\.generations\.count\) generations, \\\(gate\.held\.count\) held/);
   assert.doesNotMatch(summary, /(epochs|gates)\[[^\]]*\]\s*(=|\+=)(?!=)/);
   assert.doesNotMatch(summary, /\.(append|insert|remove|end|note)\(/);
-  assert.match(chromeWindows, /ArdiaChromeWindowHost\.focusHandoffSummaryHandler = \{ FocusHandoff\.shared\.summary\(of: \$0\) \}/);
+  assert.match(chromeWindows, /NillaChromeWindowHost\.focusHandoffSummaryHandler = \{ FocusHandoff\.shared\.summary\(of: \$0\) \}/);
   assert.match(windowHostHeader, /@property\(class, nonatomic, copy, nullable\) NSString \*\(\^focusHandoffSummaryHandler\)\(NSWindow \*window\);/);
   assert.match(windowHost, /gFocusHandoffSummary = \[handler copy\];/);
   assert.match(windowHost, /return gFocusHandoffSummary;/);
