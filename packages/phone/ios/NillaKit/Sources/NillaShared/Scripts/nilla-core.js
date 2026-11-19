@@ -417,7 +417,7 @@ const STORED_PLACEHOLDER = "{s}";
 const MIN_BANGS = 1000;
 const MAX_BANG_LIST_CHARS = 4_000_000;
 const REQUIRED_TRIGGERS = ["gh", "w", "yt"];
-const BANG_DOCUMENT = "ardia-bangs 1";
+const BANG_DOCUMENT = "nilla-bangs 1";
 
 function endOfString(text        , from        )         {
   let at = from;
@@ -1840,22 +1840,22 @@ vermögensberater vermögensberatung ελ ευ бг бел дети ею кат�
 
 });
 __define("packages/core/src/errors.ts", function (exports, __require) {
-  __export(exports, "ArdiaError", () => ArdiaError);
-  __export(exports, "ardiaError", () => ardiaError);
-class ArdiaError extends Error {
+  __export(exports, "NillaError", () => NillaError);
+  __export(exports, "nillaError", () => nillaError);
+class NillaError extends Error {
            code        ;
 
   constructor(code        , message        ) {
     super(message);
     this.code = code;
-    this.name = "ArdiaError";
+    this.name = "NillaError";
   }
 }
 
-const ardiaError = (error         )             =>
-  error instanceof ArdiaError
+const nillaError = (error         )             =>
+  error instanceof NillaError
     ? error
-    : new ArdiaError(String((error                             )?.code ?? "ERR_UNKNOWN"), String((error                                )?.message ?? error));
+    : new NillaError(String((error                             )?.code ?? "ERR_UNKNOWN"), String((error                                )?.message ?? error));
 
 });
 __define("packages/core/src/extensionRows.ts", function (exports, __require) {

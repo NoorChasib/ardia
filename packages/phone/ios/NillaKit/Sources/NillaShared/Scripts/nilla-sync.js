@@ -1994,5 +1994,5 @@ function buildView(scopes                            , me        )       {
 }
 
 });
-globalThis.ArdiaSync = __require("packages/sync/src/companion/index.ts");
+globalThis.NillaSync = __require("packages/sync/src/companion/index.ts");
 })();
