@@ -85,8 +85,8 @@ test("makes windows in a profile or incognito", () => {
 test("makes a tab with what was typed, or an empty one", () => {
   assert.equal(newTabScript("  "), 'tell application id "com.nilladigital.nilla" to make new tab');
   assert.equal(
-    newTabScript(" ardia.dev ", "current application"),
-    'tell current application to make new tab with properties {URL:"ardia.dev"}',
+    newTabScript(" example.com ", "current application"),
+    'tell current application to make new tab with properties {URL:"example.com"}',
   );
   assert.equal(
     newTabScript('say "hi"', "current application"),
