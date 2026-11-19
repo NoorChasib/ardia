@@ -922,11 +922,42 @@
    "id": "V-credit-phone-row",
    "class": "never",
    "mechanism": "never",
-   "regex": "(?<=\\{ name: \\\")Ardia(?=\\\", use: )|(?<=\\{ name: \\\"Ardia\\\", use: copy\\(\\)\\.(?:ardia|nilla)Credit, license: \\\"Apache License 2\\.0\\\", url: \\\")https://github\\.com/mantrakp04/ardia(?=\\\" \\})",
+   "regex": "(?<=\\{ name: \\\")Ardia(?=\\\", use: )|(?<=\\{ name: \\\"Ardia\\\", use: copy\\(\\)\\.(?:ardia|nilla)Credit, license: \\\"Apache License 2\\.0\\\", url: \\\")https://github\\.com/mantrakp04/ardia(?=\\\" \\})|\\{ name: \\\"Ardia\\\", use: \\\"The browser Nilla is forked from\\.\\\", license: \\\"Apache License 2\\.0\\\", url: \\\"https://github\\.com/ardia-browser/ardia\\\" \\}",
    "scope": [
     "apps/phone/src/components/settings/DataPages.tsx"
    ],
-   "why": "The phone's Ardia credit row: its name and upstream URL."
+   "why": "The phone's Ardia credit row: its name and upstream URL, and the whole row as S wrote it (its sentence, licence and the ardia-browser/ardia URL)."
+  },
+  {
+   "id": "V-upstream-guard",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)[A-Za-z0-9_.\\\\-]*(?:ardia|netnyahoo)[A-Za-z0-9_.\\\\-]*|mantrakp04",
+   "scope": [
+    "apps/browser/scripts/perf/upstreamGuard.mjs",
+    "apps/browser/scripts/perf/upstreamGuard.test.mjs"
+   ],
+   "why": "The bench's fixed upstream list (upstreamGuard.mjs UPSTREAM_HOSTS and UPSTREAM_OWNERS) and the addresses its test checks against it. They name the upstream project on purpose: renamed, the guard would stop catching real requests to ardia.dev, netnyahoo.com and the upstream GitHub owners."
+  },
+  {
+   "id": "V-services-engine-source",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=the prebuilt engine from `)ardia-browser/ardia(?=` releases)",
+   "scope": [
+    "docs/services.md"
+   ],
+   "why": "docs/services.md names the upstream release repo the prebuilt engine comes from at build time, which stays upstream in Layer 1 (as V-engine-fetch-lines)."
+  },
+  {
+   "id": "H-services-doc-linux-gate",
+   "class": "H",
+   "mechanism": "class",
+   "regex": "(?<![A-Za-z0-9_$])Ardia(?!Error(?![A-Za-z0-9_]))(?=[A-Z\\[$(])[A-Za-z0-9_]*",
+   "scope": [
+    "docs/services.md"
+   ],
+   "why": "docs/services.md lists the Linux wire names layer1Gate.ts refuses (ArdiaTelemetry.post, ArdiaSync.* ...): they stay Ardia in the Linux code (H-linux-modules), so the doc names them as the code does."
   },
   {
    "id": "V-credit-text",
