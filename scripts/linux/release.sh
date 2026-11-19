@@ -4,7 +4,7 @@ usage='usage: scripts/linux/release.sh <version> [--engine exact|nearest|<dir>] 
 
 Builds the Linux x64 release of Nilla <version> (a -nightly.<n> version is a
 nightly), the Linux counterpart of scripts/release.sh: it fetches the engine,
-builds apps/linux/dist and the nilla CLI, prepares uBlock Origin, packages
+builds apps/linux/dist and the nilla-browser CLI, prepares uBlock Origin, packages
 Nilla-<version>-linux-x64.tar.xz with lib/ardia/VERSION and the CLI, writes
 the .sha256 files and provenance.txt, and runs the smoke gate. It never
 publishes: it prints the gh release upload command for the assets.
@@ -69,7 +69,7 @@ if ! command -v bun >/dev/null; then
   done
   command -v bun >/dev/null || die "bun is neither on PATH nor in ~/.bun/bin or ~/.local/bin"
 fi
-for tool in node python3 sha256sum tar xz git dpkg-deb; do
+for tool in node python3 sha256sum tar xz git dpkg-deb unsquashfs; do
   command -v "$tool" >/dev/null || die "$tool is required"
 done
 node scripts/lib/release-note.mjs "docs/release-notes/$version.md" headline >/dev/null \
@@ -152,6 +152,8 @@ echo "==> Package"
 python3 scripts/linux/package.py --out "$engine" --ui apps/linux/dist --content-blocker "$blocker" \
   --version "$version" --cli "$out/$cli_name" --destination "$out/$package_name" \
   --deb "$out/$deb_name" --appimage "$out/$appimage_name" >/dev/null
+python3 -I scripts/linux/verify-licenses.py --tarball "$out/$package_name" --deb "$out/$deb_name" --appimage "$out/$appimage_name" \
+  || die "a package is missing its licence texts"
 for built in "$package_name" "$deb_name" "$appimage_name"; do
   (cd "$out" && sha256sum "$built" > "$built.sha256")
 done
