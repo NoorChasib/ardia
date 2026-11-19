@@ -1177,6 +1177,18 @@
    "why": "The Shared Folders test that binds a parent of Ardia Shared and Ardia Sync fixtures (in every spelling the guard folds) and checks nothing inside them is listed, written, moved, deleted or created (council C7). Renamed, it would test Nilla's own folders."
   },
   {
+   "id": "X-ardia-app-folders-guard-mac",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?i)(?<![A-Za-z0-9_])ardia(?![A-Za-z0-9_])",
+   "scope": [
+    "packages/shell/ios/ConfigCore/UpstreamAppFolders.swift",
+    "packages/shell/config-tests/UpstreamAppFoldersTests.swift",
+    "packages/shell/scripts/configFolder.test.mjs"
+   ],
+   "why": "The Mac app's list of an installed Ardia's folders (UpstreamAppFolders.swift, the same list as the CLI's upstream.py), its tests and the wiring test: ConfigFolder never reads or writes a config path that resolves into them (council C8). Renamed, the guard would refuse Nilla's own folders."
+  },
+  {
    "id": "X-ardia-sync-folder-guard-windows",
    "class": "never",
    "mechanism": "never",

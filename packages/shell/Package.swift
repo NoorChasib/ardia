@@ -9,6 +9,7 @@ let package = Package(
     .library(name: "NillaTranslateCore", targets: ["NillaTranslateCore"]),
     .library(name: "NillaReportCore", targets: ["NillaReportCore"]),
     .library(name: "NillaNotificationCore", targets: ["NillaNotificationCore"]),
+    .library(name: "NillaConfigCore", targets: ["NillaConfigCore"]),
   ],
   targets: [
     .target(name: "NillaUpdaterCore", path: "ios/UpdaterCore"),
@@ -19,5 +20,7 @@ let package = Package(
     .testTarget(name: "NillaReportCoreTests", dependencies: ["NillaReportCore"], path: "report-tests"),
     .target(name: "NillaNotificationCore", path: "ios/NotificationCore"),
     .testTarget(name: "NillaNotificationCoreTests", dependencies: ["NillaNotificationCore"], path: "notification-tests"),
+    .target(name: "NillaConfigCore", path: "ios/ConfigCore"),
+    .testTarget(name: "NillaConfigCoreTests", dependencies: ["NillaConfigCore"], path: "config-tests"),
   ]
 )

@@ -7,7 +7,8 @@
   "types": "src/index.tsx",
   "scripts": {
     "check": "tsc -p .",
-    "test": "bun test --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./scripts/focusHandoff.test.mjs && swift test --scratch-path \"${TMPDIR:-/tmp}/nilla-shell-swiftpm\""
+    "test:portable": "bun test --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./scripts/configFolder.test.mjs",
+    "test": "bun run test:portable && bun test --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json ./scripts/focusHandoff.test.mjs && swift test --scratch-path \"${TMPDIR:-/tmp}/nilla-shell-swiftpm\""
   },
   "peerDependencies": {
     "expo": "*",

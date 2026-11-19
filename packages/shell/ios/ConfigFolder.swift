@@ -19,8 +19,8 @@ enum ConfigFolder {
   static func path(_ name: String) -> String { (directory as NSString).appendingPathComponent(name) }
 
   static func read(_ name: String) -> [String: Any] {
-    guard isWatchable(name) else { return ["status": "unreadable"] }
-    return readRegularFile(path(name), stamped: name == "hooks.json")
+    guard isWatchable(name), let target = UpstreamAppFolders.ownPath(path(name)) else { return ["status": "unreadable"] }
+    return readRegularFile(target, stamped: name == "hooks.json")
   }
 
   static func readRegularFile(_ path: String, stamped: Bool = false) -> [String: Any] {
@@ -63,11 +63,13 @@ enum ConfigFolder {
   static func writeSchemas(_ files: [String: String]) throws -> [String] {
     let schemaDir = try DocumentStore.url("config-schema").path
     try FileManager.default.createDirectory(atPath: schemaDir, withIntermediateDirectories: true)
-    let folders = folderExists() ? [schemaDir, directory] : [schemaDir]
+    let configFolder = folderExists() ? UpstreamAppFolders.ownPath(directory) : nil
+    let folders = [schemaDir] + (configFolder.map { [$0] } ?? [])
     var written: [String] = []
     for folder in folders {
       for (name, contents) in files where schemaNames.contains(name) {
         let target = (folder as NSString).appendingPathComponent(name)
+        guard folder == schemaDir || UpstreamAppFolders.ownPath(target) != nil else { continue }
         if let current = readRegularFile(target)["text"] as? String, current == contents { continue }
         try replace(target, with: Data(contents.utf8))
         written.append(target)
