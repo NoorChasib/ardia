@@ -36,9 +36,10 @@ test("both launch filters drop the switch prefix the engine reads instance value
   assert.equal(enginePrefix, "ardia-");
   assert.match(launch, new RegExp(`static constexpr std::string_view kEngineSwitchPrefix = "${enginePrefix}";`));
   const chromiumSwitches = launch.slice(launch.indexOf('[config instance:@"chromiumSwitches"]'), launch.indexOf("std::vector<const char *> args"));
-  assert.match(chromiumSwitches, /!DropsReservedSwitch\(full\.c_str\(\)\)\) extra\.push_back\(full\)/);
-  const forwardedArguments = launch.slice(launch.indexOf("std::vector<const char *> args"), launch.indexOf("MergeFeatureLists(args)"));
-  assert.match(forwardedArguments, /if \(autoAccepts\(arg\) \|\| DropsReservedSwitch\(arg\)\) continue;/);
+  assert.match(chromiumSwitches, /std::optional<std::string> forwarded = ForwardedCallerArgument\(full\.c_str\(\)\);\s*if \(forwarded && !autoAccepts\(forwarded->c_str\(\)\)\) extra\.push_back\(\*forwarded\);/);
+  const forwardedArguments = launch.slice(launch.indexOf("for (int i = 1; mockKeychain && i < argc; i++) {"), launch.indexOf("MergeFeatureLists(args)"));
+  assert.match(forwardedArguments, /std::optional<std::string> forwarded = ForwardedCallerArgument\(arg\);\s*if \(forwarded && !autoAccepts\(forwarded->c_str\(\)\)\) extra\.push_back\(\*forwarded\);/);
+  assert.doesNotMatch(forwardedArguments, /args\.push_back\(arg\)/);
   assert.doesNotMatch(launch, /hasPrefix:@"[a-z]+-"|strncmp\(arg, "--[a-z]+-", \d+\)/);
   assert.match(body("- (NSArray<NSString *> *)engineSwitches {"), new RegExp(`@"--${enginePrefix}data-dir="`));
 });
@@ -46,19 +47,33 @@ test("both launch filters drop the switch prefix the engine reads instance value
 test("Chromium's user-data-dir is only ever the data dir the guard checked", () => {
   const switches = read("../ios/NillaChromiumSwitches.h");
   assert.match(switches, /kUserDataDir = "user-data-dir";/);
-  assert.match(switches, /return !name\.empty\(\) && \(NamesUserDataDir\(arg\) \|\|/);
-  const drops = launch.slice(launch.indexOf("static bool DropsReservedSwitch("), launch.indexOf("\n}\n", launch.indexOf("static bool DropsReservedSwitch(")));
-  assert.match(drops, /if \(!nilla_switches::IsReserved\(arg, kEngineSwitchPrefix\)\) return false;/);
+  assert.match(switches, /return !name\.empty\(\) && \(NamesUserDataDir\(arg, syntax\) \|\|/);
+  const forwarding = launch.slice(launch.indexOf("static std::optional<std::string> ForwardedCallerArgument("), launch.indexOf("\n}\n", launch.indexOf("static std::optional<std::string> ForwardedCallerArgument(")));
+  assert.match(forwarding, /nilla_switches::ForwardedArgument\(raw, kEngineSwitchPrefix/);
+  assert.match(forwarding, /if \(forwarding\.refusal != nilla_switches::Refusal::none\) return std::nullopt;\s*return forwarding\.argument;/);
   const run = launch.slice(launch.indexOf("+ (int)runWithArgc:"));
   assert.equal(run.match(/user-data-dir/g).length, 1, "the launch names user-data-dir once, for the checked data dir");
   assert.match(run, /"--user-data-dir=" \+ std::string\(gDataDirectory\.UTF8String\)/);
   assert.ok(run.indexOf('"--user-data-dir="') > run.indexOf("gDataDirectory = dataDirectory;"), "the switch carries the data dir only after the guard took it");
   const extra = run.slice(run.indexOf("std::vector<std::string> extra"), run.indexOf("merged = MergeFeatureLists(args);"));
   const pushes = [...extra.matchAll(/(extra|args)\.push_back\(([^;]*)\);/g)].map((m) => m[2]);
-  const fromCaller = pushes.filter((value) => /full|arg\b|sw\.UTF8String/.test(value));
-  assert.deepEqual(fromCaller, ["sw.UTF8String", "full", "arg"]);
+  const fromCaller = pushes.filter((value) => /forwarded|full|arg\b|sw\.UTF8String/.test(value));
+  assert.deepEqual(fromCaller, ["sw.UTF8String", "*forwarded", "*forwarded"]);
   assert.ok(body("- (NSArray<NSString *> *)engineSwitches {").includes(`[NSString stringWithFormat:@"--${enginePrefix}%@=%@", Kebab(key), value]`), "instance values reach the engine only under its own prefix");
   assert.match(pkg.scripts.test, /tests\/chromium-switches\.test\.cc/);
+});
+
+test("caller arguments are read the way Chromium 157's command line parser reads them before the launch filters them", () => {
+  const switches = read("../ios/NillaChromiumSwitches.h");
+  assert.match(switches, /kAsciiWhitespace = "\\t\\v\\f \\n\\r";/);
+  assert.match(switches, /if \(arg\.starts_with\("--"\)\) return 2;\s*if \(arg\.starts_with\("-"\)\) return 1;\s*if \(syntax == Syntax::windows && arg\.starts_with\("\/"\)\) return 1;/);
+  const parsed = switches.slice(switches.indexOf("inline std::optional<Switch> ParsedSwitch("), switches.indexOf("\n}\n", switches.indexOf("inline std::optional<Switch> ParsedSwitch(")));
+  assert.match(parsed, /const std::string_view arg = Trimmed\(raw, syntax\);/);
+  assert.match(parsed, /if \(prefix == 0 \|\| prefix == arg\.size\(\)\) return std::nullopt;/);
+  const forwarded = switches.slice(switches.indexOf("inline Forwarding ForwardedArgument("), switches.indexOf("\n}\n", switches.indexOf("inline Forwarding ForwardedArgument(")));
+  assert.match(forwarded, /Forwarding forwarding\{std::string\(Trimmed\(raw, syntax\)\)/);
+  assert.equal((launch.match(/ForwardedCallerArgument\(/g) || []).length, 3, "one helper, used by chromiumSwitches and argv");
+  assert.doesNotMatch(launch, /DropsReservedSwitch|nilla_switches::IsReserved\(/);
 });
 
 test("every launch passes the engine the mock keychain, and a team-signed build refuses to start before it", () => {

@@ -21,6 +21,7 @@
 #include <atomic>
 #include <cctype>
 #include <cstring>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -169,12 +170,13 @@ static std::string FeatureEntryName(const std::string &entry) {
 
 static constexpr std::string_view kEngineSwitchPrefix = "ardia-";
 
-static bool DropsReservedSwitch(const char *arg) {
-  if (!nilla_switches::IsReserved(arg, kEngineSwitchPrefix)) return false;
-  if (nilla_switches::NamesUserDataDir(arg))
-    fprintf(stderr, "[ardiacore] ignoring %s: Chromium always gets the data dir Nilla checked, %s\n", arg,
+static std::optional<std::string> ForwardedCallerArgument(const char *raw) {
+  const nilla_switches::Forwarding forwarding = nilla_switches::ForwardedArgument(raw, kEngineSwitchPrefix);
+  if (forwarding.refusal == nilla_switches::Refusal::userDataDir)
+    fprintf(stderr, "[ardiacore] ignoring %s: Chromium always gets the data dir Nilla checked, %s\n", forwarding.argument.c_str(),
             gDataDirectory.fileSystemRepresentation);
-  return true;
+  if (forwarding.refusal != nilla_switches::Refusal::none) return std::nullopt;
+  return forwarding.argument;
 }
 
 static std::vector<std::string> MergeFeatureLists(const std::vector<const char *> &args) {
@@ -530,12 +532,12 @@ void StartEarlyWindow() {
     NSString *all = [@" " stringByAppendingString:switches];
     for (NSString *item in [all componentsSeparatedByString:@" --"]) {
       NSString *sw = [item stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+      if (!sw.length) continue;
       std::string full = std::string("--") + sw.UTF8String;
-      if (sw.length && !autoAccepts(full.c_str()) && !DropsReservedSwitch(full.c_str())) extra.push_back(full);
+      std::optional<std::string> forwarded = ForwardedCallerArgument(full.c_str());
+      if (forwarded && !autoAccepts(forwarded->c_str())) extra.push_back(*forwarded);
     }
   }
-  std::vector<const char *> args = {argc > 0 && argv[0] ? argv[0] : "Nilla"};
-  for (const std::string &s : extra) args.push_back(s.c_str());
   for (int i = 1; mockKeychain && i < argc; i++) {
     const char *arg = argv[i];
     if (!arg) break;
@@ -545,9 +547,11 @@ void StartEarlyWindow() {
       i++;
       continue;
     }
-    if (autoAccepts(arg) || DropsReservedSwitch(arg)) continue;
-    args.push_back(arg);
+    std::optional<std::string> forwarded = ForwardedCallerArgument(arg);
+    if (forwarded && !autoAccepts(forwarded->c_str())) extra.push_back(*forwarded);
   }
+  std::vector<const char *> args = {argc > 0 && argv[0] ? argv[0] : "Nilla"};
+  for (const std::string &s : extra) args.push_back(s.c_str());
   static std::vector<std::string> merged;
   merged = MergeFeatureLists(args);
   args.resize(1);
