@@ -1,6 +1,7 @@
 export type CliCaller = { name: string; app: string | null };
 
-export const CLI_CALLER_FALLBACK = "nilla";
+export const CLI_CALLER_FALLBACK = "nilla-browser";
+const NAMES_FOR_THE_CLI = new Set([CLI_CALLER_FALLBACK, "nilla"]);
 const MAX_NAME = 40;
 const MAX_APP_PATH = 1024;
 const INVISIBLE = /[\p{C}]/gu;
@@ -32,7 +33,7 @@ export type ControlLine = { lead: string; name: string; rest: string };
 
 export function controlLine(caller: CliCaller | null): ControlLine {
   const name = caller?.name ?? CLI_CALLER_FALLBACK;
-  if (name.toLowerCase() === CLI_CALLER_FALLBACK) return { lead: "The ", name: CLI_CALLER_FALLBACK, rest: " command is controlling Nilla" };
+  if (NAMES_FOR_THE_CLI.has(name.toLowerCase())) return { lead: "The ", name: CLI_CALLER_FALLBACK, rest: " command is controlling Nilla" };
   return { lead: "", name, rest: " is controlling Nilla" };
 }
 

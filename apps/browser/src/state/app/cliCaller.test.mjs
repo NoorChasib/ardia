@@ -27,9 +27,11 @@ test("only an absolute, outermost .app bundle path is kept for the icon", () => 
 });
 
 test("no caller reads as the nilla-browser command, never as \"nilla is controlling Nilla\"", () => {
-  assert.deepEqual(controlLine(null), { lead: "The ", name: "nilla", rest: " command is controlling Nilla" });
+  assert.deepEqual(controlLine(null), { lead: "The ", name: "nilla-browser", rest: " command is controlling Nilla" });
   assert.equal(controlLineText(controlLine(null)), "The nilla-browser command is controlling Nilla");
   assert.equal(controlLineText(controlLine({ name: "nilla", app: null })), "The nilla-browser command is controlling Nilla");
   assert.equal(controlLineText(controlLine({ name: "Nilla", app: null })), "The nilla-browser command is controlling Nilla");
+  assert.equal(controlLineText(controlLine({ name: "nilla-browser", app: null })), "The nilla-browser command is controlling Nilla");
+  assert.equal(controlLineText(controlLine({ name: "Nilla-Browser", app: null })), "The nilla-browser command is controlling Nilla");
   assert.deepEqual(controlLine({ name: "Codex", app: null }), { lead: "", name: "Codex", rest: " is controlling Nilla" });
 });
