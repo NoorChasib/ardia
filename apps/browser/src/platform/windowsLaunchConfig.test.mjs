@@ -141,3 +141,19 @@ test("the install check finds no shortcut, registration, start or Ardia folder, 
   assert.match(readFileSync(new URL("installer/Nilla.iss", scripts), "utf8"), /^AppId=\{\{996E41A5-7F20-415A-BD04-91E365610996\}$/m);
   assert.doesNotMatch(check, /System\.AppUserModel\.ID|CreateShortcut\(\$shortcut\)/);
 });
+
+test("nilla-dev-run.ps1 resolves the data folder through handles before it compares it with Ardia's folders, and the gate smoke runs its alias cases", () => {
+  const script = (name) => readFileSync(new URL(name, scripts), "utf8");
+  const run = script("nilla-dev-run.ps1");
+  assert.match(run, /CreateFileW\(path, 0, ShareAll, IntPtr\.Zero, OpenExisting, BackupSemantics \| extra, IntPtr\.Zero\)/);
+  assert.match(run, /GetFinalPathNameByHandleW\(handle, found, \(uint\)found\.Capacity, volume\)/);
+  assert.match(run, /if \(FinalPath\(at, volume, OpenReparsePoint, out ignored\) != null\) return null;/);
+  assert.match(run, /\$data = \$PSCmdlet\.GetUnresolvedProviderPathFromPSPath\(\$DataDir\)/);
+  assert.match(run, /foreach \(\$used in @\(\$Data, \[System\.IO\.Path\]::Combine\(\$Data, "Chromium"\), \[System\.IO\.Path\]::Combine\(\$Data, "Sync"\)\)\)/);
+  assert.match(run, /New-Item -ItemType Directory -Force -Path \$data \| Out-Null\nAssert-ApartFromArdia \$data \$upstream\n/);
+  assert.match(run, /\$data = \$final -replace [^\n]+\n\$env:ARDIA_DATA_DIR = \$data\n/);
+  assert.doesNotMatch(run, /GetFullPath|StartsWith\(/);
+  const cases = script("nilla-dev-run.test.ps1");
+  for (const kind of ["a junction to Ardia's data folder", "Ardia's data folder as an extended path", "Ardia's data folder through an 8.3 short name", "Ardia's data folder as a relative .", "a scratch folder whose Chromium is a junction to Ardia's data folder", "a dangling symbolic link"]) assert.ok(cases.includes(`"${kind}"`), kind);
+  assert.match(script("launch-smoke.ps1"), /& \(Join-Path \$PSScriptRoot "nilla-dev-run\.test\.ps1"\)\n  if \(\$LASTEXITCODE -ne 0\)/);
+});

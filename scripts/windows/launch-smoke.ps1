@@ -1709,6 +1709,10 @@ function Test-ATestInstance([string]$DataDirectory, [string]$Case) {
 }
 
 if ($Part -ne "launch") {
+try {
+  & (Join-Path $PSScriptRoot "nilla-dev-run.test.ps1")
+  if ($LASTEXITCODE -ne 0) { $failures += "nilla-dev-run.ps1 let a path into Ardia's folders through, or refused a folder of its own (nilla-dev-run.test.ps1)" }
+} catch { $failures += "nilla-dev-run.test.ps1 stopped: $($_.Exception.Message)" }
 $gateData = New-DataDirectory "gate-scratch"
 $marker = Join-Path (Split-Path -Parent $gateApp) "Ardia.test-build"
 Remove-Item -Force -LiteralPath $marker
