@@ -9,11 +9,13 @@ import Testing
   let fileManager = FileManager.default
 
   func upstream(_ sandbox: Sandbox, entropy: Data) throws -> URL {
-    let folder = sandbox.root.appendingPathComponent(UpstreamSyncFolder.name, isDirectory: true)
-    try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
-    let mac = try FakeMac(folder: folder, entropy: entropy)
+    let seeded = sandbox.root.appendingPathComponent("Seeded Before The Rename", isDirectory: true)
+    try fileManager.createDirectory(at: seeded, withIntermediateDirectories: true)
+    let mac = try FakeMac(folder: seeded, entropy: entropy)
     try mac.put(Self.scope, "upstream", "1")
     try mac.sync([Self.scope])
+    let folder = sandbox.root.appendingPathComponent(UpstreamSyncFolder.name, isDirectory: true)
+    try fileManager.moveItem(at: seeded, to: folder)
     return folder
   }
 
