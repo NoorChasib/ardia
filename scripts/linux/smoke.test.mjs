@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { launchArguments, launchEnvironment } from "../../apps/linux/scripts/acceptance/lib/nilla.mjs";
-import { ASSERTIONS, SCRIPT_NAME, SCRIPT_TITLE_PREFIX, USAGE, USER_SCRIPTS_CAPABILITIES, VERSION_PATTERN, appVersionVerdict, cliControlSupport, cliTarball, debLayoutProblems, packageFormat, formatTable, installerRanAgain, launchRefusal, packageStagedFiles, parseArgs, pipeLaunchArguments, splitPipeMessages, summarize, uboSeedProblems, uboTuningProblems, userScriptSource } from "./smoke.mjs";
+import { ASSERTIONS, CLI_COMMAND, SCRIPT_NAME, SCRIPT_TITLE_PREFIX, USAGE, USER_SCRIPTS_CAPABILITIES, VERSION_PATTERN, appVersionVerdict, cliControlSupport, cliTarball, debLayoutProblems, packageFormat, formatTable, installerRanAgain, launchRefusal, packageStagedFiles, parseArgs, pipeLaunchArguments, splitPipeMessages, summarize, uboSeedProblems, uboTuningProblems, userScriptSource } from "./smoke.mjs";
 
 test("the package checks are named in the usage and keep the original eight first", () => {
   assert.deepEqual(ASSERTIONS.slice(0, 8), ["ldd", "shell-ui", "bootstrap", "native-tab", "sandbox", "content-blocker", "restart-restore", "staged-install"]);
@@ -134,4 +135,13 @@ test("a .deb is root-owned with a setuid root helper, the launcher link, the pol
   assert.ok(problems.some((p) => p.includes("chrome-sandbox is not setuid root")));
   assert.ok(problems.some((p) => p.includes("apparmor/ardia is missing")));
   assert.ok(problems.some((p) => p.includes("owned by user/user")));
+});
+
+test("cli-install checks the command the bundled installer links and the version line the CLI prints", () => {
+  const installer = readFileSync(new URL("../../apps/cli/install.sh", import.meta.url), "utf8");
+  const cli = readFileSync(new URL("../../apps/cli/nilla_browser_cli/cli.py", import.meta.url), "utf8");
+  assert.equal(CLI_COMMAND, "nilla-browser");
+  assert.match(installer, new RegExp(`^command_link=\\$bin_dir/${CLI_COMMAND}$`, "m"));
+  assert.ok(cli.includes(`version=f"${CLI_COMMAND} {__version__}"`));
+  for (const command of ["--version", "windows", "browse", "scripts install"]) assert.ok(USAGE.includes(`${CLI_COMMAND} ${command}`), command);
 });
