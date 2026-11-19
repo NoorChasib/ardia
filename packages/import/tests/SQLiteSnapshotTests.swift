@@ -1,4 +1,5 @@
 import Foundation
+import SQLite3
 import XCTest
 @testable import NillaImportCore
 
@@ -57,6 +58,95 @@ final class SQLiteSnapshotTests: XCTestCase {
     snapshot = nil
     let after = Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("nilla-import-\(getpid())-") })
     XCTAssertEqual(after, before)
+  }
+
+  private func makeDatabase(_ url: URL, table: String) throws {
+    try fm.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    var db: OpaquePointer?
+    defer { sqlite3_close(db) }
+    guard sqlite3_open(url.path, &db) == SQLITE_OK,
+          sqlite3_exec(db, "CREATE TABLE \(table) (value TEXT); INSERT INTO \(table) VALUES ('x');", nil, nil, nil) == SQLITE_OK else {
+      throw ImportError.unreadable("fixture")
+    }
+  }
+
+  private func state(_ folder: URL) throws -> [String: Data] {
+    var files: [String: Data] = [:]
+    for name in try fm.contentsOfDirectory(atPath: folder.path) {
+      files[name] = try Data(contentsOf: folder.appendingPathComponent(name))
+    }
+    return files
+  }
+
+  private func temporaryCopies() throws -> Set<String> {
+    Set(try fm.contentsOfDirectory(atPath: fm.temporaryDirectory.path).filter { $0.hasPrefix("nilla-import-\(getpid())-") })
+  }
+
+  func testALinkedSourceFileIsNeverFollowedOrOpened() throws {
+    let elsewhere = folder.appendingPathComponent("Elsewhere", isDirectory: true)
+    try makeDatabase(elsewhere.appendingPathComponent("History"), table: "secret")
+    let profile = folder.appendingPathComponent("Profile", isDirectory: true)
+    try fm.createDirectory(at: profile, withIntermediateDirectories: true)
+    try fm.createSymbolicLink(at: profile.appendingPathComponent("History"), withDestinationURL: elsewhere.appendingPathComponent("History"))
+    try fm.createSymbolicLink(atPath: profile.appendingPathComponent("Favicons").path, withDestinationPath: "../Elsewhere/History")
+    let before = try state(elsewhere)
+    let copies = try temporaryCopies()
+
+    for name in ["History", "Favicons"] {
+      XCTAssertThrowsError(try SQLiteSnapshot(copying: profile.appendingPathComponent(name)), name) { error in
+        XCTAssertEqual((error as? ImportError)?.code, "unreadable")
+      }
+    }
+    XCTAssertEqual(try state(elsewhere), before)
+    XCTAssertEqual(try temporaryCopies(), copies)
+  }
+
+  func testALinkedWriteAheadLogOrJournalIsRefusedAndNeverRead() throws {
+    let elsewhere = folder.appendingPathComponent("Elsewhere", isDirectory: true)
+    try makeDatabase(elsewhere.appendingPathComponent("Other"), table: "secret")
+    for suffix in ["-wal", "-journal"] {
+      let profile = folder.appendingPathComponent("Profile\(suffix)", isDirectory: true)
+      try makeDatabase(profile.appendingPathComponent("History"), table: "urls")
+      try fm.createSymbolicLink(at: profile.appendingPathComponent("History\(suffix)"), withDestinationURL: elsewhere.appendingPathComponent("Other"))
+      XCTAssertThrowsError(try SQLiteSnapshot(copying: profile.appendingPathComponent("History")), suffix)
+    }
+    XCTAssertEqual(try fm.contentsOfDirectory(atPath: elsewhere.path), ["Other"])
+  }
+
+  func testASourceReachedThroughALinkedFolderCopiesTheResolvedFileOnly() throws {
+    let real = folder.appendingPathComponent("Real/Default", isDirectory: true)
+    try makeDatabase(real.appendingPathComponent("History"), table: "urls")
+    let picked = folder.appendingPathComponent("Picked", isDirectory: true)
+    try fm.createSymbolicLink(at: picked, withDestinationURL: real)
+    let snapshot = try SQLiteSnapshot(copying: picked.appendingPathComponent("History"))
+    XCTAssertTrue(snapshot.tableExists("urls"))
+    let made = try temporaryCopies().compactMap { name -> String? in
+      let copy = fm.temporaryDirectory.appendingPathComponent(name).appendingPathComponent("db.sqlite").path
+      var info = stat()
+      guard lstat(copy, &info) == 0 else { return nil }
+      XCTAssertEqual(info.st_mode & S_IFMT, S_IFREG)
+      XCTAssertEqual(info.st_mode & 0o077, 0)
+      return copy
+    }
+    XCTAssertFalse(made.isEmpty)
+    XCTAssertEqual(try fm.contentsOfDirectory(atPath: real.path), ["History"])
+  }
+
+  func testAPipeOrFolderInPlaceOfTheSourceIsRefusedWithoutBlocking() throws {
+    let profile = folder.appendingPathComponent("Profile", isDirectory: true)
+    try fm.createDirectory(at: profile.appendingPathComponent("Favicons"), withIntermediateDirectories: true)
+    XCTAssertEqual(mkfifo(profile.appendingPathComponent("History").path, 0o600), 0)
+    let start = Date()
+    for name in ["History", "Favicons"] {
+      XCTAssertThrowsError(try SQLiteSnapshot(copying: profile.appendingPathComponent(name)), name)
+    }
+    XCTAssertLessThan(Date().timeIntervalSince(start), 5)
+    XCTAssertThrowsError(try SQLiteSnapshot(copying: profile.appendingPathComponent("Missing"))) { error in
+      XCTAssertEqual((error as? ImportError)?.code, "notFound")
+    }
+    XCTAssertThrowsError(try SQLiteSnapshot(copying: folder.appendingPathComponent("Gone/History"))) { error in
+      XCTAssertEqual((error as? ImportError)?.code, "notFound")
+    }
   }
 
   func testOneImportCopiesEachSourceFileOnce() throws {

@@ -7,31 +7,35 @@ final class SQLiteSnapshot {
 
   init(copying source: URL) throws {
     let fm = FileManager.default
-    guard fm.fileExists(atPath: source.path) else {
-      throw ImportError.notFound("\(source.lastPathComponent) not found")
+    let name = source.lastPathComponent
+    let folder = try Self.openResolvedFolder(of: source)
+    defer { close(folder) }
+    guard let file = try Self.openSourceFile(name, in: folder, required: true) else {
+      throw ImportError.notFound("\(name) not found")
+    }
+    defer { close(file) }
+    var siblings: [(suffix: String, descriptor: Int32)] = []
+    defer { siblings.forEach { close($0.descriptor) } }
+    for suffix in ["-wal", "-journal"] {
+      if let sibling = try Self.openSourceFile(name + suffix, in: folder, required: false) { siblings.append((suffix, sibling)) }
     }
     let dir = fm.temporaryDirectory.appendingPathComponent("\(Self.prefix)\(getpid())-\(UUID().uuidString)", isDirectory: true)
     tempDir = dir
     try fm.createDirectory(at: dir, withIntermediateDirectories: true)
     let copy = dir.appendingPathComponent("db.sqlite")
     do {
-      try fm.copyItem(at: source, to: copy)
-      for suffix in ["-wal", "-journal"] {
-        let sibling = URL(fileURLWithPath: source.path + suffix)
-        if fm.fileExists(atPath: sibling.path) {
-          try? fm.copyItem(at: sibling, to: URL(fileURLWithPath: copy.path + suffix))
-        }
-      }
+      try Self.copyBytes(from: file, to: copy.path)
+      for sibling in siblings { try Self.copyBytes(from: sibling.descriptor, to: copy.path + sibling.suffix) }
     } catch {
       try? fm.removeItem(at: dir)
-      throw ImportError.unreadable("Couldn't copy \(source.lastPathComponent): \(error.localizedDescription)")
+      throw ImportError.unreadable("Couldn't copy \(name): \(error.localizedDescription)")
     }
 
-    if sqlite3_open_v2(copy.path, &db, SQLITE_OPEN_READWRITE, nil) != SQLITE_OK {
+    if sqlite3_open_v2(copy.path, &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOFOLLOW, nil) != SQLITE_OK {
       sqlite3_close(db)
       db = nil
       let uri = "file:\(copy.path)?immutable=1"
-      if sqlite3_open_v2(uri, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI, nil) != SQLITE_OK {
+      if sqlite3_open_v2(uri, &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_URI | SQLITE_OPEN_NOFOLLOW, nil) != SQLITE_OK {
         let message = db.map { String(cString: sqlite3_errmsg($0)) } ?? "open failed"
         sqlite3_close(db)
         db = nil
@@ -80,6 +84,66 @@ final class SQLiteSnapshot {
     }
     sqlite3_close(db)
     if let tempDir { try? FileManager.default.removeItem(at: tempDir) }
+  }
+
+  static func openResolvedFolder(of source: URL) throws -> Int32 {
+    let name = source.lastPathComponent
+    guard source.isFileURL, !name.isEmpty, name != "/", name != ".", name != "..", !name.contains("/") else {
+      throw ImportError.unreadable("Couldn't open \(name)")
+    }
+    guard let resolved = realpath(source.deletingLastPathComponent().path, nil) else {
+      let code = errno
+      if code == ENOENT { throw ImportError.notFound("\(name) not found") }
+      throw ImportError.unreadable("Couldn't open \(name): \(String(cString: strerror(code)))")
+    }
+    let folder = open(resolved, O_RDONLY | O_DIRECTORY | O_CLOEXEC)
+    let code = errno
+    free(resolved)
+    guard folder >= 0 else { throw ImportError.unreadable("Couldn't open \(name): \(String(cString: strerror(code)))") }
+    return folder
+  }
+
+  static func openSourceFile(_ name: String, in folder: Int32, required: Bool) throws -> Int32? {
+    let descriptor = openat(folder, name, O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_CLOEXEC)
+    guard descriptor >= 0 else {
+      let code = errno
+      if code == ENOENT {
+        if required { throw ImportError.notFound("\(name) not found") }
+        return nil
+      }
+      if code == ELOOP { throw ImportError.unreadable("\(name) is a link, so Nilla won't follow it") }
+      throw ImportError.unreadable("Couldn't open \(name): \(String(cString: strerror(code)))")
+    }
+    var info = stat()
+    guard fstat(descriptor, &info) == 0, info.st_mode & S_IFMT == S_IFREG else {
+      close(descriptor)
+      throw ImportError.unreadable("\(name) isn't a regular file")
+    }
+    return descriptor
+  }
+
+  static func copyBytes(from source: Int32, to path: String) throws {
+    let target = open(path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, mode_t(0o600))
+    guard target >= 0 else { throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno)) }
+    defer { close(target) }
+    var buffer = [UInt8](repeating: 0, count: 1 << 20)
+    while true {
+      let count = buffer.withUnsafeMutableBytes { read(source, $0.baseAddress, $0.count) }
+      if count == 0 { return }
+      if count < 0 {
+        if errno == EINTR { continue }
+        throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+      }
+      var written = 0
+      while written < count {
+        let step = buffer.withUnsafeBytes { write(target, $0.baseAddress! + written, count - written) }
+        if step < 0 {
+          if errno == EINTR { continue }
+          throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+        }
+        written += step
+      }
+    }
   }
 
   static let prefix = "nilla-import-"
