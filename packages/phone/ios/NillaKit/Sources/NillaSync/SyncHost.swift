@@ -76,6 +76,7 @@ final class SyncHost {
   }
 
   func chainStatus() -> String {
+    guard SyncFolderAccess.isOwn(vault.folder) else { return "unavailable" }
     guard let names = SyncFolderAccess.coordinatedListing(vault.folder, coordination: coordination) else {
       timedOut = true
       return "unavailable"

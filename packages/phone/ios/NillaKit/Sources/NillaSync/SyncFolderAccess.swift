@@ -34,8 +34,17 @@ public enum SyncFolderAccess {
 
   public static func grant(picked url: URL) throws -> (SyncFolderGrant, SyncFolderLocation) {
     let accessing = url.startAccessingSecurityScopedResource()
-    let subfolder = syncSubfolder(in: url)
-    let folder = subfolder.map { url.appendingPathComponent($0, isDirectory: true) } ?? url
+    let subfolder: String?
+    let folder: URL
+    do {
+      _ = try UpstreamSyncFolder.ownURL(url)
+      subfolder = syncSubfolder(in: url)
+      folder = subfolder.map { url.appendingPathComponent($0, isDirectory: true) } ?? url
+      _ = try UpstreamSyncFolder.ownURL(folder)
+    } catch {
+      if accessing { url.stopAccessingSecurityScopedResource() }
+      throw error
+    }
     let grant = SyncFolderGrant(picked: url, folder: folder, accessing: accessing)
     let bookmark = try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
     return (grant, SyncFolderLocation(bookmark: bookmark, subfolder: subfolder, name: folder.lastPathComponent))
@@ -47,6 +56,7 @@ public enum SyncFolderAccess {
   }
 
   public static func resolve(_ location: SyncFolderLocation) -> Resolution {
+    guard !UpstreamSyncFolder.namesUpstream(location.name), location.subfolder.map(isPlainName) ?? true else { return .unavailable }
     var stale = false
     guard let url = try? URL(resolvingBookmarkData: location.bookmark, options: [], relativeTo: nil, bookmarkDataIsStale: &stale) else {
       return .unavailable
@@ -54,11 +64,21 @@ public enum SyncFolderAccess {
     let accessing = url.startAccessingSecurityScopedResource()
     let folder = location.subfolder.map { url.appendingPathComponent($0, isDirectory: true) } ?? url
     let grant = SyncFolderGrant(picked: url, folder: folder, accessing: accessing)
+    guard isOwn(folder) else { return .unavailable }
     var refreshed: SyncFolderLocation?
     if stale, let bookmark = try? url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil) {
       refreshed = SyncFolderLocation(bookmark: bookmark, subfolder: location.subfolder, name: location.name)
     }
     return .resolved(grant, refreshed: refreshed)
+  }
+
+  static func isOwn(_ url: URL) -> Bool {
+    if case .own = UpstreamSyncFolder.check(url.path) { return true }
+    return false
+  }
+
+  static func isPlainName(_ name: String) -> Bool {
+    !name.isEmpty && !name.contains("/") && name != "." && name != ".."
   }
 
   static func syncSubfolder(in url: URL) -> String? {
@@ -76,6 +96,7 @@ public enum SyncFolderAccess {
   }
 
   static func isDirectory(_ url: URL) -> Bool {
+    guard isOwn(url) else { return false }
     var isDirectory: ObjCBool = false
     return FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue
   }
@@ -83,6 +104,7 @@ public enum SyncFolderAccess {
   public static let defaultTimeout: TimeInterval = 20
 
   static func coordinatedListing(_ url: URL, coordination: SyncCoordination = SyncCoordination(timeout: defaultTimeout)) -> [String]? {
-    try? coordination.read(url) { url in try FileManager.default.contentsOfDirectory(atPath: url.path) }
+    guard isOwn(url) else { return nil }
+    return try? coordination.read(url) { url in try FileManager.default.contentsOfDirectory(atPath: url.path) }
   }
 }
