@@ -24,7 +24,7 @@ reflects every choice so far and animates from one state to the next.
 | 8 | Make it home | Default browser (7-day trial), Dock, open at login, links from other apps in Little Nilla / a tab |
 | 9 | Outro | postcard listing what you picked · Get Started / Take the Tour |
 
-Every screen has Skip, which keeps the preset, and the progress dots. Going back keeps your choices. The `nilla`
+Every screen has Skip, which keeps the preset, and the progress dots. Going back keeps your choices. The `nilla-browser`
 CLI step leaves onboarding and stays in Settings › Advanced.
 
 ## Presets

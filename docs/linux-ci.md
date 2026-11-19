@@ -138,7 +138,7 @@ It refuses any sandbox-disabling switch. Every check must run and pass:
 9. `app-version`: `systemInfo.appVersion` is `lib/ardia/VERSION`.
 10. `cli-install`: the bundled installer installs the bundled CLI the way the browser does
     (`--version <VERSION> --sha256 <digest>`, `ARDIA_CLI_URL=file://…`). `HOME`, `XDG_DATA_HOME`, `ARDIA_CLI_HOME` and
-    `ARDIA_CLI_BIN_DIR` all point into the scratch folder. `nilla --version` must print the package version, and a
+    `ARDIA_CLI_BIN_DIR` all point into the scratch folder. `nilla-browser --version` must print the package version, and a
     second install must be a no-op.
 11. `cli-control`: a third instance turns `cliControl` on. Then, with `--data-dir <profile>`, `nilla-browser windows` must
     succeed, `nilla-browser browse open <fixture>` (a background tab) then `get title` must read the fixture's title, and

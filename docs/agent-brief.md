@@ -328,7 +328,7 @@ The only variables the app and engine read, through `NillaLaunchConfig` (`packag
 | | `shadersKeyWindow` | Metal views act as in the key window (the New Tab intro) |
 | | `peekStrict` | Peek's test hooks stop relaxing its click checks |
 | | `importSecret=<s>` · `importDiaBundleId=<id>` · `importDiaWindows=<json>` | Import's Safe Storage secret · the app Dia's tabs come from (opened hidden and quit by the import) · fixture windows answering for it, with no Automation prompt |
-| | `cliInstallScript=<path>` | Another `nilla` installer script |
+| | `cliInstallScript=<path>` | Another `nilla-browser` installer script |
 | | `bangsUrl` · `onboarding` · `whatsNew` · `telemetry` · `liveMock=<url>` · `calendarFixture` | Debug builds only: bang list, run onboarding, show What's New, send telemetry, live folders from a mock, the calendar fixture |
 | | `cdpTabsVisible` | A tab that a DevTools-port client (`ARDIA_REMOTE_DEBUGGING_PORT`) attaches to stays visible to its renderer until that session detaches, as on the `nilla-browser` command's token path (`ac_cli_visible_tabs.cc`; `docs/cli.md` › Input) |
 | | `nativeDragRefused` | The engine refuses every macOS drag session a page asks for, as when one is already open, and ends the page's drag (`drag-end-check.mjs`; `docs/engine-build.md`, `chromium-drag-always-ends.patch`) |

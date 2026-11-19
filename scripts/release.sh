@@ -170,9 +170,9 @@ if [ "$phase" != sign ]; then
   "$stages/archive.sh" "$dist" "$framework_src" "${RELEASE_BUILD_DIR:-$root/apps/browser/build-release}" "$archive_signing" \
     ${version_settings[@]+"${version_settings[@]}"} AC_UPDATE_CHANNEL="$channel" \
     ${extra_build_settings[@]+"${extra_build_settings[@]}"}
-  echo "==> nilla CLI"
+  echo "==> nilla-browser CLI"
   "$root/apps/cli/scripts/build.sh" "$version" "$dist" >"$dist/cli-build.log" 2>&1 \
-    || { tail -20 "$dist/cli-build.log" >&2; die "building the nilla CLI failed ($dist/cli-build.log)"; }
+    || { tail -20 "$dist/cli-build.log" >&2; die "building the nilla-browser CLI failed ($dist/cli-build.log)"; }
 fi
 if [ "$phase" = build ]; then
   echo

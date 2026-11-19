@@ -20,7 +20,7 @@ latest release of the package into a global cache and run that, unpinned.
 | Windows app JS | Metro + Hermes | `bun run --cwd apps/browser bundle:windows`; `bun x --no-install react-native run-windows …` | bundle byte-identical |
 | Phone (Expo) | Metro | `bun run --cwd apps/phone dev`; the bundle export installs with `bun install --offline` | same modules, name@version for name@version |
 | `apps/videos` | Remotion (webpack) | `bun run --cwd apps/videos render <id>`, `studio`; `deliver.sh` | `check` 0 errors |
-| `nilla` userscripts | an esbuild binary `apps/cli/scripts/build.sh` pins | the `nilla-browser` command, on the user's machine | userscript tests pass |
+| `nilla-browser` userscripts | an esbuild binary `apps/cli/scripts/build.sh` pins | the `nilla-browser` command, on the user's machine | userscript tests pass |
 | `apps/cli/bench` fixtures | `bun x esbuild@<pinned>` | `node apps/cli/bench/tasks/build.mjs` | n/a |
 
 ## Vite 7 for `apps/linux` and `packages/demo`
@@ -87,7 +87,7 @@ with `require.context`). Each is started through `bun run` and runs on Node.
 
 ## The CLI's userscript bundler
 
-`nilla` bundles user scripts on the user's machine, which has no Bun, with the esbuild binary it ships
+`nilla-browser` bundles user scripts on the user's machine, which has no Bun, with the esbuild binary it ships
 (`apps/cli/scripts/build.sh`). It stays esbuild.
 
 ## What still isn't Bun

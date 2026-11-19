@@ -459,7 +459,7 @@ Command-line switches win over it.
 | `ARDIA_PACKAGE_DIR` | Only with an explicit `--user-data-dir`: the folder read for `VERSION` and `cli/` instead of the one holding `chrome`. For tests of a raw build tree. |
 
 It also reads `VERSION` beside `chrome` and appends `DevToolsAcceptDebuggingConnections` to `--disable-features`, as
-the Mac app does: chrome://inspect's approval mode would replace the process's one DevTools handler, the `nilla`
+the Mac app does: chrome://inspect's approval mode would replace the process's one DevTools handler, the `nilla-browser`
 command's token server.
 
 `ARDIA_DATA_DIR` isn't read: pass `--user-data-dir`. Test hooks and authentication bypasses don't exist in this
@@ -665,7 +665,7 @@ command ([linux-ci.md](linux-ci.md) › Linux releases).
   - `lib/ardia/extensions/ublock`;
   - `lib/ardia/VERSION` (with `--version`), one line with the Nilla version (`0.2.44`, `0.2.44-nightly.3`);
   - `lib/ardia/cli/` (with `--cli`): `ardia-cli-install.sh` (a copy of `apps/cli/install.sh`, mode 0755),
-    `ardia-cli-<version>-linux-x64.tar.gz` and `ardia-cli.sha256` (the digest is its first token), the `nilla`
+    `ardia-cli-<version>-linux-x64.tar.gz` and `ardia-cli.sha256` (the digest is its first token), the `nilla-browser`
     command's installer, tarball and pinned digest. When the CLI is turned on, the browser installs from these files
     with `ardia-cli-install.sh --version <VERSION> --sha256 <digest>` and `ARDIA_CLI_URL=file://…`;
   - the desktop entry and icon;
@@ -738,7 +738,7 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
 
 - **Smoke gate.** Twelve checks: libraries resolve; the shell renders the packaged UI; the bootstrap reports
   `linux-host`; a native tab paints and can't see the bridge; renderers run under seccomp; the blocker loads; a restart restores the tab; `install.sh --destdir`
-  stages correctly; and, for a release package, the app version, the bundled CLI install, `nilla` control, and a
+  stages correctly; and, for a release package, the app version, the bundled CLI install, `nilla-browser` control, and a
   userscript installed with `nilla-browser scripts install` running on the fixture page ([linux-ci.md](linux-ci.md) › Smoke gate).
 - **Acceptance suite.** Eleven headless scenarios for core features; see [linux-acceptance.md](linux-acceptance.md).
 - **Shared changes.** A change to shared code also needs the Mac checks.
@@ -1024,7 +1024,7 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
   calls to the engine only when it advertises all six (`castsTabs` in `hostCast.ts`), so an older engine keeps the
   "Casting Isn't Available" toast.
 
-### nilla browse off-screen tabs
+### nilla-browser browse off-screen tabs
 
 - **The automation window.** `engine.cliMoveOffscreen` moves a tab the nilla-browser command opened, and that was never shown,
   into a hidden Browser per regular profile (`ac_linux_automation_window.cc`). The host treats it as a companion:
@@ -1557,7 +1557,7 @@ thread. The reply shapes are the Mac's (`packages/shell/ios/SystemModule.swift`,
 
 ### Links from other apps
 
-A link another app opens (`xdg-open`, a mail client, `nilla <url>` in a terminal) reaches the shell as the Mac's
+A link another app opens (`xdg-open`, a mail client, the package's launcher run with a URL in a terminal) reaches the shell as the Mac's
 `ArdiaShell`/`onOpenURLs` event, `{urls}`, so Open links from other apps in Little Nilla, link rules and Put links from
 other apps first apply. The Mac's `source` and `pointer` are left out: Linux can't tell which app sent a link, and the
 Mac leaves `source` out too when it doesn't know.

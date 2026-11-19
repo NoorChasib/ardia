@@ -14,7 +14,7 @@ No scenario runs in CI. The package job runs `scripts/linux/smoke.mjs` only (see
 
 ```sh
 bun run --cwd apps/linux build
-bun run acceptance:linux <path to the packaged nilla executable> apps/linux/dist
+bun run acceptance:linux <path to the packaged executable> apps/linux/dist
 ```
 
 - **Where to run it.** From the repository root, from `apps/linux`, or from a folder with no `package.json` of its own.

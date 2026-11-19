@@ -306,7 +306,7 @@ Nilla's dark or light value) and the look spec in `apps/browser/src/lib/themeLoo
 of `type`, `metrics`, `layout` and `icons`), so they never drift. They help editors and the CLI; the app always validates with its
 own code.
 
-They use only this subset, which `nilla` checks itself without a JSON Schema library (other keywords are ignored):
+They use only this subset, which `nilla-browser` checks itself without a JSON Schema library (other keywords are ignored):
 `type` (one or a list), `enum`, `const`, `default`, `description`, `minimum`, `maximum`, `exclusiveMinimum`,
 `pattern`, `items`, `prefixItems`, `minItems`, `maxItems`, `properties`, `additionalProperties` (boolean or schema),
 `propertyNames`, `required`, `anyOf`.
@@ -337,7 +337,7 @@ so. Exit codes: 0 done, 1 a check failed or the input is wrong.
 - `nilla-browser config check [--json]` checks `config.json` and the theme it names. Theme problems use the app's wording;
   the theme schema supplies the role names, each role's kind (from its `default`), the look blocks' keys, ranges,
   parts and defaults. Without a schema, roles are checked by the kind of value given and the look blocks against
-  the ranges built into `nilla`. `--json` prints
+  the ranges built into `nilla-browser`. `--json` prints
   `{"ok", "files": [{"file", "problems": [{"key", "message"}]}], "warnings"}`.
 - `nilla-browser theme new NAME [--from THEME]` writes `themes/NAME.json` with every role and every look key that has a
   default (so no `type.family`, `metrics.sidebarWidth` or `layout.newTab`), from Nilla's defaults or from another

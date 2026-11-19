@@ -474,7 +474,7 @@ an aborted query is cancelled (the program is killed). The program prints `[{"ti
 
 ### The pill
 
-`run` and `apply` show the "nilla is controlling Nilla" pill like a CDP connection does: it counts as active from the moment
+`run` and `apply` show the "The nilla-browser command is controlling Nilla" pill like a CDP connection does: it counts as active from the moment
 the request arrives until its reply is written, then the usual 3 s hold. A `run`, `apply` or `caller` on a connection whose
 `hello` named a caller puts that name (and app icon) on the pill, the most recent one winning (`docs/cli.md`). The indicator combines CDP connections and
 socket runs; neither overwrites the other. `hello`, `commands`, `windows`, `workspace` and `subscribe` don't show it, so a hooks
@@ -596,7 +596,7 @@ The runner fires them and passes a `schedule.fired` event (it never comes from N
   interval, it fires one catch-up and restarts the interval; it never bursts.
 - No overlapping runs: if the hook's previous run is still going or waiting, that firing is skipped and logged.
 
-- `hooks install` writes the user LaunchAgent `com.nilladigital.nilla.hooks` (`ProgramArguments` = the installed `nilla` launcher's
+- `hooks install` writes the user LaunchAgent `com.nilladigital.nilla.hooks` (`ProgramArguments` = the installed `nilla-browser` launcher's
   stable path, `$ARDIA_CLI_HOME/current/bin/nilla`, then `hooks run --log ~/Library/Logs/Nilla/hooks.log`;
   `RunAtLoad`, `KeepAlive`, `ProcessType` `Background`; `WorkingDirectory` the home folder; `EnvironmentVariables`
   with the installing shell's `PATH` and `ARDIA_DATA_DIR` set to empty) and loads it with `launchctl bootout` then

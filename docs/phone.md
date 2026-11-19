@@ -1947,7 +1947,7 @@ gh run watch --exit-status                                     the run's summary
 
     It runs in the workflow before the real signing, and on a Mac without Gradle.
   - It is never on corex. Lab builds keep the repo's debug key.
-  - The alias is a secret, so GitHub masks the word "nilla" in that job's logs and summary; the attached stamp file
+  - The alias is a secret, so GitHub masks its value in that job's logs and summary; the attached stamp file
     isn't masked.
 - **Dispatching.** A workflow can only be dispatched once its file is on the default branch, the same as
   `ios-release.yml` for the Expo iPhone app. A run on a commit without the release scripts stops at its first step and
