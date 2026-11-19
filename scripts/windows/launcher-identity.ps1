@@ -1,10 +1,89 @@
+[CmdletBinding(DefaultParameterSetName = "Launcher")]
 param(
-  [Parameter(Mandatory = $true)][string]$Icon,
-  [Parameter(Mandatory = $true)][string]$To,
-  [switch]$Check
+  [Parameter(Mandatory = $true, ParameterSetName = "Launcher")][string]$Icon,
+  [Parameter(Mandatory = $true, ParameterSetName = "Launcher")][string]$To,
+  [Parameter(ParameterSetName = "Launcher")][switch]$Check,
+  [Parameter(Mandatory = $true, ParameterSetName = "Windows")][int]$WindowsOf,
+  [Parameter(ParameterSetName = "Windows")][string]$AppUserModelId = "NillaDigital.Nilla"
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($PSCmdlet.ParameterSetName -eq "Windows") {
+  Add-Type -TypeDefinition @"
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class NillaWindowIdentity {
+  [StructLayout(LayoutKind.Sequential)] public struct PropertyKey { public Guid Format; public uint Id; }
+  [StructLayout(LayoutKind.Explicit, Size = 24)] public struct PropVariant { [FieldOffset(0)] public ushort Type; [FieldOffset(8)] public IntPtr Pointer; }
+
+  [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IPropertyStore {
+    int GetCount(out uint count);
+    int GetAt(uint index, out PropertyKey key);
+    int GetValue(ref PropertyKey key, out PropVariant value);
+    int SetValue(ref PropertyKey key, ref PropVariant value);
+    int Commit();
+  }
+
+  delegate bool EnumWindowsProc(IntPtr window, IntPtr param);
+  [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
+  [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr window);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassNameW(IntPtr window, StringBuilder name, int size);
+  [DllImport("shell32.dll")] static extern int SHGetPropertyStoreForWindow(IntPtr window, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IPropertyStore store);
+  [DllImport("ole32.dll")] static extern int PropVariantClear(ref PropVariant value);
+
+  public class Seen { public string Handle; public string ClassName; public string AppUserModelId; }
+
+  static string AppUserModelIdOf(IntPtr window) {
+    Guid iid = typeof(IPropertyStore).GUID;
+    IPropertyStore store;
+    if (SHGetPropertyStoreForWindow(window, ref iid, out store) != 0 || store == null) return null;
+    try {
+      var key = new PropertyKey { Format = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), Id = 5 };
+      PropVariant value;
+      if (store.GetValue(ref key, out value) != 0) return null;
+      try {
+        return value.Type == 31 && value.Pointer != IntPtr.Zero ? Marshal.PtrToStringUni(value.Pointer) : "";
+      } finally {
+        PropVariantClear(ref value);
+      }
+    } finally {
+      Marshal.ReleaseComObject(store);
+    }
+  }
+
+  public static List<Seen> TopLevelOf(uint process) {
+    var seen = new List<Seen>();
+    EnumWindows((window, param) => {
+      uint owner;
+      GetWindowThreadProcessId(window, out owner);
+      if (owner != process || !IsWindowVisible(window)) return true;
+      var name = new StringBuilder(256);
+      GetClassNameW(window, name, name.Capacity);
+      seen.Add(new Seen { Handle = "0x" + window.ToInt64().ToString("x"), ClassName = name.ToString(), AppUserModelId = AppUserModelIdOf(window) });
+      return true;
+    }, IntPtr.Zero);
+    return seen;
+  }
+}
+"@
+  $windows = @([NillaWindowIdentity]::TopLevelOf([uint32]$WindowsOf))
+  if (-not $windows.Count) { Write-Host "launcher-identity: process $WindowsOf has no visible top-level window to ask for its AppUserModelID"; exit 1 }
+  $others = @()
+  foreach ($window in $windows) {
+    $said = if ($null -eq $window.AppUserModelId) { "no property store" } elseif ($window.AppUserModelId -eq "") { "none of its own, so the process's" } else { $window.AppUserModelId }
+    Write-Host "launcher-identity: window $($window.Handle) ($($window.ClassName)) carries AppUserModelID $said"
+    if ($window.AppUserModelId -and $window.AppUserModelId -ne $AppUserModelId) { $others += "$($window.ClassName) carries $($window.AppUserModelId)" }
+  }
+  if ($others.Count) { Write-Host "launcher-identity: the engine gives windows of process $WindowsOf another AppUserModelID than ${AppUserModelId}: $($others -join '; ')"; exit 1 }
+  Write-Host "launcher-identity: $($windows.Count) top-level windows of process $WindowsOf take $AppUserModelId (their own or the process's)"
+  exit 0
+}
 
 Add-Type -TypeDefinition @"
 using System;
@@ -260,7 +339,7 @@ $wanted = [ordered]@{
   ProductShortName = "Nilla"
   InternalName = "Nilla"
   OriginalFilename = "Nilla.exe"
-  LegalCopyright = "Nilla, built on Chromium. Copyright The Chromium Authors and Ardia's contributors."
+  LegalCopyright = "Copyright 2026 Noor Chasib. Nilla is a modified version of Ardia (Copyright 2026 Mantra Patel and Ardia's contributors), built on Chromium (Copyright The Chromium Authors)."
 }
 
 function Get-Mismatches($reading, $images) {
@@ -268,7 +347,7 @@ function Get-Mismatches($reading, $images) {
   if (-not $reading.First) { $problems += "it has no icon group" }
   elseif (-not [NillaLauncherIdentity]::SameImages($reading.First.Images, $images)) {
     $label = if ($reading.First.Name) { $reading.First.Name } else { "#$($reading.First.Id)" }
-    $problems += "its first icon group ($label) is not Ardia.ico"
+    $problems += "its first icon group ($label) is not the icon in $(Split-Path -Leaf $Icon)"
   }
   $strings = [NillaLauncherIdentity]::VersionStrings($reading.Version)
   if ($strings.Count -eq 0) { $problems += "it has no version strings" }

@@ -437,9 +437,15 @@ function Test-WindowIcon([System.Diagnostics.Process]$Process, [string]$Log) {
     elseif ($icon -eq [IntPtr]::Zero) { $notes += "the browser window has no $($size.Name) icon (WM_GETICON gave none)" }
     else { Write-Host "Icon: the browser window's $($size.Name) icon is 0x$($icon.ToString('x'))." }
   }
-  if (-not (Select-String -Path $Log -Pattern "app icon: AppUserModelID is Ardia\.Browser" -Quiet)) { $notes += "the launch log does not say the process took the AppUserModelID Nilla.Browser" }
+  if (-not (Select-String -Path $Log -Pattern "app icon: AppUserModelID is NillaDigital\.Nilla," -Quiet)) { $notes += "the launch log does not say the process took the AppUserModelID NillaDigital.Nilla" }
   if (-not (Select-String -Path $Log -Pattern "app icon: set on " -Quiet)) { $notes += "the launch log does not say a window got Nilla's icon" }
   return $notes
+}
+
+function Test-WindowAppUserModelId([System.Diagnostics.Process]$Process) {
+  & (Join-Path $PSScriptRoot "launcher-identity.ps1") -WindowsOf $Process.Id -AppUserModelId "NillaDigital.Nilla"
+  if ($LASTEXITCODE -ne 0) { return @("the browser process's top-level windows do not all take the AppUserModelID NillaDigital.Nilla (launcher-identity.ps1 -WindowsOf); if the engine sets its own, that is a Layer 2 limit") }
+  return @()
 }
 
 function New-DataDirectory([string]$Name) {
@@ -589,6 +595,7 @@ try {
     $private = [Math]::Round((Get-Process -Id $browser.Id).PrivateMemorySize64 / 1MB)
     Write-Host "Memory with the browser window open: $working MB working set, $private MB private."
     Test-WindowIcon $browser $browserLog | ForEach-Object { $failures += $_ }
+    Test-WindowAppUserModelId $browser | ForEach-Object { $failures += $_ }
     if (-not $NoInput) {
       $inputNotes = Test-Input $browser $browserLog
       $inputNotes | ForEach-Object { $failures += $_ }
