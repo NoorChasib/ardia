@@ -14,7 +14,7 @@ from ardia_cli import control, endpoint, urlmatch
 from ardia_cli.printable import well_formed
 
 HOOKS_FILE = "hooks.json"
-LABEL = "dev.ardia.hooks"
+LABEL = "com.nilladigital.nilla.hooks"
 SERVICE = f"{LABEL}.service"
 RESTART_SECONDS = 10
 QUEUE_CAP = 100
@@ -49,6 +49,14 @@ MAX_REWRITES = 50
 DEFAULT_PATH = "/usr/bin:/bin:/usr/sbin:/sbin"
 COMMAND_BURST = 10
 COMMAND_WINDOW = 10.0
+
+
+CLI_HOME_UNSET = (
+    "set ARDIA_CLI_HOME to the folder install.sh put nilla-browser in: on Linux this development build never guesses, "
+    "so its hooks never run an installed Ardia's ~/.local/share/ardia/cli"
+)
+LOG_FOLDER = "nilla"
+MAC_LOG_FOLDER = "Nilla"
 
 
 class HooksError(Exception):
@@ -1015,7 +1023,7 @@ def load(path: Path, service: Service, log: Log) -> None:
 @dataclass(frozen=True)
 class AgentPaths:
     home: Path
-    cli_home: Path
+    cli_home: Path | None
     linux: bool = False
     config_home: Path | None = None
     state_home: Path | None = None
@@ -1042,8 +1050,8 @@ class AgentPaths:
     @property
     def logs(self) -> Path:
         if self.linux:
-            return self.state_home / "ardia"
-        return self.home / "Library" / "Logs" / "Ardia"
+            return self.state_home / LOG_FOLDER
+        return self.home / "Library" / "Logs" / MAC_LOG_FOLDER
 
     @property
     def log(self) -> Path:
@@ -1051,16 +1059,18 @@ class AgentPaths:
 
     @property
     def launcher(self) -> Path:
+        if self.cli_home is None:
+            raise HooksError(CLI_HOME_UNSET)
         return self.cli_home / "current" / "bin" / "ardia"
 
 
 def agent_paths(linux: bool | None = None) -> AgentPaths:
     home = Path.home()
     if endpoint.LINUX if linux is None else linux:
-        cli_home = os.environ.get("ARDIA_CLI_HOME") or str(endpoint.xdg_dir("XDG_DATA_HOME", ".local", "share", absolute=True) / "ardia" / "cli")
+        cli_home = os.environ.get("ARDIA_CLI_HOME")
         return AgentPaths(
             home,
-            Path(cli_home).expanduser(),
+            Path(os.path.abspath(Path(cli_home).expanduser())) if cli_home else None,
             True,
             endpoint.config_home(absolute=True),
             endpoint.xdg_dir("XDG_STATE_HOME", ".local", "state", absolute=True),

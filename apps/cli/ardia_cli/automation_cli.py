@@ -7,7 +7,7 @@ import sys
 import time
 from pathlib import Path
 
-from ardia_cli import control, endpoint, hooks
+from ardia_cli import config_files, control, endpoint, hooks
 from ardia_cli.control import MethodError, Unreachable
 from ardia_cli.endpoint import DATA_DIR_HELP
 from ardia_cli.printable import complain, say, shown
@@ -83,8 +83,8 @@ Commands:
 
 def agent_words(linux: bool | None = None) -> dict:
     if endpoint.LINUX if linux is None else linux:
-        return {"agent": "systemd user service", "agent_a": "a systemd user service", "agent_name": hooks.SERVICE, "log": "${XDG_STATE_HOME:-~/.local/state}/ardia/hooks.log", "config_folder": f"{endpoint.LINUX_DATA_DIR_SHOWN}/config"}
-    return {"agent": "LaunchAgent", "agent_a": "a LaunchAgent", "agent_name": hooks.LABEL, "log": "~/Library/Logs/Ardia/hooks.log", "config_folder": "~/.config/ardia"}
+        return {"agent": "systemd user service", "agent_a": "a systemd user service", "agent_name": hooks.SERVICE, "log": f"${{XDG_STATE_HOME:-~/.local/state}}/{hooks.LOG_FOLDER}/hooks.log", "config_folder": f"{endpoint.LINUX_DATA_DIR_SHOWN}/config"}
+    return {"agent": "LaunchAgent", "agent_a": "a LaunchAgent", "agent_name": hooks.LABEL, "log": f"~/Library/Logs/{hooks.MAC_LOG_FOLDER}/hooks.log", "config_folder": config_files.MAC_FOLDER_SHOWN}
 
 
 def fill(template: str, words: dict) -> str:
@@ -97,12 +97,12 @@ def hooks_help(linux: bool | None = None) -> dict:
     linux = endpoint.LINUX if linux is None else linux
     words = agent_words(linux)
     if linux:
-        install = f"Write ${{XDG_CONFIG_HOME:-~/.config}}/systemd/user/{hooks.SERVICE}, which runs the installed ardia's hooks run\nat login and restarts it when it fails, then enable and start it (systemctl --user). Refused with --data-dir or\n$ARDIA_DATA_DIR."
+        install = f"Write ${{XDG_CONFIG_HOME:-~/.config}}/systemd/user/{hooks.SERVICE}, which runs $ARDIA_CLI_HOME/current/bin/ardia\nhooks run at login and restarts it when it fails, then enable and start it (systemctl --user). Needs $ARDIA_CLI_HOME;\nrefused with --data-dir or $ARDIA_DATA_DIR."
         uninstall = f"Stop, disable and remove the {hooks.SERVICE} systemd user service. Refused with --data-dir or $ARDIA_DATA_DIR."
         listing = "List the hooks in hooks.json, check them, and show whether the systemd user service is active. Exit 1 if hooks.json is invalid."
     else:
-        install = "Write ~/Library/LaunchAgents/dev.ardia.hooks.plist, which runs the installed ardia's hooks run at login\nand keeps it alive, and load it. Refused with --data-dir or $ARDIA_DATA_DIR."
-        uninstall = "Unload and remove the dev.ardia.hooks LaunchAgent. Refused with --data-dir or $ARDIA_DATA_DIR."
+        install = f"Write ~/Library/LaunchAgents/{hooks.LABEL}.plist, which runs the installed nilla-browser's hooks run\nat login and keeps it alive, and load it. Refused with --data-dir or $ARDIA_DATA_DIR."
+        uninstall = f"Unload and remove the {hooks.LABEL} LaunchAgent. Refused with --data-dir or $ARDIA_DATA_DIR."
         listing = "List the hooks in hooks.json, check them, and show whether the LaunchAgent is loaded. Exit 1 if hooks.json is invalid."
     return {
         "description": fill(HOOKS_DESCRIPTION, words),
@@ -471,6 +471,9 @@ def install_agent(args, launchctl, sleep, systemctl) -> int:
     if refuse_scratch(args, "install"):
         return 1
     paths = hooks.agent_paths()
+    if paths.cli_home is None:
+        complain(f"ardia hooks install: {hooks.CLI_HOME_UNSET}")
+        return 2
     if not os.path.exists(paths.launcher):
         complain(f"ardia hooks install: the ardia command isn't installed at {paths.launcher}; turn on \"Let the ardia command control Ardia\" in Ardia's Settings to install it")
         return 1

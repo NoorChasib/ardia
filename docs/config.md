@@ -4,7 +4,7 @@ Ardia can be set up from plain files, dotfiles style, and from the `ardia` comma
 
 ## Where
 
-The config folder is `~/.config/ardia/`. An instance started with `ARDIA_DATA_DIR` uses `<data dir>/config` instead,
+On macOS the config folder is `~/.config/nilla/`. An instance started with `ARDIA_DATA_DIR` uses `<data dir>/config` instead,
 so test instances never read the owner's files. On macOS no other environment variable picks it (a Finder-launched app
 never sees the shell's `XDG_CONFIG_HOME`, so honouring it would make the app and the CLI disagree). The app resolves it
 in `ArdiaLaunchConfig`; the CLI resolves it the same way from `--data-dir` / `$ARDIA_DATA_DIR`.
@@ -20,7 +20,7 @@ folder of its own lets a dotfiles repo own it (one symlink) without Chromium's f
 the same rule a macOS test instance follows. The schemas go to `<data dir>/config-schema/` beside it.
 
 ```
-~/.config/ardia/            (Linux: ~/.config/ardia/config/)
+~/.config/nilla/            (Linux: ~/.config/ardia/config/)
   config.json          settings and the theme choice
   hooks.json           automation hooks (docs/automation.md)
   themes/<name>.json   colour overrides

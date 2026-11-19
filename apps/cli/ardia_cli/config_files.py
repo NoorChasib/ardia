@@ -66,8 +66,13 @@ def places(data_dir: str | None = None) -> Places:
     return Places(default_folder(), endpoint.INSTALLED_DATA_DIR)
 
 
+MAC_FOLDER_SHOWN = "~/.config/nilla"
+
+
 def default_folder() -> Path:
-    return endpoint.INSTALLED_DATA_DIR / "config" if endpoint.LINUX else Path.home() / ".config" / "ardia"
+    if endpoint.LINUX:
+        return endpoint.known_data_dir(endpoint.INSTALLED_DATA_DIR) / "config"
+    return Path.home() / ".config" / "nilla"
 
 
 def is_theme_name(name) -> bool:

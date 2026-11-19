@@ -136,7 +136,7 @@ class Paths(Sandbox):
     def test_default_is_home_config_on_macos(self):
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}), mock.patch.object(endpoint, "LINUX", False):
             out, _ = self.ok("config", "path")
-        self.assertEqual(out.strip(), str(self.home / ".config" / "ardia"))
+        self.assertEqual(out.strip(), str(self.home / ".config" / "nilla"))
 
     def test_default_on_linux_is_the_config_subfolder_of_the_data_dir(self):
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}), mock.patch.object(endpoint, "LINUX", True):
@@ -144,10 +144,33 @@ class Paths(Sandbox):
             self.assertEqual(config_files.places().data, self.installed)
         self.assertEqual(out.strip(), str(self.installed / "config"))
 
+    def test_the_mac_default_is_nillas_own_folder_and_nothing_else_is_made(self):
+        with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}), mock.patch.object(endpoint, "LINUX", False):
+            self.assertEqual(config_files.default_folder(), self.home / ".config" / "nilla")
+            self.assertEqual(config_files.places().folder, self.home / ".config" / "nilla")
+            self.ok("config", "set", "tabLayout", "top")
+        self.assertEqual(sorted(p.name for p in (self.home / ".config").iterdir()), ["nilla"])
+        self.assertTrue((self.home / ".config" / "nilla" / "config.json").is_file())
+        from ardia_cli import automation_cli
+
+        self.assertEqual(automation_cli.agent_words(linux=False)["config_folder"], "~/.config/nilla")
+
+    def test_linux_refuses_without_its_config_home(self):
+        with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "ARDIA_CONFIG_HOME": ""}), mock.patch.object(endpoint, "LINUX", True), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.installed_data_dir(True)):
+            with self.assertRaises(endpoint.DataDirUnset):
+                config_files.default_folder()
+            with self.assertRaises(endpoint.DataDirUnset):
+                config_files.places()
+            for argv in (("config", "path"), ("config", "set", "tabLayout", "top"), ("theme", "new", "dusk")):
+                status, _, err = self.run_cli(*argv)
+                self.assertEqual(status, 2, argv)
+                self.assertIn("set ARDIA_DATA_DIR", err)
+        self.assertFalse((self.home / ".config").exists())
+
     def test_xdg_config_home_is_ignored_on_macos(self):
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "XDG_CONFIG_HOME": str(self.temp / "xdg")}), mock.patch.object(endpoint, "LINUX", False):
             out, _ = self.ok("config", "path")
-        self.assertEqual(out.strip(), str(self.home / ".config" / "ardia"))
+        self.assertEqual(out.strip(), str(self.home / ".config" / "nilla"))
 
     def test_schema_from_installed_app_without_data_dir(self):
         self.install_schemas(self.installed / "config-schema")

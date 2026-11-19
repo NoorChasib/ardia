@@ -942,7 +942,7 @@ class Reload(Base):
     def test_hooks_file_follows_config_resolver(self):
         self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.data / "config" / "hooks.json")
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}), mock.patch.object(endpoint, "LINUX", False):
-            self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.home / ".config" / "ardia" / "hooks.json")
+            self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.home / ".config" / "nilla" / "hooks.json")
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}), mock.patch.object(endpoint, "LINUX", True), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", self.data):
             self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.data / "config" / "hooks.json")
 
@@ -984,26 +984,47 @@ class LaunchAgent(Base):
         with self.installed_env():
             status, out, err = self.run_cli("hooks", "install")
         self.assertEqual(status, 0, err)
-        plist = self.home / "Library" / "LaunchAgents" / "dev.ardia.hooks.plist"
+        plist = self.home / "Library" / "LaunchAgents" / "com.nilladigital.nilla.hooks.plist"
         agent = plistlib.loads(plist.read_bytes())
-        self.assertEqual(agent["Label"], "dev.ardia.hooks")
-        self.assertEqual(agent["ProgramArguments"], [str(self.launcher), "hooks", "run", "--log", str(self.home / "Library" / "Logs" / "Ardia" / "hooks.log")])
+        self.assertEqual(agent["Label"], "com.nilladigital.nilla.hooks")
+        self.assertEqual(agent["ProgramArguments"], [str(self.launcher), "hooks", "run", "--log", str(self.home / "Library" / "Logs" / "Nilla" / "hooks.log")])
         self.assertTrue(os.path.isabs(agent["ProgramArguments"][0]))
         self.assertIs(agent["RunAtLoad"], True)
         self.assertIs(agent["KeepAlive"], True)
         self.assertEqual(agent["WorkingDirectory"], str(self.home))
         self.assertEqual(agent["EnvironmentVariables"], {"PATH": "/opt/homebrew/bin:/usr/bin:/bin", "ARDIA_DATA_DIR": ""})
         uid = os.getuid()
-        self.assertEqual(self.calls, [["bootout", f"gui/{uid}/dev.ardia.hooks"], ["bootstrap", f"gui/{uid}", str(plist)]])
+        self.assertEqual(self.calls, [["bootout", f"gui/{uid}/com.nilladigital.nilla.hooks"], ["bootstrap", f"gui/{uid}", str(plist)]])
         self.assertIn("there's no", err)
         with self.installed_env():
             status, out, _ = self.run_cli("hooks", "list")
-        self.assertIn("LaunchAgent dev.ardia.hooks: loaded, running (pid 4242)", out)
+        self.assertIn("LaunchAgent com.nilladigital.nilla.hooks: loaded, running (pid 4242)", out)
         with self.installed_env():
             status, out, _ = self.run_cli("hooks", "uninstall")
-        self.assertEqual((status, out.strip()), (0, "uninstalled dev.ardia.hooks"))
+        self.assertEqual((status, out.strip()), (0, "uninstalled com.nilladigital.nilla.hooks"))
         self.assertFalse(plist.exists())
-        self.assertEqual(self.calls[-1], ["bootout", f"gui/{uid}/dev.ardia.hooks"])
+        self.assertEqual(self.calls[-1], ["bootout", f"gui/{uid}/com.nilladigital.nilla.hooks"])
+
+    def test_never_touches_the_upstream_agent_and_uses_nillas_own_homes(self):
+        from ardia_cli import usage
+
+        agents = self.home / "Library" / "LaunchAgents"
+        agents.mkdir(parents=True)
+        upstream = agents / "dev.ardia.hooks.plist"
+        upstream.write_text("upstream agent")
+        with self.installed_env():
+            os.environ.pop("ARDIA_CLI_HOME")
+            self.assertEqual(usage.cli_home(), self.home / "Library" / "Application Support" / "Nilla" / "CLI")
+            self.assertEqual(hooks.agent_paths().launcher, self.home / "Library" / "Application Support" / "Nilla" / "CLI" / "current" / "bin" / "ardia")
+        with self.installed_env():
+            for verb in ("install", "list", "uninstall", "uninstall"):
+                status, _, err = self.run_cli("hooks", verb)
+                self.assertIn(status, (0, 1), err)
+        self.assertEqual(upstream.read_text(), "upstream agent")
+        self.assertEqual(sorted(p.name for p in agents.iterdir()), ["dev.ardia.hooks.plist"])
+        self.assertEqual(sorted(p.name for p in (self.home / "Library" / "Logs").iterdir()), ["Nilla"])
+        self.assertTrue(self.calls)
+        self.assertFalse([call for call in self.calls if any("dev.ardia" in part for part in call)])
 
     def test_refused_with_scratch_data_dir(self):
         for verb in ("install", "uninstall"):
@@ -1043,7 +1064,7 @@ class LaunchAgent(Base):
             with self.subTest(verb=verb), self.installed_env(), mock.patch.object(hooks, "launchctl", side_effect=stuck):
                 status, _, err = self.run_cli("hooks", verb)
             self.assertEqual(status, 1)
-            self.assertEqual(err.strip().splitlines()[-1], f"ardia hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/dev.ardia.hooks")
+            self.assertEqual(err.strip().splitlines()[-1], f"ardia hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/{hooks.LABEL}")
             self.assertNotIn("Traceback", err)
 
     def test_list_reports_hooks(self):

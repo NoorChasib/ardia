@@ -178,14 +178,14 @@ class SystemdService(Base):
         self.unit = self.home / ".config" / "systemd" / "user" / hooks.SERVICE
 
     def installed_env(self, **extra):
-        return mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "ARDIA_CONFIG_HOME": str(self.temp / "nilla-config"), "PATH": "/usr/local/bin:/usr/bin:/bin", **extra})
+        return mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "ARDIA_CONFIG_HOME": str(self.temp / "nilla-config"), "ARDIA_CLI_HOME": str(self.temp / "cli"), "PATH": "/usr/local/bin:/usr/bin:/bin", **extra})
 
     def test_install_list_uninstall(self):
         with self.installed_env():
             status, out, err = self.run_cli("hooks", "install")
         self.assertEqual(status, 0, err)
         text = self.unit.read_text()
-        log = self.home / ".local" / "state" / "ardia" / "hooks.log"
+        log = self.home / ".local" / "state" / "nilla" / "hooks.log"
         self.assertIn(f'ExecStart="{self.launcher}" "hooks" "run" "--log" "{log}"\n', text)
         self.assertIn("Restart=on-failure\n", text)
         self.assertIn("RestartSec=10\n", text)
@@ -220,18 +220,45 @@ class SystemdService(Base):
 
     def test_xdg_homes(self):
         config, state, data = self.temp / "xc", self.temp / "xs", self.temp / "xd"
-        with self.installed_env(XDG_CONFIG_HOME=str(config), XDG_STATE_HOME=str(state), XDG_DATA_HOME=str(data), ARDIA_CLI_HOME=""):
+        with self.installed_env(XDG_CONFIG_HOME=str(config), XDG_STATE_HOME=str(state), XDG_DATA_HOME=str(data)):
             paths = hooks.agent_paths()
-        self.assertEqual(paths.unit, config / "systemd" / "user" / hooks.SERVICE)
-        self.assertEqual(paths.log, state / "ardia" / "hooks.log")
-        self.assertEqual(paths.launcher, data / "ardia" / "cli" / "current" / "bin" / "ardia")
-        with self.installed_env(ARDIA_CLI_HOME=""):
-            self.assertEqual(hooks.agent_paths().launcher, self.home / ".local" / "share" / "ardia" / "cli" / "current" / "bin" / "ardia")
-        with self.installed_env(XDG_CONFIG_HOME="relative", XDG_STATE_HOME="relative", XDG_DATA_HOME="relative", ARDIA_CLI_HOME=""):
+        self.assertEqual(paths.unit, config / "systemd" / "user" / "com.nilladigital.nilla.hooks.service")
+        self.assertEqual(paths.log, state / "nilla" / "hooks.log")
+        self.assertEqual(paths.launcher, self.temp / "cli" / "current" / "bin" / "ardia")
+        with self.installed_env(XDG_CONFIG_HOME="relative", XDG_STATE_HOME="relative", XDG_DATA_HOME="relative"):
             paths = hooks.agent_paths()
         self.assertEqual(paths.unit, self.home / ".config" / "systemd" / "user" / hooks.SERVICE)
-        self.assertEqual(paths.log, self.home / ".local" / "state" / "ardia" / "hooks.log")
-        self.assertEqual(paths.launcher, self.home / ".local" / "share" / "ardia" / "cli" / "current" / "bin" / "ardia")
+        self.assertEqual(paths.log, self.home / ".local" / "state" / "nilla" / "hooks.log")
+
+    def test_install_never_guesses_a_cli_home(self):
+        for unset in ({"ARDIA_CLI_HOME": ""}, {"ARDIA_CLI_HOME": "", "XDG_DATA_HOME": str(self.temp / "xd")}):
+            with self.installed_env(**unset):
+                paths = hooks.agent_paths()
+                self.assertIsNone(paths.cli_home)
+                with self.assertRaisesRegex(hooks.HooksError, "set ARDIA_CLI_HOME"):
+                    paths.launcher
+                status, _, err = self.run_cli("hooks", "install")
+            self.assertEqual(status, 2)
+            self.assertIn("set ARDIA_CLI_HOME", err)
+        self.assertEqual(self.calls, [])
+        self.assertFalse(self.unit.exists())
+        self.assertFalse((self.home / ".local").exists())
+
+    def test_never_touches_the_upstream_service(self):
+        units = self.home / ".config" / "systemd" / "user"
+        units.mkdir(parents=True)
+        upstream = units / "dev.ardia.hooks.service"
+        upstream.write_text("upstream unit")
+        for verb in ("install", "list", "uninstall", "uninstall"):
+            with self.installed_env():
+                status, _, err = self.run_cli("hooks", verb)
+            self.assertEqual(status, 0, err)
+        self.assertEqual(upstream.read_text(), "upstream unit")
+        self.assertEqual(sorted(p.name for p in units.iterdir()), ["dev.ardia.hooks.service"])
+        self.assertEqual(sorted(p.name for p in (self.home / ".local" / "state").iterdir()), ["nilla"])
+        self.assertFalse((self.home / ".local" / "share").exists())
+        self.assertTrue(self.calls)
+        self.assertFalse([call for call in self.calls if any("dev.ardia" in part for part in call)])
 
     def test_systemctl_failures(self):
         def failing(arguments):
@@ -261,7 +288,7 @@ class SystemdService(Base):
     def test_unit_quoting(self):
         paths = hooks.AgentPaths(Path("/home/a b"), Path("/opt/100%/c\"li"), True, Path("/home/a b/.config"), Path("/home/a b/$state"))
         text = hooks.service_unit(paths, "/bin:/x$y%z")
-        self.assertIn('ExecStart="/opt/100%%/c\\"li/current/bin/ardia" "hooks" "run" "--log" "/home/a b/$$state/ardia/hooks.log"\n', text)
+        self.assertIn('ExecStart="/opt/100%%/c\\"li/current/bin/ardia" "hooks" "run" "--log" "/home/a b/$$state/nilla/hooks.log"\n', text)
         self.assertIn('Environment="PATH=/bin:/x$y%%z" "ARDIA_DATA_DIR="\n', text)
         self.assertIn("WorkingDirectory=/home/a b\n", text)
         with self.assertRaises(hooks.HooksError):
@@ -308,14 +335,14 @@ class SystemdService(Base):
     def test_help_names_the_service(self):
         status, out, _ = self.run_cli("hooks", "--help")
         self.assertIn("systemd user service", out)
-        self.assertIn("${XDG_STATE_HOME:-~/.local/state}/ardia/hooks.log", out)
+        self.assertIn("${XDG_STATE_HOME:-~/.local/state}/nilla/hooks.log", out)
         self.assertNotIn("LaunchAgent", out)
         status, out, _ = self.run_cli("hooks", "install", "--help")
         self.assertIn(f"systemd/user/{hooks.SERVICE}", out)
         with mock.patch.object(endpoint, "LINUX", False):
             status, out, _ = self.run_cli("hooks", "--help")
-        self.assertIn("LaunchAgent (dev.ardia.hooks)", out)
-        self.assertIn("~/Library/Logs/Ardia/hooks.log", out)
+        self.assertIn("LaunchAgent (com.nilladigital.nilla.hooks)", out)
+        self.assertIn("~/Library/Logs/Nilla/hooks.log", out)
         self.assertNotIn("systemd", out)
 
 

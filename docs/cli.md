@@ -1639,8 +1639,9 @@ The same CLI, with these differences:
 - Paths: data dir `${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia` (the engine's Chromium user data dir,
   holding `ArdiaControl.json`, `ArdiaControl.sock` and the `Default`/`Profile N` folders), config folder
   `<data dir>/config` (`${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia/config` by default, which the app
-  reads too; on macOS the default is `~/.config/ardia`), so `hooks.json` lives there as well, CLI home
-  `${XDG_DATA_HOME:-~/.local/share}/ardia/cli`, bin dir `~/.local/bin`, hooks log
+  reads too; on macOS the default is `~/.config/nilla`), so `hooks.json` lives there as well, CLI home
+  `${XDG_DATA_HOME:-~/.local/share}/ardia/cli` for `install.sh` (`hooks install` takes it only from `$ARDIA_CLI_HOME` and
+  refuses without it, so it never runs a CLI it didn't pick), bin dir `~/.local/bin`, hooks log
   `${XDG_STATE_HOME:-~/.local/state}/ardia/hooks.log` (rotated at 5 MB as on macOS). An `XDG_*_HOME` that isn't an
   absolute path is ignored, as the XDG spec, systemd and the engine's CLI installer do, except `XDG_CONFIG_HOME` (and
   `ARDIA_CONFIG_HOME`) for the data dir and config folder, where Chromium takes any non-empty value.

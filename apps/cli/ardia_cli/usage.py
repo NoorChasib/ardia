@@ -14,7 +14,7 @@ NOT_RECORDED = frozenset({"feedback", "star", "none"})
 
 def cli_home(env=None) -> Path:
     env = os.environ if env is None else env
-    return Path(env.get("ARDIA_CLI_HOME") or Path.home() / "Library" / "Application Support" / "Ardia" / "CLI").expanduser()
+    return Path(env.get("ARDIA_CLI_HOME") or Path.home() / "Library" / "Application Support" / "Nilla" / "CLI").expanduser()
 
 
 def recording_home(env) -> Path | None:

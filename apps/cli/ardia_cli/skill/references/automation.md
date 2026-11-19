@@ -67,7 +67,7 @@ terminal should escape control characters. `ardia events --help` lists every eve
 without their query and fragment unless the hook says `"fullUrls": true` (`--full-urls`); notifications, presence
 (`user.idle`, `app.activated`, `system.sleep`…) come only when named, never through `"*"`. Try a hook with
 `ardia on tab.navigated --match 'https://*.youtube.com/*' -- ~/bin/yt-hook`, then put it in
-`~/.config/ardia/hooks.json` (on Linux `~/.config/ardia/config/hooks.json`; `ardia config path` prints the folder):
+`~/.config/nilla/hooks.json` (on Linux `~/.config/ardia/config/hooks.json`; `ardia config path` prints the folder):
 
 ```json
 {
