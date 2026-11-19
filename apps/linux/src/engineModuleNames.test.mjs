@@ -21,7 +21,7 @@ const requested = [];
 globalThis.acTestNativeModules = new Proxy({}, { get: (_target, name) => (typeof name === "string" ? (requested.push(name), shim.requireNativeModule(name)) : undefined) });
 const { domainModule } = await import("../../../packages/ardiacore/src/engine/call.ts");
 
-test("Nilla module names map back to the frozen engine's Ardia names, and nothing else changes", () => {
+test("Nilla module names map back to the frozen engine's module names, and nothing else changes", () => {
   assert.equal(engineModuleName("NillaPasswords"), "ArdiaPasswords");
   assert.equal(engineModuleName("NillaShell"), "ArdiaShell");
   assert.equal(engineModuleName("ArdiaShell"), "ArdiaShell");
@@ -67,7 +67,7 @@ test("the shared engine bridge asks for Nilla${Domain} modules and the host rece
   assert.notEqual(shim.requireOptionalNativeModule("NillaShell"), null);
 });
 
-test("engine events keyed by Ardia module names reach listeners that asked for the Nilla module", () => {
+test("engine events keyed by the engine's module names reach listeners that asked for the Nilla module", () => {
   const seen = [];
   const subscription = shim.requireNativeModule("NillaShell").addListener("onWindowEvent", (payload) => seen.push(payload));
   for (const listener of listeners) listener("ArdiaShell", "onWindowEvent", { type: "focus" });

@@ -31,7 +31,6 @@ const GENERATED = new Set(["packages/core/src/bangList.ts", "packages/demo/src/s
 const ONE_INJECTED_SCRIPT = new Set(["packages/ardiacore/ios/page_script.js"]);
 const FROZEN_SPECS = new Set(["packages/core/src/suggest.reference.ts"]);
 const LAUNCH_CONFIG = [/^packages\/ardiacore\/ios\/ArdiaLaunchConfig\.\w+$/, /^apps\/browser\/src\/platform\/launchConfig\.ts$/];
-const MIGRATION_FILE = /(?:^|\/)(?:LegacyMigration\.swift|legacy\.ts|\w*[Mm]igrations?\.(?:ts|swift|mm|m))$/;
 const TOKEN_FILE = /(?:^|\/)(?:tokens|motion)\.ts$/;
 const ENGINE_ENV_READS = {
   "engine/ardiacore/src/ardia/core/ac_main_delegate.cc": [
@@ -315,8 +314,6 @@ const NUMERIC_BRANCH = new RegExp(String.raw`[?:]\s*(${NUMBER})\s*(?=:|\)|$)`, "
 const ENV_READ =
   /\b(?:secure_)?getenv\s*\(|processInfo(?:\]\s*|\s*\.\s*)environment\b|ProcessInfo\s*\(\s*\)\s*\.\s*environment\b|\bprocess\s*\.\s*env\b|\bbase::Environment\b/g;
 const CEF_NAME = /(?<![A-Za-z])(?:[Cc]ef|CEF)(?![a-z])|(?<=[a-z0-9_])(?:Cef|CEF)(?![a-z])/g;
-const LEGACY_BRAND = /netnyahoo/gi;
-const LEGACY_PREFIX = /\bNN[A-Z][a-z]\w*/g;
 const APP_SIDE_OBJC_FILE = /^(?:AC[A-Z]|ArdiaCore[A-Z])\w*\.(?:h|m|mm|swift)$/;
 const APP_SIDE_OBJC_CLASS =
   /@(?:interface|implementation|protocol)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*\b(?!\s*[(;])|(?<!@)\b(?:class|struct|enum|protocol|actor|typealias)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*|@objc\(\s*(?:AC[A-Z]|ArdiaCore[A-Z])\w*\s*\)/g;
@@ -403,7 +400,6 @@ function checkFile(path, src, add) {
   if (!LAUNCH_CONFIG.some((allowed) => allowed.test(path))) add("env", path, envReads(path, src, code));
 
   let naming = count(codeAndStrings, CEF_NAME);
-  if (!MIGRATION_FILE.test(path)) naming += count(codeAndStrings, LEGACY_BRAND) + count(code, LEGACY_PREFIX);
   if (/^packages\/[^/]+\/ios\//.test(path)) naming += (APP_SIDE_OBJC_FILE.test(base) ? 1 : 0) + count(code, APP_SIDE_OBJC_CLASS);
   add("naming", path, naming);
 
@@ -492,6 +488,95 @@ function findViolations(files) {
   for (const [path, src] of files) checkFile(path, src, add);
   return found;
 }
+
+const NAMING_ALLOWLIST_PATH = `${APP_SRC}naming-allowlist.json`;
+const RESIDUAL_NAME = /ardia|netnyahoo/gi;
+const RESIDUAL_GATE_FILE = `${APP_SRC}conventions.test.mjs`;
+const KEPT_PATH_GROUPS = ["frozen", "keep", "lead", "generated", "finalByD", "skipTree"];
+const KEPT_PATHS = ["docs/audit/*", RESIDUAL_GATE_FILE];
+
+const globRegex = (glob) => new RegExp(`^${glob.replace(/[.+^${}()|\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".")}$`);
+const regexText = (text) => text.replace(/[.*+?^${}()|[\]\\\/-]/g, "\\$&");
+
+function protectedPattern(entry) {
+  if ("regex" in entry) {
+    const caseless = entry.regex.startsWith("(?i)");
+    const source = caseless ? entry.regex.slice(4) : entry.regex;
+    assert.ok(!source.includes("(?i)"), `${entry.id}: a (?i) flag only at the start`);
+    return new RegExp(source, caseless ? "gmi" : "gm");
+  }
+  const text = regexText(entry.text);
+  if (entry.quoted) return new RegExp(`(?<=["'\`])${text}(?=["'\`])`, "g");
+  if ((entry.boundary ?? "word") !== "word") return new RegExp(text, "g");
+  const before = /\w/.test(entry.text[0]) ? "(?<![A-Za-z0-9_])" : "";
+  const after = /\w/.test(entry.text.at(-1)) ? "(?![A-Za-z0-9_])" : "";
+  return new RegExp(`${before}${text}${after}`, "g");
+}
+
+function namingAllowlist(document) {
+  const unmoved = [
+    ...document.moves.componentMaps
+      .filter((map) => map.replace)
+      .map((map) => [new RegExp(`(^|/)${regexText(map.replace)}(?=/|$)`, "g"), `$1${map.match.replace(/^\^|^\(\^\|\/\)|\$$/g, "").split("/").at(-1)}`]),
+    ...document.moves.componentCase.map(([before, after]) => [new RegExp(after, "g"), before]),
+  ];
+  const beforeRename = (path) => unmoved.reduce((moved, [pattern, before]) => moved.replace(pattern, before), path);
+  const matches = (globs, path) => (globs ?? []).some((glob) => globRegex(glob).test(path) || globRegex(glob).test(beforeRename(path)));
+  const keptPaths = [...KEPT_PATH_GROUPS.flatMap((group) => document.paths[group]), ...Object.keys(document.paths.skipHand), ...KEPT_PATHS];
+  const entries = document.protect.map((entry) => ({ entry, pattern: protectedPattern(entry) }));
+  return {
+    kept: (path) => matches(keptPaths, path),
+    spans(path, text) {
+      const spans = [];
+      for (const { entry, pattern } of entries) {
+        if (entry.scope && !matches(entry.scope, path)) continue;
+        if (entry.except && matches(entry.except, path)) continue;
+        for (const match of text.matchAll(pattern)) if (match[0]) spans.push([match.index, match.index + match[0].length]);
+      }
+      const lines = new Set(document.lines.filter((line) => line.path === path || line.path === beforeRename(path)).map((line) => line.text));
+      if (lines.size) {
+        let start = 0;
+        for (const line of text.split("\n")) {
+          if (lines.has(line)) spans.push([start, start + line.length]);
+          start += line.length + 1;
+        }
+      }
+      return spans;
+    },
+  };
+}
+
+function residualNames(allowlist, files) {
+  const uncovered = [];
+  for (const [path, text] of files) {
+    if (allowlist.kept(path)) continue;
+    const spans = allowlist.spans(path, text);
+    for (const match of text.matchAll(RESIDUAL_NAME)) {
+      const end = match.index + match[0].length;
+      if (spans.some(([from, to]) => from <= match.index && end <= to)) continue;
+      const line = text.slice(0, match.index).split("\n").length;
+      const lineStart = text.lastIndexOf("\n", match.index) + 1;
+      const lineEnd = text.indexOf("\n", match.index);
+      uncovered.push(`${path}:${line}: ${text.slice(lineStart, lineEnd < 0 ? text.length : lineEnd).trim().slice(0, 160)}`);
+    }
+  }
+  return uncovered;
+}
+
+function filesNamingTheUpstream() {
+  const listed = spawnSync("git", ["grep", "--untracked", "-I", "-l", "-z", "-i", "-E", RESIDUAL_NAME.source], { cwd: ROOT, maxBuffer: 1 << 30 });
+  if (listed.status > 1) throw new Error(`git grep: ${listed.stderr}`);
+  return listed.stdout.toString().split("\0").filter((path) => path && existsSync(ROOT + path)).map((path) => [path, readFileSync(ROOT + path, "utf8")]);
+}
+
+const CREDITS = [
+  ["NOTICE", /^Ardia\nCopyright 2026 Mantra Patel$/m, "keeps Ardia's NOTICE block"],
+  ["README.md", /^## Acknowledgements\n[\s\S]*\[Ardia\]\(https:\/\/github\.com\/ardia-browser\/ardia\)[\s\S]*by Mantra Patel and its contributors/m, "thanks Ardia, Mantra Patel and its contributors"],
+  ["apps/browser/src/state/app/legalNotice.ts", /"Based on Ardia, © 2026 Mantra Patel\."/, "says About is based on Ardia"],
+  ["packages/shell/ios/AppUpdater.swift", /Based on Ardia, © 2026 Mantra Patel\./, "says the Mac About panel is based on Ardia"],
+  ["apps/phone/src/components/settings/DataPages.tsx", /\{ name: "Ardia", use: "[^"]+", license: "Apache License 2\.0", url: "https:\/\/github\.com\/ardia-browser\/ardia" \}/, "lists Ardia in the phone's open source licences"],
+  ["extras/raycast-nilla/package.json", /"contributors": \[\s*"mantrakp04",\s*"ridemountainpig"/, "keeps the Raycast extension's contributors"],
+];
 
 const sorted = (found) =>
   Object.fromEntries(RULES.map((rule) => [rule, Object.fromEntries(Object.entries(found[rule] ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)))]));
@@ -653,6 +738,41 @@ if (process.argv.includes("--write-baseline")) {
     assert.deepEqual(violationsOf(policy, '    if (const char* home = getenv("HOME")) {\n'), {});
     assert.deepEqual(violationsOf(policy, '    const char* user = getenv("USER");\n'), { env: 1 });
     assert.deepEqual(violationsOf("engine/chromium/src/chrome/browser/ardia/ac_other.cc", '    if (const char* home = getenv("HOME")) {\n'), { env: 1 });
+  });
+  test("the residual-name gate covers a name only with an allowlist entry, a kept path or a protected token", () => {
+    const allowlist = namingAllowlist({
+      paths: { frozen: ["engine/*"], keep: [], lead: [], generated: [], finalByD: [], skipTree: [], skipHand: { "scripts/linux/package.py": "C-linux" } },
+      moves: { componentMaps: [{ match: "^apps/cli/ardia_cli$", replace: "nilla_browser_cli" }], componentCase: [["Ardia", "Nilla"], ["ardia", "nilla"]] },
+      protect: [
+        { id: "env", regex: "ARDIA_[A-Z_]*" },
+        { id: "core", regex: "(?i)[a-z]*ardiacore[a-z]*" },
+        { id: "word", text: "ArdiaShell", scope: ["apps/linux/*"] },
+        { id: "cli", regex: "(?i)ardia", scope: ["apps/cli/ardia_cli/upstream.py"] },
+      ],
+      lines: [{ path: "apps/browser/src/state/report/actions.ts", text: 'const URL = "https://ardia.dev";' }],
+    });
+    const files = [
+      ["engine/x.cc", "ardia"],
+      ["scripts/linux/package.py", "ardia"],
+      ["apps/browser/src/a.ts", "ARDIA_DATA_DIR ArdiaCoreTab NillaShell"],
+      ["apps/linux/src/b.ts", '"ArdiaShell.quit"'],
+      ["apps/cli/nilla_browser_cli/upstream.py", "an installed Ardia"],
+      ["apps/browser/src/state/report/actions.ts", 'const URL = "https://ardia.dev";\nconst other = "https://ardia.dev";'],
+      ["apps/browser/src/c.ts", 'const a = "ArdiaShell";\nconst b = "Netnyahoo";'],
+    ];
+    assert.deepEqual(residualNames(allowlist, files), [
+      'apps/browser/src/state/report/actions.ts:2: const other = "https://ardia.dev";',
+      'apps/browser/src/c.ts:1: const a = "ArdiaShell";',
+      'apps/browser/src/c.ts:2: const b = "Netnyahoo";',
+    ]);
+  });
+  test("every Ardia or Netnyahoo name left is one the naming allowlist keeps", () => {
+    const allowlist = namingAllowlist(JSON.parse(readFileSync(ROOT + NAMING_ALLOWLIST_PATH, "utf8")));
+    const uncovered = residualNames(allowlist, filesNamingTheUpstream());
+    assert.equal(uncovered.length, 0, `Names outside ${NAMING_ALLOWLIST_PATH} (docs/conventions.md › Names):\n${uncovered.join("\n")}`);
+  });
+  test("Nilla keeps its credit to Ardia", () => {
+    for (const [path, credit, what] of CREDITS) assert.match(readFileSync(ROOT + path, "utf8"), credit, `${path} ${what}`);
   });
   test("conventions hold, except what the baseline lists", (t) => {
     const baseline = JSON.parse(readFileSync(ROOT + BASELINE_PATH, "utf8"));

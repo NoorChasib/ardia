@@ -249,8 +249,11 @@ writeDocument(DOC, versionedJson(data, VERSION));
 - App-side ObjC classes and their files are `Nilla<Thing>`; Swift types use plain names (the module namespaces them).
 - The engine's exported ObjC API is `ArdiaCore*`; engine C/C++ is `ac_*`.
 - No `Cef*`/`CEF`/`cef` names, no `AC*` or app-side `ArdiaCore*` classes in `packages/*/ios`.
-- No `Netnyahoo` or `NN*` names outside migration code (`LegacyMigration.swift`, `legacy.ts`, `*Migration.swift`,
-  `*migrations.ts`).
+- No upstream name (the app Nilla forked, or the name before it) outside what `apps/browser/src/naming-allowlist.json`
+  keeps: its protected names and tokens (the engine interface, credits, history, the upstream prebuilt engine) and its
+  path classes (frozen, kept, lead-owned, generated and hand-edited files, `docs/audit/`). `conventions.test.mjs`
+  checks every match in `git grep`, and that the credits stay: `NOTICE`'s upstream block, the README's
+  Acknowledgements, the About notice, the phone's licences row and the Raycast extension's contributors.
 
 ## Translation layer (JS ↔ Expo modules ↔ ArdiaCore ↔ `ac_*`)
 
@@ -332,7 +335,7 @@ still counts:
 | `store-shape` | a zustand store not created as `create<T>()(() => init)` (a `set`/`get` creator, or the uncurried form) |
 | `size` | a file over its line cap |
 | `env` | an environment read outside the launch config and the three exempt engine lines |
-| `naming` | a `Cef`, `AC*`/app-side `ArdiaCore*`, `Netnyahoo` or `NN*` name |
+| `naming` | a `Cef` or `AC*`/app-side `ArdiaCore*` name |
 | `comments` | a comment that isn't a license header or tool directive |
 | `file-names` | a file name breaking the PascalCase/camelCase rule |
 

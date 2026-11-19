@@ -318,7 +318,7 @@ for (const [app, appRoot] of [["Linux", root], ["demo", `${repo}packages/demo/`]
     const resolve = config.createResolver();
     const importer = `${browser}platform/nativeApi.ts`;
     for (const [spec, shim] of shimmedPackages) assert.equal(await resolve(spec, importer), `${appRoot}src/shims/${shim}`, spec);
-    for (const spec of ["@ardia/shell", "@nilla/ardiacore", "@ardia/sync"]) assert.ok(!(await resolve(spec, importer))?.startsWith(`${appRoot}src/shims/`), spec);
+    for (const spec of ["@nilla/ardiacore"]) assert.ok(!(await resolve(spec, importer))?.startsWith(`${appRoot}src/shims/`), spec);
     const core = await resolve("@nilla/core", importer);
     assert.ok(core && realpathSync(core) === `${repo}packages/core/src/index.ts`, core);
   });
