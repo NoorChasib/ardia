@@ -60,6 +60,7 @@ public struct BrowserDefinition: Sendable {
     chromium("chromeDev", "Google Chrome Dev", ["com.google.Chrome.dev"], "Google/Chrome Dev", "Chrome"),
     chromium("chromeCanary", "Google Chrome Canary", ["com.google.Chrome.canary"], "Google/Chrome Canary", "Chrome"),
     chromium("chromium", "Chromium", ["org.chromium.Chromium"], "Chromium", "Chromium"),
+    chromium("ardia", "Ardia", ["com.ardia.browser"], "com.ardia.browser/Chromium", "Ardia"),
   ]
 
   static let arc = BrowserDefinition(id: "arc", name: "Arc", family: .arc, bundleIds: ["company.thebrowser.Browser"],
