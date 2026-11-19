@@ -15,7 +15,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import cli, computer, skills
+from ardia_cli import cli, computer, skills, upstream
 
 SCRATCH = Path.home() / "ardia-scratch"
 REAL_DOWNLOAD = computer.download
@@ -133,6 +133,7 @@ class Sandbox(unittest.TestCase):
         ardia = self.cli_home / "current" / "bin" / "ardia"
         ardia.parent.mkdir(parents=True, exist_ok=True)
         ardia.write_text("#!/bin/sh\n")
+        (self.cli_home / upstream.CLI_HOME_MARK).write_text("")
         return ardia
 
     def fake_download(self, url: str, dest: Path) -> None:
@@ -597,6 +598,7 @@ class Launcher(Sandbox):
         (elsewhere / "bin").mkdir(parents=True)
         (elsewhere / "bin" / "ardia").write_text("#!/bin/sh\n")
         self.cli_home.mkdir()
+        (self.cli_home / upstream.CLI_HOME_MARK).write_text("")
         (self.cli_home / "current").symlink_to(elsewhere)
         with mock.patch.object(sys, "executable", "/usr/bin/python3"), self.assertRaises(computer.Refused):
             computer.link_command()

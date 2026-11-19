@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlsplit
 
+from ardia_cli import upstream
 from ardia_cli.redact import add_secret
 
 NOT_REACHABLE = (
@@ -53,10 +54,21 @@ def installed_data_dir(linux: bool | None = None) -> Path:
     return Path(override) / "ardia" if override else UNSET_DATA_DIR
 
 
+class UpstreamFolder(DataDirUnset):
+    pass
+
+
+def own_folder(path: Path, what: str) -> Path:
+    folder = upstream.containing_folder(path)
+    if folder is not None:
+        raise UpstreamFolder(upstream.refusal(what, path, folder))
+    return path
+
+
 def known_data_dir(path: Path) -> Path:
     if path == UNSET_DATA_DIR:
         raise DataDirUnset(DATA_DIR_UNSET)
-    return path
+    return own_folder(path, "the data dir")
 
 
 LINUX_DATA_DIR_SHOWN = "$ARDIA_CONFIG_HOME/ardia"
@@ -110,13 +122,13 @@ def env_port_number(text: str) -> int:
 
 
 def data_root(data_dir: str | None = None) -> Path:
-    root = data_dir or os.environ.get("ARDIA_DATA_DIR")
-    return Path(root).expanduser() if root else known_data_dir(INSTALLED_DATA_DIR)
+    explicit = explicit_data_root(data_dir)
+    return explicit if explicit is not None else known_data_dir(INSTALLED_DATA_DIR)
 
 
 def explicit_data_root(data_dir: str | None = None) -> Path | None:
     root = data_dir or os.environ.get("ARDIA_DATA_DIR")
-    return Path(root).expanduser() if root else None
+    return own_folder(Path(root).expanduser(), "the data dir") if root else None
 
 
 def require_control(root: Path) -> Endpoint:

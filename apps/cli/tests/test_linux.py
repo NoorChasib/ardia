@@ -1,3 +1,4 @@
+import contextlib
 import hashlib
 import io
 import json
@@ -17,7 +18,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import automation_cli, browsing, config_files, control, endpoint, hooks, scripts_store
+from ardia_cli import automation_cli, browsing, config_files, control, endpoint, hooks, scripts_store, upstream
 from test_automation import Base
 from test_config import Sandbox
 
@@ -158,12 +159,13 @@ class LinuxConfig(Sandbox):
         self.assertIn("config.json: ok", out)
 
 
-class SystemdService(Base):
+class SystemdFakes(Base):
     def setUp(self):
         super().setUp()
         launcher = self.temp / "cli" / "current" / "bin" / "ardia"
         launcher.parent.mkdir(parents=True)
         launcher.write_text("#!/bin/sh\n")
+        (self.temp / "cli" / upstream.CLI_HOME_MARK).write_text("")
         self.launcher = launcher
         self.calls = []
         self.show = "LoadState=loaded\nActiveState=active\nSubState=running\nUnitFileState=enabled\nMainPID=4242\nExecMainStatus=0\n"
@@ -180,6 +182,8 @@ class SystemdService(Base):
     def installed_env(self, **extra):
         return mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "ARDIA_CONFIG_HOME": str(self.temp / "nilla-config"), "ARDIA_CLI_HOME": str(self.temp / "cli"), "PATH": "/usr/local/bin:/usr/bin:/bin", **extra})
 
+
+class SystemdService(SystemdFakes):
     def test_install_list_uninstall(self):
         with self.installed_env():
             status, out, err = self.run_cli("hooks", "install")
@@ -499,7 +503,7 @@ class InstallScript(unittest.TestCase):
         status, lines, _ = self.install(None, "--uninstall")
         self.assertEqual((status, lines), (0, ["step uninstall", "uninstalled"]))
         self.assertFalse(os.path.lexists(self.bin))
-        self.assertEqual(sorted(os.listdir(self.cli_home)), [".lock"])
+        self.assertEqual(sorted(os.listdir(self.cli_home)), [".lock", upstream.CLI_HOME_MARK])
 
     def test_version_from_url_and_xdg_data_home(self):
         self.login_shell("zsh")
@@ -641,3 +645,110 @@ class InstallScript(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InheritedArdiaRoots(SystemdFakes):
+    def plant_ardia(self):
+        config = self.home / ".config" / "ardia" / "config"
+        config.mkdir(parents=True)
+        (config / "config.json").write_text('{"planted": true}\n')
+        (config / "hooks.json").write_text('{"hooks": [{"name": "planted-upstream-hook", "on": "tab.opened", "run": "true"}]}\n')
+        cli_home = self.home / ".local" / "share" / "ardia" / "cli"
+        (cli_home / "0.0.1" / "bin").mkdir(parents=True)
+        (cli_home / "0.0.1" / "bin" / "ardia").write_text("#!/bin/sh\n")
+        (cli_home / "current").symlink_to("0.0.1")
+        return cli_home
+
+    def snapshot(self):
+        return sorted((str(path.relative_to(self.home)), path.read_bytes() if path.is_file() and not path.is_symlink() else os.readlink(path) if path.is_symlink() else None) for path in self.home.rglob("*"))
+
+    @contextlib.contextmanager
+    def environment(self, **extra):
+        with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": "", "ARDIA_CONFIG_HOME": str(self.home / ".config"), "ARDIA_CLI_HOME": str(self.temp / "cli"), "PATH": "/usr/local/bin:/usr/bin:/bin", **extra}):
+            with mock.patch.object(endpoint, "INSTALLED_DATA_DIR", endpoint.installed_data_dir(True)):
+                yield
+
+    def test_an_inherited_config_home_that_names_the_upstream_folder_is_refused_before_any_read_or_write(self):
+        self.plant_ardia()
+        before = self.snapshot()
+        for argv in (("config", "init"), ("config", "path"), ("config", "get", "planted"), ("hooks", "list"), ("hooks", "install"), ("hooks", "uninstall")):
+            with self.subTest(argv=argv), self.environment():
+                status, out, err = self.run_cli(*argv)
+                self.assertEqual(status, 2, (out, err))
+                self.assertIn("never reads or writes", err)
+                self.assertNotIn("planted-upstream-hook", out)
+        self.assertEqual(self.snapshot(), before)
+        self.assertEqual(self.calls, [])
+
+    def test_an_inherited_data_dir_inside_the_upstream_folders_is_refused(self):
+        self.plant_ardia()
+        before = self.snapshot()
+        for data_dir in (self.home / ".config" / "ardia", self.home / ".local" / "share" / "ardia" / "cli"):
+            with self.subTest(data_dir=data_dir), self.environment(ARDIA_DATA_DIR=str(data_dir), ARDIA_CONFIG_HOME=str(self.temp / "nilla-config")):
+                status, _, err = self.run_cli("config", "init")
+                self.assertEqual(status, 2, err)
+                self.assertIn("never reads or writes", err)
+        self.assertEqual(self.snapshot(), before)
+
+    def test_an_inherited_cli_home_holding_another_install_is_never_run_or_written(self):
+        cli_home = self.plant_ardia()
+        before = self.snapshot()
+        for verb in ("install", "list"):
+            with self.subTest(verb=verb), self.environment(ARDIA_CONFIG_HOME=str(self.temp / "nilla-config"), ARDIA_CLI_HOME=str(cli_home)):
+                status, _, err = self.run_cli("hooks", verb)
+                self.assertEqual(status, 2, err)
+                self.assertIn(upstream.CLI_HOME_MARK, err)
+        self.assertEqual(self.snapshot(), before)
+        self.assertFalse(self.unit.exists())
+        self.assertEqual(self.calls, [])
+        self.assertFalse((cli_home / "Usage").exists())
+
+    def test_a_marked_cli_home_whose_current_leads_elsewhere_is_never_run(self):
+        cli_home = self.plant_ardia()
+        own = self.temp / "own-cli"
+        own.mkdir()
+        (own / upstream.CLI_HOME_MARK).write_text("")
+        (own / "current").symlink_to(cli_home / "0.0.1")
+        with self.environment(ARDIA_CONFIG_HOME=str(self.temp / "nilla-config"), ARDIA_CLI_HOME=str(own)):
+            status, _, err = self.run_cli("hooks", "install")
+        self.assertEqual(status, 1, err)
+        self.assertIn("leads outside", err)
+        self.assertFalse(self.unit.exists())
+        self.assertEqual(self.calls, [])
+
+
+class InstallScriptOwnership(unittest.TestCase):
+    setUp = InstallScript.setUp
+    use_home = InstallScript.use_home
+    login_shell = InstallScript.login_shell
+    install = InstallScript.install
+    current = InstallScript.current
+
+    def plant_other_install(self):
+        version = self.cli_home / "0.0.9"
+        (version / "bin").mkdir(parents=True)
+        (version / "bin" / "ardia").write_text("#!/bin/sh\necho other 0.0.9\n")
+        (self.cli_home / "current").symlink_to("0.0.9")
+        return version
+
+    def test_install_and_uninstall_refuse_a_cli_home_another_install_made(self):
+        self.login_shell("zsh")
+        version = self.plant_other_install()
+        for args in (("0.0.1",), (None, "--uninstall")):
+            with self.subTest(args=args):
+                status, lines, _ = self.install(*args)
+                self.assertEqual(status, 1)
+                self.assertTrue(lines[-1].startswith("error ") and upstream.CLI_HOME_MARK in lines[-1], lines)
+                self.assertTrue((version / "bin" / "ardia").is_file())
+                self.assertEqual(os.readlink(self.cli_home / "current"), "0.0.9")
+                self.assertEqual(sorted(p.name for p in self.cli_home.iterdir()), ["0.0.9", "current"])
+                self.assertFalse(os.path.lexists(self.bin))
+
+    def test_a_fresh_install_marks_its_cli_home_and_upgrades_through_the_mark(self):
+        self.login_shell("zsh")
+        status, _, err = self.install("0.0.1")
+        self.assertEqual(status, 0, err)
+        self.assertTrue((self.cli_home / upstream.CLI_HOME_MARK).is_file())
+        status, _, err = self.install("0.0.2")
+        self.assertEqual(status, 0, err)
+        self.assertEqual(self.current(), "0.0.2")

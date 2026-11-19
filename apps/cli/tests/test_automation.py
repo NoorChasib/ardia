@@ -19,7 +19,7 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import automation_cli, cli, control, endpoint, hooks
+from ardia_cli import automation_cli, cli, control, endpoint, hooks, upstream
 
 SCRATCH = Path.home() / "ardia-scratch"
 COMMANDS = [
@@ -965,6 +965,7 @@ class LaunchAgent(Base):
         launcher = self.temp / "cli" / "current" / "bin" / "ardia"
         launcher.parent.mkdir(parents=True)
         launcher.write_text("#!/bin/sh\n")
+        (self.temp / "cli" / upstream.CLI_HOME_MARK).write_text("")
         self.launcher = launcher
         self.calls = []
 
@@ -1025,6 +1026,30 @@ class LaunchAgent(Base):
         self.assertEqual(sorted(p.name for p in (self.home / "Library" / "Logs").iterdir()), ["Nilla"])
         self.assertTrue(self.calls)
         self.assertFalse([call for call in self.calls if any("dev.ardia" in part for part in call)])
+
+    def test_inherited_roots_inside_the_upstream_mac_folders_are_refused(self):
+        support = self.home / "Library" / "Application Support"
+        bundle_folder = next(folder for folder in upstream.folders() if folder.parent == support and folder.name.startswith("com."))
+        cli_folder = next(folder for folder in upstream.folders() if folder.parent == support and not folder.name.startswith("com."))
+        (bundle_folder / "config").mkdir(parents=True)
+        (bundle_folder / "config" / "hooks.json").write_text('{"hooks": [{"name": "planted-upstream-hook", "on": "tab.opened", "run": "true"}]}\n')
+        (cli_folder / "CLI" / "current" / "bin").mkdir(parents=True)
+        (cli_folder / "CLI" / "current" / "bin" / "ardia").write_text("#!/bin/sh\n")
+        (cli_folder / "CLI" / upstream.CLI_HOME_MARK).write_text("")
+        before = sorted(str(path) for path in self.home.rglob("*"))
+        for env, argv in (
+            ({"ARDIA_DATA_DIR": str(bundle_folder)}, ("config", "init")),
+            ({"ARDIA_DATA_DIR": str(bundle_folder)}, ("hooks", "list")),
+            ({"ARDIA_DATA_DIR": str(bundle_folder / "config" / ".." )}, ("config", "path")),
+            ({"ARDIA_CLI_HOME": str(cli_folder / "CLI")}, ("hooks", "install")),
+        ):
+            with self.subTest(env=env, argv=argv), self.installed_env(), mock.patch.dict(os.environ, env):
+                status, out, err = self.run_cli(*argv)
+                self.assertEqual(status, 2, (out, err))
+                self.assertIn("never reads or writes", err)
+                self.assertNotIn("planted-upstream-hook", out)
+        self.assertEqual(sorted(str(path) for path in self.home.rglob("*")), before)
+        self.assertEqual(self.calls, [])
 
     def test_refused_with_scratch_data_dir(self):
         for verb in ("install", "uninstall"):

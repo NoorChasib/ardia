@@ -1,7 +1,7 @@
 # Config and themes
 
 When the user wants a setting changed for good, or set up from their dotfiles, edit `~/.config/nilla/config.json`
-(on Linux `~/.config/ardia/config/config.json`; `ardia config path` prints the folder) with `ardia config` instead
+(on Linux `$ARDIA_CONFIG_HOME/ardia/config/config.json`; `ardia config path` prints the folder) with `ardia config` instead
 of clicking through Settings. Ardia reads the file at launch and whenever it changes, and never writes it; these
 commands don't need Ardia running.
 

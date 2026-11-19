@@ -17,6 +17,8 @@
 # dir isn't on the login shell's PATH, it adds one PATH line to its login file, once: on macOS ~/.zprofile
 # (~/.bash_profile for bash); on Linux ~/.zprofile for zsh, ~/.bash_profile for bash when it exists, else ~/.profile;
 # for fish, on both, ${XDG_CONFIG_HOME:-~/.config}/fish/conf.d/nilla-browser.fish.
+# It marks the CLI home with a .nilla-cli file and refuses a CLI home that holds an install without one (an installed
+# Ardia's), so it never replaces, prunes or removes another install's versions.
 # Re-running it upgrades: a version that is already current is left alone; a new one is verified, staged in
 # <version>.partial, renamed, and `current` is swapped atomically (a running ardia keeps its old dir). It keeps the
 # current and the previous version and prunes the rest, except versions a running ardia uses (it leaves a lease in
@@ -226,6 +228,26 @@ check_tree() {
     done' sh {} + || fail "the tarball has a link that points outside it"
 }
 
+installed_elsewhere() {
+  [ -d "$cli_home" ] || return 1
+  [ -e "$cli_home/.nilla-cli" ] && return 1
+  if [ -e "$cli_home/current" ] || [ -L "$cli_home/current" ]; then
+    return 0
+  fi
+  for entry in "$cli_home"/[0-9]*; do
+    [ -d "$entry" ] && return 0
+  done
+  return 1
+}
+
+refuse_cli_home_of_another_install() {
+  if installed_elsewhere; then
+    fail "$cli_home holds a CLI this installer didn't install for nilla-browser (it has no .nilla-cli); set ARDIA_CLI_HOME to a folder of Nilla's own"
+  fi
+}
+
+refuse_cli_home_of_another_install
+
 if [ "$uninstall" -eq 1 ]; then
   printf 'step uninstall\n'
   if points_into_cli_home "$command_link"; then
@@ -274,6 +296,8 @@ check_bin_free
 
 mkdir -p "$cli_home" || fail "couldn't create $cli_home"
 take_lock
+refuse_cli_home_of_another_install
+: > "$cli_home/.nilla-cli" || fail "couldn't mark $cli_home as nilla-browser's"
 work=$(mktemp -d "${TMPDIR:-/tmp}/ardia-cli-install.XXXXXX") || fail "couldn't create a temporary folder"
 chmod 700 "$work"
 

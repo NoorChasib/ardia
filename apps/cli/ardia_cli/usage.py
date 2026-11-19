@@ -14,15 +14,28 @@ NOT_RECORDED = frozenset({"feedback", "star", "none"})
 
 def cli_home(env=None) -> Path:
     env = os.environ if env is None else env
-    return Path(env.get("ARDIA_CLI_HOME") or Path.home() / "Library" / "Application Support" / "Nilla" / "CLI").expanduser()
+    return owned_cli_home(Path(env.get("ARDIA_CLI_HOME") or Path.home() / "Library" / "Application Support" / "Nilla" / "CLI").expanduser())
+
+
+def owned_cli_home(home: Path) -> Path:
+    from ardia_cli import endpoint, upstream
+
+    if not endpoint.LINUX:
+        endpoint.own_folder(home, "the CLI home")
+    if upstream.installed_elsewhere(home):
+        raise endpoint.UpstreamFolder(f"the CLI home {home} holds a CLI that install.sh didn't install for nilla-browser (it has no {upstream.CLI_HOME_MARK}), so nilla-browser leaves it alone")
+    return home
 
 
 def recording_home(env) -> Path | None:
-    from ardia_cli import telemetry
+    from ardia_cli import endpoint, telemetry
 
     if telemetry.is_dev_build() and not env.get("ARDIA_CLI_HOME"):
         return None
-    return cli_home(env)
+    try:
+        return cli_home(env)
+    except endpoint.UpstreamFolder:
+        return None
 
 
 def open_folder(home: Path) -> int:

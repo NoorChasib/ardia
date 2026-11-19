@@ -12,15 +12,15 @@ in `ArdiaLaunchConfig`; the CLI resolves it the same way from `--data-dir` / `$A
 Linux is the exception, because there the folder hangs off Chromium's own user data dir, and Chromium already picks
 that from `XDG_CONFIG_HOME` (and the engine from `ARDIA_CONFIG_HOME`). The CLI has to follow the same variables just to
 find `ArdiaControl.json`, so honouring them for the config folder adds no new way for the two to disagree.
-`~/.config/ardia` is that data dir (`Local State`, `Default/`, `ArdiaControl.json`…), so the config folder is always
-`<data dir>/config`: `${XDG_CONFIG_HOME:-~/.config}/ardia/config` by default
-(`$ARDIA_CONFIG_HOME/ardia/config` when that's set, as the engine does), `<user data dir>/config` for an instance
-started with `--user-data-dir`, and `<data dir>/config` for the CLI's `--data-dir` / `$ARDIA_DATA_DIR`. Keeping it a
+`$ARDIA_CONFIG_HOME/ardia` is that data dir (`Local State`, `Default/`, `ArdiaControl.json`…), so the config folder is
+always `<data dir>/config`: `$ARDIA_CONFIG_HOME/ardia/config` (this development build sets no default and never uses
+`~/.config/ardia` itself, so the CLI refuses to guess), `<user data dir>/config` for an instance started with
+`--user-data-dir`, and `<data dir>/config` for the CLI's `--data-dir` / `$ARDIA_DATA_DIR`. Keeping it a
 folder of its own lets a dotfiles repo own it (one symlink) without Chromium's files landing in the repo, and it is
 the same rule a macOS test instance follows. The schemas go to `<data dir>/config-schema/` beside it.
 
 ```
-~/.config/nilla/            (Linux: ~/.config/ardia/config/)
+~/.config/nilla/            (Linux: $ARDIA_CONFIG_HOME/ardia/config/)
   config.json          settings and the theme choice
   hooks.json           automation hooks (docs/automation.md)
   themes/<name>.json   colour overrides

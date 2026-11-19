@@ -1248,8 +1248,9 @@ Ardia).
 5. `<data dir>/Chromium/ArdiaControl.json`, with `--data-dir` or `$ARDIA_DATA_DIR`, else the installed app's
    `~/Library/Application Support/com.ardia.browser/Chromium/ArdiaControl.json`.
    On Linux the browser is Chromium itself and its user data dir is the data dir, so it's `<data dir>/ArdiaControl.json`
-   and the installed app's is `${XDG_CONFIG_HOME:-~/.config}/ardia/ArdiaControl.json` (`$ARDIA_CONFIG_HOME/ardia` when
-   that's set, as the engine does). The control socket is `<data dir>/ArdiaControl.sock` on both, checked with
+   and, without `--data-dir` or `$ARDIA_DATA_DIR`, `$ARDIA_CONFIG_HOME/ardia/ArdiaControl.json`: this development build
+   never guesses `~/.config/ardia`, and refuses a data dir or config folder inside it or the other folders the upstream
+   app uses. The control socket is `<data dir>/ArdiaControl.sock` on both, checked with
    `LOCAL_PEERCRED` on macOS and `SO_PEERCRED` on Linux; its path may be 103 bytes on macOS and 107 on Linux.
 
 The active-page route is `GET http://127.0.0.1:P/ardia/active?token=<token>`: `{"targetId": "<id>"}`, or `null` when

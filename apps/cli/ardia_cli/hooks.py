@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from ardia_cli import control, endpoint, urlmatch
+from ardia_cli import control, endpoint, upstream, urlmatch
 from ardia_cli.printable import well_formed
 
 HOOKS_FILE = "hooks.json"
@@ -1063,21 +1063,33 @@ class AgentPaths:
             raise HooksError(CLI_HOME_UNSET)
         return self.cli_home / "current" / "bin" / "ardia"
 
+    def owned_launcher(self) -> Path:
+        launcher = self.launcher
+        if not (self.cli_home / upstream.CLI_HOME_MARK).is_file():
+            raise HooksError(f"{self.cli_home} has no {upstream.CLI_HOME_MARK}, so install.sh didn't make it for nilla-browser; hooks never run a command from it")
+        try:
+            inside = launcher.resolve(strict=True).is_relative_to(self.cli_home.resolve(strict=True))
+        except (OSError, RuntimeError):
+            inside = False
+        if not inside:
+            raise HooksError(f"{launcher} leads outside {self.cli_home}; hooks run only the nilla-browser that install.sh put there")
+        return launcher
+
 
 def agent_paths(linux: bool | None = None) -> AgentPaths:
+    from ardia_cli import usage
+
     home = Path.home()
     if endpoint.LINUX if linux is None else linux:
         cli_home = os.environ.get("ARDIA_CLI_HOME")
         return AgentPaths(
             home,
-            Path(os.path.abspath(Path(cli_home).expanduser())) if cli_home else None,
+            usage.owned_cli_home(Path(os.path.abspath(Path(cli_home).expanduser()))) if cli_home else None,
             True,
             endpoint.config_home(absolute=True),
             endpoint.xdg_dir("XDG_STATE_HOME", ".local", "state", absolute=True),
             Path(os.path.abspath(endpoint.known_data_dir(endpoint.installed_data_dir(True)).parent)),
         )
-    from ardia_cli import usage
-
     return AgentPaths(home, usage.cli_home())
 
 
