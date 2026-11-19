@@ -16,8 +16,6 @@ import { withSyncWorkCounts } from "../telemetry/workCounts";
 
 const store = () => useBrowser.getState();
 
-export const inTodaysNames = (adapter: Adapter): Adapter => adapter;
-
 type ShareLink = { syncId: string; enabled: boolean; retire?: boolean };
 
 export function sharedDataAdapter(links: () => Record<string, ShareLink>, removed: () => ReadonlySet<string> = () => new Set()): Adapter {
