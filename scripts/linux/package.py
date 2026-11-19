@@ -23,6 +23,18 @@ CLI_INSTALLER = REPO / 'apps/cli/install.sh'
 UBO_SEED = REPO / 'scripts/linux/ubo-seed.mjs'
 CLI_PLATFORM = 'linux-x64'
 VERSION_PATTERN = re.compile(r'^[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.[0-9]+)?$')
+LAUNCHER = '''#!/usr/bin/env sh
+ardia_bin_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+profile_given=
+for argument in "$@"; do
+  case $argument in --user-data-dir=?*) profile_given=1 ;; esac
+done
+if [ -z "$profile_given" ]; then
+  echo "This development build of Nilla starts only with --user-data-dir=<a profile of its own>, so its engine never opens the default ~/.config/ardia profile. Start it with scripts/linux/nilla-dev-run inside a disposable VM, container or namespace." >&2
+  exit 2
+fi
+exec "$ardia_bin_dir/../lib/ardia/ardia-launch" "$@"
+'''
 REQUIRED = runtime_files.REQUIRED
 
 
@@ -153,7 +165,7 @@ def package(output, ui, destination, content_blocker=None, version=None, cli=Non
                 seed_content_blocker(runtime, blocker)
         launcher = root / 'bin/ardia'
         launcher.parent.mkdir()
-        launcher.write_text('#!/usr/bin/env sh\nardia_bin_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexec "$ardia_bin_dir/../lib/ardia/ardia-launch" "$@"\n')
+        launcher.write_text(LAUNCHER)
         launcher.chmod(0o755)
         desktop = root / 'share/applications/ardia.desktop'
         desktop.parent.mkdir(parents=True)

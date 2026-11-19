@@ -22,7 +22,7 @@ function run(args, env = {}) {
   rmSync(seen, { force: true });
   const result = spawnSync("bash", [script, build, ...args], {
     encoding: "utf8",
-    env: { PATH: process.env.PATH, HOME: home, ARDIA_DATA_DIR: join(scratch, "data"), ARDIA_CONFIG_HOME: join(scratch, "config"), ...env },
+    env: { PATH: process.env.PATH, HOME: home, NILLA_DISPOSABLE_HOST: "1", ARDIA_DATA_DIR: join(scratch, "data"), ARDIA_CONFIG_HOME: join(scratch, "config"), ...env },
   });
   let launched = null;
   try {
@@ -85,3 +85,27 @@ test("refuses to start without ARDIA_CONFIG_HOME", () => {
   assert.match(stderr, /set ARDIA_CONFIG_HOME/);
   assert.equal(launched, null);
 });
+
+const outsideANamespace = readFileSync("/proc/self/uid_map", "utf8").trim().split(/\s+/).join(" ") === "0 0 4294967295";
+
+test("refuses outside a user namespace unless the host is declared disposable", { skip: !outsideANamespace && "this test already runs inside a user namespace" }, () => {
+  const { status, stderr, launched } = run([], { NILLA_DISPOSABLE_HOST: "" });
+  assert.equal(status, 2);
+  assert.match(stderr, /disposable user namespace/);
+  assert.equal(launched, null);
+});
+
+for (const folder of [[".config", "ardia"], [".local", "share", "ardia"], [".cache", "ardia"], [".local", "state", "ardia"]]) {
+  test(`refuses an account that has ${folder.join("/")}, even with scratch folders`, () => {
+    const planted = join(home, ...folder);
+    mkdirSync(planted, { recursive: true });
+    try {
+      const { status, stderr, launched } = run([]);
+      assert.equal(status, 2);
+      assert.match(stderr, /this account has Ardia's/);
+      assert.equal(launched, null);
+    } finally {
+      rmSync(planted, { recursive: true, force: true });
+    }
+  });
+}

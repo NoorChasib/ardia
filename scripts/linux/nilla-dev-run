@@ -5,10 +5,11 @@
 # scratch or Nilla-only folder, with --user-data-dir=$ARDIA_CONFIG_HOME/ardia (so the UI knows the profile is its own)
 # and --password-store=basic, so today's engine never reaches an installed Ardia's profile, data or secret-store items.
 # It refuses --user-data-dir and --password-store among the browser arguments, so they can't undo that. It never
-# installs anything. It is not a sandbox: run it only inside a disposable VM, container or namespace.
+# installs anything. It is not a sandbox: it runs only inside a user namespace, or with NILLA_DISPOSABLE_HOST=1 on a
+# throwaway VM, container or CI runner, and refuses an account that has Ardia's config, data, cache or state folders.
 set -euo pipefail
 
-usage() { sed -n '2,8s/^# \{0,1\}//p' "$0"; }
+usage() { sed -n '2,9s/^# \{0,1\}//p' "$0"; }
 die() { echo "nilla-dev-run: $*" >&2; exit 2; }
 
 case "${1:-}" in
@@ -21,7 +22,23 @@ launcher="$build/bin/ardia"
 [ -x "$launcher" ] || die "$build has no bin/ardia; pass the folder the build's tarball extracted to"
 
 config_root="${XDG_CONFIG_HOME:-$HOME/.config}"
-ardia_folders=("$config_root/ardia" "${XDG_DATA_HOME:-$HOME/.local/share}/ardia" "${XDG_CACHE_HOME:-$HOME/.cache}/ardia")
+ardia_folders=("$config_root/ardia" "${XDG_DATA_HOME:-$HOME/.local/share}/ardia" "${XDG_CACHE_HOME:-$HOME/.cache}/ardia" "${XDG_STATE_HOME:-$HOME/.local/state}/ardia" "$HOME/.config/ardia" "$HOME/.local/share/ardia" "$HOME/.cache/ardia" "$HOME/.local/state/ardia")
+
+in_disposable_namespace() {
+  local map
+  map="$(cat /proc/self/uid_map 2>/dev/null)" || return 1
+  read -r -a map <<< "$map"
+  [ "${map[*]}" != "0 0 4294967295" ]
+}
+
+if [ "${NILLA_DISPOSABLE_HOST:-}" != 1 ] && ! in_disposable_namespace; then
+  die "run it inside a disposable user namespace (unshare, bwrap or tools/isolate), or set NILLA_DISPOSABLE_HOST=1 on a throwaway VM, container or CI runner; never on an account that has or may get Ardia"
+fi
+for folder in "${ardia_folders[@]}"; do
+  if [ -e "$folder" ] || [ -L "$folder" ]; then
+    die "this account has Ardia's $folder; run Nilla's development build only where Ardia has never run"
+  fi
+done
 
 resolved() { realpath -m -- "$1"; }
 

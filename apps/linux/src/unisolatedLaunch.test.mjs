@@ -60,3 +60,22 @@ test("the UI refuses before it reads config, hydrates the session or writes anyt
   }
   assert.equal(main.match(/^void start\(\)/gm)?.length, 1);
 });
+
+test("the page loads only the refusal before anything that calls the host, and loads the app only when isolated", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.deepEqual([...html.matchAll(/<script[^>]*src="([^"]+)"/g)].map((match) => match[1]), ["/src/entry.ts"]);
+  const entry = readFileSync(new URL("./entry.ts", import.meta.url), "utf8");
+  const runtimeImports = (source) => [...source.matchAll(/^import (?!type )[^;]*?from "([^"]+)";$/gm)].map((match) => match[1]);
+  assert.deepEqual(runtimeImports(entry), ["./unisolatedLaunch"]);
+  assert.deepEqual(runtimeImports(readFileSync(new URL("./unisolatedLaunch.ts", import.meta.url), "utf8")), ["./hostLaunchConfig"]);
+  assert.deepEqual(runtimeImports(readFileSync(new URL("./hostLaunchConfig.ts", import.meta.url), "utf8")), []);
+  assert.doesNotMatch(entry, /^import ["']/m);
+  assert.match(entry, /if \(!\w+ \|\| !refuseUnisolatedLaunch\(\w+, document\.getElementById\("root"\)\)\) void import\("\.\/main"\);/);
+  assert.equal(entry.match(/import\(/g)?.length, 1);
+});
+
+test("the page says the UI stopped and doesn't claim the engine read nothing", () => {
+  assert.match(UNISOLATED_MESSAGE, /stopped/);
+  assert.match(UNISOLATED_MESSAGE, /scripts\/linux\/nilla-dev-run/);
+  assert.doesNotMatch(UNISOLATED_MESSAGE, /read and saved nothing|nothing was read/);
+});
