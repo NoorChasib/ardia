@@ -9,8 +9,15 @@ export class UpstreamSyncFolderError extends Error {
   }
 }
 
+export const UPSTREAM_SYNC_FOLDER_CODE = "ERR_UPSTREAM_SYNC_FOLDER";
+
+const folded = (part: string) => part.normalize("NFC").trim().replace(/[. ]+$/, "").toLowerCase();
+
 export const isUpstreamSyncFolder = (path: string) =>
-  path.split(/[\\/]+/).some((part) => part.trim().toLowerCase() === UPSTREAM_SYNC_FOLDER.toLowerCase());
+  path.split(/[\\/]+/).some((part) => folded(part) === UPSTREAM_SYNC_FOLDER.toLowerCase());
+
+const nativeRefused = (error: unknown) =>
+  !!error && typeof error === "object" && (error as { code?: unknown }).code === UPSTREAM_SYNC_FOLDER_CODE ? new UpstreamSyncFolderError() : error;
 
 const FOLDER_ARGUMENT: Record<string, number> = {
   folderInfo: 0,
@@ -35,8 +42,14 @@ export function ownSyncFoldersOnly<T extends object>(native: T | null): T | null
       const value = Reflect.get(target, key);
       if (typeof value !== "function" || typeof key !== "string") return value;
       if (key === "chooseFolder") {
-        return async (...args: unknown[]) => {
-          const picked = await value.apply(target, args);
+        return async (current: unknown, ...rest: unknown[]) => {
+          const seed = typeof current === "string" && isUpstreamSyncFolder(current) ? null : current;
+          let picked: unknown;
+          try {
+            picked = await value.call(target, seed, ...rest);
+          } catch (error) {
+            throw nativeRefused(error);
+          }
           refuseUpstream(picked);
           return picked;
         };
@@ -46,10 +59,10 @@ export function ownSyncFoldersOnly<T extends object>(native: T | null): T | null
       return (...args: unknown[]) => {
         try {
           refuseUpstream(args[index]);
+          return Promise.resolve(value.apply(target, args)).catch((error: unknown) => Promise.reject(nativeRefused(error)));
         } catch (error) {
-          return Promise.reject(error);
+          return Promise.reject(nativeRefused(error));
         }
-        return value.apply(target, args);
       };
     },
   });
