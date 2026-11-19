@@ -108,12 +108,28 @@ def appimage_tools(cache=None):
     return tools
 
 
+APPIMAGE_DOCUMENTATION = 'share/doc/nilla'
+
+
+def move_documentation_under_usr(app):
+    documentation = app / APPIMAGE_DOCUMENTATION
+    if not documentation.is_dir():
+        return
+    destination = app / 'usr' / APPIMAGE_DOCUMENTATION
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(documentation), str(destination))
+    for emptied in (documentation.parent, documentation.parent.parent):
+        if not any(emptied.iterdir()):
+            emptied.rmdir()
+
+
 def build_appimage(root, destination, tools=None):
     tools = tools or appimage_tools()
     with tempfile.TemporaryDirectory(prefix='ardia-appimage-') as scratch:
         app = pathlib.Path(scratch) / 'AppDir'
         shutil.copytree(root, app, symlinks=True, ignore=shutil.ignore_patterns('install.sh', 'apparmor.d', 'polkit-1'))
         (app / 'lib/ardia/chrome-sandbox').unlink(missing_ok=True)
+        move_documentation_under_usr(app)
         (app / 'AppRun').symlink_to('lib/ardia/ardia-launch')
         (app / 'ardia.desktop').write_text(desktop_entry(root / 'share/applications/ardia.desktop', 'AppRun'))
         icon = root / 'share/icons/hicolor/256x256/apps/ardia.png'

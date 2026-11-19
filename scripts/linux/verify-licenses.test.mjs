@@ -99,20 +99,58 @@ test("install.sh stages the licence texts and every icon size, and an Arch packa
   assert.match(readFileSync(join(here, "arch/PKGBUILD"), "utf8"), /^license=\('GPL-3\.0-only' 'Apache-2\.0'\)$/m);
 });
 
-test("the AppImage reader finds the image after the runtime and checks the same texts", { skip: !has("mksquashfs") && "mksquashfs is not installed" }, () => {
+test("an Arch .pkg.tar.zst is read through zstd, so it passes on a Python without the standard library's Zstandard module", { skip: !has("zstd") && "zstd is not installed" }, () => {
+  const pkgdir = join(scratch, "pkg");
+  const archive = join(scratch, "nilla-test-0.1.0-1-x86_64.pkg.tar.zst");
+  const packed = spawnSync("sh", ["-c", 'tar -C "$1" -cf - usr | zstd -q -o "$2"', "pack", pkgdir, archive], { encoding: "utf8" });
+  assert.equal(packed.status, 0, packed.stderr);
+  const result = verify("--arch", archive);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  const withoutStdlibZstd = spawnSync("python3", ["-I", "-c", 'import runpy, sys; sys.modules["compression.zstd"] = None; sys.argv = sys.argv[1:]; runpy.run_path(sys.argv[0], run_name="__main__")', verifier, "--arch", archive], { encoding: "utf8" });
+  assert.equal(withoutStdlibZstd.status, 0, withoutStdlibZstd.stdout + withoutStdlibZstd.stderr);
+  const truncated = join(scratch, "truncated.pkg.tar.zst");
+  writeFileSync(truncated, readFileSync(archive).subarray(0, 4096));
+  const broken = verify("--arch", truncated);
+  assert.equal(broken.status, 1);
+  assert.match(broken.stdout, /^FAIL arch /);
+});
+
+const appimageBuild = `
+import pathlib, shutil, struct, sys
+sys.dont_write_bytecode = True
+sys.path.insert(0, sys.argv[1])
+import linux_formats
+root, destination = pathlib.Path(sys.argv[2]), pathlib.Path(sys.argv[3])
+runtime = bytearray(256)
+runtime[:7] = bytes([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1])
+runtime[8:11] = b'AI\\x02'
+struct.pack_into('<Q', runtime, 0x28, 128)
+struct.pack_into('<HH', runtime, 0x3a, 64, 2)
+(destination.parent / 'runtime').write_bytes(bytes(runtime))
+linux_formats.build_appimage(root, destination, {'runtime': destination.parent / 'runtime', 'mksquashfs': shutil.which('mksquashfs')})
+`;
+
+test("the AppImage build puts the documentation copy in usr/share/doc/nilla, and the reader finds the image after the runtime", { skip: !(has("mksquashfs") && has("unsquashfs")) && "squashfs-tools is not installed" }, () => {
+  const appimage = join(scratch, "Nilla.AppImage");
+  const built = spawnSync("python3", ["-I", "-c", appimageBuild, here, packageRoot, appimage], { encoding: "utf8" });
+  assert.equal(built.status, 0, built.stderr);
+  const result = verify("--appimage", appimage);
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.ok(result.stdout.trimEnd().endsWith("5 licence texts in lib/ardia/licenses, usr/share/doc/nilla"), result.stdout);
+  const listing = spawnSync("unsquashfs", ["-o", "256", "-lc", appimage], { encoding: "utf8" }).stdout.split("\n").map((line) => line.replace(/^squashfs-root\//, ""));
+  for (const name of Object.keys(TEXTS)) assert.ok(listing.includes(`usr/share/doc/nilla/${name}`), name);
+  assert.ok(!listing.some((line) => line.startsWith("share/doc/")), "the AppImage keeps no share/doc copy");
   const image = join(scratch, "image.squashfs");
   assert.equal(spawnSync("mksquashfs", [packageRoot, image, "-all-root", "-noappend", "-no-progress", "-quiet", "-no-xattrs"]).status, 0);
+  writeFileSync(join(scratch, "not-an-appimage"), Buffer.concat([Buffer.alloc(64), readFileSync(image)]));
+  assert.match(verify("--appimage", join(scratch, "not-an-appimage")).stdout, /ELF runtime/);
   const runtime = Buffer.alloc(256);
   Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1]).copy(runtime);
   runtime.writeBigUInt64LE(128n, 0x28);
   runtime.writeUInt16LE(64, 0x3a);
   runtime.writeUInt16LE(2, 0x3c);
-  const appimage = join(scratch, "Nilla.AppImage");
-  writeFileSync(appimage, Buffer.concat([runtime, readFileSync(image)]));
-  const result = verify("--appimage", appimage);
-  assert.equal(result.status, 0, result.stdout + result.stderr);
-  writeFileSync(join(scratch, "not-an-appimage"), Buffer.concat([Buffer.alloc(64), readFileSync(image)]));
-  assert.match(verify("--appimage", join(scratch, "not-an-appimage")).stdout, /ELF runtime/);
+  writeFileSync(join(scratch, "misplaced.AppImage"), Buffer.concat([runtime, readFileSync(image)]));
+  assert.match(verify("--appimage", join(scratch, "misplaced.AppImage")).stdout, /usr\/share\/doc\/nilla\/LICENSE is missing/);
 });
 
 test("a changed, missing, extra or wrongly moded text fails, and naming no package is a usage error", () => {

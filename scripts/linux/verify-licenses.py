@@ -24,11 +24,12 @@ DOC_TEXTS = 'share/doc/nilla'
 FOLDERS = {
     'tarball': (RUNTIME_TEXTS, DOC_TEXTS),
     'deb': (f'usr/{RUNTIME_TEXTS}', f'usr/{DOC_TEXTS}'),
-    'appimage': (RUNTIME_TEXTS, DOC_TEXTS),
+    'appimage': (RUNTIME_TEXTS, f'usr/{DOC_TEXTS}'),
     'arch': (f'usr/{RUNTIME_TEXTS}', f'usr/{DOC_TEXTS}', f'usr/share/licenses/{ARCH_PACKAGE}'),
     'staged': (RUNTIME_TEXTS, DOC_TEXTS),
 }
 SQUASHFS_MAGIC = b'hsqs'
+ZSTD_MAGIC = b'\x28\xb5\x2f\xfd'
 DESCRIPTION = '''Checks that Nilla's Linux packages carry the licence texts byte for byte: LICENSE,
 LICENSE.Apache-2.0, NOTICE, third_party/bangs/LICENSE as bangs-LICENSE and the Linux
 symbol notices as symbols-THIRD_PARTY_NOTICES.txt, each a regular 0644 file, with nothing
@@ -36,10 +37,11 @@ else beside them.
 
   tarball   lib/ardia/licenses and share/doc/nilla under its one top folder (tarfile)
   deb       usr/lib/ardia/licenses and usr/share/doc/nilla (dpkg-deb --fsys-tarfile)
-  appimage  lib/ardia/licenses and share/doc/nilla (unsquashfs at the runtime's end;
+  appimage  lib/ardia/licenses and usr/share/doc/nilla (unsquashfs at the runtime's end;
             nothing in the image runs)
   arch      usr/lib/ardia/licenses, usr/share/doc/nilla and usr/share/licenses/<pkgname>
-            (pkgname from scripts/linux/arch/PKGBUILD; a .pkg.tar.zst or .pkg.tar.xz, read with tarfile)
+            (pkgname from scripts/linux/arch/PKGBUILD; a .pkg.tar.zst streamed through zstd -dc,
+            or a .pkg.tar.xz, read with tarfile)
   staged    lib/ardia/licenses and share/doc/nilla under an install root
             (install.sh --destdir D --prefix P gives D/P; an Arch pkgdir gives pkgdir/usr)
 
@@ -63,7 +65,7 @@ def expected():
 
 def tar_listing(archive):
     found = {}
-    for member in archive.getmembers():
+    for member in archive:
         name = member.name.removeprefix('./').rstrip('/')
         if member.isfile():
             found[name] = (member.mode & 0o7777, archive.extractfile(member).read())
@@ -74,10 +76,27 @@ def tar_listing(archive):
 
 def read_tar(path):
     try:
+        with open(path, 'rb') as handle:
+            if handle.read(len(ZSTD_MAGIC)) == ZSTD_MAGIC:
+                return read_zstd_tar(path)
         with tarfile.open(path) as archive:
             return tar_listing(archive)
     except (tarfile.TarError, OSError, EOFError) as error:
         raise Problem(f'{path} is not a readable tar archive: {error}') from None
+
+
+def read_zstd_tar(path):
+    if shutil.which('zstd') is None:
+        raise Problem('zstd is required to read a .pkg.tar.zst')
+    with subprocess.Popen(['zstd', '-dcq', '--', str(path)], stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+        with tarfile.open(fileobj=process.stdout, mode='r|') as archive:
+            found = tar_listing(archive)
+        while process.stdout.read(1 << 16):
+            pass
+        errors = process.stderr.read().decode(errors='replace').strip()
+    if process.returncode != 0:
+        raise Problem(f'zstd could not read {path}: {errors}')
+    return found
 
 
 def under_top_folder(found, path):
