@@ -1,6 +1,6 @@
 # Nilla for phones (Expo)
 
-One Expo app for both phones, replacing the SwiftUI iPhone app and the Compose Android app (issue #1556). On this
+One Expo app for both phones, replacing the SwiftUI iPhone app and the Compose Android app. On this
 branch the old Android app is gone ("The old Android app, cleaned out" below); `main` keeps it until the merge.
 Screens, app state and the data store are TypeScript; what has to be native is an Expo module wrapping the Kotlin and
 Swift code that already exists. Both phones run it: Android and the iPhone.
@@ -1272,8 +1272,8 @@ iPhone follows the SwiftUI app on main since the merge of main (8203d0b3c, 2026-
 ### Decided by the owner (2026-11-17): Android's redesign is parked
 
 - The owner tested the redesigned Android build on the POCO F4 and rejected it: "hate it … the … dropdowns are weird everywhere … we keeping android ones for later." Android keeps the classic design on main, and the plan below (flip, phone pass, delete the classic design) is stopped until he takes Android up again.
-- The complaint he named is the dropdowns. He gave no more detail, so which dropdowns and what is wrong with them is not known; find that out before fixing anything. His words and the state of the work are in #2496.
-- The stopped work is the draft #2477 (branch `t3/android-redesign`): the switch, the page bar kept drawn while a deck card opens, the page menu's large layout from 1.3×, and the deck's grid on Android. It is not to be merged as it is. #2472, #2474 and #2475 stay open for it.
+- The complaint he named is the dropdowns. He gave no more detail, so which dropdowns and what is wrong with them is not known; find that out before fixing anything. His words and the state of the work were in an upstream issue.
+- The stopped work is an upstream draft (branch `t3/android-redesign`): the switch, the page bar kept drawn while a deck card opens, the page menu's large layout from 1.3×, and the deck's grid on Android. It is not to be merged as it is.
 - The classic design and its tests stay in the tree. iPhone is not affected and goes on to TestFlight on the owner's word.
 
 ### Decided by the owner (2026-11-15)
@@ -1370,7 +1370,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Onboarding | All set: usage-stats toggle | deliberate | Expo only; consent is asked where sharing is described (telemetry rule) | owner's rule |
 | Onboarding | Default browser step | match | Seen 2026-11-17 with `-NillaOnboarding YES` on a fresh install of each: both walk the same four steps (welcome, blocking, sync, tips) into the app, and no step, row or text names a default browser; the code stays off without Apple's entitlement and nothing breaks (`unseen/onboarding-{ours,ref}/`) | |
 | Start page | Header, dots, bar | match | | |
-| Start page | Space name | deliberate | A title with no chevron and no menu; the dots and the swipe change space, and VoiceOver or TalkBack adjusts the dots. The SwiftUI reference's name opens a menu of the spaces (#2466) | owner's call, 2026-11-18 |
+| Start page | Space name | deliberate | A title with no chevron and no menu; the dots and the swipe change space, and VoiceOver or TalkBack adjusts the dots. The SwiftUI reference's name opens a menu of the spaces | owner's call, 2026-11-18 |
 | Start page | Pinned tiles | match | Tiles draw main's SF Symbols (Calendar, folders) at main's sizes, d09343dba | |
 | Start page | No spaces, sync off (invitation) | match | The Sync With Your Mac capsule alone, same place and size (`r-e-light`/`r-m-light`/invitation) | |
 | Search panel | Empty, recent searches | match | Main's source lists recent searches and the Mac's tabs, no open tab (the audit's SwiftUI row is a Mac tab); rows now refresh live with sync, 2fd28bbe5 | |
@@ -1379,7 +1379,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Search panel | Classic in Incognito, through the morph | match | Seen 2026-11-17 on the iPhone 18 Pro at 006f1afa3 beside main set to Classic by hand: both grow the dark Incognito pill into the same solid dark Classic panel and fold it back into the pill with no tint change (`pr-2184/search-classic-incognito-open.png`, `-close.png`). At rest ours shows the red lock where main shows its eyeglasses: our bar puts not secure before private, and main's frame has no not-secure state on loopback | |
 | Search panel | Landed pill on a real site | match | A dim-tap close on en.wikipedia.org at 006f1afa3: the landed pill is whole (favicon, host, `···`) from the first frame it shows. The favicon-only pill for about 20 frames seen on an earlier build (stage-9, 6d88e1c95 plus one native line) doesn't reproduce at head | |
 | Search panel | Voice | match | Seen beside main on the iPhone 17 Pro: the same two prompts (speech recognition, then microphone, main's wording), Listening…, "couldn't hear anything" with Try Again, and Cancel, which brings the field back focused with the keyboard up in both (seen again at 006f1afa3; an earlier build left it down). The simulator has no audio, so a spoken search is unheard (`unseen/voice-*.png`, `unseen/ref-voice-*.png`, `unseen/voice-cancel-stage10.png`) | |
-| Search panel | Open and close morph (main's PR #2010, e945077b6) | partly | Recorded 2026-11-16 on the iPhone 18 Pro beside main, one still localhost page, stage-4.app (`search-stage-18pro/{open,close,drag,go}-pair.png`). Open stills match: the address selected whole, its start shown, the site row then the typed-address row (363e43f41). Cancel into the pill: level within a frame, the face carrying its whole label (b861cd01e) and the bar back whole. Pull-down: the motion is level (616 ms both), but main folds the panel into the pill at the end and ours fades it in place; the JS sends `morph` with the pull's velocity, so the fold is the native close's (iPhone). Go: main holds the panel about 370 ms before departing up, ours about 170 ms; the JS blurs and closes in one tick, so this too is the native depart's. Open: ours sits about five frames before the panel moves, where main's face rises with the keyboard from the second frame; the native start now waits for the content's layout (e4b1e1739) and the field's late focus is traced by the iPhone agent | screens, iPhone |
+| Search panel | Open and close morph (main's, e945077b6) | partly | Recorded 2026-11-16 on the iPhone 18 Pro beside main, one still localhost page, stage-4.app (`search-stage-18pro/{open,close,drag,go}-pair.png`). Open stills match: the address selected whole, its start shown, the site row then the typed-address row (363e43f41). Cancel into the pill: level within a frame, the face carrying its whole label (b861cd01e) and the bar back whole. Pull-down: the motion is level (616 ms both), but main folds the panel into the pill at the end and ours fades it in place; the JS sends `morph` with the pull's velocity, so the fold is the native close's (iPhone). Go: main holds the panel about 370 ms before departing up, ours about 170 ms; the JS blurs and closes in one tick, so this too is the native depart's. Open: ours sits about five frames before the panel moves, where main's face rises with the keyboard from the second frame; the native start now waits for the content's layout (e4b1e1739) and the field's late focus is traced by the iPhone agent | screens, iPhone |
 | Search panel | Morph: the open's start | match | Seen 2026-11-17 on the iPhone 17 Pro beside main (`stage/{ref,hold2}-open/zoom.png`, the first 24 frames from the tap): the pill lifts off the bar carrying its face, the card deepens behind it with the field's capsule in view, the face fades at frame 17 (main's 16), the field's text at 19 (18) and the rows at 21 (21). Our field had come in about 15 frames sooner: the focus raises the keyboard inside the stage's start, so the reveal fired a turn after the lens opened; the stage now holds it 0.25 s after the unfold, and the reveal covers the field's contents, not its capsule, as main's text field does. At load 15 the keyboard came at frame 9 in both; at load 13 earlier it was late (content laid out 186 ms after the tap, field focused at 661 ms) | iPhone |
 | Search panel | Morph: dim tap back into the pill | different | The panel folds down on the keyboard's curve into the pill as main's (`stage/{ref,ours}-dim/strip.png`, 2026-11-17). After it lands, our pill shows only its favicon for about 20 frames before the label comes back; main's pill is whole at once | screens |
 | Search panel | Morph: pull-down | match | Both follow the finger with the held lift, fade their contents and fold into the pill from where the finger left them, since 6d88e1c95 (`stage/{ref,ours}-drag/strip.png`) | |
@@ -1397,7 +1397,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Page | Find on Page | match by decision | The system find navigator by default since ec6f9bc52 | |
 | Page menu | Rows and groups | match | The sheet now reaches the safe top as main's large detent does, and rows land at main's places; the action glyphs are main's size; Open in Default Browser shows, as main's does, only when Nilla can ask to be the default and isn't (hidden in builds without the entitlement) | |
 | Page menu | History, Bookmarks, Downloads rows | match | Main's group after Find, Send and Print, opening the Library sheet | |
-| Page menu | Translate | match | Main's #2259: the first Translate asks "Translate with Google?", the answer stands, and the row then names the remembered language. Seen on the iPhone 17 at e3be236e1: the question once, then "Translate to English" going straight to translate.goog; an Incognito tab always asks (`ports/06-translate-ask.png`, `08-menu-second.png`). Android has the same through its own `PageTranslation.kt` | |
+| Page menu | Translate | match | Main's: the first Translate asks "Translate with Google?", the answer stands, and the row then names the remembered language. Seen on the iPhone 17 at e3be236e1: the question once, then "Translate to English" going straight to translate.goog; an Incognito tab always asks (`ports/06-translate-ask.png`, `08-menu-second.png`). Android has the same through its own `PageTranslation.kt` | |
 | Reader | Article | match | | |
 | Reader | Top buttons | match | Main's glass circle (textformat.size, label colour) and glass Done capsule, 16 pt from each side; the lead image's 12 pt corners | |
 | Deck | Cards, Archive capsule, tab strip | match | The Archive capsule comes back on every deck open until it is dismissed or an interval is picked, as main's `hasShownArchiveCard` (Android keeps Compose's once-on-offer); the Search Tabs placeholder is the system's placeholder tone, within 3 levels of main's in light and dark (`glass-five/grid2.png`) | |
@@ -1408,7 +1408,7 @@ Owner: **screens** (JS), **iPhone** (native), **decision** (needs the owner).
 | Deck | Close | deliberate | The owner's tabs pass: no dust cloud. The closed card flies off the top on a 0.32 s critically damped spring that starts at the flick's speed, while the cards after it close the gap in the same frames; it is dropped once it has left the screen. With Reduce Motion it fades in place | owner |
 | Deck | Search Tabs | match | Typing "wiki": the bar rises above the keyboard and the deck narrows to the same Wikipedia tabs (`pairs3/search-tabs.png`) | |
 | Deck | Incognito pill | match | Seen 2026-11-17 on the iPhone 17 at e3be236e1 beside main's capture: the dark pill with the eyes and the count, and a private card's header reads Incognito beside the eyes icon instead of the page's title, as main's; before a2724b180 ours showed the page's title and hand-placed eyes (`unseen/deck-incognito/`, `ports/04-deck-incognito.png`) | |
-| Deck | Closing the last tab | match | Main's #2261: Close All Tabs, or closing the last card, hands over to the start screen, which rests with the tray down even with Open Keyboard on; the start screen's and the deck's buttons and tiles give the bar's press haptic. Seen on the iPhone 17 at e3be236e1: Close 9 Tabs lands on the resting start screen (`ports/11-after-close-all-3s.png`); the haptic is checked by `emptyDeck.render.test.tsx`, since the simulator has none | |
+| Deck | Closing the last tab | match | Main's: Close All Tabs, or closing the last card, hands over to the start screen, which rests with the tray down even with Open Keyboard on; the start screen's and the deck's buttons and tiles give the bar's press haptic. Seen on the iPhone 17 at e3be236e1: Close 9 Tabs lands on the resting start screen (`ports/11-after-close-all-3s.png`); the haptic is checked by `emptyDeck.render.test.tsx`, since the simulator has none | |
 | Deck | Dark | match | Deck, `···` menu and card menu as in light; once a card showed its placeholder (title and host) where main showed the snapshot, on the first deck open after a fresh install in dark. Not reproduced in two more fresh dark installs (browsing, then Tabs): every card showed its picture (`dark-deck/`) | |
 | Spaces | Sheet | match | The Bookmarks section is gone; bookmarks are in the Library sheet. Both show Show All after a device's eighth tab (main's `collapsedLimit`); in main that row sits behind the page dots and is unseen at rest, in ours it shows beside them (`pr-2184/spaces.png`) | screens |
 | Archive | Sheet | match | Light and dark | |
@@ -1485,7 +1485,7 @@ extensions, no `UIRequiresFullScreen`). In Expo that is `UISupportedInterfaceOri
 add upside down on iPhone; `supportsTablet` there only records the choice). An iPad window at least 600 pt both ways
 gets the open Duo's `wide` layout; a narrower one (a Split View third, Slide Over) gets `phone`, from the same probe
 as the Duo, never the device model. A new device joining sync on an iPad is named "iPad" (`SyncMeta.deviceName`).
-From @mantrakp04's #2263 on the SwiftUI app. In a window (Windowed Apps, Split View, Slide Over) iPadOS draws its
+From the SwiftUI app. In a window (Windowed Apps, Split View, Slide Over) iPadOS draws its
 window controls over the window's top-left corner; `WindowControlsClearance` (SceneDelegate.swift) adds the extra the
 corner-adapted safe area asks for (43 pt on an iPad Pro 11-inch) to the root view controller's top safe area, so
 every top inset in the app clears them, measured on the window so it never reads its own addition. A page resting at
@@ -1914,7 +1914,7 @@ Parked on 2026-11-17: the owner rejected the redesign on Android ("Decided by th
 candidate is built for release until he takes Android up again.
 
 **The workflow.** `.github/workflows/android-release.yml`, dispatch-only. It reaches `main` with the Expo branch's own
-pull request (#1556, which also closes #2160), and can't be dispatched before that merge. Then the commands are:
+pull request, and can't be dispatched before that merge. Then the commands are:
 
 ```
 gh workflow run android-release.yml -f mode=dry-run [-f commit=<sha>] [-f version=0.2.47-nightly.2]
@@ -2024,7 +2024,7 @@ as `<name>-release.apk` with its stamp. The key never leaves that Mac. The phone
 1. **The Android agent:** the candidate's build on corex, and the phone pass on the signed file, with the evidence in
    `/tmp/nilla-phone-shots/android-<candidate>/`.
 2. **The lead:** signing a candidate with the release key on the owner's Mac.
-3. **After #1556 merges, the owner the first time:** the workflow's dry run, then `mode=draft` for the release version.
+3. **After that merges, the owner the first time:** the workflow's dry run, then `mode=draft` for the release version.
 4. **The owner only:** publishing the draft on GitHub. Keep it a prerelease, and never set it as latest.
 
 ### The old Android app, cleaned out
@@ -2158,7 +2158,7 @@ Expo app builds from and what comparisons need. `main` keeps it until this branc
 
 **The pinned reference.** `~/Developer/nilla-phone-references/swiftui-main.app` (linked from
 `/tmp/nilla-phone/swiftui-main.app`), with `swiftui-main.txt`, is main's SwiftUI app built from
-`e945077b66efc7595382510e4a3c78c8e541957f` (PR #2010's search morph): Release, for the simulator, ad hoc signed with
+`e945077b66efc7595382510e4a3c78c8e541957f` (the search morph): Release, for the simulator, ad hoc signed with
 simulated entitlements. It is the one SwiftUI build the launch check, the upgrade proof and the speed comparisons
 install. Install the folder, not the `/tmp` link: the Simlock upload refuses links. The previous pin, from
 `a6ab643116b53c7a7079521adbb9374537eaec0f`, stays beside it as `swiftui-main-a6ab64311.app` until the audit rows for
@@ -2687,7 +2687,7 @@ Ranked by how much a person feels it, worst first:
 | – | Closing a tab by flick, 30 / 100 tabs | 643 / 648 ms to still | 556 / 553 ms | | level |
 | – | Cold launch, first frame to settled, 30 / 100 tabs | 409 / 411 ms | 409 / 409 ms | | level (iOS's zoom; see the first table) |
 | – | Typing in search, one letter: the letter and the new suggestion rows | same frame | same frame | | level |
-| – | Search panel open from a page, to settled, against main at e945077b6 (#2010's growing pill), 2026-11-16 19:18–19:33 | 393 ms (383–557) | 410 ms (382–417) | | level; Expo is the old search motion (JS at 82888f79f on native from 3e5ae048c), not the uncommitted native stage |
+| – | Search panel open from a page, to settled, against main at e945077b6 (the growing pill), 2026-11-16 19:18–19:33 | 393 ms (383–557) | 410 ms (382–417) | | level; Expo is the old search motion (JS at 82888f79f on native from 3e5ae048c), not the uncommitted native stage |
 | – | Search submitted (Go) to the page's first paint, same session | 143 ms (58–287) | 98 ms (65–367) | | faster; WebKit's own time on the Mac's CPU |
 | – | Search submitted to settled, same session | 332 ms (282–530) | 328 ms (263–997) | | level |
 | – | Search panel open from a page, tap to settled, against main at e945077b6 with the native stage (e4b1e1739's stage-7), 2026-11-16 21:50, iPhone 18 Pro, still pages on loopback, ten each in alternating rounds, load 4–5 | 537.5 ms (458–558); first movement 150 ms after the tap | **435 ms** (423–540); first movement 54 ms | | faster |

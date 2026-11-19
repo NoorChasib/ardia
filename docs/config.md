@@ -1,6 +1,6 @@
 # Config files
 
-Nilla can be set up from plain files, dotfiles style, and from the `nilla-browser` command (`docs/cli.md`). Closes #716.
+Nilla can be set up from plain files, dotfiles style, and from the `nilla-browser` command (`docs/cli.md`).
 
 ## Where
 

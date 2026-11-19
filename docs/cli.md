@@ -534,7 +534,7 @@ final value).
 init scripts registered, then `Page.navigate`); later `open`s navigate the session's tab. A session works in the
 background by default: it never takes the tab the user is looking at on its own. Until it has a tab (`open`, `tab
 new`, `tab active` or `tab <id>`), every command that needs a page fails with `no_session_tab` and names both ways in
-(`nilla-browser browse open <url>`, or `nilla-browser browse tab active` to work in the user's tab). Before #1738 such a session took
+(`nilla-browser browse open <url>`, or `nilla-browser browse tab active` to work in the user's tab). Before that, such a session took
 the active tab for its first command, so an agent's first `snapshot`, click or fill landed in the page the user was
 on. `tab active` picks the page shown in Nilla's last focused window: on the token path `GET /ardia/active?token=…`;
 on `--port`/`--ws` test servers, or when that route fails, the page that's visible and focused, else one that's

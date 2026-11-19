@@ -2,7 +2,7 @@
 
 The `nilla-browser` command can run Nilla's commands and react to what happens in the browser: tabs opening, pages loading,
 windows taking focus. Hooks run outside the app as ordinary programs, so nothing third-party runs in Nilla's process.
-Issue #717. Config files and themes are `docs/config.md`; page scripting over CDP is `docs/cli.md`.
+Config files and themes are `docs/config.md`; page scripting over CDP is `docs/cli.md`.
 
 ## The control socket
 
@@ -114,7 +114,7 @@ bookmark searches) and their fixed page title.
 
 ### Tabs and groups
 
-Issue #876. Everything the sidebar does to tabs and groups, by id, through the same store actions the sidebar
+Everything the sidebar does to tabs and groups, by id, through the same store actions the sidebar
 calls (`placeTabs`, `pinTabs`, `groupTabs`, `updateGroup`, `moveGroup`, `ungroup`, `closeGroup`, `deleteGroup`,
 `newTab`, `closeTabs`, `setMuted`, `updateTab`, `moveTabsToWindow`, `moveTabToProfile`, `moveGroupToWindow`,
 `moveGroupToProfile`), so pins, group nesting, the pin mirror, Chrome's tab strips and sync follow exactly as for a

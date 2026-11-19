@@ -7,7 +7,7 @@ The fix is `FocusHandoff` in packages/shell/ios/FocusHandoff.swift.
 
 **How a handoff runs**
 - The command resigns the page's RenderWidgetHostViewCocoa synchronously.
-- A gate opens for that window and holds keys and edit actions for up to 3 s while the command's field mounts and takes focus. A newer command while the gate is open starts a newer generation and gives it the full 3 s again. The gate used to last 400 ms, so with the JS thread busy for 450 ms or more the first keys after ⌘T beeped or went back into the old page (#816).
+- A gate opens for that window and holds keys and edit actions for up to 3 s while the command's field mounts and takes focus. A newer command while the gate is open starts a newer generation and gives it the full 3 s again. The gate used to last 400 ms, so with the JS thread busy for 450 ms or more the first keys after ⌘T beeped or went back into the old page.
 - Edit › Cut, Copy, Paste, Paste and Match Style and Select All wait on the newest generation.
 
 **Delivery: one path only.** The field that generation's command focuses (the New Tab box, the command bar, Find, or the page a new tab opens on) claims the generation and is verified as first responder. Only then are the waiting actions performed, and only on it.

@@ -91,10 +91,10 @@ Measured materials (our own non-activating panels over solid backdrops; sRGB; ac
   9 pt from the card. Dia's own inset is 6 with the card at the sidebar's width. The traffic lights
   and the sidebar's header row follow the toolbar down to y 30 (`LIGHTS_CENTER`). One constant: `CARD_INSET` in
   `apps/browser/src/lib/windowLayout.ts`. Radius stays 10.
-- The frame is a setting (issue #66, 2026-11-07): `pageFrame`, 0–12 pt, default `CARD_INSET` (9), so the default look
+- The frame is a setting (2026-11-07): `pageFrame`, 0–12 pt, default `CARD_INSET` (9), so the default look
   is the one above. Settings › Appearance › Page Frame and onboarding's "How much frame?" (`pageFrameOf` in
   `windowLayout.ts`, `components/window/cardFrame.ts`). A `borderlessMode` switch (off by default, synced) overrides the
-  effective inset to 0 and leaves `pageFrame` saved. Issue #999 adds two off-by-default synced flags
+  effective inset to 0 and leaves `pageFrame` saved. Two off-by-default synced flags
   (`pageFrameZeroInFullScreen`, `pageFrameZeroWhenTabsHidden`): the first drops the effective inset to 0 in macOS full
   screen; the second only when full screen and Auto-Hide Tabs are both on (`pageFrameInsetOf`); borderless wins over both.
   Otherwise the slider still applies. The inset applies at the window's edges, below the top strip's
@@ -105,7 +105,7 @@ Measured materials (our own non-activating panels over solid backdrops; sRGB; ac
   to half points (0 edge to edge, where the window's own corner rounds the page), and the peek's is
   `min(12, radius + frame - its side)`, so its corners still cover the card's. The traffic lights stay 21 pt below the
   card's top (y = frame + 21; the compact toolbar lifts them as before). The sidebar's header and its first row rise by
-  the same lift (`sidebarHeaderOf`, `firstRowTopOf` in `components/sidebar/geometry.ts`; issue #1364), so the first tab or
+  the same lift (`sidebarHeaderOf`, `firstRowTopOf` in `components/sidebar/geometry.ts`), so the first tab or
   Top Apps tile stays 24 pt below the lights; with the address bar in the sidebar the lights are fixed and so is the
   header. Below an 8 pt frame the sidebar's peek strip
   would lie over the page, so the native edge watch takes the 8 pt band instead and clicks there reach the page.
@@ -215,9 +215,9 @@ the same as top"), so if a Dia capture ever differs, the owner's equal insets wi
   dark); hover as above. Measured on a 2× capture of 1.50.1 (2026-09-30, dark, hovered): label peak α 0.547, plus 0.24,
   over a 0.16 hover fill. It sits one row gap (3 pt) under the tab above it, background to background.
 - Pinned tile hover: a custom tooltip showing the title and URL.
-- Groups (GitHub issue #154's Dia capture): at rest no box; the header sits on the sidebar like a row (icon at x 15) and
+- Groups (the Dia capture): at rest no box; the header sits on the sidebar like a row (icon at x 15) and
   the group's tabs 16 pt further in (icon at x 31). The box spans the list's width, and the group's rows end 3 pt inside
-  its right and bottom edges, at rest too (issue #154's 2× capture: pinned tiles end at x 221, the selected grouped row at
+  its right and bottom edges, at rest too (the 2× capture: pinned tiles end at x 221, the selected grouped row at
   x 218; the owner's hovered capture of 2026-11-10, 4.15 px per pt from the 34 pt row: right 11 px, bottom 10–11 px, so
   2.7 pt from the box's outer edge, read as 3 pt, the row gap). The box appears while the pointer is over the group:
   `TabGroupNeutralBackground` (white 0.10 dark / black 0.05 light), edge `TabGroupSidebarStroke` (white / black 0.10).
@@ -244,7 +244,7 @@ corner**, the corner nearest the row.
   not identified) and **0** when another card is already up. A click or key down dismisses it (local event monitor).
   The leave delay comes from the hover source's dismissal behaviour; no value in the binary. Both need a recording.
 - Ours (`components/sidebar/hoverMotion.ts`): the same curve, spring and scale, anchored at the card's top-left. Unlike Dia,
-  since 2026-11-14 (#1584, #1365) it opens only after the pointer rests 0.8 s on one row (Dia: 0.5 s, then 0 for every
+  since 2026-11-14 it opens only after the pointer rests 0.8 s on one row (Dia: 0.5 s, then 0 for every
   next row), never moves from row to row with the pointer, leaves at once when the pointer leaves away from it (up, out
   of the far edge, or onto another row) and 160 ms after a leave toward it, and never opens for rows a peeking sidebar
   brings under the pointer during its first 0.4 s; Settings › Tabs › Show tab hover menu turns it off. Measured on the native driver's own per-frame values
@@ -331,7 +331,7 @@ Dia's divider under its Pinned section (owner's 2× capture, 2026-11-09): a 1 pt
 6.5 pt above what follows (a group's box or a row), 14 pt edge to edge. Dia shows no labels there; ours carries the
 Pinned fold and Tidy/Clear (10 pt tiny text on a 13 pt line), so its band is the label plus 4 pt each side, keeping a hovered row's
 background off the text: 21 pt at the default Sidebar Text size, 23 pt at Large and 25 pt at Larger.
-What it closes (issue #149): the unselected unpinned tabs (`clearOthers`), keeping the selected tab and, per Arc's 2022
+What it closes: the unselected unpinned tabs (`clearOthers`), keeping the selected tab and, per Arc's 2022
 release notes, tabs playing media. Dia's Close All in the sidebar does the same with the selected tab (the issue's
 recording: of three unpinned tabs, the two unselected close and the selected one stays selected).
 
@@ -589,7 +589,7 @@ Implemented in `apps/browser/src/state/windows/profilePager.ts` (+ `components/w
   `isDirectionInvertedFromDevice`), then ignores wheel events for 0.25 s. Nilla does not copy the flip: AppKit has
   already applied the device's scroll-direction setting to `scrollingDeltaX`, so a scroll left (Δx > 0) shows the
   previous page with Natural scrolling on or off, as the trackpad path does (the flip paged a wheel with it off
-  backwards, #325).
+  backwards).
 - `TabSidebar.PagingContainerViewController` keeps `loadedPages` / `transitionPageIDs` and schedules page cleanup:
   pages beside the current one only exist during a transition. `TabStrip.TabStripSpacePagingController` pages the
   top tab strip too (with a content fade on settle, `settleUsesContentFade`, not decoded).
@@ -970,7 +970,7 @@ to these numbers (`chrome/browser/ardia/pip/` (`engine/chromium`)); a same-crop 
 
 Nilla differs in: the origin includes a port when the page has one (Chrome's formatting), and the play glyph
 (paused) and replay glyph weren't in the recording, so they're a rounded triangle of the same height and Chrome's icon.
-Nilla also has ±10 s buttons, which Dia doesn't (a user's request, issue #129): Chrome's replay 10 / forward 10 icons,
+Nilla also has ±10 s buttons, which Dia doesn't (a user's request): Chrome's replay 10 / forward 10 icons,
 32 pt and bare white like the pause glyph, centred 76 pt either side of it; ← and → seek too. Chrome hides the controls
 2.5 s after the pointer stops; Nilla keeps them while the pointer rests on one of its buttons or the progress bar, so a
 second click on a still pointer (pause, then play) isn't lost as a window drag.

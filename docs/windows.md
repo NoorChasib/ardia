@@ -1,8 +1,8 @@
 # Nilla on Windows
 
 Windows comes before Linux, and both share one codebase with the Mac: no fork. The Windows work lives on its
-branch (PR #1116) until the owner merges it. This file is
-the plan and the state of the port. The request is issue #351.
+branch until the owner merges it. This file is
+the plan and the state of the port.
 
 ## What is shared
 
@@ -22,8 +22,8 @@ Logic is written once. Only code that calls the OS is written per platform.
 Walked by hand on 2026-11-14 in the Windows 11 ARM VM (1920 by 1080), with the `Ardia-Setup-arm64` installer of run
 43544610044 (commit 45a0962e6, engine `windows-engine-20261113-12`, `ArdiaApp.dll` checked against the artifact), from
 a fresh data folder, as a user would: 41 driven runs, every row below seen on that build. Later that day the rows
-changed by #1658, #1686 and #1691 were seen again, and Tour and Open at login walked, on run 43565273476 (commit
-d83398e1f, engine `windows-engine-20261113-16`), and the intro, onboarding and tab strip that evening on #1737's
+changed since were seen again, and Tour and Open at login walked, on run 43565273476 (commit
+d83398e1f, engine `windows-engine-20261113-16`), and the intro, onboarding and tab strip that evening on the
 build 72901e27a (run 43624897005, engine `windows-engine-20261113-21`); those rows say so, and rows others saw say
 who and on which build. Of the 76 rows, 56 work, 8 work with a difference, 4 do nothing, 7 are not offered
 and 1 was not walked. Works with a difference says
@@ -32,105 +32,105 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
 
 **Install, first launch, updates**
 
-| Feature | State | Tracked in |
-| --- | --- | --- |
-| Installer (wizard, Start menu, Open Nilla) | Works (`setup exit 0` over an empty and over an existing install) | |
-| First launch after the installer | Works: onboarding, no release notes | #1517 |
-| First launch with a link | Works: the link opens in a Little Nilla window in front, onboarding waits in the main window behind it | |
-| Onboarding (main's walk-through, #1762) | Works (72901e27a): eight steps (source, layout, tabs, look, search and privacy, pins, default browser, outro), Edge found on this PC, Windows wording, Ctrl+T, Ctrl+L and Ctrl+S key caps, no Dock card or trial, no app icon row; Skip on every step; Get Started and Take the Tour. Gaps: Tab leaves the intro for the page behind it, and the links step names the Mac's Notes (#1812); the default-browser hand-off to Windows Settings wasn't seen (the VM's default is already Nilla) | #1812 |
-| Intro animation and music | Differs: no Windows machine with a real GPU has run the animated meadow yet. Where Chromium gives no WebGL2 (the VM and the CI runners: no GPU, and the engine has no SwiftShader) the dawn poster stands in, or the plain dark background at night, within about 0.4 s (14 of 14 launches on 72901e27a). On software rendering (WARP, turned on with test switches) the scene draws: in the VM on 65dd9760b, in light with the page's own icon and wordmark and at night with the moon and fireflies; Tab, Space and Enter work Mute and Skip, and a click on Skip ends it. The WARP self-check runs it on every PR on x64 and ARM64. Music not checked (the VM has no audio out) | #1547, #1546, #1737, #1249 |
-| Tour | Works (d83398e1f): Take the Tour shows five stops (search, tabs in the sidebar, room to focus, two pages side by side, all set) with Back, Next and Skip Tour; Done ends it | |
-| Import from Edge | Works (onboarding finds Edge; import itself checked in #1357) | #1516 |
-| Check for updates | Differs: Check Now says "No Windows update published yet" and names the build (0.2.47-nightly.1, Windows alpha 290) | #1517 |
-| Default browser | Works: Settings › General says "Nilla is your default browser" in this VM | #1439 |
-| Open at login | Works (d83398e1f, the VM user's own data folder): on, it writes the `Run` entry for the installed `Nilla.exe`; off, it removes it. When Windows has it turned off in Task Manager's Startup apps, the row asks you to allow it there (#1694; it named the Mac's System Settings before). A sign-in wasn't done: it needs the VM account's password | #1694 |
+| Feature | State |
+| --- | --- |
+| Installer (wizard, Start menu, Open Nilla) | Works (`setup exit 0` over an empty and over an existing install) |
+| First launch after the installer | Works: onboarding, no release notes |
+| First launch with a link | Works: the link opens in a Little Nilla window in front, onboarding waits in the main window behind it |
+| Onboarding (main's walk-through) | Works (72901e27a): eight steps (source, layout, tabs, look, search and privacy, pins, default browser, outro), Edge found on this PC, Windows wording, Ctrl+T, Ctrl+L and Ctrl+S key caps, no Dock card or trial, no app icon row; Skip on every step; Get Started and Take the Tour. Gaps: Tab leaves the intro for the page behind it, and the links step names the Mac's Notes; the default-browser hand-off to Windows Settings wasn't seen (the VM's default is already Nilla) |
+| Intro animation and music | Differs: no Windows machine with a real GPU has run the animated meadow yet. Where Chromium gives no WebGL2 (the VM and the CI runners: no GPU, and the engine has no SwiftShader) the dawn poster stands in, or the plain dark background at night, within about 0.4 s (14 of 14 launches on 72901e27a). On software rendering (WARP, turned on with test switches) the scene draws: in the VM on 65dd9760b, in light with the page's own icon and wordmark and at night with the moon and fireflies; Tab, Space and Enter work Mute and Skip, and a click on Skip ends it. The WARP self-check runs it on every PR on x64 and ARM64. Music not checked (the VM has no audio out) |
+| Tour | Works (d83398e1f): Take the Tour shows five stops (search, tabs in the sidebar, room to focus, two pages side by side, all set) with Back, Next and Skip Tour; Done ends it |
+| Import from Edge | Works (onboarding finds Edge; import itself checked separately) |
+| Check for updates | Differs: Check Now says "No Windows update published yet" and names the build (0.2.47-nightly.1, Windows alpha 290) |
+| Default browser | Works: Settings › General says "Nilla is your default browser" in this VM |
+| Open at login | Works (d83398e1f, the VM user's own data folder): on, it writes the `Run` entry for the installed `Nilla.exe`; off, it removes it. When Windows has it turned off in Task Manager's Startup apps, the row asks you to allow it there (it named the Mac's System Settings before). A sign-in wasn't done: it needs the VM account's password |
 
 **Windows and tabs**
 
-| Feature | State | Tracked in |
-| --- | --- | --- |
-| New tab, close, reopen closed tab (Ctrl+Shift+T) | Works | |
-| Ctrl+Z reopens closed tabs | Works once turned on in Keyboard Shortcuts (off by default, as on the Mac) | |
-| New window | Works | |
-| Private window | Works; closing one with two tabs asks first (Close 2 tabs?, Don't ask me again) | #1453 |
-| Close-tabs confirm while other windows load | Works: the confirm (like the prompt and the file pickers) runs on its own thread, so other windows keep loading and taking input while it is open; it stays in front of its own window and comes forward with it (#1688's self-check holds a confirm while a page loads, on CI; not walked here) | #1672, #1688 |
-| Quit and relaunch with the session restored | Works (tabs, the split and the open windows came back) | |
-| Engine memory trimmed after tabs close, once input is idle | Works (logged after closes) | #1544 |
-| Memory Saver's loaded-tab budget (the tabs hidden longest sleep past it) | Works (engine `windows-engine-20261116-4`, which also has #2052's page-place guard; seen by the `engine sleep:` self-checks in CI, not walked in the VM): the Mac's budget and sweep, sized from this PC's memory and Windows' memory load (85 % a warning, 95 % critical); the page view's `sleepIfHidden` asks Chromium's discard policy with the proactive reason, so a shown page or split pane, a page hidden within the mode's wait, typed form input, audio, capture and the other protections keep a tab awake. A page the app hid is no longer its page window's active tab, which Chromium would otherwise keep from every discard, and Chromium's DevTools-open state means a DevTools window inspects the page, not the engine's own always-attached page client (before -10 no Windows page could be discarded at all, by this budget, Chrome's Memory Saver timer or memory pressure). A discard is in place (`WebContentsDiscard`, as on the Mac), so the tab keeps its page and back/forward list. A slept tab wakes on show at its address and scroll. A pop-up window's page is not a tab, so the budget never asks it. The engine keeps a page for its own reasons too, in every discard but one the user or one of their extensions asks for (Chrome's Memory Saver timer, its memory-pressure and frozen-with-growing-memory discards as well as the budget, `kept_pages.cc` through `chromium-win-discard-asks-the-host.patch`; a kept page is never taken by an urgent discard either, since Windows' urgent discards skip protected pages; a discard the user or one of their extensions asks for, such as `chrome.tabs.discard()` from a tab-suspender extension, does not ask the host): the opener of a live pop-up or of a pending offer (100), so the pop-up's `window.opener` keeps working; a `beforeunload` handler (content's own handler state; the page graph's flag is never set in Chromium 157) on a page the user has used (101); a held Web Lock (102) or blocking IndexedDB lock (103); a WebSocket, WebTransport, WebRTC or direct-socket connection (104: the same signals that keep a page from freezing; in Chromium 157 an open WebSocket registers only the sticky feature, so a page that has used one stays kept until it navigates or reloads); a DevTools window, or a DevTools client other than the engine's own on the page or tab target: an extension's `chrome.debugger` or a remote CDP tool (105). Chromium's own protections hold as on the Mac (audible, capture, form input, notifications). Not seen yet, so such a page can still sleep (#2050): a Web Lock held by a dedicated worker, a WebSocket held by a SharedWorker, a blocking IndexedDB lock in a shared or service worker, an EventSource or long fetch stream, an upload. A hidden Peek card that stays mounted is not a shown page: after the mode's wait it can sleep, and it reloads at its address and scroll when it shows again. A tab that slept once still opens a new tab its link script saw clicked (the script Peek runs in) and an app-link ask. Pinned tabs sleep like any tab, as on the Mac (#1069). A page window keeps #2052's guard through a sleep and holds its place again once it wakes. Self-checks: `engine sleep:` in `selfCheck/engineSleep.ts`, `engineSleepKept.ts` and `engineSleepPlace.ts` | #1969 |
-| Unload inactive profiles (Settings › Advanced, with Memory Saver) | Not offered; hidden: the engine has no `profiles.unloadIdle` | #1425 |
-| The `nilla-browser` command (the install 8 s after launch, Settings › Advanced › Command line) | Not offered: Windows has no native `NillaCli`. `PLATFORM_FEATURES.nillaCommand` is false, so Command line is hidden in Settings and nothing is installed at launch. Its stand-in (`defaults.ts`) answers `canInstallUnattended` false and `install` with a failed result, and `installCliInBackground` treats a missing result as a failure. (Before, both answered null: the launch install threw `Cannot read property 'ok' of null`, an unhandled rejection 8 s after launch for nearly every Windows user, and Command line stayed on "Installing…".) Tests: `cliControlWindows.test.mjs`, `hiddenOnWindows.test.mjs` | #2135 |
-| Little Nilla (Ctrl+Alt+N) | Works, app-drawn chrome; its command bar lists recent pages | |
-| Search Tabs (Ctrl+Shift+A), Ctrl+Tab | Works (d83398e1f): the new page has the keyboard after Ctrl+Tab and after Next Tab into a tab a restore left unloaded (#1658, #1691). Gap: a new tab opened with an address (Ctrl+T, the address, Enter) doesn't get the keyboard, tracked in #1689 (still so on 72901e27a) | #1658, #1689 |
-| Pin, Top Apps, New Group with Tab, tab menus | Works (the tab menu offers Move to Top Apps, Remove from Split View, Close Split View) | |
-| Page picture (a pinned page in another window) | Works: the other window shows the page picture | #1540 |
-| Tabs in the sidebar or across the top (Ctrl+Shift+S), hide the sidebar (Ctrl+S) | Works. The pale box once left over the page's top-left came from visiting a second profile, not from Ctrl+S: the next profile's sidebar page, parked beside the sidebar, cut a hole in the page. Gone on d83398e1f, on a full-width tab and a split pane. With tabs across the top (72901e27a), the open and recently closed tabs button and New Tab stay clear of the caption buttons down to the narrowest window (600 px), where tabs scroll instead, and a right-click on the empty strip opens the tab menu | #1673, #1583 |
-| Minimalism mode (Ctrl+Alt+M) | Works, except one edge (53d5a2bee, walked 2026-11-14): in all five layouts (sidebar left, right, hidden; tabs on top with the strip shown and hidden) the window buttons sit in the band, the sidebar header or the strip with only app UI under them; minimize, maximize, restore and close work, the band, strip or header drags and double-click maximizes; Split View, full screen, a second window and turning it off behave, at 100% and 125%. Left, right and bottom resize work; where the page reaches the top edge (sidebar right), the band resizes the window (#1888; a real drag in CI, the cursor and double click untried in the VM) | #1831, #1888 |
-| Profiles: switch with Alt+1, Alt+2 | Works (Work opened in its own colour) | |
-| Open in WebKit, Engines pane, Opens in | Does nothing (no WebKit on Windows); hidden | #1522 |
-| Split View (Ctrl+\, two pages, Next Pane) | Works: the empty pane takes the next address, Alt+Shift+] moves focus to the other pane's page. Seen on #1686's build: Focus Next Split Pane into an empty pane puts the typing in its search field, and a page left full screen by a tab switch comes back in a window and gets Escape | #1490, #1658 |
-| Peek | Works: Shift-click opens it over a split pane and in a private window; Escape closes it. Keys reach the Peek's page without a click, and after Escape they reach the source page with the link still focused, as on the Mac (the engine thread saw both in the VM on build 339 of #1708; not re-walked here). Its buttons at the top, left and right (53d5a2bee, walked 2026-11-14) are app UI over the page with a clean cut, answer clicks, include Split View's, and the tooltip reads "Open as Tab (Ctrl+O)" | #1531, #1576, #1708 |
-| A download while split | Differs: an insecure (http) download is blocked by Chromium's own download bubble; a download from localhost reaches Nilla's panel | #1519 |
-| Pop-up windows from pages | Works: the pop-up stays a tab of its opener's window, so `window.opener` and `postMessage` keep working, and shows in a pop-up window the app draws, sized and placed as the page asked | #1518 |
-| Open pop-up windows as tabs (Settings › Tabs › Links) | Works, not seen on Windows yet: with it on, a page's pop-up opens as a foreground tab beside the page instead of a pop-up window, as on the Mac (`engine/popupsAsTabs.ts`); a pop-up from Little Nilla, one with no page to open beside, an extension's, and a pop-up window already open stay windows | #1986 |
-| Main, Settings and Little Nilla window chrome | Works, no system title bar | |
+| Feature | State |
+| --- | --- |
+| New tab, close, reopen closed tab (Ctrl+Shift+T) | Works |
+| Ctrl+Z reopens closed tabs | Works once turned on in Keyboard Shortcuts (off by default, as on the Mac) |
+| New window | Works |
+| Private window | Works; closing one with two tabs asks first (Close 2 tabs?, Don't ask me again) |
+| Close-tabs confirm while other windows load | Works: the confirm (like the prompt and the file pickers) runs on its own thread, so other windows keep loading and taking input while it is open; it stays in front of its own window and comes forward with it (the self-check holds a confirm while a page loads, on CI; not walked here) |
+| Quit and relaunch with the session restored | Works (tabs, the split and the open windows came back) |
+| Engine memory trimmed after tabs close, once input is idle | Works (logged after closes) |
+| Memory Saver's loaded-tab budget (the tabs hidden longest sleep past it) | Works (engine `windows-engine-20261116-4`, which also has the page-place guard; seen by the `engine sleep:` self-checks in CI, not walked in the VM): the Mac's budget and sweep, sized from this PC's memory and Windows' memory load (85 % a warning, 95 % critical); the page view's `sleepIfHidden` asks Chromium's discard policy with the proactive reason, so a shown page or split pane, a page hidden within the mode's wait, typed form input, audio, capture and the other protections keep a tab awake. A page the app hid is no longer its page window's active tab, which Chromium would otherwise keep from every discard, and Chromium's DevTools-open state means a DevTools window inspects the page, not the engine's own always-attached page client (before -10 no Windows page could be discarded at all, by this budget, Chrome's Memory Saver timer or memory pressure). A discard is in place (`WebContentsDiscard`, as on the Mac), so the tab keeps its page and back/forward list. A slept tab wakes on show at its address and scroll. A pop-up window's page is not a tab, so the budget never asks it. The engine keeps a page for its own reasons too, in every discard but one the user or one of their extensions asks for (Chrome's Memory Saver timer, its memory-pressure and frozen-with-growing-memory discards as well as the budget, `kept_pages.cc` through `chromium-win-discard-asks-the-host.patch`; a kept page is never taken by an urgent discard either, since Windows' urgent discards skip protected pages; a discard the user or one of their extensions asks for, such as `chrome.tabs.discard()` from a tab-suspender extension, does not ask the host): the opener of a live pop-up or of a pending offer (100), so the pop-up's `window.opener` keeps working; a `beforeunload` handler (content's own handler state; the page graph's flag is never set in Chromium 157) on a page the user has used (101); a held Web Lock (102) or blocking IndexedDB lock (103); a WebSocket, WebTransport, WebRTC or direct-socket connection (104: the same signals that keep a page from freezing; in Chromium 157 an open WebSocket registers only the sticky feature, so a page that has used one stays kept until it navigates or reloads); a DevTools window, or a DevTools client other than the engine's own on the page or tab target: an extension's `chrome.debugger` or a remote CDP tool (105). Chromium's own protections hold as on the Mac (audible, capture, form input, notifications). Not seen yet, so such a page can still sleep: a Web Lock held by a dedicated worker, a WebSocket held by a SharedWorker, a blocking IndexedDB lock in a shared or service worker, an EventSource or long fetch stream, an upload. A hidden Peek card that stays mounted is not a shown page: after the mode's wait it can sleep, and it reloads at its address and scroll when it shows again. A tab that slept once still opens a new tab its link script saw clicked (the script Peek runs in) and an app-link ask. Pinned tabs sleep like any tab, as on the Mac. A page window keeps the guard through a sleep and holds its place again once it wakes. Self-checks: `engine sleep:` in `selfCheck/engineSleep.ts`, `engineSleepKept.ts` and `engineSleepPlace.ts` |
+| Unload inactive profiles (Settings › Advanced, with Memory Saver) | Not offered; hidden: the engine has no `profiles.unloadIdle` |
+| The `nilla-browser` command (the install 8 s after launch, Settings › Advanced › Command line) | Not offered: Windows has no native `NillaCli`. `PLATFORM_FEATURES.nillaCommand` is false, so Command line is hidden in Settings and nothing is installed at launch. Its stand-in (`defaults.ts`) answers `canInstallUnattended` false and `install` with a failed result, and `installCliInBackground` treats a missing result as a failure. (Before, both answered null: the launch install threw `Cannot read property 'ok' of null`, an unhandled rejection 8 s after launch for nearly every Windows user, and Command line stayed on "Installing…".) Tests: `cliControlWindows.test.mjs`, `hiddenOnWindows.test.mjs` |
+| Little Nilla (Ctrl+Alt+N) | Works, app-drawn chrome; its command bar lists recent pages |
+| Search Tabs (Ctrl+Shift+A), Ctrl+Tab | Works (d83398e1f): the new page has the keyboard after Ctrl+Tab and after Next Tab into a tab a restore left unloaded. Gap: a new tab opened with an address (Ctrl+T, the address, Enter) doesn't get the keyboard (still so on 72901e27a) |
+| Pin, Top Apps, New Group with Tab, tab menus | Works (the tab menu offers Move to Top Apps, Remove from Split View, Close Split View) |
+| Page picture (a pinned page in another window) | Works: the other window shows the page picture |
+| Tabs in the sidebar or across the top (Ctrl+Shift+S), hide the sidebar (Ctrl+S) | Works. The pale box once left over the page's top-left came from visiting a second profile, not from Ctrl+S: the next profile's sidebar page, parked beside the sidebar, cut a hole in the page. Gone on d83398e1f, on a full-width tab and a split pane. With tabs across the top (72901e27a), the open and recently closed tabs button and New Tab stay clear of the caption buttons down to the narrowest window (600 px), where tabs scroll instead, and a right-click on the empty strip opens the tab menu |
+| Minimalism mode (Ctrl+Alt+M) | Works, except one edge (53d5a2bee, walked 2026-11-14): in all five layouts (sidebar left, right, hidden; tabs on top with the strip shown and hidden) the window buttons sit in the band, the sidebar header or the strip with only app UI under them; minimize, maximize, restore and close work, the band, strip or header drags and double-click maximizes; Split View, full screen, a second window and turning it off behave, at 100% and 125%. Left, right and bottom resize work; where the page reaches the top edge (sidebar right), the band resizes the window (a real drag in CI, the cursor and double click untried in the VM) |
+| Profiles: switch with Alt+1, Alt+2 | Works (Work opened in its own colour) |
+| Open in WebKit, Engines pane, Opens in | Does nothing (no WebKit on Windows); hidden |
+| Split View (Ctrl+\, two pages, Next Pane) | Works: the empty pane takes the next address, Alt+Shift+] moves focus to the other pane's page. Seen on the build: Focus Next Split Pane into an empty pane puts the typing in its search field, and a page left full screen by a tab switch comes back in a window and gets Escape |
+| Peek | Works: Shift-click opens it over a split pane and in a private window; Escape closes it. Keys reach the Peek's page without a click, and after Escape they reach the source page with the link still focused, as on the Mac (the engine thread saw both in the VM on build 339; not re-walked here). Its buttons at the top, left and right (53d5a2bee, walked 2026-11-14) are app UI over the page with a clean cut, answer clicks, include Split View's, and the tooltip reads "Open as Tab (Ctrl+O)" |
+| A download while split | Differs: an insecure (http) download is blocked by Chromium's own download bubble; a download from localhost reaches Nilla's panel |
+| Pop-up windows from pages | Works: the pop-up stays a tab of its opener's window, so `window.opener` and `postMessage` keep working, and shows in a pop-up window the app draws, sized and placed as the page asked |
+| Open pop-up windows as tabs (Settings › Tabs › Links) | Works, not seen on Windows yet: with it on, a page's pop-up opens as a foreground tab beside the page instead of a pop-up window, as on the Mac (`engine/popupsAsTabs.ts`); a pop-up from Little Nilla, one with no page to open beside, an extension's, and a pop-up window already open stay windows |
+| Main, Settings and Little Nilla window chrome | Works, no system title bar |
 
 **Pages**
 
-| Feature | State | Tracked in |
-| --- | --- | --- |
-| Command bar (history, open tabs, suggestions) | Works | |
-| Inline completion in the command bar | Works (top match completes inline) | #1520 |
-| Find in page | Works: the app's find bar, from a page or the app's UI (Ctrl+F); count, Enter, Shift+Enter, F3 and Shift+F3 step; Escape gives the page the keyboard back; private windows too | #1758 |
-| Page loading in the address field | Works (#1865's build 0bcabc63e, run 43642845254, 125%): while a slow page loads the glow fills the toolbar field, a Split View pane's field, a Peek's bar and Little Nilla's field, sweeps across when the load ends and fades; a load under 150 ms shows nothing; the tab's spinner and the stop button as before | #1820 |
-| Reading mode (Ctrl+Alt+R, F9) | Works (53d5a2bee, walked 2026-11-14): it draws on a local article and on Wikipedia; Larger Text and the font switch work, Escape leaves it, F9 and Ctrl+Alt+R toggle it and it stays across a tab switch. A reload leaves it, as on the Mac. Find in page finds nothing inside it, as the shared reader keeps the article in a closed shadow root | #1831, #1883 |
-| Zoom (Ctrl+=, Ctrl+0) | Works, with the zoom icon in the address bar | |
-| Print | Works (Chromium's print preview, Microsoft Print to PDF) | |
-| JavaScript alert, confirm and prompt | Works (Chromium's dialogs over the page) | |
-| Page, link and image menus | Differs: Chromium's menu, trimmed as on the Mac (no Open link in split view, Cast, reading mode, QR code, send to your devices, Lens or other-profile items; Save as shows no Ctrl+S), but without the Mac's own items for a selection (search with Nilla's engine, Share) | #1811 |
-| Full-screen (a page element) | Works; Escape leaves it | |
-| Picture in picture | Differs: Chromium's window, no stash, corners or mini player | #1425 |
-| Downloads (download, panel, Ctrl+J) | Works: the panel opens for a new download and lists it, including one held for Keep; Ctrl+J opens it and Escape closes it (53d5a2bee, walked 2026-11-14) | #1519, #1610 |
-| History (Ctrl+H), Clear Browsing Data (Ctrl+Shift+Del) | Works; history is kept past 90 days and an import keeps its older pages, as on the Mac (engine `windows-engine-20261116-4` passes `keep-old-history`; seen by the `engine history:` self-check in CI) | #2009 |
-| Bookmarks (Ctrl+D, Ctrl+Shift+O) | Works | |
-| mailto and other app links | Works: the app's prompt, then the handler (`mailto` opens the mail app without a prompt, as Chromium and the Mac allow it by default). The engine thread saw the prompt and the handler in the VM on build 347 of #1701; not walked here. The first click on the prompt works after using the page since #1749, and a data: page's prompt stops counting once its document is gone since #1750 (engine `-22`); the engine thread saw the first in the VM and the self-check proves the second on both CPUs. | #1590, #1701, #1749, #1750 |
-| Translate | Not offered | #1520 |
-| Network error page | Works (Chromium's) | |
-| DevTools (F12), Task Manager (Shift+Esc) | Works (Chromium's) | |
+| Feature | State |
+| --- | --- |
+| Command bar (history, open tabs, suggestions) | Works |
+| Inline completion in the command bar | Works (top match completes inline) |
+| Find in page | Works: the app's find bar, from a page or the app's UI (Ctrl+F); count, Enter, Shift+Enter, F3 and Shift+F3 step; Escape gives the page the keyboard back; private windows too |
+| Page loading in the address field | Works (the build 0bcabc63e, run 43642845254, 125%): while a slow page loads the glow fills the toolbar field, a Split View pane's field, a Peek's bar and Little Nilla's field, sweeps across when the load ends and fades; a load under 150 ms shows nothing; the tab's spinner and the stop button as before |
+| Reading mode (Ctrl+Alt+R, F9) | Works (53d5a2bee, walked 2026-11-14): it draws on a local article and on Wikipedia; Larger Text and the font switch work, Escape leaves it, F9 and Ctrl+Alt+R toggle it and it stays across a tab switch. A reload leaves it, as on the Mac. Find in page finds nothing inside it, as the shared reader keeps the article in a closed shadow root |
+| Zoom (Ctrl+=, Ctrl+0) | Works, with the zoom icon in the address bar |
+| Print | Works (Chromium's print preview, Microsoft Print to PDF) |
+| JavaScript alert, confirm and prompt | Works (Chromium's dialogs over the page) |
+| Page, link and image menus | Differs: Chromium's menu, trimmed as on the Mac (no Open link in split view, Cast, reading mode, QR code, send to your devices, Lens or other-profile items; Save as shows no Ctrl+S), but without the Mac's own items for a selection (search with Nilla's engine, Share) |
+| Full-screen (a page element) | Works; Escape leaves it |
+| Picture in picture | Differs: Chromium's window, no stash, corners or mini player |
+| Downloads (download, panel, Ctrl+J) | Works: the panel opens for a new download and lists it, including one held for Keep; Ctrl+J opens it and Escape closes it (53d5a2bee, walked 2026-11-14) |
+| History (Ctrl+H), Clear Browsing Data (Ctrl+Shift+Del) | Works; history is kept past 90 days and an import keeps its older pages, as on the Mac (engine `windows-engine-20261116-4` passes `keep-old-history`; seen by the `engine history:` self-check in CI) |
+| Bookmarks (Ctrl+D, Ctrl+Shift+O) | Works |
+| mailto and other app links | Works: the app's prompt, then the handler (`mailto` opens the mail app without a prompt, as Chromium and the Mac allow it by default). The engine thread saw the prompt and the handler in the VM on build 347; not walked here. The first click on the prompt works after using the page, and a data: page's prompt stops counting once its document is gone (engine `-22`); the engine thread saw the first in the VM and the self-check proves the second on both CPUs. |
+| Translate | Not offered |
+| Network error page | Works (Chromium's) |
+| DevTools (F12), Task Manager (Shift+Esc) | Works (Chromium's) |
 
 **Passwords, permissions, extensions**
 
-| Feature | State | Tracked in |
-| --- | --- | --- |
-| Offer to save a password | Differs: Chromium's bubble (Save, Never, No thanks) | #1425 |
-| Fill a saved password | Works | |
-| Notification and location prompts | Differs: Chromium's prompts (Allow, Block; while visiting, this time, never) | #1425 |
-| Camera and microphone | Not walked: the VM has no camera | |
-| Chrome Web Store install | Differs: the store says Add to Ardia, Chromium's Add extension dialog, then the icon in the toolbar and the extension's own page | stand-ins `extensions.resolveInstallPrompt` |
-| ardia://extensions | Works | |
-| Ad, tracker and cookie-banner blocking | Not offered; hidden | #1425 |
-| Hide anything (Hide Element) | Not offered; hidden: its rules are kept by the content blocker, which Windows lacks | #1425 |
-| Block autoplay on every site, and Autoplay per site in Site Controls | Works (engine `windows-engine-20261116-9`; seen by the `engine autoplay:` self-checks in CI, not walked in the VM): the Mac's settings and rule, enforced in Blink. A tab whose top-level site is set to Block, or has no Autoplay setting of its own while Block autoplay everywhere is on, plays media only in a document whose user asked: a click, tap or key press that reached that document (not Escape, not a Ctrl or Windows-key chord; Ctrl with Alt is AltGr and counts), Nilla's own play controls for the media they play, or a user action through Chrome's media session; a subframe also plays while it has transient activation, as the Mac's page script allows. The site is the top-level document's origin, or for a `blob:` or `about:blank` page the origin that made it. `chromium-win-autoplay-policy.patch` carries the decision to each new document with its commit (out-of-process iframes included), updates open documents when the setting changes, after a back/forward cache restore and when a prerendered page is shown, and refuses in `AutoplayPolicy` before Chrome's exemptions (media engagement, a Sound allowance, capture) and before muted autoplay: `play()` rejects with NotAllowedError, the autoplay attribute and internal resumptions do nothing, detached elements and shadow roots included. Blocking an open page pauses what its user did not ask to play. Plays refused are counted in the engine (`usage_counts.autoplay_plays_blocked`, at most 20 per page). Not covered, as on the Mac: Web Audio. Nilla's play controls reach media in the page and its same-origin iframes only, as before. Self-checks: `engine autoplay:` in `selfCheck/engineAutoplay.ts` | #1425, #1774, #2125 |
-| Block requests to send notifications (Settings › Privacy & Security) | Not offered; hidden: it turns a notification request down when the app hears one, and on Windows the app hears none and can't answer one (`permissions.resolve`), so Chromium's own prompt still asks | #1425 |
-| Bookmark export | Works: Windows' Save As, then the HTML file is written | #1551 |
-| Password export | Works up to Windows' own sign-in prompt over the app window; the walk cancelled it there (the VM account's password is not typed in a test), so the file was not written | #1551 |
+| Feature | State |
+| --- | --- |
+| Offer to save a password | Differs: Chromium's bubble (Save, Never, No thanks) |
+| Fill a saved password | Works |
+| Notification and location prompts | Differs: Chromium's prompts (Allow, Block; while visiting, this time, never) |
+| Camera and microphone | Not walked: the VM has no camera |
+| Chrome Web Store install | Differs: the store says Add to Ardia, Chromium's Add extension dialog, then the icon in the toolbar and the extension's own page; its stand-ins are `extensions.resolveInstallPrompt` |
+| ardia://extensions | Works |
+| Ad, tracker and cookie-banner blocking | Not offered; hidden |
+| Hide anything (Hide Element) | Not offered; hidden: its rules are kept by the content blocker, which Windows lacks |
+| Block autoplay on every site, and Autoplay per site in Site Controls | Works (engine `windows-engine-20261116-9`; seen by the `engine autoplay:` self-checks in CI, not walked in the VM): the Mac's settings and rule, enforced in Blink. A tab whose top-level site is set to Block, or has no Autoplay setting of its own while Block autoplay everywhere is on, plays media only in a document whose user asked: a click, tap or key press that reached that document (not Escape, not a Ctrl or Windows-key chord; Ctrl with Alt is AltGr and counts), Nilla's own play controls for the media they play, or a user action through Chrome's media session; a subframe also plays while it has transient activation, as the Mac's page script allows. The site is the top-level document's origin, or for a `blob:` or `about:blank` page the origin that made it. `chromium-win-autoplay-policy.patch` carries the decision to each new document with its commit (out-of-process iframes included), updates open documents when the setting changes, after a back/forward cache restore and when a prerendered page is shown, and refuses in `AutoplayPolicy` before Chrome's exemptions (media engagement, a Sound allowance, capture) and before muted autoplay: `play()` rejects with NotAllowedError, the autoplay attribute and internal resumptions do nothing, detached elements and shadow roots included. Blocking an open page pauses what its user did not ask to play. Plays refused are counted in the engine (`usage_counts.autoplay_plays_blocked`, at most 20 per page). Not covered, as on the Mac: Web Audio. Nilla's play controls reach media in the page and its same-origin iframes only, as before. Self-checks: `engine autoplay:` in `selfCheck/engineAutoplay.ts` |
+| Block requests to send notifications (Settings › Privacy & Security) | Not offered; hidden: it turns a notification request down when the app hears one, and on Windows the app hears none and can't answer one (`permissions.resolve`), so Chromium's own prompt still asks |
+| Bookmark export | Works: Windows' Save As, then the HTML file is written |
+| Password export | Works up to Windows' own sign-in prompt over the app window; the walk cancelled it there (the VM account's password is not typed in a test), so the file was not written |
 
 **Settings**
 
-| Feature | State | Tracked in |
-| --- | --- | --- |
-| Settings window, panes, search | Works (all twelve panes; search finds rows and opens their pane) | |
-| Profiles: create, switcher | Works | |
-| Appearance: light and dark | Works | |
-| Higher contrast text | Works (403b48b2c, walked 2026-11-14): Automatic follows a Windows contrast theme turned on while the app runs and one already on at launch, through the shell's `isHighContrast` and its `highContrast` event (react-native-windows' `AppTheme` is UWP-only and always read off). Changing the theme while Settings is open can crash the window layer, on older builds too | #1831, #1882, #1900 |
-| Keyboard Shortcuts pane | Works, Windows keys | |
-| "…" menu | Works, except Check for Updates | #1517 |
-| Sync | Works: Turn On Sync at the default folder shows the Recovery Kit, the pane says updated just now, every What Syncs row but Passwords; a Mac and a PC exchanged pinned tabs and bookmarks both ways (#1594) | #1575, #1425 |
-| Calendar | Does nothing; hidden | #1521 |
-| Trackpad gestures, video upscaling, reorder haptics, thin scroll bars | Does nothing; hidden | #1522, #1520 |
-| Keep new-tab links inside a Little Nilla window, zoom with Ctrl and the mouse wheel, offer to save and fill passwords | Does nothing (the engine has no call for them yet); hidden | #1783, #1425 |
-| Warn before quitting | Works (#1796's build 1f4d97db1, run 43631924720): with it on, closing the last window (close button, Alt+F4, Ctrl+Shift+W, a lone Little Nilla's Ctrl+W; Ctrl+W on a window's last tab follows the same rule) asks first with the Mac's words; Cancel keeps the app running, Quit exits, Don't ask again turns it off; a hidden instance never asks | #1782, #1803 |
-| Widevine | Not offered (says so) | |
-| Copy naming the Mac | Works: the walk found three more (a ⌘T, "History › Recently Closed", "File › Close All Tabs"), fixed in #1668's PR | #1522, #1668 |
+| Feature | State |
+| --- | --- |
+| Settings window, panes, search | Works (all twelve panes; search finds rows and opens their pane) |
+| Profiles: create, switcher | Works |
+| Appearance: light and dark | Works |
+| Higher contrast text | Works (403b48b2c, walked 2026-11-14): Automatic follows a Windows contrast theme turned on while the app runs and one already on at launch, through the shell's `isHighContrast` and its `highContrast` event (react-native-windows' `AppTheme` is UWP-only and always read off). Changing the theme while Settings is open can crash the window layer, on older builds too |
+| Keyboard Shortcuts pane | Works, Windows keys |
+| "…" menu | Works, except Check for Updates |
+| Sync | Works: Turn On Sync at the default folder shows the Recovery Kit, the pane says updated just now, every What Syncs row but Passwords; a Mac and a PC exchanged pinned tabs and bookmarks both ways |
+| Calendar | Does nothing; hidden |
+| Trackpad gestures, video upscaling, reorder haptics, thin scroll bars | Does nothing; hidden |
+| Keep new-tab links inside a Little Nilla window, zoom with Ctrl and the mouse wheel, offer to save and fill passwords | Does nothing (the engine has no call for them yet); hidden |
+| Warn before quitting | Works (the build 1f4d97db1, run 43631924720): with it on, closing the last window (close button, Alt+F4, Ctrl+Shift+W, a lone Little Nilla's Ctrl+W; Ctrl+W on a window's last tab follows the same rule) asks first with the Mac's words; Cancel keeps the app running, Quit exits, Don't ask again turns it off; a hidden instance never asks |
+| Widevine | Not offered (says so) |
+| Copy naming the Mac | Works: the walk found three more (a ⌘T, "History › Recently Closed", "File › Close All Tabs"), fixed in the PR |
 
 ## The Windows app
 
@@ -160,7 +160,7 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
     Pending telemetry and documents are written while stopping (`ShutDown` in `Nilla.cpp`), while their worker
     threads still run. Nothing in the library may wait on another thread from an exit handler or a static destructor:
     those run during `ExitProcess`, after Windows has ended every other thread, so such a wait only ends on its
-    timeout and the process outlives the quit (#1706: 30 s, which made the installer give up with exit 5). The
+    timeout and the process outlives the quit (30 s, which made the installer give up with exit 5). The
     engine now ends the browser process as soon as Chromium's shutdown returns (`AfterChromeMain`, as Chrome does for
     its utility processes), so no exit handler or static destructor runs in it at all.
   - `NillaEngineHost` (`EngineHostModule.h`) is the bridge: `available()`, `hostCall`, `engineCall`, and the engine's
@@ -200,7 +200,7 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
     a right sidebar's header, at the end of the top tab strip, in Little Nilla's bar. With the address bar in a left
     sidebar they sit at the sidebar's leading end, in their own row above the header (one button and a 3 point gap
     tall, `sidebarControlsRow`), in the same order as everywhere else (menu, minimize, maximize, close), and the card
-    reaches the page frame (#1973); the row beside them is a caption region, counted from the left (a negative third
+    reaches the page frame; the row beside them is a caption region, counted from the left (a negative third
     value in a caption region is a width). Only a card with no toolbar and no sidebar showing (address bar in the
     sidebar, tabs hidden) and Minimalism's band layouts keep a 32 point band for them. They take the site's toolbar
     colours in the toolbar, and when the toolbar hides while scrolling a smaller set fades in on the 20 point strip.
@@ -242,10 +242,10 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
     doesn't repeat from JS on Windows, so a running animation keeps writing its values to a view until it ends. So a
     style never swaps an Animated value for a constant while an animation may still write to it: the view keeps the
     same node, and `useGated` (`components/ui/motion.ts`) pins that node to its resting value while its state is off.
-    A sidebar docked while its peek was closing drew its rows off where they click before this (#1852); the self-check
+    A sidebar docked while its peek was closing drew its rows off where they click before this; the self-check
     `sidebar peek layer rests at identity after docking mid-close` docks the first window six times as its peek
     closes and logs `self-check note: sidebar peek, <n> cycles, <m> docked mid-close, ...`. And no view that takes
-    clicks rests under a non-zero transform (#1868).
+    clicks rests under a non-zero transform.
   - The app quits when its last window closes: it sends `willQuit`, then quits on the UI's yes or after 3 seconds
     without a reply; a no cancels the quit.
   - Warn before quitting asks when closing a browser window would quit the app: the setting is on, the instance
@@ -259,10 +259,10 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
     Windows has no Quit command, so these are the only places it asks; the Mac asks on ⌘Q and never on a window's
     close. It asks before the window closes, so a Cancel leaves the window and the app as they were and no quit
     starts; Quit closes the window and the quit above runs as before. A close that asked it never also shows the
-    close-tabs confirm. The dialog is the shared confirm on the dialog thread (#1672). Closing Settings when it is
-    the only window left quits without asking: Settings closes without a close request (#1803). When another window
+    close-tabs confirm. The dialog is the shared confirm on the dialog thread. Closing Settings when it is
+    the only window left quits without asking: Settings closes without a close request. When another window
     closes while a close-tabs confirm is open, confirming it asks the quit question too, since that close now quits:
-    the only close that shows both dialogs (#1889; `quit_warnings_after_tabs_confirm` and its `_cancelled` count them).
+    the only close that shows both dialogs (`quit_warnings_after_tabs_confirm` and its `_cancelled` count them).
   - Windows fade as on the Mac (`WindowFade.h`), fade only with no grow. A window opened with `animated`, and every
     window that is not a browser window (Little Nilla, Settings, Import: the Mac's system animates those open),
     stays transparent until its React root has content or for 0.6 s, then fades in over 0.25 s (Little Nilla
@@ -315,7 +315,7 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
   shortcut still runs. The launch log says `keys escape capture on|off` and
   `keys escape sent to the open popover or drag`. The Mac's Downloads popover does not close on Escape yet
   (`PLATFORM_FEATURES.escapeClosesDownloads` is off there).
-- The new tab's bar takes the keyboard about 50 ms after Ctrl+T (#2098). It used to take it only on its first layout,
+- The new tab's bar takes the keyboard about 50 ms after Ctrl+T. It used to take it only on its first layout,
   60 to 280 ms after the command on CI's runner, after the whole New Tab page had mounted, and the letters typed
   before then went to the previous tab's hidden bar.
   - **The change:** with `PLATFORM_FEATURES.newTabBarFirst` (Windows only; the Mac and Linux keep today's order), a
@@ -329,10 +329,10 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
     button. A stop fails only when the new tab's bar takes focus more than 90 ms after the `newTab` command (the
     worst seen was 69 ms under load), or the first key does not land in the new tab's bar (its first `typed` mark
     after the command, and the settled text starting with that key). A stop typing from 15 ms after Ctrl+T
-    must keep every key (#2099). The rest is report only: the whole text at 30 ms a key (#2101), where Go goes
-    (#2102), and three launches each typing at 80 and at 120 ms a key that read the field after every key.
-  - **A stalled JS thread** (a slow first launch, #2059) is covered by the key hold below (#2099).
-- The command bar puts back a letter its text field drops (#2101). React Native Windows 0.81's text field applies
+    must keep every key. The rest is report only: the whole text at 30 ms a key, where Go goes
+   , and three launches each typing at 80 and at 120 ms a key that read the field after every key.
+  - **A stalled JS thread** (a slow first launch) is covered by the key hold below.
+- The command bar puts back a letter its text field drops. React Native Windows 0.81's text field applies
   the state of its first change (event count 0) whenever that state mounts. When JS is busy, as right after Ctrl+T,
   the state lands after the next letter and wipes it: "example.com" became "eample.com" in 2 of 10 tries at 80 ms a
   key and 2 of 10 at 120 ms. React Native Windows fixed it with React Native 0.88 (commit 1f59db13f9), not in 0.81.40,
@@ -366,7 +366,7 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
 
     The per-key reads name the focused UI Automation element.
   - **Telemetry:** `command_bar_letters_restored` in `usage_counts`, counted once per field the repair acted on.
-- A window's views mount only after the React instance finishes loading (#2115, `InstanceLoad.h`). React Native
+- A window's views mount only after the React instance finishes loading (`InstanceLoad.h`). React Native
   Windows 0.81's `ReactNativeIsland::ShowInstanceLoaded` starts a new surface each time it runs. It runs when a view
   host attaches to an instance already marked Loaded, and again when the host's `whenLoaded` continuation updates
   every attached view host. A window that attached between the two got two copies of the app, both alive: every New
@@ -375,9 +375,9 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
   mounts a window that comes before `ReloadInstance()` completes once it has completed, and logs
   `window <id> waited <ms> ms for the instance to finish loading`. `window_roots_doubled` in `usage_counts` counts a
   window whose root mounts while another root for it is still up.
-- The keys typed right after Ctrl+T or Ctrl+L wait for the bar's field (#2099, #2124). The keyboard hook runs on the UI
+- The keys typed right after Ctrl+T or Ctrl+L wait for the bar's field. The keyboard hook runs on the UI
   thread and handles a typed key before the queued mount that focuses the new bar, so a key typed then went into the
-  old, dying field or nowhere: 1 of 20 first letters with #2060's mount order and 3 of 20 with main's, at 80 and
+  old, dying field or nowhere: 1 of 20 first letters with the mount order and 3 of 20 with main's, at 80 and
   120 ms a key. `FocusHold.h` holds them, through the Mac's focus-handoff contract:
   - **Start:** `MenuKeyboard::Emit` gives `newTab` and `focusCommandBar` a `focusGeneration` when the window is
     visible and in front. Another command ends the hold.
@@ -386,12 +386,12 @@ what differs; the Mac's list is `docs/dia-feature-parity.md`. Rows marked "hidde
     `unregisterInput`). Windows can't focus a view by tag natively, so it needs both. With
     `PLATFORM_FEATURES.claimsFollowFocus`, a bar field that already has focus claims when the move asks for it (Ctrl+L
     on an open bar, a hero bar asked again), and a field claims again when it takes focus. The contract's missing part
-    is #989's acknowledgement; until it lands, a hold gives up 3 s after the command.
+    is the acknowledgement; until it lands, a hold gives up 3 s after the command.
   - **Held:** character keys with no Ctrl, Alt or Win, turned into characters when recorded (`ToUnicodeEx` with flag 4,
     so the dead-key state is left alone). Modifiers pass. At most 64.
   - **Replay:** one `WM_CHAR` at a time (a surrogate pair together) posted to the focused `InputSiteWindowClass`
     window, then a sentinel to the hold's own message window, re-checking the window in front and the focus before the
-    next, waiting 50 ms after the first one's sentinel returns so the field's first change settles before a second letter can meet #2101's
+    next, waiting 50 ms after the first one's sentinel returns so the field's first change settles before a second letter can meet the
     revert. No `SendInput`. A failed post, or a sentinel not back within 1 s, ends the hold. A posted character can't be
     recalled, and the check sees the input window, not which React field inside it has focus. So `src/textFocus.ts`
     also tells the hold when JS asks another field to take focus (`fieldAsked`, sent before the request; a request
@@ -515,14 +515,14 @@ is plain Chromium.
 
 - Features the engine turns off at launch (`AddLaunchSwitches` in `scripts/windows/engine/src/ardia/win/main.cc`,
   appended to any `--disable-features` the launcher passed, which a launcher's `--enable-features` can't undo):
-  `CalculateNativeWinOcclusion`, and `SettingsGlowupJourneys` (engine `windows-engine-20261117-9`, #2326). The latter
+  `CalculateNativeWinOcclusion`, and `SettingsGlowupJourneys` (engine `windows-engine-20261117-9`). The latter
   feeds Chrome's own guided tours, which Nilla never shows, and its chrome://settings handlers CHECK for a tracked
-  browser view in the tab's window, which a hidden page window doesn't have. The Mac turns it off too (#2289). The
+  browser view in the tab's window, which a hidden page window doesn't have. The Mac turns it off too. The
   `engine settings:` self-checks change a search engine, a site permission, the theme and browsing data through
   chrome://settings in shown, private, pop-up and hidden pages and ask the engine for the page after each.
 - A browser-theme change (chrome://settings › Appearance › Reset to default, a theme installed or removed) leaves a
-  hosted page window's frame alone (`chromium-win-hosted-theme-change.patch`, engine `windows-engine-20261117-9`,
-  #2332). Chromium regenerates the frame on Windows for every theme change, which asks the window for a DWM frame
+  hosted page window's frame alone (`chromium-win-hosted-theme-change.patch`, engine `windows-engine-20261117-9`).
+  Chromium regenerates the frame on Windows for every theme change, which asks the window for a DWM frame
   transition; a hosted window's frame is custom drawn, so that ended in a failed CHECK that closed the app.
 - The Visual C++ runtime ships inside the folder. React Native's DLLs import the app-container CRT (`vcruntime140_app.dll`,
   `msvcp140_app.dll` and the other `*_app.dll`), whose exports forward to the desktop `VCRUNTIME140.dll`, `MSVCP140.dll`
@@ -532,7 +532,7 @@ is plain Chromium.
   `Microsoft.VCRedistVersion.default.txt`, found with vswhere; `-VcRedist <folder>` overrides it), for the launcher's
   CPU (all nine on x64, eight on ARM64, which has no `vcruntime140_1`). A forwarder whose target the redist lacks is left
   out when nothing loads it, and fails the assembly when something does. Without this the app fails with "Class not registered" on a machine without the VC++ redist, and GitHub's
-  runners have it, so only `dependency-check.ps1` below catches it in CI (#2036).
+  runners have it, so only `dependency-check.ps1` below catches it in CI.
 
 - `//ardia/win` (`scripts/windows/engine/src/ardia/win`, copied into the tree by `series_win.py`) is the engine's side.
   It starts Chromium with no window of its own, turns the launch variables into switches as the Mac's launcher does
@@ -549,7 +549,7 @@ is plain Chromium.
   top-level, it is what a window tool finds under the pointer (AltSnap's Alt+drag, a script posting SC_MOVE), so while a page
   is shown and not fullscreen its window holds its place: the host's own placement is the only move or resize it takes,
   a change that skipped WM_WINDOWPOSCHANGING (SWP_NOSENDCHANGING) is put back, and a system move or size started on it
-  goes to the app window (#2051, `Test-PageHoldsPlace` in `launch-smoke.ps1`). The guard stays on the window through Memory
+  goes to the app window (`Test-PageHoldsPlace` in `launch-smoke.ps1`). The guard stays on the window through Memory
   Saver: a hidden page that sleeps keeps it, and the page holds its place again once it wakes (`engineSleepPlace.ts`). A window
   Chromium opens by itself (a link opened in a new window) stays off screen until the app adopts its tabs.
 - The verbs: `tab.create` (a key, a profile, a URL or a tab to adopt; the same key again moves the tab to the window
@@ -577,7 +577,7 @@ is plain Chromium.
   the find bar, dialogs, toasts, the downloads bubble) reports its rectangle (`usePageCover`), and the page window gets
   a hole there, with the surface's corners. A surface inside a `ClipView` (the sidebar's and the tab strip's profile
   pages, which sit side by side and clip to one) reports only the part its clips show, so the next profile's rows,
-  parked beside the sidebar, cut nothing in the page (#1673). A translucent surface shows the card behind it in the hole, not the page.
+  parked beside the sidebar, cut nothing in the page. A translucent surface shows the card behind it in the hole, not the page.
   A `Surface` that only draws a gradient (`GradientFill`, the address field's load glow) reports no rectangle: it always
   sits inside a toolbar, sidebar or Little Nilla plate that does, and `windowsGradientFill.test.mjs` pins its callers.
   Gradients draw through `NillaMaterialGradient` (`GradientView.h`): `fillColors` at `fillStops` top to bottom, masked
@@ -590,7 +590,7 @@ is plain Chromium.
 - Native modals (confirm and alert, the prompt, the open, save and folder pickers; `NativeDialogs.h`, `SaveDialog.h`)
   run on a thread of their own (`ModalThread.h` `RunModal`, a COM STA thread), never on the UI thread. The app shares
   that thread with Chromium's browser UI, and Chromium runs none of its own tasks inside a native modal loop, so a
-  dialog there stalled every window's pages until it closed (#1672: in the VM, Chromium's DevTools list gave no answer
+  dialog there stalled every window's pages until it closed (in the VM, Chromium's DevTools list gave no answer
   for 5 s while "Close 2 tabs?" was open and a page asked in another window stayed "Untitled"). No dialog is owned by
   a window on another thread: that joins the two threads' input queues, and WinAppSDK's input (`Microsoft.UI.Input.dll`)
   then fails fast (`0xc0000602`) when the app quits. The dialog thread owns the dialog by a hidden window of its own
@@ -601,14 +601,14 @@ is plain Chromium.
   shuts down WinUI's queue (`ShutDown` in `Nilla.cpp`): destroying the input site of a focused window moves focus
   into a site being torn down, and `Microsoft.UI.Input` fails fast (`0xc0000602`, seen in a VM dump). Keys typed in it no longer reach the app's shortcut hook. One dialog per window at a time; a dialog whose window goes away, or every
   dialog when the app stops, is cancelled within 250 ms, except the open-file picker: quitting with it open waits the
-  stop's full 2 s and leaves its thread running (exit code 0, no crash; #1747). The launch log notes how many dialogs
-  were open at stop, how long they took and how many were left. Pop-up menus run the same way (#1687): the UI thread
+  stop's full 2 s and leaves its thread running (exit code 0, no crash). The launch log notes how many dialogs
+  were open at stop, how long they took and how many were left. Pop-up menus run the same way: the UI thread
   builds the menu and takes the cursor point, and `TrackPopupMenuEx` runs on a `RunModal` thread, owned by that
   thread's hidden `ModalParent` at the app window, which takes the foreground so keys and outside clicks reach the
   menu. The app window stays enabled, the `resignActive` its deactivation would send is held back
   (`ActivatesMenuThread`) and sent after the menu only if another app took the foreground, and a menu is closed
   (`EndMenu`) when its window goes or the app stops. A right press in the sidebar while a page has the keyboard
-  activates the app window first, before any menu, so the page lost the keyboard to the sidebar for good (#2218, seen on
+  activates the app window first, before any menu, so the page lost the keyboard to the sidebar for good (seen on
   the CI runner: the field kept its caret but `document.hasFocus()` was false and the keys went nowhere). The app window
   now remembers the page it was activated from when the secondary button was down (`TakePageLeftBySecondaryPress`). The
   sidebar's presses reach WinUI without passing the UI thread's mouse messages or a `WH_MOUSE` hook (the CI input trace
@@ -632,7 +632,7 @@ is plain Chromium.
 - When the app can't start inside the engine (its library doesn't load, it has no `ArdiaAppStart`, or that refuses),
   the engine shows why in a message box (none in a hidden instance), writes it to the launch log as
   `app start failed: <reason>`, and quits from inside the run loop, so the process exits 0. It used to call
-  `QuitApp()` before the run loop and CHECK-crash at `browser_process_impl.cc:1959` with nothing on screen (#2044).
+  `QuitApp()` before the run loop and CHECK-crash at `browser_process_impl.cc:1959` with nothing on screen.
   The app hands back its reason through `ArdiaAppStartFailure`.
 - A start that crashes or fails before it has run for 15 s counts as unfinished (`launch-starts.txt` in the data
   folder; a quit before then counts as finished). After two unfinished starts in a row, the next one moves the
@@ -641,7 +641,7 @@ is plain Chromium.
   `GraphiteDawnCache`, `ShaderCache`, `GPUPersistentCache` and the profile's `GPUCache`, `DawnGraphiteCache`,
   `DawnWebGPUCache`: a relaunch differs from a first run in what the first session wrote there), and says so once it
   has opened, so a profile that crashes Nilla at every start opens again on its own. Chromium's profile (bookmarks,
-  history, passwords, cookies) isn't touched. #2097's recording (the app gone about 4 s after its window appears, at
+  history, passwords, cookies) isn't touched. The recording (the app gone about 4 s after its window appears, at
   every launch after onboarding) is that shape; the launch log now kept in `Logs` says what ended it.
 - A window closed while minimized keeps its restored place and size for the next launch (the frame event's restored
   bounds); it used to save the minimized frame and come back as a 480 x 360 window in the corner.
@@ -706,9 +706,9 @@ is plain Chromium.
   it; the sidebar, the command bar, the find bar and the toolbar keep the keyboard. Only a page already showing
   in that window gets the ask at once. For any other page (none yet, sleeping, hidden, prewarmed, still opening, or
   still showing in the window a tab moved from) the ask is kept until that page shows in that window, however long it
-  takes to open, and no show timer is involved (`engine/keptFollow.ts`, #1689, not seen on Windows yet). A shown tab
+  takes to open, and no show timer is involved (`engine/keptFollow.ts`, not seen on Windows yet). A shown tab
   that gets its first address (Enter in its New Tab page's search box, or in the command bar over it) asks again.
-  Escape in the command bar over a page gives that page the keyboard back, as on the Mac (#1894): the page's
+  Escape in the command bar over a page gives that page the keyboard back, as on the Mac: the page's
   `focusIfUnfocused` asks the same way, and only when no field of the window holds the keyboard (not seen on Windows
   yet; `page_focus_returns_after_bar` counts it).
   The ask is used once. It is dropped when another tab is followed or focused, a page is pressed, or a field takes the
@@ -724,7 +724,7 @@ is plain Chromium.
   an empty pane's search field), `NillaFocus.takeKeyboardFromPage` activates that window. A page that hides or
   closes leaves full screen, as the Mac's does.
 - Win+Up, Win+Down, Win+Left, Win+Right, Win+Z and their chains work while a page has the keyboard, as natively as
-  with the sidebar (#2148). The shell acts on the window that was in front when the Windows key went down (CI showed
+  with the sidebar. The shell acts on the window that was in front when the Windows key went down (CI showed
   an arrow sent later, with the app window in front, still ignored), and a page's own window can't be snapped, so
   nothing moved. `MenuKeyboard`'s thread hook sees the Windows key go down over a page; when the foreground window is
   then a page window owned by one of the app's browser or Little Nilla windows (and the instance isn't a background
@@ -755,12 +755,12 @@ is plain Chromium.
   Chromium's own find bar never shows. React Native for Windows fires both `onKeyDown` and `onSubmitEditing` for one
   Enter in the find field, so the bar ignores a submit within 250 ms of the Enter it came from (`submitRepeatsKey`).
   `find_opens` and `find_steps` in the hourly `usage_counts` count it on every platform. The engine's `find` call still
-  ignores `findNext` (#1425), so reopening the bar on the same words moves one match on.
+  ignores `findNext`, so reopening the bar on the same words moves one match on.
 - Peek opens as on the Mac. The engine host keeps a DevTools session of its own on each page and puts the Peek part of
   ArdiaCore's page script into an isolated world of every web frame (`page_links.cc`): the page can't see the script
   or its binding. It is registered for each new document (`Page.addScriptToEvaluateOnNewDocument` in that world, with
   the binding scoped to it), so it is in place before a page that just woke from sleep or came by a cross-process
-  navigation takes input (engine `windows-engine-20261117-9`, #2198; the `engine links:` self-checks). A click on a link with the Peek key (`webView.setPeekModifier`), the Split key
+  navigation takes input (engine `windows-engine-20261117-9`; the `engine links:` self-checks). A click on a link with the Peek key (`webView.setPeekModifier`), the Split key
   (`setSplitLinkModifier`), or a plain click to another site on a tab that peeks those (`setPeekOtherSiteTabs`), is
   cancelled and reported; the host checks it against the last real left mouse-up over that page and sends the Mac's
   `openWindow` (`peek` or `split`), or falls back as the Mac does. A tab the page opens itself carries `fromClick` only
@@ -769,7 +769,7 @@ is plain Chromium.
   (ArdiaCore's page script also counts a `window.open()` during an activation; Windows doesn't).
   Cross-site iframes run in their own process and their own DevTools target, so links in them don't peek yet.
   The Peek card's background is a surface painted beneath the Peek's page, so a Peek's page (`temporary`) keeps a
-  cover that encloses it whole; anything over part of it still cuts it. A Peek belongs to its tab (#1361): while
+  cover that encloses it whole; anything over part of it still cuts it. A Peek belongs to its tab: while
   another tab shows, its card stays mounted and unseen, its page is hidden, and `PageCoverGate` (a plain pass-through
   on the Mac) keeps the card's surfaces from cutting holes in the page that shows; back on its tab the Peek's page is
   asked to follow again (not seen on Windows yet). Escape closes a Peek from either page, as on
@@ -789,7 +789,7 @@ is plain Chromium.
   tab the engine opened itself keeps its blank page until a download.
   The engine reports these itself (`TabState::CommittedPageURL`): a download from a tab asked for `about:blank`
   names `about:blank` as its committed page, and one from a tab opened with no address names none. The `engine blank:`
-  self-checks (`selfCheck/engineBlank.ts`, #2127) hold both against the engine as it ships.
+  self-checks (`selfCheck/engineBlank.ts`) hold both against the engine as it ships.
 - The engine's download list (`ac_downloads_list`) includes Chromium's history of earlier launches under their own
   ids, while the app restores its own list from `downloads.json`. Announcing the whole list at launch made each
   earlier download a new one: the panel opened by itself and listed it twice. The launch replay
@@ -831,7 +831,7 @@ is plain Chromium.
   prompt is drawn on the asking page's tab, so a window with no page has nowhere to show it.
 - A pop-up window takes focus only if, when it opens, its opener's app window is the foreground window and the
   opener's page holds the keyboard (`keyboard.page`, asked by `WindowManager.h` at that moment, the same rule as page
-  focus in #1658); a pop-up from a pop-up is placed and focused by that pop-up, while its tabs and prompts go to the
+  focus); a pop-up from a pop-up is placed and focused by that pop-up, while its tabs and prompts go to the
   main page. Otherwise it shows just above its opener's window and that window's pages, without activating, and never
   above another application's window. The Mac shows such a pop-up in front of its Nilla windows and makes it key
   within Nilla; Windows shows it in the same place but leaves the keyboard where it was.
@@ -1040,7 +1040,7 @@ Deleting a profile's data: native (`NillaEngineHost.removeProfileFolder`) works 
 the engine does (`<ARDIA_DATA_DIR>\Chromium` in an instance with its own data folder, `%LOCALAPPDATA%\Ardia\User Data`
 otherwise), and acts only where that folder holds the `Default` profile folder or `Local State` and agrees with `host.info`'s
 `userDataDir`. The folder counts first: Chromium saves `Local State` with `ReplaceFile`, and while it does a reader can
-find the file missing, which made a removal answer "refused" and leave a deleted profile's data on disk (#2120). A profile
+find the file missing, which made a removal answer "refused" and leave a deleted profile's data on disk. A profile
 is deleted by its folder only when its id is one Nilla makes: lowercase `a-z`, `0-9` and `-`, at most 238 characters,
 so that `Nilla <id> (removing)` fits one 255-character NTFS name. Its folder is then exactly `Nilla <id>`. Any other id
 (hand-edited state, a sync from something else, a bug) could share its folder with another profile, so on purpose
@@ -1156,8 +1156,8 @@ sealed exactly as `packages/sync/ios/Core/SyncCrypto.swift` seals it. The engine
   unsealed (`SyncLogins::SealedLogins`), and Sync's password adapter neither uploads it nor reads it as a deletion
   (`ignore`), and never writes a synced password over it: such a login stays as it is on this machine and nothing about
   it is uploaded, and a damaged row is the user's to fix by saving the password again. Before passwords sync on
-  Windows (#1425), Sync must treat every error as "skip this cycle, delete nothing". The Mac drops such a login
-  silently (#1933).
+  Windows, Sync must treat every error as "skip this cycle, delete nothing". The Mac drops such a login
+  silently.
 - Passwords, once the engine lists them: `ac_passwords_logins` is called and its reply sealed in C++ (`SyncSystem.h`),
   and a synced password is opened only to hand it to `ac_passwords_add`. The Mac's vault files carry plaintext `p` in `pw:` records, as the Mac
   writes them; `SyncLogins.h` swaps them for sealed `s` before JS sees a document (escaped keys included; a login it
@@ -1410,41 +1410,41 @@ The Mac's numbers are the targets for Windows, measured from the first engine bu
 Ranked by how much a user notices. Sizes are rough: S is under a day, M is one to three days, L is more.
 
 App side, an agent can do these now:
-1. A new tab opened with an address (Ctrl+T, the address, Enter) gets no keyboard (#1689). S, with the engine
+1. A new tab opened with an address (Ctrl+T, the address, Enter) gets no keyboard. S, with the engine
    thread.
-2. Changing a Windows contrast theme while Settings is open crashes Nilla, inside the Windows App SDK (#1900). S once
+2. Changing a Windows contrast theme while Settings is open crashes Nilla, inside the Windows App SDK. S once
    the cause is seen on Windows.
 3. A private pop-up left as the only window closes the tabs it opens at once, where a regular one gets a browser window
-   back (#1910): the app can't open a window on the pop-up's private session yet. S.
-4. The top edge over a page that reaches it (#1888): a real drag in CI resizes the window from the top; the cursor, a
+   back: the app can't open a window on the pop-up's private session yet. S.
+4. The top edge over a page that reaches it: a real drag in CI resizes the window from the top; the cursor, a
    double click and a maximized window are untried in the VM. S.
-5. The theme's grain draws nothing, and the sidebar and toolbar don't blur what is behind them (#1921). M.
+5. The theme's grain draws nothing, and the sidebar and toolbar don't blur what is behind them. M.
 6. The Mac's own items in the page menu: search a selection with Nilla's engine and Share (Chromium's menu is otherwise
-   trimmed as on the Mac since #1811). S.
-7. The app's own prompts for passwords, notifications and location, drawn like the Mac's (#1425 for the events the app
+   trimmed as on the Mac). S.
+7. The app's own prompts for passwords, notifications and location, drawn like the Mac's (the events the app
    needs). M each once the engine reports them. A pop-up's prompts go to its opener's window, as on the Mac's
    `NillaPopupWindow` (else any window of its profile). Today Chromium's own prompt shows, most likely in the
    pop-up's window (not yet seen in the VM).
-8. Picture in picture: the Mac's stash, corners and mini player (#1425 for the window events). L.
-9. A pop-up whose opener wrote its document shows about:blank in its origin strip (#1863). S.
-10. Dragging a pinned extension to reorder the toolbar (main's #1935): the engine takes `pinnedIndex` since
+8. Picture in picture: the Mac's stash, corners and mini player (the window events). L.
+9. A pop-up whose opener wrote its document shows about:blank in its origin strip. S.
+10. Dragging a pinned extension to reorder the toolbar (main's): the engine takes `pinnedIndex` since
     `windows-engine-20261115-3`; that the new order sticks, and the drag itself, are untried on Windows. S.
 11. A group's and a live folder's icon is the plain folder symbol, filled while open, not the Mac's animated folder
-    (main's #376; `views/FolderIcon.tsx`). S.
+    (main's; `views/FolderIcon.tsx`). S.
 
-Engine work (#1425): the walk found nothing new missing beyond what is already listed there:
-- password sync on Windows: the engine's login read is ready (#1918); Sync still has to handle its errors before
+Engine work: the walk found nothing new missing beyond what is already listed there:
+- password sync on Windows: the engine's login read is ready; Sync still has to handle its errors before
   `syncsPasswords` turns on;
 - the password, permission and picture-in-picture events the app needs to draw its own prompts and windows;
 - the 67 calls `packages/expo-windows/src/engine/domains/forwarded.json` lists under `missing`;
 - nothing else open from the 2026-11-14 walk: a tab the app closes no longer prompts and is gone within its deadlines
-  (#1696), a data: page's app-link prompt needs its document alive (#1750), the first click on a page prompt works after
-  using the page (#1749), and the app process exits at once after quit (#1761).
+ , a data: page's app-link prompt needs its document alive, the first click on a page prompt works after
+  using the page, and the app process exits at once after quit.
 
 Decisions for Shivam:
-- the calendar source on Windows (#1521);
-- Translate (#1520);
-- signing, or a per-machine install (#1659).
+- the calendar source on Windows;
+- Translate;
+- signing, or a per-machine install.
 
 With the engine and owner items set aside, the app side has not reached parity yet: items 1 to 4, 9 and 10 are bugs a
 user hits, and 5 to 8 and 11 are visible differences from the Mac. Everything else in the table works or differs
@@ -1452,7 +1452,7 @@ only where the engine, Windows itself or a decision stands in the way.
 
 ## Order of work
 
-1. The app shell: the UI in native windows, with the app-side native modules and views. Done in #1112, except what
+1. The app shell: the UI in native windows, with the app-side native modules and views. Done, except what
    the log still lists.
 2. Chromium for Windows with our patches, hosted in the app: pages load in tabs. Done (The engine in the app).
 3. What the Mac's native layer does that Windows still leaves to Chromium's own UI or lacks: the page's context menu,

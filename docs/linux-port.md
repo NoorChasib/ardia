@@ -2,7 +2,7 @@
 
 The Linux port runs the same browser UI as the Mac app on the same Chromium (157.0.8103.50) and Helium (0.21.2, with
 helium-linux 0.21.2.1) pins. It targets x86-64 Linux on Wayland, with Hyprland and Omarchy as the main desktop; X11
-works, and arm64 builds are configured but untested. It answers upstream issue #1, "Linux Support".
+works, and arm64 builds are configured but untested.
 
 On the Mac, ArdiaCore is a framework that the React Native app hosts. On Linux there is no React Native: Chromium's own
 `chrome` executable is the app. It serves Nilla's UI from `chrome://ardia/` inside each browser window and hands the
@@ -873,7 +873,7 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
 - **Wayland focus.** Activation uses `xdg_activation_v1` and the compositor may refuse it (Hyprland may mark the
   window urgent instead). A Wayland client can't refuse focus when it maps, so `ARDIA_BACKGROUND=1` keeps focus only on
   X11.
-- **Sidebar-edge peek** (#368). With the sidebar hidden, the native host watches the sidebar's edge itself
+- **Sidebar-edge peek**. With the sidebar hidden, the native host watches the sidebar's edge itself
   (`ArdiaShell.watchSidebarEdge`, `ac_linux_sidebar_edge.h`), the way macOS's `SidebarEdgeWatcher` does: the left edge,
   or the right edge when Settings › Tabs › Sidebar position is Right. Before this the shell watched its own DOM. The native page covers everything from the card's 9 px inset, and the frame's resize border
   never reaches the shell, so only window x 4–10 revealed the sidebar on X11. No fast move ever revealed it (0 of
@@ -909,7 +909,7 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
     never reveals a hidden strip.
   - Switching the sidebar's side re-evaluates the last pointer position and drops a pending 90 ms settle.
   - No stop at a shared screen edge. macOS holds the pointer at a screen edge another display shares so the peek opens
-    (#1816) and reports `screenEdge` (`stopped`, `passed`) for its telemetry. Linux peeks when the pointer leaves the
+    and reports `screenEdge` (`stopped`, `passed`) for its telemetry. Linux peeks when the pointer leaves the
     window on the sidebar side, so a fast pointer that crosses to the other display still opens it; a Wayland client
     can't warp the pointer or know its global position anyway. The engine never sends `screenEdge`
     (`shellMethods.test.mjs`), so `sidebar_screen_edge_stops` and `sidebar_screen_edge_pass_throughs` stay macOS only.
@@ -960,7 +960,7 @@ bun run acceptance:linux <extracted>/nilla/bin/ardia
   - An automatic request with nowhere to play (the window hidden or minimized, its shell not attached, a site set to
     Ask) is declined before the page is asked.
   - Leaving a tab tells Chromium's automatic PiP only once the page is hidden (its `WebContents` no longer
-    visible, then the next task), or after `kHiddenPageWaitMs` regardless, as the Mac does since #1793: Meet opens
+    visible, then the next task), or after `kHiddenPageWaitMs` regardless, as the Mac does: Meet opens
     PiP only from a hidden page. Coming back before then cancels the departure.
   - Automatic document PiP (video calls such as Meet) opens Chromium's real document PiP window. It maps a toplevel,
     so on Wayland it takes focus as any new window does there. Not yet run against a real Meet call.
@@ -1299,7 +1299,7 @@ Linux reads calendars from Evolution Data Server, which GNOME Online Accounts, G
   - `ProbeReauth()` reports why authentication is unavailable without prompting: `notPermitted`, `policyMissing`,
     `noPolkit` or `background`.
 - **Login password when polkit can't ask.** Where `dev.ardia.linux.reauthenticate` isn't installed (an AppImage, an
-  extracted tarball) or polkit isn't running, reauth asks for the login password instead (from #1998): a native
+  extracted tarball) or polkit isn't running, reauth asks for the login password instead: a native
   window-modal dialog over the profile's last active window (`ac_linux_password_prompt.cc`) whose password goes to
   the system's `unix_chkpwd` on stdin, never on a command line and never through a renderer
   (`ac_linux_password_check.cc`).
