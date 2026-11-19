@@ -125,16 +125,16 @@ test("staleness: after a crash the file read at launch has the hint of its own s
 });
 
 test("switched off (launchTab): no hint is saved, so the engine starts nothing", async () => {
-  const ks = await import("../../platform/killSwitches.ts");
+  const { reloadLaunchConfigForTests } = await import("../../platform/launchConfig.ts");
   hydrate([win("w1", ["a"], "a")], [tab("a", "w1", "https://a.com/")], { focusedWindowId: "w1" });
-  stub.docs.set("switches-cache.json", JSON.stringify({ version: 1, switches: { launchTab: false } }));
-  ks.reloadSwitches();
+  stub.launch.switches = { launchTab: false };
+  reloadLaunchConfigForTests();
   try {
     S().updateTab("a", { url: "https://a.com/off", title: "" }, { isLoading: false, canGoBack: true, canGoForward: false });
     assert.equal(savedHint(), null);
   } finally {
-    stub.docs.delete("switches-cache.json");
-    ks.reloadSwitches();
+    stub.launch.switches = {};
+    reloadLaunchConfigForTests();
   }
   S().updateTab("a", { url: "https://a.com/on", title: "" }, { isLoading: false, canGoBack: true, canGoForward: false });
   assert.equal(savedHint().url, "https://a.com/on");
