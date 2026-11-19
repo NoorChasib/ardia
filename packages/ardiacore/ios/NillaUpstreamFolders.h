@@ -6,7 +6,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <dirent.h>
+#include <fcntl.h>
+#include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -194,24 +197,151 @@ inline bool IsEntryName(const std::string &name) {
   return !name.empty() && name != "." && name != ".." && name.find('/') == std::string::npos && name.find('\0') == std::string::npos;
 }
 
-inline bool IsOwnEntry(const std::string &dataDirectory, const std::string &name, const std::vector<std::string> &roots) {
-  return IsEntryName(name) && !ReachesProtected(dataDirectory + "/" + name, "", roots);
+using FileIdentity = std::pair<dev_t, ino_t>;
+
+inline FileIdentity IdentityOf(const struct stat &info) { return {info.st_dev, info.st_ino}; }
+
+struct Protection {
+  std::vector<std::string> roots;
+  std::vector<std::string> folders;
+  std::set<FileIdentity> identities;
+};
+
+inline std::optional<Protection> ProtectionOf(const std::string &home) {
+  auto roots = ProtectedRoots(home);
+  if (!roots) return std::nullopt;
+  Protection protection{std::move(*roots), {}, {}};
+  for (const auto &folder : Folders(home)) {
+    const auto resolved = Resolve(folder, true);
+    if (!resolved) return std::nullopt;
+    protection.folders.push_back(*resolved);
+    struct stat info;
+    if (stat(resolved->c_str(), &info) == 0) protection.identities.insert(IdentityOf(info));
+  }
+  return protection;
+}
+
+inline bool PassesThroughProtected(const std::string &absolute, const Protection &protection) {
+  std::string prefix;
+  for (const auto &part : Components(absolute)) {
+    prefix += "/" + part;
+    struct stat info;
+    if (stat(prefix.c_str(), &info) != 0) return false;
+    if (protection.identities.count(IdentityOf(info))) return true;
+  }
+  return false;
+}
+
+inline bool LeadsIntoProtected(const std::string &absolute, const Protection &protection) {
+  if (ReachesProtected(absolute, "", protection.roots) || PassesThroughProtected(absolute, protection)) return true;
+  const auto resolved = Resolve(absolute, true);
+  return !resolved || PassesThroughProtected(*resolved, protection);
+}
+
+enum class Listing { listed, gone, unreadable, stopped };
+
+template <typename Visit>
+inline Listing ListTree(const std::string &directory, std::string &unreadable, Visit visit) {
+  unreadable.clear();
+  DIR *dir = opendir(directory.c_str());
+  if (!dir) return errno == ENOENT || errno == ENOTDIR ? Listing::gone : Listing::unreadable;
+  const int fd = dirfd(dir);
+  Listing listing = Listing::listed;
+  struct stat info;
+  while (const dirent *entry = readdir(dir)) {
+    const char *name = entry->d_name;
+    if (name[0] == '.' && (!name[1] || (name[1] == '.' && !name[2]))) continue;
+    if (fstatat(fd, name, &info, AT_SYMLINK_NOFOLLOW) != 0) {
+      if (errno == ENOENT) continue;
+      unreadable = name;
+      listing = Listing::unreadable;
+      break;
+    }
+    if (!visit(name, info)) {
+      listing = Listing::stopped;
+      break;
+    }
+  }
+  closedir(dir);
+  return listing;
+}
+
+inline std::optional<std::string> SharedFileInProtected(const std::map<FileIdentity, std::string> &shared, const Protection &protection) {
+  std::vector<std::string> pending(protection.folders.begin(), protection.folders.end());
+  std::string unreadable;
+  std::optional<std::string> found;
+  while (!pending.empty() && !found) {
+    const std::string directory = pending.back();
+    pending.pop_back();
+    const Listing listing = ListTree(directory, unreadable, [&](const char *name, const struct stat &info) {
+      if (S_ISDIR(info.st_mode)) {
+        pending.push_back(directory + "/" + name);
+      } else if (S_ISREG(info.st_mode) && info.st_nlink > 1) {
+        if (auto match = shared.find(IdentityOf(info)); match != shared.end()) found = match->second;
+      }
+      return !found;
+    });
+    if (listing == Listing::unreadable) return shared.begin()->second;
+  }
+  return found;
+}
+
+inline std::optional<std::string> UnownedWithin(const std::string &directory, const std::string &label, const Protection &protection) {
+  if (LeadsIntoProtected(directory, protection)) return label;
+  std::set<FileIdentity> walked;
+  std::map<FileIdentity, std::string> shared;
+  std::vector<std::pair<std::string, std::string>> pending = {{directory, label}};
+  struct stat top;
+  if (stat(directory.c_str(), &top) == 0) walked.insert(IdentityOf(top));
+  std::string unreadable;
+  std::optional<std::string> unowned;
+  while (!pending.empty() && !unowned) {
+    const auto [path, shown] = pending.back();
+    pending.pop_back();
+    const Listing listing = ListTree(path, unreadable, [&](const char *name, const struct stat &entry) {
+      struct stat info = entry;
+      if (S_ISLNK(entry.st_mode)) {
+        const std::string linked = path + "/" + name;
+        if (LeadsIntoProtected(linked, protection)) {
+          unowned = shown + "/" + name;
+          return false;
+        }
+        if (stat(linked.c_str(), &info) != 0) return true;
+      }
+      if (protection.identities.count(IdentityOf(info))) {
+        unowned = shown + "/" + name;
+        return false;
+      }
+      if (S_ISDIR(info.st_mode)) {
+        if (walked.insert(IdentityOf(info)).second) pending.push_back({path + "/" + name, shown + "/" + name});
+      } else if (S_ISREG(info.st_mode) && info.st_nlink > 1) {
+        shared.emplace(IdentityOf(info), shown + "/" + name);
+      }
+      return true;
+    });
+    if (listing == Listing::unreadable) return unreadable.empty() ? shown : shown + "/" + unreadable;
+  }
+  if (unowned) return unowned;
+  if (!shared.empty()) return SharedFileInProtected(shared, protection);
+  return std::nullopt;
+}
+
+inline std::string WithinName(const std::string &label, const std::string &name) {
+  return name.size() > label.size() + 1 ? name.substr(label.size() + 1) : name;
+}
+
+inline bool IsOwnEntry(const std::string &dataDirectory, const std::string &name, const Protection &protection) {
+  return IsEntryName(name) && !UnownedWithin(dataDirectory + "/" + name, name, protection);
 }
 
 inline constexpr const char *kDefaultProfile = "Default";
 
-inline std::optional<std::string> UnownedEntry(const std::string &dataDirectory, const std::vector<std::string> &roots) {
-  std::vector<std::string> names = {kDefaultProfile};
-  if (DIR *dir = opendir(dataDirectory.c_str())) {
-    while (const dirent *entry = readdir(dir))
-      if (strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) names.push_back(entry->d_name);
-    closedir(dir);
-  } else if (errno != ENOENT) {
-    return dataDirectory;
-  }
-  for (const auto &name : names)
-    if (!IsOwnEntry(dataDirectory, name, roots)) return name;
-  return std::nullopt;
+inline std::optional<std::string> UnownedEntry(const std::string &dataDirectory, const Protection &protection) {
+  if (LeadsIntoProtected(dataDirectory + "/" + kDefaultProfile, protection)) return kDefaultProfile;
+  const std::string label = ".";
+  const auto unowned = UnownedWithin(dataDirectory, label, protection);
+  if (!unowned) return std::nullopt;
+  return *unowned == label ? dataDirectory : WithinName(label, *unowned);
 }
 
 #ifdef __OBJC__
@@ -225,16 +355,16 @@ inline std::optional<std::vector<std::string>> HomeProtectedRoots() {
 }
 
 inline NSString *UnownedDataEntry(NSString *dataDirectory) {
-  const auto roots = HomeProtectedRoots();
-  if (!roots || !dataDirectory.length) return dataDirectory ?: @"";
-  const auto entry = UnownedEntry(dataDirectory.fileSystemRepresentation, *roots);
+  const auto protection = ProtectionOf(NSHomeDirectory().fileSystemRepresentation);
+  if (!protection || !dataDirectory.length) return dataDirectory ?: @"";
+  const auto entry = UnownedEntry(dataDirectory.fileSystemRepresentation, *protection);
   return entry ? @(entry->c_str()) : nil;
 }
 
 inline bool IsOwnProfileFolder(NSString *dataDirectory, NSString *directoryName) {
-  const auto roots = HomeProtectedRoots();
-  return roots && dataDirectory.length && directoryName.length &&
-         IsOwnEntry(dataDirectory.fileSystemRepresentation, directoryName.fileSystemRepresentation, *roots);
+  const auto protection = ProtectionOf(NSHomeDirectory().fileSystemRepresentation);
+  return protection && dataDirectory.length && directoryName.length &&
+         IsOwnEntry(dataDirectory.fileSystemRepresentation, directoryName.fileSystemRepresentation, *protection);
 }
 #endif
 

@@ -141,8 +141,15 @@ test("no profile or other entry of the data dir may lead into an installed Ardia
   assert.ok(run.indexOf("createDirectoryAtPath:gDataDirectory") > entryGuard, "nothing is created before the entry guard");
   const native = read("../ios/NillaUpstreamFolders.h");
   const unowned = native.slice(native.indexOf("inline std::optional<std::string> UnownedEntry("), native.indexOf("\n}\n", native.indexOf("inline std::optional<std::string> UnownedEntry(")));
-  assert.match(unowned, /std::vector<std::string> names = \{kDefaultProfile\};/);
-  assert.match(unowned, /readdir\(dir\)/);
+  assert.match(unowned, /LeadsIntoProtected\(dataDirectory \+ "\/" \+ kDefaultProfile, protection\)/);
+  assert.match(unowned, /UnownedWithin\(dataDirectory, label, protection\)/);
+  const within = native.slice(native.indexOf("inline std::optional<std::string> UnownedWithin("), native.indexOf("\n}\n", native.indexOf("inline std::optional<std::string> UnownedWithin(")));
+  assert.match(within, /while \(!pending\.empty\(\) && !unowned\) \{/, "the whole tree is walked, not only the data dir's own entries");
+  assert.match(within, /if \(S_ISLNK\(entry\.st_mode\)\) \{\s*const std::string linked = path \+ "\/" \+ name;\s*if \(LeadsIntoProtected\(linked, protection\)\) \{/, "every link at any depth is resolved");
+  assert.match(within, /protection\.identities\.count\(IdentityOf\(info\)\)/, "a folder reached by any spelling is compared with the protected folders themselves");
+  assert.match(within, /info\.st_nlink > 1/, "hard links are checked");
+  const owned = native.slice(native.indexOf("inline bool IsOwnEntry("), native.indexOf("\n}\n", native.indexOf("inline bool IsOwnEntry(")));
+  assert.match(owned, /UnownedWithin\(dataDirectory \+ "\/" \+ name, name, protection\)/, "a profile's whole folder is walked before it loads");
   assert.match(native, /inline constexpr const char \*kDefaultProfile = "Default";/);
   assert.match(launch, /"--profile-directory=Default",/);
   const profiles = read("../ios/ArdiaProfiles.mm");
