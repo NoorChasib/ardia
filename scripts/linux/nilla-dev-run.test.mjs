@@ -40,6 +40,7 @@ function run(args, env = {}, wrapper = []) {
 }
 
 const realHome = spawnSync("getent", ["passwd", String(process.getuid())], { encoding: "utf8" }).stdout.split(":")[5];
+const coverOtherHomes = `getent passwd | cut -d: -f6 | sort -u | while read -r other; do if [ "$other" != / ] && [ "$other" != '${realHome}' ] && [ -d "$other" ] && [ -w "$other" ]; then mount -t tmpfs tmpfs "$other" && mount -o remount,ro,bind "$other"; fi; done`;
 const canUnshare = spawnSync("unshare", ["--user", "--map-root-user", "--mount", "true"]).status === 0;
 
 function inMountNamespace(setup, args, env) {
@@ -125,17 +126,17 @@ test("without NILLA_DISPOSABLE_HOST it refuses where the account's real home is 
 });
 
 test("without NILLA_DISPOSABLE_HOST it starts in a user and mount namespace that covers the real home read-only and gives a scratch HOME", { skip: !canUnshare && "unprivileged user namespaces are unavailable here" }, () => {
-  const cover = `mount -t tmpfs tmpfs '${realHome}'; mount -o remount,ro,bind '${realHome}'`;
+  const cover = `${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mount -o remount,ro,bind '${realHome}'`;
   const isolated = inMountNamespace(cover, [], { NILLA_DISPOSABLE_HOST: "" });
   assert.equal(isolated.status, 0, isolated.stderr);
   assert.equal(isolated.launched[0], `--user-data-dir=${profile}`);
   const homeIsReal = inMountNamespace(cover, [], { NILLA_DISPOSABLE_HOST: "", HOME: realHome });
   assert.equal(homeIsReal.status, 2);
   assert.match(homeIsReal.stderr, /is the account folder/);
-  const writableConfig = inMountNamespace(`mount -t tmpfs tmpfs '${realHome}'; mkdir '${realHome}/.config'; mount -o remount,ro,bind '${realHome}'; mount -t tmpfs tmpfs '${realHome}/.config'`, [], { NILLA_DISPOSABLE_HOST: "" });
+  const writableConfig = inMountNamespace(`${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mkdir '${realHome}/.config'; mount -o remount,ro,bind '${realHome}'; mount -t tmpfs tmpfs '${realHome}/.config'`, [], { NILLA_DISPOSABLE_HOST: "" });
   assert.equal(writableConfig.status, 2);
   assert.match(writableConfig.stderr, /\.config is writable here/);
-  const planted = inMountNamespace(`mount -t tmpfs tmpfs '${realHome}'; mkdir -p '${realHome}/.config/ardia'; mount -o remount,ro,bind '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
+  const planted = inMountNamespace(`${coverOtherHomes}; mount -t tmpfs tmpfs '${realHome}'; mkdir -p '${realHome}/.config/ardia'; mount -o remount,ro,bind '${realHome}'`, [], { NILLA_DISPOSABLE_HOST: "" });
   assert.equal(planted.status, 2);
   assert.match(planted.stderr, /this machine has Ardia's .*\.config\/ardia/);
 });
