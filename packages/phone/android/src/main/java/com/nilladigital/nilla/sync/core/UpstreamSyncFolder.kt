@@ -10,7 +10,7 @@ import java.util.Locale
 
 object UpstreamSyncFolder {
     const val NAME = "Ardia Sync"
-    const val REFUSAL = "Nilla keeps its sync data apart from Ardia’s and doesn’t open the Ardia Sync folder"
+    const val REFUSAL = "Nilla keeps its sync data in its own folder and doesn’t open this one"
 
     private val upstream = fold(NAME)
 
