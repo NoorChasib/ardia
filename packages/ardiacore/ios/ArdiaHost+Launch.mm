@@ -503,7 +503,7 @@ void StartEarlyWindow() {
     for (NSString *item in [all componentsSeparatedByString:@" --"]) {
       NSString *sw = [item stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
       std::string full = std::string("--") + sw.UTF8String;
-      if (sw.length && !autoAccepts(full.c_str()) && ![sw hasPrefix:@"nilla-"]) extra.push_back(full);
+      if (sw.length && !autoAccepts(full.c_str()) && ![sw hasPrefix:@"ardia-"]) extra.push_back(full);
     }
   }
   std::vector<const char *> args = {argc > 0 && argv[0] ? argv[0] : "Nilla"};

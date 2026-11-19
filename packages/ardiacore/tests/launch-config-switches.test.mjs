@@ -4,6 +4,8 @@ import { test } from "node:test";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const config = read("../ios/ArdiaLaunchConfig.mm");
+const launch = read("../ios/ArdiaHost+Launch.mm");
+const enginePrefix = /const std::string name = "([a-z]+-)" \+ std::string\(key\);/.exec(read("../../../engine/ardiacore/src/ardia/core/ac_launch_switches.cc"))?.[1];
 const pkg = JSON.parse(read("../package.json"));
 const body = (signature) => {
   const start = config.indexOf(signature);
@@ -28,6 +30,16 @@ test("the native snapshot check knows the same fields as ServicesSnapshot.swift 
   assert.match(swift, /largestFileBytes = 64 \* 1024/);
   assert.match(config, /kLargestServicesSnapshotBytes = 64 \* 1024/);
   assert.match(body("BOOL ServicesSnapshotNamesSwitchesURL("), /return IsHttps\(fields\[@"switchesUrl"\]\);/);
+});
+
+test("both launch filters drop the switch prefix the engine reads instance values from", () => {
+  assert.equal(enginePrefix, "ardia-");
+  const chromiumSwitches = launch.slice(launch.indexOf('[config instance:@"chromiumSwitches"]'), launch.indexOf("std::vector<const char *> args"));
+  assert.match(chromiumSwitches, new RegExp(`!\\[sw hasPrefix:@"${enginePrefix}"\\]\\) extra\\.push_back\\(full\\)`));
+  const forwardedArguments = launch.slice(launch.indexOf("std::vector<const char *> args"), launch.indexOf("MergeFeatureLists(args)"));
+  assert.match(forwardedArguments, new RegExp(`autoAccepts\\(arg\\) \\|\\| !strncmp\\(arg, "--${enginePrefix}", ${enginePrefix.length + 2}\\)\\) continue;`));
+  for (const prefix of launch.matchAll(/hasPrefix:@"([a-z]+-)"/g)) assert.equal(prefix[1], enginePrefix);
+  assert.match(body("- (NSArray<NSString *> *)engineSwitches {"), new RegExp(`@"--${enginePrefix}data-dir="`));
 });
 
 test("the Mac test run builds and runs the seeded-cache switch test", () => {

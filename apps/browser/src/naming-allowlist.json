@@ -389,11 +389,10 @@
    "boundary": "none",
    "quoted": true,
    "scope": [
-    "scripts/lib/launchEnv.mjs",
-    "packages/ardiacore/ios/ArdiaLaunchConfig.mm",
-    "apps/browser/windows/Ardia/LaunchConfig.h"
+    "packages/ardiacore/ios/ArdiaHost+Launch.mm",
+    "packages/ardiacore/tests/launch-config-switches.test.mjs"
    ],
-   "why": "The quoted switch prefix the launch configs forward to the engine."
+   "why": "The quoted engine switch prefix the Mac launch filters drop from chromiumSwitches and forwarded arguments (the engine reads \"ardia-\" + key, ac_launch_switches.cc), and the wiring test that pins it (council C2)."
   },
   {
    "id": "R-ardiacore",
@@ -1908,8 +1907,8 @@
    "files": 508,
    "occurrences": 1889,
    "decision": "class",
-   "protectedOccurrences": 340,
-   "renamedOccurrences": 1549,
+   "protectedOccurrences": 341,
+   "renamedOccurrences": 1548,
    "notRsFiles": 680,
    "coveredBy": [
     "N-cli-artifacts",
@@ -1932,6 +1931,7 @@
     "R-engine-doc-symbols",
     "R-engine-branding-row",
     "T-header",
+    "S-prefix-forwarding",
     "K-asserted:scripts/release.sh"
    ],
    "why": "Prefix fragment: its engine use is the --ardia- switch prefix (class S); other ardia- names are covered by their own entries."
