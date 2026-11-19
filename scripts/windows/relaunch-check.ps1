@@ -234,7 +234,7 @@ try {
   Note "launch after a start failure: a window again"
 
   $events = @(Get-WinEvent -FilterHashtable @{ LogName = "Application"; StartTime = $started } -ErrorAction SilentlyContinue |
-      Where-Object { $_.ProviderName -eq "Application Error" -and $_.Message -match "Ardia\.exe" })
+      Where-Object { $_.ProviderName -eq "Application Error" -and $_.Message -match "Nilla\.exe" })
   if ($events.Count) { throw "Windows logged $($events.Count) Nilla crash(es): $(($events[0].Message -split "`n")[0..3] -join ' | ')" }
   $dumps = @(Get-ChildItem -LiteralPath $reports -Filter *.dmp -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -ge $started })
   if ($dumps.Count) { throw "Crashpad wrote $($dumps.Count) crash dump(s): $($dumps.Name -join ', ')" }

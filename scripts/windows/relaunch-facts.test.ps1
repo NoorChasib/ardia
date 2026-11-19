@@ -12,10 +12,10 @@ function Process([int]$Id, [int]$Parent, [string]$CommandLine) {
 }
 
 $running = @(
-  (Process 10 1 '"C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe" '),
-  (Process 11 10 'C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe --type=crashpad-handler "--user-data-dir=C:\x"'),
-  (Process 12 10 '"C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe" --type=gpu-process --field-trial-handle=1'),
-  (Process 20 1 '"C:\Users\a\AppData\Local\Programs\Ardia\Nilla.exe" --single-argument https://example.com/--type=x'),
+  (Process 10 1 '"C:\Users\a\AppData\Local\Programs\Nilla\Nilla.exe" '),
+  (Process 11 10 'C:\Users\a\AppData\Local\Programs\Nilla\Nilla.exe --type=crashpad-handler "--user-data-dir=C:\x"'),
+  (Process 12 10 '"C:\Users\a\AppData\Local\Programs\Nilla\Nilla.exe" --type=gpu-process --field-trial-handle=1'),
+  (Process 20 1 '"C:\Users\a\AppData\Local\Programs\Nilla\Nilla.exe" --single-argument https://example.com/--type=x'),
   (Process 30 1 $null)
 )
 Check "a process without --type is a browser process" "10,20" ((Get-BrowserProcesses $running | ForEach-Object ProcessId) -join ",")

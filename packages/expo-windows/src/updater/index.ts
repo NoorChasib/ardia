@@ -38,7 +38,7 @@ const feedOverride = () => text(constants().feedOverride);
 const feed = () => text(constants().feed);
 const publishedUnder = () => text(constants().publishedUnder);
 const configured = () => !!native() && constants().installed === true && identity() !== null && feed() !== "" && publishedUnder() !== "";
-const named = (version: string, build: number) => `${version}, Windows alpha ${build}`;
+const named = (version: string, build: number) => `${version}, Windows build ${build}`;
 
 function preferences(): Preferences {
   if (preferencesRead) return preferencesRead;
