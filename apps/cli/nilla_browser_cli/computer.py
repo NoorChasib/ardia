@@ -532,18 +532,22 @@ def bin_dir(env=None) -> Path:
 
 
 def trusted_launcher(env=None) -> Path | None:
-    from nilla_browser_cli import usage
+    from nilla_browser_cli import upstream, usage
 
     cli_home = usage.cli_home(env)
     current = cli_home / "current" / "bin" / "ardia"
     try:
-        if current.is_file() and current.resolve(strict=True).is_relative_to(cli_home.resolve(strict=True)):
+        if current.is_file() and current.resolve(strict=True).is_relative_to(cli_home.resolve(strict=True)) and upstream.containing_folder(current) is None:
             return current
-    except OSError:
+    except (OSError, ValueError):
         pass
     root = Path(sys.executable).resolve().parents[2]
     launcher = root / "bin" / "ardia"
-    if Path(sys.executable).resolve().parent.parent == root / "python" and launcher.is_file() and not launcher.is_symlink():
+    try:
+        outside_upstream = upstream.containing_folder(launcher) is None
+    except (OSError, ValueError):
+        outside_upstream = False
+    if outside_upstream and Path(sys.executable).resolve().parent.parent == root / "python" and launcher.is_file() and not launcher.is_symlink():
         return launcher
     return None
 

@@ -284,7 +284,7 @@ def config_init(args, where: Places) -> int:
     for folder in (where.folder, where.themes):
         if folder.is_dir():
             continue
-        folder.mkdir(parents=True, exist_ok=True)
+        files.make_folder(folder)
         say(f"created {folder}/")
     create(where.config, files.dump(files.new_config()))
     for name in (files.CONFIG_SCHEMA, files.THEME_SCHEMA):
@@ -542,8 +542,9 @@ def editor_command(linux: bool | None = None) -> tuple[list[str], bool]:
 def config_edit(args, where: Places) -> int:
     import subprocess
 
+    files.owned(where.config, "the config file")
     if not os.path.lexists(where.config):
-        where.folder.mkdir(parents=True, exist_ok=True)
+        files.make_folder(where.folder)
         create(where.config, files.dump(files.new_config()))
     command, waits = editor_command()
     try:
@@ -880,7 +881,7 @@ def theme_new(args, where: Places) -> int:
     for key, value in source.items():
         if key not in document:
             document[key] = value
-    where.themes.mkdir(parents=True, exist_ok=True)
+    files.make_folder(where.themes)
     try:
         files.write_json(target, document, overwrite=False)
     except FileExistsError:
@@ -1095,7 +1096,7 @@ def theme_set(args, where: Places) -> int:
             complain(f"nilla-browser theme: {problem.message}")
         return 1
     if creating:
-        where.themes.mkdir(parents=True, exist_ok=True)
+        files.make_folder(where.themes)
         try:
             files.write_json(target, updated, overwrite=False)
         except FileExistsError:

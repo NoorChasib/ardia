@@ -1,5 +1,6 @@
 import os
 import sys
+import unicodedata
 from pathlib import Path
 
 CLI_HOME_MARK = ".nilla-cli"
@@ -29,8 +30,11 @@ def folders() -> list[Path]:
 
 
 def _comparable(path) -> str:
-    resolved = os.path.realpath(os.path.abspath(os.path.expanduser(str(path))))
-    return resolved.lower() if sys.platform == "darwin" else resolved
+    text = os.path.expanduser(os.fspath(path))
+    if "\0" in text:
+        raise ValueError("the path holds a NUL byte")
+    resolved = os.path.realpath(os.path.join(os.getcwd(), text))
+    return unicodedata.normalize("NFC", resolved).casefold() if sys.platform == "darwin" else resolved
 
 
 def containing_folder(path) -> Path | None:

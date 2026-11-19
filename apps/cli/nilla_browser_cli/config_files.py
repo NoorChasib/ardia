@@ -62,8 +62,23 @@ class Places:
 def places(data_dir: str | None = None) -> Places:
     explicit = endpoint.explicit_data_root(data_dir)
     if explicit is not None:
-        return Places(explicit / "config", explicit)
-    return Places(default_folder(), endpoint.INSTALLED_DATA_DIR)
+        return checked(Places(explicit / "config", explicit))
+    return checked(Places(default_folder(), endpoint.INSTALLED_DATA_DIR))
+
+
+def owned(path: Path, what: str) -> Path:
+    return endpoint.own_folder(Path(path), what)
+
+
+def checked(where: Places) -> Places:
+    owned(where.folder, "the config folder")
+    owned(where.data, "the data dir")
+    return where
+
+
+def make_folder(path: Path) -> None:
+    owned(path, "the config folder")
+    path.mkdir(parents=True, exist_ok=True)
 
 
 MAC_FOLDER_SHOWN = "~/.config/nilla"
@@ -100,6 +115,7 @@ def parse_json(text: str):
 
 
 def read_text(path: Path) -> str:
+    owned(path, "the config file")
     fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
     try:
         if not stat.S_ISREG(os.fstat(fd).st_mode):
@@ -159,7 +175,9 @@ def _default_mode() -> int:
 def write_text(path: Path, text: str, overwrite: bool = True) -> None:
     if not overwrite and os.path.lexists(path):
         raise FileExistsError(path)
+    owned(path, "the config file")
     target = Path(os.path.realpath(path)) if overwrite and path.is_symlink() else path
+    owned(target, "the config file")
     if overwrite and os.path.lexists(target) and not target.is_file():
         raise ConfigError(f"{path} isn't a regular file")
     try:
@@ -262,7 +280,7 @@ def load_config(where: Places, create: bool = False) -> tuple[dict, bool]:
 
 def save_config(where: Places, document: dict, created: bool) -> None:
     if created:
-        where.folder.mkdir(parents=True, exist_ok=True)
+        make_folder(where.folder)
         try:
             write_json(where.config, document, overwrite=False)
             return
@@ -287,6 +305,7 @@ def with_key(document: dict, key: str, value, after: str | None = None) -> dict:
 
 
 def theme_names(where: Places) -> list[str]:
+    owned(where.themes, "the themes folder")
     try:
         entries = os.listdir(where.themes)
     except (FileNotFoundError, NotADirectoryError):

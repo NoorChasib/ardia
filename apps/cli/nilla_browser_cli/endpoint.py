@@ -64,7 +64,10 @@ class UpstreamFolder(DataDirUnset):
 
 
 def own_folder(path: Path, what: str) -> Path:
-    folder = upstream.containing_folder(path)
+    try:
+        folder = upstream.containing_folder(path)
+    except (OSError, ValueError) as error:
+        raise UpstreamFolder(f"{what} {path} can't be resolved ({getattr(error, 'strerror', None) or error}), so nilla-browser won't use it") from None
     if folder is not None:
         raise UpstreamFolder(upstream.refusal(what, path, folder))
     return path

@@ -456,7 +456,7 @@ class InstallScript(unittest.TestCase):
     def use_home(self, name):
         self.home = self.temp / name
         self.home.mkdir()
-        self.cli_home = self.home / ".local" / "share" / "ardia" / "cli"
+        self.cli_home = self.home / ".local" / "share" / "nilla" / "cli"
         self.bin = self.home / ".local" / "bin" / "nilla-browser"
 
     def login_shell(self, name: str) -> Path:
@@ -479,6 +479,7 @@ class InstallScript(unittest.TestCase):
             "HOME": str(self.home),
             "TMPDIR": str(self.temp),
             "ARDIA_CLI_URL": f"file://{tarball}",
+            "ARDIA_CLI_HOME": str(self.cli_home),
             "SHELL": "/bin/sh",
         }
         environment.update(env or {})
@@ -537,19 +538,26 @@ class InstallScript(unittest.TestCase):
         self.assertFalse(os.path.lexists(self.bin))
         self.assertEqual(sorted(os.listdir(self.cli_home)), [".lock", upstream.CLI_HOME_MARK])
 
-    def test_version_from_url_and_xdg_data_home(self):
+    def test_version_from_url(self):
         self.login_shell("zsh")
-        data = self.temp / "xdg-data"
-        status, lines, err = self.install(None, url_version="0.0.7", env={"XDG_DATA_HOME": str(data)})
+        status, lines, err = self.install(None, url_version="0.0.7")
         self.assertEqual(status, 0, err)
         self.assertIn("version 0.0.7", lines)
-        self.assertEqual(os.readlink(data / "ardia" / "cli" / "current"), "0.0.7")
-        self.assertEqual(os.readlink(self.bin), str(data / "ardia" / "cli" / "current" / "bin" / "ardia"))
-        self.use_home("home-relative")
-        self.login_shell("zsh")
-        status, _, err = self.install("0.0.7", env={"XDG_DATA_HOME": "relative/data"})
-        self.assertEqual(status, 0, err)
         self.assertEqual(os.readlink(self.cli_home / "current"), "0.0.7")
+        self.assertEqual(os.readlink(self.bin), str(self.cli_home / "current" / "bin" / "ardia"))
+
+    def test_linux_has_no_default_cli_home(self):
+        self.login_shell("zsh")
+        for env in ({"ARDIA_CLI_HOME": ""}, {"ARDIA_CLI_HOME": "", "XDG_DATA_HOME": str(self.temp / "xdg-data")}):
+            with self.subTest(env=env):
+                status, lines, _ = self.install("0.0.1", env=env)
+                self.assertEqual(status, 1)
+                self.assertTrue(lines[-1].startswith("error set ARDIA_CLI_HOME to a folder of Nilla's own"), lines)
+        self.assertEqual(sorted(p.name for p in self.home.iterdir()), [])
+        self.assertFalse((self.temp / "xdg-data").exists())
+        status, lines, _ = self.install("0.0.1", "--help", env={"ARDIA_CLI_HOME": ""})
+        self.assertEqual(status, 0)
+        self.assertIn("Installs the nilla-browser command", "\n".join(lines))
 
     def test_login_file_per_shell(self):
         posix = 'export PATH="$HOME/.local/bin:$PATH"'
@@ -729,7 +737,7 @@ class InheritedUpstreamRoots(SystemdFakes):
             with self.subTest(verb=verb), self.environment(ARDIA_CONFIG_HOME=str(self.temp / "nilla-config"), ARDIA_CLI_HOME=str(cli_home)):
                 status, _, err = self.run_cli("hooks", verb)
                 self.assertEqual(status, 2, err)
-                self.assertIn(upstream.CLI_HOME_MARK, err)
+                self.assertIn("never reads or writes", err)
         self.assertEqual(self.snapshot(), before)
         self.assertFalse(self.unit.exists())
         self.assertEqual(self.calls, [])

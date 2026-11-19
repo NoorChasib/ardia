@@ -12,22 +12,25 @@
 # downloaded. It never creates, replaces or removes an ardia link.
 #
 # Runs on macOS (Apple silicon) and Linux (x86_64). Installs into $ARDIA_CLI_HOME/<version> (default
-# ~/Library/Application Support/Nilla/CLI on macOS, ${XDG_DATA_HOME:-~/.local/share}/ardia/cli on Linux), points its
-# `current` link there and links ${ARDIA_CLI_BIN_DIR:-~/.local/bin}/nilla-browser to current/bin/ardia. When the default bin
-# dir isn't on the login shell's PATH, it adds one PATH line to its login file, once: on macOS ~/.zprofile
+# ~/Library/Application Support/Nilla/CLI on macOS; on Linux this development build has no default and needs
+# ARDIA_CLI_HOME), points its `current` link there and links ${ARDIA_CLI_BIN_DIR:-~/.local/bin}/nilla-browser to
+# current/bin/ardia. When the default bin dir isn't on the login shell's PATH, it adds one PATH line to its login
+# file, once: on macOS ~/.zprofile
 # (~/.bash_profile for bash); on Linux ~/.zprofile for zsh, ~/.bash_profile for bash when it exists, else ~/.profile;
 # for fish, on both, ${XDG_CONFIG_HOME:-~/.config}/fish/conf.d/nilla-browser.fish.
-# It marks the CLI home with a .nilla-cli file and refuses a CLI home that holds an install without one (an installed
-# Ardia's), so it never replaces, prunes or removes another install's versions.
+# It refuses a CLI home or bin dir that resolves (through links, on macOS in any letter case) into an installed
+# Ardia's folders, and a path it can't resolve. It marks the CLI home with a .nilla-cli file and refuses a CLI home
+# that holds an install without one, so it never replaces, prunes or removes another install's versions; the mark
+# never makes an Ardia folder its own.
 # Re-running it upgrades: a version that is already current is left alone; a new one is verified, staged in
-# <version>.partial, renamed, and `current` is swapped atomically (a running ardia keeps its old dir). It keeps the
-# current and the previous version and prunes the rest, except versions a running ardia uses (it leaves a lease in
+# <version>.partial, renamed, and `current` is swapped atomically (a running nilla-browser keeps its old dir). It keeps the
+# current and the previous version and prunes the rest, except versions a running nilla-browser uses (it leaves a lease in
 # <version>/.leases/<pid>, live while that pid runs and started before the lease was written). Two runs never overlap:
 # each holds a flock on $ARDIA_CLI_HOME/.lock (lockf on macOS, flock on Linux), which the kernel drops when
 # the run exits.
 # The installed version is `basename "$(readlink "$ARDIA_CLI_HOME/current")"`. It runs nothing after the link: no skill
 # install or refresh and no cua-driver refresh, since those can download. --uninstall also removes
-# $ARDIA_CLI_HOME/cua-driver and the cua-driver link in the bin dir when it is ardia's, and leaves /Applications/CuaDriver.app.
+# $ARDIA_CLI_HOME/cua-driver and the cua-driver link in the bin dir when it is this CLI's, and leaves /Applications/CuaDriver.app.
 # ARDIA_CLI_URL names the tarball; without --sha256 its checksum is read from $ARDIA_CLI_URL.sha256.
 #
 # Prints one line per event: `step resolve|download|verify|install|link`, `version <v>`, `path <rc file>`,
@@ -39,11 +42,7 @@ version_pattern='^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}(-[a-z]{1,16}\.[0-9]{1,4})?$
 if [ "$(uname -s)" = Linux ]; then
   os=linux
   asset_platform=linux-x64
-  case ${XDG_DATA_HOME:-} in
-    /*) data_home=$XDG_DATA_HOME ;;
-    *) data_home=$HOME/.local/share ;;
-  esac
-  cli_home=${ARDIA_CLI_HOME:-$data_home/ardia/cli}
+  cli_home=${ARDIA_CLI_HOME:-}
 else
   os=macos
   asset_platform=macos-arm64
@@ -101,6 +100,71 @@ fi
 if [ -n "$pinned_sha" ] && ! printf '%s\n' "$pinned_sha" | grep -Eq '^[0-9a-f]{64}$'; then
   fail "bad --sha256 digest: $pinned_sha"
 fi
+if [ -z "$cli_home" ]; then
+  fail "set ARDIA_CLI_HOME to a folder of Nilla's own: on Linux this development build never guesses, so it never installs into an installed Ardia's ~/.local/share/ardia/cli"
+fi
+
+xdg_or() {
+  case $1 in
+    /*) printf '%s\n' "$1" ;;
+    *) printf '%s\n' "$2" ;;
+  esac
+}
+
+upstream_folders() {
+  printf '%s/ardia\n' "$(xdg_or "${XDG_CONFIG_HOME:-}" "$HOME/.config")" "$HOME/.config" \
+    "$(xdg_or "${XDG_DATA_HOME:-}" "$HOME/.local/share")" "$HOME/.local/share" \
+    "$(xdg_or "${XDG_STATE_HOME:-}" "$HOME/.local/state")" "$HOME/.local/state" \
+    "$(xdg_or "${XDG_CACHE_HOME:-}" "$HOME/.cache")" "$HOME/.cache"
+  printf '%s\n' "$HOME/Library/Application Support/Ardia" "$HOME/Library/Application Support/com.ardia.browser" \
+    "$HOME/Library/Logs/Ardia"
+}
+
+real_path() {
+  path=$1
+  while [ "$path" != / ] && [ "${path%/}" != "$path" ]; do
+    path=${path%/}
+  done
+  case $path in
+    /*) ;;
+    *) return 1 ;;
+  esac
+  case $path/ in
+    */./*|*/../*|*//*) [ "$path" = / ] || return 1 ;;
+  esac
+  rest=
+  while ! [ -d "$path" ]; do
+    if [ -e "$path" ] || [ -L "$path" ]; then
+      return 1
+    fi
+    rest=/${path##*/}$rest
+    path=${path%/*}
+    [ -n "$path" ] || path=/
+  done
+  base=$(cd -P -- "$path" 2>/dev/null && pwd -P) || return 1
+  [ "$base" = / ] && base=
+  real=$base$rest
+  if [ "$os" = macos ]; then
+    real=$(printf '%s' "$real" | tr '[:upper:]' '[:lower:]')
+  fi
+  printf '%s\n' "${real:-/}"
+}
+
+refuse_upstream() {
+  target=$(real_path "$2") || fail "$1 $2 can't be resolved to a real folder (use an absolute path with no . or .. parts and no dangling links)"
+  while IFS= read -r folder; do
+    [ -n "$folder" ] || continue
+    root=$(real_path "$folder") || root=$folder
+    case $target/ in
+      "$root"/*) fail "$1 $2 is inside $folder, an installed Ardia's folder; nilla-browser never installs into Ardia's folders" ;;
+    esac
+  done <<EOF
+$(upstream_folders)
+EOF
+}
+
+refuse_upstream "the CLI home" "$cli_home"
+refuse_upstream "the bin dir" "$bin_dir"
 
 local_file() {
   path=${1#file://}
@@ -298,7 +362,7 @@ mkdir -p "$cli_home" || fail "couldn't create $cli_home"
 take_lock
 refuse_cli_home_of_another_install
 : > "$cli_home/.nilla-cli" || fail "couldn't mark $cli_home as nilla-browser's"
-work=$(mktemp -d "${TMPDIR:-/tmp}/ardia-cli-install.XXXXXX") || fail "couldn't create a temporary folder"
+work=$(mktemp -d "${TMPDIR:-/tmp}/nilla-cli-install.XXXXXX") || fail "couldn't create a temporary folder"
 chmod 700 "$work"
 
 previous=$(readlink "$cli_home/current" 2>/dev/null || true)
@@ -335,7 +399,7 @@ tar -xzf "$work/cli.tar.gz" -C "$staged" --strip-components 1 --no-same-owner "a
 check_tree "$staged"
 [ -x "$staged/bin/ardia" ] || fail "the tarball has no ardia-cli-$version/bin/ardia"
 [ "$os" = linux ] || xattr -dr com.apple.quarantine "$staged" 2>/dev/null || true
-"$staged/bin/ardia" --version >"$work/check.out" 2>&1 9>&- || fail "the downloaded ardia doesn't run: $(tail -n 1 "$work/check.out")"
+"$staged/bin/ardia" --version >"$work/check.out" 2>&1 9>&- || fail "the downloaded nilla-browser doesn't run: $(tail -n 1 "$work/check.out")"
 if [ -d "$dest" ] && ! [ -L "$dest" ] && [ -x "$dest/bin/ardia" ] && in_use "$dest"; then
   rm -rf "$staged"
 else

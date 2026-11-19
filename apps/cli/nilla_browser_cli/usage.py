@@ -20,8 +20,7 @@ def cli_home(env=None) -> Path:
 def owned_cli_home(home: Path) -> Path:
     from nilla_browser_cli import endpoint, upstream
 
-    if not endpoint.LINUX:
-        endpoint.own_folder(home, "the CLI home")
+    endpoint.own_folder(home, "the CLI home")
     if upstream.installed_elsewhere(home):
         raise endpoint.UpstreamFolder(f"the CLI home {home} holds a CLI that install.sh didn't install for nilla-browser (it has no {upstream.CLI_HOME_MARK}), so nilla-browser leaves it alone")
     return home

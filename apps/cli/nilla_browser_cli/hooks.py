@@ -1073,6 +1073,10 @@ class AgentPaths:
             inside = False
         if not inside:
             raise HooksError(f"{launcher} leads outside {self.cli_home}; hooks run only the nilla-browser that install.sh put there")
+        try:
+            endpoint.own_folder(launcher, "the hooks launcher")
+        except endpoint.UpstreamFolder as error:
+            raise HooksError(str(error)) from None
         return launcher
 
 
