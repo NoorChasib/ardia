@@ -37,3 +37,15 @@ test("the Linux engine publisher never uploads without a repo named on the comma
   assert.equal(publisher.status, 64, publisher.stderr);
   assert.match(publisher.stderr, /--upload needs --repo/);
 });
+
+test("the workflows cache the CLI toolchain in the folder build.sh writes", () => {
+  const build = read("apps/cli/scripts/build.sh");
+  const linux = /cache=\$HOME\/\.cache\/([\w-]+) ;;/.exec(build)?.[1];
+  const mac = /cache=\$HOME\/Library\/Caches\/([\w-]+)$/m.exec(build)?.[1];
+  assert.ok(linux && mac, "build.sh names its cache folders");
+  for (const workflow of [".github/workflows/linux.yml", ".github/workflows/release.yml"]) {
+    const cached = [...read(workflow).matchAll(/path: ~\/(?:\.cache|Library\/Caches)\/([\w-]*cli[\w-]*)/g)].map((match) => match[1]);
+    assert.ok(cached.length > 0, `${workflow} caches the CLI toolchain`);
+    for (const folder of cached) assert.ok(folder === linux || folder === mac, `${workflow} caches ${folder}, not ${linux}`);
+  }
+});
