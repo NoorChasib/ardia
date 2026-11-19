@@ -561,6 +561,17 @@
    "why": "APP_SCHEME and scheme comparisons with the bare name."
   },
   {
+   "id": "F-phone-browse-scheme",
+   "class": "F",
+   "mechanism": "class",
+   "regex": "(?<=BROWSE_SCHEME = \\\")ardia(?=\\\")|(?<=browseScheme = \\\")ardia(?=\\\")",
+   "scope": [
+    "packages/phone/android/*/BrowserUrl.kt",
+    "packages/phone/ios/*/TabPolicies.swift"
+   ],
+   "why": "The phones' browse scheme constants, BrowserUrl.BROWSE_SCHEME on Android and BrowserURL.browseScheme on iOS. ExternalLinks, WebViewPage and WebTab compare them with the scheme of the internal ardia:// app and synced URLs, which F-scheme keeps, so each constant keeps ardia with the URLs it classifies. The system-link scheme is the separate nilla constant (owner I, 3fdb394ea)."
+  },
+  {
    "id": "F-scheme-list",
    "class": "F",
    "mechanism": "class",
