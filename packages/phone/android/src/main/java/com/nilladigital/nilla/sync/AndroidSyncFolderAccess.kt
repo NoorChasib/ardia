@@ -3,6 +3,7 @@ package com.nilladigital.nilla.sync
 import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
+import com.nilladigital.nilla.sync.core.UpstreamSyncFolder
 
 open class AndroidSyncFolderAccess(
     protected val resolver: ContentResolver,
@@ -10,9 +11,13 @@ open class AndroidSyncFolderAccess(
 ) : LocalFolderAccess() {
     override fun open(pick: SyncFolderPick): SyncFolderGrant? {
         val tree = (pick as? SyncFolderPick.Tree)?.let { tree(it.treeUri) } ?: return super.open(pick)
+        if (UpstreamSyncFolder.refusesDocument(tree.rootId)) return null
         return try {
+            val root = tree.root()
+            if (UpstreamSyncFolder.isUpstreamName(root.name)) return null
             val subfolder = DocumentTreeStorage.locate(tree)
-            val name = subfolder ?: tree.root().name
+            if (UpstreamSyncFolder.isUpstreamName(subfolder)) return null
+            val name = subfolder ?: root.name
             val location = SyncFolderLocation.Tree(pick.treeUri, subfolder, name)
             SyncFolderGrant(DocumentTreeStorage(tree, subfolder, name), location)
         } catch (error: Exception) {
@@ -23,6 +28,7 @@ open class AndroidSyncFolderAccess(
     override fun resolve(location: SyncFolderLocation): SyncFolderGrant? {
         if (location !is SyncFolderLocation.Tree) return super.resolve(location)
         val tree = tree(location.treeUri) ?: return null
+        if (UpstreamSyncFolder.refusesDocument(tree.rootId) || UpstreamSyncFolder.isUpstreamName(location.name) || UpstreamSyncFolder.isUpstreamName(location.subfolder)) return null
         if (!tree.hasPersistedAccess()) return null
         return SyncFolderGrant(DocumentTreeStorage(tree, location.subfolder, location.name), location)
     }

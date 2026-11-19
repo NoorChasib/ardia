@@ -11,7 +11,11 @@ import java.nio.file.StandardCopyOption
 class FolderStorage(val root: File) : SyncStorage {
     override val name: String get() = root.name
 
-    private fun file(path: List<String>): File = path.fold(root) { at, part -> File(at, part) }
+    private fun file(path: List<String>): File {
+        val target = path.fold(root) { at, part -> File(at, part) }
+        if (UpstreamSyncFolder.refuses(target)) throw IOException(UpstreamSyncFolder.REFUSAL)
+        return target
+    }
 
     override fun names(path: List<String>): List<String>? {
         val directory = file(path)
@@ -20,7 +24,12 @@ class FolderStorage(val root: File) : SyncStorage {
         return directory.list()?.toList() ?: throw IOException("can't list ${directory.name}")
     }
 
-    override fun isDirectory(path: List<String>): Boolean = file(path).isDirectory
+    override fun isDirectory(path: List<String>): Boolean =
+        try {
+            file(path).isDirectory
+        } catch (error: IOException) {
+            false
+        }
 
     override fun makeDirectory(path: List<String>) {
         val directory = file(path)
@@ -64,7 +73,11 @@ class FolderStorage(val root: File) : SyncStorage {
         }
 
     override fun ageMillis(path: List<String>): Long? {
-        val modified = file(path).lastModified()
+        val modified = try {
+            file(path).lastModified()
+        } catch (error: IOException) {
+            0L
+        }
         return if (modified == 0L) null else maxOf(0L, System.currentTimeMillis() - modified)
     }
 }

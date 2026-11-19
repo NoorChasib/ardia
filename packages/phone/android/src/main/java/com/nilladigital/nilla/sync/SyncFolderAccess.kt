@@ -2,6 +2,7 @@ package com.nilladigital.nilla.sync
 
 import com.nilladigital.nilla.sync.core.FolderStorage
 import com.nilladigital.nilla.sync.core.SyncStorage
+import com.nilladigital.nilla.sync.core.UpstreamSyncFolder
 import java.io.File
 import java.io.IOException
 import kotlinx.serialization.SerialName
@@ -53,18 +54,21 @@ class SyncStorageTimedOut : IOException("the sync folder didn’t answer in time
 open class LocalFolderAccess : SyncFolderAccess {
     override fun open(pick: SyncFolderPick): SyncFolderGrant? {
         val folder = (pick as? SyncFolderPick.Folder)?.file ?: return null
+        if (UpstreamSyncFolder.refuses(folder)) return null
         val located = SyncFolders.locate(folder) ?: return null
+        if (UpstreamSyncFolder.refuses(located)) return null
         return SyncFolderGrant(FolderStorage(located), SyncFolderLocation.Path(located.path, located.name))
     }
 
     override fun resolve(location: SyncFolderLocation): SyncFolderGrant? {
         val path = location as? SyncFolderLocation.Path ?: return null
+        if (UpstreamSyncFolder.refuses(File(path.path))) return null
         return SyncFolderGrant(FolderStorage(File(path.path)), path)
     }
 
-    override fun hasAccess(location: SyncFolderLocation): Boolean = location is SyncFolderLocation.Path
+    override fun hasAccess(location: SyncFolderLocation): Boolean = location is SyncFolderLocation.Path && !UpstreamSyncFolder.refuses(File(location.path))
 
-    override fun keep(location: SyncFolderLocation): Boolean = location is SyncFolderLocation.Path
+    override fun keep(location: SyncFolderLocation): Boolean = location is SyncFolderLocation.Path && !UpstreamSyncFolder.refuses(File(location.path))
 
     override fun release(location: SyncFolderLocation, keeping: SyncFolderLocation?) {}
 }
