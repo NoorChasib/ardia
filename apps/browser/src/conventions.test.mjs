@@ -580,8 +580,8 @@ const ENGINE_CONTRACT = [
     name: "the instance switch prefix ardia-",
     engine: ["engine/ardiacore/src/ardia/core/ac_launch_switches.cc", /const std::string name = "ardia-" \+ std::string\(key\);/],
     app: [
-      ["packages/ardiacore/ios/ArdiaHost+Launch.mm", /!\[sw hasPrefix:@"ardia-"\]/],
-      ["packages/ardiacore/ios/ArdiaHost+Launch.mm", /!strncmp\(arg, "--ardia-", 8\)/],
+      ["packages/ardiacore/ios/ArdiaHost+Launch.mm", /static constexpr std::string_view kEngineSwitchPrefix = "ardia-";/],
+      ["packages/ardiacore/tests/chromium-switches.test.cc", /static constexpr std::string_view kEnginePrefix = "ardia-";/],
       ["packages/ardiacore/ios/ArdiaLaunchConfig.mm", /@"--ardia-%@=%@"/],
       ["scripts/lib/launchEnv.mjs", /"--ardia-apply-profile-gate"/],
     ],

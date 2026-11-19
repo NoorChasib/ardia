@@ -390,9 +390,10 @@
    "quoted": true,
    "scope": [
     "packages/ardiacore/ios/ArdiaHost+Launch.mm",
-    "packages/ardiacore/tests/launch-config-switches.test.mjs"
+    "packages/ardiacore/tests/launch-config-switches.test.mjs",
+    "packages/ardiacore/tests/chromium-switches.test.cc"
    ],
-   "why": "The quoted engine switch prefix the Mac launch filters drop from chromiumSwitches and forwarded arguments (the engine reads \"ardia-\" + key, ac_launch_switches.cc), and the wiring test that pins it (council C2)."
+   "why": "The quoted engine switch prefix the Mac launch filters drop from chromiumSwitches and forwarded arguments (the engine reads \"ardia-\" + key, ac_launch_switches.cc), the wiring test that pins it (council C2), and the reserved-switch test that filters with it (close: user-data-dir and engine switches in either dash spelling)."
   },
   {
    "id": "R-ardiacore",

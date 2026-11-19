@@ -9,6 +9,7 @@
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
 #import "ArdiaWebViewInternal.h"
+#import "NillaChromiumSwitches.h"
 #import "NillaUpstreamFolders.h"
 
 #import <Security/Security.h>
@@ -164,6 +165,16 @@ static std::string FeatureEntryName(const std::string &entry) {
   const size_t start = !entry.empty() && entry[0] == '*' ? 1 : 0;
   const size_t end = entry.find_first_of("<:", start);
   return entry.substr(start, end == std::string::npos ? std::string::npos : end - start);
+}
+
+static constexpr std::string_view kEngineSwitchPrefix = "ardia-";
+
+static bool DropsReservedSwitch(const char *arg) {
+  if (!nilla_switches::IsReserved(arg, kEngineSwitchPrefix)) return false;
+  if (nilla_switches::NamesUserDataDir(arg))
+    fprintf(stderr, "[ardiacore] ignoring %s: Chromium always gets the data dir Nilla checked, %s\n", arg,
+            gDataDirectory.fileSystemRepresentation);
+  return true;
 }
 
 static std::vector<std::string> MergeFeatureLists(const std::vector<const char *> &args) {
@@ -515,7 +526,7 @@ void StartEarlyWindow() {
     for (NSString *item in [all componentsSeparatedByString:@" --"]) {
       NSString *sw = [item stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
       std::string full = std::string("--") + sw.UTF8String;
-      if (sw.length && !autoAccepts(full.c_str()) && ![sw hasPrefix:@"ardia-"]) extra.push_back(full);
+      if (sw.length && !autoAccepts(full.c_str()) && !DropsReservedSwitch(full.c_str())) extra.push_back(full);
     }
   }
   std::vector<const char *> args = {argc > 0 && argv[0] ? argv[0] : "Nilla"};
@@ -529,7 +540,7 @@ void StartEarlyWindow() {
       i++;
       continue;
     }
-    if (autoAccepts(arg) || !strncmp(arg, "--ardia-", 8)) continue;
+    if (autoAccepts(arg) || DropsReservedSwitch(arg)) continue;
     args.push_back(arg);
   }
   static std::vector<std::string> merged;

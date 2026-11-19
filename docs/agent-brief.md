@@ -301,7 +301,7 @@ The only variables the app and engine read, through `NillaLaunchConfig` (`packag
 | `ARDIA_BACKGROUND` | `1` (anything but empty or `0`) | Hidden test instance (Rules › never steal focus; `docs/testing.md`) |
 | `ARDIA_REMOTE_DEBUGGING_PORT` | port | CDP on that port, only on the mock keychain |
 | `ARDIA_INSTANCE` | `jsLocation=host:port` | This launch's Metro (Debug builds) |
-| | `chromiumSwitches=--a --b=x,y` | Extra Chrome switches, space-separated, only on the mock keychain; background mode drops the auto-accept capture ones, and `--ardia-*` never passes |
+| | `chromiumSwitches=--a --b=x,y` | Extra Chrome switches, space-separated, only on the mock keychain; background mode drops the auto-accept capture ones, and `--ardia-*` and `--user-data-dir` never pass (from argv either, in either dash spelling; the data dir is always the checked `ARDIA_DATA_DIR`) |
 | | `downloadsDir=<dir>` | Chrome's default download folder for this launch, never written to the profile |
 | | `updateFeed=<url>` | Sparkle's feed; a scratch instance checks for updates only with one |
 | | `allowAudio` · `allowOcclusion` | Background mode keeps sound · keeps Chrome's occlusion |
