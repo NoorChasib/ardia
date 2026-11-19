@@ -1565,6 +1565,15 @@ function Invoke-FirstRunLaunch([string]$Name, [string]$Exe, [scriptblock]$Body, 
   Stop-Nilla $session
 }
 
+function Remove-ColdCopy([string]$Folder) {
+  $deadline = (Get-Date).AddSeconds(30)
+  while ((Test-Path -LiteralPath $Folder) -and (Get-Date) -lt $deadline) {
+    Remove-Item -LiteralPath $Folder -Recurse -Force -ErrorAction SilentlyContinue
+    if (Test-Path -LiteralPath $Folder) { Start-Sleep -Milliseconds 500 }
+  }
+  if (Test-Path -LiteralPath $Folder) { Write-Host "::warning::the cold copy of the app at $Folder could not be removed" }
+}
+
 function Invoke-FirstRunTour {
   Invoke-FirstRunLaunch "human-ctrl-t" "" {
     param($session)
@@ -1585,8 +1594,7 @@ function Invoke-FirstRunTour {
     Invoke-TypeStop $session "tool-tour-ended" "First run: Ctrl+T right after ending the tool tour" "Ended the tool tour with Skip Tour (or Escape), then about 400 ms after the click (its own 300 ms wait, then 100 ms) pressed Ctrl+T and typed example.com from 100 ms after it, 30 ms a key, then pressed Enter." { param($stop) $clicked = Click-Named $session "Skip Tour"; if (-not $clicked) { Send-Escape }; $stop.Facts.Add("Skip Tour clicked: $clicked"); Start-Sleep -Milliseconds 100 } "ctrl+t" "Enter" "#2101" -Required | Out-Null
   }
 
-  $cold = Join-Path $Out "cold-app"
-  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $cold
+  $cold = Join-Path ([System.IO.Path]::GetTempPath()) ("nilla-tour-cold-app-" + [guid]::NewGuid().ToString("N"))
   Copy-Item -Recurse -Force (Split-Path -Parent $App) $cold
   $hogs = Start-Hogs (Join-Path $Out "hog")
   Write-Host "[tour] started $($hogs.Count) CPU and disk hogs and copied the app to $cold"
@@ -1602,6 +1610,7 @@ function Invoke-FirstRunTour {
     $hogs | Stop-Job -ErrorAction SilentlyContinue
     $hogs | Remove-Job -Force -ErrorAction SilentlyContinue
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $Out "hog")
+    Remove-ColdCopy $cold
   }
 
   $suggestLog = Join-Path $Out "suggest-server.log"
