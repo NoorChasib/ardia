@@ -647,8 +647,8 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class InheritedArdiaRoots(SystemdFakes):
-    def plant_ardia(self):
+class InheritedUpstreamRoots(SystemdFakes):
+    def plant_upstream_install(self):
         config = self.home / ".config" / "ardia" / "config"
         config.mkdir(parents=True)
         (config / "config.json").write_text('{"planted": true}\n')
@@ -669,7 +669,7 @@ class InheritedArdiaRoots(SystemdFakes):
                 yield
 
     def test_an_inherited_config_home_that_names_the_upstream_folder_is_refused_before_any_read_or_write(self):
-        self.plant_ardia()
+        self.plant_upstream_install()
         before = self.snapshot()
         for argv in (("config", "init"), ("config", "path"), ("config", "get", "planted"), ("hooks", "list"), ("hooks", "install"), ("hooks", "uninstall")):
             with self.subTest(argv=argv), self.environment():
@@ -681,7 +681,7 @@ class InheritedArdiaRoots(SystemdFakes):
         self.assertEqual(self.calls, [])
 
     def test_an_inherited_data_dir_inside_the_upstream_folders_is_refused(self):
-        self.plant_ardia()
+        self.plant_upstream_install()
         before = self.snapshot()
         for data_dir in (self.home / ".config" / "ardia", self.home / ".local" / "share" / "ardia" / "cli"):
             with self.subTest(data_dir=data_dir), self.environment(ARDIA_DATA_DIR=str(data_dir), ARDIA_CONFIG_HOME=str(self.temp / "nilla-config")):
@@ -691,7 +691,7 @@ class InheritedArdiaRoots(SystemdFakes):
         self.assertEqual(self.snapshot(), before)
 
     def test_an_inherited_cli_home_holding_another_install_is_never_run_or_written(self):
-        cli_home = self.plant_ardia()
+        cli_home = self.plant_upstream_install()
         before = self.snapshot()
         for verb in ("install", "list"):
             with self.subTest(verb=verb), self.environment(ARDIA_CONFIG_HOME=str(self.temp / "nilla-config"), ARDIA_CLI_HOME=str(cli_home)):
@@ -704,7 +704,7 @@ class InheritedArdiaRoots(SystemdFakes):
         self.assertFalse((cli_home / "Usage").exists())
 
     def test_a_marked_cli_home_whose_current_leads_elsewhere_is_never_run(self):
-        cli_home = self.plant_ardia()
+        cli_home = self.plant_upstream_install()
         own = self.temp / "own-cli"
         own.mkdir()
         (own / upstream.CLI_HOME_MARK).write_text("")
