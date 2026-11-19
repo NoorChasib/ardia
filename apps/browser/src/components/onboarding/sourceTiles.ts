@@ -34,10 +34,19 @@ export type SourceTile = { id: BrowserSourceId; name: string; found: boolean; ap
 
 type Finding = Pick<PlatformFeatures, "findsBrowsersBy" | "hiddenBrowserSources">;
 
+const offeredGroups = (platform: Finding) =>
+  SOURCE_CANDIDATES.filter((group) => !platform.hiddenBrowserSources.includes(group[0]!.id) && !(platform.findsBrowsersBy === "appBundle" && group[0]!.listedOnly));
+
+export const candidateImportIds = (platform: Finding) => [...new Set(offeredGroups(platform).flat().map((c) => c.importId ?? c.id))];
+
+export async function listedSourceTiles(listBrowsers: (only: readonly string[]) => Promise<{ id: string }[]>, platform: Finding): Promise<SourceTile[]> {
+  const listed = new Set((await listBrowsers(candidateImportIds(platform))).map((source) => source.id));
+  return sourceTiles((c) => listed.has(c.importId ?? c.id), platform);
+}
+
 export function sourceTiles(isFound: (c: SourceCandidate) => boolean, platform: Finding): SourceTile[] {
   const keepsAppPaths = platform.findsBrowsersBy === "appBundle";
-  const offered = SOURCE_CANDIDATES.filter((group) => !platform.hiddenBrowserSources.includes(group[0]!.id) && !(keepsAppPaths && group[0]!.listedOnly));
-  return offered.flatMap((group): SourceTile[] => {
+  return offeredGroups(platform).flatMap((group): SourceTile[] => {
     const found = group.find(isFound);
     if (found) return [{ id: found.id, name: found.name, found: true, app: keepsAppPaths ? found.app : null, icon: null, importId: found.importId }];
     if (group.every((c) => c.onlyWhenFound)) return [];
