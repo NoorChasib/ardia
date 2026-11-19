@@ -401,6 +401,11 @@ void StartEarlyWindow() {
     return 1;
   }
 #endif
+  if (IsTeamSigned()) {
+    fprintf(stderr, "[ardiacore] a team-signed Nilla build waits for Nilla's own engines: every launch passes today's "
+                    "engine the mock keychain, which turns off its real-profile gate\n");
+    return 1;
+  }
   gMakeDelegate = [makeDelegate copy];
   NSString *scratch = config.dataDirectory;
   gDataDirectory = scratch ? [scratch stringByAppendingPathComponent:@"Chromium"] : InstalledDataDirectory();

@@ -35,6 +35,8 @@ int main() {
     Write(@"switches-cache.json", @"{\"fetchedAt\":1,\"switches\":{\"launchTab\":false,\"updatePrewarm\":false}}");
 
     NillaLaunchConfig *bare = Config(@{});
+    CHECK([bare.engineSwitches.firstObject isEqualToString:@"--use-mock-keychain"]);
+    CHECK([Config(@{}, YES).engineSwitches containsObject:@"--use-mock-keychain"]);
     CHECK(!bare.remoteSwitchesConfigured);
     CHECK([bare switchOn:@"launchTab"]);
     CHECK([bare switchOn:@"updatePrewarm"]);

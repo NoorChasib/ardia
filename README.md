@@ -110,6 +110,12 @@ uses which.
 Every build runs on a data folder of its own. Nilla never reads or writes an installed Ardia's data, keychain items or
 sync folder, and a test instance never touches a real profile.
 
+On the Mac, every launch passes today's engine Chromium's mock keychain, because the engine would otherwise keep its
+Safe Storage key in Ardia's "Ardia Safe Storage" keychain item. Saved passwords and cookies are therefore sealed with
+Chromium's fixed mock key, not a key in your keychain: anyone who can read Nilla's data folder can read them. A
+team-signed build refuses to start until Nilla's own engines exist (Layer 2), because the engine turns its real-profile
+gate off under the mock keychain.
+
 ### macOS
 
 Needs Xcode 26+ and CocoaPods.

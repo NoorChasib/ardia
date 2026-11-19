@@ -42,6 +42,13 @@ test("both launch filters drop the switch prefix the engine reads instance value
   assert.match(body("- (NSArray<NSString *> *)engineSwitches {"), new RegExp(`@"--${enginePrefix}data-dir="`));
 });
 
+test("every launch passes the engine the mock keychain, and a team-signed build refuses to start before it", () => {
+  assert.match(body("- (NSArray<NSString *> *)engineSwitches {"), /\[NSMutableArray arrayWithObject:@"--use-mock-keychain"\]/);
+  const run = launch.slice(launch.indexOf("+ (int)runWithArgc:"), launch.indexOf("[NSFileManager.defaultManager createDirectoryAtPath:gDataDirectory"));
+  assert.match(run, /if \(IsTeamSigned\(\)\) \{[^}]*return 1;\s*\}/);
+  assert.ok(run.indexOf("IsTeamSigned()") < run.indexOf("gDataDirectory ="), "the refusal comes before the data dir is chosen");
+});
+
 test("the Mac test run builds and runs the seeded-cache switch test", () => {
   assert.match(pkg.scripts.test, /ios\/ArdiaLaunchConfig\.mm tests\/launch-config-switches\.test\.mm/);
   assert.match(pkg.scripts["test:portable"], /\.\/tests\/launch-config-switches\.test\.mjs/);

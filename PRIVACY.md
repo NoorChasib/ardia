@@ -28,6 +28,10 @@ Your history, bookmarks, tabs, passwords, settings and everything else you do in
 and your system keychain or keyring. Nilla never reads or writes another browser's data, except when you ask it to
 import from that browser.
 
+On the Mac, until Nilla has engines of its own, saved passwords and cookies are sealed with Chromium's fixed mock key
+rather than a key in your keychain, so they are only as private as Nilla's data folder (the README's "Build and
+run" section says why).
+
 ## Sync
 
 Sync is end-to-end encrypted and has no server. Nilla writes sealed files into a folder you choose (for example in
