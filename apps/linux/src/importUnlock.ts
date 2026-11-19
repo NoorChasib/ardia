@@ -3,6 +3,7 @@ import type { BrowserSource, ImportKind } from "../../../packages/import/src/ind
 type LinuxProfile = BrowserSource["profiles"][number] & { needsPrimaryPassword?: boolean; cardsNeedKeyring?: boolean };
 
 export const APP_NAME = "Ardia";
+export const PRODUCT_NAME = "Nilla";
 export const FIREFOX_CARD_KEY = "Firefox Encrypted Storage";
 
 const chosen = (source: BrowserSource, selected: readonly string[]) =>
@@ -18,20 +19,20 @@ export type UnlockCopy = { title: string; subtitle: string; lead: string; detail
 
 export function unlockCopy(source: BrowserSource, selected: readonly string[], kinds: Iterable<ImportKind>): UnlockCopy {
   const title = "Unlock your data for import";
-  const subtitle = `${APP_NAME} can securely import logins, cookies and cards from your previous browser, so you stay signed in and don't have to enter your passwords again.`;
+  const subtitle = `${PRODUCT_NAME} can securely import logins, cookies and cards from your previous browser, so you stay signed in and don't have to enter your passwords again.`;
   if (source.family === "firefox") {
     const field = asksPrimaryPassword(source, selected);
     const cards = readsCardKey(source, selected, kinds);
-    const keyring = `${source.name} keeps saved card numbers under “${FIREFOX_CARD_KEY}” in your system keyring, which may ask whether ${APP_NAME} can read it.`;
+    const keyring = `${source.name} keeps saved card numbers under “${FIREFOX_CARD_KEY}” in your system keyring, which may ask whether “${APP_NAME}” (the name this build's engine gives the keyring) can read them.`;
     return {
       title,
       subtitle,
       field,
       lead: field
-        ? `${source.name}'s saved passwords are protected by a primary password. Enter it to bring them securely into ${APP_NAME}.`
-        : `Some of ${source.name}'s data is encrypted, so your system keyring may ask for your password to bring it securely into ${APP_NAME}.`,
+        ? `${source.name}'s saved passwords are protected by a primary password. Enter it to bring them securely into ${PRODUCT_NAME}.`
+        : `Some of ${source.name}'s data is encrypted, so your system keyring may ask for your password to bring it securely into ${PRODUCT_NAME}.`,
       detail: [
-        field ? `${APP_NAME} uses it only for this import, never saves it, and forgets it after 10 minutes.` : "",
+        field ? `${PRODUCT_NAME} uses it only for this import, never saves it, and forgets it after 10 minutes.` : "",
         cards ? keyring : "",
         "Your data stays on this computer.",
       ].filter(Boolean).join(" "),
@@ -46,8 +47,8 @@ export function unlockCopy(source: BrowserSource, selected: readonly string[], k
     field: false,
     lead: many
       ? `Some data is encrypted, so your system keyring may ask for your password once for each selected profile.`
-      : `Some data is encrypted, so your system keyring may ask for your password to bring it securely into ${APP_NAME}.`,
-    detail: `${APP_NAME} asks your system keyring (Secret Service or KWallet) for “${item}”: it's the key ${source.name} encrypts passwords, cookies, cards and open tabs with. Allow it when asked. Your data stays on this computer.`,
+      : `Some data is encrypted, so your system keyring may ask for your password to bring it securely into ${PRODUCT_NAME}.`,
+    detail: `${PRODUCT_NAME} asks your system keyring (Secret Service or KWallet) for “${item}”: it's the key ${source.name} encrypts passwords, cookies, cards and open tabs with. Allow it when asked. Your data stays on this computer.`,
     waiting: "Waiting for the keyring...",
   };
 }

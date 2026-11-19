@@ -5,6 +5,7 @@ import { emitNativeEvent, provideNativeModule, provideNativeModuleProvider } fro
 import { NATIVE_CHANGE } from "./react-native";
 import { nillaHost, hostModuleMethod, reportHostError } from "../host";
 import { hostLaunchConfig } from "../hostLaunchConfig";
+import { APP_NAME, reportedSystemInfo } from "../hostSystemInfo";
 import { createFolderPicker } from "../hostFolders";
 import { linuxHostDialogs } from "../hostDialogs";
 import { createHostDocuments } from "../hostDocuments";
@@ -36,7 +37,7 @@ export { setTrafficLightsCenter };
 export { fetchBangList } from "../shellMethods";
 
 const SYSTEM_INFO: SystemInfo = {
-  appName: "Nilla",
+  appName: APP_NAME,
   appVersion: "linux-dev",
   appBuild: "host",
   bundleId: "dev.ardia.linux",
@@ -82,7 +83,7 @@ export const setAppearance = (mode: AppearanceMode) => appearance.setAppearance(
 
 export const windowIds = nillaHost ? createLinuxWindowIds(nillaHost, () => useBrowser.getState()) : async () => [] as string[];
 export const windowFrame = async (id: string): Promise<[number, number, number, number] | null> => nillaHost ? hostModuleMethod("ArdiaShell", "windowFrame")(id) as Promise<[number, number, number, number] | null> : null;
-export const systemInfo = (): SystemInfo => nillaHost ? (nillaHost.bootstrap.nativeModules?.ArdiaApp?.systemInfo as SystemInfo | undefined) ?? { ...SYSTEM_INFO, appVersion: "linux-dev", appBuild: "host", bundleId: "dev.ardia.linux", osVersion: "Linux", osBuild: "Linux", arch: "unknown", model: "Linux" } : SYSTEM_INFO;
+export const systemInfo = (): SystemInfo => nillaHost ? reportedSystemInfo(nillaHost) ?? { ...SYSTEM_INFO, appVersion: "linux-dev", appBuild: "host", bundleId: "dev.ardia.linux", osVersion: "Linux", osBuild: "Linux", arch: "unknown", model: "Linux" } : SYSTEM_INFO;
 export const launchConfig = () => hostLaunchConfig(nillaHost);
 
 const claimHostFocus = async (generation: number, tag: number) => {

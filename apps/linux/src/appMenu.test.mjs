@@ -10,7 +10,7 @@ const state = (overrides = {}) => ({
   windows: [{ id: "w2", title: "Docs" }],
   bookmarkFolders: [{ id: "bar", title: "Bookmarks Bar" }],
   recentBookmarks: [{ id: "b1", title: "Example", url: "https://example.com" }],
-  bookmarksBar: [{ id: "f1", title: "Work", children: [{ id: "b2", title: "", url: "https://ardia.dev" }] }],
+  bookmarksBar: [{ id: "f1", title: "Work", children: [{ id: "b2", title: "", url: "https://example.org" }] }],
   otherBookmarks: [],
   recentlyClosed: [],
   recentlyClosedGroups: [],
@@ -41,7 +41,7 @@ test("items carry the menu state's checks, disabled commands and titles", () => 
   assert.equal(find(items, "togglePin:tile"), undefined);
   assert.equal(find(top(items, "Bookmarks").children, "bookmarkPage").title, "Edit Bookmark…");
   assert.equal(find(top(items, "Tabs").children, "moveTabToProfile:p1").checked, true);
-  assert.equal(find(items, "openBookmark:b2").title, "https://ardia.dev");
+  assert.equal(find(items, "openBookmark:b2").title, "https://example.org");
   assert.equal(find(items, "addFolderToSidebar:f1").enabled, true);
   assert.equal(find(items, "openExtension:ext").title, "uBlock");
 });

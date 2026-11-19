@@ -7,6 +7,7 @@ import { NATIVE_EDGE_ZONE, createRevealBands } from "./sidebarRevealBand.ts";
 import { dominantAccent } from "./iconAccent.ts";
 import { hostModuleName, requireNativeModule } from "./shims/expo-modules-core.ts";
 import { setTrafficLightsCenter } from "./shims/web/windowChrome.tsx";
+import { APP_NAME, reportedSystemInfo } from "./hostSystemInfo.ts";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const nativeHost = read("../../../engine/ardiacore-linux/src/ardia/linux/ac_linux_host.cc");
@@ -257,8 +258,8 @@ test("problem reports without their engine, the local telemetry copy and hardwar
   assert.equal(unserved("removeFile")("/tmp/x"), undefined);
   assert.equal(unserved("cancelUploads")(), undefined);
   assert.throws(() => unserved("draftDirectory")(), { code: "ERR_UNAVAILABLE" });
-  assert.equal((await unserved("upload")("f", "https://ardia.dev", "PUT", {}, "/tmp/f")).status, 0);
-  assert.equal((await unserved("post")("https://ardia.dev/api/feedback", "{}", {})).status, 0);
+  assert.equal((await unserved("upload")("f", "https://example.org", "PUT", {}, "/tmp/f")).status, 0);
+  assert.equal((await unserved("post")("https://example.org/api/feedback", "{}", {})).status, 0);
   const served = linuxHost();
   const reached = [];
   served.invoke = async (method) => (reached.push(method), null);
@@ -325,8 +326,8 @@ test("reading the clipboard uses the shell's own clipboard on Linux until the na
   try {
     withClipboard(undefined);
     assert.equal(await read(), "");
-    withClipboard({ readText: async () => "https://ardia.dev/" });
-    assert.equal(await read(), "https://ardia.dev/");
+    withClipboard({ readText: async () => "https://example.org/" });
+    assert.equal(await read(), "https://example.org/");
     withClipboard({ readText: async () => { throw new DOMException("denied", "NotAllowedError"); } });
     assert.equal(await read(), "");
   } finally {
@@ -699,4 +700,17 @@ test("Linux never reports screenEdge: its edge watch peeks when the pointer leav
   assert.deepEqual([...sent[0].matchAll(/\.Set\("(\w+)"/g)].map((m) => m[1]), ["type", "id", "over", "point"]);
   const shell = readFileSync(new URL("./shims/web/motion/sidebarEdge.ts", import.meta.url), "utf8");
   assert.ok(!shell.includes("screenEdge"));
+});
+
+test("About and problem reports name the app Nilla while the engine's own system details, bundle id included, pass through", () => {
+  const engineAppName = nativeHost.match(/Set\("appName", "([^"]+)"\)/)?.[1];
+  assert.ok(engineAppName, "the engine reports an appName");
+  const reported = { appName: engineAppName, appVersion: "0.1.0", appBuild: "7", bundleId: "dev.ardia.linux", configuration: "Release", osVersion: "6.8", osBuild: "Linux", arch: "x86_64", model: "PC", memoryGB: 16, locale: "en-US" };
+  const host = { bootstrap: { windowId: "main", profileId: "default", capabilities: [], nativeModules: { ArdiaApp: { systemInfo: reported } } } };
+  assert.equal(APP_NAME, "Nilla");
+  assert.deepEqual(reportedSystemInfo(host), { ...reported, appName: "Nilla" });
+  assert.equal(reported.appName, engineAppName);
+  assert.equal(reportedSystemInfo({ bootstrap: { windowId: "main", profileId: "default", capabilities: [] } }), undefined);
+  assert.equal(reportedSystemInfo(undefined), undefined);
+  assert.match(read("./shims/shellBase.tsx"), /export const systemInfo = \(\): SystemInfo => nillaHost \? reportedSystemInfo\(nillaHost\) \?\? \{/);
 });
