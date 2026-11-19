@@ -1197,9 +1197,9 @@ looks in the cwd.
 
 ### Install contract with the app
 
-The data dir is `--data-dir`, else `$ARDIA_DATA_DIR`, else the installed app's (`~/Library/Application
-Support/com.nilladigital.nilla`; on Linux `${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia`, see How it finds
-Nilla).
+The data dir is the one How it finds Nilla gives: on macOS `--data-dir`, else `$ARDIA_DATA_DIR`, else the installed
+app's (`~/Library/Application Support/com.nilladigital.nilla`); on Linux `--data-dir`, else `$ARDIA_CONFIG_HOME/ardia`,
+else `$ARDIA_DATA_DIR`, and with none of them the command refuses.
 
 1. The CLI takes an exclusive `flock` on `<data dir>/Scripts/.lock` (polled, 30 s deadline). The app takes a shared
    one while it reads and validates. `Scripts/`, `Scripts/scripts/`, record folders and `extension/` must be real
@@ -1247,10 +1247,12 @@ Nilla).
 4. `$ARDIA_CDP_URL`, like `--ws`.
 5. `<data dir>/Chromium/ArdiaControl.json`, with `--data-dir` or `$ARDIA_DATA_DIR`, else the installed app's
    `~/Library/Application Support/com.nilladigital.nilla/Chromium/ArdiaControl.json`.
-   On Linux the browser is Chromium itself and its user data dir is the data dir, so it's `<data dir>/ArdiaControl.json`
-   and, without `--data-dir` or `$ARDIA_DATA_DIR`, `$ARDIA_CONFIG_HOME/ardia/ArdiaControl.json`: this development build
-   never guesses `~/.config/ardia`, and refuses a data dir or config folder inside it or the other folders the upstream
-   app uses. The control socket is `<data dir>/ArdiaControl.sock` on both, checked with
+   On Linux the browser is Chromium itself and its user data dir is the data dir, so it's `<data dir>/ArdiaControl.json`,
+   with the data dir taken in this order: `--data-dir`; else `$ARDIA_CONFIG_HOME/ardia` when `$ARDIA_CONFIG_HOME` is
+   set, even with `$ARDIA_DATA_DIR` set too (as `scripts/linux/nilla-dev-run` sets both, and starts the engine on
+   `$ARDIA_CONFIG_HOME/ardia`); else `$ARDIA_DATA_DIR`. With none of them the command refuses: this development build
+   has no default, never guesses `$XDG_CONFIG_HOME` or `~/.config/ardia`, and refuses a data dir or config folder
+   inside those or the other folders the upstream app uses. The control socket is `<data dir>/ArdiaControl.sock` on both, checked with
    `LOCAL_PEERCRED` on macOS and `SO_PEERCRED` on Linux; its path may be 103 bytes on macOS and 107 on Linux.
 
 The active-page route is `GET http://127.0.0.1:P/ardia/active?token=<token>`: `{"targetId": "<id>"}`, or `null` when
@@ -1640,19 +1642,18 @@ Any Chromium works for `--port`: `chromium --headless=new --remote-debugging-por
 
 The same CLI, with these differences:
 
-- Paths: data dir `${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia` (the engine's Chromium user data dir,
-  holding `ArdiaControl.json`, `ArdiaControl.sock` and the `Default`/`Profile N` folders), config folder
-  `<data dir>/config` (`${ARDIA_CONFIG_HOME:-${XDG_CONFIG_HOME:-~/.config}}/ardia/config` by default, which the app
-  reads too; on macOS the default is `~/.config/nilla`), so `hooks.json` lives there as well, CLI home
-  `${XDG_DATA_HOME:-~/.local/share}/ardia/cli` for `install.sh` (`hooks install` takes it only from `$ARDIA_CLI_HOME` and
-  refuses without it, so it never runs a CLI it didn't pick), bin dir `~/.local/bin`, hooks log
+- Paths: data dir `--data-dir`, else `$ARDIA_CONFIG_HOME/ardia`, else `$ARDIA_DATA_DIR`, with no default (How it
+  finds Nilla); it is the engine's Chromium user data dir, holding `ArdiaControl.json`, `ArdiaControl.sock` and the
+  `Default`/`Profile N` folders. Config folder `<data dir>/config`, which the app reads too (on macOS the default is
+  `~/.config/nilla`), so `hooks.json` lives there as well. CLI home `$ARDIA_CLI_HOME`, which `install.sh` and
+  `hooks install` both need on Linux and refuse without, so neither installs into nor runs a CLI it didn't pick; bin dir `~/.local/bin`, hooks log
   `${XDG_STATE_HOME:-~/.local/state}/nilla/hooks.log` (rotated at 5 MB as on macOS). An `XDG_*_HOME` that isn't an
-  absolute path is ignored, as the XDG spec, systemd and the engine's CLI installer do, except `XDG_CONFIG_HOME` (and
-  `ARDIA_CONFIG_HOME`) for the data dir and config folder, where Chromium takes any non-empty value.
+  absolute path is ignored, as the XDG spec, systemd and the engine's CLI installer do, except `ARDIA_CONFIG_HOME` for
+  the data dir and config folder, where Chromium takes any non-empty value.
 - `nilla-browser hooks install` writes `${XDG_CONFIG_HOME:-~/.config}/systemd/user/com.nilladigital.nilla.hooks.service` (`Type=exec`,
   `ExecStart` the installed `current/bin/ardia hooks run --log <log>`, `WorkingDirectory` the home folder, `PATH`
-  from the installing shell, an empty `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME` set to the folder the installing
-  shell resolved (`$ARDIA_CONFIG_HOME`, else `${XDG_CONFIG_HOME:-~/.config}`), so the service reads the same
+  from the installing shell, an empty `ARDIA_DATA_DIR` and `ARDIA_CONFIG_HOME` set to the installing shell's
+  `$ARDIA_CONFIG_HOME`, which `hooks install` needs on Linux, so the service reads the same
   `hooks.json` and reaches the same Nilla as `nilla-browser hooks list` even when the systemd user manager's environment
   differs, `Restart=on-failure` with `RestartSec=10` and
   `StartLimitIntervalSec=0` so it never gives up, output to null, `WantedBy=default.target`), then runs `systemctl
