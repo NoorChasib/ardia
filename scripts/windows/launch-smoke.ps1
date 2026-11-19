@@ -1674,6 +1674,19 @@ function Test-NotATestInstance([string]$DataDirectory, [string]$Case) {
   } finally { Stop-GateLaunch $run }
 }
 
+function Test-RefusedByTheApp([string]$DataDirectory, [string]$Case) {
+  $run, $caseLog = Start-GateLaunch $DataDirectory $Case "appDialog,reauth=granted"
+  try {
+    $refused = Wait-GateLine $run $caseLog "keys ignored: not a test instance \("
+    if ($refused) { Write-Host "test gate, $Case`: $($refused.Line)" } else { $script:failures += "the app counted ARDIA_TEST, or said nothing, with $Case"; return }
+    if (-not $withEngine) { return }
+    $engine = Wait-GateLine $run $caseLog "^engine 0 test gate: "
+    if (-not $engine) { Write-Host "engine test gate, $Case`: no line"; return }
+    Write-Host "engine test gate, $Case`: $($engine.Line)"
+    if ($engine.Line -notmatch "not a test instance \(") { Write-Host "test gate, $Case`: the prebuilt engine refuses only Ardia's folders, so it still counts this one (a Layer 2 limit); the app refused it" }
+  } finally { Stop-GateLaunch $run }
+}
+
 function Test-ATestInstance([string]$DataDirectory, [string]$Case) {
   $run, $caseLog = Start-GateLaunch $DataDirectory $Case "reauth=granted"
   try {
@@ -1703,6 +1716,18 @@ if ($env:GITHUB_ACTIONS -eq "true") {
   $junction = Join-Path (New-DataDirectory "gate-junction") "profile"
   New-Item -ItemType Junction -Path $junction -Target $realProfile | Out-Null
   try { Test-NotATestInstance $junction "a junction to the real profile folder" } finally { (Get-Item -LiteralPath $junction).Delete() }
+  $ownFolders = @((Join-Path $env:LOCALAPPDATA "Nilla"), (Join-Path $env:APPDATA "Nilla"))
+  $madeOwnFolders = @($ownFolders | Where-Object { -not (Test-Path -LiteralPath $_) })
+  foreach ($own in $ownFolders) { New-Item -ItemType Directory -Force -Path $own | Out-Null }
+  try {
+    Test-RefusedByTheApp $ownFolders[0] "Nilla's own profile folder"
+    Test-RefusedByTheApp $ownFolders[1] "Nilla's roaming folder"
+    $ownJunction = Join-Path (New-DataDirectory "gate-own-junction") "profile"
+    New-Item -ItemType Junction -Path $ownJunction -Target $ownFolders[0] | Out-Null
+    try { Test-RefusedByTheApp $ownJunction "a junction to Nilla's own profile folder" } finally { (Get-Item -LiteralPath $ownJunction).Delete() }
+  } finally {
+    foreach ($own in $madeOwnFolders) { Remove-Item -LiteralPath $own -Recurse -Force -ErrorAction SilentlyContinue }
+  }
 }
 if ($withEngine -and $env:GITHUB_ACTIONS -eq "true") {
   $realUserData = Join-Path $env:LOCALAPPDATA "Ardia\User Data"

@@ -41,9 +41,15 @@ test("a test instance needs an absolute scratch folder clear of the real profile
   assert.match(gate, /if \(!requested\.is_absolute\(\)\) return/);
   assert.match(gate, /FOLDERID_LocalAppData, L"LOCALAPPDATA"\) \/ L"Ardia"/);
   assert.match(gate, /FOLDERID_RoamingAppData, L"APPDATA"\) \/ L"Ardia"/);
+  assert.match(gate, /FOLDERID_LocalAppData, L"LOCALAPPDATA"\) \/ L"Nilla",/);
+  assert.match(gate, /FOLDERID_RoamingAppData, L"APPDATA"\) \/ L"Nilla",/);
+  assert.match(gate, /realFolders\[\] = \{\n(?: {6}Paths::UserFolder\([^\n]+\n){4} {2}\};/);
   assert.match(gate, /RealFolderClash\(\{Paths::DataDirectory\(\), Paths::DataDirectory\(\) \/ L"Chromium", Paths::DataDirectory\(\) \/ L"Sync"\}, L"ARDIA_DATA_DIR"\)/);
   assert.match(source("LaunchConfig.h"), /TestGate::RealFolderClash\(\{requested\}, L"ARDIA_CONFIG_DIR"\);\n    if \(clash\.empty\(\)\) return Paths::Ensured\(requested\);/);
-  assert.match(gate, /VOLUME_NAME_GUID \| FILE_NAME_NORMALIZED/);
+  assert.match(gate, /CanonicalPath\(std::filesystem::path const &path\) noexcept \{ return Paths::Resolved\(path, VOLUME_NAME_GUID\); \}/);
+  const paths = source("Paths.h");
+  assert.match(paths, /DWORD flags = volume \| FILE_NAME_NORMALIZED;\n  DWORD size = GetFinalPathNameByHandleW\(handle, nullptr, 0, flags\);/);
+  assert.match(paths, /if \(std::filesystem::exists\(entry\)\) \{\n    if \(!std::filesystem::exists\(path, error\)\) return std::nullopt;/);
   assert.match(gate, /if \(!TestBuild\(\)\) return/);
 });
 
@@ -53,7 +59,9 @@ test("the test-build marker never reaches an installer, and the harnesses that n
   assert.match(script("make-installer.ps1"), /-Filter "Ardia\.test-build"[^\n]*throw/);
   assert.match(script("installer-check.ps1"), /-Filter "Ardia\.test-build"[^\n]*throw/);
   const smoke = script("launch-smoke.ps1");
-  for (const kind of ["no test-build marker", "a relative ARDIA_DATA_DIR", "the real profile folder", "a junction to the real profile folder"]) assert.ok(smoke.includes(`"${kind}"`), kind);
+  for (const kind of ["no test-build marker", "a relative ARDIA_DATA_DIR", "the real profile folder", "a junction to the real profile folder", "Nilla's own profile folder", "Nilla's roaming folder", "a junction to Nilla's own profile folder"]) assert.ok(smoke.includes(`"${kind}"`), kind);
+  assert.match(smoke, /function Test-RefusedByTheApp\(/);
+
   assert.match(script("launch-smoke.ps1"), /"Ardia\.test-build"\r?\nNew-Item -ItemType File -Force -Path \$testBuild/);
   assert.match(script("tour.ps1"), /exit 0\r?\n\}\r?\n\$App = \(Resolve-Path -LiteralPath \$App\)\.Path\r?\nNew-Item -ItemType File -Force -Path \(Join-Path \(Split-Path -Parent \$App\) "Ardia\.test-build"\)/);
   for (const packaging of ["make-installer.ps1", "installer-check.ps1"]) assert.match(script(packaging), /-Recurse -File -Force -Filter "Ardia\.test-build"/, packaging);

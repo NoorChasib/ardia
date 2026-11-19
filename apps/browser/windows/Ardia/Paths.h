@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -54,6 +55,42 @@ inline std::filesystem::path Ensured(std::filesystem::path directory) noexcept {
   std::error_code ignored;
   std::filesystem::create_directories(directory, ignored);
   return directory;
+}
+
+inline std::optional<std::wstring> FinalPathOf(HANDLE handle, DWORD volume) noexcept {
+  DWORD flags = volume | FILE_NAME_NORMALIZED;
+  DWORD size = GetFinalPathNameByHandleW(handle, nullptr, 0, flags);
+  if (size == 0) return std::nullopt;
+  std::wstring value(size, L'\0');
+  DWORD written = GetFinalPathNameByHandleW(handle, value.data(), size, flags);
+  if (written == 0 || written >= size) return std::nullopt;
+  value.resize(written);
+  return value;
+}
+
+inline std::optional<std::wstring> OpenedFinalPath(std::filesystem::path const &path, DWORD volume) noexcept {
+  constexpr DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+  HANDLE handle = CreateFileW(path.c_str(), 0, share, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+  if (handle == INVALID_HANDLE_VALUE) return std::nullopt;
+  std::optional<std::wstring> found = FinalPathOf(handle, volume);
+  CloseHandle(handle);
+  return found;
+}
+
+inline std::optional<std::wstring> Resolved(std::filesystem::path const &path, DWORD volume) noexcept {
+  std::error_code error;
+  std::filesystem::file_status entry = std::filesystem::symlink_status(path, error);
+  if (error && error != std::errc::no_such_file_or_directory) return std::nullopt;
+  if (std::filesystem::exists(entry)) {
+    if (!std::filesystem::exists(path, error)) return std::nullopt;
+    return OpenedFinalPath(path, volume);
+  }
+  if (!path.has_parent_path() || path.parent_path() == path || !path.has_filename()) return std::nullopt;
+  std::optional<std::wstring> parent = Resolved(path.parent_path(), volume);
+  if (!parent) return std::nullopt;
+  std::wstring joined = *parent;
+  if (joined.empty() || joined.back() != L'\\') joined.push_back(L'\\');
+  return joined + path.filename().wstring();
 }
 
 inline std::wstring OneDriveFolder() noexcept {

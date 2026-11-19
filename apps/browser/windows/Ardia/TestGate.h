@@ -14,35 +14,7 @@ namespace Nilla::TestGate {
 
 constexpr wchar_t TestBuildMarker[] = L"Ardia.test-build";
 
-inline std::optional<std::wstring> OpenedFinalPath(std::filesystem::path const &path) noexcept {
-  constexpr DWORD share = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-  HANDLE handle = CreateFileW(path.c_str(), 0, share, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-  if (handle == INVALID_HANDLE_VALUE) return std::nullopt;
-  constexpr DWORD flags = VOLUME_NAME_GUID | FILE_NAME_NORMALIZED;
-  std::optional<std::wstring> found;
-  DWORD size = GetFinalPathNameByHandleW(handle, nullptr, 0, flags);
-  if (size > 0) {
-    std::wstring value(size, L'\0');
-    DWORD written = GetFinalPathNameByHandleW(handle, value.data(), size, flags);
-    if (written > 0 && written < size) {
-      value.resize(written);
-      found = std::move(value);
-    }
-  }
-  CloseHandle(handle);
-  return found;
-}
-
-inline std::optional<std::wstring> CanonicalPath(std::filesystem::path const &path) noexcept {
-  std::error_code error;
-  if (std::filesystem::exists(path, error)) return OpenedFinalPath(path);
-  if (error || !path.has_parent_path() || path.parent_path() == path || !path.has_filename()) return std::nullopt;
-  std::optional<std::wstring> parent = CanonicalPath(path.parent_path());
-  if (!parent) return std::nullopt;
-  std::wstring joined = *parent;
-  if (joined.empty() || joined.back() != L'\\') joined.push_back(L'\\');
-  return joined + path.filename().wstring();
-}
+inline std::optional<std::wstring> CanonicalPath(std::filesystem::path const &path) noexcept { return Paths::Resolved(path, VOLUME_NAME_GUID); }
 
 inline bool SameText(std::wstring_view a, std::wstring_view b) noexcept {
   return a.size() == b.size() && CompareStringOrdinal(a.data(), static_cast<int>(a.size()), b.data(), static_cast<int>(b.size()), TRUE) == CSTR_EQUAL;
@@ -62,6 +34,8 @@ inline std::wstring RealFolderClash(std::initializer_list<std::filesystem::path>
   std::filesystem::path const realFolders[] = {
       Paths::UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Ardia",
       Paths::UserFolder(FOLDERID_RoamingAppData, L"APPDATA") / L"Ardia",
+      Paths::UserFolder(FOLDERID_LocalAppData, L"LOCALAPPDATA") / L"Nilla",
+      Paths::UserFolder(FOLDERID_RoamingAppData, L"APPDATA") / L"Nilla",
   };
   for (std::filesystem::path const &real : realFolders) {
     std::optional<std::wstring> canonicalReal = CanonicalPath(real);
