@@ -13,9 +13,13 @@ const body = (signature) => {
 test("the Mac config folder reads and writes only paths that resolve outside Ardia's folders", () => {
   assert.match(body("static func read(_ name: String)"), /let target = UpstreamAppFolders\.ownPath\(path\(name\)\) else \{ return \["status": "unreadable"\] \}\s*return readRegularFile\(target,/);
   const writeSchemas = body("static func writeSchemas(");
-  assert.match(writeSchemas, /let configFolder = folderExists\(\) \? UpstreamAppFolders\.ownPath\(directory\) : nil/);
-  assert.match(writeSchemas, /guard folder == schemaDir \|\| UpstreamAppFolders\.ownPath\(target\) != nil else \{ continue \}/);
-  assert.doesNotMatch(writeSchemas, /\[schemaDir, directory\]/);
+  const schemaGuard = writeSchemas.indexOf('if let schemaDir = UpstreamAppFolders.ownPath(try DocumentStore.url("config-schema").path) {');
+  assert.ok(schemaGuard >= 0, "the schema folder resolves outside Ardia's folders");
+  assert.ok(writeSchemas.indexOf("createDirectory(atPath: schemaDir") > schemaGuard, "the schema folder is made only after that check");
+  assert.equal([...writeSchemas.matchAll(/createDirectory\(/g)].length, 1);
+  assert.match(writeSchemas, /if folderExists\(\), let configFolder = UpstreamAppFolders\.ownPath\(directory\) \{ folders\.append\(configFolder\) \}/);
+  assert.match(writeSchemas, /guard let target = UpstreamAppFolders\.ownPath\(\(folder as NSString\)\.appendingPathComponent\(name\)\) else \{ continue \}/);
+  assert.doesNotMatch(writeSchemas, /folder == schemaDir|\[schemaDir, directory\]/);
   assert.equal([...folder.matchAll(/readRegularFile\(/g)].length, 3, "every read of the config folder goes through read or writeSchemas");
 });
 

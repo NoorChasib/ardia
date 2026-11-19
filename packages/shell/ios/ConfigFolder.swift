@@ -61,15 +61,16 @@ enum ConfigFolder {
   }
 
   static func writeSchemas(_ files: [String: String]) throws -> [String] {
-    let schemaDir = try DocumentStore.url("config-schema").path
-    try FileManager.default.createDirectory(atPath: schemaDir, withIntermediateDirectories: true)
-    let configFolder = folderExists() ? UpstreamAppFolders.ownPath(directory) : nil
-    let folders = [schemaDir] + (configFolder.map { [$0] } ?? [])
+    var folders: [String] = []
+    if let schemaDir = UpstreamAppFolders.ownPath(try DocumentStore.url("config-schema").path) {
+      try FileManager.default.createDirectory(atPath: schemaDir, withIntermediateDirectories: true)
+      folders.append(schemaDir)
+    }
+    if folderExists(), let configFolder = UpstreamAppFolders.ownPath(directory) { folders.append(configFolder) }
     var written: [String] = []
     for folder in folders {
       for (name, contents) in files where schemaNames.contains(name) {
-        let target = (folder as NSString).appendingPathComponent(name)
-        guard folder == schemaDir || UpstreamAppFolders.ownPath(target) != nil else { continue }
+        guard let target = UpstreamAppFolders.ownPath((folder as NSString).appendingPathComponent(name)) else { continue }
         if let current = readRegularFile(target)["text"] as? String, current == contents { continue }
         try replace(target, with: Data(contents.utf8))
         written.append(target)
