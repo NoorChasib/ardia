@@ -68,6 +68,22 @@ final class UpstreamAppFoldersTests: XCTestCase {
     XCTAssertNil(own(path(".config/nilla/config.json")))
   }
 
+  func testADanglingUpstreamLinkGuardsWhereItPointsAndNothingElse() throws {
+    let config = path(".config/nilla")
+    try fm.createDirectory(atPath: config, withIntermediateDirectories: true)
+    try fm.createDirectory(atPath: path("Library/Logs"), withIntermediateDirectories: true)
+    let later = (scratch as NSString).appendingPathComponent("later/ardia-logs")
+    try fm.createSymbolicLink(atPath: path("Library/Logs/Ardia"), withDestinationPath: "../../../later/ardia-logs")
+    XCTAssertEqual(own(config), config)
+    XCTAssertEqual(own((config as NSString).appendingPathComponent("config.json")), (config as NSString).appendingPathComponent("config.json"))
+    XCTAssertNil(own(later))
+    XCTAssertNil(own((later as NSString).appendingPathComponent("config.json")))
+    XCTAssertNil(own(path("Library/Logs/Ardia/config.json")))
+    try fm.createDirectory(atPath: path(".cache"), withIntermediateDirectories: true)
+    try fm.createSymbolicLink(atPath: path(".cache/ardia"), withDestinationPath: path(".cache/ardia"))
+    XCTAssertNil(own(config))
+  }
+
   func testACaseVariantIsRefusedOnTheMac() throws {
     #if os(macOS)
       XCTAssertNil(own(path(".config/ARDIA/config")))

@@ -13,22 +13,26 @@ public enum UpstreamAppFolders {
     ].map { (home as NSString).appendingPathComponent($0) }
   }
 
+  static let maxLinkHops = 40
+
   public static func ownPath(_ path: String, home: String = NSHomeDirectory()) -> String? {
     guard let resolved = resolve(path) else { return nil }
     let candidate = comparable(resolved)
     for folder in folders(home: home) {
-      guard let root = resolve(folder).map(comparable) else { return nil }
+      guard let root = resolve(folder, followingDanglingLinks: true).map(comparable) else { return nil }
       if candidate == root || candidate.hasPrefix(root + "/") { return nil }
     }
     return resolved
   }
 
-  public static func resolve(_ path: String) -> String? {
+  public static func resolve(_ path: String, followingDanglingLinks: Bool = false) -> String? {
     guard path.hasPrefix("/"), !path.contains("\0") else { return nil }
+    var pending = Array((path as NSString).pathComponents.dropFirst().reversed())
     var resolved = ["/"]
     var missing = false
+    var hops = 0
     var info = stat()
-    for part in (path as NSString).pathComponents.dropFirst() {
+    while let part = pending.popLast() {
       switch part {
       case "", ".", "/": continue
       case "..":
@@ -41,8 +45,15 @@ public enum UpstreamAppFolders {
         }
         let candidate = NSString.path(withComponents: resolved + [part])
         if lstat(candidate, &info) == 0 {
-          guard let real = realPath(candidate) else { return nil }
-          resolved = (real as NSString).pathComponents
+          if let real = realPath(candidate) {
+            resolved = (real as NSString).pathComponents
+          } else if followingDanglingLinks, info.st_mode & S_IFMT == S_IFLNK, hops < maxLinkHops, let target = linkTarget(candidate) {
+            hops += 1
+            if target.hasPrefix("/") { resolved = ["/"] }
+            pending.append(contentsOf: (target as NSString).pathComponents.reversed())
+          } else {
+            return nil
+          }
         } else if errno == ENOENT {
           missing = true
           resolved.append(part)
@@ -52,6 +63,13 @@ public enum UpstreamAppFolders {
       }
     }
     return NSString.path(withComponents: resolved)
+  }
+
+  static func linkTarget(_ path: String) -> String? {
+    var buffer = [CChar](repeating: 0, count: Int(PATH_MAX) + 1)
+    let count = readlink(path, &buffer, buffer.count - 1)
+    guard count > 0 else { return nil }
+    return String(decoding: buffer[0..<count].map { UInt8(bitPattern: $0) }, as: UTF8.self)
   }
 
   static func comparable(_ path: String) -> String {
