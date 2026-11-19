@@ -139,6 +139,70 @@ class ConfigTargets(Guarded):
         with self.assertRaisesRegex(endpoint.UpstreamFolder, "can't be resolved"):
             endpoint.own_folder(Path("/tmp/a\0b"), "the data dir")
 
+    def locked_folder(self) -> Path:
+        if os.geteuid() == 0:
+            self.skipTest("root reads a mode-000 folder")
+        blocked = self.temp / "blocked"
+        blocked.mkdir()
+        (blocked / "alias").symlink_to(self.upstream_config / "config")
+        blocked.chmod(0)
+        self.addCleanup(blocked.chmod, 0o700)
+        return blocked
+
+    def test_an_alias_upstream_under_a_folder_it_cant_read_is_refused(self):
+        blocked = self.locked_folder()
+        for path in (blocked / "alias" / "config.json", blocked / "alias", blocked / "new" / "deeper"):
+            with self.subTest(path=path):
+                with self.assertRaises(PermissionError):
+                    upstream.resolved(path)
+                with self.assertRaisesRegex(endpoint.UpstreamFolder, "can't be resolved"):
+                    endpoint.own_folder(path, "the data dir")
+        self.refused("config", "get", env={"ARDIA_DATA_DIR": str(blocked / "alias")})
+        with self.assertRaisesRegex(endpoint.UpstreamFolder, "can't be resolved"):
+            usage.owned_cli_home(blocked / "cli")
+        self.assert_untouched()
+
+    def test_a_file_in_the_middle_of_a_path_is_refused_not_treated_as_absent(self):
+        plain = self.temp / "plain"
+        plain.write_text("")
+        for path in (plain / "inside", plain / ".." / "data"):
+            with self.subTest(path=path), self.assertRaises(NotADirectoryError):
+                upstream.resolved(path)
+
+    def test_only_a_suffix_that_doesnt_exist_yet_resolves_lexically(self):
+        (self.temp / "made").mkdir()
+        (self.temp / "made" / "link").symlink_to(self.upstream_config)
+        self.assertEqual(upstream.resolved(self.temp / "made" / "new" / "deeper"), str(self.temp / "made" / "new" / "deeper"))
+        self.assertEqual(upstream.resolved(self.temp / "made" / "new" / ".." / "link" / "config"), str(self.upstream_config / "config"))
+        self.assertEqual(upstream.resolved(self.temp / "made" / "new" / "x" / ".." / ".." / "link"), str(self.upstream_config))
+        self.assertIsNotNone(upstream.containing_folder(self.temp / "made" / "new" / ".." / "link" / "future"))
+        self.assertIsNone(upstream.containing_folder(self.temp / "made" / "new" / "deeper"))
+
+    def test_the_resolver_agrees_with_realpath_wherever_realpath_can_resolve(self):
+        root = self.temp / "tree"
+        (root / "a" / "b").mkdir(parents=True)
+        (root / "a" / "file").write_text("")
+        (root / "up").symlink_to("..")
+        (root / "a" / "toB").symlink_to("b")
+        (root / "a" / "abs").symlink_to(root / "a" / "b")
+        (root / "a" / "chain").symlink_to("toB")
+        (root / "dangling").symlink_to("nowhere/deeper")
+        spellings = ("a/b", "a/toB/..", "a/chain/../file", "up/tree/a/abs", "a/abs/../../up", "dangling/x", "dangling/../a", "a/missing/../b", "./a//b/.", "a/file")
+        for spelling in spellings:
+            with self.subTest(spelling=spelling):
+                self.assertEqual(upstream.resolved(f"{root}/{spelling}"), os.path.realpath(f"{root}/{spelling}"))
+
+    def test_a_chain_longer_than_the_kernel_allows_is_refused(self):
+        previous = self.temp / "end"
+        previous.mkdir()
+        for index in range(upstream.MAX_LINK_HOPS + 1):
+            link = self.temp / f"hop{index}"
+            link.symlink_to(previous)
+            previous = link
+        with self.assertRaisesRegex(OSError, "doesn't lead to a real path"):
+            upstream.resolved(previous)
+        self.assertEqual(upstream.resolved(self.temp / f"hop{upstream.MAX_LINK_HOPS - 1}"), str(self.temp / "end"))
+
     def test_case_and_unicode_variants_match_on_macos(self):
         support = self.home / "Library" / "Application Support"
         with mock.patch.object(upstream.sys, "platform", "darwin"):
@@ -361,6 +425,20 @@ class InstallScriptRefusesUpstream(unittest.TestCase):
                 if value.endswith("dangling/cli"):
                     (self.temp / "dangling").symlink_to(self.temp / "nowhere")
                 self.refused({"ARDIA_CLI_HOME": value}, "can't be resolved")
+
+    def test_a_cli_home_under_a_folder_it_cant_read_is_refused(self):
+        if os.geteuid() == 0:
+            self.skipTest("root reads a mode-000 folder")
+        self.login_shell("zsh")
+        (self.home / ".config" / "ardia").mkdir(parents=True)
+        blocked = self.temp / "blocked"
+        blocked.mkdir()
+        (blocked / "alias").symlink_to(self.home / ".config" / "ardia")
+        blocked.chmod(0)
+        self.addCleanup(blocked.chmod, 0o700)
+        for value in (blocked / "alias" / "cli", blocked / "new" / "cli"):
+            with self.subTest(value=value):
+                self.refused({"ARDIA_CLI_HOME": str(value)}, "can't be resolved")
 
     def test_equivalent_spellings_of_a_protected_xdg_root_are_refused(self):
         self.login_shell("zsh")

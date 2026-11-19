@@ -1,5 +1,6 @@
 import errno
 import os
+import stat
 import sys
 import unicodedata
 from pathlib import Path
@@ -30,19 +31,56 @@ def folders() -> list[Path]:
     ]
 
 
+MAX_LINK_HOPS = 40
+
+
+def _parts(text: str) -> list[str]:
+    return [part for part in text.split(os.sep) if part not in ("", ".")]
+
+
+def _lstat(path: str):
+    try:
+        return os.lstat(path)
+    except FileNotFoundError:
+        return None
+
+
 def resolved(path) -> str:
     text = os.path.expanduser(os.fspath(path))
     if "\0" in text:
         raise ValueError("the path holds a NUL byte")
-    real = os.path.realpath(os.path.join(os.getcwd(), text))
-    probe = real
-    while True:
-        if os.path.islink(probe):
-            raise OSError(errno.ELOOP, f"the link {probe} doesn't lead to a real path")
-        parent = os.path.dirname(probe)
-        if parent == probe:
-            return real
-        probe = parent
+    if not os.path.isabs(text):
+        text = os.path.join(os.getcwd(), text)
+    pending = _parts(text)[::-1]
+    real = os.sep
+    absent = 0
+    hops = 0
+    while pending:
+        name = pending.pop()
+        if name == "..":
+            real = os.path.dirname(real)
+            absent = max(absent - 1, 0)
+            continue
+        candidate = os.path.join(real, name)
+        if absent:
+            real, absent = candidate, absent + 1
+            continue
+        status = _lstat(candidate)
+        if status is None:
+            real, absent = candidate, 1
+        elif stat.S_ISLNK(status.st_mode):
+            hops += 1
+            if hops > MAX_LINK_HOPS:
+                raise OSError(errno.ELOOP, f"the link {candidate} doesn't lead to a real path")
+            target = os.readlink(candidate)
+            if os.path.isabs(target):
+                real = os.sep
+            pending.extend(_parts(target)[::-1])
+        elif not stat.S_ISDIR(status.st_mode) and pending:
+            raise OSError(errno.ENOTDIR, f"{candidate} isn't a folder")
+        else:
+            real = candidate
+    return real
 
 
 def _comparable(path) -> str:
@@ -63,10 +101,16 @@ def refusal(what: str, path, folder: Path) -> str:
     return f"{what} {path} is inside {folder}, an installed Ardia's folder; nilla-browser never reads or writes Ardia's data, config, CLI or logs"
 
 
+def _exists(path: Path) -> bool:
+    return _lstat(os.fspath(path)) is not None
+
+
 def installed_elsewhere(cli_home) -> bool:
-    home = Path(cli_home)
-    if (home / CLI_HOME_MARK).exists() or not home.is_dir():
+    home = Path(resolved(cli_home))
+    status = _lstat(os.fspath(home))
+    if status is None or not stat.S_ISDIR(status.st_mode) or _exists(home / CLI_HOME_MARK):
         return False
-    if os.path.lexists(home / "current"):
+    if _exists(home / "current"):
         return True
-    return any(entry.name[:1].isdigit() and entry.is_dir() for entry in home.iterdir())
+    with os.scandir(home) as entries:
+        return any(entry.name[:1].isdigit() and entry.is_dir() for entry in entries)
