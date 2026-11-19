@@ -29,20 +29,22 @@ object UpstreamSyncFolder {
 
     private fun namesUpstream(path: String): Boolean = path.split('/', '\\').any(::isUpstreamName)
 
-    private fun realPath(file: File): String? = try {
-        var existing: Path? = file.toPath()
-        val missing = ArrayDeque<Path>()
-        while (existing != null && !Files.exists(existing)) {
-            if (Files.isSymbolicLink(existing)) return null
-            missing.addFirst(existing.fileName)
-            existing = existing.parent
+    private fun realPath(file: File): String? {
+        return try {
+            var existing: Path? = file.toPath()
+            val missing = ArrayDeque<Path>()
+            while (existing != null && !Files.exists(existing)) {
+                if (Files.isSymbolicLink(existing)) return null
+                missing.addFirst(existing.fileName)
+                existing = existing.parent
+            }
+            if (existing == null) null else missing.fold(existing.toRealPath()) { at, part -> at.resolve(part) }.toString()
+        } catch (error: IOException) {
+            null
+        } catch (error: InvalidPathException) {
+            null
+        } catch (error: SecurityException) {
+            null
         }
-        if (existing == null) null else missing.fold(existing.toRealPath()) { at, part -> at.resolve(part) }.toString()
-    } catch (error: IOException) {
-        null
-    } catch (error: InvalidPathException) {
-        null
-    } catch (error: SecurityException) {
-        null
     }
 }
