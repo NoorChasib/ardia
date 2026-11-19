@@ -1585,7 +1585,7 @@ that resolves its links and runs `python3 -I -m nilla_browser_cli`, and esbuild 
 `@esbuild/linux-x64` tarball, the same version, its sha256 and npm's sha512 pinned in the script) in
 `nilla_browser_cli/bin/esbuild`. Downloads are cached in `~/Library/Caches/ardia-cli-build` on macOS and
 `${XDG_CACHE_HOME:-~/.cache}/ardia-cli-build` on Linux. The macOS tarball is about 18 MB, 52 MB installed; the Linux
-one about 26 MB, 76 MB installed. `nilla --version` takes about 10 ms; the first command about 1 s while Python writes its
+one about 26 MB, 76 MB installed. `ardia --version` takes about 10 ms; the first command about 1 s while Python writes its
 bytecode cache, later ones about 0.15 s.
 
 `scripts/release.sh` builds it into the release's dist dir after the export and writes its digest to

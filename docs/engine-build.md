@@ -586,7 +586,7 @@ A Chromium patch release, through Helium 0.21.2 and helium-macos 0.21.2.1. What 
   naming Helium.
 - **Checked in a hidden instance.** chrome://version and `/json/version` say 157.0.8103.50; a page loads; uBlock
   blocks Google's ad script; chrome://settings/privacy shows no Helium text; chrome://settings/search shows the new
-  section branded Nilla ("Nilla sends what you type…"); Quit exits cleanly with no crash report.
+  section branded Ardia ("Ardia sends what you type…"); Quit exits cleanly with no crash report.
 
 ### 0.20.3 → 0.21.1 (Chromium 157.0.8103.38, 2026-11-09)
 

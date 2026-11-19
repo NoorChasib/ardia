@@ -2341,12 +2341,12 @@ By part, installed (deflated):
 | App binary | 12.7 MB (4.7) | 5.9 MB (2.4) |
 | React Native's frameworks: React 11.6, hermesvm 6.1, ReactNativeDependencies 1.2, ExpoModulesJSI 1.2 | 20.1 MB as shipped, 16.5 after the Release strip: React 10.1, hermesvm 4.2, ReactNativeDependencies 1.1, ExpoModulesJSI 1.2 | none |
 | JS bundle (Hermes bytecode) | 5.4 MB (2.2) | none |
-| The three extensions (Share, Open in Nilla, Widgets) | 11.2 MB (4.4) | 11.2 MB (4.4) |
+| The three extensions (Share, Open in Ardia, Widgets) | 11.2 MB (4.4) | 11.2 MB (4.4) |
 | Asset catalog | 9.4 MB (9.3) | 9.5 MB (9.4) |
-| NillaKit's resource bundles | 1.0 MB | 0.9 MB |
+| ArdiaKit's resource bundles | 1.0 MB | 0.9 MB |
 
 **Where the Expo binary's 11.5 MB of linked code goes** (from its link map):
-- our native module with NillaKit linked in: 3.2 MB;
+- our native module with ArdiaKit linked in: 3.2 MB;
 - Expo UI: 2.2;
 - Expo's modules core: 1.3;
 - expo-sqlite: 1.2;
@@ -2356,7 +2356,7 @@ By part, installed (deflated):
 - expo-file-system: 0.4;
 - then React Native's codegen, Gesture Handler, Expo's other modules and the linker's own.
 
-The SwiftUI app's 5.9 MB binary is NillaKit plus its SwiftUI screens.
+The SwiftUI app's 5.9 MB binary is ArdiaKit plus its SwiftUI screens.
 
 **The asset catalog is the largest part of both downloads, and it is the app icon.** The Icon Composer icon is stored
 as 1024 px renditions (any, dark, tinted), each once for iPhone and once for iPad: 8.6 of its 9.4 MB. It barely
@@ -2737,7 +2737,7 @@ Scrolling, what was found and what the stepped window and the pages do:
 - Archive gained less (10.5 to 7.5); its rows sit in native `Section`s, and what is left there is not yet found.
 
 Left, and the next step for each (2026-11-16, the screens agent took these over from the speed agent):
-- Archive and History scroll, re-measured 2026-11-16 21:40 on the iPhone 18 Pro with the lab's `-NillaDemoScale 1000`
+- Archive and History scroll, re-measured 2026-11-16 21:40 on the iPhone 18 Pro with the lab's `-ArdiaDemoScale 1000`
   (1,004 archived tabs, 3,007 visits over 30 days; the demo seed now writes them, so any leased device can be seeded),
   one 150 ms flick a recording, load 4–8: Archive 5 long frames a flick (4, 5, 7, 5; worst 49 ms), History 4.5 (3, 6, 1,
   12; worst 44 ms). Main wasn't re-measured in this session (its demo seed has a handful of rows); its figures above
