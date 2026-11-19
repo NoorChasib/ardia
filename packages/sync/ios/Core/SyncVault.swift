@@ -114,6 +114,8 @@ public final class SyncVault {
       if name.hasPrefix("."), name.hasSuffix("\(suffix).icloud") {
         let id = String(name.dropFirst().dropLast(suffix.count + ".icloud".count))
         guard Base32.isTag(id), !present.contains(id) else { continue }
+        guard UpstreamSyncFolder.entryKind(directory.appendingPathComponent(name)) == .file,
+              UpstreamSyncFolder.entryKind(directory.appendingPathComponent("\(id)\(suffix)")) != .other else { continue }
         present.insert(id)
         listing.present.append(id)
         if !known.contains(id) {
@@ -125,9 +127,10 @@ public final class SyncVault {
       guard name.hasSuffix(suffix) else { continue }
       let id = String(name.dropLast(suffix.count))
       guard Base32.isTag(id) else { continue }
+      let url = directory.appendingPathComponent(name)
+      guard UpstreamSyncFolder.entryKind(url) == .file else { continue }
       if present.insert(id).inserted { listing.present.append(id) }
       if known.contains(id) { continue }
-      let url = directory.appendingPathComponent(name)
       let values = try? url.resourceValues(forKeys: Set(keysToRead))
       if values?.isUbiquitousItem == true, let status = values?.ubiquitousItemDownloadingStatus, status != .current {
         listing.pending.append(id)
@@ -135,11 +138,13 @@ public final class SyncVault {
         continue
       }
       do {
-        let data = try coordinate(reading: url) { try Data(contentsOf: $0) }
+        let data = try coordinate(reading: url) { try UpstreamSyncFolder.readEntry($0) }
         listing.files.append(File(id: id, payload: try keys.open(data, scopeTag: scopeTag, fileId: id)))
       } catch is SyncCoordination.TimedOut {
         listing.timedOut = true
         return listing
+      } catch is UpstreamSyncFolder.Refused {
+        continue
       } catch {
         let modified = values?.contentModificationDate ?? Date()
         listing.damaged.append((id, max(0, Date().timeIntervalSince(modified))))

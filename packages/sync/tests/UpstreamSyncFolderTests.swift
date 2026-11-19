@@ -70,6 +70,41 @@ final class UpstreamSyncFolderTests: XCTestCase {
     XCTAssertEqual(verdict("a\0b"), "unresolved")
   }
 
+  func testAMissingFolderFollowedByDotDotCantReachALinkIntoTheUpstreamFolder() throws {
+    try fileManager.createSymbolicLink(at: own.appendingPathComponent("link"), withDestinationURL: upstream)
+    let sneaky = own.path + "/missing/../link"
+    XCTAssertEqual(verdict(sneaky), "unresolved")
+    XCTAssertEqual(verdict(sneaky + "/chain"), "unresolved")
+    XCTAssertEqual(verdict(own.path + "/missing/./x/../y"), "unresolved")
+    XCTAssertEqual(verdict(own.path + "/missing/deeper"), "own")
+    XCTAssertNil(UpstreamSyncFolder.pickerSeed(sneaky))
+    XCTAssertEqual(UpstreamSyncFolder.pickerSeed(own.path)?.path, UpstreamSyncFolder.realPath(own.path))
+    XCTAssertThrowsError(try UpstreamSyncFolder.folderToProbe(sneaky, fallback: own))
+    XCTAssertThrowsError(try UpstreamSyncFolder.folderToProbe(nil, fallback: own.appendingPathComponent("link")))
+    XCTAssertNoThrow(try UpstreamSyncFolder.folderToProbe(nil, fallback: own))
+  }
+
+  func testAVaultSkipsEntriesLinkedIntoTheUpstreamFolder() throws {
+    let keys = SyncKeys(entropy: Data(count: 32))
+    let vault = SyncVault(folder: own, keys: keys)
+    let mine = try vault.write(scope: "app", payload: Data("{\"n\":1}".utf8))
+    let target = upstream.appendingPathComponent("chain/old.\(SyncVault.fileExtension)")
+    try Data("ardia".utf8).write(to: target)
+    let scope = vault.scopeURL("app")
+    let linked = SyncKeys.newFileId()
+    try fileManager.createSymbolicLink(at: scope.appendingPathComponent("\(linked).\(SyncVault.fileExtension)"), withDestinationURL: target)
+    let placeholder = SyncKeys.newFileId()
+    try Data().write(to: scope.appendingPathComponent(".\(placeholder).\(SyncVault.fileExtension).icloud"))
+    try fileManager.createSymbolicLink(at: scope.appendingPathComponent("\(placeholder).\(SyncVault.fileExtension)"), withDestinationURL: target)
+    let listing = try vault.read(scope: "app", skipping: [])
+    XCTAssertEqual(listing.files.map(\.id), [mine])
+    XCTAssertEqual(listing.present, [mine])
+    XCTAssertEqual(listing.pending, [])
+    XCTAssertTrue(listing.damaged.isEmpty)
+    XCTAssertEqual(try Data(contentsOf: target), Data("ardia".utf8))
+    XCTAssertThrowsError(try UpstreamSyncFolder.readEntry(scope.appendingPathComponent("\(linked).\(SyncVault.fileExtension)")))
+  }
+
   func testAVaultWithAChainLinkedIntoTheUpstreamFolderNeverTouchesIt() throws {
     let keys = SyncKeys(entropy: Data(count: 32))
     let vault = SyncVault(folder: own, keys: keys)

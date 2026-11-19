@@ -15,7 +15,7 @@ public class SyncModule: Module {
 
     AsyncFunction("folderInfo") { (path: String?) throws -> [String: Any] in
       let url = path.map { URL(fileURLWithPath: $0, isDirectory: true) } ?? Self.defaultFolder
-      let own = try Self.ownFolder(url.path)
+      let own = try Self.guarded { try UpstreamSyncFolder.folderToProbe(path, fallback: Self.defaultFolder) }
       var isDirectory: ObjCBool = false
       let exists = FileManager.default.fileExists(atPath: own.path, isDirectory: &isDirectory) && isDirectory.boolValue
       return [
@@ -37,7 +37,7 @@ public class SyncModule: Module {
       panel.allowsMultipleSelection = false
       panel.prompt = "Use Folder"
       panel.message = "Choose a folder that syncs between your Macs, like one in iCloud Drive or Dropbox, or on a NAS or USB drive."
-      if let current, case .own(let seed) = UpstreamSyncFolder.check(current) { panel.directoryURL = seed }
+      if let seed = UpstreamSyncFolder.pickerSeed(current) { panel.directoryURL = seed }
       panel.begin { response in
         guard response == .OK, let picked = panel.url?.path else { return promise.resolve(nil) }
         do {

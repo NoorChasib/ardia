@@ -43,22 +43,66 @@ public enum UpstreamSyncFolder {
     try own(url.path)
   }
 
+  public static func pickerSeed(_ current: String?) -> URL? {
+    guard let current, case .own(let seed) = check(current) else { return nil }
+    return seed
+  }
+
+  public static func folderToProbe(_ requested: String?, fallback: URL) throws -> URL {
+    try own(requested ?? fallback.path)
+  }
+
+  public enum EntryKind: Equatable {
+    case file
+    case absent
+    case other
+  }
+
+  public static func entryKind(_ url: URL) -> EntryKind {
+    var info = stat()
+    guard lstat(url.path, &info) == 0 else { return errno == ENOENT ? .absent : .other }
+    return info.st_mode & S_IFMT == S_IFREG ? .file : .other
+  }
+
+  public static func readEntry(_ url: URL) throws -> Data {
+    guard case .own = check(url.deletingLastPathComponent().path) else { throw Refused(verdict: .upstream) }
+    let descriptor = open(url.path, O_RDONLY | O_NOFOLLOW | O_CLOEXEC)
+    guard descriptor >= 0 else {
+      if errno == ELOOP { throw Refused(verdict: .upstream) }
+      throw NSError(domain: NSPOSIXErrorDomain, code: Int(errno))
+    }
+    let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: true)
+    var info = stat()
+    guard fstat(descriptor, &info) == 0, info.st_mode & S_IFMT == S_IFREG else { throw Refused(verdict: .upstream) }
+    return try handle.readToEnd() ?? Data()
+  }
+
   static func resolve(_ components: [String]) -> [String]? {
     guard components.first == "/" else { return nil }
-    var head = components
-    var tail: [String] = []
+    var resolved = ["/"]
+    var missing = false
     var info = stat()
-    while head.count > 1, lstat(NSString.path(withComponents: head), &info) != 0 {
-      guard errno == ENOENT || errno == ENOTDIR else { return nil }
-      tail.insert(head.removeLast(), at: 0)
-    }
-    guard let real = realPath(NSString.path(withComponents: head)) else { return nil }
-    var resolved = (real as NSString).pathComponents
-    for part in tail {
+    for part in components.dropFirst() {
       switch part {
       case "", ".", "/": continue
-      case "..": if resolved.count > 1 { resolved.removeLast() }
-      default: resolved.append(part)
+      case "..":
+        guard !missing else { return nil }
+        if resolved.count > 1 { resolved.removeLast() }
+      default:
+        if missing {
+          resolved.append(part)
+          continue
+        }
+        let candidate = NSString.path(withComponents: resolved + [part])
+        if lstat(candidate, &info) == 0 {
+          guard let real = realPath(candidate) else { return nil }
+          resolved = (real as NSString).pathComponents
+        } else if errno == ENOENT {
+          missing = true
+          resolved.append(part)
+        } else {
+          return nil
+        }
       }
     }
     return resolved
