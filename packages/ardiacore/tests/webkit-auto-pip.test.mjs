@@ -69,7 +69,7 @@ test("WebKit tabs keep the autoPictureInPicture flag instead of a stub that read
 });
 
 test("WebKit tabs follow the user's sight of their window the way Chromium views do", () => {
-  assert.match(sight, /let seen = visible && ArdiaChromeWindowHost\.userSees\(window\)/);
+  assert.match(sight, /let seen = visible && NillaChromeWindowHost\.userSees\(window\)/);
   assert.match(sight, /forName: (?:NSNotification\.Name\.)?NillaWindowSeenDidChange, object: window/);
   assert.match(sight, /let activeCapture = webView\?\.cameraCaptureState == \.active \|\| webView\?\.microphoneCaptureState == \.active/);
   assert.match(sight, /playing: !playingFrames\.isEmpty \|\| activeCapture/);
