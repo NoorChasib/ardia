@@ -15,7 +15,15 @@ $launcher = "Nilla.exe"
 $engineLauncher = "chrome.exe"
 $library = "ArdiaApp.dll"
 $engineNotes = "RUN.txt"
-$appIcon = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) "apps\browser\windows\Ardia\Ardia.ico"
+$repository = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+$appIcon = Join-Path $repository "apps\browser\windows\Ardia\Ardia.ico"
+$licenses = [ordered]@{
+  "LICENSE" = "LICENSE"
+  "LICENSE.Apache-2.0" = "LICENSE.Apache-2.0"
+  "NOTICE" = "NOTICE"
+  "bangs-LICENSE" = "third_party\bangs\LICENSE"
+  "symbols-THIRD_PARTY_NOTICES.txt" = "packages\demo\src\shims\web\symbols\THIRD_PARTY_NOTICES.txt"
+}
 
 function Resolve-Folder([string]$path, [string]$what, [string]$marker) {
   if (-not (Test-Path -LiteralPath $path -PathType Container)) { throw "$what '$path' is not a folder" }
@@ -68,6 +76,16 @@ foreach ($relative in (Get-RelativeFiles $appRoot)) {
   $appCount += 1
 }
 
+$licenseFolder = Join-Path $outRoot "Licenses"
+New-Item -ItemType Directory -Path $licenseFolder -Force | Out-Null
+foreach ($name in $licenses.Keys) {
+  $source = Join-Path $repository $licenses[$name]
+  $target = Join-Path $licenseFolder $name
+  if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "the repository has no $($licenses[$name]) to ship as Licenses\$name" }
+  if (Test-Path -LiteralPath $target) { throw "the engine or the app already ships a Licenses\$name" }
+  Copy-Item -LiteralPath $source -Destination $target
+}
+
 Move-Item -LiteralPath (Join-Path $outRoot $engineLauncher) -Destination (Join-Path $outRoot $launcher)
 & (Join-Path $PSScriptRoot "host-manifest.ps1") -From (Join-Path $appRoot $library) -To (Join-Path $outRoot $launcher)
 if ($LASTEXITCODE -ne 0) { throw "the launcher did not get the app's manifest entries" }
@@ -85,5 +103,5 @@ if ($Build -gt 0) {
   Write-Host "assemble: this is Nilla $Version, build $Build"
 }
 
-Write-Host "assemble: $($engineFiles.Count) engine files and $appCount app files in $outRoot"
+Write-Host "assemble: $($engineFiles.Count) engine files, $appCount app files and $($licenses.Count) licence texts in $outRoot"
 foreach ($relative in $clashes) { Write-Host "assemble: kept the engine's $relative; the app's differs" }

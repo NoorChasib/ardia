@@ -101,3 +101,35 @@ test("an app folder the Windows workflow uploads has lost its test-build marker,
   }
   assert.ok(uploaded.beforeAnyHarness > 0, `the workflow caches or uploads app folders: ${JSON.stringify(uploaded)}`);
 });
+
+test("the app folder and the installer carry the same licence texts, and the install check compares them with the repository's bytes", () => {
+  const script = (name) => readFileSync(new URL(name, scripts), "utf8");
+  const repository = new URL("../../../../", import.meta.url);
+  const table = (name) => {
+    const text = script(name);
+    const block = text.match(/\$licenses = \[ordered\]@\{\r?\n([\s\S]*?)\r?\n\}/);
+    assert.ok(block, `${name} lists its licence texts`);
+    return Object.fromEntries([...block[1].matchAll(/^\s+"([^"]+)" = "([^"]+)"$/gm)].map(([, shipped, source]) => [shipped, source]));
+  };
+  const assembled = table("assemble.ps1");
+  assert.deepEqual(Object.keys(assembled), ["LICENSE", "LICENSE.Apache-2.0", "NOTICE", "bangs-LICENSE", "symbols-THIRD_PARTY_NOTICES.txt"]);
+  for (const source of Object.values(assembled)) assert.ok(readFileSync(new URL(source.replace(/\\/g, "/"), repository)).length > 0, source);
+  assert.deepEqual(table("make-installer.ps1"), assembled);
+  assert.deepEqual(table("installer-check.ps1"), assembled);
+  assert.match(script("assemble.ps1"), /Copy-Item -LiteralPath \$source -Destination \$target\n\}\n\nMove-Item/);
+  assert.match(script("installer-check.ps1"), /Get-FileHash -LiteralPath \(Join-Path \$repository \$licenses\[\$name\]\)/);
+  const installer = script("installer/Nilla.iss");
+  assert.match(installer, /^UninstallDisplayIcon=\{app\}\\Nilla\.ico$/m);
+  assert.match(installer, /DestName: "Nilla\.ico"/);
+  assert.match(script("installer-check.ps1"), /\$shipped = @\([^)]*"Nilla\.ico"/);
+});
+
+test("the install check finds no shortcut, registration, start or Ardia folder, and the installer has nothing that makes them", () => {
+  const check = readFileSync(new URL("installer-check.ps1", scripts), "utf8");
+  const asked = (name) => check.split(`Assert-Nothing (${name})`).length - 1;
+  for (const leftover of ["Get-Registrations", "Get-Shortcuts", "Get-UpstreamFolders"]) assert.equal(asked(leftover), 3, `${leftover} before the install, after it and after the uninstall`);
+  assert.equal(asked("Get-RunningFromInstall"), 1);
+  assert.match(check, /\$entry = "\$uninstallKeys\\\{996E41A5-7F20-415A-BD04-91E365610996\}_is1"/);
+  assert.match(readFileSync(new URL("installer/Nilla.iss", scripts), "utf8"), /^AppId=\{\{996E41A5-7F20-415A-BD04-91E365610996\}$/m);
+  assert.doesNotMatch(check, /System\.AppUserModel\.ID|CreateShortcut\(\$shortcut\)/);
+});

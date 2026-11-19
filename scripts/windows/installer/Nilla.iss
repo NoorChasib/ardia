@@ -20,7 +20,7 @@ LZMAUseSeparateProcess=yes
 ArchitecturesAllowed={#Allowed}
 ArchitecturesInstallIn64BitMode={#Allowed}
 SetupIconFile={#Icon}
-UninstallDisplayIcon={app}\Ardia.ico
+UninstallDisplayIcon={app}\Nilla.ico
 UninstallDisplayName=Nilla
 WizardStyle=modern
 CloseApplications=yes
@@ -28,7 +28,7 @@ RestartApplications=no
 
 [Files]
 Source: "{#Source}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "{#Icon}"; DestDir: "{app}"; DestName: "Ardia.ico"; Flags: ignoreversion
+Source: "{#Icon}"; DestDir: "{app}"; DestName: "Nilla.ico"; Flags: ignoreversion
 
 [UninstallDelete]
 Type: files; Name: "{app}\debug.log"

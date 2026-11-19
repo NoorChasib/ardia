@@ -43,6 +43,18 @@ if (-not (Test-Path -LiteralPath (Join-Path $Source "Nilla.exe") -PathType Leaf)
 if (-not (Test-Path -LiteralPath (Join-Path $Source "chrome.dll") -PathType Leaf)) { throw "'$Source' has no chrome.dll: the installer ships the app assembled with the engine" }
 $sourceRoot = (Resolve-Path -LiteralPath $Source).Path
 if (Get-ChildItem -LiteralPath $sourceRoot -Recurse -File -Force -Filter "Ardia.test-build" | Select-Object -First 1) { throw "'$Source' holds an Ardia.test-build marker: an installer never ships it, so a build people install ignores test keys" }
+$licenses = [ordered]@{
+  "LICENSE" = "LICENSE"
+  "LICENSE.Apache-2.0" = "LICENSE.Apache-2.0"
+  "NOTICE" = "NOTICE"
+  "bangs-LICENSE" = "third_party\bangs\LICENSE"
+  "symbols-THIRD_PARTY_NOTICES.txt" = "packages\demo\src\shims\web\symbols\THIRD_PARTY_NOTICES.txt"
+}
+foreach ($name in $licenses.Keys) {
+  $packaged = Join-Path $sourceRoot "Licenses\$name"
+  if (-not (Test-Path -LiteralPath $packaged -PathType Leaf)) { throw "'$Source' has no Licenses\${name}: assemble.ps1 ships every licence text with the app" }
+  if ((Get-FileHash -LiteralPath $packaged -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath (Join-Path $repository $licenses[$name]) -Algorithm SHA256).Hash) { throw "'$Source' has a Licenses\$name that is not the repository's $($licenses[$name])" }
+}
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $outRoot = (Resolve-Path -LiteralPath $Out).Path
 if (-not $Version) { $Version = & (Join-Path $PSScriptRoot "project-version.ps1") }
