@@ -1,0 +1,9 @@
+path	from	to	what
+apps/browser/windows/Ardia/LaunchConfig.h	S-services	I-identity	add services to TestKeys()
+apps/linux/linuxWording.ts	S-services	C-linux	done by the lead before R (12d16b224, S-linuxWording.patch); C-linux only rechecks it after R
+packages/ardiacore/ios/ArdiaLaunchConfig.mm	S-services	I-identity	add services to AppTestKeys()
+scripts/lib/launchEnv.mjs	S-services	I-identity	add the services ARDIA_TEST key to TEST_KEYS
+scripts/lib/launchEnv.test.mjs	S-services	I-identity	keep the three key lists equal with services
+scripts/linux/linux_formats.py	I-identity	C-linux	Maintainer, Homepage and Description only; Package: ardia stays
+scripts/linux/package.py	B-brand	C-linux	icon source scripts/linux/icons/hicolor/256x256/apps/nilla.png, installed as share/icons/hicolor/256x256/apps/ardia.png, with a test that the packaged bytes match it
+scripts/windows/installer-check.ps1	I-identity	C-windows	assert no [Registry], [Icons], [Run] or Ardia [Dirs]

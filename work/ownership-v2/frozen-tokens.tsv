@@ -1,0 +1,10 @@
+token	frozen_file	r_files_using_it	sample
+ardiaPageColor	apps/browser/assets/offline-game/game.js	1	docs/engine-build.md
+ardiapagecolor	apps/browser/assets/offline-game/game.js	1	docs/engine-build.md
+ArdiaAppPreTranslateFunction	apps/browser/windows/Ardia/EngineApi.h	1	apps/browser/windows/Ardia/Ardia.cpp
+ArdiaAppRunFunction	apps/browser/windows/Ardia/EngineApi.h	2	apps/browser/windows/Ardia/Ardia.cpp apps/browser/windows/ArdiaLauncher/Launcher.cpp
+ArdiaAppStartFailureFunction	apps/browser/windows/Ardia/EngineApi.h	1	apps/browser/windows/Ardia/Ardia.cpp
+ArdiaAppStartFunction	apps/browser/windows/Ardia/EngineApi.h	1	apps/browser/windows/Ardia/Ardia.cpp
+ArdiaAppStopFunction	apps/browser/windows/Ardia/EngineApi.h	1	apps/browser/windows/Ardia/Ardia.cpp
+ArdiaEngineApi	apps/browser/windows/Ardia/EngineApi.h	7	apps/browser/src/platform/windowsDefaultBrowser.test.mjs apps/browser/windows/Ardia/Ardia.cpp apps/browser/windows/Ardia/EngineHostModule.h apps/browser/windows/Ardia/Host.h
+setLittleArdiaOpensNewTabLinks	packages/ardiacore/src/engine/api.ts	13	apps/browser/src/platform/pageOptions.ts apps/browser/src/state/littleArdia/newTabLinks.ts apps/browser/src/test-native/ardiacore.ts apps/linux/src/engineCapabilities.test.mjs

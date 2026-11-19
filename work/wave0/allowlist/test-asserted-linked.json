@@ -1,0 +1,577 @@
+[
+ {
+  "text": "\"$target/share/applications/ardia.desktop\"",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/ardiacore-linux/tests/test_desktop_core.py"
+   ]
+  ]
+ },
+ {
+  "text": "'share/applications/ardia.desktop'",
+  "pairs": [
+   [
+    "scripts/linux/package.py",
+    "engine/ardiacore-linux/tests/test_desktop_core.py"
+   ]
+  ]
+ },
+ {
+  "text": "--ardia-sandbox-decision=Ardia was started with --no-sandbox",
+  "pairs": [
+   [
+    "scripts/linux/ardia-launch",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "/bin/ardia",
+  "pairs": [
+   [
+    "apps/cli/install.sh",
+    "engine/patches/build/tests/test_linux_release.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_linux_release.py"
+   ]
+  ]
+ },
+ {
+  "text": "/lib/ardia/ardia-launch\" \"$@\"",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "/usr/lib/ardia/chrome",
+  "pairs": [
+   [
+    "scripts/linux/ardia.apparmor",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/deb/postinst",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "<action id=\"dev.ardia.linux.reauthenticate\">",
+  "pairs": [
+   [
+    "scripts/linux/dev.ardia.linux.policy",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "ARDIACORE_",
+  "pairs": [
+   [
+    "packages/ardiacore/scripts/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/publish-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/publish_engine.py",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ]
+  ]
+ },
+ {
+  "text": "ArdiaCore-",
+  "pairs": [
+   [
+    "packages/ardiacore/scripts/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/publish-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/runtime_files.py",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/symbolize.py",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ]
+  ]
+ },
+ {
+  "text": "ArdiaCrash.list",
+  "pairs": [
+   [
+    "apps/linux/src/hostCrashReports.ts",
+    "engine/ardiacore-linux/tests/test_crash_dumps.py"
+   ]
+  ]
+ },
+ {
+  "text": "ArdiaCrash.read",
+  "pairs": [
+   [
+    "apps/linux/src/hostCrashReports.ts",
+    "engine/ardiacore-linux/tests/test_crash_dumps.py"
+   ]
+  ]
+ },
+ {
+  "text": "ArdiaLive.connect",
+  "pairs": [
+   [
+    "apps/linux/src/hostLive.ts",
+    "engine/ardiacore-linux/tests/live_services.test.mjs"
+   ]
+  ]
+ },
+ {
+  "text": "ArdiaLive.request",
+  "pairs": [
+   [
+    "apps/linux/src/hostLive.ts",
+    "engine/ardiacore-linux/tests/live_services.test.mjs"
+   ]
+  ]
+ },
+ {
+  "text": "Exec=ardia %U",
+  "pairs": [
+   [
+    "scripts/linux/package.py",
+    "engine/ardiacore-linux/tests/test_desktop_core.py"
+   ]
+  ]
+ },
+ {
+  "text": "apparmor.d/ardia",
+  "pairs": [
+   [
+    "scripts/linux/deb/postinst",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/deb/postrm",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "apparmor_parser -r /etc/apparmor.d/ardia",
+  "pairs": [
+   [
+    "scripts/linux/deb/postinst",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "apps/browser/build-ardiacore/prebuilt-linux-x86_64",
+  "pairs": [
+   [
+    "scripts/linux/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardia-cli-",
+  "pairs": [
+   [
+    "apps/cli/install.sh",
+    "engine/patches/build/tests/test_linux_release.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_linux_release.py"
+   ],
+   [
+    "scripts/linux/release.sh",
+    "engine/patches/build/tests/test_linux_release.py"
+   ],
+   [
+    "scripts/release.sh",
+    "engine/patches/build/tests/test_linux_release.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardia-launch",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardia-ver",
+  "pairs": [
+   [
+    "apps/linux/src/hostCrashReports.ts",
+    "engine/ardiacore-linux/tests/test_crash_dumps.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardia/install.sh",
+  "pairs": [
+   [
+    "scripts/linux/arch/PKGBUILD",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardia/lib/ardia",
+  "pairs": [
+   [
+    "scripts/linux/arch/PKGBUILD",
+    "engine/patches/build/tests/test_linux_release.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardia/lib/ardia/VERSION",
+  "pairs": [
+   [
+    "scripts/linux/arch/PKGBUILD",
+    "engine/patches/build/tests/test_linux_release.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardiacore-linux-x64",
+  "pairs": [
+   [
+    "scripts/linux/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/runtime_files.py",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ]
+  ]
+ },
+ {
+  "text": "ardiacore-linux-x64-symbols",
+  "pairs": [
+   [
+    "scripts/linux/runtime_files.py",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ]
+  ]
+ },
+ {
+  "text": "bin/ardia",
+  "pairs": [
+   [
+    "apps/cli/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "const APP_PARTS = [\"ArdiaUpdater\", \"ArdiaNotifications\", \"ArdiaScripting\", \"ArdiaDev\"];",
+  "pairs": [
+   [
+    "apps/linux/src/shims/expo-modules-core.ts",
+    "engine/ardiacore-linux/tests/test_notifications.py"
+   ]
+  ]
+ },
+ {
+  "text": "engine/ardiacore-linux",
+  "pairs": [
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "exec \"$ardia_bin_dir/../lib/ardia/ardia-launch\" \"$@\"",
+  "pairs": [
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "export const FEEDBACK_URL = \"https://ardia.dev/api/feedback\";",
+  "pairs": [
+   [
+    "apps/browser/src/state/report/actions.ts",
+    "engine/ardiacore-linux/tests/test_report.py"
+   ]
+  ]
+ },
+ {
+  "text": "export const INGEST_KEY_HEADER = \"X-Ardia-Key\";",
+  "pairs": [
+   [
+    "packages/core/src/ingestKeys.ts",
+    "engine/ardiacore-linux/tests/test_report.py"
+   ]
+  ]
+ },
+ {
+  "text": "http://127.0.0.1:53682/ardia-oauth",
+  "pairs": [
+   [
+    "apps/linux/scripts/acceptance/lib/liveServices.mjs",
+    "engine/ardiacore-linux/tests/live_services.test.mjs"
+   ]
+  ]
+ },
+ {
+  "text": "if (name === \"ArdiaShell\" && !hostSupports(`${name}.${method}`, host)) {",
+  "pairs": [
+   [
+    "apps/linux/src/hostModules.ts",
+    "engine/ardiacore-linux/tests/test_bang_list.py"
+   ]
+  ]
+ },
+ {
+  "text": "lib/ardia",
+  "pairs": [
+   [
+    "scripts/linux/arch/PKGBUILD",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/ardia.apparmor",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/deb/postinst",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "lib/ardia/ardia-launch",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "lib/ardia/chrome",
+  "pairs": [
+   [
+    "scripts/linux/ardia.apparmor",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/deb/postinst",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "lib/ardia/chrome-sandbox",
+  "pairs": [
+   [
+    "scripts/linux/deb/postinst",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "packages/ardiacore/prebuilt-engines-linux.tsv",
+  "pairs": [
+   [
+    "scripts/linux/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/publish-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/publish_engine.py",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ]
+  ]
+ },
+ {
+  "text": "packages/ardiacore/scripts/fetch-engine.sh",
+  "pairs": [
+   [
+    "packages/ardiacore/scripts/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/fetch-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ],
+   [
+    "scripts/linux/publish-engine.sh",
+    "engine/patches/build/tests/test_linux_engine.py"
+   ]
+  ]
+ },
+ {
+  "text": "profile ardia /usr/lib/ardia/chrome flags=(unconfined) {\n",
+  "pairs": [
+   [
+    "scripts/linux/ardia.apparmor",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "rm -f /etc/apparmor.d/ardia",
+  "pairs": [
+   [
+    "scripts/linux/deb/postrm",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "share/apparmor.d/ardia",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "share/applications/ardia.desktop",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/package.py",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "s|^Exec=ardia |Exec=$prefix/bin/ardia |",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/ardiacore-linux/tests/test_desktop_core.py"
+   ]
+  ]
+ },
+ {
+  "text": "thinScrollBars: has(\"ArdiaSystem.setThinScrollBars\")",
+  "pairs": [
+   [
+    "apps/linux/src/hostCapabilities.ts",
+    "engine/ardiacore-linux/tests/test_hardware.py"
+   ]
+  ]
+ },
+ {
+  "text": "usr/lib/ardia/chrome",
+  "pairs": [
+   [
+    "scripts/linux/ardia.apparmor",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/deb/postinst",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ],
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ },
+ {
+  "text": "usr/share/polkit-1/actions/dev.ardia.linux.policy",
+  "pairs": [
+   [
+    "scripts/linux/install.sh",
+    "engine/patches/build/tests/test_platform_tooling.py"
+   ]
+  ]
+ }
+]

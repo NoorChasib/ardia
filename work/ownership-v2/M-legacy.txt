@@ -1,0 +1,7 @@
+apps/browser/src/state/sync/pinned.test.mjs
+packages/sync/Package.swift
+packages/sync/package.json
+packages/sync/src/companion/companion.test.ts
+packages/sync/src/companion/cycle.ts
+packages/sync/src/companion/view.ts
+scripts/lib/instance.mjs

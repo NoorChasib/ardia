@@ -1,0 +1,102 @@
+literal	engine_uses	reason
+                          ? g_ardia_tab_shown_by_host(GetObservedWebContents())\n	1	format or escaped literal: the lead matches it by hand
+          ? g_ardia_browser_window_factory(this)\n	1	format or escaped literal: the lead matches it by hand
+          ? g_ardia_tab_shown_by_host(tab_interface_->GetContents())\n	1	format or escaped literal: the lead matches it by hand
+      !g_ardia_history_eligible(web_contents())) {\n	1	format or escaped literal: the lead matches it by hand
+      g_ardia_extension_installed(profile(), extension, icon)) {\n	1	format or escaped literal: the lead matches it by hand
+      g_ardia_external_protocol_dialog(url, web_contents, initiating_origin,\n	1	format or escaped literal: the lead matches it by hand
+      g_ardia_file_system_restore_prompt(request, callback, web_contents)) {\n	1	format or escaped literal: the lead matches it by hand
+      g_ardia_skip_cpu_health_sampling ? nullptr\n	1	format or escaped literal: the lead matches it by hand
+      g_ardia_tab_shown_by_host(active) == 0) {\n	1	format or escaped literal: the lead matches it by hand
+      g_ardia_tab_shown_by_host(tab_interface_->GetContents()) == 1) {\n	1	format or escaped literal: the lead matches it by hand
+    *g_ardia_create_permission_prompt)(\n	1	format or escaped literal: the lead matches it by hand
+    *g_ardia_create_web_contents_delegate)(\n	1	format or escaped literal: the lead matches it by hand
+    ArdiaSetHybridUiShown(this, step_ == Step::kCableV2QRCode ||\n	1	format or escaped literal: the lead matches it by hand
+    auto ardia_alive = GetWeakPtr();\n	1	format or escaped literal: the lead matches it by hand
+    auto prompt = g_ardia_create_permission_prompt(web_contents, delegate,\n	1	format or escaped literal: the lead matches it by hand
+    browser_web_contents_delegate_ = g_ardia_create_web_contents_delegate(\n	1	format or escaped literal: the lead matches it by hand
+    g_ardia_dnr_rule_matched(browser_context_, tab_id, request_action,\n	1	format or escaped literal: the lead matches it by hand
+    g_ardia_dnr_rulesets_in_force(\n	1	format or escaped literal: the lead matches it by hand
+    if (std::optional<bool> shown = g_ardia_open_action_popup(\n	1	format or escaped literal: the lead matches it by hand
+  ArdiaSetHybridUiShown(this, false);\n	1	format or escaped literal: the lead matches it by hand
+  ThrottleCheckResult WillProcessResponse() override {\n    if (should_defer_ && g_ardia_scripts_wait_at_response) {\n	1	format or escaped literal: the lead matches it by hand
+  bool ArdiaHostVisibilityChanged(content::WebContents* contents);\n	1	format or escaped literal: the lead matches it by hand
+  bool record = !g_ardia_embedder;\n	1	format or escaped literal: the lead matches it by hand
+  if (!g_ardia_embedder) {\n	1	format or escaped literal: the lead matches it by hand
+  if (!g_ardia_embedder) {\n    crash_reporter::InitializeCrashKeys();\n  }\n	1	format or escaped literal: the lead matches it by hand
+  if (!suspended && g_ardia_global_shortcuts_resumed) {\n	1	format or escaped literal: the lead matches it by hand
+  if (!web_contents && g_ardia_prompts_without_tab) {\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_autofill_suggestions_shown && IsRootPopup() && web_contents_) {\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_bluetooth_poll_on_demand && !IsDiscovering()) {\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_bluetooth_poll_on_demand) {\n    PollAdapterOnDemand();\n  }\n  DCHECK(callback);\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_disk_space_check_seconds > 0) {\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_embedder) {\n    ExtensionActionDispatcher::Get(browser_context_)\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_hybrid_scan_on_demand && ModelsShowingHybrid().empty() &&\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_hybrid_scan_on_demand && scan_wanted_ && !discovery_session_) {\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_opacity_from_default_color) {\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_reserved_accelerator && g_ardia_reserved_accelerator(accelerator)) {\n	2	format or escaped literal: the lead matches it by hand
+  if (g_ardia_reserved_global_accelerator &&\n	1	format or escaped literal: the lead matches it by hand
+  if (g_ardia_script_loader_ready_at_once &&\n	1	format or escaped literal: the lead matches it by hand
+ window.dispatchEvent(new Event(\"ardiapagecolor\"));	1	format or escaped literal: the lead matches it by hand
+$env:TEMP\\ardia-throwaway-profile	1	format or escaped literal: the lead matches it by hand
+%TEMP%\\ardia-throwaway-profile	1	format or escaped literal: the lead matches it by hand
+1. Open Ardia › Settings › Sync, and choose the same sync folder.\n	1	format or escaped literal: the lead matches it by hand
+Ardia	19	bare product name: covered by rule 14 and the class rules
+Ardia 	6	bare product name: covered by rule 14 and the class rules
+Ardia Recovery Kit\nCreated 	1	format or escaped literal: the lead matches it by hand
+Ardia Trace %@.json	1	format or escaped literal: the lead matches it by hand
+Ardia couldn't start.\n\n	1	format or escaped literal: the lead matches it by hand
+BrowserWindow* (*g_ardia_browser_window_factory)(Browser*) = nullptr;\n	1	format or escaped literal: the lead matches it by hand
+BrowserWindow* (*g_ardia_browser_window_factory)(Browser*) = nullptr;\n\n	1	format or escaped literal: the lead matches it by hand
+Local\\ArdiaBrowser.	2	format or escaped literal: the lead matches it by hand
+[Desktop Entry]\nType=Application\nName=Ardia\nExec=	1	format or escaped literal: the lead matches it by hand
+\n  if (!g_ardia_embedder) {\n	1	format or escaped literal: the lead matches it by hand
+\n;\n} catch (ardiaError) {}\n	1	format or escaped literal: the lead matches it by hand
+\nIcon=ardia\nTerminal=false\nX-GNOME-Autostart-enabled=true\n	1	format or escaped literal: the lead matches it by hand
+\n\nInstalling Ardia again from ardia.dev usually 	1	format or escaped literal: the lead matches it by hand
+\nglobalThis.ardiaPeek && globalThis.ardiaPeek.config(	1	format or escaped literal: the lead matches it by hand
+ardia	18	bare product name: covered by rule 14 and the class rules
+ardia.elementPicker\")].linuxPick = { value: v === undefined ? null : v }; }, () => { window[Symbol.for(\"ardia.elementPicker\")].linuxPick = { value: null }; });	1	format or escaped literal: the lead matches it by hand
+ardia:	1	bare product name: covered by rule 14 and the class rules
+ardia: 	2	bare product name: covered by rule 14 and the class rules
+bool (*g_ardia_extension_installed)(\n	2	format or escaped literal: the lead matches it by hand
+bool (*g_ardia_external_protocol_dialog)(\n	1	format or escaped literal: the lead matches it by hand
+bool (*g_ardia_file_system_restore_prompt)(\n	1	format or escaped literal: the lead matches it by hand
+bool (*g_ardia_history_eligible)(content::WebContents*) = nullptr;\n	1	format or escaped literal: the lead matches it by hand
+bool (*g_ardia_history_eligible)(content::WebContents*) = nullptr;\n\n	1	format or escaped literal: the lead matches it by hand
+bool (*g_ardia_reserved_accelerator)(const ui::Accelerator& accelerator) = nullptr;\n	1	format or escaped literal: the lead matches it by hand
+bool (*g_ardia_reserved_accelerator)(const ui::Accelerator& accelerator) = nullptr;\n\n	1	format or escaped literal: the lead matches it by hand
+bool (*g_ardia_reserved_global_accelerator)(const ui::Accelerator& accelerator) = nullptr;\n	2	format or escaped literal: the lead matches it by hand
+bool ArdiaTabActive(content::WebContents* contents, bool chrome_says) {\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_bluetooth_poll_on_demand = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_embedder = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_hybrid_scan_on_demand = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_lazy_storage_usage = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_opacity_from_default_color = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_opacity_from_default_color = false;\n\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_prompts_without_tab = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_prompts_without_tab = false;\n\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_script_loader_ready_at_once = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_scripts_wait_at_response = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_skip_cpu_health_sampling = false;\n	1	format or escaped literal: the lead matches it by hand
+bool g_ardia_viewless_browsers = false;\n	1	format or escaped literal: the lead matches it by hand
+const post = (kind, value) => { if (kind === \"result\" && ardiaResult === null && typeof value === \"string\") ardiaResult = value; };\n	1	format or escaped literal: the lead matches it by hand
+folder can read your synced data. Ardia can’t recover the words for you: there’s no server and no other copy.\n	1	format or escaped literal: the lead matches it by hand
+int (*g_ardia_permission_tab_shown)(content::WebContents*) = nullptr;\n	1	format or escaped literal: the lead matches it by hand
+int (*g_ardia_tab_shown_by_host)(content::WebContents*) = nullptr;\n	1	format or escaped literal: the lead matches it by hand
+int g_ardia_disk_space_check_seconds = 0;\n	1	format or escaped literal: the lead matches it by hand
+keychain from a backup, or delete \u201CArdia Safe Storage\u201D in 	1	format or escaped literal: the lead matches it by hand
+let ardiaResult = null;\n	1	format or escaped literal: the lead matches it by hand
+login keychain, or allow Ardia to use \u201CArdia Safe Storage\u201D 	1	format or escaped literal: the lead matches it by hand
+return ardiaResult;\n	1	format or escaped literal: the lead matches it by hand
+std::optional<bool> (*g_ardia_open_action_popup)(\n	2	format or escaped literal: the lead matches it by hand
+the engine\'s launch gate refused it (see ardia/win/test_gate.cc)	1	format or escaped literal: the lead matches it by hand
+value_store::ValueStore::WriteResult ArdiaWriteAfterValueRestore(Write write) {\n	1	format or escaped literal: the lead matches it by hand
+void (*g_ardia_autofill_suggestions_shown)(\n	2	format or escaped literal: the lead matches it by hand
+void (*g_ardia_dnr_rule_matched)(\n	2	format or escaped literal: the lead matches it by hand
+void (*g_ardia_dnr_rulesets_in_force)(\n	2	format or escaped literal: the lead matches it by hand
+void (*g_ardia_global_shortcuts_resumed)() = nullptr;\n\n	1	format or escaped literal: the lead matches it by hand
+void ArdiaAutoPictureInPictureHostVisibilityChanged(\n	1	format or escaped literal: the lead matches it by hand
+void ArdiaReregisterGlobalCommands(content::BrowserContext* context) {\n	1	format or escaped literal: the lead matches it by hand
+void ArdiaSetHybridUiShown(const void* model, bool shown) {\n	1	format or escaped literal: the lead matches it by hand
+window.ardiaPageColor = \"	1	format or escaped literal: the lead matches it by hand

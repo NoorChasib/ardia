@@ -1,0 +1,7 @@
+AGENTS.md
+CLAUDE.md
+CONTRIBUTING.md
+NOTICE
+README.md
+docs/release-notes/README.md
+docs/releasing.md

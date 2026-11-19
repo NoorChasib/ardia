@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+set -euo pipefail
+usage='usage: nilla-isolate --setup
+       nilla-isolate --run DIR [--net] [--proxy-mode MODE] [--display]
+                     [--bind-ro PATH]... [--bind-rw PATH]... -- COMMAND [ARG...]
+
+Runs COMMAND inside unprivileged Linux namespaces (user, mount, PID and,
+with --net, network) so that nothing it starts can touch the real home:
+
+  * the real home is covered by an empty tmpfs; only the --bind-ro paths
+    (plus the repo, this tool and the node/bun toolchains) come back
+    read-only, and DIR comes back read-write
+  * HOME is DIR/home, XDG dirs live under it, /tmp, /run, /dev/shm and
+    /var/tmp are fresh tmpfs mounts (no host D-Bus, systemd-resolved,
+    docker or keyring sockets)
+  * a private session bus with no activatable services runs inside, and a
+    monitor logs every Secret Service and KWallet call to
+    DIR/logs/dbus-secrets.log (libsecret attempts)
+  * the command runs as your own uid in a nested user namespace, so it
+    holds no capabilities and cannot undo the mounts
+
+With --net the command also gets its own network namespace with
+deny-by-default egress: nftables drops every packet that leaves through a
+non-loopback interface and copies it to NFLOG, which tcpdump writes to
+DIR/logs/egress.pcap. A dummy interface carries a default route so every
+attempt reaches the output hook instead of failing with "no route". DNS goes
+to a logging stub (DIR/logs/dns.jsonl) that answers with per-name sinkhole
+addresses. The only way out is the namespace proxy at 127.0.0.1:3128, which
+a Unix socket in DIR carries to a mitmproxy on the host; it logs host and
+path of every request to DIR/logs/proxy.jsonl. Its throwaway CA lives in
+DIR/ca and is trusted only inside: an NSS db in DIR/home/.pki/nssdb and a
+bundle passed as SSL_CERT_FILE, REQUESTS_CA_BUNDLE, CURL_CA_BUNDLE and
+NODE_EXTRA_CA_CERTS. http_proxy/https_proxy (both cases) and
+ISOLATE_PROXY=http://127.0.0.1:3128 are exported for the command.
+
+  --setup             create .venv next to this script and install mitmproxy
+  --run DIR           run directory (created; must not hold a previous run)
+  --net               network namespace, deny-by-default egress, logging proxy
+  --proxy-mode MODE   block-upstream (default: refuse the fixed upstream list
+                      with 451, forward the rest), forward, or offline (503)
+  --display           start Xvfb inside and export DISPLAY
+  --bind-ro PATH      expose PATH read-only at the same place (repeatable)
+  --bind-rw PATH      expose PATH read-write at the same place (repeatable)
+
+Afterwards it compares a snapshot of the real home (~/.config/ardia,
+~/.config/nilla, ~/.local/share/keyrings, ~/.pki/nssdb) taken before and
+after, writes DIR/logs/realhome.diff, and exits with the command'"'"'s status,
+or 3 when the real home changed. check-upstream.py DIR reads the logs.
+Needs: unshare (util-linux), nft, ip, tcpdump, Xvfb for --display,
+dbus-daemon, dbus-monitor, certutil, python3; unprivileged user namespaces.'
+
+here=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
+venv=$here/.venv
+repo_default=/home/noor/Code/ardia
+
+setup() {
+  python3 -m venv "$venv"
+  "$venv/bin/pip" install --quiet mitmproxy
+  "$venv/bin/mitmdump" --version
+}
+
+run_dir="" net=0 display=0 proxy_mode=block-upstream
+bind_ro=() bind_rw=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help) echo "$usage"; exit 0 ;;
+    --setup) setup; exit 0 ;;
+    --run) run_dir=$2; shift 2 ;;
+    --net) net=1; shift ;;
+    --display) display=1; shift ;;
+    --proxy-mode) proxy_mode=$2; shift 2 ;;
+    --bind-ro) bind_ro+=("$(readlink -f "$2")"); shift 2 ;;
+    --bind-rw) bind_rw+=("$(readlink -f "$2")"); shift 2 ;;
+    --) shift; break ;;
+    *) echo "$usage" >&2; exit 64 ;;
+  esac
+done
+[ -n "$run_dir" ] && [ $# -gt 0 ] || { echo "$usage" >&2; exit 64; }
+case "$proxy_mode" in block-upstream|forward|offline) ;; *) echo "nilla-isolate: bad --proxy-mode $proxy_mode" >&2; exit 64 ;; esac
+die() { echo "nilla-isolate: $*" >&2; exit 2; }
+
+for tool in unshare nft ip tcpdump dbus-daemon dbus-monitor certutil python3; do
+  command -v "$tool" >/dev/null || die "$tool is required"
+done
+[ "$display" = 0 ] || command -v Xvfb >/dev/null || die "Xvfb is required for --display"
+[ "$net" = 0 ] || [ -x "$venv/bin/mitmdump" ] || die "no mitmproxy in $venv: run nilla-isolate --setup"
+unshare --user --map-root-user true 2>/dev/null || die "unprivileged user namespaces are not available here (check kernel.unprivileged_userns_clone, user.max_user_namespaces and kernel.apparmor_restrict_unprivileged_userns)"
+
+real_home=$(readlink -f "$HOME")
+mkdir -p "$run_dir"
+run_dir=$(readlink -f "$run_dir")
+[ ! -e "$run_dir/logs" ] || die "$run_dir already holds a run"
+case "$real_home/" in "$run_dir/"*) die "the run directory can't contain the real home" ;; esac
+mkdir -p "$run_dir"/{logs,home,ca,sock}
+chmod 700 "$run_dir"
+
+[ -d "$repo_default" ] && bind_ro+=("$repo_default")
+bind_ro+=("$here")
+for tool in node bun; do
+  found=$(command -v "$tool" 2>/dev/null || true)
+  [ -n "$found" ] || continue
+  resolved=$(readlink -f "$found")
+  case "$resolved" in
+    "$real_home"/*) bind_ro+=("$(dirname "$resolved")") ;;
+  esac
+done
+tool_path=""
+for tool in node bun; do
+  found=$(command -v "$tool" 2>/dev/null || true)
+  [ -n "$found" ] && tool_path="$tool_path$(dirname "$(readlink -f "$found")"):"
+done
+
+snapshot() {
+  local target
+  for target in .config/ardia .config/nilla .local/share/keyrings .pki/nssdb; do
+    if [ -e "$real_home/$target" ]; then
+      find "$real_home/$target" -maxdepth 3 -printf '%P %y %s %T@\n' 2>/dev/null | sed "s|^|$target/|" | sort
+    else
+      echo "$target absent"
+    fi
+  done
+}
+snapshot > "$run_dir/logs/realhome-before.txt"
+
+pids=()
+cleanup_host() {
+  local pid
+  for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done
+  for pid in "${pids[@]}"; do
+    for _ in $(seq 50); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+    kill -9 "$pid" 2>/dev/null || true
+  done
+}
+trap cleanup_host EXIT
+
+proxy_port_inside=3128
+if [ "$net" = 1 ]; then
+  host_port=$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1])')
+  env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY -u all_proxy -u ALL_PROXY \
+    ISOLATE_PROXY_LOG="$run_dir/logs/proxy.jsonl" ISOLATE_PROXY_MODE="$proxy_mode" \
+    "$venv/bin/mitmdump" --listen-host 127.0.0.1 --listen-port "$host_port" \
+      --set confdir="$run_dir/ca" --set connection_strategy=lazy --set termlog_verbosity=warn \
+      -s "$here/proxy_addon.py" > "$run_dir/logs/mitmdump.log" 2>&1 &
+  pids+=("$!")
+  python3 "$here/unixbridge.py" unix-to-tcp "$run_dir/sock/proxy.sock" "127.0.0.1:$host_port" --ready "$run_dir/sock/host-bridge.ready" > "$run_dir/logs/host-bridge.log" 2>&1 &
+  pids+=("$!")
+  for _ in $(seq 150); do
+    [ -s "$run_dir/ca/mitmproxy-ca-cert.pem" ] && [ -e "$run_dir/sock/host-bridge.ready" ] \
+      && python3 -c 'import socket, sys; socket.create_connection(("127.0.0.1", int(sys.argv[1])), 1).close()' "$host_port" 2>/dev/null && break
+    sleep 0.1
+  done
+  [ -s "$run_dir/ca/mitmproxy-ca-cert.pem" ] || die "mitmdump didn't start: $(tail -5 "$run_dir/logs/mitmdump.log")"
+  cat /etc/ssl/certs/ca-certificates.crt "$run_dir/ca/mitmproxy-ca-cert.pem" > "$run_dir/ca/bundle.pem"
+  : > "$run_dir/logs/proxy.jsonl"
+fi
+
+ro_list=$(printf '%s\n' "${bind_ro[@]}" | awk 'NF && !seen[$0]++')
+rw_list=$(printf '%s\n' "$run_dir" "${bind_rw[@]}" | awk 'NF && !seen[$0]++')
+namespaces=(--user --map-root-user --mount --pid --fork --kill-child --mount-proc)
+[ "$net" = 0 ] || namespaces+=(--net)
+
+set +e
+env -i PATH="${tool_path}/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" LANG="${LANG:-C.UTF-8}" TERM="${TERM:-dumb}" \
+  ISOLATE_HERE="$here" ISOLATE_RUN="$run_dir" ISOLATE_REAL_HOME="$real_home" \
+  ISOLATE_UID="$(id -u)" ISOLATE_GID="$(id -g)" ISOLATE_NET="$net" ISOLATE_DISPLAY="$display" \
+  ISOLATE_PROXY_PORT="$proxy_port_inside" ISOLATE_RO="$ro_list" ISOLATE_RW="$rw_list" \
+  unshare "${namespaces[@]}" -- bash "$here/isolate-inner.sh" "$@"
+status=$?
+set -e
+
+cleanup_host
+trap - EXIT
+snapshot > "$run_dir/logs/realhome-after.txt"
+if diff -u "$run_dir/logs/realhome-before.txt" "$run_dir/logs/realhome-after.txt" > "$run_dir/logs/realhome.diff"; then
+  echo "nilla-isolate: real home unchanged ($(tr '\n' ';' < "$run_dir/logs/realhome-after.txt" | cut -c1-200))" >&2
+else
+  echo "nilla-isolate: THE REAL HOME CHANGED, see $run_dir/logs/realhome.diff" >&2
+  exit 3
+fi
+exit "$status"

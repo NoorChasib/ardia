@@ -1,0 +1,33 @@
+owner	wave	files	files_with_L1_hits	L1_hits
+B-brand	1	217	7	30
+C-cli-extras	3	160	160	2799
+C-linux	3	278	278	2089
+C-mac	3	526	515	4539
+C-phone	3	643	640	2759
+C-repo-docs	3	92	92	3725
+C-ui	3	703	697	2908
+C-windows	3	218	218	1413
+D-docs	1	7	4	149
+G-governance-ci	1	67	34	327
+I-identity	1	135	67	1206
+L-lead	-	23	11	2099
+M-legacy	1	7	4	14
+R-mechanical	2	2590	2589	19848
+S-services	1	301	105	892
+W-web-surfaces	1	7	4	16
+X-keep	-	170	131	1638
+X-layer2	-	1107	15	76
+
+tracked files: 7158; files with Layer 1 hits: 2761
+overlaps inside a wave: wave1=0 wave2=0 wave3=0
+files with Layer 1 hits and no schedule: 0
+deleted in wave 1: 0 (M 0, G 0, W 0)
+moved in wave 1: 0
+retained G/W/D files with hits: 42; scheduled for R or wave 3: 39; written final by D: 4; archived by D: 0; unscheduled: 0
+M closure rows: 0; G/W closure rows: 10; handoffs: 8
+contract paths: 85 files, 7 dirs, 689 imported by them; new versus ownership/contract-files.txt: 33; old ones no longer found: 0
+frozen-token rows: 9; engine literals found in Layer 1 files: 363; occurrences: 9677 in 1212 files; excluded literals: 101
+native-file test rows: 10; required contract paths missing: none
+generated and Mac-only files held by the lead: 15
+explicit wave 3 assignments: 71; scheduled only by them: 20; not at ref: none
+named paths not at ref (new files or later moves): CLA.md .coderabbit.yaml scripts/stats.mjs scripts/telemetry-env.mjs scripts/telemetry-sql.mjs scripts/update-checks.mjs scripts/replay.mjs infra/shared.ts infra/lib.sh docs/growth.md docs/dashboard-triage.md docs/dashboard-settings.md apps/site/public/switches.json docs/ardiacore-spike.md docs/ardiacore-parity.md docs/perf/field-journeys.md docs/perf/sprint.md

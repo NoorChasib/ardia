@@ -1,0 +1,364 @@
+literal	engine_uses	layer1_files	sample
+ardia-	2	546	.github/release/unpack-build.py .github/workflows/android.yml .github/workflows/linux.yml .github/workflows/release.yml .github/workflows/windows.yml
+ARDIA_	1	197	.github/workflows/android-release.yml .github/workflows/android.yml AGENTS.md CONTRIBUTING.md README.md
+/ardia/	1	136	AGENTS.md NOTICE apps/browser/assets/offline-game-pipeline/gen.sh apps/browser/assets/offline-game-pipeline/tint_maps.py apps/browser/scripts/perf/upstreamGuard.test.mjs
+ArdiaHost	2	125	apps/browser/macos/Ardia-macOS/main.swift apps/browser/src/naming-allowlist.json apps/browser/src/state/onboarding/nativeOnboardingVersion.test.mjs apps/linux/src/appModuleFallbacks.ts apps/linux/src/appServices.ts
+ArdiaShell	16	108	apps/browser/macos/Ardia-macOS/AppDelegate.swift apps/browser/macos/Podfile.lock apps/browser/scripts/perf/bench-entry.js apps/browser/scripts/perf/ratchet.json apps/browser/scripts/topstrip-ux.mjs
+ArdiaApp	2	107	.github/workflows/windows.yml AGENTS.md apps/browser/scripts/peek-edge-test.mjs apps/browser/src/components/window/peekTabDrag.test.mjs apps/browser/src/components/window/useSidebarEdgeWatch.test.mjs
+ArdiaWebView	1	98	apps/browser/scripts/perf/actabs.m apps/browser/scripts/perf/ratchet.json apps/browser/src/naming-allowlist.json apps/browser/src/state/tabs/adoptIds.test.mjs apps/browser/src/test-native/ardiacore.ts
+ARDIA_DATA_DIR	6	81	AGENTS.md CONTRIBUTING.md README.md apps/browser/package.json apps/browser/scripts/import-flow-test.mjs
+littleArdia	1	71	apps/browser/scripts/import-flow-test.mjs apps/browser/scripts/video-upscaling-test.mjs apps/browser/src/App.tsx apps/browser/src/components/dev/devHarness.ts apps/browser/src/components/littleArdia/LittleArdiaWindow.tsx
+ArdiaEngine	3	57	apps/browser/scripts/perf/scroll-frames.mjs apps/browser/scripts/pip-click-seek-test.mjs apps/browser/scripts/video-upscaling-test.mjs apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsDefaultBrowser.test.mjs
+ardia://	2	56	AGENTS.md CONTRIBUTING.md README.md apps/browser/scripts/perf/scroll-frames.mjs apps/browser/scripts/profile-swipe-test.mjs
+ARDIA_BACKGROUND	3	50	AGENTS.md CONTRIBUTING.md README.md apps/browser/scripts/perf/energy.mjs apps/browser/scripts/perf/js-bench.mjs
+ArdiaImport	3	43	apps/browser/macos/Podfile.lock apps/browser/scripts/import-flow-test.mjs apps/browser/src/naming-allowlist.json apps/browser/src/state/import/arcExtras.test.mjs apps/browser/src/state/import/diaSidebarFallback.test.mjs
+ARDIA_TEST	1	38	apps/browser/scripts/import-flow-test.mjs apps/browser/src/components/settings/panes/LiveFoldersSection.tsx apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsExternalApps.test.mjs apps/browser/src/platform/windowsLaunchConfig.test.mjs
+__ardiaHost	1	34	AGENTS.md apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/lib/ardia.mjs apps/linux/scripts/acceptance/scenarios/f09-extensions.mjs apps/linux/scripts/acceptance/scenarios/f26-platform-settings.mjs
+ARDIA_INSTANCE	1	31	apps/browser/scripts/import-flow-test.mjs apps/browser/scripts/perf/energy.mjs apps/browser/scripts/perf/native-bench.mjs apps/browser/scripts/perf/xbench.mjs apps/browser/src/naming-allowlist.json
+ArdiaDocuments	1	27	apps/browser/scripts/perf/bench-entry.js apps/browser/src/naming-allowlist.json apps/browser/src/platform/documents.ts apps/browser/src/platform/nativeApi.ts apps/browser/src/state/app/perfProbe.ts
+:ardia	1	24	.github/workflows/android.yml apps/browser/scripts/perf/upstreamGuard.mjs apps/browser/src/conventions.test.mjs apps/browser/src/naming-allowlist.json apps/browser/src/state/telemetry/diagnostics.ts
+ArdiaCli	3	24	apps/browser/src/naming-allowlist.json apps/browser/src/platform/cli.ts apps/browser/src/state/app/cliControlWindows.test.mjs apps/browser/src/test-native/shell.ts apps/linux/src/appModuleFallbacks.ts
+ArdiaTabs	5	23	apps/browser/scripts/tab-drag-test.mjs apps/browser/src/naming-allowlist.json apps/browser/src/platform/keyboardFollow.windows.ts apps/browser/src/platform/tabs.ts apps/browser/src/platform/windowsPopupWindows.test.mjs
+ArdiaReport	1	22	apps/browser/src/naming-allowlist.json apps/browser/src/platform/report.ts apps/browser/src/platform/windowsViews.test.mjs apps/browser/src/test-native/report.ts apps/browser/src/test-native/shell.ts
+ardia-cli-	1	22	.github/release/unpack-build.py .github/workflows/linux.yml .github/workflows/release.yml apps/browser/src/naming-allowlist.json apps/cli/bench/plans/others-cloud.json
+ARDIA_CLI_HOME	2	21	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/automation_cli.py apps/cli/ardia_cli/computer.py apps/cli/ardia_cli/feedback.py apps/cli/ardia_cli/hooks.py
+ARDIA_SWITCHES	2	20	apps/browser/scripts/perf/js-bench.mjs apps/browser/scripts/perf/native-bench.mjs apps/browser/scripts/perf/scroll-frames.mjs apps/browser/src/naming-allowlist.json apps/browser/src/platform/killSwitches.test.mjs
+ArdiaContentBlocker	1	20	apps/browser/src/naming-allowlist.json apps/browser/src/state/site/contentBlocking.test.mjs apps/browser/src/test-native/ardiacore.ts apps/linux/src/hostSiteControls.test.mjs docs/agent-brief.md
+ARDIA_REMOTE_DEBUGGING_PORT	1	19	AGENTS.md CONTRIBUTING.md README.md apps/browser/scripts/perf/energy.mjs apps/browser/scripts/perf/js-bench.mjs
+ArdiaExtensions	1	16	apps/browser/src/naming-allowlist.json apps/browser/src/state/import/listedExtensions.test.mjs apps/browser/src/test-native/ardiacore.ts apps/linux/scripts/acceptance/scenarios/f09-extensions.mjs apps/linux/scripts/host-csp-fixture.mjs
+ArdiaGlass	2	16	AGENTS.md apps/browser/scripts/perf/ratchet.json apps/browser/src/naming-allowlist.json apps/browser/src/test-native/shell.ts apps/linux/src/glassRegions.ts
+ardia-ui	1	16	AGENTS.md README.md apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/lib/ardia.mjs apps/linux/scripts/acceptance/tests/ardia-shell.test.mjs
+ArdiaAutomation	1	15	apps/browser/src/naming-allowlist.json apps/browser/src/platform/automation.ts apps/browser/src/test-native/shell.ts apps/linux/src/appModuleFallbacks.ts apps/linux/src/hostCapabilities.test.mjs
+ArdiaControl.json	1	15	AGENTS.md apps/browser/src/naming-allowlist.json apps/browser/src/state/app/cliControl.test.mjs apps/cli/ardia_cli/endpoint.py apps/cli/ardia_cli/scripts_cli.py
+ArdiaUserScripts	1	15	apps/browser/src/naming-allowlist.json apps/browser/src/platform/userScripts.ts apps/browser/src/test-native/shell.ts apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts
+X-Ardia-Key	3	15	AGENTS.md apps/browser/src/naming-allowlist.json apps/browser/src/state/report/upload.test.mjs apps/browser/src/state/telemetry/localCopy.test.mjs apps/cli/ardia_cli/telemetry.py
+ARDIA_CONFIG_HOME	1	14	README.md apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/endpoint.py apps/cli/ardia_cli/hooks.py apps/cli/ardia_cli/scripts_cli.py
+ARDIA_TRACE	1	14	apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsLaunchConfig.test.mjs apps/browser/windows/Ardia/LaunchConfig.h apps/cli/tests/test_browse_e2e.py docs/agent-brief.md
+ardia-test	1	14	apps/browser/src/naming-allowlist.json apps/browser/src/state/telemetry/hourlyExtrasConsent.test.mjs apps/browser/src/state/telemetry/shellCountsConsent.test.mjs apps/browser/src/test-loader.mjs apps/cli/bench/harness/bench.py
+ardia-ui-dir	2	14	AGENTS.md README.md apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/lib/ardia.mjs apps/linux/scripts/acceptance/tests/ardia-shell.test.mjs
+ArdiaCalendar	2	13	apps/browser/src/naming-allowlist.json apps/browser/src/platform/calendar.ts apps/browser/src/state/live/connectCalendar.test.mjs apps/browser/src/test-native/shell.ts apps/linux/src/host.test.mjs
+ArdiaConfig	1	13	apps/browser/src/naming-allowlist.json apps/browser/src/platform/configFolder.ts apps/browser/src/test-native/shell.ts apps/browser/windows/Ardia/ConfigModule.h apps/linux/src/appModuleFallbacks.ts
+ArdiaSystemSignals	1	13	apps/browser/src/naming-allowlist.json apps/browser/src/platform/systemSignals.ts apps/browser/src/test-native/shell.ts apps/browser/windows/Ardia/SystemSignalsModule.h apps/linux/src/appModuleFallbacks.ts
+ArdiaApp.dll	1	12	.github/workflows/windows.yml AGENTS.md apps/browser/src/naming-allowlist.json apps/browser/windows/Ardia/Ardia.vcxproj apps/browser/windows/ArdiaLauncher/ArdiaLauncher.vcxproj
+ArdiaProfiles	1	12	apps/browser/src/components/pages/ClearDataDialog.test.mjs apps/browser/src/naming-allowlist.json apps/browser/src/test-native/ardiacore.ts apps/browser/windows/Ardia/CommandTable.h apps/browser/windows/Ardia/MenuStore.h
+ARDIA_CLI_BIN_DIR	2	11	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/computer.py apps/cli/install.sh apps/cli/tests/test_computer.py apps/cli/tests/test_linux.py
+ArdiaCli.install	3	11	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/hostCli.ts
+ardia.desktop	2	11	AGENTS.md apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/scenarios/f26-platform-settings.mjs apps/linux/scripts/acceptance/tests/linux-smoke.test.mjs docs/linux-port.md
+ardia.window.small	1	11	AGENTS.md apps/browser/scripts/little-ardia-links-test.mjs apps/browser/scripts/windowing-test.mjs apps/browser/src/naming-allowlist.json docs/windows.md
+Ardia.test-build	1	10	apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsLaunchConfig.test.mjs apps/browser/windows/Ardia/TestGate.h docs/conventions.md docs/windows.md
+chrome://ardia/	2	10	AGENTS.md apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/lib/ardia.mjs apps/linux/scripts/acceptance/tests/ardia-shell.test.mjs apps/linux/scripts/perf/lib/instance.mjs
+/ardia/cli	1	9	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/hooks.py apps/cli/install.sh docs/cli.md docs/linux-ci.md
+ARDIA_CLI_URL	2	9	apps/browser/src/naming-allowlist.json apps/cli/install.sh apps/cli/tests/test_linux.py docs/cli.md docs/linux-ci.md
+Ardia Scripts	1	9	apps/browser/src/naming-allowlist.json apps/browser/src/state/extensions/userScripts.test.mjs apps/browser/src/state/extensions/userScripts.ts apps/cli/ardia_cli/scripts_cli.py apps/cli/ardia_cli/scripts_store.py
+ArdiaControl.sock	1	9	AGENTS.md apps/browser/src/naming-allowlist.json apps/browser/src/test-native/shell.ts apps/cli/ardia_cli/control.py docs/automation.md
+ArdiaShell.fetchKillSwitches	2	9	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostUpdates.test.mjs apps/linux/src/hostUpdates.ts apps/linux/src/layer1Gate.ts
+ArdiaSystem.setAsDefaultBrowser	2	9	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/host.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts
+ardia-import-	1	9	apps/browser/src/naming-allowlist.json apps/browser/src/state/import/fixtures/windowsHost.mjs apps/browser/windows/Ardia/ImportFiles.h apps/browser/windows/Ardia/ImportModule.h apps/linux/src/importHandles.ts
+dev.ardia.linux	2	9	AGENTS.md apps/browser/src/naming-allowlist.json apps/linux/src/shims/shellBase.tsx docs/linux-port.md scripts/linux/dev.ardia.linux.policy
+Add to Ardia	2	8	AGENTS.md apps/browser/src/components/settings/rows/profileRows.ts apps/browser/src/naming-allowlist.json apps/browser/src/state/extensions/webStore.ts apps/linux/scripts/acceptance/scenarios/f09-extensions.mjs
+ArdiaReport.post	2	8	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostReport.test.mjs apps/linux/src/hostReport.ts apps/linux/src/layer1Gate.ts
+ArdiaSystem.setLaunchAtLogin	2	8	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/host.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts
+ArdiaUpdates.releases	2	8	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostUpdates.test.mjs apps/linux/src/hostUpdates.ts apps/linux/src/layer1Gate.ts
+webView.setLittleArdiaOpensNewTabLinks	2	8	apps/browser/src/naming-allowlist.json apps/browser/src/platform/pageOptions.ts apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts
+Ardia Sync	1	7	apps/browser/src/naming-allowlist.json apps/phone/scripts/phone-sync-relay.mjs docs/dia-feature-parity.md docs/linux-port.md docs/phone.md
+ArdiaAutomation.start	2	7	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs docs/linux-ci.md
+ArdiaPasswords.	1	7	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts docs/linux-port.md packages/sync/scripts/e2e.mjs
+ArdiaShell.openWindow	1	7	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/host.test.mjs apps/linux/src/hostProfiles.test.mjs apps/linux/src/hostSmallWindows.test.mjs
+ArdiaShell.toggleFullScreen	2	7	apps/browser/src/naming-allowlist.json apps/linux/src/appServices.ts apps/linux/src/engineCapabilities.test.mjs apps/linux/src/fullScreen.test.mjs apps/linux/src/hostCapabilities.test.mjs
+ArdiaShell.windowFrame	2	7	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/shellMethods.test.mjs apps/linux/src/shellMethods.ts apps/linux/src/windowControls.test.mjs
+ArdiaUserScripts.watch	2	7	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs docs/linux-port.md
+__ardiaReply	2	7	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostPageCommands.test.mjs apps/linux/src/hostPagePrompts.test.mjs apps/linux/src/hostPageStatus.test.mjs
+ardia-cli.sha256	1	7	apps/browser/src/naming-allowlist.json docs/cli.md docs/linux-port.md scripts/linux/package.py scripts/linux/smoke.mjs
+ardia-linux-bridge	1	7	apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/tests/content-blocker-bridge.test.mjs apps/linux/scripts/perf/bench.mjs apps/linux/scripts/perf/lib/util.mjs apps/linux/scripts/perf/tests/harness.test.mjs
+https://ardia.dev/api/feedback	1	7	apps/browser/src/naming-allowlist.json apps/browser/src/state/report/actions.ts apps/linux/src/engineCapabilities.test.mjs apps/linux/src/shellMethods.test.mjs docs/cli.md
+isn't allowed for the ardia command	1	7	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/browse/errors.py apps/cli/tests/test_browse.py apps/cli/tests/test_browse_e2e.py apps/cli/tests/test_browse_pages.py
+ isn't allowed for the ardia command	2	6	apps/browser/src/naming-allowlist.json apps/cli/tests/test_browse.py apps/cli/tests/test_browse_e2e.py apps/cli/tests/test_browse_pages.py docs/cli.md
+/ardia/active	1	6	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/endpoint.py apps/cli/tests/test_browse_changes.py docs/cli.md docs/engine-build.md
+Ardia Passwords.csv	1	6	apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsDesktopCalls.test.mjs apps/linux/src/hostCredentials.test.mjs packages/ardiacore/ios/ArdiaServices.mm packages/expo-windows/src/engine/domains/exports.ts
+ArdiaApp.postNotification	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/notifications.test.mjs apps/linux/src/settingsIndex.ts apps/linux/src/shellMethods.test.mjs
+ArdiaCli.installedVersion	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/hostCli.ts apps/linux/src/shellMethods.test.mjs
+ArdiaPasswords.save	3	6	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts packages/sync/scripts/e2e.mjs scripts/linux/password-heap-check.mjs
+ArdiaReport.upload	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostReport.test.mjs apps/linux/src/layer1Gate.ts docs/feedback.md
+ArdiaShell.focusWindow	3	6	apps/browser/src/naming-allowlist.json apps/linux/src/appServices.ts apps/linux/src/hostPrivateWindows.test.mjs apps/linux/src/hostPrivateWindows.ts apps/linux/src/windowMenu.test.mjs
+ArdiaShell.launchSteps	3	6	apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/scenarios/f27-app-services.mjs apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/appServices.test.mjs apps/linux/src/appServices.ts
+ArdiaSystem.launchAtLoginStatus	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts docs/linux-port.md
+ArdiaTelemetry.post	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostTelemetry.ts apps/linux/src/layer1Gate.ts docs/linux-port.md
+ArdiaUserScripts.read	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs scripts/linux/smoke.mjs
+ArdiaUserScripts.readStatus	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs scripts/linux/smoke.mjs
+ArdiaUserScripts.writeStatus	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs scripts/linux/smoke.mjs
+__ardiaEvent	2	6	apps/browser/src/naming-allowlist.json apps/linux/src/hostPageCommands.test.mjs apps/linux/src/hostPagePrompts.test.mjs apps/linux/src/hostPageStatus.test.mjs apps/linux/src/hostSiteControls.test.mjs
+ardia-cli-install.sh	1	6	apps/browser/src/naming-allowlist.json docs/linux-port.md packages/shell/scripts/bundle-cli-installer.sh scripts/linux/package.py scripts/linux/smoke.mjs
+ardiaRequest	2	6	apps/browser/src/naming-allowlist.json apps/linux/scripts/perf/lib/probes.mjs apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostPageCommands.test.mjs apps/linux/src/hostPagePrompts.test.mjs
+//chrome/browser/ardia	4	5	apps/browser/src/naming-allowlist.json docs/agent-brief.md docs/engine-build.md docs/history/ardia/ardiacore-parity.md docs/store-api.md
+Ardia Tab History	2	5	AGENTS.md apps/browser/src/naming-allowlist.json docs/dia-feature-parity.md docs/linux-port.md packages/ardiacore/ios/ArdiaWebView+Transfer.mm
+ArdiaApp.hardwareInfo	2	5	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/shellMethods.test.mjs docs/linux-port.md packages/expo-windows/src/selfCheck/appSystem.ts
+ArdiaApp.notificationPermission	2	5	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/notifications.test.mjs apps/linux/src/shellMethods.test.mjs docs/linux-port.md
+ArdiaApp.openExternalURL	2	5	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts docs/linux-port.md
+ArdiaAppStart	1	5	apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsDefaultBrowser.test.mjs apps/browser/windows/Ardia/Ardia.cpp apps/browser/windows/Ardia/EngineApi.h docs/windows.md
+ArdiaAppStop	1	5	apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsDialogPages.test.mjs apps/browser/windows/Ardia/Ardia.cpp apps/browser/windows/Ardia/EngineApi.h docs/windows.md
+ArdiaHTM	1	5	apps/browser/src/naming-allowlist.json apps/browser/src/platform/windowsDefaultBrowser.test.mjs docs/windows.md packages/expo-windows/src/selfCheck/appSystem.ts scripts/windows/installer-check.ps1
+ArdiaPictureInPicture.plist	1	5	apps/browser/src/naming-allowlist.json docs/dia-feature-parity.md docs/dia-spec.md docs/engine-build.md packages/ardiacore/ios/ArdiaPiPController+SelfTest.mm
+ArdiaShell.completeLaunchStep	2	5	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/appServices.test.mjs apps/linux/src/appServices.ts apps/linux/src/hostTelemetry.ts
+ArdiaShell.fetchBangList	3	5	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/host.test.mjs apps/linux/src/shellMethods.test.mjs docs/linux-port.md
+ArdiaShell.minimizeWindow	2	5	apps/browser/src/naming-allowlist.json apps/linux/src/windowControls.test.mjs apps/linux/src/windowMenu.test.mjs apps/linux/src/windowMenu.ts docs/linux-port.md
+ArdiaShell.privateWindows	1	5	apps/browser/src/naming-allowlist.json apps/linux/src/hostPrivateWindows.test.mjs apps/linux/src/hostPrivateWindows.ts apps/linux/src/windowMenu.test.mjs apps/linux/src/windowMenu.ts
+ArdiaShell.readDocument	1	5	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/appServices.ts apps/linux/src/hostDocuments.ts apps/linux/src/pipPlayer.ts
+ArdiaShell.smallWindows	1	5	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostSmallWindows.test.mjs apps/linux/src/hostSmallWindows.ts docs/linux-port.md
+ArdiaShell.windowIds	1	5	apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/lib/ardia.mjs apps/linux/scripts/acceptance/tests/ardia-shell.test.mjs apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/windowSweep.test.mjs
+ArdiaSystem.fileStatus	3	5	apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/scenarios/f08-downloads.mjs apps/linux/src/fileCapabilities.ts apps/linux/src/hostDownloads.test.mjs apps/linux/src/hostFiles.test.mjs
+ArdiaSystem.isDefaultBrowser	2	5	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts docs/linux-port.md
+ArdiaSystem.setThinScrollBars	2	5	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts docs/linux-port.md
+ArdiaTabs.unclaimedTabs	1	5	apps/browser/src/naming-allowlist.json apps/linux/src/openUrls.test.mjs apps/linux/src/unclaimedTabs.test.mjs apps/linux/src/unclaimedTabs.ts docs/linux-port.md
+ardia-content-blocker-dir	1	5	apps/browser/src/naming-allowlist.json apps/linux/scripts/perf/lib/instance.mjs apps/linux/scripts/perf/tests/harness.test.mjs docs/linux-port.md scripts/linux/ubo-seed.mjs
+ardia-pip-	1	5	AGENTS.md apps/browser/src/naming-allowlist.json apps/linux/src/InWindowPlayer.tsx apps/linux/src/base.css docs/linux-port.md
+ardia-switches	1	5	apps/browser/src/naming-allowlist.json docs/conventions.md docs/engine-build.md docs/kill-switches.md packages/ardiacore/ios/ArdiaLaunchConfig.mm
+ardia-trace	1	5	apps/browser/src/naming-allowlist.json docs/conventions.md docs/engine-build.md docs/windows.md packages/ardiacore/ios/ArdiaLaunchConfig.mm
+//ardia/core	1	4	apps/browser/src/naming-allowlist.json docs/agent-brief.md docs/engine-build.md docs/history/ardia/ardiacore-spike.md
+Ardia Safe Storage	3	4	apps/browser/src/naming-allowlist.json docs/engine-build.md docs/history/ardia/ardiacore-parity.md docs/history/ardia/releasing.md
+Ardia Sync Key	1	4	apps/browser/src/naming-allowlist.json docs/linux-port.md docs/phone.md docs/sync.md
+Ardia couldn't take that tab off-screen.	2	4	apps/browser/src/naming-allowlist.json apps/browser/src/state/automation/offscreen.test.mjs apps/browser/src/state/automation/offscreen.ts packages/ardiacore/ios/ArdiaHost.mm
+ArdiaApp.removeNotifications	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/notifications.test.mjs apps/linux/src/shellMethods.test.mjs
+ArdiaApp.requestNotificationPermission	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/notifications.test.mjs apps/linux/src/shellMethods.test.mjs
+ArdiaAppStartFailure	1	4	apps/browser/src/naming-allowlist.json apps/browser/windows/Ardia/Ardia.cpp apps/browser/windows/Ardia/EngineApi.h docs/windows.md
+ArdiaAutofill.	1	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts docs/linux-port.md
+ArdiaAutofill.cardNumber	3	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts docs/linux-port.md
+ArdiaAutofill.status	3	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts docs/linux-port.md
+ArdiaAutomation.broadcast	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs
+ArdiaAutomation.reply	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs
+ArdiaAutomation.stop	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostCapabilities.ts apps/linux/src/shellMethods.test.mjs
+ArdiaCalendar.status	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCalendar.test.mjs apps/linux/src/hostCalendar.ts docs/linux-port.md
+ArdiaConfig.readFile	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostConfig.test.mjs apps/linux/src/hostConfig.ts docs/linux-port.md
+ArdiaControl.sock.lock	1	4	apps/browser/src/naming-allowlist.json docs/automation.md docs/linux-port.md packages/shell/ios/ControlSocket.swift
+ArdiaCrash.list	1	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCrashReports.test.mjs apps/linux/src/hostCrashReports.ts docs/linux-port.md
+ArdiaCrash.read	1	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCrashReports.test.mjs apps/linux/src/hostCrashReports.ts docs/linux-port.md
+ArdiaImport.listBrowsers	2	4	apps/browser/scripts/import-flow-test.mjs apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs apps/linux/src/importUnlock.test.mjs
+ArdiaLive.connect	4	4	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostLive.test.mjs apps/linux/src/hostLive.ts
+ArdiaLive.request	4	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostLive.test.mjs apps/linux/src/hostLive.ts docs/linux-port.md
+ArdiaMedia	2	4	apps/browser/src/naming-allowlist.json apps/browser/src/test-native/ardiacore.ts apps/linux/src/hostCapabilities.test.mjs apps/linux/src/hostModules.ts
+ArdiaPasswords.reveal	3	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts docs/linux-port.md
+ArdiaPasswords.status	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts docs/linux-port.md
+ArdiaPasswords.unlock	3	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts scripts/linux/password-heap-check.mjs
+ArdiaPermissions	1	4	apps/browser/src/naming-allowlist.json apps/browser/src/test-native/ardiacore.ts apps/linux/src/hostPagePrompts.test.mjs docs/conventions.md
+ArdiaSearch.suggest	2	4	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/hostSuggestions.ts docs/linux-port.md
+ArdiaShell.beginDialog	2	4	apps/browser/src/naming-allowlist.json apps/linux/scripts/dialog-module-production.mjs apps/linux/src/hostDialogs.ts apps/linux/src/quit.test.mjs
+ArdiaShell.cancelDialog	3	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostDialogs.test.mjs apps/linux/src/hostDialogs.ts apps/linux/src/quit.test.mjs
+ArdiaShell.listenForOpenURLs	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/openUrls.ts docs/linux-port.md
+ArdiaShell.onOpenURLs	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostCapabilities.ts docs/linux-port.md
+ArdiaShell.readText	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/shellMethods.test.mjs docs/linux-port.md
+ArdiaShell.setActiveProfile	1	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostProfiles.test.mjs apps/linux/src/hostWindowProfiles.ts docs/linux-port.md
+ArdiaShell.setAppearance	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs apps/linux/src/hostAppearance.ts docs/linux-port.md
+ArdiaShell.watchSidebarEdge	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostModules.ts apps/linux/src/shellMethods.test.mjs docs/linux-port.md
+ArdiaShell.windowIdentity	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostDialogConsumers.test.mjs apps/linux/src/hostDialogs.test.mjs apps/linux/src/quit.test.mjs
+ArdiaShell.writeDocument	2	4	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/host.test.mjs apps/linux/src/pipPlayer.ts
+ArdiaSync.read	3	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.test.mjs apps/linux/src/hostSync.ts docs/history/ardia/ardiacore-parity.md
+ArdiaSync.readPasswords	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.test.mjs apps/linux/src/hostSync.ts docs/history/ardia/ardiacore-parity.md
+ArdiaSync.savePassword	1	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.test.mjs apps/linux/src/hostSync.ts docs/sync.md
+ArdiaSystem.fileIcon	2	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostFiles.test.mjs apps/linux/src/hostFiles.ts packages/expo-windows/src/selfCheck/appSystem.ts
+Remove from Ardia	1	4	apps/browser/src/naming-allowlist.json apps/browser/src/state/extensions/webStore.ts apps/linux/src/hostPageScripts.ts docs/dia-feature-parity.md
+ardia-downloads-dir	2	4	apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/scenarios/f01-page-commands.mjs apps/linux/scripts/acceptance/scenarios/f08-downloads.mjs docs/engine-build.md
+ardia-links	1	4	apps/browser/scripts/little-ardia-links-test.mjs apps/browser/src/naming-allowlist.json apps/phone/src/state/links/links.ts docs/dia-feature-parity.md
+ardia-linux-bridge.js	1	4	apps/browser/src/naming-allowlist.json apps/linux/scripts/perf/bench.mjs apps/linux/scripts/perf/lib/util.mjs docs/perf/linux-bench.md
+ardia-ver	1	4	apps/browser/src/naming-allowlist.json apps/linux/src/hostCrashReports.test.mjs apps/linux/src/hostCrashReports.ts docs/linux-port.md
+ardiaOffscreen	2	4	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/browse/commands.py apps/cli/tests/test_browse_borrowed.py docs/cli.md
+https://ardia.dev/otel/v1/logs	1	4	apps/browser/scripts/perf/upstreamGuard.test.mjs apps/browser/src/naming-allowlist.json docs/cli.md docs/linux-port.md
+https://ardia.dev/switches.json	1	4	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostUpdates.test.mjs apps/linux/src/hostUpdates.ts
+no scratch ARDIA_DATA_DIR	2	4	apps/browser/src/naming-allowlist.json apps/browser/windows/Ardia/LaunchConfig.h apps/browser/windows/Ardia/TestGate.h packages/ardiacore/ios/ArdiaLaunchConfig.mm
+on a tab the ardia command didn't open	2	4	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/browse/errors.py apps/cli/tests/test_browse.py docs/cli.md
+ ms for a previous Ardia, 	1	3	apps/browser/src/naming-allowlist.json scripts/windows/relaunch-facts.ps1 scripts/windows/relaunch-facts.test.ps1
+//ardia/win	1	3	apps/browser/src/naming-allowlist.json docs/engine-build-windows.md docs/windows.md
+Ardia Recovery Kit.txt	1	3	apps/browser/src/naming-allowlist.json packages/expo-windows/src/sync/kit.ts packages/sync/ios/Core/RecoveryKit.swift
+Ardia Tab History Cleared	2	3	apps/browser/src/naming-allowlist.json docs/linux-port.md packages/ardiacore/ios/ArdiaWebView+Transfer.mm
+Ardia Test Sink	1	3	apps/browser/src/naming-allowlist.json docs/linux-port.md packages/ardiacore/scripts/acceptance.mjs
+Ardia has no data folder	2	3	apps/browser/src/naming-allowlist.json packages/shell/ios/ControlSocket.swift packages/shell/ios/UserScripts.swift
+ArdiaAppPreTranslateMessage	1	3	apps/browser/src/naming-allowlist.json apps/browser/windows/Ardia/Ardia.cpp docs/windows.md
+ArdiaAutofill.saveCard	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts
+ArdiaCalendar.objects	3	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostCalendar.test.mjs apps/linux/src/hostCalendar.ts
+ArdiaCalendar.timezones	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostCalendar.test.mjs apps/linux/src/hostCalendar.ts
+ArdiaConfig.watch	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostConfig.test.mjs apps/linux/src/hostConfig.ts
+ArdiaConfig.writeSchemas	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostConfig.test.mjs apps/linux/src/hostConfig.ts
+ArdiaImport.forgetUnlockedKeys	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs packages/import/scripts/e2e.mjs
+ArdiaImport.unlockBrowser	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs apps/linux/src/importUnlock.test.mjs
+ArdiaLive.cancel	3	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostLive.test.mjs apps/linux/src/hostLive.ts
+ArdiaLocation.locationPermission	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/shellMethods.test.mjs docs/linux-port.md
+ArdiaPasswords.export	3	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts
+ArdiaPasswords.update	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostCredentials.test.mjs apps/linux/src/hostCredentials.ts
+ArdiaReport.draftDirectory	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostReport.test.mjs apps/linux/src/hostReport.ts
+ArdiaReport.gzipText	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostReport.test.mjs apps/linux/src/hostReport.ts
+ArdiaSearch.cancelSuggest	2	3	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/hostSuggestions.ts
+ArdiaSettings	2	3	apps/browser/src/naming-allowlist.json apps/phone/src/lib/launchArguments.ts docs/phone.md
+ArdiaShell.commandsReady	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/typeahead.test.mjs apps/linux/src/typeahead.ts
+ArdiaShell.copyText	1	3	apps/browser/src/naming-allowlist.json apps/browser/src/state/commands/copySelectedUrls.test.mjs apps/browser/windows/Ardia/ShellModule.h
+ArdiaShell.downloadsInProgress	3	3	apps/browser/src/naming-allowlist.json apps/linux/src/quit.test.mjs apps/linux/src/quit.ts
+ArdiaShell.isDarkAppearance	1	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostAppearance.ts docs/linux-port.md
+ArdiaShell.pickFolder	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostFolders.test.mjs apps/linux/src/hostFolders.ts
+ArdiaShell.quit	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/quit.test.mjs apps/linux/src/quit.ts
+ArdiaShell.removeDocument	3	3	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/host.test.mjs
+ArdiaShell.resignActive	1	3	apps/browser/src/naming-allowlist.json apps/linux/src/engineCapabilities.test.mjs docs/linux-port.md
+ArdiaShell.setDragEscapeCapture	2	3	apps/browser/src/components/sidebar/fixtures/nativeFakes.mjs apps/browser/src/naming-allowlist.json apps/linux/src/shellMethods.test.mjs
+ArdiaShell.setKeyboardShortcuts	1	3	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs apps/linux/src/shortcutsRuntime.ts
+ArdiaShell.setMenuState	1	3	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs docs/audit/2026-11-18-performance-and-architecture.md
+ArdiaShell.shellPainted	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/shellPainted.test.mjs apps/linux/src/shellPainted.ts
+ArdiaShell.toggleMaximizeWindow	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/windowControls.test.mjs apps/linux/src/windowMenu.test.mjs
+ArdiaShell.typeaheadReady	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/typeahead.test.mjs apps/linux/src/typeahead.ts
+ArdiaShell.utilityReady	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/session.test.mjs apps/linux/src/utilityNavigation.ts
+ArdiaSync.enterPhrase	4	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.test.mjs apps/linux/src/hostSync.ts
+ArdiaSync.folderInfo	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.test.mjs apps/linux/src/hostSync.ts
+ArdiaSync.status	5	3	apps/browser/src/naming-allowlist.json apps/linux/src/host.test.mjs apps/linux/src/hostSync.ts
+ArdiaSystemSignals.devPost	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/appModuleFallbacks.ts apps/linux/src/shellMethods.test.mjs
+ArdiaSystemSignals.watchIdle	2	3	apps/browser/src/naming-allowlist.json apps/linux/src/shellMethods.test.mjs docs/linux-port.md
+ardia-background	2	3	apps/browser/src/naming-allowlist.json docs/engine-build.md packages/ardiacore/ios/ArdiaLaunchConfig.mm
+ardia-data-dir	1	3	apps/browser/src/naming-allowlist.json docs/engine-build.md packages/ardiacore/ios/ArdiaLaunchConfig.mm
+ardia-linux-bridge.html	1	3	apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/tests/content-blocker-bridge.test.mjs docs/linux-port.md
+ardia-sandbox-decision	1	3	apps/browser/src/naming-allowlist.json docs/linux-port.md scripts/linux/ardia-launch
+ardia/linux/ac_linux_page_operations.h	1	3	apps/browser/src/naming-allowlist.json apps/linux/scripts/page-operations.mjs apps/linux/src/pageOperations.test.mjs
+ardiaReloadPending	2	3	apps/browser/src/naming-allowlist.json packages/ardiacore/ios/ArdiaContentBlockerCalls.mm scripts/linux/ubo-seed.test.mjs
+ardia_resources_win.txt	1	3	apps/browser/src/naming-allowlist.json docs/brand/nilla/build.mjs docs/engine-build-windows.md
+dev.ardia.linux.reauthenticate	1	3	apps/browser/src/naming-allowlist.json docs/linux-port.md scripts/linux/dev.ardia.linux.policy
+http://127.0.0.1:53682/ardia-oauth	1	3	apps/browser/src/naming-allowlist.json apps/browser/src/state/live/googleAuth.ts apps/linux/scripts/acceptance/lib/liveServices.mjs
+ ms for the previous Ardia on this profile to finish exiting	1	2	apps/browser/src/naming-allowlist.json scripts/windows/relaunch-facts.test.ps1
+) has no ardia command release.	1	2	apps/browser/src/naming-allowlist.json packages/shell/ios/CliInstaller.swift
+.ardia-staging	1	2	apps/browser/src/naming-allowlist.json apps/browser/src/state/automation/automationHooks.test.mjs
+.ardia-staging-	1	2	apps/browser/src/naming-allowlist.json apps/browser/src/state/automation/automationHooks.test.mjs
+/.local/share/ardia/cli	1	2	apps/browser/src/naming-allowlist.json apps/cli/ardia_cli/hooks.py
+//ardia/core/mojom	1	2	apps/browser/src/naming-allowlist.json docs/history/ardia/ardiacore-spike.md
+//ardia/core:hooks	3	2	apps/browser/src/naming-allowlist.json docs/engine-build.md
+//ardia/core:launch_switches	5	2	apps/browser/src/naming-allowlist.json docs/engine-build.md
+//chrome/app/theme/ardia/BRANDING	1	2	apps/browser/src/naming-allowlist.json docs/engine-build-windows.md
+/^(?:ardia-blocking-off|)/	1	2	apps/browser/src/naming-allowlist.json packages/ardiacore/ios/ArdiaContentBlocker.mm
+ARDIA_DATA_DIR is not an absolute path	1	2	apps/browser/src/naming-allowlist.json apps/browser/windows/Ardia/TestGate.h
+ARDIA_INPUT_TRACE	1	2	apps/browser/src/naming-allowlist.json docs/windows.md
+ARDIA_PACKAGE_DIR	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+ARDIA_PROBE_COOKIE_URL	1	2	apps/browser/src/naming-allowlist.json docs/windows.md
+ARDIA_PROBE_DOWNLOAD_URL	1	2	apps/browser/src/naming-allowlist.json docs/windows.md
+ARDIA_PROBE_SLOW_DOWNLOAD_URL	1	2	apps/browser/src/naming-allowlist.json docs/windows.md
+Another Ardia is serving this data folder.	1	2	apps/browser/src/naming-allowlist.json packages/shell/ios/ControlSocket.swift
+Ardia Live Folder Token	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+Ardia can't read its Safe Storage key.	1	2	apps/browser/src/naming-allowlist.json docs/engine-build.md
+Ardia can't save downloads in that folder	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostFolders.test.mjs
+Ardia couldn't take that tab off-screen, and closed it.	2	2	apps/browser/src/naming-allowlist.json packages/ardiacore/ios/ArdiaHost.mm
+Ardia engine 	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostCalendar.ts
+Ardia has no data folder.	2	2	apps/browser/src/naming-allowlist.json packages/shell/ios/ControlSocket.swift
+Ardia's Safe Storage key is damaged.	1	2	apps/browser/src/naming-allowlist.json docs/engine-build.md
+ArdiaCalendar.requestAccess	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostCalendar.ts
+ArdiaCalendar.sources	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostCalendar.ts
+ArdiaExtensionView	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostExtensionView.ts
+ArdiaFileDrag.begin	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/fileCapabilities.ts
+ArdiaFileDrop.takeDrop	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/fileCapabilities.ts
+ArdiaImport.cancelChooser	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.cancelImport	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.chooseImportFile	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.discardImported	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.discardPasswords	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.importBookmarksHTML	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.importPasswordsCSV	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.startImport	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.writeImported	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaImport.writePasswords	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostImport.test.mjs
+ArdiaLinuxWindowOutputs	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+ArdiaLive.disconnect	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostLive.ts
+ArdiaLocation.requestLocationPermission	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/shellMethods.test.mjs
+ArdiaPip	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/pipPlayer.ts
+ArdiaProbe	1	2	apps/browser/src/naming-allowlist.json docs/engine-build-windows.md
+ArdiaReport.cancelUploads	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostReport.test.mjs
+ArdiaReport.fileSize	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostReport.test.mjs
+ArdiaReport.gzipFile	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostReport.test.mjs
+ArdiaReport.removeFile	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostReport.test.mjs
+ArdiaShell.captionDoubleClick	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/windowDrag.ts
+ArdiaShell.pickFiles	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/shellMethods.test.mjs
+ArdiaShell.restoreFullScreen	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/shellMethods.test.mjs
+ArdiaShell.restoreShortcutFocus	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/shortcutsRuntime.ts
+ArdiaShell.setMenuBookmarks	1	2	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs
+ArdiaShell.setShortcutRecording	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/shortcutsRuntime.ts
+ArdiaShell.setSwitcherCapture	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/shortcutsRuntime.ts
+ArdiaShell.setWindowTitle	2	2	apps/browser/src/naming-allowlist.json apps/linux/scripts/host-csp-fixture.mjs
+ArdiaShell.startWindowMove	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/windowDrag.ts
+ArdiaSync.chainStatus	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.chooseFolder	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.claimAuthority	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.copyRecoveryKit	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.copyRecoveryPhrase	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.createChain	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.createPhrase	4	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.deleteChain	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.deviceName	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.forget	4	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.openLocal	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.qrCode	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.recoveryKitPreview	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.recoveryWords	6	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.releaseAuthority	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.remove	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.revealFolder	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.saveRecoveryKit	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.sealLocal	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.shareRecoveryKit	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.unlock	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSync.write	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSync.ts
+ArdiaSystem.moveToTrash	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostFiles.test.mjs
+ArdiaSystem.openFile	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostFiles.test.mjs
+ArdiaSystem.revealFile	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostFiles.test.mjs
+ArdiaTabs.prepareTransfer	2	2	apps/browser/src/naming-allowlist.json packages/ardiacore/scripts/acceptance.mjs
+ArdiaTabs.releaseTransfer	1	2	apps/browser/src/naming-allowlist.json packages/ardiacore/scripts/acceptance.mjs
+IDR_ARDIA_GAME_HTML	1	2	apps/browser/src/naming-allowlist.json docs/engine-build.md
+The installer isn't in this build of Ardia.	1	2	apps/browser/src/naming-allowlist.json packages/shell/ios/CliInstaller.swift
+[control] the ardia command's socket didn't start: 	1	2	apps/browser/src/naming-allowlist.json packages/shell/ios/ControlSocket.swift
+ardia-chromium-win-$WIN_CPU	1	2	apps/browser/src/naming-allowlist.json docs/engine-build-windows.md
+ardia-default-search-engine	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+ardia-hyprland-instance	2	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+ardia-hyprland-runtime-dir	2	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+ardia-keyboard-diagnostics	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+ardia-test-cast-sink	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+ardia-test-instance	2	2	apps/browser/src/naming-allowlist.json docs/windows.md
+ardia/core/ac_hooks.h	32	2	apps/browser/src/naming-allowlist.json docs/engine-build-windows.md
+ardia/core/ac_prerender_posts.h	1	2	apps/browser/src/naming-allowlist.json packages/ardiacore/tests/prerender-posts.test.cc
+ardia/linux/ac_linux_open_urls.h	3	2	apps/browser/src/naming-allowlist.json apps/linux/src/openUrls.test.mjs
+ardia/linux/ac_linux_page_evaluation.h	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/pageOperations.test.mjs
+ardia/linux/ac_linux_sidebar_edge.h	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/shellMethods.test.mjs
+ardia/linux/ac_linux_suggest_policy.h	2	2	apps/browser/src/naming-allowlist.json apps/linux/src/hostSuggestions.test.mjs
+ardia/linux/host_bootstrap.h	1	2	apps/browser/src/naming-allowlist.json scripts/linux/syntax_check_156.py
+ardia/linux/page_script.h	1	2	apps/browser/src/naming-allowlist.json scripts/linux/syntax_check_156.py
+ardia: Target.getTargetInfo on that target 	1	2	apps/browser/src/naming-allowlist.json apps/cli/tests/test_browse.py
+ardia://page-script	2	2	apps/browser/scripts/perf/scroll-frames.mjs apps/browser/src/naming-allowlist.json
+chrome/browser/ardia/ac_engine_dispatch.inc	1	2	apps/browser/src/naming-allowlist.json scripts/linux/syntax_check_156.py
+chrome/browser/ardia/public/ac_engine.h	10	2	apps/browser/src/naming-allowlist.json packages/ardiacore/ios/ArdiaEngineBridge.mm
+data-ardia-bridge	1	2	apps/browser/src/naming-allowlist.json apps/linux/scripts/acceptance/tests/content-blocker-bridge.test.mjs
+dev.ardia.linux.LiveToken	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+dev.ardia.linux.SyncKey	1	2	apps/browser/src/naming-allowlist.json docs/linux-port.md
+trusted-types ardia-symbols;	1	2	apps/browser/src/naming-allowlist.json apps/linux/src/suggestionCsp.test.mjs
+ARDIA_DESKTOP	1	1	apps/browser/src/naming-allowlist.json
+ARDIA_PROBE_DIR	1	1	apps/browser/src/naming-allowlist.json
+ARDIA_PROBE_EXPORTS	1	1	apps/browser/src/naming-allowlist.json
+ARDIA_PROBE_LOG	1	1	apps/browser/src/naming-allowlist.json
+ARDIA_PROBE_STAY	1	1	apps/browser/src/naming-allowlist.json
+ARDIA_PROBE_STEP_MS	1	1	apps/browser/src/naming-allowlist.json
+ARDIA_PROBE_URL	1	1	apps/browser/src/naming-allowlist.json
+ARDIA_PROBE_URL_2	1	1	apps/browser/src/naming-allowlist.json
+Ardia HTML Document	1	1	apps/browser/src/naming-allowlist.json
+ArdiaDocumentAutoplay	1	1	apps/browser/src/naming-allowlist.json
+ArdiaFrameAutoplay	1	1	apps/browser/src/naming-allowlist.json
+ArdiaGlassRegion	1	1	apps/browser/src/naming-allowlist.json
+ArdiaHostedPage	1	1	apps/browser/src/naming-allowlist.json
+ArdiaLinuxContentBlockerHold	1	1	apps/browser/src/naming-allowlist.json
+ArdiaPDF	1	1	apps/browser/src/naming-allowlist.json
+ArdiaProbeWindow	1	1	apps/browser/src/naming-allowlist.json
+ArdiaScriptsPagesThrottle	1	1	apps/browser/src/naming-allowlist.json
+ardiaFadeOut	1	1	apps/browser/src/naming-allowlist.json
+ardiaPeekSend	1	1	apps/browser/src/naming-allowlist.json
+ardia_icon_fetch	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_autofill_prompt	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_bang_list	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_favicon_fetch	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_live_folders	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_problem_report	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_search_suggestions	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_update_check	1	1	apps/browser/src/naming-allowlist.json
+ardia_linux_usage_telemetry	1	1	apps/browser/src/naming-allowlist.json
+ardia_pad	1	1	apps/browser/src/naming-allowlist.json
+ardia_screenshot_	1	1	apps/browser/src/naming-allowlist.json
+ardia_search_suggest	1	1	apps/browser/src/naming-allowlist.json
+ardia_sync_approval	1	1	apps/browser/src/naming-allowlist.json
+ardia_sync_delayed	1	1	apps/browser/src/naming-allowlist.json
+ardia_sync_desired	1	1	apps/browser/src/naming-allowlist.json
+ardia_yuv_to_rgb	1	1	apps/browser/src/naming-allowlist.json
+g_ardia_host_takes_global_accelerator	1	1	apps/browser/src/naming-allowlist.json
+globalThis.ardiaPeek && globalThis.ardiaPeek.config(	1	1	apps/browser/src/naming-allowlist.json

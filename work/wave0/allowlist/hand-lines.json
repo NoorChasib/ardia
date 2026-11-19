@@ -1,0 +1,578 @@
+[
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "Ardia (`NOTICE`, the README's Acknowledgements), and its owner is Noor Chasib (`NoorChasib` on GitHub). This file is"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "- **Never launch or touch the owner's installed Ardia or Nilla** (`/Applications/Ardia.app`,"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "- **The owner's real browser data is for debugging only.** Read the owner's Ardia, Nilla, Dia and other browser"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  (`docs/services.md`). Never point one at Ardia's servers, and never add a ping that runs without consent."
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "## Independence from Ardia"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "salt, `nilla://` phone scheme and `nilla-browser` command. It never migrates anything from Ardia. Until Nilla's own"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "engines exist (Layer 2), today's prebuilt engines still force a few Ardia names, so:"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "- A Nilla build never reads or writes an installed Ardia's data, keychain or secret-store items, sync folder or OS"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  registrations. Where an engine forces an Ardia name, turn the feature off or isolate it on the app side and record"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "- The one allowed read is an import the user starts by picking Ardia in the importer: it reads a snapshot, writes"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  nothing to Ardia's folder and never runs at startup."
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  a throwaway machine. Never on a host or account that has, or could later get, an Ardia profile:"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  the engines pick Ardia's default profile before any app code runs. Start them through `scripts/linux/nilla-dev-run`"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  and `scripts/windows/nilla-dev-run.ps1`. A bare-launch test passes only when listing the folders shows Ardia's were"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "## Names that stay Ardia until Layer 2"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  layer ids (`ardia.window.small`, `ArdiaGlass`), routes and schemes (`ardia://`, `/ardia-oauth`, `chrome://ardia/`)."
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "- The Linux wire names (`Ardia<Module>.<method>` in `apps/linux` and `scripts/linux`), the Linux package layout"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  (`Package: ardia`, `bin/ardia`, `lib/ardia/`, `ardia.desktop`, `dev.ardia.linux`), the Windows engine names"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  (`ArdiaApp.dll`, the `ArdiaApp*` exports, the folder `apps/browser/windows/Ardia`) and the `X-Ardia-Key` header."
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "- Text the engine draws (chrome://credits, the Web Store's \"Add to Ardia\", its error messages) and `docs/brand/ardia/`."
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "- **Engines.** Nilla publishes no engines yet: the pins point at Ardia's releases, and app builds use the exact one"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "  Ardia's release history is archived in `docs/history/ardia/`, with its credits; it is never published as Nilla's."
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "`extras/raycast-nilla` the Raycast extension. `docs/history/ardia/` keeps Ardia's release notes and retired docs, and"
+ },
+ {
+  "path": "AGENTS.md",
+  "class": "V",
+  "why": "AGENTS.md names Ardia only to credit it, to state Nilla's independence from it, and to list the engine-read names that keep their Ardia spelling until Layer 2.",
+  "text": "`docs/audit/` audits made on Ardia's tree. Nilla's own source files are Apache-2.0; the app as distributed is GPL-3.0,"
+ },
+ {
+  "path": "CONTRIBUTING.md",
+  "class": "V",
+  "why": "CONTRIBUTING.md credits Ardia, says where Ardia fixes belong, and names the engine-read Ardia names and the engines' Ardia default profile.",
+  "text": "its own yet, so those come from Ardia's releases, and `--nearest` picks the newest one when none matches exactly. If"
+ },
+ {
+  "path": "CONTRIBUTING.md",
+  "class": "V",
+  "why": "CONTRIBUTING.md credits Ardia, says where Ardia fixes belong, and names the engine-read Ardia names and the engines' Ardia default profile.",
+  "text": "Every build runs on its own data folder, so it never touches the browser you use, Ardia included. A Debug build"
+ },
+ {
+  "path": "CONTRIBUTING.md",
+  "class": "V",
+  "why": "CONTRIBUTING.md credits Ardia, says where Ardia fixes belong, and names the engine-read Ardia names and the engines' Ardia default profile.",
+  "text": "because today's engines choose Ardia's default profile before any app code runs. `scripts/linux/nilla-dev-run` and"
+ },
+ {
+  "path": "CONTRIBUTING.md",
+  "class": "V",
+  "why": "CONTRIBUTING.md credits Ardia, says where Ardia fixes belong, and names the engine-read Ardia names and the engines' Ardia default profile.",
+  "text": "- Some names keep their Ardia spelling because today's engines read them: the `ARDIA_*` environment variables, the"
+ },
+ {
+  "path": "CONTRIBUTING.md",
+  "class": "V",
+  "why": "CONTRIBUTING.md credits Ardia, says where Ardia fixes belong, and names the engine-read Ardia names and the engines' Ardia default profile.",
+  "text": "Nilla is a fork of [Ardia](https://github.com/ardia-browser/ardia). A fix that applies to Ardia too is welcome there,"
+ },
+ {
+  "path": "CONTRIBUTING.md",
+  "class": "V",
+  "why": "CONTRIBUTING.md credits Ardia, says where Ardia fixes belong, and names the engine-read Ardia names and the engines' Ardia default profile.",
+  "text": "under Ardia's own rules. Don't open Nilla issues on Ardia's tracker, and don't report Ardia's bugs here unless they"
+ },
+ {
+  "path": "CONTRIBUTING.md",
+  "class": "V",
+  "why": "CONTRIBUTING.md credits Ardia, says where Ardia fixes belong, and names the engine-read Ardia names and the engines' Ardia default profile.",
+  "text": "Nilla's own files, and those it carries from Ardia, are Apache-2.0, and Nilla as distributed is GPL-3.0 (see"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "> **Status: pre-release.** Nilla is a new, independent fork of [Ardia](https://github.com/ardia-browser/ardia). There"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "from source also downloads the prebuilt engine from Ardia's releases (\"The engine\" below)."
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "folder and check its SHA-256 against a pinned table. Today those engines are **Ardia's**, fetched from the upstream"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "project's releases (`ardia-browser/ardia`):"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "  Ardia\" button, some error messages) still say Ardia, and the address bar shows `ardia://` for the app's own pages."
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "- Names today's engines read keep their Ardia spelling until Nilla's engines exist: the `ARDIA_*` environment"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "Every build runs on a data folder of its own. Nilla never reads or writes an installed Ardia's data, keychain items or"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "Safe Storage key in Ardia's \"Ardia Safe Storage\" keychain item. Saved passwords and cookies are therefore sealed with"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "account that has, or could later get, an Ardia profile: today's Linux engine picks Ardia's default folder before any"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "ARDIA_DATA_DIR=\"$scratch/data\" ARDIA_CONFIG_HOME=\"$scratch/config\" scripts/linux/nilla-dev-run \"$scratch/ardia\""
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "The engine refuses a group-writable data folder, hence `umask 022`. The tarball extracts to `ardia/` (its launcher is"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "`bin/ardia` until Nilla's own engine). `nilla-dev-run` also passes `--user-data-dir=$ARDIA_CONFIG_HOME/ardia` and"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "only on a throwaway VM, container or CI runner. Either way it refuses a machine where Ardia's config, data, cache or"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "state folders exist in `$HOME`, the XDG folders or any account's home. The tarball's `bin/ardia` refuses to start"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "Windows builds run in CI or in a disposable Windows VM only: today's Windows engine opens Ardia's default profile"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "Helium's GPL-3.0 patches. Nilla's own source files, including those it carries from Ardia, are under the"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "Nilla is a fork of **[Ardia](https://github.com/ardia-browser/ardia)** (originally"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "[mantrakp04/ardia](https://github.com/mantrakp04/ardia)), by Mantra Patel and its contributors. Nearly everything here"
+ },
+ {
+  "path": "README.md",
+  "class": "V",
+  "why": "README.md credits Ardia (status note, Acknowledgements), says the prebuilt engines are Ardia's, and names the engine-drawn text, engine-read names and the Linux tarball layout that keep Ardia's spelling.",
+  "text": "Nilla is an independent project. It is not affiliated with or endorsed by Ardia or its authors, The Helium Authors, or"
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "# downloaded. It never creates, replaces or removes an ardia link."
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "# Ardia's folders, and a path it can't resolve. It marks the CLI home with a .nilla-cli file and refuses a CLI home"
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "# never makes an Ardia folder its own. It refuses a .lock or .nilla-cli that is a link, and links nilla-browser only to a"
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "# launcher that resolves inside the CLI home and outside Ardia's folders."
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "  fail \"set ARDIA_CLI_HOME to a folder of Nilla's own: on Linux this development build never guesses, so it never installs into an installed Ardia's ~/.local/share/ardia/cli\""
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "  printf '%s/ardia\\n' \"$(xdg_or \"${XDG_CONFIG_HOME:-}\" \"$HOME/.config\")\" \"$HOME/.config\" \\"
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "  printf '%s\\n' \"$HOME/Library/Application Support/Ardia\" \"$HOME/Library/Application Support/com.ardia.browser\" \\"
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "    \"$HOME/Library/Logs/Ardia\""
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "    root=$(real_path \"$folder\") || fail \"$folder, an installed Ardia's folder, can't be resolved, so nilla-browser can't tell whether $2 is inside it\""
+ },
+ {
+  "path": "apps/cli/install.sh",
+  "class": "N",
+  "why": "The CLI installer's help and its refusal of an installed Ardia's folders (the same list as upstream.py), and the never-touch-an-ardia-link note.",
+  "text": "      \"${root%/}\"/*) fail \"$1 $2 is inside $folder, an installed Ardia's folder; nilla-browser never installs into Ardia's folders\" ;;"
+ },
+ {
+  "path": "apps/cli/scripts/build.sh",
+  "class": "N",
+  "why": "The CLI tarball's bin/ardia launcher that bin/nilla-browser links to (the Linux package layout keeps it until Layer 2).",
+  "text": "ln -s ardia \"$root/bin/nilla-browser\""
+ },
+ {
+  "path": "docs/release-notes/README.md",
+  "class": "V",
+  "why": "The release-notes guide points at Ardia's archived notes and forbids comparing with Ardia's numbers.",
+  "text": "`MARKETING_VERSION` exactly (`0.1.0.md`). Nilla has no releases yet, so this folder holds only this guide; Ardia's"
+ },
+ {
+  "path": "docs/release-notes/README.md",
+  "class": "V",
+  "why": "The release-notes guide points at Ardia's archived notes and forbids comparing with Ardia's numbers.",
+  "text": "  one sentence on what moved most. Never compare against Ardia's numbers."
+ },
+ {
+  "path": "docs/releasing.md",
+  "class": "V",
+  "why": "docs/releasing.md says the release machinery is Ardia's shape, points at Ardia's archived guide, and says the engine pins point at Ardia's engines.",
+  "text": "The release machinery is still the shape Ardia used: `.github/workflows/release.yml`, `scripts/release.sh` and its"
+ },
+ {
+  "path": "docs/releasing.md",
+  "class": "V",
+  "why": "docs/releasing.md says the release machinery is Ardia's shape, points at Ardia's archived guide, and says the engine pins point at Ardia's engines.",
+  "text": "stages in `scripts/release/`, `scripts/linux/release.sh` and the Windows packaging in `scripts/windows`. Ardia's guide"
+ },
+ {
+  "path": "docs/releasing.md",
+  "class": "V",
+  "why": "docs/releasing.md says the release machinery is Ardia's shape, points at Ardia's archived guide, and says the engine pins point at Ardia's engines.",
+  "text": "| Nilla's own engines (Layer 2), published on `NoorChasib/nilla` with their pins updated | every desktop platform | the pins point at Ardia's engines, whose own pages still say Ardia, so no build is published |"
+ },
+ {
+  "path": "docs/releasing.md",
+  "class": "V",
+  "why": "docs/releasing.md says the release machinery is Ardia's shape, points at Ardia's archived guide, and says the engine pins point at Ardia's engines.",
+  "text": "  release, Ardia's included: Nilla has to keep it available itself."
+ },
+ {
+  "path": "scripts/linux/arch/PKGBUILD",
+  "class": "N",
+  "why": "The Arch package of the Linux tarball: its ardia-bin name, provides and conflicts, the ardia-linux-x64 tarball and its ardia/ top folder (Linux package layout, Layer 2).",
+  "text": "pkgname=ardia-bin"
+ },
+ {
+  "path": "scripts/linux/arch/PKGBUILD",
+  "class": "N",
+  "why": "The Arch package of the Linux tarball: its ardia-bin name, provides and conflicts, the ardia-linux-x64 tarball and its ardia/ top folder (Linux package layout, Layer 2).",
+  "text": "provides=('ardia')"
+ },
+ {
+  "path": "scripts/linux/arch/PKGBUILD",
+  "class": "N",
+  "why": "The Arch package of the Linux tarball: its ardia-bin name, provides and conflicts, the ardia-linux-x64 tarball and its ardia/ top folder (Linux package layout, Layer 2).",
+  "text": "conflicts=('ardia')"
+ },
+ {
+  "path": "scripts/linux/arch/PKGBUILD",
+  "class": "N",
+  "why": "The Arch package of the Linux tarball: its ardia-bin name, provides and conflicts, the ardia-linux-x64 tarball and its ardia/ top folder (Linux package layout, Layer 2).",
+  "text": "source=(\"ardia-linux-x64.tar.xz\")"
+ },
+ {
+  "path": "scripts/linux/arch/PKGBUILD",
+  "class": "N",
+  "why": "The Arch package of the Linux tarball: its ardia-bin name, provides and conflicts, the ardia-linux-x64 tarball and its ardia/ top folder (Linux package layout, Layer 2).",
+  "text": "  \"$srcdir/ardia/install.sh\" --prefix /usr --destdir \"$pkgdir\""
+ },
+ {
+  "path": "scripts/linux/fetch-engine.sh",
+  "class": "V",
+  "why": "The Linux engine fetcher's help names its upstream default repo (Layer 1 fetches Ardia's engines).",
+  "text": "  ARDIACORE_PREBUILT_REPO          GitHub repo (default ardia-browser/ardia)"
+ },
+ {
+  "path": "scripts/linux/install.sh",
+  "class": "N",
+  "why": "The tarball installer copies the ardia.* icons (ICON_NAME, Linux package layout).",
+  "text": "for icon in \"$source_root\"/share/icons/hicolor/*/apps/ardia.*; do"
+ },
+ {
+  "path": "scripts/linux/linux_formats.py",
+  "class": "N",
+  "why": "The .deb and AppImage builders: their temporary folder prefixes, the ARDIA_APPIMAGE_TOOLS cache folder and the ardia.png icon (Linux package layout).",
+  "text": "    with tempfile.TemporaryDirectory(prefix='ardia-deb-') as scratch:"
+ },
+ {
+  "path": "scripts/linux/linux_formats.py",
+  "class": "N",
+  "why": "The .deb and AppImage builders: their temporary folder prefixes, the ARDIA_APPIMAGE_TOOLS cache folder and the ardia.png icon (Linux package layout).",
+  "text": "    cache = pathlib.Path(cache or os.environ.get('ARDIA_APPIMAGE_TOOLS') or pathlib.Path.home() / '.cache/ardia-appimage')"
+ },
+ {
+  "path": "scripts/linux/linux_formats.py",
+  "class": "N",
+  "why": "The .deb and AppImage builders: their temporary folder prefixes, the ARDIA_APPIMAGE_TOOLS cache folder and the ardia.png icon (Linux package layout).",
+  "text": "    with tempfile.TemporaryDirectory(prefix='ardia-appimage-') as scratch:"
+ },
+ {
+  "path": "scripts/linux/linux_formats.py",
+  "class": "N",
+  "why": "The .deb and AppImage builders: their temporary folder prefixes, the ARDIA_APPIMAGE_TOOLS cache folder and the ardia.png icon (Linux package layout).",
+  "text": "        icon = root / 'share/icons/hicolor/256x256/apps/ardia.png'"
+ },
+ {
+  "path": "scripts/linux/linux_formats.py",
+  "class": "N",
+  "why": "The .deb and AppImage builders: their temporary folder prefixes, the ARDIA_APPIMAGE_TOOLS cache folder and the ardia.png icon (Linux package layout).",
+  "text": "            shutil.copyfile(icon, app / 'ardia.png')"
+ },
+ {
+  "path": "scripts/linux/package.py",
+  "class": "N",
+  "why": "The tarball packager: the bin/ardia launcher text test_platform_tooling.py asserts ($ardia_bin_dir), ICON_NAME, the icon path, its temporary folder and the ardia/ top folder.",
+  "text": "ardia_bin_dir=$(CDPATH= cd -- \"$(dirname -- \"$0\")\" && pwd)"
+ },
+ {
+  "path": "scripts/linux/package.py",
+  "class": "N",
+  "why": "The tarball packager: the bin/ardia launcher text test_platform_tooling.py asserts ($ardia_bin_dir), ICON_NAME, the icon path, its temporary folder and the ardia/ top folder.",
+  "text": "exec \"$ardia_bin_dir/../lib/ardia/ardia-launch\" \"$@\""
+ },
+ {
+  "path": "scripts/linux/package.py",
+  "class": "N",
+  "why": "The tarball packager: the bin/ardia launcher text test_platform_tooling.py asserts ($ardia_bin_dir), ICON_NAME, the icon path, its temporary folder and the ardia/ top folder.",
+  "text": "ICON_NAME = 'ardia'"
+ },
+ {
+  "path": "scripts/linux/package.py",
+  "class": "N",
+  "why": "The tarball packager: the bin/ardia launcher text test_platform_tooling.py asserts ($ardia_bin_dir), ICON_NAME, the icon path, its temporary folder and the ardia/ top folder.",
+  "text": "    if 'share/icons/hicolor/256x256/apps/ardia.png' not in icons:"
+ },
+ {
+  "path": "scripts/linux/package.py",
+  "class": "N",
+  "why": "The tarball packager: the bin/ardia launcher text test_platform_tooling.py asserts ($ardia_bin_dir), ICON_NAME, the icon path, its temporary folder and the ardia/ top folder.",
+  "text": "    with tempfile.TemporaryDirectory(prefix='ardia-package-') as scratch:"
+ },
+ {
+  "path": "scripts/linux/package.py",
+  "class": "N",
+  "why": "The tarball packager: the bin/ardia launcher text test_platform_tooling.py asserts ($ardia_bin_dir), ICON_NAME, the icon path, its temporary folder and the ardia/ top folder.",
+  "text": "            archive.add(root, arcname='ardia')"
+ },
+ {
+  "path": "scripts/linux/publish_engine.py",
+  "class": "N",
+  "why": "The Linux engine publisher's temporary folder prefixes.",
+  "text": "    with tempfile.TemporaryDirectory(prefix='ardia-engine-key-') as scratch:"
+ },
+ {
+  "path": "scripts/linux/publish_engine.py",
+  "class": "N",
+  "why": "The Linux engine publisher's temporary folder prefixes.",
+  "text": "        dest = pathlib.Path(tempfile.mkdtemp(prefix='ardia-linux-engine-'))"
+ },
+ {
+  "path": "scripts/linux/publish_engine.py",
+  "class": "N",
+  "why": "The Linux engine publisher's temporary folder prefixes.",
+  "text": "    with tempfile.TemporaryDirectory(prefix='ardia-engine-stage-') as scratch, tempfile.TemporaryDirectory(prefix='ardia-engine-symbols-') as symbols_scratch:"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "a temporary folder, launches ardia/bin/ardia headless (ozone headless, SwiftShader,"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "  if (fields.Package !== \"ardia\") problems.push(`the package is called ${fields.Package}, not ardia`);"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "    this.root = { tar: join(into, \"ardia\"), deb: join(into, \"usr\"), appimage: join(into, \"squashfs-root\") }[this.format];"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "    this.launcher = { tar: join(this.root, \"bin\", \"ardia\"), deb: join(this.root, \"bin\", \"ardia\"), appimage: join(this.root, \"AppRun\") }[this.format];"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "    this.runtime = join(this.root, \"lib\", \"ardia\");"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "    if (!/^Exec=\\/usr\\/bin\\/ardia /m.test(desktop)) problems.push(\"the staged desktop entry does not run /usr/bin/ardia\");"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "    if (!/^Exec=\\/usr\\/bin\\/ardia /m.test(desktop)) problems.push(\"the .deb's desktop entry does not run /usr/bin/ardia\");"
+ },
+ {
+  "path": "scripts/linux/smoke.mjs",
+  "class": "N",
+  "why": "The Linux smoke gate checks the package layout the engine and packaging keep until Layer 2: Package: ardia, bin/ardia, lib/ardia, Exec=/usr/bin/ardia, ardia.png and the tarball's ardia/ folder.",
+  "text": "    if (!(await fileInfo(join(this.root, \"ardia.png\")))?.isFile) problems.push(\"the AppImage has no ardia.png\");"
+ }
+]
