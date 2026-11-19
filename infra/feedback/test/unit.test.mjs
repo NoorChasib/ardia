@@ -190,7 +190,7 @@ test("scrubText removes emails, secrets, URL queries and home paths", () => {
 });
 
 test("quietMentions keeps GitHub from pinging anyone", () => {
-  assert.equal(quietMentions("ping @mantrakp04 and @org/team"), "ping @\u200bmantrakp04 and @\u200borg/team");
+  assert.equal(quietMentions("ping @alice and @org/team"), "ping @\u200balice and @\u200borg/team");
   assert.equal(quietMentions("`@types/node`"), "`@types/node`");
   assert.equal(scrubForIssue("me@example.com @bob"), "[email] @\u200bbob");
 });
