@@ -660,7 +660,12 @@ const ENGINE_CONTRACT = [
   {
     name: "the engine source list ardia_sources",
     engine: ["engine/chromium/src/chrome/browser/ardia/BUILD.gn", /^ardia_sources = \[/m],
-    app: [["scripts/linux/syntax_check_156.py", /re\.search\(r"ardia_sources = \\\[\(\.\*\?\)\\\]", gn, re\.S\)/]],
+    app: [["scripts/linux/syntax_check_156.py", (script, read) => gnSearchesMatch(script, read(LINUX_SYNTAX_GN))]],
+  },
+  {
+    name: "the engine folders the Linux syntax check reads",
+    engine: ["engine/ardiacore-linux/src/ardia/linux/BUILD.gn", /^mojom\("page_mojom"\) \{\n  sources = \[ "mojom\/page\.mojom" \]/m],
+    app: [["scripts/linux/syntax_check_156.py", syntaxCheckFoldersExist]],
   },
   {
     name: "the upstream engine repo the fetch defaults name",
@@ -669,12 +674,36 @@ const ENGINE_CONTRACT = [
   },
 ];
 
+const LINUX_SYNTAX_GN = "engine/chromium/src/chrome/browser/ardia/BUILD.gn";
+
+function gnSearchesMatch(script, gn) {
+  const searches = [...script.matchAll(/re\.search\(r"((?:[^"\\]|\\.)+)", gn, re\.S\)/g)].map((match) => new RegExp(match[1], "s"));
+  return gn !== undefined && searches.length >= 2 && searches.every((search) => search.test(gn));
+}
+
+function syntaxCheckFoldersExist(script) {
+  const bases = { ROOT: "" };
+  for (const [, name, base, path] of script.matchAll(/^(\w+) = (ROOT|ENGINE|LINUX) \/ "([^"]+)"$/gm)) if (base in bases) bases[name] = `${bases[base]}${path}/`;
+  const read = [...script.matchAll(/\b(ROOT|ENGINE|LINUX|NILLA) \/ "([^"]+)"/g)].map(([, base, path]) => (base in bases ? bases[base] + path : undefined));
+  const mojom = /\(LINUX \/ "([^"]+)\/mojom"\)\.glob\("\*\.mojom"\)/.exec(script)?.[1];
+  return (
+    ["LINUX", "ENGINE", "NILLA"].every((name) => name in bases) &&
+    read.length >= 8 &&
+    read.every((path) => path !== undefined && existsSync(ROOT + path)) &&
+    mojom !== undefined &&
+    script.includes(`mojo / "src/${mojom}/mojom" / mojom.name`) &&
+    script.includes(`f"src/${mojom}/mojom/{m.name}\\n"`) &&
+    script.includes(`(mojo / "gen/${mojom.split("/")[0]}").rglob("*.h")`)
+  );
+}
+
 function engineContractProblems(read) {
   const problems = [];
+  const holds = (pattern, path) => (typeof pattern === "function" ? pattern(read(path) ?? "", read) : pattern.test(read(path) ?? ""));
   for (const { name, engine, app } of ENGINE_CONTRACT) {
     const [enginePath, enginePattern] = engine;
-    if (!enginePattern.test(read(enginePath) ?? "")) problems.push(`${name}: ${enginePath} no longer holds it; update the app side with the engine`);
-    for (const [path, pattern] of app) if (!pattern.test(read(path) ?? "")) problems.push(`${name}: ${path} must hold the engine's spelling`);
+    if (!holds(enginePattern, enginePath)) problems.push(`${name}: ${enginePath} no longer holds it; update the app side with the engine`);
+    for (const [path, pattern] of app) if (!holds(pattern, path)) problems.push(`${name}: ${path} must hold the engine's spelling`);
   }
   return problems;
 }
