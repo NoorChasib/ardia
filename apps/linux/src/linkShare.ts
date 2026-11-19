@@ -1,4 +1,4 @@
-import type { MenuItem } from "@ardia-real/shell";
+import type { MenuItem } from "@nilla-real/shell";
 
 export type ShareAnchor = readonly [number, number, number, number];
 export type ShareSurface = {

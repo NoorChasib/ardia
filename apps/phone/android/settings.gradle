@@ -27,10 +27,10 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 }
 expoAutolinking.useExpoModules()
 
-rootProject.name = 'ArdiaPhone'
+rootProject.name = 'NillaPhone'
 
 expoAutolinking.useExpoVersionCatalog()
 
 include ':app'
-include ':ardia-design'
+include ':nilla-design'
 includeBuild(expoAutolinking.reactNativeGradlePlugin)

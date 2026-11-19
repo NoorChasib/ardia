@@ -1,5 +1,5 @@
 import type { ConfirmOptions, DialogsNative, PromptOptions } from "../../../packages/shell/src/dialogs";
-import { ardiaHost, hostModuleMethod, invokeHost, type ArdiaHost } from "./host";
+import { nillaHost, hostModuleMethod, invokeHost, type ArdiaHost } from "./host";
 
 type Confirmation = Awaited<ReturnType<DialogsNative["confirm"]>>;
 type DialogResult = Confirmation | string | null;
@@ -144,4 +144,4 @@ export function createHostDialogs(host: ArdiaHost, newId = () => `dialog:${crypt
 }
 
 let dialogs: ReturnType<typeof createHostDialogs> | undefined;
-export const linuxHostDialogs = () => dialogs ??= createHostDialogs(ardiaHost!);
+export const linuxHostDialogs = () => dialogs ??= createHostDialogs(nillaHost!);

@@ -23,7 +23,7 @@ final class CommandItem: NSMenuItem, Rebindable {
     let shortcut = MainMenu.keyEquivalent(key, mods)
     super.init(title: title, action: #selector(MenuTarget.performCommand(_:)), keyEquivalent: shortcut.key)
     keyEquivalentModifierMask = shortcut.mods
-    identifier = NSUserInterfaceItemIdentifier("ardia.command." + command)
+    identifier = NSUserInterfaceItemIdentifier("nilla.command." + command)
     target = MenuTarget.shared
     tag = Self.chromeMenuTag
   }

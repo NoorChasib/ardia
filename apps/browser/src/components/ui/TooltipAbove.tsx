@@ -1,4 +1,4 @@
-import { Surface } from "@ardia/shell";
+import { Surface } from "@nilla/shell";
 import { useEffect, useRef, useState } from "react";
 import { Animated, Text } from "react-native";
 import { hex, surfaceTheme, useTheme } from "./theme";

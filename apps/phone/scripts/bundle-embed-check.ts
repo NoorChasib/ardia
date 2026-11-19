@@ -67,7 +67,7 @@ function bundle(root: string, platform: Platform, work: string): { ok: boolean; 
     node,
     [cli, "export:embed", "--entry-file", entry, "--platform", platform, "--dev", "false", "--reset-cache", "--minify", "false",
       "--bundle-output", path.join(out, "main.bundle"), "--sourcemap-output", map, "--assets-dest", path.join(out, "assets")],
-    { cwd: phone, env: { ...process.env, EXPO_PUBLIC_ARDIA_LAB: "false", CI: "1" }, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
+    { cwd: phone, env: { ...process.env, EXPO_PUBLIC_NILLA_LAB: "false", CI: "1" }, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 },
   );
   fs.writeFileSync(log, `${run.stdout ?? ""}${run.stderr ?? ""}`);
   if (run.status !== 0) {
@@ -102,7 +102,7 @@ function main(argv: string[]): number {
     if (!beforeBun) console.log("no commit before Bun in this history: checking HEAD only");
     commits = beforeBun ? ["HEAD", beforeBun] : ["HEAD"];
   }
-  const work = fs.mkdtempSync(path.join(os.tmpdir(), "ardia-embed-check-"));
+  const work = fs.mkdtempSync(path.join(os.tmpdir(), "nilla-embed-check-"));
   let failed = 0;
   const report = (label: string, platform: Platform, result: { ok: boolean; detail: string }) => {
     if (!result.ok) failed += 1;

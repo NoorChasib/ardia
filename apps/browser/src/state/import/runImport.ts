@@ -1,4 +1,4 @@
-import { ardiaError } from "@ardia/core";
+import { nillaError } from "@nilla/core";
 import { orWarn } from "../../lib/fallback";
 import { confirm } from "../app/system";
 import { plural } from "../browser/model";
@@ -45,18 +45,23 @@ import {
 import { importModule } from "./importApi";
 import { listFoundExtensions } from "./listedExtensions";
 import type { ExtensionGroup } from "./extensionListing";
+import { checkingSessionKeys, withSessionKeyNeeds } from "./sessionKeys";
 
-export function continueImport() {
-  const { source, step, kinds, sourceProfiles } = importNow();
-  if (!source) return;
+export async function continueImport() {
+  const { source: listed, step, kinds, sourceProfiles } = importNow();
+  if (!listed || checkingSessionKeys()) return;
   if (step.name === "choose") {
-    if (source.needsFullDiskAccess) return patchImport({ step: { name: "access" } });
-    if (source.requiresExport) return patchImport({ step: { name: "safari", error: null } });
-    if (source.profiles.length > 1 || (importsBySpaces(source) && spacesOf(source).length > 1)) return patchImport({ step: { name: "profiles" } });
+    if (listed.needsFullDiskAccess) return patchImport({ step: { name: "access" } });
+    if (listed.requiresExport) return patchImport({ step: { name: "safari", error: null } });
+    if (listed.profiles.length > 1 || (importsBySpaces(listed) && spacesOf(listed).length > 1)) return patchImport({ step: { name: "profiles" } });
   }
+  const unlocked = () => importModule().isBrowserUnlocked(listed.id);
+  const wantsSessionTabs = kinds.has("tabs") && !listed.asksAppForTabs && listed.family === "chromium";
+  const source = wantsSessionTabs && listed.needsKeychain && !unlocked() ? await withSessionKeyNeeds(listed, sourceProfiles) : listed;
+  if (!source) return;
   const sidebarKinds = DIA_SIDEBAR_KINDS.some((k) => kinds.has(k));
   const encryptedTabs = source.profiles.some((p) => sourceProfiles.includes(p.id) && p.tabsNeedKey && (kinds.has("tabs") || (!!p.diaSidebar && sidebarKinds)));
-  const locked = (encryptedTabs || ENCRYPTED_KINDS.some((k) => kinds.has(k))) && source.needsKeychain && !importModule().isBrowserUnlocked(source.id);
+  const locked = (encryptedTabs || ENCRYPTED_KINDS.some((k) => kinds.has(k))) && source.needsKeychain && !unlocked();
   if ((step.name === "choose" || step.name === "profiles") && locked) return patchImport({ step: { name: "unlock", unlocking: false, error: null } });
   void runImport(kinds);
 }
@@ -103,7 +108,7 @@ async function destination(target: string, index: number, name: string, color?: 
 type AppTabs = { result: DiaTabsResult } | { note: string };
 
 const NOT_BROUGHT = "Dia's tabs couldn't be brought over:";
-const SIDEBAR_UNREAD = "Dia's sidebar file couldn't be read, so Ardia asked Dia for its open and pinned tabs: their folders, custom names and split views stay in Dia.";
+const SIDEBAR_UNREAD = "Dia's sidebar file couldn't be read, so Nilla asked Dia for its open and pinned tabs: their folders, custom names and split views stay in Dia.";
 const FAVORITES_LOCKED = "Dia's Favorites weren't imported: they're in its sidebar file, which needs the keychain access you skipped.";
 
 function readAppTabs(): Promise<AppTabs> {
@@ -112,9 +117,9 @@ function readAppTabs(): Promise<AppTabs> {
     .then(
       (result): AppTabs => (result.windowCount ? { result } : { note: `${NOT_BROUGHT} Dia had no windows open.` }),
       (e: unknown): AppTabs => {
-        const { code } = ardiaError(e);
+        const { code } = nillaError(e);
         if (code === "locked")
-          return { note: `${NOT_BROUGHT} macOS didn't allow Ardia to ask Dia for them. Allow it in System Settings › Privacy & Security › Automation, then import again.` };
+          return { note: `${NOT_BROUGHT} macOS didn't allow Nilla to ask Dia for them. Allow it in System Settings › Privacy & Security › Automation, then import again.` };
         return { note: `${NOT_BROUGHT} ${code === "notRunning" ? "Dia didn't open." : "Dia didn't answer."}` };
       },
     );
@@ -235,7 +240,7 @@ export async function runImport(wanted: ReadonlySet<ImportKind>, withoutKey = fa
         },
       });
     } catch (e) {
-      if (ardiaError(e).code === "cancelled") return;
+      if (nillaError(e).code === "cancelled") return;
       if (readsSidebarFile(profile) && fromApp.length) {
         result = nothingRead(source.id, profile.id, profileKinds);
       } else {

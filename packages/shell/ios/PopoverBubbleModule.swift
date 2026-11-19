@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public class PopoverBubbleModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPopoverBubble")
+    Name("NillaPopoverBubble")
 
     View(PopoverBubble.self) {
       Prop("material") { (view: PopoverBubble, name: String?) in view.setMaterial(name) }

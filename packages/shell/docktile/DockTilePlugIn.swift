@@ -1,14 +1,14 @@
 import AppKit
 
-@objc(ArdiaDockTilePlugIn)
-final class ArdiaDockTilePlugIn: NSObject, NSDockTilePlugIn {
+@objc(NillaDockTilePlugIn)
+final class NillaDockTilePlugIn: NSObject, NSDockTilePlugIn {
   private var dockTile: NSDockTile?
   private var observer: NSObjectProtocol?
   private var styleWatcher: IconStyleWatcher?
   private var saved = "default"
 
   private lazy var app: Bundle? = {
-    let url = Bundle(for: ArdiaDockTilePlugIn.self).bundleURL
+    let url = Bundle(for: NillaDockTilePlugIn.self).bundleURL
       .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     return Bundle(url: url)
   }()

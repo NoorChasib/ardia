@@ -3,7 +3,7 @@ import { act } from "react-test-renderer";
 import { DeckBar } from "../components/tabs/DeckBar";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 
-const lookModule = require("@ardia/phone-native/src/look") as typeof import("@ardia/phone-native/src/look");
+const lookModule = require("@nilla/phone-native/src/look") as typeof import("@nilla/phone-native/src/look");
 
 beforeEach(() => {
   jest.useFakeTimers();

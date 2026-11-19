@@ -1,8 +1,8 @@
 import XCTest
-@testable import ArdiaNotificationCore
+@testable import NillaNotificationCore
 
 final class CategoryLedgerTests: XCTestCase {
-  private let own = ["ardia.dismissible"]
+  private let own = ["nilla.dismissible"]
   private var registered: [String] = []
   private let ledger = CategoryLedger()
 
@@ -15,7 +15,7 @@ final class CategoryLedgerTests: XCTestCase {
     let snapshot = ["saved"]
     let wrote = ledger.writeUnlessWritten(since: mark) { engineSets(snapshot) }
     XCTAssertTrue(wrote)
-    XCTAssertEqual(registered, ["saved", "ardia.dismissible"])
+    XCTAssertEqual(registered, ["saved", "nilla.dismissible"])
   }
 
   func testAnEngineWriteDuringTheReadIsNotOverwrittenByTheOlderSnapshot() {
@@ -24,7 +24,7 @@ final class CategoryLedgerTests: XCTestCase {
     engineSets(["engine-buttons"])
     let wrote = ledger.writeUnlessWritten(since: mark) { engineSets(snapshot) }
     XCTAssertFalse(wrote)
-    XCTAssertEqual(registered, ["engine-buttons", "ardia.dismissible"])
+    XCTAssertEqual(registered, ["engine-buttons", "nilla.dismissible"])
   }
 
   func testWritesFromManyThreadsAreCountedAndTheGuardSeesEveryOne() {
@@ -36,7 +36,7 @@ final class CategoryLedgerTests: XCTestCase {
   }
 
   func testAMergeKeepsTheGivenCategoriesAndAddsOnlyMissingOwnOnes() {
-    XCTAssertEqual(CategoryLedger.merged(["a", "ardia.dismissible"], keeping: own, id: { $0 }), ["a", "ardia.dismissible"])
-    XCTAssertEqual(CategoryLedger.merged([], keeping: own, id: { $0 }), ["ardia.dismissible"])
+    XCTAssertEqual(CategoryLedger.merged(["a", "nilla.dismissible"], keeping: own, id: { $0 }), ["a", "nilla.dismissible"])
+    XCTAssertEqual(CategoryLedger.merged([], keeping: own, id: { $0 }), ["nilla.dismissible"])
   }
 }

@@ -1,7 +1,7 @@
 import Foundation
 
 public struct SharedFolderDirectory {
-  public static let manifestName = ".ardia-folder.json"
+  public static let manifestName = ".nilla-folder.json"
   public static let linkExtension = "webloc"
   static let maxDepth = 8
   static let maxLinkBytes = 64 * 1024
@@ -53,10 +53,64 @@ public struct SharedFolderDirectory {
     return ["conflicts": conflicts]
   }
 
+  public static func namesUpstreamFolder(_ name: String) -> Bool {
+    UpstreamSyncFolder.names(name, [UpstreamSyncFolder.sharedName, UpstreamSyncFolder.name])
+  }
+
+  static func namesUpstreamEntry(_ name: String) -> Bool {
+    if namesUpstreamFolder(name) { return true }
+    guard name.hasPrefix("."), name.hasSuffix(placeholderSuffix) else { return false }
+    return namesUpstreamFolder(String(name.dropFirst().dropLast(placeholderSuffix.count)))
+  }
+
+  static func holdsUpstreamFolder(_ path: String, isPackage: (String) -> Bool = isPackage) -> Bool {
+    var pending = [path]
+    while let folder = pending.popLast() {
+      let descriptor = open(folder, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
+      guard descriptor >= 0 else { return true }
+      guard let stream = fdopendir(descriptor) else {
+        close(descriptor)
+        return true
+      }
+      defer { closedir(stream) }
+      while true {
+        errno = 0
+        guard let entry = readdir(stream) else {
+          if errno != 0 { return true }
+          break
+        }
+        let name = withUnsafeBytes(of: entry.pointee.d_name) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        if name == "." || name == ".." { continue }
+        if namesUpstreamEntry(name) { return true }
+        let child = folder + "/" + name
+        let type = Int(entry.pointee.d_type)
+        let isFolder: Bool
+        if type == Int(DT_UNKNOWN) {
+          let found = kind(of: child)
+          if found == .blocked { return true }
+          isFolder = found == .directory
+        } else {
+          isFolder = type == Int(DT_DIR)
+        }
+        guard isFolder else { continue }
+        if isPackage(child) { return true }
+        pending.append(child)
+      }
+    }
+    return false
+  }
+
+  static func isPackage(_ path: String) -> Bool {
+    (try? URL(fileURLWithPath: path, isDirectory: true).resourceValues(forKeys: [.isPackageKey]))?.isPackage == true
+  }
+
   public static func create(in parent: URL, named name: String) throws -> URL {
     let fileManager = FileManager.default
-    try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
     let base = folderName(name)
+    guard !namesUpstreamFolder(base), case .own = UpstreamSyncFolder.checkShared(parent.appendingPathComponent(base, isDirectory: true).path) else {
+      throw failure(UpstreamSyncFolder.sharedRefusal)
+    }
+    try fileManager.createDirectory(at: parent, withIntermediateDirectories: true)
     var number = 1
     while true {
       let candidate = parent.appendingPathComponent(number == 1 ? base : "\(base) \(number)", isDirectory: true)
@@ -122,7 +176,7 @@ public struct SharedFolderDirectory {
     var manifest: Any = NSNull()
     var manifestPending = false
     let held = { (name: String, reason: String) in entries.append(["kind": "pending", "file": name, "reason": reason]) }
-    for name in names.sorted() {
+    for name in names.sorted() where !Self.namesUpstreamFolder(name) {
       let url = directory.appendingPathComponent(name)
       let kind = Self.kind(of: url.path)
       if name.hasPrefix(".") {
@@ -136,6 +190,7 @@ public struct SharedFolderDirectory {
         }
         guard name.hasSuffix(Self.placeholderSuffix), kind == .file else { continue }
         let real = String(name.dropFirst().dropLast(Self.placeholderSuffix.count))
+        guard !Self.namesUpstreamFolder(real) else { continue }
         try? fileManager.startDownloadingUbiquitousItem(at: directory.appendingPathComponent(real))
         if real == Self.manifestName {
           manifestPending = true
@@ -250,7 +305,9 @@ public struct SharedFolderDirectory {
 
   private func inside(_ path: String) -> URL? {
     let parts = path.split(separator: "/", omittingEmptySubsequences: true)
-    guard !parts.isEmpty, !path.hasPrefix("/"), !parts.contains(where: { $0 == ".." || $0 == "." }) else { return nil }
+    guard !parts.isEmpty, !path.hasPrefix("/"), !parts.contains(where: { $0 == ".." || $0 == "." || Self.namesUpstreamFolder(String($0)) }) else {
+      return nil
+    }
     var url = URL(fileURLWithPath: rootReal, isDirectory: true)
     for part in parts.dropLast() {
       url.appendPathComponent(String(part))
@@ -300,6 +357,7 @@ public struct SharedFolderDirectory {
     var moved = false
     try SyncCoordination.move(coordination, from, to: to) { source, destination in
       guard Self.kind(of: destination.path) == .missing else { return }
+      guard Self.kind(of: source.path) != .directory || !Self.holdsUpstreamFolder(source.path) else { throw Self.failure(UpstreamSyncFolder.sharedRefusal) }
       if renamex_np(source.path, destination.path, UInt32(RENAME_EXCL)) == 0 {
         moved = true
       } else if errno != EEXIST {
@@ -361,6 +419,6 @@ public struct SharedFolderDirectory {
   }
 
   static func failure(_ message: String) -> NSError {
-    NSError(domain: "ArdiaSharedFolders", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+    NSError(domain: "NillaSharedFolders", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
   }
 }

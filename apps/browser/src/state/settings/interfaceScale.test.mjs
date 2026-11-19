@@ -64,7 +64,7 @@ test("a window frame stays physical and converts to root points by dividing by t
 
 test("a host without the interface size calls answers 100% and a range that hides the row, never a promise", async () => {
   const { moduleDefaults } = await import("../../../../../packages/expo-windows/src/defaults.ts");
-  const app = moduleDefaults.ArdiaApp;
+  const app = moduleDefaults.NillaApp;
   assert.equal(app.interfaceScale(), 1);
   assert.deepEqual(app.interfaceScaleRange(), [1, 1]);
   assert.equal(await app.setInterfaceScale(1.25), 1);

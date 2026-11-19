@@ -45,35 +45,11 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+  DEVELOPER_DIR: ${{ vars.XCODE_APP || '/Applications/Xcode.app' }}/Contents/Developer
 
 jobs:
-  gate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      run: ${{ steps.vouch.outputs.run }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          persist-credentials: false
-          sparse-checkout: .github
-      - id: vouch
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          retries: 3
-          script: |
-            const vouch = require(`${process.env.GITHUB_WORKSPACE}/.github/vouch/vouch.cjs`);
-            await vouch.gate({ github, context, core });
-
   app:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 75
     env:
       SCRATCH: ${{ github.workspace }}/.ci
@@ -98,14 +74,12 @@ jobs:
           git diff --exit-code -- apps/phone/ios ':!apps/phone/ios/Pods' || { echo "::error::pod install rewrote the iPhone project (diff above): run pod install locally and commit what it writes"; exit 1; }
       - name: Build the Expo app for the simulator, unsigned
         run: >-
-          xcodebuild -workspace apps/phone/ios/Ardia.xcworkspace -scheme Ardia -configuration Debug
+          xcodebuild -workspace apps/phone/ios/Nilla.xcworkspace -scheme Nilla -configuration Debug
           -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$SCRATCH/dd"
           CODE_SIGNING_ALLOWED=NO COMPILER_INDEX_STORE_ENABLE=NO -quiet build
 
   packages:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 45
     env:
       SCRATCH: ${{ github.workspace }}/.ci
@@ -121,7 +95,7 @@ jobs:
       - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            .ci/ardiakit
+            .ci/nillakit
             .ci/phonemotion
             .ci/phonesync
             .ci/sync
@@ -129,8 +103,8 @@ jobs:
           restore-keys: swiftpm-xcode-27.1-
       - name: The JavaScriptCore bundles match their TypeScript
         run: node apps/phone/scripts/bundle-shared.mjs --check
-      - name: ArdiaKit tests
-        run: swift test --package-path packages/phone/ios/ArdiaKit --scratch-path "$SCRATCH/ardiakit"
+      - name: NillaKit tests
+        run: swift test --package-path packages/phone/ios/NillaKit --scratch-path "$SCRATCH/nillakit"
       - name: The phone's Swift tests
         run: |
           swift test --package-path packages/phone/ios/PhoneMotion --scratch-path "$SCRATCH/phonemotion"
@@ -141,7 +115,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
-            .ci/ardiakit
+            .ci/nillakit
             .ci/phonemotion
             .ci/phonesync
             .ci/sync

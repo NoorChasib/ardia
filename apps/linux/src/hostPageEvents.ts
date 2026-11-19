@@ -1,4 +1,4 @@
-import { toAppUrl } from "@ardia/core";
+import { toAppUrl } from "@nilla/core";
 import { deliverPageEvent, type PageEvent } from "../../../packages/ardiacore/src/pageEvents";
 import type { NavigationState, WebViewProps } from "../../../packages/ardiacore/src/pageTypes";
 import type { PageResetReason } from "./hostPageLifecycle";

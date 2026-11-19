@@ -21,7 +21,7 @@ const RULE_KEYS: Record<string, DecideEvent> = {
   permission: "permission.requested",
 };
 const FILTER_KEYS: Record<string, DecideEvent> = { from: "link.opening", kinds: "permission.requested" };
-const OPEN_MODES = ["tab", "littleArdia", "window"] as const;
+const OPEN_MODES = ["tab", "littleNilla", "window"] as const;
 
 export type Rewrite = { pattern: string; spec: MatchSpec; to: string };
 export type Route = { profile: string | null; open: (typeof OPEN_MODES)[number] | null };
@@ -113,7 +113,7 @@ function rulesOf(item: Fields, event: DecideEvent): DecideRules | string {
   }
   if ("route" in item) {
     const route = item.route;
-    if (!isFields(route) || Object.keys(route).some((k) => k !== "profile" && k !== "open")) return 'route is {"profile"?: name, "open"?: "tab" | "littleArdia" | "window"}';
+    if (!isFields(route) || Object.keys(route).some((k) => k !== "profile" && k !== "open")) return 'route is {"profile"?: name, "open"?: "tab" | "littleNilla" | "window"}';
     if (route.profile !== undefined && (typeof route.profile !== "string" || !route.profile)) return "route.profile must be a profile name or id";
     if (route.open !== undefined && !OPEN_MODES.includes(route.open as never)) return `route.open must be ${OPEN_MODES.join(", ")}`;
     if (route.profile === undefined && route.open === undefined) return "route needs profile or open";

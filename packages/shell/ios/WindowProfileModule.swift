@@ -3,7 +3,7 @@ import ExpoModulesCore
 
 public class WindowProfileModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaWindowProfile")
+    Name("NillaWindowProfile")
 
     View(WindowProfileView.self) {
       Events("onSwapped")

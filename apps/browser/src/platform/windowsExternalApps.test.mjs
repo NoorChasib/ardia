@@ -5,7 +5,7 @@ import { readExternalAppAsk, schemeOf, serializedOrigin, trustworthyOrigin, wind
 import { answerExternalApp, showExternalApp } from "../state/site/prompts.ts";
 import { noteExternalApp, takeExternalAppCounts } from "../state/telemetry/externalAppCounts.ts";
 
-const HANDLERS = { mailto: { name: "Mail", path: "C:\\Mail\\mail.exe", icon: "data:image/png;base64,AA==" }, ardiatest: { name: "Test Handler", path: null, icon: null } };
+const HANDLERS = { mailto: { name: "Mail", path: "C:\\Mail\\mail.exe", icon: "data:image/png;base64,AA==" }, nillatest: { name: "Test Handler", path: null, icon: null } };
 
 function fakes() {
   const opened = [];
@@ -186,10 +186,10 @@ test("the self-check's gate, which skips the engine's liveness check, still need
   const docs = new Map();
   const documents = { readDocument: (name) => docs.get(name) ?? null, writeDocument: (name, text) => void docs.set(name, text) };
   const apps = windowsExternalApps(() => ({ describe: async (scheme) => HANDLERS[scheme] ?? null, open: async (url) => (opened.push(url), true) }), () => documents, async () => true);
-  const refused = await apps.request(ask({ url: "ardiaprogid:boom" }), "self-check", "page");
+  const refused = await apps.request(ask({ url: "nillaprogid:boom" }), "self-check", "page");
   assert.equal(refused.app, null);
   assert.equal(await apps.resolve(refused.id, true, true), false);
-  const declined = await apps.request(ask({ url: "ardiatest:x" }), "self-check", "page");
+  const declined = await apps.request(ask({ url: "nillatest:x" }), "self-check", "page");
   assert.equal(await apps.resolve(declined.id, false, true), false);
   assert.deepEqual(opened, []);
   const remembered = await apps.request(ask(), "self-check", "page");
@@ -242,7 +242,7 @@ test("a yes counts as a click, and only a launch Windows confirmed counts as a l
   const stale = await apps.request(ask(), "Ardia p-1", "tab-1");
   gone.add("tab-1");
   assert.equal(await apps.resolve(stale.id, true, false), false);
-  const live = await apps.request(ask({ id: "x2", url: "ardiatest:x" }), "Ardia p-1", "tab-2");
+  const live = await apps.request(ask({ id: "x2", url: "nillatest:x" }), "Ardia p-1", "tab-2");
   assert.equal(await apps.resolve(live.id, true, false), true);
   assert.deepEqual(windowsExternalAppCounts.takeLaunches(), { opened: 1, refused: 1, automatic: 0 });
 });

@@ -1,15 +1,15 @@
-import type { FocusNative } from "@ardia/shell";
+import type { FocusNative } from "@nilla/shell";
 import { TurboModuleRegistry } from "react-native";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
-const focus = () => requireNativeModule<FocusNative>("ArdiaFocus");
+const focus = () => requireNativeModule<FocusNative>("NillaFocus");
 
 export const checks: Check[] = [
   {
     name: "focus: the Escape and tab switcher captures are native",
     run() {
-      expectTrue(TurboModuleRegistry.get("ArdiaFocus"), "ArdiaFocus has no native module");
+      expectTrue(TurboModuleRegistry.get("NillaFocus"), "NillaFocus has no native module");
     },
   },
   {

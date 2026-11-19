@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 const root = new URL("..", import.meta.url).pathname;
-const typescriptSevenProjects = [".", "apps/phone", "apps/dashboard", "apps/videos"];
+const typescriptSevenProjects = [".", "apps/phone"];
 
 function majorOf(range) {
   return Number(range.replace(/^[~^]/, "").split(".")[0]);

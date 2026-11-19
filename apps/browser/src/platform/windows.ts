@@ -1,12 +1,12 @@
 import type { ComponentProps } from "react";
 import { call } from "@ardia/ardiacore";
-import { isPopupWindowId, nativeModule, type DragPreviewShape, type OpenWindowOptions, type OutsidePressArea, type Rect4, type WindowEvent } from "@ardia/shell";
+import { isPopupWindowId, nativeModule, type DragPreviewShape, type OpenWindowOptions, type OutsidePressArea, type Rect4, type WindowEvent } from "@nilla/shell";
 
 export type { DragPreviewShape, WindowEvent, OpenWindowOptions };
 export type OutsidePressEvent = Parameters<NonNullable<ComponentProps<typeof OutsidePressArea>["onOutsidePress"]>>[0];
 export { isPopupWindowId };
 
-const Windows = nativeModule("ArdiaAppWindows");
+const Windows = nativeModule("NillaAppWindows");
 let cachedWindowCornerRadius: number | undefined;
 export const windowCornerRadius = () => (cachedWindowCornerRadius ??= Windows.windowCornerRadius());
 export const forgetWindowCornerRadius = () => {
@@ -44,4 +44,4 @@ export const chromeWindows = () => call("windows.list");
 export const devWindowAction = (windowNumber: number, action: string) => call("windows.dev", { window: windowNumber, action });
 
 export const setWindowActivity = (windowId: string, url: string | null, title: string | null) =>
-  nativeModule("ArdiaApp").setWindowActivity(windowId, url, title);
+  nativeModule("NillaApp").setWindowActivity(windowId, url, title);

@@ -6,25 +6,26 @@ import LocalAuthentication
 public class SyncModule: Module {
   private let state = KeyState()
   private let owner = DeviceOwnerCheck()
-  private static let work = DispatchQueue(label: "ardia.sync", qos: .utility)
+  private static let work = DispatchQueue(label: "nilla.sync", qos: .utility)
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaSync")
+    Name("NillaSync")
 
     OnCreate { Self.work.async { Self.removeTemporaryKits() } }
 
-    AsyncFunction("folderInfo") { (path: String?) -> [String: Any] in
+    AsyncFunction("folderInfo") { (path: String?) throws -> [String: Any] in
       let url = path.map { URL(fileURLWithPath: $0, isDirectory: true) } ?? Self.defaultFolder
+      let own = try Self.guarded { try UpstreamSyncFolder.folderToProbe(path, fallback: Self.defaultFolder) }
       var isDirectory: ObjCBool = false
-      let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue
+      let exists = FileManager.default.fileExists(atPath: own.path, isDirectory: &isDirectory) && isDirectory.boolValue
       return [
         "path": url.path,
         "defaultPath": Self.defaultFolder.path,
         "iCloudAvailable": Self.testFolder != nil || SyncFolder.iCloudDriveAvailable,
         "inICloud": SyncFolder.isInICloudDrive(url),
         "exists": exists,
-        "writable": exists && FileManager.default.isWritableFile(atPath: url.path),
-        "hasSyncData": exists && SyncFolder.hasSyncData(url),
+        "writable": exists && FileManager.default.isWritableFile(atPath: own.path),
+        "hasSyncData": exists && SyncFolder.hasSyncData(own),
       ]
     }.runOnQueue(Self.work)
 
@@ -36,8 +37,18 @@ public class SyncModule: Module {
       panel.allowsMultipleSelection = false
       panel.prompt = "Use Folder"
       panel.message = "Choose a folder that syncs between your Macs, like one in iCloud Drive or Dropbox, or on a NAS or USB drive."
-      if let current { panel.directoryURL = URL(fileURLWithPath: current, isDirectory: true) }
-      panel.begin { response in promise.resolve(response == .OK ? panel.url?.path : nil) }
+      if let seed = UpstreamSyncFolder.pickerSeed(current) { panel.directoryURL = seed }
+      panel.begin { response in
+        guard response == .OK, let picked = panel.url?.path else { return promise.resolve(nil) }
+        do {
+          _ = try Self.ownFolder(picked)
+          promise.resolve(picked)
+        } catch let refusal as Exception {
+          promise.reject(refusal)
+        } catch {
+          promise.reject(error)
+        }
+      }
     }.runOnQueue(.main)
 
     Function("newDeviceId") { SyncKeys.newFileId() }
@@ -51,7 +62,7 @@ public class SyncModule: Module {
       return true
     }.runOnQueue(Self.work)
 
-    AsyncFunction("enterPhrase") { (account: String, text: String, folder: String) -> [String: Any] in
+    AsyncFunction("enterPhrase") { (account: String, text: String, folder: String) throws -> [String: Any] in
       let entropy: Data
       do {
         entropy = try RecoveryPhrase.entropy(from: text)
@@ -62,7 +73,7 @@ public class SyncModule: Module {
         case .checksum: return ["error": "checksum"]
         }
       }
-      let folderURL = URL(fileURLWithPath: folder, isDirectory: true)
+      let folderURL = try Self.ownFolder(folder)
       if !SyncVault(folder: folderURL, keys: SyncKeys(entropy: entropy)).chainExists() {
         return ["error": SyncFolder.hasSyncData(folderURL) ? "mismatch" : "noData"]
       }
@@ -86,19 +97,20 @@ public class SyncModule: Module {
     AsyncFunction("chainStatus") { (folder: String) throws -> String in
       let vault = try self.vault(folder)
       var isDirectory: ObjCBool = false
-      guard FileManager.default.fileExists(atPath: folder, isDirectory: &isDirectory), isDirectory.boolValue else { return "unavailable" }
+      guard FileManager.default.fileExists(atPath: vault.folder.path, isDirectory: &isDirectory), isDirectory.boolValue else { return "unavailable" }
       return vault.chainExists() ? "ok" : "missing"
     }.runOnQueue(Self.work)
 
     AsyncFunction("createChain") { (folder: String) throws in
-      try FileManager.default.createDirectory(at: URL(fileURLWithPath: folder, isDirectory: true), withIntermediateDirectories: true)
-      try self.vault(folder).createChain()
+      try FileManager.default.createDirectory(at: try Self.ownFolder(folder), withIntermediateDirectories: true)
+      let vault = try self.vault(folder)
+      try Self.guarded { try vault.createChain() }
     }.runOnQueue(Self.work)
 
     AsyncFunction("write") { (folder: String, scope: String, payload: String) throws -> String in
       try self.ensureLocalStateReadable()
       let vault = try self.vault(folder)
-      return try vault.write(scope: scope, payload: LegacyPasswords.restore(Data(payload.utf8), keys: vault.keys))
+      return try Self.guarded { try vault.write(scope: scope, payload: LegacyPasswords.restore(Data(payload.utf8), keys: vault.keys)) }
     }.runOnQueue(Self.work)
 
     AsyncFunction("read") { (folder: String, scope: String, known: [String]) throws -> [String: Any] in
@@ -106,6 +118,8 @@ public class SyncModule: Module {
       let listing: SyncVault.Listing
       do {
         listing = try vault.read(scope: scope, skipping: Set(known))
+      } catch let refused as UpstreamSyncFolder.Refused {
+        throw Self.refusal(refused.verdict)
       } catch {
         throw Exception(name: "folderUnreadable", description: "The sync folder couldn't be read: \(error.localizedDescription)", code: "ERR_SYNC_FOLDER_UNREADABLE")
       }
@@ -122,11 +136,13 @@ public class SyncModule: Module {
     }.runOnQueue(Self.work)
 
     AsyncFunction("remove") { (folder: String, scope: String, ids: [String]) throws in
-      try self.vault(folder).remove(scope: scope, ids: ids)
+      let vault = try self.vault(folder)
+      try Self.guarded { try vault.remove(scope: scope, ids: ids) }
     }.runOnQueue(Self.work)
 
     AsyncFunction("deleteChain") { (folder: String) throws in
-      try self.vault(folder).deleteChain()
+      let vault = try self.vault(folder)
+      try Self.guarded { try vault.deleteChain() }
     }.runOnQueue(Self.work)
 
     AsyncFunction("sealLocal") { (text: String) throws -> String in
@@ -208,13 +224,13 @@ public class SyncModule: Module {
       }
     }.runOnQueue(.main)
 
-    AsyncFunction("revealFolder") { (path: String) in
-      NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path, isDirectory: true)])
+    AsyncFunction("revealFolder") { (path: String) throws in
+      NSWorkspace.shared.activateFileViewerSelecting([try Self.ownFolder(path)])
     }.runOnQueue(.main)
 
     AsyncFunction("readPasswords") { (engineProfile: String, promise: Promise) in
       DispatchQueue.main.async {
-        ArdiaEngineBridge.callForSecretReply("ac_passwords_logins", profile: engineProfile, timeout: Self.loginsTimeout) { reply in
+        NillaEngineBridge.callForSecretReply("ac_passwords_logins", profile: engineProfile, timeout: Self.loginsTimeout) { reply in
           promise.resolve(self.sealedLogins(reply))
         }
       }
@@ -226,14 +242,14 @@ public class SyncModule: Module {
         return promise.resolve(false)
       }
       let save = {
-        ArdiaServices.savePassword(profile: engineProfile, origin: origin, username: username, password: password) { _, error in
+        NillaServices.savePassword(profile: engineProfile, origin: origin, username: username, password: password) { _, error in
           if let error { NSLog("[sync] saving a synced password: \(error)") }
           promise.resolve(error == nil)
         }
       }
       DispatchQueue.main.async {
         guard replacing else { return save() }
-        ArdiaServices.deletePassword(profile: engineProfile, origin: origin, username: username) { _, error in
+        NillaServices.deletePassword(profile: engineProfile, origin: origin, username: username) { _, error in
           guard let error else { return save() }
           NSLog("[sync] replacing a saved password: \(error)")
           promise.resolve(false)
@@ -289,8 +305,27 @@ public class SyncModule: Module {
   }
 
   private func vault(_ folder: String) throws -> SyncVault {
+    let own = try Self.ownFolder(folder)
     guard let keys = state.keys else { throw Exception(name: "locked", description: "Sync isn't set up on this Mac.") }
-    return SyncVault(folder: URL(fileURLWithPath: folder, isDirectory: true), keys: keys)
+    return SyncVault(folder: own, keys: keys)
+  }
+
+  static func refusal(_ verdict: UpstreamSyncFolder.Verdict) -> Exception {
+    verdict == .upstream
+      ? Exception(name: "upstreamSyncFolder", description: UpstreamSyncFolder.refusal, code: UpstreamSyncFolder.refusedCode)
+      : Exception(name: "syncFolderUnresolved", description: UpstreamSyncFolder.unresolved, code: UpstreamSyncFolder.unresolvedCode)
+  }
+
+  static func ownFolder(_ path: String) throws -> URL {
+    try guarded { try UpstreamSyncFolder.own(path) }
+  }
+
+  static func guarded<T>(_ body: () throws -> T) throws -> T {
+    do {
+      return try body()
+    } catch let refused as UpstreamSyncFolder.Refused {
+      throw refusal(refused.verdict)
+    }
   }
 
   private func words() throws -> [String] {
@@ -304,7 +339,10 @@ public class SyncModule: Module {
       : RecoveryKit.pdf(words: words, created: Date(), device: device)
   }
 
-  private static let temporaryKitFolder = FileManager.default.temporaryDirectory.appendingPathComponent("Ardia Recovery Kit", isDirectory: true)
+  private static let temporaryKitFolder = (dataDirectory
+    ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+      .appendingPathComponent(Bundle.main.bundleIdentifier ?? "Nilla", isDirectory: true))
+    .appendingPathComponent("Recovery Kit", isDirectory: true)
 
   private static func removeTemporaryKits() {
     try? FileManager.default.removeItem(at: temporaryKitFolder)
@@ -344,11 +382,8 @@ public class SyncModule: Module {
 
   static var defaultFolder: URL {
     if let testFolder { return testFolder }
-    if let dataDirectory { return dataDirectory.appendingPathComponent("Ardia Sync", isDirectory: true) }
-    let folder = SyncFolder.iCloudDrive.appendingPathComponent("Ardia Sync", isDirectory: true)
-    let legacy = SyncFolder.iCloudDrive.appendingPathComponent(LegacyName.syncFolderName, isDirectory: true)
-    if !FileManager.default.fileExists(atPath: folder.path), SyncFolder.hasSyncData(legacy) { return legacy }
-    return folder
+    if let dataDirectory { return dataDirectory.appendingPathComponent("Nilla Sync", isDirectory: true) }
+    return SyncFolder.iCloudDrive.appendingPathComponent("Nilla Sync", isDirectory: true)
   }
 
   static let keyStore: SyncKeyStore = dataDirectory.map { FileKeyStore(directory: $0) } ?? KeychainKeyStore()

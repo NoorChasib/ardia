@@ -4,16 +4,16 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
-@implementation ArdiaPiPOverlay
+@implementation NillaPiPOverlay
 
 - (instancetype)initWithFrame:(NSRect)frame {
   if ((self = [super initWithFrame:frame])) {
     self.wantsLayer = YES;
     self.layer.zPosition = 100;
     self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    _handle = [[ArdiaPiPHandle alloc] initWithFrame:NSZeroRect];
+    _handle = [[NillaPiPHandle alloc] initWithFrame:NSZeroRect];
     _handle.hidden = YES;
     _handle.alphaValue = 0;
     [self addSubview:_handle];
@@ -32,7 +32,7 @@ using namespace ardia_pip;
 - (void)layout {
   [super layout];
   NSSize size = self.bounds.size;
-  _handle.frame = _handle.edge == ArdiaPiPEdgeLeft ? NSMakeRect(size.width - kPeek, 0, kPeek, size.height)
+  _handle.frame = _handle.edge == NillaPiPEdgeLeft ? NSMakeRect(size.width - kPeek, 0, kPeek, size.height)
                                                  : NSMakeRect(0, 0, kPeek, size.height);
 }
 

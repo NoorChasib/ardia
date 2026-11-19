@@ -26,8 +26,8 @@ function land(name) {
 }
 
 globalThis.acTestNativeModules = {
-  ArdiaApp: { ...shellNativeModules.ArdiaApp, share: async (url) => void (shares.push(url), events.push("share")) },
-  ArdiaDocuments: {
+  NillaApp: { ...shellNativeModules.NillaApp, share: async (url) => void (shares.push(url), events.push("share")) },
+  NillaDocuments: {
     readDocument: (name) => pending.get(name) ?? landed.get(name) ?? null,
     writeDocument: (name, contents) => {
       if (unstageable.has(name)) throw new Error(`can't stage ${name}`);
@@ -45,8 +45,8 @@ globalThis.acTestNativeModules = {
       ),
     removeDocument: (name) => void (pending.delete(name), landed.delete(name)),
   },
-  ArdiaSharedFolders: {
-    location: () => ({ path: "/scratch/Ardia Shared", iCloudAvailable: true, iCloudPath: "/scratch" }),
+  NillaSharedFolders: {
+    location: () => ({ path: "/scratch/Nilla Shared", iCloudAvailable: true, iCloudPath: "/scratch" }),
     read: async (path) => {
       events.push(`read ${path}`);
       const now = byPath.get(path) ?? listing;
@@ -105,7 +105,7 @@ function setup() {
   const g = S().groupTabs([t], { pinned: true, name: "Team" });
   const profileId = S().groups[g].profileId;
   const key = pinKeyOf(S().groups[g]);
-  bindFolder(profileId, key, "/scratch/Ardia Shared/Team");
+  bindFolder(profileId, key, "/scratch/Nilla Shared/Team");
   return { profileId, key };
 }
 
@@ -141,7 +141,7 @@ test("a session snapshot that never got staged stops the round too, and is stage
   const g = S().groupTabs([t], { pinned: true, name: "Second" });
   const profileId = S().groups[g].profileId;
   const key = pinKeyOf(S().groups[g]);
-  bindFolder(profileId, key, "/scratch/Ardia Shared/Second");
+  bindFolder(profileId, key, "/scratch/Nilla Shared/Second");
   await wait(900);
   listing = { exists: true, root: { entries: [{ kind: "link", file: "Staged.webloc", text: webloc("https://staged.example/") }], manifest: null, manifestPending: false } };
   unstageable.add("session.json");
@@ -160,18 +160,18 @@ test("a session snapshot that never got staged stops the round too, and is stage
 test("a folder unbound and bound again while its round reads changes neither binding", async () => {
   const { profileId, key } = setup();
   await wait(900);
-  const oldPath = "/scratch/Ardia Shared/Team";
+  const oldPath = "/scratch/Nilla Shared/Team";
   byPath.set(oldPath, { exists: true, root: { entries: [{ kind: "link", file: "Old.webloc", text: webloc("https://old-folder.example/") }], manifest: null, manifestPending: false } });
   duringRead = async () => {
     duringRead = async () => {};
     unbindFolder(profileId, key);
-    bindFolder(profileId, key, "/scratch/Ardia Shared/Elsewhere");
+    bindFolder(profileId, key, "/scratch/Nilla Shared/Elsewhere");
   };
   await settled(syncFolderNow(profileId, key));
   await wait(400);
   await settled(syncFolderNow(profileId, key));
   assert.deepEqual(events.filter((e) => e.startsWith(`apply ${oldPath} `)), [], "nothing is written for the old binding");
-  assert.equal(sharedFolderOf(profileId, key).path, "/scratch/Ardia Shared/Elsewhere");
+  assert.equal(sharedFolderOf(profileId, key).path, "/scratch/Nilla Shared/Elsewhere");
   assert.ok(!sharedFolderOf(profileId, key).base.some((b) => b.url === "https://old-folder.example/"), "the new binding never takes the old folder's links");
   assert.ok(!Object.values(S().tabs).some((t) => t.pinnedUrl === "https://old-folder.example/"), "the old folder's links aren't imported");
 });
@@ -182,7 +182,7 @@ test("a read that fails after the folder was bound again doesn't mark the new bi
   duringRead = async () => {
     duringRead = async () => {};
     unbindFolder(profileId, key);
-    bindFolder(profileId, key, "/scratch/Ardia Shared/Fresh");
+    bindFolder(profileId, key, "/scratch/Nilla Shared/Fresh");
     throw new Error("the old disk went away");
   };
   await settled(syncFolderNow(profileId, key));
@@ -196,12 +196,12 @@ test("Share Folder doesn't open the share sheet when the folder's first sync fai
   const g = S().groupTabs([t], { pinned: true, name: "Third" });
   await wait(900);
   shares.length = 0;
-  const read = globalThis.acTestNativeModules.ArdiaSharedFolders.read;
-  globalThis.acTestNativeModules.ArdiaSharedFolders.read = async () => {
+  const read = globalThis.acTestNativeModules.NillaSharedFolders.read;
+  globalThis.acTestNativeModules.NillaSharedFolders.read = async () => {
     throw new Error("disk went away");
   };
   await settled(shareFolder(w, g));
-  globalThis.acTestNativeModules.ArdiaSharedFolders.read = read;
+  globalThis.acTestNativeModules.NillaSharedFolders.read = read;
   assert.deepEqual(shares, [], "no share sheet for a folder whose links weren't written");
   await settled(shareFolder(w, g));
   assert.equal(shares.length, 1, "once the folder syncs, Share Folder opens the sheet");
@@ -210,7 +210,7 @@ test("Share Folder doesn't open the share sheet when the folder's first sync fai
 test("unbinding and binding the same path again during a read still counts as a new binding", async () => {
   const { profileId, key } = setup();
   await wait(900);
-  const path = "/scratch/Ardia Shared/Team";
+  const path = "/scratch/Nilla Shared/Team";
   listing = { exists: true, root: { entries: [{ kind: "link", file: "Before.webloc", text: webloc("https://before-rebind.example/") }], manifest: null, manifestPending: false } };
   let replaced;
   duringRead = async () => {
@@ -233,7 +233,7 @@ test("Share Folder waits for a round that starts after it, not one already runni
   const g = S().groupTabs([t], { pinned: true, name: "Fourth" });
   const profileId = S().groups[g].profileId;
   const key = pinKeyOf(S().groups[g]);
-  bindFolder(profileId, key, "/scratch/Ardia Shared/Fourth");
+  bindFolder(profileId, key, "/scratch/Nilla Shared/Fourth");
   await wait(900);
   await settled(syncFolderNow(profileId, key));
   let release;

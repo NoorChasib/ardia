@@ -10,7 +10,7 @@ import { Cursor } from "../Floating";
 import { mockArt, mockInk, sceneMs } from "../tokens";
 import { font, radius, space } from "../../../ui/tokens";
 import type { Scene } from "../scene";
-import { Desktop, MINI_SIDE, MiniArdia, Window } from "./SceneParts";
+import { Desktop, MINI_SIDE, MiniNilla, Window } from "./SceneParts";
 
 function Bubble({ g, look, mine, children, style }: { g: Geo; look: Look; mine?: boolean; children: ReactNode; style?: object }) {
   return (
@@ -30,18 +30,18 @@ export function links(little: boolean): Scene {
   return ({ g, look, p }) => {
     const t = tracker(p, sceneMs.links);
     const chat: Rect = { x: 18, y: 40, w: 300, h: g.H - 80 };
-    const ardia: Rect = { x: 300, y: 22, w: g.W - 318, h: g.H - 44 };
+    const nilla: Rect = { x: 300, y: 22, w: g.W - 318, h: g.H - 44 };
     const cursorFrom = { x: chat.x + 250, y: chat.y + chat.h - 40 };
     const cursorTo = { x: chat.x + 120, y: chat.y + 228 };
-    const float: Rect = { x: ardia.x + 70, y: 70, w: 430, h: g.H - 120 };
+    const float: Rect = { x: nilla.x + 70, y: 70, w: 430, h: g.H - 120 };
     const arrived = { opacity: t.in(560, 240), transform: [{ translateX: t([[560, -12 * g.s], [860, 0]]) }] };
     return (
       <>
         <Desktop look={look} />
-        <MiniArdia
+        <MiniNilla
           g={g}
           look={look}
-          rect={ardia}
+          rect={nilla}
           tabs={little ? [tab(1), tab(3), tab(4)] : [tab(1), tab(3), tab(4), tab(0)]}
           sel={little ? 0 : 3}
           rowStyle={(i) => (!little && i === 3 ? arrived : null)}

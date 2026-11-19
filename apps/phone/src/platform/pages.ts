@@ -1,4 +1,4 @@
-export { closePage, pages, type SitePermissionGrant, type SitePermissionKind } from "@ardia/phone-native";
+export { closePage, pages, type SitePermissionGrant, type SitePermissionKind } from "@nilla/phone-native";
 export type {
   FindResult,
   NightShadeMode,
@@ -14,4 +14,4 @@ export type {
   PressTarget,
   ReadableContent,
   VisitKind,
-} from "@ardia/phone-native";
+} from "@nilla/phone-native";

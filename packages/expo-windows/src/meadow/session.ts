@@ -1,4 +1,4 @@
-import type { MeadowIntro, MeadowIntroEvent, MeadowPageReport, MeadowPageState, MeadowTone } from "@ardia/shaders";
+import type { MeadowIntro, MeadowIntroEvent, MeadowPageReport, MeadowPageState, MeadowTone } from "@nilla/shaders";
 import { MEADOW_PAGE_API, MEADOW_PAGE_CONFIG_ID } from "../../../shaders/src/meadowPage/config";
 import { meadowScriptsCode, withoutFragment } from "./pageUrl";
 
@@ -68,7 +68,7 @@ export function startMeadowSession(intro: MeadowIntro, night: boolean, url: stri
 
   const stopPoll = deps.every(MEADOW_POLL_MS, () => void poll());
   const stopDeadline = deps.later(readyLimitMs, () => fallBack("no first frame"));
-  deps.log("[ardia windows] meadow page created");
+  deps.log("[nilla windows] meadow page created");
 
   const finished = () => phase === "closing" || phase === "closed" || phase === "fallen";
 
@@ -79,14 +79,14 @@ export function startMeadowSession(intro: MeadowIntro, night: boolean, url: stri
   }
 
   function logClosed(reason: string) {
-    deps.log(`[ardia windows] meadow page closed after ${Math.round(deps.now() - createdAt)} ms (${reason})`);
+    deps.log(`[nilla windows] meadow page closed after ${Math.round(deps.now() - createdAt)} ms (${reason})`);
   }
 
   function fallBack(reason: string) {
     if (finished()) return;
     phase = "fallen";
     stopTimers();
-    deps.log(`[ardia windows] meadow fell back: ${reason}`);
+    deps.log(`[nilla windows] meadow fell back: ${reason}`);
     deps.tell({ kind: "fallback", reason });
     void deps.close().then(() => logClosed(reason));
   }
@@ -103,7 +103,7 @@ export function startMeadowSession(intro: MeadowIntro, night: boolean, url: stri
     const last = await Promise.race([deps.evaluate(TAKE).then((raw) => reportOf(readPoll(raw)), () => null), new Promise<null>((done) => deps.later(MEADOW_LAST_READ_MS, () => done(null)))]);
     if (phase !== "closing") return;
     if (last) noteFrames(last);
-    deps.log(`[ardia windows] meadow ${frames} frames in ${framesMs} ms`);
+    deps.log(`[nilla windows] meadow ${frames} frames in ${framesMs} ms`);
     await deps.close();
     if (phase !== "closing") return;
     phase = "closed";

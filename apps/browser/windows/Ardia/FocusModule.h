@@ -11,7 +11,7 @@
 
 #pragma comment(lib, "user32.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 struct SwitcherPointer {
   std::mutex lock;
@@ -69,7 +69,7 @@ struct KeyboardHandoff {
   }
 };
 
-REACT_MODULE(FocusModule, L"ArdiaFocus")
+REACT_MODULE(FocusModule, L"NillaFocus")
 struct FocusModule {
   using DonePromise = winrt::Microsoft::ReactNative::ReactPromise<void>;
 
@@ -82,7 +82,7 @@ struct FocusModule {
       hold.Reloaded();
       hold.announce = [context](int tag, int count) noexcept {
         using winrt::Microsoft::ReactNative::JSValueObject;
-        EmitEvent(context, L"ArdiaShell", L"onAppEvent", JSValueObject{{"type", "keyHoldReplay"}, {"tag", static_cast<int64_t>(tag)}, {"count", static_cast<int64_t>(count)}});
+        EmitEvent(context, L"NillaShell", L"onAppEvent", JSValueObject{{"type", "keyHoldReplay"}, {"tag", static_cast<int64_t>(tag)}, {"count", static_cast<int64_t>(count)}});
         LaunchLog::Write(L"keys", L"hold replay into tag " + std::to_wstring(tag) + (count ? L" announced, " + std::to_wstring(count) + L" held" : std::wstring{L" over"}));
       };
     });

@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <initializer_list>
 
-using namespace ardia_pip_seek;
+using namespace nilla_pip_seek;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

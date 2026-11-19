@@ -16,7 +16,7 @@ const method = (source, signature) => {
   return source.slice(start, end);
 };
 const run = (compiler, args, source, extension) => {
-  const dir = mkdtempSync(join(tmpdir(), "ardia-clear-data-"));
+  const dir = mkdtempSync(join(tmpdir(), "nilla-clear-data-"));
   try {
     const file = join(dir, `main.${extension}`), binary = join(dir, "test");
     writeFileSync(file, source);
@@ -37,16 +37,16 @@ test("the production service accepts only boolean true and preserves engine erro
 static NSDictionary *answer;
 static int calls = 0;
 static int pictures = 0;
-@interface ArdiaEarlyWindow : NSObject
+@interface NillaEarlyWindow : NSObject
 + (void)forgetPictures;
 @end
-@implementation ArdiaEarlyWindow
+@implementation NillaEarlyWindow
 + (void)forgetPictures { pictures++; }
 @end
-@interface ArdiaServices : NSObject
+@interface NillaServices : NSObject
 + (void)call:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args completion:(void (^)(NSDictionary *))completion;
 @end
-@implementation ArdiaServices
+@implementation NillaServices
 + (void)call:(NSString *)name profile:(NSString *)profile args:(NSDictionary *)args completion:(void (^)(NSDictionary *))completion {
   assert([name isEqualToString:@"ac_browsing_data_clear"]);
   assert([profile isEqualToString:@"unloaded-profile"]);
@@ -63,7 +63,7 @@ int main() {
     for (NSUInteger i = 0; i < answers.count; i++) {
       answer = answers[i];
       __block int replies = 0;
-      [ArdiaServices clearBrowsingData:@"unloaded-profile" types:@[@"history", @"cache"] since:1234567 completion:^(NSString *error) {
+      [NillaServices clearBrowsingData:@"unloaded-profile" types:@[@"history", @"cache"] since:1234567 completion:^(NSString *error) {
         replies++;
         assert((error == nil) == (i == 0));
         if (i == answers.count - 1) assert([error isEqualToString:@"engine refused"]);
@@ -95,7 +95,7 @@ var replies: [String] = []
 protocol PageEngine {
   func clearBrowsingData(profile: String, types: [String], since: Double, done: @escaping (String?) -> Void)
 }
-enum ArdiaServices {
+enum NillaServices {
   static func clearBrowsingData(profile: String, types: [String], since: Double, completion: @escaping (String?) -> Void) {
     requests.append((profile, types, since)); chromiumDone = completion
   }

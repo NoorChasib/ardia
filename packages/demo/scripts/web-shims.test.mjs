@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 import { createServer } from "vite";
 
 test("web shims survive ticker failures, reject inherited palettes and enter a view under a still pointer", { timeout: 30_000 }, async (t) => {
-  const cacheDir = await mkdtemp(join(tmpdir(), "ardia-web-shims-"));
+  const cacheDir = await mkdtemp(join(tmpdir(), "nilla-web-shims-"));
   t.after(() => rm(cacheDir, { recursive: true, force: true }));
   const server = await createServer({
     cacheDir,

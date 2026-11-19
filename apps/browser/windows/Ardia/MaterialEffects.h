@@ -19,7 +19,7 @@
 
 #pragma comment(lib, "dxguid.lib")
 
-namespace Ardia::MaterialEffects {
+namespace Nilla::MaterialEffects {
 
 namespace AbiEffects = ABI::Windows::Graphics::Effects;
 namespace AbiFoundation = ABI::Windows::Foundation;

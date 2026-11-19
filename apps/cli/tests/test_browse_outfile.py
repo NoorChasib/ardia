@@ -7,7 +7,7 @@ import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
-from ardia_cli.browse import outfile
+from nilla_browser_cli.browse import outfile
 
 
 def fake_run(payload):
@@ -30,7 +30,7 @@ class Content(unittest.TestCase):
 
 class Saving(unittest.TestCase):
     def setUp(self):
-        self.folder = Path(tempfile.mkdtemp(prefix="ardia-out-"))
+        self.folder = Path(tempfile.mkdtemp(prefix="nilla-out-"))
 
     def run_saving(self, payload, path, command="script"):
         out, err = io.StringIO(), io.StringIO()

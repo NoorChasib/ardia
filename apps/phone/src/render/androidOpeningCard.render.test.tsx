@@ -21,14 +21,14 @@ let mockNearEnd = false;
 let mockHoldsGrowing = false;
 let mockHeldGrowing: (() => void) | null = null;
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual<typeof import("@ardia/phone-native")>("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual<typeof import("@nilla/phone-native")>("@nilla/phone-native");
   const { createElement } = jest.requireActual<typeof import("react")>("react");
   return {
     ...actual,
     pageReportsDrawn: () => mockReportsDrawn,
     motionReportsNearEnd: () => mockNearEnd,
-    MotionView: (props: import("@ardia/phone-native").MotionViewProps) => createElement(actual.MotionView, { ...props, onMotionEnd: undefined }),
+    MotionView: (props: import("@nilla/phone-native").MotionViewProps) => createElement(actual.MotionView, { ...props, onMotionEnd: undefined }),
   };
 });
 jest.mock("../platform/lab", () => ({ ...jest.requireActual<object>("../platform/lab"), isLabBuild: true }));
@@ -55,7 +55,7 @@ beforeEach(() => {
   mockNearEnd = false;
   mockHoldsGrowing = false;
   mockHeldGrowing = null;
-  jest.spyOn(launchFlags, "launchArguments").mockImplementation(() => parseLaunchArguments({ ArdiaOpeningCard: "1" }));
+  jest.spyOn(launchFlags, "launchArguments").mockImplementation(() => parseLaunchArguments({ NillaOpeningCard: "1" }));
   counted = jest.spyOn(telemetry, "countUsage");
   withTabs(3);
   useBrowse.setState({ surface: "deck", sheet: null, deckEntrance: null, frozenOrder: null, opening: null, veiled: null });
@@ -98,7 +98,7 @@ const openedId = () => {
 };
 const reportCover = (root: ReactTestRenderer, reason: "drawn" | "cap" = "drawn") => act(() => pageView(root)!.props.onPageEvent({ nativeEvent: { name: "coverHidden", reason, found: true } }));
 
-onAndroid("with ArdiaOpeningCard, the opening card mounts in the tap's own commit already growing, from the card's place in the deck to full screen, and ends square-cornered with its bar band shown", () => {
+onAndroid("with NillaOpeningCard, the opening card mounts in the tap's own commit already growing, from the card's place in the deck to full screen, and ends square-cornered with its bar band shown", () => {
   const root = renderSurface(<Surfaces />);
   const before = deckCards(root);
   act(() => sendDeckCommand({ kind: "openFocused" }));
@@ -136,7 +136,7 @@ onAndroid("with ArdiaOpeningCard, the opening card mounts in the tap's own commi
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard, the tap leaves every deck card's pose alone (no expanded card yet), and the opening card's mount hides the tapped card and gives it the expanded role in one worklet, before any spring", () => {
+onAndroid("with NillaOpeningCard, the tap leaves every deck card's pose alone (no expanded card yet), and the opening card's mount hides the tapped card and gives it the expanded role in one worklet, before any spring", () => {
   mockHoldsGrowing = true;
   const root = renderSurface(<Surfaces />);
   const before = deckCards(root);
@@ -163,7 +163,7 @@ onAndroid("with ArdiaOpeningCard, the tap leaves every deck card's pose alone (n
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard, the page isn't made in the tap's commit but a frame after the growth starts, veiled at opacity 0", () => {
+onAndroid("with NillaOpeningCard, the page isn't made in the tap's commit but a frame after the growth starts, veiled at opacity 0", () => {
   const root = renderSurface(<Surfaces />);
   const selected = currentTabs().selectedId;
   act(() => sendDeckCommand({ kind: "openFocused" }));
@@ -179,7 +179,7 @@ onAndroid("with ArdiaOpeningCard, the page isn't made in the tap's commit but a 
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard, the page is unveiled when the opening card's motion ends, not on a timer, and the deck's cards go straight to their end then", () => {
+onAndroid("with NillaOpeningCard, the page is unveiled when the opening card's motion ends, not on a timer, and the deck's cards go straight to their end then", () => {
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
   advance(LANDS_MS + 100);
@@ -197,7 +197,7 @@ onAndroid("with ArdiaOpeningCard, the page is unveiled when the opening card's m
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard, an opening card whose motion end never comes still unveils the page at twice the landing time", () => {
+onAndroid("with NillaOpeningCard, an opening card whose motion end never comes still unveils the page at twice the landing time", () => {
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
   advance(2 * LANDS_MS - 8);
@@ -208,7 +208,7 @@ onAndroid("with ArdiaOpeningCard, an opening card whose motion end never comes s
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard, the page view is handed the opening card to hide, and takes over in the same call as its report that it hid it on its first drawn frame; that open isn't counted as waited", () => {
+onAndroid("with NillaOpeningCard, the page view is handed the opening card to hide, and takes over in the same call as its report that it hid it on its first drawn frame; that open isn't counted as waited", () => {
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
   advance(LANDS_MS);
@@ -222,7 +222,7 @@ onAndroid("with ArdiaOpeningCard, the page view is handed the opening card to hi
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard, a page whose view hid the card at its 200 ms cap takes over then and that open is counted as waited; with no report at all the deck still gives way after 500 ms, also counted", () => {
+onAndroid("with NillaOpeningCard, a page whose view hid the card at its 200 ms cap takes over then and that open is counted as waited; with no report at all the deck still gives way after 500 ms, also counted", () => {
   let root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
   advance(LANDS_MS);
@@ -244,7 +244,7 @@ onAndroid("with ArdiaOpeningCard, a page whose view hid the card at its 200 ms c
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard where MotionView reports its near end, the opening card asks for the last 2 device pixels and the page is unveiled there instead of at the motion's end", () => {
+onAndroid("with NillaOpeningCard where MotionView reports its near end, the opening card asks for the last 2 device pixels and the page is unveiled there instead of at the motion's end", () => {
   mockNearEnd = true;
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
@@ -260,7 +260,7 @@ onAndroid("with ArdiaOpeningCard where MotionView reports its near end, the open
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard, a card that stops before the page is made still makes it, shown, and hands over on drawn", () => {
+onAndroid("with NillaOpeningCard, a card that stops before the page is made still makes it, shown, and hands over on drawn", () => {
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
   expect(useBrowse.getState().opening).toBeNull();
@@ -274,7 +274,7 @@ onAndroid("with ArdiaOpeningCard, a card that stops before the page is made stil
   unmount(root);
 });
 
-onAndroid("with ArdiaOpeningCard where the page view can't report drawn, the page takes over when the card stops once it has laid out, as without it", () => {
+onAndroid("with NillaOpeningCard where the page view can't report drawn, the page takes over when the card stops once it has laid out, as without it", () => {
   mockReportsDrawn = false;
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
@@ -288,7 +288,7 @@ onAndroid("with ArdiaOpeningCard where the page view can't report drawn, the pag
   unmount(root);
 });
 
-onAndroid("without ArdiaOpeningCard, Android opens a card as before: no opening card and no page while the card grows", () => {
+onAndroid("without NillaOpeningCard, Android opens a card as before: no opening card and no page while the card grows", () => {
   jest.spyOn(launchFlags, "launchArguments").mockImplementation(() => NO_LAUNCH_ARGUMENTS);
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
@@ -355,7 +355,7 @@ test("the covering card lays out in the screen's own shape on whole pixels, so o
   expect(px(tall.height) * tall.scale).toBeCloseTo(2412, 6);
 });
 
-onAndroid("with ArdiaOpeningCard, the deck moves off screen on the UI thread in the cover report's own call (a move, never a fade, so its glass is never under a fading parent), before React switches to browsing, so the page and its bar under it show at once", () => {
+onAndroid("with NillaOpeningCard, the deck moves off screen on the UI thread in the cover report's own call (a move, never a fade, so its glass is never under a fading parent), before React switches to browsing, so the page and its bar under it show at once", () => {
   const root = renderSurface(<Surfaces />);
   act(() => sendDeckCommand({ kind: "openFocused" }));
   advance(LANDS_MS);

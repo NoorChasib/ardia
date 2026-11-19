@@ -8,8 +8,8 @@ public class EngineModule: Module {
     Self.calls.forwardEvents(to: self)
 
     OnCreate {
-      ArdiaEngineBridge.forwardEngineEvents()
-      SystemState.shared.onChange = { state in ArdiaEvents.emit("engine.systemState", data: state) }
+      NillaEngineBridge.forwardEngineEvents()
+      SystemState.shared.onChange = { state in NillaEvents.emit("engine.systemState", data: state) }
       SystemState.shared.start()
     }
 
@@ -22,12 +22,12 @@ public class EngineModule: Module {
   }
 
   static let calls = CallTable(domain: "engine", handlers: [
-    "info": { _, reply in reply.ok(ArdiaHost.engineInfo) },
-    "components": { _, reply in ArdiaServices.components { reply.service($0, $1) } },
-    "tasks": { _, reply in ArdiaServices.tasks { reply.service($0, $1) } },
-    "beginTracing": { _, reply in ArdiaHost.beginTracing { reply.ok($0) } },
-    "endTracing": { args, reply in ArdiaHost.endTracing(keep: try args.bool("keep")) { reply.ok($0) } },
-    "isTracing": { _, reply in reply.ok(ArdiaHost.isTracing) },
+    "info": { _, reply in reply.ok(NillaHost.engineInfo) },
+    "components": { _, reply in NillaServices.components { reply.service($0, $1) } },
+    "tasks": { _, reply in NillaServices.tasks { reply.service($0, $1) } },
+    "beginTracing": { _, reply in NillaHost.beginTracing { reply.ok($0) } },
+    "endTracing": { args, reply in NillaHost.endTracing(keep: try args.bool("keep")) { reply.ok($0) } },
+    "isTracing": { _, reply in reply.ok(NillaHost.isTracing) },
     "systemState": { _, reply in reply.ok(SystemState.shared.snapshot) },
     "batterySaver": EngineCall.passing("ac_battery_saver"),
     "memorySaver": EngineCall.passing("ac_memory_saver"),
@@ -41,21 +41,21 @@ public class EngineModule: Module {
       EngineCall.passing("ac_cli_control", profile: args.profile, args: ["on": try args.bool("on")], reply: reply)
     },
     "cliTabTargets": { args, reply in
-      ArdiaHost.cliTabTargets(try args.strings("tabIds")) { reply.ok($0) }
+      NillaHost.cliTabTargets(try args.strings("tabIds")) { reply.ok($0) }
     },
     "cliOwnsTab": { args, reply in
-      let tab = ArdiaHost.chromeTabId(ofTab: try args.text("tabId"))
+      let tab = NillaHost.chromeTabId(ofTab: try args.text("tabId"))
       EngineCall.passing("ac_cli_owns_tab", profile: args.profile, args: ["tab": tab], reply: reply)
     },
     "cliMoveOffscreen": { args, reply in
-      ArdiaHost.cliMoveOffscreen(try args.text("tabId")) { reply.ok($0) }
+      NillaHost.cliMoveOffscreen(try args.text("tabId")) { reply.ok($0) }
     },
     "cliCloseOffscreenTabs": { _, reply in
-      ArdiaHost.cliCloseOffscreenTabs()
+      NillaHost.cliCloseOffscreenTabs()
       reply.ok()
     },
     "setCliActiveTab": { args, reply in
-      let active = try args.optionalText("tabId").map { ArdiaHost.chromeTabId(ofTab: $0) } ?? -1
+      let active = try args.optionalText("tabId").map { NillaHost.chromeTabId(ofTab: $0) } ?? -1
       EngineCall.passing("ac_cli_control", profile: args.profile, args: ["active": active], reply: reply)
     },
   ])

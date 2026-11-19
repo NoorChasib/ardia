@@ -5,13 +5,13 @@
 
 namespace {
 
-ardia_little_fit::Rect FromNSRect(NSRect rect) { return {rect.origin.x, rect.origin.y, rect.size.width, rect.size.height}; }
+nilla_little_fit::Rect FromNSRect(NSRect rect) { return {rect.origin.x, rect.origin.y, rect.size.width, rect.size.height}; }
 
-NSRect ToNSRect(ardia_little_fit::Rect rect) { return NSMakeRect(rect.x, rect.y, rect.w, rect.h); }
+NSRect ToNSRect(nilla_little_fit::Rect rect) { return NSMakeRect(rect.x, rect.y, rect.w, rect.h); }
 
 }
 
-@implementation ArdiaChromeWindowHost (LittleFit)
+@implementation NillaChromeWindowHost (LittleFit)
 
 + (NSValue *)littleFrameFittingLandingOf:(NSWindow *)window minimumSize:(NSSize)minimum {
   NSArray<NSScreen *> *screens = NSScreen.screens;
@@ -21,11 +21,11 @@ NSRect ToNSRect(ardia_little_fit::Rect rect) { return NSMakeRect(rect.x, rect.y,
   if (![info[(id)kCGWindowIsOnscreen] boolValue]) return nil;
   CGRect bounds = CGRectZero;
   if (!CGRectMakeWithDictionaryRepresentation((__bridge CFDictionaryRef)info[(id)kCGWindowBounds], &bounds)) return nil;
-  const ardia_little_fit::Rect landed = ardia_little_fit::FlipFromTopLeft(FromNSRect(bounds), NSHeight(screens.firstObject.frame));
-  std::vector<ardia_little_fit::Display> displays;
+  const nilla_little_fit::Rect landed = nilla_little_fit::FlipFromTopLeft(FromNSRect(bounds), NSHeight(screens.firstObject.frame));
+  std::vector<nilla_little_fit::Display> displays;
   for (NSScreen *screen in screens) displays.push_back({FromNSRect(screen.frame), FromNSRect(screen.visibleFrame)});
-  ardia_little_fit::Rect fitted;
-  if (!ardia_little_fit::FitLanding(landed, displays, {minimum.width, minimum.height}, &fitted)) return nil;
+  nilla_little_fit::Rect fitted;
+  if (!nilla_little_fit::FitLanding(landed, displays, {minimum.width, minimum.height}, &fitted)) return nil;
   return [NSValue valueWithRect:ToNSRect(fitted)];
 }
 

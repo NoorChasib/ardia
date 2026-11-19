@@ -16,9 +16,9 @@
 #include <initializer_list>
 #include <mach/mach.h>
 
-using namespace ardia_early_window;
+using namespace nilla_early_window;
 
-@implementation ArdiaEarlyShown
+@implementation NillaEarlyShown
 @end
 
 namespace {
@@ -43,7 +43,7 @@ double PageFrameOf(NSDictionary *settings) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 NSString *gLayoutPath;
 
@@ -67,7 +67,7 @@ BOOL gPrefetchDiscarded;
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 NSString *gPrefetchedWindow;
 
@@ -81,7 +81,7 @@ BOOL gPictureCurrent;
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 NSString *gLaunchURL;
 
@@ -91,7 +91,7 @@ namespace {
 
 NSMutableDictionary *gLittleLayout;
 
-NSString *const kLittleWindow = @"ardia.early.little-ardia";
+NSString *const kLittleWindow = @"nilla.early.little-nilla";
 
 NSMutableSet<NSString *> *Dismissed() {
   static NSMutableSet *dismissed = [NSMutableSet set];
@@ -100,39 +100,39 @@ NSMutableSet<NSString *> *Dismissed() {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 dispatch_queue_t Writer() {
-  static dispatch_queue_t queue = dispatch_queue_create("ardia.early-window.writer", DISPATCH_QUEUE_SERIAL);
+  static dispatch_queue_t queue = dispatch_queue_create("nilla.early-window.writer", DISPATCH_QUEUE_SERIAL);
   return queue;
 }
 
-NSMutableArray<ArdiaEarlyShown *> *Shown() {
+NSMutableArray<NillaEarlyShown *> *Shown() {
   static NSMutableArray *shown = [NSMutableArray array];
   return shown;
 }
 
-ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
+NillaEarlyShown *ShownForWindow(NSWindow *window) {
   if (!window) return nil;
-  for (ArdiaEarlyShown *s in Shown())
+  for (NillaEarlyShown *s in Shown())
     if (s.window == window) return s;
   return nil;
 }
 
 }
 
-@implementation ArdiaEarlyWindow
+@implementation NillaEarlyWindow
 
 + (void)setDataDirectory:(NSString *)directory {
   gDirectory = [directory copy];
   gLayoutPath = directory.length ? [directory stringByAppendingPathComponent:@"launch-layout.json"] : nil;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    [NSNotificationCenter.defaultCenter addObserverForName:ArdiaInterfaceScaleDidChange
+    [NSNotificationCenter.defaultCenter addObserverForName:NillaInterfaceScaleDidChange
                                                     object:nil
                                                      queue:nil
                                                 usingBlock:^(NSNotification *) {
-                                                  [ArdiaEarlyWindow forgetPicturesOfOtherScales];
+                                                  [NillaEarlyWindow forgetPicturesOfOtherScales];
                                                 }];
   });
 }
@@ -148,7 +148,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
     gLayouts[windowId] = layout;
     DropPictureFile(windowId);
   }
-  for (ArdiaWindowController *controller in ArdiaWindowController.all) {
+  for (NillaWindowController *controller in NillaWindowController.all) {
     if (!controller.appWindowId.length || controller.stray || controller.standalone) continue;
     [self noteLayoutChangeIn:controller.coreWindow.window];
     break;
@@ -157,7 +157,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
 
 + (void)noteLayoutChangeIn:(NSWindow *)window {
   if (!gLayoutPath || gRecordQueued || !window) return;
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
   if (!controller.appWindowId.length || controller.stray || controller.standalone) return;
   gRecordQueued = YES;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kRecordDelay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ Record(NO); });
@@ -167,7 +167,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
   Record(YES);
 }
 
-+ (void)prefetchForSession:(ArdiaSavedSession *)session {
++ (void)prefetchForSession:(NillaSavedSession *)session {
   NSString *focused = session.focusedWindowId;
   if (!focused.length || !gLayoutPath || gPrefetch) return;
   gPrefetch = dispatch_group_create();
@@ -198,7 +198,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
   CGImageRelease(image);
 }
 
-+ (BOOL)canShowWindow:(NSString *)windowId session:(ArdiaSavedSession *)session {
++ (BOOL)canShowWindow:(NSString *)windowId session:(NillaSavedSession *)session {
   if (!gLayoutPath || !windowId.length || Shown().count) return NO;
   LoadLayouts();
   NSDictionary *layout = gLayouts[windowId];
@@ -217,7 +217,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
 
 + (BOOL)holdsPage:(ArdiaCoreTab *)tab {
   if (!tab) return NO;
-  for (ArdiaEarlyShown *s in Shown())
+  for (NillaEarlyShown *s in Shown())
     if (s.tab == tab && !s.claimed && tab.view.superview == s.cover) return YES;
   return NO;
 }
@@ -257,7 +257,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
           backdrop:(NSDictionary *)backdrop
            picture:(CGImageRef)picture {
   if (!gLayoutPath || !windowId.length || !key.length || frame.count != 4 || (Shown().count && !gLittleLayout)) return NO;
-  Class backdropClass = NSClassFromString(@"ArdiaEarlyBackdrop");
+  Class backdropClass = NSClassFromString(@"NillaEarlyBackdrop");
   const SEL make = NSSelectorFromString(@"make:");
   if (![backdropClass respondsToSelector:make]) return NO;
   NSDictionary *layout = gLittleLayout ?: gLayouts[windowId];
@@ -266,22 +266,22 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
     if (![frame[i] isKindOfClass:NSNumber.class] || !std::isfinite(frame[i].doubleValue)) return NO;
   const NSRect rect = NSMakeRect(frame[0].doubleValue, frame[1].doubleValue, frame[2].doubleValue, frame[3].doubleValue);
   if (NSWidth(rect) < 300 || NSHeight(rect) < 200) return NO;
-  NSWindow *window = [ArdiaChromeWindowHost makeWindowForProfile:profile ?: @""];
-  if (gLittleLayout) [ArdiaChromeWindowHost floatForWindowManagers:window];
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
+  NSWindow *window = [NillaChromeWindowHost makeWindowForProfile:profile ?: @""];
+  if (gLittleLayout) [NillaChromeWindowHost floatForWindowManagers:window];
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
   NSView *host = controller.coreWindow.hostView;
   if (!window || !host) {
-    if (window) [ArdiaChromeWindowHost closeWindow:window];
+    if (window) [NillaChromeWindowHost closeWindow:window];
     return NO;
   }
   if (gLittleLayout) {
     NSArray<NSNumber *> *cardInsets = layout[@"card"];
     const double inset = cardInsets.firstObject.doubleValue;
-    gLittleLayout[@"radius"] = @(inset == 0 ? 0 : MAX(ArdiaChromeWindowHost.windowCornerRadius - inset, [ArdiaInterfaceScale windowLengthFromRoot:2]));
+    gLittleLayout[@"radius"] = @(inset == 0 ? 0 : MAX(NillaChromeWindowHost.windowCornerRadius - inset, [NillaInterfaceScale windowLengthFromRoot:2]));
   }
   controller.appWindowId = windowId;
-  NSScreen *savedDisplay = [ArdiaDisplayIdentity screenWithIdentifier:display];
-  [window setFrame:(savedDisplay ? [ArdiaDisplayIdentity frame:rect onScreen:savedDisplay] : rect) display:NO];
+  NSScreen *savedDisplay = [NillaDisplayIdentity screenWithIdentifier:display];
+  [window setFrame:(savedDisplay ? [NillaDisplayIdentity frame:rect onScreen:savedDisplay] : rect) display:NO];
   if (NSScreen *screen = savedDisplay ?: window.screen ?: NSScreen.mainScreen) [window setFrame:[window constrainFrameRect:window.frame toScreen:screen] display:NO];
   if ([layout[@"appearance"] isKindOfClass:NSString.class]) window.appearance = [NSAppearance appearanceNamed:layout[@"appearance"]];
   [host layoutSubtreeIfNeeded];
@@ -289,14 +289,14 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
   NSRect pageRect = NSZeroRect;
   NSView *cover = backdropView ? Cover(host, layout, &pageRect) : nil;
   if (!cover) {
-    [ArdiaChromeWindowHost closeWindow:window];
+    [NillaChromeWindowHost closeWindow:window];
     return NO;
   }
   backdropView.frame = host.bounds;
   backdropView.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
   [host addSubview:backdropView positioned:NSWindowBelow relativeTo:cover];
   ApplyLights(window, layout);
-  ArdiaEarlyShown *s = [ArdiaEarlyShown new];
+  NillaEarlyShown *s = [NillaEarlyShown new];
   s.window = window;
   s.appWindow = windowId;
   s.profile = profile ?: @"";
@@ -317,24 +317,24 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
     s.picture = view;
   }
   [Shown() addObject:s];
-  __weak ArdiaEarlyShown *weakShown = s;
+  __weak NillaEarlyShown *weakShown = s;
   s.closeObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSWindowWillCloseNotification
                                                                      object:window
                                                                       queue:nil
                                                                  usingBlock:^(NSNotification *) {
-                                                                   ArdiaEarlyShown *closing = weakShown;
+                                                                   NillaEarlyShown *closing = weakShown;
                                                                    if (!closing) return;
                                                                    if (!closing.claimed) {
                                                                      [Dismissed() addObject:closing.appWindow];
                                                                      ArdiaCoreTab *page = closing.tab;
-                                                                     if (page && page == ArdiaTabParking.launchTab)
-                                                                       [ArdiaTabParking claimLaunchTab:@"" url:@"" profile:@""];
+                                                                     if (page && page == NillaTabParking.launchTab)
+                                                                       [NillaTabParking claimLaunchTab:@"" url:@"" profile:@""];
                                                                      else if (page && closing.expectedURL) {
                                                                        [Dismissed() addObject:closing.key];
-                                                                       [ArdiaTabParking dismissLinkTab:page];
+                                                                       [NillaTabParking dismissLinkTab:page];
                                                                      }
                                                                      else if (page)
-                                                                       [ArdiaWebView releaseTransfer:closing.key];
+                                                                       [NillaWebView releaseTransfer:closing.key];
                                                                    }
                                                                    DropPictures(closing);
                                                                    Forget(closing);
@@ -343,7 +343,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
   [window displayIfNeeded];
   [CATransaction flush];
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnclaimedSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaEarlyShown *still = weakShown;
+    NillaEarlyShown *still = weakShown;
     if (!still || still.claimed || ![Shown() containsObject:still]) return;
     if (still.tab) still.expired = YES;
     else Abandon(still);
@@ -353,7 +353,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
 
 + (void)attachPage:(ArdiaCoreTab *)tab key:(NSString *)key {
   if (!tab || tab.closed || !key.length) return;
-  for (ArdiaEarlyShown *s in Shown()) {
+  for (NillaEarlyShown *s in Shown()) {
     if (!s.cover || s.tab || ![s.key isEqualToString:key]) continue;
     NSView *page = tab.view;
     if (!page) return;
@@ -380,13 +380,13 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
                        settings:(NSDictionary *)settings
                            like:(NSString *)windowId {
   if (!gLayoutPath || !tab || tab.closed || !url.length || !mark.length) return NO;
-  for (ArdiaEarlyShown *s in Shown())
+  for (NillaEarlyShown *s in Shown())
     if ([s.appWindow isEqualToString:kLittleWindow]) return NO;
   LoadLayouts();
   NSDictionary *main = windowId.length && [gLayouts[windowId] isKindOfClass:NSDictionary.class] ? gLayouts[windowId] : @{};
   const double pageFrame = PageFrameOf(settings);
-  NSNumber *cardInset = @([ArdiaInterfaceScale windowLengthFromRoot:pageFrame]);
-  NSNumber *top = @([ArdiaInterfaceScale windowLengthFromRoot:38]);
+  NSNumber *cardInset = @([NillaInterfaceScale windowLengthFromRoot:pageFrame]);
+  NSNumber *top = @([NillaInterfaceScale windowLengthFromRoot:38]);
   NSMutableDictionary *layout = [@{
     @"page" : @[ cardInset, top, cardInset, cardInset ],
     @"card" : @[ cardInset, top, cardInset, cardInset ],
@@ -398,7 +398,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
   const BOOL shown = [self showWindow:kLittleWindow frame:frame display:nil key:mark profile:profile backdrop:backdrop picture:nullptr];
   gLittleLayout = nil;
   if (!shown) return NO;
-  ArdiaEarlyShown *little = Shown().lastObject;
+  NillaEarlyShown *little = Shown().lastObject;
   little.window.identifier = @"ardia.window.small";
   little.expectedURL = url;
   [self attachPage:tab key:mark];
@@ -406,9 +406,9 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
     little.inputBlock = [tab suppressInput];
     ReleaseFocusFrom(tab.view);
   }
-  __weak ArdiaEarlyShown *weakLittle = little;
+  __weak NillaEarlyShown *weakLittle = little;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUnclaimedSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaEarlyShown *still = weakLittle;
+    NillaEarlyShown *still = weakLittle;
     if (still && !still.claimed && [Shown() containsObject:still]) Abandon(still);
   });
   return YES;
@@ -416,20 +416,20 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
 
 + (NSWindow *)claimLittleWindowForLink:(NSString *)mark profile:(NSString *)profile {
   BOOL pending = NO;
-  for (ArdiaEarlyShown *s in Shown())
+  for (NillaEarlyShown *s in Shown())
     if ([s.appWindow isEqualToString:kLittleWindow] && !s.claimed && [s.key isEqualToString:mark]) pending = YES;
   if (!pending) return nil;
   NSWindow *window = [self claimForAppWindow:kLittleWindow profile:profile];
-  if (window) [ArdiaWindowController forNSWindow:window].appWindowId = nil;
+  if (window) [NillaWindowController forNSWindow:window].appWindowId = nil;
   return window;
 }
 
 + (NSWindow *)claimForAppWindow:(NSString *)windowId profile:(NSString *)profile {
   if (!windowId.length) return nil;
-  for (ArdiaEarlyShown *s in [Shown() copy]) {
+  for (NillaEarlyShown *s in [Shown() copy]) {
     if (s.claimed || ![s.appWindow isEqualToString:windowId]) continue;
     NSWindow *window = s.window;
-    if (!window || ![ArdiaWindowController forNSWindow:window]) {
+    if (!window || ![NillaWindowController forNSWindow:window]) {
       Abandon(s);
       return nil;
     }
@@ -440,9 +440,9 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
       Forget(s);
       return window;
     }
-    __weak ArdiaEarlyShown *weakShown = s;
+    __weak NillaEarlyShown *weakShown = s;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kClaimedSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      ArdiaEarlyShown *late = weakShown;
+      NillaEarlyShown *late = weakShown;
       if (late && [Shown() containsObject:late]) Forget(late);
     });
     return window;
@@ -461,7 +461,7 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
 }
 
 + (void)rootEmbedded:(NSView *)root inWindow:(NSWindow *)window {
-  ArdiaEarlyShown *s = ShownForWindow(window);
+  NillaEarlyShown *s = ShownForWindow(window);
   if (!root || !s) return;
   if (s.rootFillCleared && s.root != root) {
     [s.root setValue:s.rootFill forKey:@"backgroundColor"];
@@ -472,20 +472,20 @@ ArdiaEarlyShown *ShownForWindow(NSWindow *window) {
   s.root = root;
   ClearRootFill(s, root);
   if (s.contentObserver) [NSNotificationCenter.defaultCenter removeObserver:s.contentObserver];
-  __weak ArdiaEarlyShown *weakShown = s;
+  __weak NillaEarlyShown *weakShown = s;
   s.contentObserver = [NSNotificationCenter.defaultCenter
       addObserverForName:@"RCTContentDidAppearNotification"
                   object:root
                    queue:nil
               usingBlock:^(NSNotification *) {
-                ArdiaEarlyShown *shown = weakShown;
+                NillaEarlyShown *shown = weakShown;
                 if (!shown) return;
                 [NSNotificationCenter.defaultCenter removeObserver:shown.contentObserver];
                 shown.contentObserver = nil;
                 if (!shown.tab) DropCover(shown);
                 HandOffPictures(shown);
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kUntakenAfterContentSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-                  ArdiaEarlyShown *later = weakShown;
+                  NillaEarlyShown *later = weakShown;
                   if (later && [Shown() containsObject:later]) Forget(later);
                 });
               }];

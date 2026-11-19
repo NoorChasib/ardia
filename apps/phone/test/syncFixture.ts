@@ -13,7 +13,7 @@ export function status(patch: Partial<SyncStatus> = {}): SyncStatus {
     isDemo: false,
     pendingDownloads: 0,
     lastSynced: NOW - 5_000,
-    folderName: "Ardia Sync",
+    folderName: "Nilla Sync",
     deviceName: "POCO M3 Pro",
     selectedProfileId: "work",
     showsResetNotice: false,
@@ -60,7 +60,7 @@ const work: SyncedProfile = {
       { key: "t2", title: "Docs", url: "https://docs.example/", icon: null, folder: [{ key: "t2a", title: "Spec", url: "https://docs.example/spec", icon: null }] },
     ],
     sections: [
-      { tab: { key: "p1", title: "", url: "https://www.github.com/ardia", icon: null }, group: null },
+      { tab: { key: "p1", title: "", url: "https://www.github.com/nilla", icon: null }, group: null },
       {
         tab: null,
         group: { key: "g1", name: "Launch", icon: null, color: "green", items: [{ tab: { key: "p2", title: "Plan", url: "https://plan.example/", icon: null }, group: null }] },

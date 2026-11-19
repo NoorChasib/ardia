@@ -12,7 +12,7 @@ let ids = 0;
 let writes = 0;
 let gate = null;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => `id${++ids}`,
     deviceName: () => "Test Mac",
     createPhrase: async () => true,

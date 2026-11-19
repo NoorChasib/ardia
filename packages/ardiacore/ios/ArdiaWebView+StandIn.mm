@@ -3,8 +3,8 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
 namespace {
 
@@ -13,16 +13,16 @@ constexpr CFTimeInterval kTakeOverLendSeconds = 1;
 
 }
 
-@implementation ArdiaWebView (StandIn)
+@implementation NillaWebView (StandIn)
 
 - (void)lendPageToSuccessor {
   NSView *page = _tab.view;
   if (!page || _standalone || _devtoolsView || page.superview != self || page.hidden || self.alphaValue <= 0 ||
       self.isHiddenOrHasHiddenAncestor)
     return;
-  ArdiaWebView *holder = nil;
+  NillaWebView *holder = nil;
   const CFTimeInterval now = CACurrentMediaTime();
-  for (ArdiaWebView *other in LiveViews().allObjects)
+  for (NillaWebView *other in LiveViews().allObjects)
     if (other->_frameHold.tookOverFrom == self && now - other->_frameHold.tookOverAt < kTakeOverLendSeconds && (other->_visible || other->_reveal.active))
       holder = other;
   if (!holder) return;
@@ -46,20 +46,20 @@ constexpr CFTimeInterval kTakeOverLendSeconds = 1;
     if (covers) holder.alphaValue = 1;
   });
   if (heldFocus) {
-    if (holder->_focus.page == ArdiaPageFocus::Elsewhere) holder->_focus.page = ArdiaPageFocus::Page;
+    if (holder->_focus.page == NillaPageFocus::Elsewhere) holder->_focus.page = NillaPageFocus::Page;
     [holder requestFocusRestoreIn:window];
   }
   if (covers) return;
-  __weak ArdiaWebView *weakHolder = holder;
+  __weak NillaWebView *weakHolder = holder;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kStandInTeardownDelay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakHolder;
+    NillaWebView *view = weakHolder;
     if (view && view->_standIn.page == page && !view->_frameHold.awaiting) [view dropStandIn];
   });
 }
 
 - (void)reclaimLentPage {
   NSView *page = _tab.view;
-  ArdiaWebView *holder = _standIn.lentTo;
+  NillaWebView *holder = _standIn.lentTo;
   if (!page || !self.window || (!holder && page.superview)) return;
   _standIn.lentTo = nil;
   if (holder && holder->_standIn.page == page) [holder cancelStandIn];
@@ -73,7 +73,7 @@ constexpr CFTimeInterval kTakeOverLendSeconds = 1;
 }
 
 - (void)clearStandIn {
-  ArdiaWebView *lender = _standIn.lender;
+  NillaWebView *lender = _standIn.lender;
   if (lender && lender->_standIn.lentTo == self) lender->_standIn.lentTo = nil;
   _standIn.page = nil;
   _standIn.tab = nil;
@@ -112,7 +112,7 @@ constexpr CFTimeInterval kTakeOverLendSeconds = 1;
   const NSUInteger generation = ++_standIn.generation;
   const void *holder = (__bridge const void *)self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kStandInTeardownDelay * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    for (ArdiaWebView *view in LiveViews().allObjects)
+    for (NillaWebView *view in LiveViews().allObjects)
       if ((__bridge const void *)view == holder && view->_standIn.leaving && view->_standIn.generation == generation) return [view finishStandIn];
   });
 }
@@ -123,7 +123,7 @@ constexpr CFTimeInterval kTakeOverLendSeconds = 1;
   ArdiaCoreTab *tab = _standIn.tab;
   const BOOL closes = _standIn.closes, leaving = _standIn.leaving;
   const float opacity = _standIn.opacity;
-  ArdiaWebView *lender = _standIn.lender;
+  NillaWebView *lender = _standIn.lender;
   [self clearStandIn];
   WithoutActions(^{
     if (page.superview == self) [page removeFromSuperview];

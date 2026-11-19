@@ -21,13 +21,13 @@
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "winsqlite3.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 namespace ImportFiles {
 
 inline constexpr uint64_t kLargestFileBytes = 256ull << 20;
 inline constexpr size_t kLargestQueryRows = 2'000'000;
-inline constexpr char kSnapshotPrefix[] = "ardia-import-";
+inline constexpr char kSnapshotPrefix[] = "nilla-import-";
 
 inline std::wstring SecretStoreKey(std::wstring name) {
   size_t stream = name.find(L':');

@@ -17,7 +17,7 @@ async function importOnce(): Promise<ImportResult> {
   try {
     return await runLegacyImport(deps());
   } catch {
-    console.log("ardia-legacy failed reason=write");
+    console.log("nilla-legacy failed reason=write");
     return { kind: "failed", reason: "write" };
   }
 }
@@ -35,7 +35,7 @@ export async function startWithoutOldApp(): Promise<boolean> {
   try {
     return await startWithoutImport(deps());
   } catch {
-    console.log("ardia-legacy start-fresh failed");
+    console.log("nilla-legacy start-fresh failed");
     return false;
   }
 }

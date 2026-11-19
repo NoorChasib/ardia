@@ -41,8 +41,8 @@ const bodyOf = (text, signature) => {
   assert.fail(`${signature} has no closing brace`);
 };
 
-const marks = (tab) => `[ArdiaTabRegistry expectFirstShowFocus:YES forTab:${tab}];`;
-const unmarks = (tab) => `[ArdiaTabRegistry expectFirstShowFocus:NO forTab:${tab}];`;
+const marks = (tab) => `[NillaTabRegistry expectFirstShowFocus:YES forTab:${tab}];`;
+const unmarks = (tab) => `[NillaTabRegistry expectFirstShowFocus:NO forTab:${tab}];`;
 
 test("a mark that is only commented out does not count", () => {
   const commented = `// ${marks("tab")}\n/* ${marks("tab")}\n */\nreturn @"http://example.test"; // ${marks("tab")}\n`;
@@ -64,7 +64,7 @@ test("slashes inside a string do not hide a mark that follows on the same line",
 });
 
 test("the request belongs to the tab, not to a view or its focus state", () => {
-  const state = bodyOf(native("ArdiaWebViewInternal.h"), "struct ArdiaPageFocusState");
+  const state = bodyOf(native("ArdiaWebViewInternal.h"), "struct NillaPageFocusState");
   assert.ok(!state.includes("onFirstShow"), "the focus state of a view does not hold the request");
   const header = native("ArdiaTabRegistry.h");
   assert.match(header, /\+ \(void\)expectFirstShowFocus:\(BOOL\)expects forTab:\(ArdiaCoreTab \*\)tab;/);
@@ -100,7 +100,7 @@ test("an offered tab that is held is marked only once it is parked for the retry
   assert.ok(heldAt >= 0, "the offered branch holds a tab the window cannot take yet");
   assert.ok(!offered.slice(0, heldAt).includes(marks("offered")), "nothing is marked before the hold is decided");
   const held = bodyOf(offered.slice(heldAt), "[self holdTransferOf:offered]");
-  const parked = held.indexOf("[ArdiaTabParking park:offered forKey:_transferKey];");
+  const parked = held.indexOf("[NillaTabParking park:offered forKey:_transferKey];");
   assert.ok(parked >= 0, "the held tab is parked");
   assert.ok(held.indexOf(marks("offered")) > parked, "the mark follows the park");
 });
@@ -108,7 +108,7 @@ test("an offered tab that is held is marked only once it is parked for the retry
 test("a parked link tab is marked before it is taken, and unmarked when it is not", () => {
   const take = bodyOf(native("ArdiaWebView+Transfer.mm"), "- (BOOL)takeLinkTab:");
   const mark = take.indexOf(marks("tab"));
-  const taken = take.indexOf("[self takeTransferredTab] != ArdiaTransferNone");
+  const taken = take.indexOf("[self takeTransferredTab] != NillaTransferNone");
   assert.ok(mark >= 0 && taken > mark, "the link tab is marked before takeTransferredTab");
   const unmark = take.indexOf(unmarks("tab"), taken);
   assert.ok(unmark > taken && unmark < take.indexOf("discardTab:tab"), "a discarded link tab leaves no mark");
@@ -118,7 +118,7 @@ const settle = () => bodyOf(native("ArdiaWebView+Focus.mm"), "- (void)settleFirs
 
 test("a request is consumed only once the page is attached, shown and not hidden", () => {
   const body = settle();
-  const consumed = body.indexOf("[ArdiaTabRegistry takeFirstShowFocusOfTab:_tab]");
+  const consumed = body.indexOf("[NillaTabRegistry takeFirstShowFocusOfTab:_tab]");
   assert.ok(consumed >= 0, "settling consumes the tab's request");
   const gate = body.slice(0, consumed);
   for (const check of ["!_tab", "!_visible", "!window", "_standalone", "page.superview != self", "page.isHiddenOrHasHiddenAncestor"])
@@ -128,8 +128,8 @@ test("a request is consumed only once the page is attached, shown and not hidden
 
 test("only the tab the strip shows as active takes focus, and a visible tab that is not active yet keeps its request", () => {
   const body = settle();
-  const consumed = body.indexOf("[ArdiaTabRegistry takeFirstShowFocusOfTab:_tab]");
-  const check = "if (!controller || [ArdiaTabStrip activeTabInWindow:controller profile:_tab.profile] != _tab) return;";
+  const consumed = body.indexOf("[NillaTabRegistry takeFirstShowFocusOfTab:_tab]");
+  const check = "if (!controller || [NillaTabStrip activeTabInWindow:controller profile:_tab.profile] != _tab) return;";
   const active = body.indexOf(check);
   const requested = body.indexOf("[self requestFocusRestoreIn:window];");
   assert.ok(active >= 0, "settling checks that the strip lists this tab as active");

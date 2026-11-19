@@ -21,7 +21,7 @@
 #include "NativeModules.h"
 #include "Paths.h"
 
-namespace Ardia {
+namespace Nilla {
 
 class SerialQueue {
  public:
@@ -345,7 +345,7 @@ class DocumentStore {
       if (pending != State().removing.end() && --pending->second <= 0) State().removing.erase(pending);
     }
     bool settled = removed || superseded;
-    if (!settled) OutputDebugStringW((std::wstring(L"Ardia: a document could not be removed: ") + path.filename().wstring() + L"\n").c_str());
+    if (!settled) OutputDebugStringW((std::wstring(L"Nilla: a document could not be removed: ") + path.filename().wstring() + L"\n").c_str());
     for (auto const &waiter : waiters) {
       try {
         waiter(settled ? std::nullopt : std::optional<std::string>("The document could not be removed"));
@@ -452,14 +452,14 @@ class DocumentStore {
       new std::vector<Done>(std::move(waiters));
     }
     if (!message) return;
-    OutputDebugStringW((L"Ardia: saving " + key + L" failed (try " + std::to_wstring(attempt + 1) + L"): " + Paths::Wide(*message) + L"\n").c_str());
+    OutputDebugStringW((L"Nilla: saving " + key + L" failed (try " + std::to_wstring(attempt + 1) + L"): " + Paths::Wide(*message) + L"\n").c_str());
     if (attempt == FlushAttempt) return;
     int delaySeconds = std::min(60, 2 << std::min(attempt, 5));
     Queue().AsyncAfter(std::chrono::seconds(delaySeconds), [key, generation, attempt]() { Land(key, generation, attempt + 1); });
   }
 };
 
-REACT_MODULE(DocumentsModule, L"ArdiaDocuments")
+REACT_MODULE(DocumentsModule, L"NillaDocuments")
 struct DocumentsModule {
   REACT_SYNC_METHOD(readDocument)
   std::optional<std::string> readDocument(std::string name) noexcept { return DocumentStore::Read(name); }

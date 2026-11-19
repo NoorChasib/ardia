@@ -13,7 +13,7 @@
 #include <bcrypt.h>
 #include <wincrypt.h>
 
-namespace Ardia::SyncCrypto {
+namespace Nilla::SyncCrypto {
 
 class WipedBytes {
  public:
@@ -78,8 +78,8 @@ constexpr size_t TagBytes = 16;
 constexpr size_t FilePadding = 1024;
 constexpr size_t PasswordPadding = 32;
 constexpr uint8_t PasswordVersion = 1;
-constexpr std::string_view Magic = "NNS1";
-constexpr std::string_view Salt = "netnyahoo-sync/v1";
+constexpr std::string_view Magic = "NLS1";
+constexpr std::string_view Salt = "nilla-sync/v1";
 constexpr std::string_view Base32Alphabet = "abcdefghijklmnopqrstuvwxyz234567";
 
 inline std::string_view Bytes(void const *data, size_t size) noexcept { return {static_cast<char const *>(data), size}; }

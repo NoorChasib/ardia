@@ -27,11 +27,25 @@ env:
   HOMEBREW_NO_AUTO_UPDATE: 1
   HOMEBREW_NO_INSTALL_CLEANUP: 1
   TURBO_TELEMETRY_DISABLED: 1
+  NILLA_RELEASES_ENABLED: ${{ vars.NILLA_RELEASES_ENABLED }}
+  APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+  NILLA_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
   VERSION: ${{ inputs.version }}
   DRY_RUN: ${{ inputs.dry_run }}
 
 jobs:
+  releases-enabled:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Releases are set up for Nilla
+        env:
+          ENABLED: ${{ vars.NILLA_RELEASES_ENABLED }}
+        run: |
+          [ -n "$ENABLED" ] || { echo "::error::Releases aren't set up for Nilla yet"; exit 1; }
+
   preflight:
+    needs: releases-enabled
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -50,14 +64,14 @@ jobs:
           check() { if [ "$DRY_RUN" = true ]; then echo "::warning::$* (a real release would stop here)"; else fail "$*"; fi; }
           . scripts/lib/releases.sh
           channel=$(channel_of "$VERSION") || fail "$VERSION is neither <major>.<minor>.<patch> nor <next stable>-nightly.<n>"
-          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' apps/browser/macos/Ardia.xcodeproj/project.pbxproj | sort -u)
+          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' apps/browser/macos/Nilla.xcodeproj/project.pbxproj | sort -u)
           [ "$project" = "$VERSION" ] || check "MARKETING_VERSION is $project: commit the bump to $VERSION first"
           [ -f "docs/release-notes/$VERSION.md" ] || check "no docs/release-notes/$VERSION.md: write and commit the notes first"
           if gh release view "v$VERSION" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then check "v$VERSION is already published"; fi
           tree=$(engine/engine-key.sh)
           echo "tree=$tree" >> "$GITHUB_OUTPUT"
           {
-            echo "### Ardia $VERSION ($channel)"
+            echo "### Nilla $VERSION ($channel)"
             echo "- commit \`$GITHUB_SHA\`, engine tree \`${tree:0:12}\`"
             if [ "$DRY_RUN" = true ]; then echo "- dry run: a release candidate, nothing published"; else echo "- publishes"; fi
             if [ "$IPHONE" = true ]; then echo "- iPhone: $(apple_version_of "$VERSION"), $([ "$DRY_RUN" = true ] && echo "built and signed, not uploaded" || echo "sent to TestFlight after the Mac release")"; fi
@@ -65,7 +79,7 @@ jobs:
 
   checks:
     needs: preflight
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -87,7 +101,7 @@ jobs:
 
   build:
     needs: preflight
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 120
     env:
       CAS_PATH: ${{ github.workspace }}/.xcode-cas
@@ -140,14 +154,14 @@ jobs:
           key: ubol-webkit-${{ hashFiles('packages/ardiacore/scripts/ubol.sh', 'packages/ardiacore/scripts/ubol-webkit.py') }}
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: ~/Library/Caches/ardia-cli-build
-          key: ardia-cli-${{ hashFiles('apps/cli/scripts/build.sh', 'apps/cli/requirements.lock') }}
+          path: ~/Library/Caches/nilla-cli-build
+          key: nilla-cli-${{ hashFiles('apps/cli/scripts/build.sh', 'apps/cli/requirements.lock') }}
       - name: Pods
         working-directory: apps/browser/macos
         run: pod install
       - name: Tree is clean
         run: |
-          pbx=apps/browser/macos/Ardia.xcodeproj/project.pbxproj
+          pbx=apps/browser/macos/Nilla.xcodeproj/project.pbxproj
           unquote() { sed -E 's/^[-+]//; s/"//g'; }
           removed=$(git diff -U0 -- "$pbx" | { grep '^-[^-]' || true; } | unquote)
           added=$(git diff -U0 -- "$pbx" | { grep '^+[^+]' || true; } | unquote)
@@ -177,7 +191,7 @@ jobs:
         env:
           DIST: ${{ steps.paths.outputs.dist }}
         run: |
-          COPYFILE_DISABLE=1 tar --no-mac-metadata -cf "$RUNNER_TEMP/build.tar" -C "$DIST" Ardia.xcarchive provenance.txt \
+          COPYFILE_DISABLE=1 tar --no-mac-metadata -cf "$RUNNER_TEMP/build.tar" -C "$DIST" Nilla.xcarchive provenance.txt \
             "ardia-cli-$VERSION-macos-arm64.tar.gz" "ardia-cli-$VERSION-macos-arm64.tar.gz.sha256"
       - if: always() && steps.cas.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -193,14 +207,14 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: build-logs
+          name: nilla-dev-${{ github.sha }}-release-build-logs
           path: ${{ steps.paths.outputs.dist }}/*.log
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   sign:
     needs: [preflight, build]
-    runs-on: xcode-27
+    runs-on: ${{ vars.MAC_RUNNER || 'macos-26' }}
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -258,7 +272,7 @@ jobs:
           rm -rf "$secrets"
           printf '%s=\n' RELEASE_PROVISIONING_PROFILE SPARKLE_KEY_FILE NOTARY_KEY >> "$GITHUB_ENV"
           [ ! -e "$secrets" ] || { echo "::error::couldn't remove $secrets"; exit 1; }
-          if security find-identity -v -p codesigning | grep -q 'Developer ID Application: .*(U5L5T3NGVV)'; then
+          if security find-identity -v -p codesigning | grep -q 'Developer ID Application: '; then
             echo "::error::a Developer ID identity is still in the keychain search list"
             exit 1
           fi
@@ -283,8 +297,8 @@ jobs:
         with:
           name: release
           path: |
-            ${{ steps.paths.outputs.dist }}/Ardia-${{ inputs.version }}.dmg
-            ${{ steps.paths.outputs.dist }}/Ardia-${{ inputs.version }}.zip
+            ${{ steps.paths.outputs.dist }}/Nilla-${{ inputs.version }}.dmg
+            ${{ steps.paths.outputs.dist }}/Nilla-${{ inputs.version }}.zip
             ${{ steps.paths.outputs.dist }}/appcast.xml
             ${{ steps.paths.outputs.dist }}/release-notes.md
             ${{ steps.paths.outputs.dist }}/provenance.txt
@@ -296,10 +310,10 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: sign-logs
+          name: nilla-dev-${{ github.sha }}-release-sign-logs
           path: ${{ steps.paths.outputs.dist }}/*.log
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   linux:
     needs: preflight
@@ -318,7 +332,7 @@ jobs:
             libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 libatspi2.0-0t64 libcups2t64 libdbus-1-3
             libx11-6 libxcb1 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxrandr2 libxkbcommon0
             libgbm1 libdrm2 libexpat1 libcairo2 libpango-1.0-0 libudev1 libasound2t64 libglib2.0-0t64
-            libgtk-3-0t64 libsecret-1-0
+            libgtk-3-0t64 libsecret-1-0 squashfs-tools zstd
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: apps/browser/build-ardiacore/prebuilt-linux-x86_64
@@ -326,8 +340,8 @@ jobs:
           restore-keys: engine-linux-x64-v3-
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          path: ~/.cache/ardia-cli-build
-          key: ardia-cli-build-linux-x64-${{ hashFiles('apps/cli/scripts/build.sh', 'apps/cli/requirements.lock') }}
+          path: ~/.cache/nilla-cli-build
+          key: nilla-cli-build-linux-x64-${{ hashFiles('apps/cli/scripts/build.sh', 'apps/cli/requirements.lock') }}
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: packages/ardiacore/vendor/ubo
@@ -337,19 +351,23 @@ jobs:
       - name: Build, package, smoke
         run: |
           if ! scripts/linux/release.sh "$VERSION" --engine exact --out "$RUNNER_TEMP/linux"; then
-            echo "::error::no Linux build for $VERSION (above). A missing engine for ${TREE:0:12} means: build it on the Linux builder, publish it with scripts/linux/publish-engine.sh --upload and commit prebuilt-engines-linux.tsv"
+            echo "::error::no Linux build for $VERSION (above). A missing engine for ${TREE:0:12} means $ARDIACORE_PREBUILT_REPO has none for this key: Layer 1 fetches the engines published upstream and Nilla publishes none (docs/linux-ci.md)"
             exit 1
           fi
+      - name: Licence texts in every package
+        run: |
+          python3 -I scripts/linux/verify-licenses.py --tarball "$RUNNER_TEMP/linux/Nilla-$VERSION-linux-x64.tar.xz" \
+            --deb "$RUNNER_TEMP/linux/Nilla-$VERSION-linux-x64.deb" --appimage "$RUNNER_TEMP/linux/Nilla-$VERSION-linux-x64.AppImage"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: linux
           path: |
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.tar.xz
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.tar.xz.sha256
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.deb
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.deb.sha256
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.AppImage
-            ${{ runner.temp }}/linux/Ardia-${{ inputs.version }}-linux-x64.AppImage.sha256
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.tar.xz
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.tar.xz.sha256
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.deb
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.deb.sha256
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.AppImage
+            ${{ runner.temp }}/linux/Nilla-${{ inputs.version }}-linux-x64.AppImage.sha256
             ${{ runner.temp }}/linux/ardia-cli-${{ inputs.version }}-linux-x64.tar.gz
             ${{ runner.temp }}/linux/ardia-cli-${{ inputs.version }}-linux-x64.tar.gz.sha256
             ${{ runner.temp }}/linux/provenance.txt
@@ -359,14 +377,14 @@ jobs:
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: linux-logs
+          name: nilla-dev-${{ github.sha }}-release-linux-logs
           path: |
             ${{ runner.temp }}/linux/*.log
             ${{ runner.temp }}/linux/smoke
             ${{ runner.temp }}/linux/smoke-deb
             ${{ runner.temp }}/linux/smoke-appimage
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   windows:
     needs: preflight
@@ -423,21 +441,12 @@ jobs:
           git tag "v$VERSION" "$GITHUB_SHA"
           git push origin "refs/tags/v$VERSION"
       - name: Publish
-        env:
-          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           export RELEASE_DIST="$GITHUB_WORKSPACE/dist/$VERSION"
-          if [ -n "$TAP_TOKEN" ]; then
-            git config --global url."https://x-access-token:$TAP_TOKEN@github.com/ardia-browser/homebrew-tap".insteadOf https://github.com/ardia-browser/homebrew-tap
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          else
-            export PUBLISH_TAP=0
-          fi
           if [ "$DRY_RUN" = true ]; then
-            .claude/skills/release/scripts/publish.sh "$VERSION" --dry-run
+            scripts/release/publish.sh "$VERSION" --dry-run
           else
-            .claude/skills/release/scripts/publish.sh "$VERSION"
+            scripts/release/publish.sh "$VERSION"
           fi
 
   windows-update:

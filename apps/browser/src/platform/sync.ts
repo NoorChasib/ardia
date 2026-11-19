@@ -1,1 +1,1 @@
-export * from "@ardia/sync";
+export * from "@nilla/sync";

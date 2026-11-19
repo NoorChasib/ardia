@@ -1,6 +1,6 @@
 import ExpoModulesCore
 
-final class SwipeArea: ExpoView, ArdiaSwipeTarget {
+final class SwipeArea: ExpoView, NillaSwipeTarget {
   let onSwipe = EventDispatcher()
   let onPagerPosition = EventDispatcher()
   let onPagerState = EventDispatcher()
@@ -20,7 +20,7 @@ final class SwipeArea: ExpoView, ArdiaSwipeTarget {
 
   override func viewDidMoveToWindow() {
     super.viewDidMoveToWindow()
-    if window != nil { ArdiaSwipe.addTarget(self) } else { ArdiaSwipe.removeTarget(self) }
+    if window != nil { NillaSwipe.addTarget(self) } else { NillaSwipe.removeTarget(self) }
   }
 
   deinit {

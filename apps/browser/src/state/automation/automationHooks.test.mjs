@@ -9,7 +9,7 @@ const { approveRule, pendingRules, resetApprovalsForTests } = await import("./ap
 const { approvalFor } = await import("./hookPolicy.ts");
 const { usePages, patchPage } = await import("../tabs/pageState.ts");
 const { noteNotificationShown } = await import("./notificationEvents.ts");
-const { openExternalUrls } = await import("../littleArdia/actions.ts");
+const { openExternalUrls } = await import("../littleNilla/actions.ts");
 const { useRegisteredProviders } = await import("../omnibox/providers.ts");
 const stub = await import("../../test-native/index.ts");
 
@@ -235,7 +235,7 @@ test("link.opening routes or drops links from other apps before any tab exists",
     { name: "slack-work", on: "link.opening", from: ["com.tinyspeck.slackmacgap"], route: { open: "tab" } },
   ]);
   approveRule(approvalFor(useHookRules.getState().hooks[1]).key);
-  S().updateSettings({ openLinksInLittleArdia: true });
+  S().updateSettings({ openLinksInLittleNilla: true });
   const w = S().createWindow({ url: "https://a.example/" });
   const tabs = () => Object.keys(S().tabs).length;
   const before = tabs();
@@ -492,7 +492,7 @@ test("the incoming-link hold follows whether an active tab.opening or link.openi
   assert.equal(stub.systemSignals.holdsIncomingLinks, false);
 });
 
-test("a tab target in Little Ardia runs there, with or without a main window, and unsupported commands are refused", async () => {
+test("a tab target in Little Nilla runs there, with or without a main window, and unsupported commands are refused", async () => {
   fresh();
   await controlOn();
   S().updateSettings({ warnBeforeClosingLastTab: false });

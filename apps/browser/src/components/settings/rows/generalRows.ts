@@ -3,6 +3,7 @@ import type { SettingsPane } from "../../../state/settings/settingsWindows";
 import { keyText } from "../../../state/commands/keyText";
 import { PLATFORM_FEATURES } from "../../../lib/platformFeatures";
 import { PLATFORM_TERMS } from "../../../lib/platformTerms";
+import { setupCodesOffered } from "../../../state/app/siteServices";
 
 const inSidebar = (_: unknown, env: SettingsEnv) => !env.top;
 const syncOn = (_: unknown, env: SettingsEnv) => !!env.syncOn;
@@ -28,13 +29,13 @@ export const generalRows = {
           keywords: ["startup", "launch", "login items", "boot"],
         },
         windowsAndTabs: {
-          title: "When Ardia quits",
+          title: "When Nilla quits",
           description: `What you see the next time you open it. ${PLATFORM_FEATURES.menuBar ? "Closed windows stay in History › Recently Closed." : `${keyText("⇧⌘T")} reopens closed windows too.`}`,
           keywords: ["restore", "session", "reopen", "preserve tabs", "start fresh", "windows and tabs"],
         },
         askBefore: {
           title: "Ask before",
-          description: "Ardia asks before doing any of these.",
+          description: "Nilla asks before doing any of these.",
           keywords: ["quit", "confirm", "cmd q", "last window", "exit", "warn before quitting", "close window", "warn before closing a window with multiple tabs", "close tab", "warn before closing last tab in a profile", "close group", "folder", "accidentally", "warn before closing a tab group", "warn before moving tabs between profiles", "warn", "last tab", "move tab"],
         },
       },
@@ -159,7 +160,7 @@ export const generalRows = {
         importBrowser: {
           title: "Import from another browser",
           description: `From Chrome, Arc, ${PLATFORM_FEATURES.hiddenBrowserSources.includes("safari") ? "Edge" : "Safari"}, Firefox and more.`,
-          keywords: ["migrate", "switch", "transfer", "import from another browser", "setup code", "demo", "ardia.dev", "preset", "arc", "layout", "apply a setup code"],
+          keywords: ["migrate", "switch", "transfer", "import from another browser", "preset", "arc", "layout", ...(setupCodesOffered() ? ["setup code", "demo", "apply a setup code"] : [])],
         },
         redoSetup: {
           title: `Set up ${APP} again`,

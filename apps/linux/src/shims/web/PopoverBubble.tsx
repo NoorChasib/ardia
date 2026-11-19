@@ -1,4 +1,4 @@
-import type { PopoverBubbleProps } from "@ardia-real/shell";
+import type { PopoverBubbleProps } from "@nilla-real/shell";
 import { useId, useState } from "react";
 import { View, type LayoutChangeEvent } from "react-native";
 import { shellOverPages } from "../../shellAbove";

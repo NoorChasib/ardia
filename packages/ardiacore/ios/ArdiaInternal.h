@@ -8,11 +8,11 @@
 #import "ArdiaTabRegistry.h"
 #import "ArdiaWindowController.h"
 
-@class ArdiaWebView;
+@class NillaWebView;
 
 NS_ASSUME_NONNULL_BEGIN
 
-namespace ardia_host {
+namespace nilla_host {
 
 ArdiaCoreProfile *_Nullable LoadedProfile(NSString *name);
 bool IsDeletedProfile(NSString *name);
@@ -63,7 +63,7 @@ void SetAppActive(bool active);
 void ActToggleFullScreen(NSWindow *window);
 void InstallTestCrashGuard(NSString *_Nullable dataDir);
 
-void OpenPopupWindow(ArdiaCoreTab *tab, ArdiaWebView *_Nullable opener);
+void OpenPopupWindow(ArdiaCoreTab *tab, NillaWebView *_Nullable opener);
 ArdiaCoreWindow *_Nullable PopupWindowForChromeBrowser(ArdiaCoreProfile *profile);
 void ChromeMakesAppWindow(ArdiaCoreProfile *profile);
 bool IsReservedKeyEvent(NSEvent *event);
@@ -71,28 +71,28 @@ bool IsReservedBinding(NSString *key, NSString *unshiftedKey, NSEventModifierFla
 NSUInteger PopupWindowCount();
 bool AskPermissionInPopupWindow(ArdiaCoreTab *tab, NSDictionary *request);
 void DropPopupWindowPermission(NSString *requestId);
-void NotePasswordPromptSource(ArdiaWebView *view, ArdiaCoreTab *_Nullable source);
-ArdiaCoreTab *_Nullable PasswordPromptTab(ArdiaWebView *view, ArdiaCoreTab *_Nullable own);
+void NotePasswordPromptSource(NillaWebView *view, ArdiaCoreTab *_Nullable source);
+ArdiaCoreTab *_Nullable PasswordPromptTab(NillaWebView *view, ArdiaCoreTab *_Nullable own);
 
 }
 
-@interface ArdiaTabStrip (Engine)
-+ (void)changedInWindow:(ArdiaWindowController *)controller profile:(ArdiaCoreProfile *)profile;
-+ (void)changedInWindow:(ArdiaWindowController *)controller profile:(ArdiaCoreProfile *)profile cause:(nullable id)cause;
-+ (void)windowClosed:(ArdiaWindowController *)controller;
-+ (void)activated:(ArdiaCoreTab *)tab inWindow:(ArdiaWindowController *)controller;
-+ (nullable ArdiaCoreTab *)activeTabInWindow:(ArdiaWindowController *)controller profile:(ArdiaCoreProfile *)profile;
-+ (void)removed:(ArdiaCoreTab *)tab fromWindow:(ArdiaWindowController *)controller;
+@interface NillaTabStrip (Engine)
++ (void)changedInWindow:(NillaWindowController *)controller profile:(ArdiaCoreProfile *)profile;
++ (void)changedInWindow:(NillaWindowController *)controller profile:(ArdiaCoreProfile *)profile cause:(nullable id)cause;
++ (void)windowClosed:(NillaWindowController *)controller;
++ (void)activated:(ArdiaCoreTab *)tab inWindow:(NillaWindowController *)controller;
++ (nullable ArdiaCoreTab *)activeTabInWindow:(NillaWindowController *)controller profile:(ArdiaCoreProfile *)profile;
++ (void)removed:(ArdiaCoreTab *)tab fromWindow:(NillaWindowController *)controller;
 + (void)setPinned:(BOOL)pinned tab:(ArdiaCoreTab *)tab;
 @end
 
-namespace ardia_host {
+namespace nilla_host {
 NSArray<ArdiaCoreProfile *> *LoadedProfiles();
 void LoadContentBlocker(NSString *profile);
 void PrepareContentBlocker();
 }
 
-@interface ArdiaFavicons (Tabs)
+@interface NillaFavicons (Tabs)
 + (void)noteImage:(nullable NSImage *)image forURL:(nullable NSString *)url profile:(nullable NSString *)profile;
 @end
 

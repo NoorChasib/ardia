@@ -1,5 +1,5 @@
-export * from "@ardia-real/shell";
-import type { AppEvent, CommandEvent, ConfirmOptions, InlineWrite, LaunchConfig, PromptOptions, SystemInfo, WindowEvent } from "@ardia-real/shell";
+export * from "@nilla-real/shell";
+import type { AppEvent, CommandEvent, ConfirmOptions, InlineWrite, LaunchConfig, PromptOptions, SystemInfo, WindowEvent } from "@nilla-real/shell";
 import { unstable_batchedUpdates } from "react-dom";
 import { emitNativeEvent, provideNativeModule } from "./expo-modules-core";
 import { NATIVE_CHANGE } from "./react-native";
@@ -24,10 +24,10 @@ export { MouseArea } from "./web/MouseArea";
 export { showMenu } from "./web/menus";
 
 const SYSTEM_INFO: SystemInfo = {
-  appName: "Ardia",
+  appName: "Nilla",
   appVersion: "demo",
   appBuild: "web",
-  bundleId: "dev.ardia.demo",
+  bundleId: "com.nilladigital.nilla.demo",
   configuration: "Release",
   osVersion: "web",
   osBuild: "web",
@@ -49,7 +49,7 @@ const LAUNCH_CONFIG: LaunchConfig = {
   test: {},
 };
 
-provideNativeModule("ArdiaApp", {
+provideNativeModule("NillaApp", {
   launchEnvironment: () => null,
   systemInfo: () => SYSTEM_INFO,
   launchConfig: () => LAUNCH_CONFIG,
@@ -59,21 +59,21 @@ provideNativeModule("ArdiaApp", {
   interfaceScaleRange: () => [1, 1],
   setInterfaceScale: async () => 1,
 });
-provideNativeModule("ArdiaCalendar", { authorizationStatus: () => "notDetermined" });
-provideNativeModule("ArdiaCli", { installedVersion: () => null });
-provideNativeModule("ArdiaUserScripts", { watch: () => {}, read: async () => ({ state: "empty" }), readStatus: async () => null });
+provideNativeModule("NillaCalendar", { authorizationStatus: () => "notDetermined" });
+provideNativeModule("NillaCli", { installedVersion: () => null });
+provideNativeModule("NillaUserScripts", { watch: () => {}, read: async () => ({ state: "empty" }), readStatus: async () => null });
 
 const documents = new Map<string, string>();
 const darkQuery = typeof window === "undefined" ? null : window.matchMedia("(prefers-color-scheme: dark)");
 let appearance: "auto" | "light" | "dark" = "auto";
 
-provideNativeModule("ArdiaDocuments", {
+provideNativeModule("NillaDocuments", {
   readDocument: (name: string) => documents.get(name) ?? null,
   writeDocument: (name: string, contents: string) => void documents.set(name, contents),
   saveDocument: async (name: string, contents: string) => void documents.set(name, contents),
   removeDocument: (name: string) => void documents.delete(name),
 });
-provideNativeModule("ArdiaShell", {
+provideNativeModule("NillaShell", {
   fetchBangList: async (_etag: string | null) => ({ status: 304, etag: null, contentType: null, body: null, bytes: 0 }),
   copyText: (text: string) => void navigator.clipboard?.writeText(text).catch(() => {}),
   isDarkAppearance: async () => !!darkQuery?.matches,
@@ -83,7 +83,7 @@ provideNativeModule("ArdiaShell", {
     emitAppEvent({ type: "appearance", dark: mode === "auto" ? !!darkQuery?.matches : mode === "dark" });
   },
 });
-provideNativeModule("ArdiaDialogs", {
+provideNativeModule("NillaDialogs", {
   confirm: async (options: ConfirmOptions) => ({
     confirmed: window.confirm([options.title, options.message].filter(Boolean).join("\n\n")),
     suppressed: false,
@@ -91,7 +91,7 @@ provideNativeModule("ArdiaDialogs", {
   prompt: async (options: PromptOptions) =>
     window.prompt(options.message ? `${options.title}\n\n${options.message}` : options.title, options.value ?? ""),
 });
-provideNativeModule("ArdiaAppWindows", {
+provideNativeModule("NillaAppWindows", {
   windowCornerRadius: () => 19,
   windowIds: async () => [] as string[],
   windowFrame: async (_id: string): Promise<[number, number, number, number] | null> => null,
@@ -115,6 +115,6 @@ export async function completeInline(tag: number, typed: string, completion: str
   return 1;
 }
 
-export const emitCommand = (event: CommandEvent) => emitNativeEvent("ArdiaMenus", "onCommand", event);
-export const emitWindowEvent = (event: WindowEvent) => emitNativeEvent("ArdiaAppWindows", "onWindowEvent", event);
-export const emitAppEvent = (event: AppEvent) => emitNativeEvent("ArdiaShell", "onAppEvent", event);
+export const emitCommand = (event: CommandEvent) => emitNativeEvent("NillaMenus", "onCommand", event);
+export const emitWindowEvent = (event: WindowEvent) => emitNativeEvent("NillaAppWindows", "onWindowEvent", event);
+export const emitAppEvent = (event: AppEvent) => emitNativeEvent("NillaShell", "onAppEvent", event);

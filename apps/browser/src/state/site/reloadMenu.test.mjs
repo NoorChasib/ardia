@@ -16,7 +16,7 @@ const render = (items, depth = 0) =>
 
 const SITE = ["Site Settings [gearshape] ›", "  Clear Cookies and Site Data… [trash]", "  ---", "  Site Controls…"];
 
-test("the reload button's menu: the site's ad blocker as a checkmark, then Site Settings with the actions Ardia has", () => {
+test("the reload button's menu: the site's ad blocker as a checkmark, then Site Settings with the actions Nilla has", () => {
   assert.deepEqual(render(reloadMenuItems({ blocker: "on" })), ["✓ Block Ads & Trackers [hand.raised]", "---", ...SITE]);
   assert.deepEqual(render(reloadMenuItems({ blocker: "off" }))[0], "Block Ads & Trackers [hand.raised]");
   assert.deepEqual(render(reloadMenuItems({ blocker: "offInSettings" }))[0], "Block Ads & Trackers [hand.raised]");
@@ -45,17 +45,17 @@ function pendingClear(engine) {
     return () => (module.call = call);
   };
   const engineCalls = [];
-  const restore = [recording(ardiaCoreNativeModules.ArdiaSites, engineCalls)];
+  const restore = [recording(ardiaCoreNativeModules.NillaSites, engineCalls)];
   let answer;
   const asked = [];
-  const confirm = shellNativeModules.ArdiaDialogs.confirm;
-  shellNativeModules.ArdiaDialogs.confirm = (options) => (asked.push(options.title), new Promise((resolve) => (answer = (confirmed) => resolve({ confirmed, suppressed: false }))));
+  const confirm = shellNativeModules.NillaDialogs.confirm;
+  shellNativeModules.NillaDialogs.confirm = (options) => (asked.push(options.title), new Promise((resolve) => (answer = (confirmed) => resolve({ confirmed, suppressed: false }))));
   const done = clearSiteDataAfterConfirm(S().tabs[id], "https://a.com");
   const finish = async (confirmed) => {
     answer(confirmed);
     const result = await done;
     restore.forEach((undo) => undo());
-    shellNativeModules.ArdiaDialogs.confirm = confirm;
+    shellNativeModules.NillaDialogs.confirm = confirm;
     webviews.delete(id);
     return result;
   };

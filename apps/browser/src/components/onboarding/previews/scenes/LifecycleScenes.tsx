@@ -8,7 +8,7 @@ import { Cursor, Pill } from "../Floating";
 import { sceneMs } from "../tokens";
 import { font } from "../../../ui/tokens";
 import type { Scene } from "../scene";
-import { Chrome, Desktop, KeyPress, listTop, MINI_SIDE, MiniArdia, Std } from "./SceneParts";
+import { Chrome, Desktop, KeyPress, listTop, MINI_SIDE, MiniNilla, Std } from "./SceneParts";
 import { keyText } from "../../../../state/commands/keyText";
 
 export function tidy(auto: boolean): Scene {
@@ -96,7 +96,7 @@ export function windows(shared: boolean): Scene {
     return (
       <>
         <Desktop look={look} />
-        <MiniArdia
+        <MiniNilla
           g={g}
           look={look}
           rect={a}
@@ -114,7 +114,7 @@ export function windows(shared: boolean): Scene {
             </>
           }
         />
-        <MiniArdia g={g} look={look} rect={b} tabs={other} sel={shared ? 1 : 0} dim={dimB} />
+        <MiniNilla g={g} look={look} rect={b} tabs={other} sel={shared ? 1 : 0} dim={dimB} />
         <Cursor
           g={g}
           style={{

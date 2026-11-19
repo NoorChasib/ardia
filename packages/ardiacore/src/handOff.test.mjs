@@ -24,6 +24,6 @@ test("a tab nobody opened is not re-homed onto a hidden pre-loaded view while a 
 });
 
 test("a tab nobody opened still goes to a hidden view when no stray-tab listener exists to adopt it", () => {
-  assert.match(hostCondition(), /view && \(view\.visible \|\| !\[ArdiaEvents listens:@"extensions"\]\) &&/, "the tab would be dropped without a host");
-  assert.match(functionBody("AnnounceStrayTab"), /if \(!\[ArdiaEvents listens:@"extensions"\]\) return;/);
+  assert.match(hostCondition(), /view && \(view\.visible \|\| !\[NillaEvents listens:@"extensions"\]\) &&/, "the tab would be dropped without a host");
+  assert.match(functionBody("AnnounceStrayTab"), /if \(!\[NillaEvents listens:@"extensions"\]\) return;/);
 });

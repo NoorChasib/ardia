@@ -14,8 +14,8 @@ VERSION_PATTERN = r"[0-9]+\.[0-9]+\.[0-9]+(-nightly\.[0-9]+)?"
 if not re.fullmatch(VERSION_PATTERN, version):
     sys.exit(USAGE)
 
-ARCHIVE = "Ardia.xcarchive"
-APP = f"{ARCHIVE}/Products/Applications/Ardia.app"
+ARCHIVE = "Nilla.xcarchive"
+APP = f"{ARCHIVE}/Products/Applications/Nilla.app"
 CLI = f"ardia-cli-{version}-macos-arm64.tar.gz"
 TOP_FILES = {"provenance.txt", CLI, f"{CLI}.sha256"}
 ARCHIVE_DIRS = {ARCHIVE, f"{ARCHIVE}/Products", f"{ARCHIVE}/Products/Applications", f"{ARCHIVE}/dSYMs"}
@@ -138,11 +138,11 @@ with open(os.path.join(real_dest, APP, "Contents/Info.plist"), "rb") as handle:
         info = plistlib.load(handle)
     except Exception:
         fail("the app's Info.plist isn't a property list")
-expected = {"CFBundleIdentifier": "com.ardia.browser", "CFBundleExecutable": "Ardia", "CFBundleShortVersionString": version}
+expected = {"CFBundleIdentifier": "com.nilladigital.nilla", "CFBundleExecutable": "Nilla", "CFBundleShortVersionString": version}
 for key, value in expected.items():
     if info.get(key) != value:
         fail(f"the app's {key} isn't {value}")
 with open(os.path.join(real_dest, f"{CLI}.sha256"), encoding="ascii", errors="replace") as handle:
     if not re.fullmatch(rf"[0-9a-f]{{64}}  {re.escape(CLI)}\n?", handle.read()):
         fail(f"{CLI}.sha256 isn't one SHA-256 line for {CLI}")
-print(f"unpacked {len(members)} members into {dest}: Ardia.app {version} (com.ardia.browser), {CLI}")
+print(f"unpacked {len(members)} members into {dest}: Nilla.app {version} (com.nilladigital.nilla), {CLI}")

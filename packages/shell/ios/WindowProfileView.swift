@@ -33,15 +33,15 @@ final class WindowProfileView: ExpoView {
     if applied?.profile != profile {
       let shownSelection = selection
       let shownSwitch = switchId
-      ArdiaChromeWindowHost.showProfile(profile, in: window, report: { [weak self] profileLoaded, activeMs, swapMs, heldTimedOut in
+      NillaChromeWindowHost.showProfile(profile, in: window, report: { [weak self] profileLoaded, activeMs, swapMs, heldTimedOut in
         self?.onSwapped(["selection": shownSelection, "switchId": shownSwitch, "profileLoaded": profileLoaded, "activeMs": activeMs, "swapMs": swapMs, "heldTimedOut": heldTimedOut])
       })
     }
     if let applied, applied.profile != profile || applied.selection != selection {
-      ArdiaWebView.wakeNeighbourPages(in: window)
+      NillaWebView.wakeNeighbourPages(in: window)
     }
     if applied?.neighbours != neighbours, !neighbours.isEmpty, let current = self.window {
-      ArdiaChromeWindowHost.prepareProfiles(neighbours, for: current)
+      NillaChromeWindowHost.prepareProfiles(neighbours, for: current)
     }
     applied = (profile, neighbours, selection)
   }

@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
 import { connectCdp, fetchJson } from "../lib/cdp.mjs";
-import { launchEnvironment } from "../lib/ardia.mjs";
+import { launchEnvironment } from "../lib/nilla.mjs";
 import { until } from "../lib/util.mjs";
 
 const CHROMIUM = process.env.ARDIA_ACCEPTANCE_CHROMIUM ?? "/usr/bin/chromium";
@@ -28,7 +28,7 @@ async function nativeScripts() {
 }
 
 const STAND_IN = {
-  "manifest.json": JSON.stringify({ manifest_version: 3, name: "Ardia bridge stand-in", version: "1.0", permissions: ["storage"] }),
+  "manifest.json": JSON.stringify({ manifest_version: 3, name: "Nilla bridge stand-in", version: "1.0", permissions: ["storage"] }),
   "js/vapi.js": `chrome.extension.getBackgroundPage = () => ({ "\\u00b5Block": { isReadyPromise: Promise.resolve() } });
 self.standIn = { whitelist: ["chrome-extension-scheme"], available: { easylist: { content: "filters", group: "ads", title: "EasyList", entryCount: 5 }, "fanboy-cookiemonster": { content: "filters", group: "annoyances", title: "Cookies", off: true, entryCount: 2 } }, messages: [] };`,
   "js/vapi-common.js": "",
@@ -53,7 +53,7 @@ describe("the content blocker bridge page in a stock Chromium", { skip: availabl
   let scripts;
 
   before(async () => {
-    root = await mkdtemp(join(tmpdir(), "ardia-acceptance-bridge-"));
+    root = await mkdtemp(join(tmpdir(), "nilla-acceptance-bridge-"));
     const extension = join(root, "extension");
     for (const [name, text] of Object.entries(STAND_IN)) {
       await mkdir(join(extension, name, ".."), { recursive: true });
@@ -76,7 +76,7 @@ describe("the content blocker bridge page in a stock Chromium", { skip: availabl
     page = await connectCdp(target.webSocketDebuggerUrl);
     await page.send("Page.enable");
     const { frameTree } = await page.send("Page.getFrameTree");
-    ({ executionContextId: world } = await page.send("Page.createIsolatedWorld", { frameId: frameTree.frame.id, worldName: "ardia-native" }));
+    ({ executionContextId: world } = await page.send("Page.createIsolatedWorld", { frameId: frameTree.frame.id, worldName: "nilla-native" }));
   });
 
   after(async () => {

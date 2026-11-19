@@ -5,7 +5,7 @@ import subprocess
 import time
 from pathlib import Path
 
-import ardia_side
+import nilla_side
 import browsers
 import grading
 import opencode_side
@@ -14,7 +14,7 @@ import servers
 import tunnel
 from procs import front_pid, http, kill_group, proc_info, read_json, read_jsonl, sh, spawn_agent, terminate, write_json
 
-ROOT = Path(os.environ.get("BENCH_BROWSERHARNESS_HOME", Path.home() / "ardia-scratch/browser-harness"))
+ROOT = Path(os.environ.get("BENCH_BROWSERHARNESS_HOME", Path.home() / "nilla-scratch/browser-harness"))
 DEFAULTS = {
     "browser": "chrome",
     "agent": "codex",
@@ -54,7 +54,7 @@ Task:
 
 
 def log(msg):
-    ardia_side.log(f"browserharness: {msg}")
+    nilla_side.log(f"browserharness: {msg}")
 
 
 def options(overrides=None):
@@ -62,8 +62,8 @@ def options(overrides=None):
     opts.update({k: v for k, v in (overrides or {}).items() if v is not None})
     opts["cdp_port"] = int(opts["cdp_port"]) + int(opts.get("lane_index") or 0)
     opts["lane"] = opts.get("lane") or "lane0"
-    if opts["browser"] not in ("chrome", "cloud", "ardia"):
-        raise SystemExit(f"browser must be chrome, cloud or ardia, not {opts['browser']}")
+    if opts["browser"] not in ("chrome", "cloud", "nilla"):
+        raise SystemExit(f"browser must be chrome, cloud or nilla, not {opts['browser']}")
     return opts
 
 
@@ -100,9 +100,9 @@ def harness_env(opts, home, browser, workdir):
 
 
 def agent_env(opts, home, browser, workdir, extra=None):
-    env = ardia_side.agent_env({"cli": "installed"}, extra)
+    env = nilla_side.agent_env({"cli": "installed"}, extra)
     env = {k: v for k, v in env.items() if not k.startswith(STRIPPED_ENV_PREFIXES)}
-    keep = [p for p in env["PATH"].split(":") if p and Path(p) not in (ardia_side.DEV_BIN, ardia_side.INSTALLED_ARDIA.parent)]
+    keep = [p for p in env["PATH"].split(":") if p and Path(p) not in (nilla_side.DEV_BIN, nilla_side.INSTALLED_NILLA.parent)]
     env["PATH"] = ":".join([str(bin_dir(opts))] + keep)
     env.update(harness_env(opts, home, browser, workdir))
     return env
@@ -146,13 +146,13 @@ def start_browser(opts, task, home, deadline):
     if opts["browser"] == "cloud":
         return browsers.cloud_start(f"bh-{opts['lane']}", deadline // 60 + 10, opts["cloud_country"])
     with open(home / "browser.log", "ab") as logs:
-        if opts["browser"] == "ardia":
-            return browsers.launch_ardia(opts["app"], home / "ardia-data", opts["cdp_port"])
+        if opts["browser"] == "nilla":
+            return browsers.launch_nilla(opts["app"], home / "nilla-data", opts["cdp_port"])
         return browsers.launch_chrome(opts.get("chrome"), home, opts["cdp_port"], logs)
 
 
 def make_workdir(opts, run_id):
-    workdir = ardia_side.WORK / run_id
+    workdir = nilla_side.WORK / run_id
     if workdir.exists():
         shutil.rmtree(workdir)
     workdir.mkdir(parents=True)
@@ -204,7 +204,7 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
     if stale:
         log(f"{opts['lane']}: stopped leftovers {stale}")
     try:
-        baseline = ardia_side.reset_task(local_task)
+        baseline = nilla_side.reset_task(local_task)
         if home.exists():
             shutil.rmtree(home)
         (home / "bh").mkdir(parents=True)
@@ -228,8 +228,8 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
         warm = warm_daemon(env, workdir)
         setup_s = round(time.monotonic() - t0, 2)
         prompt = SYSTEM_PROMPT.format(shots=workdir / "shots", task=task["prompt"])
-        cmd = ardia_side.codex_command(model, effort, workdir, prompt)
-        cmd = [shutil.which("codex", path=ardia_side.agent_env({"cli": "installed"})["PATH"]) or "codex"] + cmd[1:]
+        cmd = nilla_side.codex_command(model, effort, workdir, prompt)
+        cmd = [shutil.which("codex", path=nilla_side.agent_env({"cli": "installed"})["PATH"]) or "codex"] + cmd[1:]
         front_before = front_pid()
         started_at = datetime.datetime.now().astimezone()
         log(f"{run_id}: codex on {task_id} ({opts['lane']}, {opts['browser']}, setup {setup_s} s)")
@@ -267,7 +267,7 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
     passed, reset_by_agent = grading.grade(check, timed_out, baseline_reset_at_ms=baseline.get("reset_at_ms"))
     completed = check.get("completed_at_ms")
     lines = read_jsonl(events)
-    parsed = ardia_side.parse_codex(lines)
+    parsed = nilla_side.parse_codex(lines)
     _, shell, other = opencode_side.browse_calls_codex(lines)
     bh_calls, other_shell = harness_calls(shell)
     record = {

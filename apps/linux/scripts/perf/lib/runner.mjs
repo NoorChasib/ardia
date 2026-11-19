@@ -153,7 +153,7 @@ export class Launch {
   }
 
   state(body, timeout) {
-    return this.shellEval(`(() => { const s = ardiaLinux.store.getState(); const windowId = __ardiaHost.bootstrap.windowId; const w = s.windows[windowId]; ${body} })()`, timeout);
+    return this.shellEval(`(() => { const s = nillaLinux.store.getState(); const windowId = __ardiaHost.bootstrap.windowId; const w = s.windows[windowId]; ${body} })()`, timeout);
   }
 
   async identifyShellPid() {
@@ -518,7 +518,7 @@ export class Launch {
   }
 
   async layoutState(tab, rowTitle) {
-    return this.shellEval(`(() => { const s = ardiaLinux.store.getState(); const w = s.windows[__ardiaHost.bootstrap.windowId]; return { active: w?.activeTabIds?.[w.profileId] ?? null, loading: !!s.live?.[${js(tab.id)}]?.isLoading, pill: __benchProbe.shown('[aria-label="Loading page"]'), addressBar: s.settings.addressBar ?? null, rowLeft: __benchProbe.rowLeft(${js(rowTitle)}) }; })()`);
+    return this.shellEval(`(() => { const s = nillaLinux.store.getState(); const w = s.windows[__ardiaHost.bootstrap.windowId]; return { active: w?.activeTabIds?.[w.profileId] ?? null, loading: !!s.live?.[${js(tab.id)}]?.isLoading, pill: __benchProbe.shown('[aria-label="Loading page"]'), addressBar: s.settings.addressBar ?? null, rowLeft: __benchProbe.rowLeft(${js(rowTitle)}) }; })()`);
   }
 
   async pendingSlow(token) {
@@ -673,7 +673,7 @@ export class Launch {
       this.xvfb = await startXvfb({ base: this.displayBase, cpus: this.cpus, logDir: join(this.out, "logs") });
       await copyProfile(this.template, data);
       this.check();
-      this.app = await launch({ chrome: this.chrome, data, uiDir: this.build.dir, contentBlocker: this.contentBlocker, extraArgs: this.extraArgs, debugPort: this.debugPort ?? 0, display: this.xvfb.display, cpus: this.cpus, unit: `ardia-bench-${this.launchId}`, logPath }).catch((error) => {
+      this.app = await launch({ chrome: this.chrome, data, uiDir: this.build.dir, contentBlocker: this.contentBlocker, extraArgs: this.extraArgs, debugPort: this.debugPort ?? 0, display: this.xvfb.display, cpus: this.cpus, unit: `nilla-bench-${this.launchId}`, logPath }).catch((error) => {
         this.startupTeardown = error.teardown ?? null;
         throw error;
       });

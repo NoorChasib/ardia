@@ -2,7 +2,7 @@
 #import "ArdiaContentBlocker.h"
 #import "ArdiaServices.h"
 
-@interface ArdiaContentBlockerPage : NSObject <ArdiaCoreTabDelegate>
+@interface NillaContentBlockerPage : NSObject <ArdiaCoreTabDelegate>
 @property(readonly) ArdiaCoreTab *tab;
 @property(readonly) NSString *origin;
 @property(readonly) BOOL dead;
@@ -14,7 +14,7 @@
 - (void)fail:(NSString *)error;
 @end
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 NSString *ExtensionId();
 extern NSString *const kLiteId;
@@ -24,8 +24,8 @@ extern bool gFailNextMessage;
 NSString *ScriptWith(NSString *format, NSArray *args);
 extern NSString *const kProfile;
 NSMutableOrderedSet<NSString *> *LoadedProfiles();
-NSMutableDictionary<NSString *, ArdiaContentBlockerPage *> *Pages();
-ArdiaContentBlockerPage *HiddenPage(NSString *key, NSString *profile, ArdiaCoreProfile *p, NSString *extensionId, NSString *file);
+NSMutableDictionary<NSString *, NillaContentBlockerPage *> *Pages();
+NillaContentBlockerPage *HiddenPage(NSString *key, NSString *profile, ArdiaCoreProfile *p, NSString *extensionId, NSString *file);
 bool IsHiddenPageWindow(NSWindow *window);
 void LoadIntoProfile(NSString *profile, void (^then)(NSString *error));
 extern NSString *const kOffDirective;

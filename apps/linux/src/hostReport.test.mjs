@@ -59,7 +59,7 @@ test("without the report capabilities ArdiaReport answers as before and nothing 
   assert.deepEqual(host.invoked, []);
 });
 
-test("each capability routes its own calls to the engine with the Mac's arguments, and recording stays off", async () => {
+test("report files route to the engine with the Mac's arguments, sending stays off behind the Layer 1 gate, and recording stays off", async () => {
   const answers = {
     "ArdiaReport.draftDirectory": "/p/Report Drafts/u1",
     "ArdiaReport.fileSize": 12,
@@ -77,18 +77,15 @@ test("each capability routes its own calls to the engine with the Mac's argument
   assert.equal(await call("removeFile", "/p/a"), null);
   assert.equal(await call("gzipFile", "/p/a", "/p/a.gz", true), 7);
   assert.equal(await call("gzipText", "text", "/p/t.gz"), 9);
-  assert.deepEqual(await call("upload", "local-events.jsonl.gz", "https://ardia.dev/api/feedback/r1/files/local-events.jsonl.gz", "PUT", { Authorization: "Bearer t" }, "/p/t.gz"), answers["ArdiaReport.upload"]);
-  assert.deepEqual(await call("post", FEEDBACK_URL, "{}", { "Content-Type": "application/json" }), answers["ArdiaReport.post"]);
-  assert.equal(await call("cancelUploads"), null);
+  assert.equal((await call("upload", "local-events.jsonl.gz", "https://feedback.example.test/api/feedback/r1/files/local-events.jsonl.gz", "PUT", { Authorization: "Bearer t" }, "/p/t.gz")).status, 0);
+  assert.equal(hostReportPost(host), undefined);
+  await call("cancelUploads");
   assert.deepEqual(host.invoked, [
     ["ArdiaReport.draftDirectory", []],
     ["ArdiaReport.fileSize", ["/p/a"]],
     ["ArdiaReport.removeFile", ["/p/a"]],
     ["ArdiaReport.gzipFile", ["/p/a", "/p/a.gz", true]],
     ["ArdiaReport.gzipText", ["text", "/p/t.gz"]],
-    ["ArdiaReport.upload", ["local-events.jsonl.gz", "https://ardia.dev/api/feedback/r1/files/local-events.jsonl.gz", "PUT", { Authorization: "Bearer t" }, "/p/t.gz"]],
-    ["ArdiaReport.post", [FEEDBACK_URL, "{}", { "Content-Type": "application/json" }]],
-    ["ArdiaReport.cancelUploads", []],
   ]);
   host.invoked.length = 0;
   await assert.rejects(call("startRecording", "main", false, "/p/r.mp4", 60), { code: "ERR_UNAVAILABLE" });
@@ -104,7 +101,7 @@ test("each capability routes its own calls to the engine with the Mac's argument
   const sendOnly = fakeHost(["report.send"], answers);
   assert.throws(() => resolveHostModule(sendOnly, "ArdiaReport", "draftDirectory")(), { code: "ERR_UNAVAILABLE" });
   assert.equal(servesReportSheet(sendOnly), false);
-  assert.equal(servesReportSheet(host), true);
+  assert.equal(servesReportSheet(host), false);
 });
 
 test("the local events export is gzipped into one remembered draft folder, and a lost folder is replaced", async () => {
@@ -187,67 +184,29 @@ test("the shared report code works with a module that answers promises where the
   }
 });
 
-test("with both capabilities Report a Problem opens the sheet without recording, and Send posts through the engine", async () => {
+test("with both capabilities but no feedback server Report a Problem opens the issue page, never the sheet, and posts nothing", async () => {
   mainWindow();
-  const posts = [];
-  const host = fakeHost(BOTH, {
-    "ArdiaReport.post": (url, body, headers) => {
-      posts.push({ url, body: JSON.parse(body), headers });
-      return url === FEEDBACK_URL
-        ? { status: 201, body: JSON.stringify({ id: "r1", name: "Quiet Fox", upload_token: "tok" }), error: null }
-        : { status: 200, body: JSON.stringify({ id: "r1", issue_url: "https://github.com/mantrakp04/ardia/issues/77" }), error: null };
-    },
-  });
+  const host = fakeHost(BOTH, { "ArdiaReport.post": () => ({ status: 201, body: "{}", error: null }) });
   adoptHostReports(host);
   try {
-    assert.equal(recordsReports(), false);
-    assert.equal(canRecord(), false);
-    const tabs = Object.keys(S().tabs).length;
+    assert.equal(sendsFromSheet(host), false);
     await openReport("main", "menu", host);
-    assert.equal(useReportSheet.getState().windowId, "main");
-    assert.equal(Object.keys(S().tabs).length, tabs, "no issue tab opens");
-    await startRecording();
-    assert.equal(useReportSheet.getState().recording.phase, "none");
-    setTitle("Tabs flicker");
-    setDescription("They flicker after the laptop wakes up from sleep.");
+    assert.equal(useReportSheet.getState().windowId, null);
+    const opened = Object.values(S().tabs).map((tab) => tab.url ?? tab.navigation?.url ?? "").filter((url) => url.startsWith("https://github.com/NoorChasib/nilla/issues/new?body="));
+    assert.equal(opened.length, 1);
+    assert.deepEqual([...new URL(opened[0]).searchParams.keys()], ["body"]);
     await sendCurrentReport();
-    await waitFor(() => useReportSheet.getState().sent);
-    const state = useReportSheet.getState();
-    assert.equal(state.upload.phase, "sent", JSON.stringify(state.upload));
-    assert.equal(state.sent.issueNumber, 77);
-    assert.deepEqual(posts.map((post) => post.url), [FEEDBACK_URL, `${FEEDBACK_URL}/r1/complete`]);
-    assert.equal(posts[0].body.title, "Tabs flicker");
-    assert.deepEqual(Object.keys(posts[0].headers).sort(), ["Content-Type", "X-Ardia-Key"]);
-    assert.equal(posts[0].headers["Content-Type"], "application/json");
-    assert.deepEqual(Object.keys(posts[1].headers).sort(), ["Authorization", "Content-Type", "X-Ardia-Key"]);
-    assert.equal(posts[1].headers.Authorization, "Bearer tok");
-    assert.ok(host.invoked.every(([, args]) => args.length === 3 && typeof args[1] === "string"));
+    assert.deepEqual(host.invoked.filter(([method]) => method === "ArdiaReport.post"), []);
   } finally {
     resetReport();
     adoptHostReports(undefined);
   }
 });
 
-test("a refused or failed engine post is a failure the sheet can retry, never a thrown error", async () => {
+test("with the Layer 1 gate there is no engine post, even when the engine advertises one", async () => {
   mainWindow();
-  const host = fakeHost(BOTH, { "ArdiaReport.post": { status: 0, body: "", error: "Background instances send no reports" } });
-  const post = hostReportPost(host);
-  assert.deepEqual(await post(FEEDBACK_URL, "{}", {}), { status: 0, text: "" });
-  assert.deepEqual(await hostReportPost(fakeHost(BOTH, { "ArdiaReport.post": null }))(FEEDBACK_URL, "{}", {}), { status: 0, text: "" });
-});
-
-test("a build's own feedback page keeps the issue tab even when the engine could send the sheet", async () => {
-  const { appInfo } = await import("../../browser/src/test-native/index.ts");
-  mainWindow();
-  const host = fakeHost(BOTH);
-  appInfo.feedbackURL = "https://feedback.example/new?text=%s";
-  try {
-    assert.equal(sendsFromSheet(host), false);
-    await openReport("main", "menu", host);
-    assert.equal(useReportSheet.getState().windowId, null);
-    assert.ok(Object.values(S().tabs).some((tab) => (tab.url ?? tab.navigation?.url ?? "").startsWith("https://feedback.example/new?text=")));
-  } finally {
-    delete appInfo.feedbackURL;
-  }
-  assert.equal(sendsFromSheet(host), true);
+  const host = fakeHost(BOTH, { "ArdiaReport.post": { status: 201, body: "{}", error: null } });
+  assert.equal(hostReportPost(host), undefined);
+  await assert.rejects(resolveHostModule(host, "ArdiaReport", "post")(FEEDBACK_URL, "{}", {}).then((reply) => (reply?.status ? reply : Promise.reject(new Error("refused")))));
+  assert.deepEqual(host.invoked.filter(([method]) => method === "ArdiaReport.post"), []);
 });

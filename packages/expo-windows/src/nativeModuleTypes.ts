@@ -1,5 +1,5 @@
-import type { AppNative, DialogsNative, FileDropNative, MenusNative, NotificationsNative, SystemNative, SystemSignalsNative, WindowControlsNative, WindowsNative } from "@ardia/shell";
-import type { FolderInfo } from "@ardia/sync";
+import type { AppNative, DialogsNative, FileDropNative, MenusNative, NotificationsNative, SystemNative, SystemSignalsNative, WindowControlsNative, WindowsNative } from "@nilla/shell";
+import type { FolderInfo } from "@nilla/sync";
 import type { TurboModule } from "react-native";
 import type { PowerReading } from "./engine/domains/calling";
 import type { EventSubscription } from "./events";
@@ -114,7 +114,7 @@ export type DialogsModule = DialogsNative & {
 
 export type SystemSignalsModule = SystemSignalsNative & { powerState(): PowerReading };
 
-export type SyncFolderState = Pick<FolderInfo, "exists" | "writable" | "hasSyncData">;
+export type SyncFolderState = Pick<FolderInfo, "exists" | "writable" | "hasSyncData"> & { resolved: boolean };
 
 export type WindowsSyncModule = TurboModule &
   VaultNative &

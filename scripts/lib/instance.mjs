@@ -86,13 +86,7 @@ async function killSpawned(pids) {
 export const isAlive = (pid) => { try { process.kill(pid, 0); return true; } catch (e) { return e.code === "EPERM"; } };
 export const binaryOf = (app) => join(app, "Contents/MacOS",
   execFileSync("plutil", ["-extract", "CFBundleExecutable", "raw", join(app, "Contents/Info.plist")]).toString().trim());
-export const appEnv = (app, env) => {
-  const binary = binaryOf(app);
-  const forThisBuild = forBuild(binary, env);
-  if (basename(binary) !== "Netnyahoo") return forThisBuild;
-  const legacy = Object.fromEntries(Object.entries(forThisBuild).filter(([k]) => k.startsWith("ARDIA_")).map(([k, v]) => [`NETNYAHOO_${k.slice("ARDIA_".length)}`, v]));
-  return { ...forThisBuild, ...legacy };
-};
+export const appEnv = (app, env) => forBuild(binaryOf(app), env);
 export const onScreenWindows = (pid) => JSON.parse(execFileSync("osascript", ["-l", "JavaScript", "-e",
   `ObjC.import("CoreGraphics"); JSON.stringify(ObjC.deepUnwrap(ObjC.castRefToObject($.CGWindowListCopyWindowInfo($.kCGWindowListOptionOnScreenOnly, 0)))
      .filter((w) => w.kCGWindowOwnerPID === ${pid} && w.kCGWindowLayer <= 0 && w.kCGWindowLayer > -2000000).map((w) => w.kCGWindowNumber))`], { timeout: 20000 }).toString());
@@ -485,7 +479,7 @@ if (process.argv[1] === here) {
   const args = process.argv.slice(2);
   if (args[0] === "--metro-proxy") await metroProxyMain(args[1], Number(args[2]));
   else if (args[0] === "--self-test") {
-    const bin = "/tmp/Ardia.app/Contents/MacOS/Ardia";
+    const bin = "/tmp/Nilla.app/Contents/MacOS/Nilla";
     const cmd = (map) => (pid) => map[pid];
     assert.equal(parsePort("9474"), 9474);
     for (const bad of ["0", "65536", "94.5", "-1", "", "9474x", "1e3"]) assert.throws(() => parsePort(bad), /1\.\.65535/, bad);
@@ -494,7 +488,7 @@ if (process.argv[1] === here) {
     assert.ok(commandIsBinary(bin, bin));
     assert.ok(commandIsBinary(`${bin} --flag`, bin));
     assert.ok(!commandIsBinary(`${bin}2`, bin));
-    assert.ok(!commandIsBinary(`/tmp/Ardia.app/Contents/Frameworks/Ardia Helper.app/Contents/MacOS/Ardia Helper`, bin));
+    assert.ok(!commandIsBinary(`/tmp/Nilla.app/Contents/Frameworks/Nilla Helper.app/Contents/MacOS/Nilla Helper`, bin));
     assert.deepEqual(parseProcessLine(`Wed Sep 30 18:44:18 2026     ${bin} --x\n`), { started: "Wed Sep 30 18:44:18 2026", command: `${bin} --x` });
     assert.equal(parseProcessLine(""), null);
     assert.equal(ownedCandidate([], new Set(), cmd({}), bin), null);

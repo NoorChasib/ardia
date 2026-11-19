@@ -6,7 +6,7 @@ import { startBrowser } from "../lib/flows.mjs";
 import { js, nonce, pause, until } from "../lib/util.mjs";
 
 export const FIXTURE_EXTENSION = new URL("../fixtures/extension/", import.meta.url);
-export const FIXTURE_NAME = "Ardia Acceptance Fixture";
+export const FIXTURE_NAME = "Nilla Acceptance Fixture";
 
 const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
   let c = n;
@@ -86,8 +86,8 @@ export default {
   title: "Extensions management, toolbar action, popup and side panel",
   deadline: 360000,
   manual: [
-    { name: "Web Store install shows Ardia's consent dialog and Cancel installs nothing", steps: ["Open chromewebstore.google.com and choose Add to Ardia on any extension.", "Ardia's own dialog lists the extension's permissions.", "Cancel: nothing is installed and the store page shows Add again.", "Add: the extension appears in Settings › Extensions and on the toolbar."], reason: "needs network access to the Chrome Web Store and its signed CRX" },
-    { name: "A permission-increasing update asks before re-enabling", steps: ["Install a packed CRX from Settings › Extensions › Install from file.", "Install a newer CRX of the same key that adds a permission: Chromium disables it.", "Turning it on shows Ardia's 'needs new permissions' dialog; Cancel keeps it off, Allow turns it on."], reason: "needs two signed CRX files of the same key" },
+    { name: "Web Store install shows Nilla's consent dialog and Cancel installs nothing", steps: ["Open chromewebstore.google.com and choose Add to Ardia on any extension.", "Nilla's own dialog lists the extension's permissions.", "Cancel: nothing is installed and the store page shows Add again.", "Add: the extension appears in Settings › Extensions and on the toolbar."], reason: "needs network access to the Chrome Web Store and its signed CRX" },
+    { name: "A permission-increasing update asks before re-enabling", steps: ["Install a packed CRX from Settings › Extensions › Install from file.", "Install a newer CRX of the same key that adds a permission: Chromium disables it.", "Turning it on shows Nilla's 'needs new permissions' dialog; Cancel keeps it off, Allow turns it on."], reason: "needs two signed CRX files of the same key" },
     { name: "Popup placement, focus and keyboard", steps: ["Pin the fixture and click its toolbar button: the popup opens under the button at its own size.", "Typing goes to the popup; Escape and clicking outside close it; Close in the popup closes it."], reason: "needs a visible compositor and real input" },
   ],
   async run(t) {
@@ -107,7 +107,7 @@ export default {
       if (ext.actionTitle !== "Fixture Action" || !String(ext.actionIcon).startsWith("data:image/png;base64,")) problems.push("action title or icon");
       if (ext.fromWebStore !== false || ext.webStoreUrl !== null || ext.incognitoSplit !== false) problems.push("store fields");
       if (problems.length) throw new Error(problems.join("; "));
-      await until(async () => (await shell.eval(`(ardiaLinux.extensions.getState().lists[""] ?? []).some((x) => x.id === ${js(ext.id)})`)) || false,
+      await until(async () => (await shell.eval(`(nillaLinux.extensions.getState().lists[""] ?? []).some((x) => x.id === ${js(ext.id)})`)) || false,
         { timeout: 10000, label: "the fixture in the shared Extensions store" });
       return { id: ext.id, location: ext.location };
     }, { critical: true });
@@ -119,10 +119,10 @@ export default {
       return { unknown: unknown.code, malformed: malformed.code };
     });
 
-    await t.check("the omnibox keyword is listed by search.engines and kept out of Ardia's search engines", async () => {
+    await t.check("the omnibox keyword is listed by search.engines and kept out of Nilla's search engines", async () => {
       const engines = (await reply(shell, "search.engines", {})).list.engines;
       const keyword = engines.find((e) => e.extension?.id === ext.id);
-      if (!keyword || keyword.isOmniboxExtension !== true || keyword.keyword !== "ardiafixture") throw new Error(JSON.stringify(keyword ?? null));
+      if (!keyword || keyword.isOmniboxExtension !== true || keyword.keyword !== "nillafixture") throw new Error(JSON.stringify(keyword ?? null));
       const mapped = await shell.state("return s.settings.extensionSearchEngines ?? [];");
       if (mapped.some((e) => e.extensionId === ext.id)) throw new Error("an omnibox keyword became a search engine");
       return { keyword: keyword.keyword };
@@ -167,12 +167,12 @@ export default {
     await t.check("the toolbar action opens a real extension popup, which closes on tab switch", async () => {
       await shell.state(`s.activate(${js(tabA)}); return true;`);
       await shell.waitState(`return s.windows[windowId]?.activeTabIds?.[s.windows[windowId].profileId] === ${js(tabA)};`, { timeout: 5000, label: "tab A active" });
-      await shell.eval(`(ardiaLinux.openExtension(${js(shell.windowId)}, ${js(ext.id)}, ${js(tabA)}), true)`);
-      await until(async () => (await shell.eval(`ardiaLinux.extensions.getState().popup?.extensionId === ${js(ext.id)}`)) || false, { timeout: 8000, label: "the popup in the shared store" });
+      await shell.eval(`(nillaLinux.openExtension(${js(shell.windowId)}, ${js(ext.id)}, ${js(tabA)}), true)`);
+      await until(async () => (await shell.eval(`nillaLinux.extensions.getState().popup?.extensionId === ${js(ext.id)}`)) || false, { timeout: 8000, label: "the popup in the shared store" });
       const report = await until(async () => (await reports(sw)).find((r) => r.kind === "popup") ?? false, { timeout: 15000, label: "the popup page to run" });
       if (report.popupViews !== 1) throw new Error(`popup view type ${JSON.stringify(report)}`);
       await shell.state(`s.activate(${js(tabB)}); return true;`);
-      await until(async () => (await shell.eval("ardiaLinux.extensions.getState().popup === null")) || false, { timeout: 8000, label: "popup closed on tab switch" });
+      await until(async () => (await shell.eval("nillaLinux.extensions.getState().popup === null")) || false, { timeout: 8000, label: "popup closed on tab switch" });
       await until(async () => !(await app.targets()).some((x) => x.url === `chrome-extension://${ext.id}/popup.html`), { timeout: 8000, label: "the popup host destroyed" });
       return report;
     });
@@ -181,14 +181,14 @@ export default {
       await evaluate(sw, "chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).then(() => true)");
       const url = await reply(shell, "extensions.sidePanelUrl", { tabId: tabB, extensionId: ext.id });
       if (url !== `chrome-extension://${ext.id}/panel.html`) throw new Error(`side panel URL ${url}`);
-      await shell.eval(`(ardiaLinux.openExtension(${js(shell.windowId)}, ${js(ext.id)}, ${js(tabB)}), true)`);
-      await until(async () => (await shell.eval(`ardiaLinux.extensions.getState().sidePanels[${js(shell.windowId)}]?.extensionId === ${js(ext.id)}`)) || false, { timeout: 8000, label: "the side panel in the shared store" });
+      await shell.eval(`(nillaLinux.openExtension(${js(shell.windowId)}, ${js(ext.id)}, ${js(tabB)}), true)`);
+      await until(async () => (await shell.eval(`nillaLinux.extensions.getState().sidePanels[${js(shell.windowId)}]?.extensionId === ${js(ext.id)}`)) || false, { timeout: 8000, label: "the side panel in the shared store" });
       const report = await until(async () => (await reports(sw)).find((r) => r.kind === "panel") ?? false, { timeout: 15000, label: "the side panel page to run" });
       await evaluate(sw, "chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false }).then(() => true)");
       return report;
     });
 
-    await t.check("tabs and windows an extension opens show in Ardia, and an inactive tab keeps the selection", async () => {
+    await t.check("tabs and windows an extension opens show in Nilla, and an inactive tab keeps the selection", async () => {
       const opened = (hash) => `chrome-extension://${ext.id}/opened.html#${hash}`;
       const tabsAt = (url) => shell.state(`return Object.values(s.tabs).filter((t) => t.windowId === windowId && t.url === ${js(url)}).map((t) => t.id);`);
       const shownOnce = async (url, label) => {
@@ -201,7 +201,7 @@ export default {
       };
       await shell.state(`s.activate(${js(tabA)}); return true;`);
       await evaluate(sw, "chrome.action.setPopup({ popup: '' }).then(() => true)");
-      await shell.eval(`(ardiaLinux.openExtension(${js(shell.windowId)}, ${js(ext.id)}, ${js(tabA)}), true)`);
+      await shell.eval(`(nillaLinux.openExtension(${js(shell.windowId)}, ${js(ext.id)}, ${js(tabA)}), true)`);
       const clicked = await shownOnce(opened("clicked"), "the action click's tab");
       await shell.waitState(`return s.windows[windowId]?.activeTabIds?.[s.windows[windowId].profileId] === ${js(clicked)};`, { timeout: 5000, label: "the clicked tab selected" });
       await evaluate(sw, "chrome.action.setPopup({ popup: 'popup.html' }).then(() => true)");
@@ -235,7 +235,7 @@ export default {
       await reply(shell, "extensions.uninstall", { id: ext.id });
       await eventOf(shell, ext.id, "uninstalled");
       await until(async () => !((await reply(shell, "extensions.list", {})).extensions.some((x) => x.id === ext.id)), { timeout: 8000, label: "gone from extensions.list" });
-      await until(async () => (await shell.eval(`!ardiaLinux.extensions.getState().sidePanels[${js(shell.windowId)}]`)) || false, { timeout: 8000, label: "side panel closed" });
+      await until(async () => (await shell.eval(`!nillaLinux.extensions.getState().sidePanels[${js(shell.windowId)}]`)) || false, { timeout: 8000, label: "side panel closed" });
       const engines = (await reply(shell, "search.engines", {})).list.engines;
       if (engines.some((e) => e.extension?.id === ext.id)) throw new Error("the keyword outlived its extension");
       if (installed) await reply(shell, "extensions.uninstall", { id: installed });

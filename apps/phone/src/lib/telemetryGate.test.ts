@@ -153,9 +153,9 @@ test("the schema refuses free text, unknown fields and identifiers it doesn't kn
     distinct_id: "00000000-0000-4000-8000-000000000002",
     timestamp: "2026-11-14T10:00:00.000Z",
     properties: {
-      $lib: "ardia-phone-telemetry",
+      $lib: "nilla-phone-telemetry",
       $lib_version: "1",
-      $app_name: "Ardia",
+      $app_name: "Nilla",
       app: "phone",
       platform: "android",
       $app_version: "1.0.0",
@@ -202,7 +202,7 @@ test("a send or pin that began while sharing was off, or before it was turned of
   assert.equal(JSON.parse(stored.get(DAILY_KEY)!).tabs_sent, 1);
 });
 
-test("after days away, the last day used goes out once and is not merged with the day Ardia is opened again", async () => {
+test("after days away, the last day used goes out once and is not merged with the day Nilla is opened again", async () => {
   const { gate, runTimers, sent, stored, advance } = harness();
   gate.setSharing(true, "settings");
   gate.count("tabs_opened");

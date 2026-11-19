@@ -2,9 +2,9 @@
 
 #include <utility>
 
-using namespace ardia_content_blocker;
+using namespace nilla_content_blocker;
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 NSString *ExtensionId() { return @"fajbdaomknpkicfjcpipdmcpoamdmilh"; }
 
@@ -18,7 +18,7 @@ NSString *const kBundledName = @"ublock";
 
 }
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 NSString *const kLiteReaderName = @"ublock-lite-settings";
 
@@ -43,7 +43,7 @@ void StartPreparing() {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
     gExtensionPath = BundledExtension();
-    NSString *oldCopies = [[ArdiaHost.dataDirectory stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"Built-in Extensions"];
+    NSString *oldCopies = [[NillaHost.dataDirectory stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"Built-in Extensions"];
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
       if ([NSFileManager.defaultManager fileExistsAtPath:oldCopies]) [NSFileManager.defaultManager removeItemAtPath:oldCopies error:nil];
     });
@@ -66,14 +66,14 @@ void WhenDefaultSettled(void (^then)(void));
 
 }
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 void LoadIntoProfile(NSString *profile, void (^then)(NSString *error)) {
   then = [then copy];
   StartPreparing();
   void (^load)(void) = ^{
     if ([LoadedProfiles() containsObject:profile]) return then(nil);
-    ardia_host::WithProfile(profile, ^(ArdiaCoreProfile *p) {
+    nilla_host::WithProfile(profile, ^(ArdiaCoreProfile *p) {
       if ([LoadedProfiles() containsObject:profile]) return then(nil);
       NSString *path = gExtensionPath;
       if (!p || !path) return then(@"not loaded");
@@ -129,8 +129,8 @@ NSString *const kFollow =
 
 void ForgetGoneProfiles() {
   for (NSString *profile in LoadedProfiles().array) {
-    ArdiaCoreProfile *now = ardia_host::LoadedProfile(profile);
-    if (now && now == [LoadedInto() objectForKey:profile] && !ardia_host::IsDeletedProfile(profile)) continue;
+    ArdiaCoreProfile *now = nilla_host::LoadedProfile(profile);
+    if (now && now == [LoadedInto() objectForKey:profile] && !nilla_host::IsDeletedProfile(profile)) continue;
     [LoadedProfiles() removeObject:profile];
     [LoadedInto() removeObjectForKey:profile];
     [Pages()[profile] fail:@"profile gone"];
@@ -140,7 +140,7 @@ void ForgetGoneProfiles() {
 
 void FollowDefault(NSArray<NSString *> *profiles, void (^done)(NSString *error)) {
   done = [done copy];
-  if (!gDefaultSettled && ArdiaHost.isStarted) return WhenDefaultSettled(^{ FollowDefault(profiles, done); });
+  if (!gDefaultSettled && NillaHost.isStarted) return WhenDefaultSettled(^{ FollowDefault(profiles, done); });
   if (!profiles) ForgetGoneProfiles();
   profiles = [(profiles ?: LoadedProfiles().array) filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"length > 0"]];
   if (!profiles.count) return done(nil);
@@ -152,7 +152,7 @@ void FollowDefault(NSArray<NSString *> *profiles, void (^done)(NSString *error))
     for (NSString *profile in profiles) {
       dispatch_group_enter(group);
       Call(profile, ScriptWith(kFollow, @[ settings ]), ^(id, NSString *error) {
-        const bool gone = !ardia_host::LoadedProfile(profile) || ardia_host::IsDeletedProfile(profile);
+        const bool gone = !nilla_host::LoadedProfile(profile) || nilla_host::IsDeletedProfile(profile);
         if (!gone) failed = failed ?: error;
         dispatch_group_leave(group);
       });
@@ -185,7 +185,7 @@ void Inherit(NSString *profile, int attempt, void (^first)(NSString *error)) {
   first = [first copy];
   FollowDefault(@[ profile ], ^(NSString *error) {
     if (first) first(error);
-    const bool gone = !ardia_host::LoadedProfile(profile) || ardia_host::IsDeletedProfile(profile) ||
+    const bool gone = !nilla_host::LoadedProfile(profile) || nilla_host::IsDeletedProfile(profile) ||
                       ![LoadedProfiles() containsObject:profile];
     if (!error || gone || attempt + 1 >= kInheritAttempts) {
       if (error && !gone) NSLog(@"[blocker] profile \"%@\" didn't take the default profile's settings: %@", profile, error);
@@ -199,7 +199,7 @@ void Inherit(NSString *profile, int attempt, void (^first)(NSString *error)) {
 
 void LoadHeld(NSString *profile) {
   ForgetGoneProfiles();
-  ArdiaCoreProfile *p = ardia_host::LoadedProfile(profile);
+  ArdiaCoreProfile *p = nilla_host::LoadedProfile(profile);
   const bool isDefault = profile.length == 0;
   const bool firstLoad = p && ![LoadedProfiles() containsObject:profile];
   const bool hold = firstLoad && (isDefault ? LiteSettingsPending(p) : !gLaunching);
@@ -223,10 +223,10 @@ void LoadHeld(NSString *profile) {
         });
       }
       void (^settle)(void) = ^{
-        ArdiaCoreProfile *current = ardia_host::LoadedProfile(profile);
+        ArdiaCoreProfile *current = nilla_host::LoadedProfile(profile);
         if (!hold && current && !LiteSettingsPending(current)) return DefaultSettled();
         Call(profile, @"null", ^(id, NSString *readyError) {
-          ArdiaCoreProfile *loaded = ardia_host::LoadedProfile(profile);
+          ArdiaCoreProfile *loaded = nilla_host::LoadedProfile(profile);
           if (readyError || !loaded) {
             DefaultSettled();
             return release(readyError ? [@"uBlock Origin isn't ready: " stringByAppendingString:readyError] : nil);
@@ -287,12 +287,12 @@ NSString *const kState =
      "})";
 
 void Publish(NSDictionary *change) {
-  [NSNotificationCenter.defaultCenter postNotificationName:@"ArdiaContentBlockerDidChange" object:nil userInfo:change];
+  [NSNotificationCenter.defaultCenter postNotificationName:@"NillaContentBlockerDidChange" object:nil userInfo:change];
 }
 
 void State(void (^completion)(NSDictionary *state)) {
   completion = [completion copy];
-  if (!gDefaultSettled && ArdiaHost.isStarted) return WhenDefaultSettled(^{ State(completion); });
+  if (!gDefaultSettled && NillaHost.isStarted) return WhenDefaultSettled(^{ State(completion); });
   Call(kProfile, kState, ^(NSDictionary *read, NSString *error) {
     if (![read isKindOfClass:NSDictionary.class] || ![read[@"lists"] isKindOfClass:NSArray.class]) {
       return completion(@{
@@ -340,7 +340,7 @@ void Changed(NSString *error, void (^completion)(NSString *error)) {
   if (error) return completion(error);
   completion = [completion copy];
   FollowDefault(nil, ^(NSString *followError) {
-    State(^(NSDictionary *state) { [ArdiaEvents emit:@"contentBlocker.changed" data:state[@"stats"]]; });
+    State(^(NSDictionary *state) { [NillaEvents emit:@"contentBlocker.changed" data:state[@"stats"]]; });
     completion(followError);
   });
 }
@@ -348,7 +348,7 @@ void Changed(NSString *error, void (^completion)(NSString *error)) {
 void ListsChanged(NSString *error, void (^completion)(NSString *error)) {
   if (error) return completion(error);
   completion(nil);
-  State(^(NSDictionary *state) { [ArdiaEvents emit:@"contentBlocker.changed" data:state[@"stats"]]; });
+  State(^(NSDictionary *state) { [NillaEvents emit:@"contentBlocker.changed" data:state[@"stats"]]; });
   FollowDefault(nil, ^(NSString *followError) {
     if (followError) NSLog(@"[blocker] the other profiles didn't take the list change: %@", followError);
   });
@@ -356,7 +356,7 @@ void ListsChanged(NSString *error, void (^completion)(NSString *error)) {
 
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 void PrepareContentBlocker() {
   StartPreparing();
@@ -418,7 +418,7 @@ NSArray<NSString *> *Strings(id value) {
 
 }
 
-@implementation ArdiaContentBlocker
+@implementation NillaContentBlocker
 
 + (void)state:(void (^)(NSDictionary<NSString *, id> *))completion {
   State(completion);
@@ -505,20 +505,20 @@ NSArray<NSString *> *Strings(id value) {
 }
 
 + (void)hiddenElementsInProfile:(NSString *)profile completion:(void (^)(NSArray<NSString *> *, NSString *))completion {
-  Call(ardia_host::OriginalProfileName(profile), WithHidingRules(kReadHidden), ^(id filters, NSString *error) {
+  Call(nilla_host::OriginalProfileName(profile), WithHidingRules(kReadHidden), ^(id filters, NSString *error) {
     completion(error ? nil : Strings(filters), error);
   });
 }
 
 + (void)hideElements:(NSArray<NSString *> *)filters inProfile:(NSString *)profile completion:(void (^)(NSString *))completion {
-  if (ardia_host::IsPrivateProfile(profile)) return completion(@"a private window keeps its hidden elements for the session");
+  if (nilla_host::IsPrivateProfile(profile)) return completion(@"a private window keeps its hidden elements for the session");
   if (!filters.count) return completion(nil);
   Call(profile, WithHidingRules(ScriptWith(kHide, @[ filters ])), ^(id, NSString *error) { completion(error); });
 }
 
 + (void)restoreElements:(NSArray<NSString *> *)filters inProfile:(NSString *)profile completion:(void (^)(NSString *))completion {
   if (!filters.count) return completion(nil);
-  Call(ardia_host::OriginalProfileName(profile), WithHidingRules(ScriptWith(kRestore, @[ filters ])), ^(id, NSString *error) { completion(error); });
+  Call(nilla_host::OriginalProfileName(profile), WithHidingRules(ScriptWith(kRestore, @[ filters ])), ^(id, NSString *error) { completion(error); });
 }
 
 + (void)devFailNextMessage {

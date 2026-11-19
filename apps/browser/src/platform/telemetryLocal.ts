@@ -1,6 +1,6 @@
-import { nativeModule, type TelemetryLocalExport, type TelemetryLocalStats } from "@ardia/shell";
+import { nativeModule, type TelemetryLocalExport, type TelemetryLocalStats } from "@nilla/shell";
 
-const Local = nativeModule("ArdiaTelemetryLocal");
+const Local = nativeModule("NillaTelemetryLocal");
 
 export type { TelemetryLocalExport, TelemetryLocalStats };
 

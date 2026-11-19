@@ -11,5 +11,5 @@
         android:layout_gravity="top|start"
         android:layout_margin="16dp"
         android:importantForAccessibility="no"
-        android:src="@drawable/ardia_logo" />
+        android:src="@drawable/nilla_logo" />
 </FrameLayout>

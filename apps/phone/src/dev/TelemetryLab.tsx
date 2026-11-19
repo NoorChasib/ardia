@@ -1,4 +1,4 @@
-import { labLog, system } from "@ardia/phone-native";
+import { labLog, system } from "@nilla/phone-native";
 import { useCallback, useEffect, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 import { usageToday } from "../state/telemetry/telemetry";

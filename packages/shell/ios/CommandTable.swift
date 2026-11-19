@@ -5,8 +5,8 @@ enum CommandTable {
     case newTab
     case newWindow
     case newIncognitoWindow
-    case newLittleArdia
-    case toggleOpenLinksInLittleArdia
+    case newLittleNilla
+    case toggleOpenLinksInLittleNilla
     case reopenClosedTab
     case reopenClosedWindow
     case restoreClosed
@@ -120,8 +120,8 @@ enum CommandTable {
     "newTab": "New Tab",
     "newWindow": "New Window",
     "newIncognitoWindow": "New Incognito Window",
-    "newLittleArdia": "New Little Ardia Window",
-    "toggleOpenLinksInLittleArdia": "Open Links from Other Apps in Main Window",
+    "newLittleNilla": "New Little Nilla Window",
+    "toggleOpenLinksInLittleNilla": "Open Links from Other Apps in Main Window",
     "reopenClosedTab": "Reopen Closed Tab",
     "reopenClosedWindow": "Reopen Closed Window",
     "clearRecentlyClosed": "Clear Recently Closed",
@@ -241,7 +241,7 @@ enum CommandTable {
     "newTab": [("t", [.command])],
     "newWindow": [("n", [.command])],
     "newIncognitoWindow": [("n", [.shift, .command])],
-    "newLittleArdia": [("n", [.option, .command])],
+    "newLittleNilla": [("n", [.option, .command])],
     "reopenClosedTab": [("t", [.shift, .command])],
     "focusCommandBar": [("l", [.command]), ("\u{F708}", [.control])],
     "closeTab": [("w", [.command])],

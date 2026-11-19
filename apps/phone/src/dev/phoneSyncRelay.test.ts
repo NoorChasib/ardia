@@ -87,9 +87,9 @@ test("a side that lists nothing after a pass saw files there stops the pass inst
 });
 
 test("the relay's probe file is left out of a pass's listing and kept for the probe itself", () => {
-  const out = "1700000000 18 ./.ardia-relay-probe\n1700000001 7 ./b.json\n";
+  const out = "1700000000 18 ./.nilla-relay-probe\n1700000001 7 ./b.json\n";
   assert.deepEqual(Object.keys(parseListing(out)), ["b.json"]);
-  assert.deepEqual(parseListing(out, { withProbe: true })[".ardia-relay-probe"], { mtime: 1700000000, size: 18 });
+  assert.deepEqual(parseListing(out, { withProbe: true })[".nilla-relay-probe"], { mtime: 1700000000, size: 18 });
 });
 
 const made: string[] = [];
@@ -100,7 +100,7 @@ function relayWorld() {
   made.push(root);
   const adb = writeFakeAdb(root);
   const mac = path.join(root, "mac", "folder");
-  const phone = path.join(root, "phone", "Ardia Sync");
+  const phone = path.join(root, "phone", "Nilla Sync");
   const work = path.join(root, "work");
   fs.mkdirSync(mac, { recursive: true });
   fs.mkdirSync(phone, { recursive: true });
@@ -174,7 +174,7 @@ test("a copy that arrives short is not put in place and its part is removed", as
 
 test("the probe goes through the real copy path, and leaves neither name nor an old run's part behind", async () => {
   const { phone, opts, files } = relayWorld();
-  fs.writeFileSync(path.join(phone, ".ardia-relay-probe.relay-part"), "left by sync10's relay");
+  fs.writeFileSync(path.join(phone, ".nilla-relay-probe.relay-part"), "left by sync10's relay");
   const log = path.join(opts.work, "adb.log");
   process.env.FAKE_ADB_LOG = log;
   try {
@@ -185,7 +185,7 @@ test("the probe goes through the real copy path, and leaves neither name nor an 
   assert.deepEqual(files(phone), []);
   assert.equal(fs.existsSync(partsFolder(phone)), false);
   const calls = fs.readFileSync(log, "utf8");
-  assert.match(calls, /^exec-in cat > '[^']*\.ardia-relay-parts\/[^']*\.relay-part'$/m);
+  assert.match(calls, /^exec-in cat > '[^']*\.nilla-relay-parts\/[^']*\.relay-part'$/m);
   assert.match(calls, /relay-committed/);
 });
 

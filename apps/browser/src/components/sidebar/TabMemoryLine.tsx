@@ -13,7 +13,7 @@ export function TabMemoryLine({ tabId }: { tabId: string }) {
 function MemoryLine({ tabId }: { tabId: string }) {
   const memory = useTabMemoryLine(tabId);
   return (
-    <Text testID="ardia.tabHoverMemory" lines={2} size="caption" tone="textTab" style={LINE}>
+    <Text testID="nilla.tabHoverMemory" lines={2} size="caption" tone="textTab" style={LINE}>
       {tabMemoryLabel(memory)}
     </Text>
   );

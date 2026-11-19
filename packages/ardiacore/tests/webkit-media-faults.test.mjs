@@ -113,7 +113,7 @@ function page({ protocol = "https:", hostname = sites[0] } = {}) {
     addEventListener() {},
     performance: { now: () => 0 },
     setTimeout() {},
-    webkit: { messageHandlers: { ardia: { postMessage: (message) => posted.push(JSON.parse(JSON.stringify(message))) } } },
+    webkit: { messageHandlers: { nilla: { postMessage: (message) => posted.push(JSON.parse(JSON.stringify(message))) } } },
   };
   window.window = window;
   window.top = window;
@@ -280,7 +280,7 @@ test("a subdomain of a streaming site is watched", async () => {
 test("the page script relays a reason that is a short string and nothing else the page's events carry", () => {
   const p = page();
   p.run(`
-    for (const detail of ["media_error_decode", 42, null, { reason: "x" }, ["a"], "x".repeat(65), "x".repeat(64)]) document.dispatchEvent(new CustomEvent("ardia:media-fault", { detail }));
+    for (const detail of ["media_error_decode", 42, null, { reason: "x" }, ["a"], "x".repeat(65), "x".repeat(64)]) document.dispatchEvent(new CustomEvent("nilla:media-fault", { detail }));
   `);
   assert.deepEqual(p.reported(), ["media_error_decode", "x".repeat(64)]);
   assert.ok(p.faults().every((m) => Object.keys(m.data).join() === "reason"));
@@ -288,16 +288,16 @@ test("the page script relays a reason that is a short string and nothing else th
 
 test("the page script relays at most 200 reasons per page", () => {
   const p = page();
-  p.run(`for (let i = 0; i < 300; i++) document.dispatchEvent(new CustomEvent("ardia:media-fault", { detail: "media_error_decode" }));`);
+  p.run(`for (let i = 0; i < 300; i++) document.dispatchEvent(new CustomEvent("nilla:media-fault", { detail: "media_error_decode" }));`);
   assert.equal(p.reported().length, 200);
 });
 
 test("a page off the streaming sites gets no media fault listener or wrapper", () => {
   for (const [protocol, hostname] of [["https:", "example.com"], ["http:", sites[0]], ["https:", `not${sites[0]}`]]) {
     const p = page({ protocol, hostname });
-    assert.equal(p.json("(document._listeners || []).filter((l) => l.type === 'ardia:media-fault' || l.type === 'error').length"), 0, `${protocol}//${hostname}`);
+    assert.equal(p.json("(document._listeners || []).filter((l) => l.type === 'nilla:media-fault' || l.type === 'error').length"), 0, `${protocol}//${hostname}`);
     assert.equal(p.json("Navigator.prototype.requestMediaKeySystemAccess === originalAccess && WebKitMediaKeys.isTypeSupported === originalIsTypeSupported && WebKitMediaKeys.prototype.createSession === originalCreateSession"), true);
-    p.run(`document.dispatchEvent(new CustomEvent("ardia:media-fault", { detail: "media_error_decode" }));`);
+    p.run(`document.dispatchEvent(new CustomEvent("nilla:media-fault", { detail: "media_error_decode" }));`);
     assert.deepEqual(p.reported(), [], `${protocol}//${hostname}`);
   }
 });

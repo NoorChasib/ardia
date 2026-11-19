@@ -17,15 +17,15 @@ export async function offscreenMethod(params: Record<string, unknown>): Promise<
   const unknown = Object.keys(params).filter((key) => key !== "tab");
   if (unknown.length) return failure("bad_request", `offscreen takes tab, not ${unknown.join(", ")}.`);
   const tab = params.tab;
-  if (typeof tab !== "string" || !isEligibleTab(useBrowser.getState(), tab)) return failure("no_window", "There's no such tab the ardia command can use.");
+  if (typeof tab !== "string" || !isEligibleTab(useBrowser.getState(), tab)) return failure("no_window", "There's no such tab the nilla-browser command can use.");
   if (shownTabIds(useBrowser.getState()).has(tab)) return failure("refused", "That tab is shown in a window, so it can't go off-screen.");
   try {
     const owner = await cliOwnsTab(tab);
-    if (!owner.owned) return failure("refused", "The ardia command didn't open that tab.");
+    if (!owner.owned) return failure("refused", "The nilla-browser command didn't open that tab.");
     if (owner.shown) return failure("refused", "That tab has been shown in a window, so it can't go off-screen.");
     if (shownTabIds(useBrowser.getState()).has(tab)) return failure("refused", "That tab is shown in a window, so it can't go off-screen.");
     const moved = await cliMoveOffscreen(tab);
-    if (!moved.ok) return failure("refused", moved.reason ?? "Ardia couldn't take that tab off-screen.");
+    if (!moved.ok) return failure("refused", moved.reason ?? "Nilla couldn't take that tab off-screen.");
   } catch (error) {
     return failure("failed", errorText(error));
   }

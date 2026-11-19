@@ -1,7 +1,7 @@
 #!/bin/bash
 # corex-build <name> <commit> [build-apk options]
 # Builds the Android app on corex, in the bots container (14 GB), from a pushed commit, with build-apk unchanged, into
-# ~/Developer/ardia-phone-apks/<name>.apk with its stamp <name>.txt. ~/Developer/ardia-android-build/src is a build-only
+# ~/Developer/nilla-phone-apks/<name>.apk with its stamp <name>.txt. ~/Developer/nilla-android-build/src is a build-only
 # clone: fetched, detached at the commit and reset to it every time, never edited or committed from; all work happens
 # in the main checkout. The scripts come from the branch head, so an older commit builds with today's build-apk.
 # Waits (up to ARDIA_BUILD_WAIT seconds, default 1800) while another Gradle build is busy in the container (more than
@@ -24,12 +24,12 @@ shift 2
 for argument in "$@"; do
   [ "$argument" = "--compose-key" ] && { echo "--compose-key signs with the Compose app's key, which only the Mac holds" >&2; exit 64; }
 done
-base="$HOME/Developer/ardia-android-build"
+base="$HOME/Developer/nilla-android-build"
 src="$base/src"
 tools="$base/tools"
-out="$HOME/Developer/ardia-phone-apks"
+out="$HOME/Developer/nilla-phone-apks"
 branch="${ARDIA_BUILD_BRANCH:-t3/unify-expo-architecture}"
-remote="https://github.com/ardia-browser/ardia.git"
+remote="https://github.com/NoorChasib/nilla.git"
 keep=8
 gib=$((1024 * 1024 * 1024))
 
@@ -71,14 +71,14 @@ flock -w "${ARDIA_BUILD_WAIT:-1800}" 9 || { echo "the build clone stayed busy (c
 cat > "$base/README.md" <<'README'
 # Build-only clone for corex-build
 
-`src/` is a clone of ardia used only to build the Android app on corex (`apps/phone/scripts/corex-build`).
+`src/` is a clone of nilla used only to build the Android app on corex (`apps/phone/scripts/corex-build`).
 Every build fetches, detaches it at the requested commit and resets it there; untracked files are removed, and only
 the build outputs Git ignores stay. Never edit, commit or push from here: all work happens in the main checkout on
 the Mac. `apps/phone/scripts/corex-test` runs the Kotlin unit tests here too: it may apply a diff from the main
 checkout for one run and resets the clone when it ends. Both hold `clone.lock`. `tools/` holds the branch head's `apps/phone/scripts`, `apps/phone/test/r8`, `package.json`, `bunfig.toml` and `metro-nested-modules.js`, rewritten by every build and test.
 `bun-<version>/` is the pinned Bun, `bun-cache/` its install cache, `sdk-view/` the pinned apkanalyzer in an SDK layout that links the shared
 SDK's parts, and `tmp/` holds the bundle exports.
-APKs go to `~/Developer/ardia-phone-apks/`.
+APKs go to `~/Developer/nilla-phone-apks/`.
 README
 if [ ! -d "$src/.git" ]; then
   git clone --quiet --no-checkout "$remote" "$src"

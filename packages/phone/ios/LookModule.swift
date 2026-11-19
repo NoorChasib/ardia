@@ -1,11 +1,11 @@
-import ArdiaDesign
+import NillaDesign
 import ExpoModulesCore
 import SwiftUI
 import UIKit
 
 public final class LookModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneLook")
+    Name("NillaPhoneLook")
 
     Function("hasGlass") { () -> Bool in true }
 

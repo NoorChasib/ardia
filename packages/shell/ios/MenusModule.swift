@@ -7,7 +7,7 @@ public class MenusModule: Module {
   private static weak var openMenu: NSMenu?
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaMenus")
+    Name("NillaMenus")
     Events(ShellEvents.Channel.command.rawValue)
 
     OnCreate {

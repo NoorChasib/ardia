@@ -4,7 +4,7 @@ import { constants } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, describe, it } from "node:test";
-import { launchArdia, Shell } from "../lib/ardia.mjs";
+import { launchNilla, Shell } from "../lib/nilla.mjs";
 import { evaluate } from "../lib/cdp.mjs";
 import { startFixtures, SUGGEST_HOST, suggestionsFor } from "../lib/fixtures.mjs";
 import { writeChromePreferences } from "../lib/seed.mjs";
@@ -22,14 +22,14 @@ describe("harness against a stock Chromium", { skip: available ? false : `${CHRO
   let downloads;
 
   before(async () => {
-    root = await mkdtemp(join(tmpdir(), "ardia-acceptance-self-"));
+    root = await mkdtemp(join(tmpdir(), "nilla-acceptance-self-"));
     const tls = await generateTls(join(root, "tls"));
     fixtures = await startFixtures({ tls, slowInterval: 50 });
     const scratch = join(root, "profile");
     downloads = join(root, "downloads");
     await mkdir(downloads, { recursive: true });
     await writeChromePreferences(scratch, { downloads, printToPdf: true });
-    app = await launchArdia({ executable: CHROMIUM, scratch, background: false, label: "chromium", extraArgs: [...fixtures.chromiumArgs, "--kiosk-printing", "about:blank"] });
+    app = await launchNilla({ executable: CHROMIUM, scratch, background: false, label: "chromium", extraArgs: [...fixtures.chromiumArgs, "--kiosk-printing", "about:blank"] });
   });
 
   after(async () => {
@@ -71,7 +71,7 @@ describe("harness against a stock Chromium", { skip: available ? false : `${CHRO
     assert.notEqual((await lastState(plain.states)).securityState, "secure");
     const mixed = await open(fixtures.url.mixed());
     const state = await until(() => mixed.states.find((s) => s.securityStateIssueIds?.includes("contained-mixed-form")), { timeout: 8000, label: "mixed form state" });
-    assert.ok(state, "Chromium did not report the insecure form that Ardia classifies as mixed");
+    assert.ok(state, "Chromium did not report the insecure form that Nilla classifies as mixed");
   });
 
   it("answers the mapped suggestion host and blocks every other host", async () => {

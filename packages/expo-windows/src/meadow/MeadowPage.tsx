@@ -1,8 +1,8 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 import type { OpenWindowRequest } from "@ardia/ardiacore";
-import type { MeadowIntroEvent, MeadowProps } from "@ardia/shaders";
-import type { AppNative } from "@ardia/shell";
+import type { MeadowIntroEvent, MeadowProps } from "@nilla/shaders";
+import type { AppNative } from "@nilla/shell";
 import { takeKeyboardFor } from "../appKeyboard";
 import { EngineWebView } from "../engine/EngineWebView";
 import { discardOffered, engineAvailable } from "../engine/host";
@@ -21,11 +21,11 @@ const PAGE_CLOSE_MS = 400;
 let opened = 0;
 
 const testReadyLimit = () => {
-  const asked = Number(requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().test.meadowReadyMs);
+  const asked = Number(requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().test.meadowReadyMs);
   return Number.isFinite(asked) && asked > 0 ? asked : undefined;
 };
 
-const focusModule = () => requireNativeModule<Pick<FocusOnWindows, "takeKeyboardFromPage">>("ArdiaFocus");
+const focusModule = () => requireNativeModule<Pick<FocusOnWindows, "takeKeyboardFromPage">>("NillaFocus");
 
 const within = (ms: number, work: Promise<unknown>) => Promise.race([work.catch(() => {}), new Promise((done) => setTimeout(done, ms))]);
 

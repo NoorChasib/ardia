@@ -4,7 +4,7 @@
 #include <cmath>
 #include <cstddef>
 
-namespace ardia_display {
+namespace nilla_display {
 
 struct Rect {
   double x, y, w, h;

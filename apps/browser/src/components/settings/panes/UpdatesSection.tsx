@@ -12,9 +12,9 @@ import { useResource } from "../../../state/settings/resources";
 import { UI_LOCALE } from "../../../lib/uiLocale";
 import { Group, Row, SectionHeader } from "../Form";
 import { setting } from "../settingsIndex";
+import { FORK_CREDIT, LEGAL_NOTICE, sourceLinks } from "../../../state/app/legalNotice";
 
-const APP = "Ardia";
-const REPOSITORY = "https://github.com/mantrakp04/ardia";
+const APP = "Nilla";
 
 export function UpdatesSection() {
   const [state, reload] = useResource(updater);
@@ -94,8 +94,11 @@ function VersionDetails({ status }: { status: string | null }) {
           Widevine isn't available in this build: video that needs it, like Netflix or Disney+, won't play.
         </Text>
       ) : null}
+      <Text size="caption" tone="textSecondary" style={DETAIL()}>
+        {`${LEGAL_NOTICE} ${FORK_CREDIT}`}
+      </Text>
       <View style={LINKS}>
-        <Button variant="text" look="link" pad="none" title="Source code" onPress={() => openUrls([`${REPOSITORY}/tree/v${systemInfo().appVersion}`])} />
+        <Button variant="text" look="link" pad="none" title="Source code" onPress={() => openUrls([sourceLinks().source])} />
         <Button variant="text" look="link" pad="none" title="Licenses" onPress={() => openUrls(["chrome://credits"])} />
       </View>
     </View>

@@ -6,10 +6,10 @@ const realView = core.requireNativeViewManager;
 const { forwardRef, useImperativeHandle, createElement } = require("react") as typeof import("react");
 const NativeField = forwardRef(function NativeField(props: Record<string, unknown>, ref) {
   useImperativeHandle(ref, () => ({ focus: () => undefined, blur: () => undefined, setText: () => undefined }));
-  return createElement("ArdiaPhoneCompletingField", props);
+  return createElement("NillaPhoneCompletingField", props);
 });
-jest.spyOn(core, "requireOptionalNativeModule").mockImplementation((name: string) => (name === "ArdiaPhoneCompletingField" ? {} : realOptional(name)));
-jest.spyOn(core, "requireNativeViewManager").mockImplementation((name: string) => (name === "ArdiaPhoneCompletingField" ? NativeField : realView(name)));
+jest.spyOn(core, "requireOptionalNativeModule").mockImplementation((name: string) => (name === "NillaPhoneCompletingField" ? {} : realOptional(name)));
+jest.spyOn(core, "requireNativeViewManager").mockImplementation((name: string) => (name === "NillaPhoneCompletingField" ? NativeField : realView(name)));
 
 const { SearchTray } = require("../components/search/SearchTray") as typeof import("../components/search/SearchTray");
 const { pages } = require("../platform/pages") as typeof import("../platform/pages");
@@ -45,7 +45,7 @@ afterEach(() => {
 test("one Go through the switch component the Android build uses opens exactly one tab, and its page's own report records one visit and no second tab", () => {
   presentSearch("page", "");
   const root = renderSurface(<SearchTray />);
-  const field = root.root.findAll((node) => node.type === ("ArdiaPhoneCompletingField" as never))[0]!;
+  const field = root.root.findAll((node) => node.type === ("NillaPhoneCompletingField" as never))[0]!;
   expect(field).toBeDefined();
   const before = currentTabs().open.length;
   const record = jest.spyOn(history(), "record");
@@ -64,7 +64,7 @@ test("one Go through the switch component the Android build uses opens exactly o
 test("a field that reports one Go twice still opens one tab: the tray takes one submit", () => {
   presentSearch("page", "");
   const root = renderSurface(<SearchTray />);
-  const field = root.root.findAll((node) => node.type === ("ArdiaPhoneCompletingField" as never))[0]!;
+  const field = root.root.findAll((node) => node.type === ("NillaPhoneCompletingField" as never))[0]!;
   const before = currentTabs().open.length;
   act(() => {
     field.props.onSubmit({ nativeEvent: { displayed: "example.com" } });
@@ -80,7 +80,7 @@ test("each tab opened prints one lab line with its origin, so a phone run can co
   lab.traceLab(true, (line) => traced.push(line));
   presentSearch("page", "");
   const root = renderSurface(<SearchTray />);
-  const field = root.root.findAll((node) => node.type === ("ArdiaPhoneCompletingField" as never))[0]!;
+  const field = root.root.findAll((node) => node.type === ("NillaPhoneCompletingField" as never))[0]!;
   act(() => field.props.onSubmit({ nativeEvent: { displayed: "example.com" } }));
   lab.traceLab(false);
   const opened = traced.filter((line) => line.startsWith("PAGELAB tab opened"));

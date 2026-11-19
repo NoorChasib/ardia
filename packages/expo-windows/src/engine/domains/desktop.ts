@@ -3,8 +3,8 @@ import { nativeImportHost } from "../../import/nativeHost";
 import type { DialogsModule, SystemSignalsModule } from "../../nativeModuleTypes";
 import type { Desktop } from "./calling";
 
-const dialogs = () => TurboModuleRegistry.get<TurboModule & DialogsModule>("ArdiaDialogs");
-const signals = () => TurboModuleRegistry.get<TurboModule & SystemSignalsModule>("ArdiaSystemSignals");
+const dialogs = () => TurboModuleRegistry.get<TurboModule & DialogsModule>("NillaDialogs");
+const signals = () => TurboModuleRegistry.get<TurboModule & SystemSignalsModule>("NillaSystemSignals");
 
 export function nativeDesktop(): Desktop | undefined {
   const files = nativeImportHost();

@@ -29,7 +29,7 @@ function strings(value, out = []) {
 const live = strings(EXPORTS.map((name) => copy[name]));
 
 test("Windows words every sentence as the branch wrote it by hand on 2026-11-14", () => {
-  assert.equal(pairs.length, 158);
+  assert.equal(pairs.length, 156);
   for (const [mac, windows] of pairs) {
     const missed = KEYS_THE_BRANCH_MISSED.find(([before]) => mac.startsWith(before));
     const expected = missed ? windows.replace(missed[0], missed[1]) : windows;
@@ -53,7 +53,7 @@ test("no Mac name, Mac-only phrase or key glyph is left in Windows's copy except
     assert.doesNotMatch(text, /\b(?:this|the) Mac\b|\bmacOS version\b|\bfrom the Dock\b|\bin Finder\b|[⌃⌥⇧⌘]/u, text);
     for (const phrase of Object.values(PHRASES_ONLY_WITH)) assert.ok(!text.includes(phrase));
   }
-  assert.ok(windows.some((text) => text.includes("whether macOS and Ardia agree")));
+  assert.ok(windows.some((text) => text.includes("whether macOS and Nilla agree")));
   assert.ok(windows.some((text) => text.includes("Dock icon clicks")));
 });
 
@@ -76,8 +76,8 @@ test("the rules touch only whole words outside quotes", () => {
 test("the branch's own sentences come last in Usage, after main's", () => {
   const usage = copy.WHATS_SENT.find((group) => group.title === "Usage");
   assert.ok(usage);
-  assert.ok(usage.items.at(-1).startsWith("On Windows, how many times Ardia asked before quitting right after you confirmed closing a window's tabs"));
-  assert.ok(usage.items.at(-2).startsWith("On Windows, how many times Ardia held the keys you typed"));
+  assert.ok(usage.items.at(-1).startsWith("On Windows, how many times Nilla asked before quitting right after you confirmed closing a window's tabs"));
+  assert.ok(usage.items.at(-2).startsWith("On Windows, how many times Nilla held the keys you typed"));
   assert.ok(usage.items.at(-3).startsWith("How many times suggestions that came in late waited"));
   assert.ok(usage.items.at(-4).startsWith("How many times a window's interface was started a second time"));
   assert.ok(usage.items.at(-5).startsWith("On Windows, how many times the command bar put back a letter"));

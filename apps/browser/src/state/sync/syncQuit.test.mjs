@@ -11,7 +11,7 @@ let releaseRead = null;
 let heldSeal = null;
 let releaseSeal = null;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => "devC",
     deviceName: () => "Test Mac",
     createPhrase: async () => true,
@@ -48,7 +48,7 @@ globalThis.acTestNativeModules = {
 
 const shell = await import("../../test-native/index.ts");
 const { useBrowser } = await import("../browser/store.ts");
-const { canonical } = await import("@ardia/sync");
+const { canonical } = await import("@nilla/sync");
 const quit = await import("../app/quit.ts");
 const S = () => useBrowser.getState();
 const realNow = Date.now;

@@ -17,7 +17,7 @@ export function mute(results: OpResult[], op: Op, muted: boolean): OpResult {
     const s = store();
     if (!muted && isSiteMuted(s, s.tabs[id]!)) s.setSiteMuted(id, false);
     if (store().tabs[id]!.muted !== muted) store().setMuted([id], muted);
-    if (store().tabs[id]?.muted !== muted) throw new OpError("failed", `Ardia didn't do that: tab ${id} isn't ${muted ? "muted" : "unmuted"}.`);
+    if (store().tabs[id]?.muted !== muted) throw new OpError("failed", `Nilla didn't do that: tab ${id} isn't ${muted ? "muted" : "unmuted"}.`);
   }
   return { tabs: ids };
 }
@@ -53,7 +53,7 @@ export function closeTabs(results: OpResult[], op: Op): OpResult {
   store().closeTabs(ids);
   const s = store();
   const left = ids.find((id) => s.tabs[id] && !inPinnedContainer(s, id));
-  if (left) throw new OpError("failed", `Ardia didn't do that: tab ${left} is still open.`);
+  if (left) throw new OpError("failed", `Nilla didn't do that: tab ${left} is still open.`);
   return { tabs: ids };
 }
 
@@ -63,7 +63,7 @@ export function rename(results: OpResult[], op: Op): OpResult {
   const name = (op.title as string | null) ?? "";
   const customTitle = name && name !== t.title ? name : null;
   store().updateTab(id, { customTitle });
-  if (store().tabs[id]?.customTitle !== customTitle) throw new OpError("failed", `Ardia didn't do that: tab ${id} wasn't renamed.`);
+  if (store().tabs[id]?.customTitle !== customTitle) throw new OpError("failed", `Nilla didn't do that: tab ${id} wasn't renamed.`);
   return { tabs: [id] };
 }
 
@@ -73,6 +73,6 @@ export function tabIcon(results: OpResult[], op: Op): OpResult {
   if (none && !isPinnedRow(store().tabs[id])) throw new OpError("bad_request", "\"none\" is for groups and pinned rows; give null to reset a tab's icon.");
   const icon = none ? NO_ROW_ICON : (op.icon as IconValue);
   store().updateTab(id, { customIcon: icon });
-  if (store().tabs[id]?.customIcon !== icon) throw new OpError("failed", `Ardia didn't do that: tab ${id}'s icon didn't change.`);
+  if (store().tabs[id]?.customIcon !== icon) throw new OpError("failed", `Nilla didn't do that: tab ${id}'s icon didn't change.`);
   return { tabs: [id] };
 }

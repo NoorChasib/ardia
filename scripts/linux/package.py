@@ -23,7 +23,31 @@ CLI_INSTALLER = REPO / 'apps/cli/install.sh'
 UBO_SEED = REPO / 'scripts/linux/ubo-seed.mjs'
 CLI_PLATFORM = 'linux-x64'
 VERSION_PATTERN = re.compile(r'^[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.[0-9]+)?$')
+LAUNCHER = '''#!/usr/bin/env sh
+ardia_bin_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+profile_given=
+for argument in "$@"; do
+  case $argument in --user-data-dir=?*) profile_given=1 ;; esac
+done
+if [ -z "$profile_given" ]; then
+  echo "This development build of Nilla starts only with --user-data-dir=<a profile of its own>, so its engine never opens the default ~/.config/ardia profile. Start it with scripts/linux/nilla-dev-run inside a disposable VM, container or namespace." >&2
+  exit 2
+fi
+exec "$ardia_bin_dir/../lib/ardia/ardia-launch" "$@"
+'''
 REQUIRED = runtime_files.REQUIRED
+LICENSE_TEXTS = {
+    'LICENSE': REPO / 'LICENSE',
+    'LICENSE.Apache-2.0': REPO / 'LICENSE.Apache-2.0',
+    'NOTICE': REPO / 'NOTICE',
+    'bangs-LICENSE': REPO / 'third_party/bangs/LICENSE',
+    'symbols-THIRD_PARTY_NOTICES.txt': REPO / 'apps/linux/src/shims/web/symbols/THIRD_PARTY_NOTICES.txt',
+}
+LICENSE_FOLDERS = ('lib/ardia/licenses', 'share/doc/nilla')
+ICON_SOURCE = REPO / 'scripts/linux/icons/hicolor'
+ICON_NAME = 'ardia'
+DESKTOP_ENTRY = ('[Desktop Entry]\nType=Application\nName=Nilla\nExec=ardia %U\nIcon=ardia\nTerminal=false\nCategories=Network;WebBrowser;\n'
+                 'MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;\nStartupWMClass=ardia\n')
 
 
 def check_content_blocker(source):
@@ -97,6 +121,32 @@ def add_cli(runtime, tarball, digest, installer=CLI_INSTALLER):
     return digest
 
 
+def add_licenses(root):
+    missing = [str(source) for source in LICENSE_TEXTS.values() if not source.is_file()]
+    if missing:
+        raise ValueError('missing licence texts: ' + ', '.join(missing))
+    for folder in LICENSE_FOLDERS:
+        target = root / folder
+        target.mkdir(parents=True)
+        for name, source in LICENSE_TEXTS.items():
+            shutil.copyfile(source, target / name)
+
+
+def icon_files():
+    return {f'share/icons/hicolor/{source.parent.parent.name}/apps/{ICON_NAME}{source.suffix}': source
+            for source in sorted(ICON_SOURCE.glob('*/apps/nilla.*'))}
+
+
+def add_icons(root):
+    icons = icon_files()
+    if 'share/icons/hicolor/256x256/apps/ardia.png' not in icons:
+        raise ValueError(f'no 256x256 icon in {ICON_SOURCE}')
+    for name, source in icons.items():
+        target = root / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+
+
 def normalize_modes(root):
     for path in [root, *root.rglob('*')]:
         if path.is_symlink():
@@ -153,11 +203,11 @@ def package(output, ui, destination, content_blocker=None, version=None, cli=Non
                 seed_content_blocker(runtime, blocker)
         launcher = root / 'bin/ardia'
         launcher.parent.mkdir()
-        launcher.write_text('#!/usr/bin/env sh\nardia_bin_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\nexec "$ardia_bin_dir/../lib/ardia/ardia-launch" "$@"\n')
+        launcher.write_text(LAUNCHER)
         launcher.chmod(0o755)
         desktop = root / 'share/applications/ardia.desktop'
         desktop.parent.mkdir(parents=True)
-        desktop.write_text('[Desktop Entry]\nType=Application\nName=Ardia\nExec=ardia %U\nIcon=ardia\nTerminal=false\nCategories=Network;WebBrowser;\nMimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;\nStartupWMClass=ardia\n')
+        desktop.write_text(DESKTOP_ENTRY)
         policy = root / 'share/polkit-1/actions/dev.ardia.linux.policy'
         policy.parent.mkdir(parents=True)
         shutil.copyfile(pathlib.Path(__file__).resolve().parent / 'dev.ardia.linux.policy', policy)
@@ -167,11 +217,8 @@ def package(output, ui, destination, content_blocker=None, version=None, cli=Non
         installer = root / 'install.sh'
         shutil.copyfile(pathlib.Path(__file__).resolve().parent / 'install.sh', installer)
         installer.chmod(0o755)
-        icon = pathlib.Path(__file__).resolve().parents[2] / 'engine/chromium/src/chrome/app/theme/chromium/product_logo_256.png'
-        if icon.is_file():
-            target = root / 'share/icons/hicolor/256x256/apps/ardia.png'
-            target.parent.mkdir(parents=True)
-            shutil.copyfile(icon, target)
+        add_icons(root)
+        add_licenses(root)
         normalize_modes(root)
         with tarfile.open(destination, 'x:xz') as archive:
             archive.add(root, arcname='ardia')
@@ -188,7 +235,7 @@ def main():
     parser.add_argument('--ui', type=pathlib.Path, required=True)
     parser.add_argument('--destination', type=pathlib.Path, required=True)
     parser.add_argument('--content-blocker', type=pathlib.Path)
-    parser.add_argument('--version', help='the Ardia version, written to lib/ardia/VERSION')
+    parser.add_argument('--version', help='the Nilla version, written to lib/ardia/VERSION')
     parser.add_argument('--cli', type=pathlib.Path, help=f'the ardia-cli-<version>-{CLI_PLATFORM}.tar.gz to bundle in lib/ardia/cli (needs --version)')
     parser.add_argument('--deb', type=pathlib.Path, help='also build a .deb at this path (dpkg-deb)')
     parser.add_argument('--appimage', type=pathlib.Path, help='also build an AppImage at this path (a pinned type 2 runtime and mksquashfs)')

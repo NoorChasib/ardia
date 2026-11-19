@@ -81,8 +81,8 @@
   "defaultProfileId": "default",
   "profileSwitcherIcons": false,
   "shortcuts": {},
-  "openLinksInLittleArdia": true,
-  "littleArdiaSize": [
+  "openLinksInLittleNilla": true,
+  "littleNillaSize": [
    900,
    640
   ],

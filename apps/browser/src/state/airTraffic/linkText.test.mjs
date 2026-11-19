@@ -22,7 +22,7 @@ test("contains and exact-address conditions save, load and match literally", () 
   assert.ok(rules.linkMatches({ kind: "equals", text: "localhost:3000/app" }, "http://localhost:3000/app"));
 });
 
-test("a fallback the person sets, even back to Ardia's usual routing, is remembered as chosen", () => {
+test("a fallback the person sets, even back to Nilla's usual routing, is remembered as chosen", () => {
   store.resetAirTrafficForTests(rules.NO_AIR_TRAFFIC);
   assert.equal(store.currentAirTraffic().fallbackChosen, undefined);
   store.setAirTrafficFallback(null);
@@ -37,7 +37,7 @@ test("a rule added with a given id is added once", () => {
   store.resetAirTrafficForTests(rules.NO_AIR_TRAFFIC);
   const draft = { enabled: true, from: null, when: { kind: "contains", text: "a.example" }, profileId: null, open: "tab" };
   assert.equal(store.addAirTrafficRule(draft, "arc-R-1"), "arc-R-1");
-  assert.equal(store.addAirTrafficRule({ ...draft, open: "littleArdia" }, "arc-R-1"), null);
+  assert.equal(store.addAirTrafficRule({ ...draft, open: "littleNilla" }, "arc-R-1"), null);
   assert.equal(store.currentAirTraffic().rules.length, 1);
 });
 
@@ -78,7 +78,7 @@ test("a setting with a synced record counts as chosen", async () => {
   const { settingSyncedIn } = await import("../sync/settingsAdapter.ts");
   assert.equal(settingSyncedIn({}, "cleanUpInactiveTabsAfterMinutes"), false);
   assert.equal(settingSyncedIn({ "set:cleanUpInactiveTabsAfterHours": { v: { v: null } } }, "cleanUpInactiveTabsAfterMinutes"), true);
-  assert.equal(settingSyncedIn({ "set:openLinksInLittleArdia": { v: { v: true } } }, "openLinksInLittleArdia"), true);
+  assert.equal(settingSyncedIn({ "set:openLinksInLittleNilla": { v: { v: true } } }, "openLinksInLittleNilla"), true);
 });
 
 test("adding a rule or setting the fallback reports whether it was saved", () => {

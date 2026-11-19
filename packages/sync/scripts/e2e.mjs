@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { freePort, launch, reporter, sleep } from "../../../scripts/lib/instance.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
-const APP = path.resolve(process.argv[2] ?? `${repo}/apps/browser/build-sync/Build/Products/Debug/Ardia.app`);
+const APP = path.resolve(process.argv[2] ?? `${repo}/apps/browser/build-sync/Build/Products/Debug/Nilla.app`);
 const WORK = path.resolve(process.argv[3] ?? `${process.env.TMPDIR ?? "/tmp"}/ac-sync-e2e`);
 const FOLDER = `${WORK}/folder`;
 const PORT = await freePort();
@@ -122,7 +122,7 @@ function bip39(entropy) {
 
 const savePassword = (origin, user, password) =>
   `return ac.engine.call("passwords.remove", { profile: "", origin: "${origin}", username: "${user}" }).catch((e) => ({ error: e.message }))
-    .then(() => globalThis.expo.modules.ArdiaPasswords.save("", "${origin}", "${user}", "${password}").then(JSON.parse).catch((e) => ({ error: e.message })));`;
+    .then(() => globalThis.expo.modules.NillaPasswords.save("", "${origin}", "${user}", "${password}").then(JSON.parse).catch((e) => ({ error: e.message })));`;
 
 fs.mkdirSync(FOLDER, { recursive: true });
 const swift = fs.readFileSync(`${repo}/packages/sync/ios/Core/Wordlist.swift`, "utf8");
@@ -166,7 +166,7 @@ try {
   const swapped = [...words];
   [swapped[0], swapped[1]] = [swapped[1], swapped[0]];
   const typo = [...words];
-  typo[3] = "ardia";
+  typo[3] = "nilla";
   const wrong = {
     "a valid phrase of someone else": [bip39(crypto.randomBytes(32)), "mismatch"],
     "two words swapped": [swapped[0] === swapped[1] ? [...words].reverse().join(" ") : swapped.join(" "), "checksum"],
@@ -305,7 +305,7 @@ try {
   await sync("A", "B", "A", "B", "A", "B");
   check("steady state: no files written while nothing changes", (await seqs()) === before);
 
-  const list = () => execSync(`find ${FOLDER} -name '*.nns' -type f`).toString().trim().split("\n");
+  const list = () => execSync(`find ${FOLDER} -name '*.nls' -type f`).toString().trim().split("\n");
   const known = new Set(list());
   await ev("A", `ac.store.getState().addBookmark({ profileId: "default", url: "${W}/alpha.html?nne2e=partial1", title: "ACE2E Partial One" }); return acSync.syncNow()`);
   const first = list().find((f) => !known.has(f));
@@ -330,8 +330,8 @@ try {
   const files = execSync(`find ${FOLDER} -mindepth 1`).toString().trim().split("\n");
   const needles = ["ACE2E", "nne2e", "hunter2", "127.0.0.1", "alpha.html", "Bookmark", "duckduckgo", "appearance", "MacBook", "https", "default", "pw:", "bm:"];
   const leaks = needles.filter((n) => files.some((f) => f.slice(FOLDER.length).includes(n) || (fs.statSync(f).isFile() && fs.readFileSync(f).includes(n))));
-  check(`no plaintext in the sync folder (${files.filter((f) => f.endsWith(".nns")).length} files; ${needles.length} strings searched)`, leaks.length === 0, leaks.join(", "));
-  check("every file is padded to 1 KiB steps", files.filter((f) => f.endsWith(".nns")).every((f) => (fs.statSync(f).size - 32) % 1024 === 0));
+  check(`no plaintext in the sync folder (${files.filter((f) => f.endsWith(".nls")).length} files; ${needles.length} strings searched)`, leaks.length === 0, leaks.join(", "));
+  check("every file is padded to 1 KiB steps", files.filter((f) => f.endsWith(".nls")).every((f) => (fs.statSync(f).size - 32) % 1024 === 0));
   const local = ["A", "B"].flatMap((n) => ["sync.json", "sync-state.nns", "sync-journal.nns"].map((f) => `${DEV[n].dir}/${f}`)).filter((f) => fs.existsSync(f));
   check("this Mac's own sync state holds no plaintext password", local.every((f) => !fs.readFileSync(f).includes("ACE2E-concurrent-B")));
 

@@ -24,7 +24,7 @@ export const LINUX_WORDING: readonly Wording[] = [
     replacements: [
       [
         `        {system && system.dockAvailable && !system.inDock ? (
-          <OptionCard control="check" icon="dock.rectangle" title="Add Ardia to Dock" subtitle="Quick access whenever you need it" selected={dock} onPress={() => setExtras({ dock: !dock })} />
+          <OptionCard control="check" icon="dock.rectangle" title="Add Nilla to Dock" subtitle="Quick access whenever you need it" selected={dock} onPress={() => setExtras({ dock: !dock })} />
         ) : null}
 `,
         "",
@@ -48,7 +48,8 @@ export const LINUX_WORDING: readonly Wording[] = [
     file: "state/telemetry/copy.ts",
     replacements: [
       ["how many tab changes this Mac sent,", "how many tab changes this computer sent,"],
-      ["Sent to ardia.dev with a random ID made on this Mac, and kept", "Sent to ardia.dev with a random ID made on this computer, and kept"],
+      ["with a random ID made on this Mac. This build has none, so nothing leaves this Mac.", "with a random ID made on this computer. This build has none, so nothing leaves this computer."],
+      ["so it never sends them. What it records stays on this Mac.", "so it never sends them. What it records stays on this computer."],
       [`keptOnThisMac: "Kept on this Mac"`, `keptOnThisMac: "Kept on this computer"`],
       ["browsing data removed from this Mac and", "browsing data removed from this computer and"],
       ["switched Auto-hide tabs on or off on this Mac,", "switched Auto-hide tabs on or off on this computer,"],
@@ -56,21 +57,12 @@ export const LINUX_WORDING: readonly Wording[] = [
       ["turned Minimalism mode on and off on this Mac, from Settings, the View menu or ⌃⌘M,", "turned Minimalism mode on and off on this computer, from Settings, the View menu or Ctrl+Super+M,"],
       ["whether macOS Increase Contrast is on", "whether the desktop's high contrast setting is on"],
       [
-        "whether macOS returned an error, whether Ardia or the app that opened it was asked, whether System Settings opened, and how long it took.",
+        "whether macOS returned an error, whether Nilla or the app that opened it was asked, whether System Settings opened, and how long it took.",
         "whether Evolution Data Server returned an error, and how long it took.",
-      ],
-      ["app version, update channel, macOS version, chip,", "app version, update channel, operating system version, chip,"],
-      [
-        `dailyCountShort: "Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID."`,
-        `dailyCountShort: "Either way, Ardia sends one anonymous “opened today” count a day, with its version and operating system version and no persistent ID."`,
-      ],
-      [
-        "change it any time in Settings › Privacy & Security. Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID.",
-        "change it any time in Settings › Privacy & Security. Either way, Ardia sends one anonymous “opened today” count a day, with its version and operating system version and no persistent ID.",
       ],
       [
         "After a crash: the exception type and name (never its message), and the function names where it was thrown and on the crashing thread, from this app's crash report",
-        "After a crash: the signal and its code, and for each step on the crashing thread the file it ran in (like chrome or libc.so.6) and the position inside that file, with the build IDs of Ardia's own files, read from the crash dump Chromium's crash handler keeps on this computer. Never the dump itself, which can hold page content",
+        "After a crash: the signal and its code, and for each step on the crashing thread the file it ran in (like chrome or libc.so.6) and the position inside that file, with the build IDs of Nilla's own files, read from the crash dump Chromium's crash handler keeps on this computer. Never the dump itself, which can hold page content",
       ],
       [
         "plus the version that crashed, how long the process had run, the total size of its writable memory regions, and how the system ended it (its termination reason, like a signal or a code-signing kill)",
@@ -79,8 +71,8 @@ export const LINUX_WORDING: readonly Wording[] = [
       ["A random install ID, made on this Mac once", "A random install ID, made on this computer once"],
       ["App version and build, macOS version, chip", "App version and build, operating system version, chip"],
       [
-        "Every 10 minutes Ardia notes on this Mac its tab, window and profile counts, its memory use, rough free disk space, the Mac's memory pressure, how long it has been open, and which of Ardia's own pages (like Settings or History) the tab in front was on, never a website's address. Ardia also takes that note when you open or leave one of those pages, and keeps the last 3 of those pages with how many minutes ago you were on each. That note is sent only with a crash report, or at the next launch after Ardia didn't quit cleanly, with whether the Mac restarted since.",
-        "Every 10 minutes Ardia notes on this computer its tab, window and profile counts, its memory use, rough free disk space, the system's memory pressure, how long it has been open, and which of Ardia's own pages (like Settings or History) the tab in front was on, never a website's address. Ardia also takes that note when you open or leave one of those pages, and keeps the last 3 of those pages with how many minutes ago you were on each. That note is sent only with a crash report, or at the next launch after Ardia didn't quit cleanly, with whether the computer restarted since.",
+        "Every 10 minutes Nilla notes on this Mac its tab, window and profile counts, its memory use, rough free disk space, the Mac's memory pressure, how long it has been open, and which of Nilla's own pages (like Settings or History) the tab in front was on, never a website's address. Nilla also takes that note when you open or leave one of those pages, and keeps the last 3 of those pages with how many minutes ago you were on each. That note is sent only with a crash report, or at the next launch after Nilla didn't quit cleanly, with whether the Mac restarted since.",
+        "Every 10 minutes Nilla notes on this computer its tab, window and profile counts, its memory use, rough free disk space, the system's memory pressure, how long it has been open, and which of Nilla's own pages (like Settings or History) the tab in front was on, never a website's address. Nilla also takes that note when you open or leave one of those pages, and keeps the last 3 of those pages with how many minutes ago you were on each. That note is sent only with a crash report, or at the next launch after Nilla didn't quit cleanly, with whether the computer restarted since.",
       ],
       [
         "how much memory the Mac has, how many displays and their scale, and whether the Mac decodes",
@@ -91,12 +83,12 @@ export const LINUX_WORDING: readonly Wording[] = [
       ["a link no app on this Mac opens", "a link no app on this computer opens"],
       ["Its version, macOS version, chip and Python version, with this Mac's install ID", "Its version, operating system version, chip and Python version, with this computer's install ID"],
       ["Leaves this Mac only as the events above", "Leaves this computer only as the events above"],
-      ["whether macOS and Ardia agree that Ardia is the app in front", "whether the system and Ardia agree that Ardia is the app in front"],
+      ["whether macOS and Nilla agree that Nilla is the app in front", "whether the system and Nilla agree that Nilla is the app in front"],
       ["window was still on a screen, either though macOS reported it covered", "window was still on a screen, either though the system reported it covered"],
-      ["one the ardia command or a debugger started and left behind, or one macOS refused to start.", "one the ardia command or a debugger started and left behind, or one the system refused to start."],
+      ["one the nilla-browser command or a debugger started and left behind, or one macOS refused to start.", "one the nilla-browser command or a debugger started and left behind, or one the system refused to start."],
       [
-        "whether macOS gave Ardia location access, you said no in macOS's prompt, it was already off in System Settings, or the check failed, one event each time.",
-        "whether the desktop's location service (GeoClue) let Ardia ask for the location, refused it, or the check failed, one event each time.",
+        "whether macOS gave Nilla location access, you said no in macOS's prompt, it was already off in System Settings, or the check failed, one event each time.",
+        "whether the desktop's location service (GeoClue) let Nilla ask for the location, refused it, or the check failed, one event each time.",
       ],
       ["and the copy kept on this Mac is deleted.", "and the copy kept on this computer is deleted."],
       [`title: "Kept on this Mac"`, `title: "Kept on this computer"`],
@@ -116,7 +108,7 @@ export const LINUX_WORDING: readonly Wording[] = [
       ["Bringing your last window back from the Dock or at launch", "Bringing your last window back from the taskbar or at launch"],
       ["How many times ⌘Y asked for the History", "How many times Ctrl+Y asked for the History"],
       [
-        "summed up once an hour, and when Ardia can't post one or the system refuses it: how long its title and message were, whether it had an icon, whether posting failed in Ardia itself and the kind of error it was, and the error code the system gave. Never the notification's text",
+        "summed up once an hour, and when Nilla can't post one or the system refuses it: how long its title and message were, whether it had an icon, whether posting failed in Nilla itself and the kind of error it was, and the error code the system gave. Never the notification's text",
         "summed up once an hour. Never the notification's text",
       ],
     ],
@@ -152,8 +144,8 @@ export const LINUX_WORDING: readonly Wording[] = [
         "`The system keyring didn't allow access to ${source.name}'s Safe Storage key. Try again, or skip the encrypted data.`",
       ],
       [
-        "`${NOT_BROUGHT} macOS didn't allow Ardia to ask Dia for them. Allow it in System Settings › Privacy & Security › Automation, then import again.`",
-        "`${NOT_BROUGHT} Ardia wasn't allowed to ask Dia for them.`",
+        "`${NOT_BROUGHT} macOS didn't allow Nilla to ask Dia for them. Allow it in System Settings › Privacy & Security › Automation, then import again.`",
+        "`${NOT_BROUGHT} Nilla wasn't allowed to ask Dia for them.`",
       ],
       [
         "\"Dia's Favorites weren't imported: they're in its sidebar file, which needs the keychain access you skipped.\"",
@@ -235,7 +227,7 @@ export function linuxWording(): Plugin {
   const applied = new Set<string>();
   let building = false;
   return {
-    name: "ardia-linux:wording",
+    name: "nilla-linux:wording",
     enforce: "pre",
     configResolved(config) {
       building = config.command === "build";

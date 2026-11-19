@@ -35,7 +35,7 @@ export function Meadow({ night, style, testID, intro, onIntro, onTone }: MeadowP
     if (event.kind === "fallback") setLive(false);
     onIntro?.(event);
   };
-  if (intro) MeadowPage ??= requireNativeViewManager<MeadowProps>("ArdiaMeadowPage");
+  if (intro) MeadowPage ??= requireNativeViewManager<MeadowProps>("NillaMeadowPage");
   const poster = !night && !live && size && size.width > 0 && size.height > 0 ? nearestPoster(size.width / size.height) : null;
   return (
     <View pointerEvents="none" testID={testID} style={[style, { overflow: "hidden" }]} onLayout={onLayout}>

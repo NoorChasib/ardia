@@ -72,7 +72,7 @@ const MODULE_FALLBACKS: Record<string, Record<string, Fallback>> = {
   ArdiaReport: REPORT_FALLBACKS,
   ArdiaTelemetryLocal: TELEMETRY_LOCAL_METHODS,
   ArdiaSystem: { runningAppIcon: answer(null) },
-  ArdiaCli: { install: refuse("The ardia command") },
+  ArdiaCli: { install: refuse("The nilla-browser command") },
   ArdiaSwipe: { haptic: now(undefined) },
   ArdiaWindowBackdrop: { holdKeyLook: answer(undefined) },
   ArdiaConfig: { watch: answer(undefined), writeSchemas: answer([]) },

@@ -1,2 +1,2 @@
-export { blocking } from "@ardia/phone-native";
-export type { BlockingCategory, BlockingState, FilterList } from "@ardia/phone-native";
+export { blocking } from "@nilla/phone-native";
+export type { BlockingCategory, BlockingState, FilterList } from "@nilla/phone-native";

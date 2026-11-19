@@ -5,7 +5,7 @@ import { PLATFORM_TERMS } from "../../lib/platformTerms";
 import { keyText } from "../commands/keyText";
 
 export const SETUP_CODE_VERSION = 1;
-export const SETUP_CODE_PREFIX = `ardia${SETUP_CODE_VERSION}-`;
+export const SETUP_CODE_PREFIX = `nilla${SETUP_CODE_VERSION}-`;
 export const SETUP_CODE_MAX_LENGTH = 160;
 export const SETUP_CODE_MAX_INPUT = SETUP_CODE_MAX_LENGTH * 8;
 
@@ -66,7 +66,7 @@ export const SETTING_FIELDS: { [K in SetupSettingKey]: Field<Settings[K]> } = {
   bookmarksBar: { key: "v", values: ["always", "newTab", "never"] },
 };
 
-const PRESET_FIELD: Field<Preset> = { key: "p", values: ["arc", "dia", "chrome", "safari", "firefox", "zen", "brave", "edge", "fresh", "helium", "chromium", "vivaldi", "opera"] };
+const PRESET_FIELD: Field<Preset> = { key: "p", values: ["arc", "dia", "chrome", "safari", "firefox", "zen", "brave", "edge", "fresh", "helium", "chromium", "vivaldi", "opera", "ardia"] };
 const COLOR_FIELD: Field<ProfileColor> = { key: "x", values: ["plum", "blue", "purple", "pink", "red", "orange", "yellow", "green", "neutral"] };
 const PINS_KEY = "f";
 
@@ -81,9 +81,9 @@ const CHECK_SPACE = 36 ** CHECK_DIGITS;
 export const SETUP_CODE_ERRORS = {
   empty: "Paste a setup code first.",
   shape: `That doesn't look like a setup code. It starts with ${SETUP_CODE_PREFIX}`,
-  newer: "That code is from a newer Ardia. Update Ardia, then paste it again.",
-  damaged: "That code looks cut off or mistyped. Copy it again from ardia.dev.",
-  nothing: "That code has nothing this version of Ardia can apply.",
+  newer: "That code is from a newer Nilla. Update Nilla, then paste it again.",
+  damaged: "That code looks cut off or mistyped. Copy it again from the demo.",
+  nothing: "That code has nothing this version of Nilla can apply.",
 } as const;
 
 function checksum(body: string): string {
@@ -147,7 +147,7 @@ export function decodeSetupCode(input: string): SetupCodeResult {
   const code = normalizeSetupCode(input);
   if (!code) return { ok: false, error: SETUP_CODE_ERRORS.empty };
   if (code.length > SETUP_CODE_MAX_LENGTH) return { ok: false, error: SETUP_CODE_ERRORS.shape };
-  const version = /^ardia(\d{1,3})-/.exec(code);
+  const version = /^nilla(\d{1,3})-/.exec(code);
   if (!version) return { ok: false, error: SETUP_CODE_ERRORS.shape };
   if (Number(version[1]) > SETUP_CODE_VERSION) return { ok: false, error: SETUP_CODE_ERRORS.newer };
   if (version[0] !== SETUP_CODE_PREFIX) return { ok: false, error: SETUP_CODE_ERRORS.shape };

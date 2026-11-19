@@ -7,9 +7,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-const USAGE = `usage: ARDIA_LOGIN_PASSWORD=<password> node scripts/linux/password-heap-check.mjs --executable <ardia> --results <dir> [--dark]
+const USAGE = `usage: ARDIA_LOGIN_PASSWORD=<password> node scripts/linux/password-heap-check.mjs --executable <nilla> --results <dir> [--dark]
 
-Types passwords into the login-password fallback dialog of a real Ardia build
+Types passwords into the login-password fallback dialog of a real Nilla build
 and scans the browser process's memory for copies of them.
 Runs under X11 (DISPLAY, xdotool and ImageMagick's import), as a user whose
 login password is ARDIA_LOGIN_PASSWORD, where polkit can't ask (no system bus).
@@ -30,7 +30,7 @@ Each flow's answer must match (cancelled, cancelled, granted). Three scans:
   after close   once every dialog has closed, no 10-character window of any
                 typed password is left, as UTF-8 or UTF-16
 
-  --executable PATH  the packaged launcher, e.g. <package>/ardia/bin/ardia
+  --executable PATH  the packaged launcher, e.g. <package>/nilla/bin/ardia
   --results DIR      report.json, the browser log and dialog captures
   --dark             run with --force-dark-mode
 
@@ -183,7 +183,7 @@ async function main() {
     process.stderr.write(`${USAGE}\n`);
     return 2;
   }
-  const ardia = await import(join(lib, "ardia.mjs"));
+  const nilla = await import(join(lib, "nilla.mjs"));
   const seed = await import(join(lib, "seed.mjs"));
   await mkdir(options.results, { recursive: true });
   const scratch = join(options.results, "profile");
@@ -205,13 +205,13 @@ async function main() {
     await pause(1500);
     const found = await xdotool("search", "--onlyvisible", "--name", " - Ardia$").catch(() => ({ stdout: "" }));
     const id = found.stdout.trim().split("\n").filter(Boolean)[0];
-    if (!id) throw new Error("no Ardia window to type into");
+    if (!id) throw new Error("no Nilla window to type into");
     await xdotool("windowfocus", id).catch(() => {});
     await pause(300);
   };
   const key = (...keys) => xdotool("key", "--delay", "60", ...keys);
 
-  const app = await ardia.launchArdia({
+  const app = await nilla.launchNilla({
     executable: options.executable,
     scratch,
     background: false,
@@ -324,7 +324,7 @@ async function main() {
   } finally {
     await writeFile(join(options.results, "report.json"), JSON.stringify(report, null, 2));
     await writeFile(join(options.results, "browser.log"), await app.logText());
-    await ardia.closeAllApps().catch(() => {});
+    await nilla.closeAllApps().catch(() => {});
   }
   process.stdout.write(`${report.verdict ?? "error"}\n`);
   return status;

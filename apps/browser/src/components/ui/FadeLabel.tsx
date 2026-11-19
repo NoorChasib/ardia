@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { FadeLabel as NativeFadeLabel, type FadeLabelProps } from "@ardia/shell";
+import { FadeLabel as NativeFadeLabel, type FadeLabelProps } from "@nilla/shell";
 import { activeLook } from "../../lib/activeLook";
 import type { FontWeight } from "../../lib/themeLook";
 import { useScopedTheme } from "./theme";

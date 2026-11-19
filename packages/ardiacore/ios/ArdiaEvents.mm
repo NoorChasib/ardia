@@ -15,7 +15,7 @@ NSString *DomainOf(NSString *name) {
 
 }
 
-@implementation ArdiaEvents
+@implementation NillaEvents
 
 + (void)setSender:(void (^)(NSString *, NSDictionary *))sender forDomain:(NSString *)domain {
   Senders()[domain] = [sender copy];
@@ -26,7 +26,7 @@ NSString *DomainOf(NSString *name) {
 }
 
 + (void)emit:(NSString *)name data:(NSDictionary *)data {
-  if ([name isEqualToString:@"downloads.changed"] && data) data = [ArdiaDownloadMover.shared noteDownloadEvent:data];
+  if ([name isEqualToString:@"downloads.changed"] && data) data = [NillaDownloadMover.shared noteDownloadEvent:data];
   if (void (^sender)(NSString *, NSDictionary *) = Senders()[DomainOf(name)]) sender(name, data ?: @{});
 }
 

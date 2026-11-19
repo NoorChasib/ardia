@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mobileSetSources, mobileSuggest } from "@ardia/core/src/mobile.ts";
+import { mobileSetSources, mobileSuggest } from "@nilla/core/src/mobile.ts";
 
 const WORDS = ["otter", "lisbon", "news", "wiki", "github", "docs", "example", "tapas", "train", "weather", "maps", "mail"];
 const ADDRESS = "https://en.wikipedia.org/wiki/Otter_conservation_in_Lisbon";

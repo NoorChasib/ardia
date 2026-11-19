@@ -1,5 +1,6 @@
 import { requireOptionalNativeModule } from "expo-modules-core";
 import type { Listing, Transport } from "./scopeState.ts";
+import { ownSyncFoldersOnly } from "./upstreamSyncFolder.ts";
 
 export type FolderInfo = {
   path: string;
@@ -52,7 +53,7 @@ type SyncNative = {
   takeFileCounts?(): { placeholders: number; busy: number; hydrated: number };
 };
 
-export const SyncNative = requireOptionalNativeModule<SyncNative>("ArdiaSync");
+export const SyncNative = ownSyncFoldersOnly(requireOptionalNativeModule<SyncNative>("NillaSync"));
 
 export const folderTransport = (native: SyncNative, folder: string): Transport => ({
   write: (scope, payload) => native.write(folder, scope, payload),

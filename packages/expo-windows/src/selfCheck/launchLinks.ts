@@ -4,12 +4,12 @@ import { launchAddresses } from "../launchLinks/addresses";
 import type { WindowsHostModule } from "../nativeModuleTypes";
 import { expectEqual, expectTrue, type Check } from "./check";
 
-const host = () => TurboModuleRegistry.getEnforcing<WindowsHostModule>("ArdiaWindowsHost");
+const host = () => TurboModuleRegistry.getEnforcing<WindowsHostModule>("NillaWindowsHost");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export const checks: Check[] = [
   {
-    name: "ArdiaWindowsHost.launchArguments reads this launch's switches and no address",
+    name: "NillaWindowsHost.launchArguments reads this launch's switches and no address",
     run() {
       const launch = host().launchArguments();
       expectTrue(Array.isArray(launch?.arguments), `arguments is ${JSON.stringify(launch?.arguments)}`);
@@ -24,11 +24,11 @@ export const checks: Check[] = [
     async run() {
       const received: unknown[] = [];
       let delivered = 0;
-      emitWhenListened("ArdiaSelfCheck", "held", { n: 1 }, () => delivered++);
-      const subscription = addNativeListener("ArdiaSelfCheck", "held", (payload) => received.push(payload));
+      emitWhenListened("NillaSelfCheck", "held", { n: 1 }, () => delivered++);
+      const subscription = addNativeListener("NillaSelfCheck", "held", (payload) => received.push(payload));
       try {
         await settled(50);
-        const second = addNativeListener("ArdiaSelfCheck", "held", () => received.push("again"));
+        const second = addNativeListener("NillaSelfCheck", "held", () => received.push("again"));
         await settled(50);
         second.remove();
         expectEqual(received, [{ n: 1 }], "events received");

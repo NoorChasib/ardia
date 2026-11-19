@@ -56,7 +56,7 @@ lists_image() {
   sidecar="$cache/$candidate/$name"
   if [ ! -f "$sidecar" ]; then
     mkdir -p "$run/$candidate" "$cache/$candidate"
-    gh release download "$candidate" -R "$REPO" -p "$name" -D "$run/$candidate" >/dev/null 2>&1 || return 2
+    gh release download "$candidate" -R "$ENGINE_REPO" -p "$name" -D "$run/$candidate" >/dev/null 2>&1 || return 2
     mv -f "$run/$candidate/$name" "$sidecar"
   fi
   row="$(image_row "$sidecar")"
@@ -72,8 +72,8 @@ if [ -n "$tag" ]; then
 else
   page=1 engines=0
   while [ -z "$row" ]; do
-    releases="$(gh api "repos/$REPO/releases?per_page=100&page=$page" --jq '.[] | [.tag_name, ([.assets[].name] | join(" "))] | @tsv')" \
-      || die "couldn't list $REPO's releases: is gh signed in?"
+    releases="$(gh api "repos/$ENGINE_REPO/releases?per_page=100&page=$page" --jq '.[] | [.tag_name, ([.assets[].name] | join(" "))] | @tsv')" \
+      || die "couldn't list $ENGINE_REPO's releases: is gh signed in?"
     [ -n "$releases" ] || break
     while IFS=$'\t' read -r candidate assets; do
       [[ "$candidate" == engine-* ]] || continue
@@ -86,7 +86,7 @@ else
     done <<<"$releases"
     page=$((page + 1))
   done
-  [ "$engines" -gt 0 ] || die "$REPO has no engine-* releases"
+  [ "$engines" -gt 0 ] || die "$ENGINE_REPO has no engine-* releases"
 fi
 [ -n "$row" ] || die "no engine release lists the image $uuid: its symbols weren't published (releases before the symbols were uploaded have none)"
 
@@ -95,7 +95,7 @@ binary="$cache/$tag/symbols/$rel"
 if [ "$(image_uuid "$binary" "$arch" 2>/dev/null || true)" != "$uuid" ]; then
   name="$(engine_symbols_name "$tag")"
   mkdir -p "$run/$tag/symbols"
-  gh release download "$tag" -R "$REPO" -p "$name" -D "$run/$tag" || die "couldn't download $name from $tag"
+  gh release download "$tag" -R "$ENGINE_REPO" -p "$name" -D "$run/$tag" || die "couldn't download $name from $tag"
   tar -xJf "$run/$tag/$name" -C "$run/$tag/symbols" "$rel" || die "couldn't unpack $rel from $name"
   found="$(image_uuid "$run/$tag/symbols/$rel" "$arch" || true)"
   [ "$found" = "$uuid" ] || die "$rel in $tag has UUID ${found:-none}, not $uuid"

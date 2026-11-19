@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import ArdiaSyncCore
+@testable import NillaSyncCore
 
 private final class StuckPresenter: NSObject, NSFilePresenter {
   let presentedItemURL: URL?

@@ -119,7 +119,7 @@ try {
     : await launch(app, {
         data, fresh: true, onboarded: true,
         session: session({ tabs: [{ id: "home", url: "about:blank", title: "Home" }] }),
-        ready: "return !!globalThis.expo?.modules?.ArdiaEngine && Object.keys(ac.store.getState().windows).length > 0",
+        ready: "return !!globalThis.expo?.modules?.NillaEngine && Object.keys(ac.store.getState().windows).length > 0",
       });
 } catch (e) {
   console.log(`FAIL launch: ${e.message}`);

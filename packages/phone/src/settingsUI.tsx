@@ -25,7 +25,7 @@ export type ProfilePresetName = "plum" | "blue" | "purple" | "pink" | "red" | "o
 
 export type SetupProgress = "done" | "current" | "upcoming";
 
-export const SETTINGS_UI_MODULE = "ArdiaPhoneSettingsUI";
+export const SETTINGS_UI_MODULE = "NillaPhoneSettingsUI";
 
 export const settingsUIAvailable = () => requireOptionalNativeModule(SETTINGS_UI_MODULE) !== null;
 
@@ -112,30 +112,30 @@ export const spaceSymbol = (icon?: string | null): string | null => spaceFunctio
 
 export const spaceColor = (name?: string | null): { light: string; dark: string } | null => spaceFunctions()?.spaceColor(name ?? null) ?? null;
 
-const ardia = (name: string, params: Record<string, unknown> = {}): ModifierConfig | null => (settingsUIAvailable() ? modifierHelpers().createModifier(`ardia.${name}`, params) : null);
+const nilla = (name: string, params: Record<string, unknown> = {}): ModifierConfig | null => (settingsUIAvailable() ? modifierHelpers().createModifier(`nilla.${name}`, params) : null);
 
 export const spaceBackdrop = (look: SpaceLook & { animated?: boolean }) =>
-  ardia("spaceBackdrop", { color: look.color ?? null, icon: look.icon ?? null, themeColors: look.themeColors ?? [], themeDarkColors: look.themeDarkColors ?? null, animated: look.animated ?? true });
+  nilla("spaceBackdrop", { color: look.color ?? null, icon: look.icon ?? null, themeColors: look.themeColors ?? [], themeDarkColors: look.themeDarkColors ?? null, animated: look.animated ?? true });
 
-export const settingsChrome = () => ardia("settingsChrome");
+export const settingsChrome = () => nilla("settingsChrome");
 
-export const settingsPage = (title: string) => ardia("settingsPage", { title });
+export const settingsPage = (title: string) => nilla("settingsPage", { title });
 
-export const chromeSurface = (params: { shape: "circle" | "capsule" | "rounded"; cornerRadius?: number; interactive?: boolean; tinted?: boolean }) => ardia("chromeSurface", params);
+export const chromeSurface = (params: { shape: "circle" | "capsule" | "rounded"; cornerRadius?: number; interactive?: boolean; tinted?: boolean }) => nilla("chromeSurface", params);
 
-export const settingsSwitchStyle = () => ardia("settingsSwitchStyle");
+export const settingsSwitchStyle = () => nilla("settingsSwitchStyle");
 
-export const pressableStyle = () => ardia("pressableStyle");
+export const pressableStyle = () => nilla("pressableStyle");
 
-export const legibleInk = (tint: SettingsTintName | "formAccent") => ardia("legibleInk", { tint });
+export const legibleInk = (tint: SettingsTintName | "formAccent") => nilla("legibleInk", { tint });
 
 export const profileLook = (look: LookColors & { usesGlass?: boolean }) =>
-  ardia("profileLook", { color: look.color ?? null, themeColors: look.themeColors ?? [], darkThemeColors: look.darkThemeColors ?? null, usesGlass: look.usesGlass ?? true });
+  nilla("profileLook", { color: look.color ?? null, themeColors: look.themeColors ?? [], darkThemeColors: look.darkThemeColors ?? null, usesGlass: look.usesGlass ?? true });
 
-export const navigationBarBackButtonHidden = (hidden: boolean) => ardia("navigationBarBackButtonHidden", { hidden });
+export const navigationBarBackButtonHidden = (hidden: boolean) => nilla("navigationBarBackButtonHidden", { hidden });
 
-export const minListRowHeight = (height: number) => ardia("minListRowHeight", { height });
+export const minListRowHeight = (height: number) => nilla("minListRowHeight", { height });
 
-export const contentMargins = (params: { edges: "top" | "bottom" | "all"; length: number }) => ardia("contentMargins", params);
+export const contentMargins = (params: { edges: "top" | "bottom" | "all"; length: number }) => nilla("contentMargins", params);
 
 export const modifierList = (...items: (ModifierConfig | null | undefined | false)[]): ModifierConfig[] => items.filter((item): item is ModifierConfig => !!item);

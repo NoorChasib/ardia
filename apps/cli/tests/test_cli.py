@@ -15,9 +15,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import automation_cli, browsing, cli, endpoint
+from nilla_browser_cli import automation_cli, browsing, cli, endpoint
 
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 ENV_NAMES = ("ARDIA_PORT", "ARDIA_WS", "ARDIA_CDP_URL", "ARDIA_DATA_DIR", "AGENT_BROWSER_CDP")
 
 
@@ -88,7 +88,7 @@ class SharedFlags(unittest.TestCase):
             seen["args"] = args
             return 0
 
-        from ardia_cli import scripts_cli
+        from nilla_browser_cli import scripts_cli
 
         with clean_env(), mock.patch.object(scripts_cli, "run", capture):
             status, _, err = run_cli("--port", "9351", "--ws", "ws://h/devtools/browser/x", "--json", "scripts", "test", "a.user.ts")
@@ -117,7 +117,7 @@ class Browse(unittest.TestCase):
             seen["argv"] = argv
             return 0
 
-        from ardia_cli.browse import cli as browse_cli
+        from nilla_browser_cli.browse import cli as browse_cli
 
         with clean_env(**env), mock.patch.object(browse_cli, "main", capture):
             status, _, err = run_cli(*argv)
@@ -146,7 +146,7 @@ class Browse(unittest.TestCase):
         with clean_env():
             status, _, err = run_cli("--timeout", "5", "browse", "snapshot")
         self.assertEqual(status, 1)
-        self.assertIn("ardia browse doesn't take --timeout", err)
+        self.assertIn("nilla-browser browse doesn't take --timeout", err)
 
 
 class Resolve(unittest.TestCase):
@@ -175,7 +175,7 @@ class RemovedExec(unittest.TestCase):
                 status, out, err = run_cli(*argv)
             self.assertEqual(status, 2, argv)
             self.assertIn("unknown command 'exec'", err)
-            self.assertIn("ardia browse", err)
+            self.assertIn("nilla-browser browse", err)
             self.assertEqual(out, "")
 
     def test_other_unknown_command(self):
@@ -185,15 +185,15 @@ class RemovedExec(unittest.TestCase):
         self.assertIn("unknown command 'nope'", err)
 
     def test_runner_is_gone(self):
-        self.assertIsNone(importlib.util.find_spec("ardia_cli.runner"))
+        self.assertIsNone(importlib.util.find_spec("nilla_browser_cli.runner"))
 
 
 class Notes(unittest.TestCase):
     def test_passes_the_rest_through(self):
         seen = {}
-        fake = types.ModuleType("ardia_cli.notes")
+        fake = types.ModuleType("nilla_browser_cli.notes")
         fake.main = lambda argv: seen.setdefault("argv", argv) and 7
-        with clean_env(), mock.patch.dict(sys.modules, {"ardia_cli.notes": fake}):
+        with clean_env(), mock.patch.dict(sys.modules, {"nilla_browser_cli.notes": fake}):
             status, _, _ = run_cli("--data-dir", "/d", "notes", "add", "--json", "hi")
         self.assertEqual(status, 7)
         self.assertEqual(seen["argv"], ["--data-dir", "/d", "add", "--json", "hi"])
@@ -219,8 +219,8 @@ class BrowsingCommands(unittest.TestCase):
         control.write_text(json.dumps({"port": 1, "browser": "/devtools/browser/abc", "token": "t" * 24, "pid": os.getpid(), "generation": 1}))
         control.chmod(0o600)
         if self.linux:
-            (chromium / "Default" / "Ardia").mkdir()
-            (chromium / "Default" / "Ardia" / "linux-session.json").write_text(json.dumps(self.session()))
+            (chromium / "Default" / "Nilla").mkdir()
+            (chromium / "Default" / "Nilla" / "linux-session.json").write_text(json.dumps(self.session()))
         else:
             (self.data / "session.json").write_text(json.dumps(self.session()))
         self.history(chromium / "Default" / "History")

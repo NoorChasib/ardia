@@ -1,4 +1,4 @@
-import { labLog, sync, syncLab, type PhoneInbox, type ReceivedTab, type SyncedView, type SyncStatus } from "@ardia/phone-native";
+import { labLog, sync, syncLab, type PhoneInbox, type ReceivedTab, type SyncedView, type SyncStatus } from "@nilla/phone-native";
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 

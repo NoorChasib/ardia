@@ -8,6 +8,7 @@ import { useReportSheet } from "../../browser/src/state/report/store.ts";
 import { APP_COMMAND_HANDLERS } from "../../browser/src/state/commands/appCommands.ts";
 import { LINUX_REPORT_TEMPLATE, openReport } from "./reportProblem.ts";
 import { APP_LAUNCH_LOCK, APP_LAUNCH_MARK, FRESH_PROFILE_DOCUMENT, LAUNCH_STEPS, LINUX_APP_COMMANDS, UTILITY_APP_COMMANDS, claimAppLaunch, hostLaunchRecord, onboardingAction, recordFreshProfile, runAppCommand, runLaunchServices, serveUtilityCommands, startAppCommands } from "./appServices.ts";
+import { overrideServicesForTests, resetServicesForTests } from "@nilla/core/src/services.testing.ts";
 
 const capabilities = { defaultBrowser: false, launchAtLogin: false, thinScrollBars: false, webkit: false, cliControl: false, cliInstall: false, externalLinks: false, performanceRecording: false, taskManager: false };
 
@@ -252,37 +253,29 @@ const tabsIn = (windowId) => Object.values(useBrowser.getState().tabs).filter((t
 const tabURL = (tab) => tab.url ?? tab.navigation?.url ?? "";
 const waitFor = async (check) => { for (let i = 0; i < 100 && !check(); i++) await new Promise((resolve) => setTimeout(resolve, 5)); };
 
-test("Report a Problem opens one prefilled GitHub issue in the window that asked, since the sheet can't send from Linux", async () => {
+test("Report a Problem opens one GitHub issue page with a static body in the window that asked, since the sheet can't send from Linux", async () => {
   const { first, second } = twoWindows();
   useReportSheet.setState(useReportSheet.getInitialState(), true);
   const before = tabsIn(first).length;
   assert.equal(runAppCommand(first, "reportProblem", capabilities), true);
   await waitFor(() => tabsIn(first).length > before);
-  const opened = tabsIn(first).filter((tab) => tabURL(tab).startsWith("https://github.com/mantrakp04/ardia/issues/new?body="));
+  const opened = tabsIn(first).filter((tab) => tabURL(tab).startsWith("https://github.com/NoorChasib/nilla/issues/new?body="));
   assert.equal(opened.length, 1);
   const body = decodeURIComponent(tabURL(opened[0]).split("?body=")[1]);
-  assert.ok(body.startsWith(LINUX_REPORT_TEMPLATE), body);
-  assert.match(body, /Windows: 2 \(\+0 incognito\)/);
+  assert.equal(body, LINUX_REPORT_TEMPLATE);
+  assert.doesNotMatch(tabURL(opened[0]), /Windows|incognito|tabs/);
   assert.equal(tabsIn(second).length, 1);
   assert.equal(useReportSheet.getState().windowId, null);
 });
 
-test("Report a Problem from the check-in or the command bar reaches the same issue page, and a build's own https feedback page wins", async () => {
+test("Report a Problem from the check-in reaches the same issue page, and a window that can't take it opens nothing", async () => {
   const { first } = twoWindows();
-  appInfo.feedbackURL = "https://feedback.example/new?text=%s";
-  try {
-    await openReport(first, "check_in");
-    assert.ok(tabsIn(first).some((tab) => tabURL(tab).startsWith("https://feedback.example/new?text=What%20happened%3F")));
-    appInfo.feedbackURL = "http://insecure.example/?q=%s";
-    await openReport(first);
-    assert.ok(tabsIn(first).some((tab) => tabURL(tab).startsWith("https://github.com/mantrakp04/ardia/issues/new?body=")));
-    const count = tabsIn(first).length;
-    await openReport("settings");
-    await openReport(null);
-    assert.equal(tabsIn(first).length, count);
-  } finally {
-    delete appInfo.feedbackURL;
-  }
+  await openReport(first, "check_in");
+  assert.ok(tabsIn(first).some((tab) => tabURL(tab).startsWith("https://github.com/NoorChasib/nilla/issues/new?body=What%20happened%3F")));
+  const count = tabsIn(first).length;
+  await openReport("settings");
+  await openReport(null);
+  assert.equal(tabsIn(first).length, count);
 });
 
 test("the shared command handler never also runs an app command Linux runs itself, so nothing opens twice", () => {
@@ -361,23 +354,23 @@ test("only the renderer that runs launch steps leaves the evidence mark", async 
 test("release notes still open when the holder died between recording versionUpdated and version", async () => {
   const { first } = twoWindows();
   appInfo.appVersion = "4.0";
-  appInfo.releaseNotesURL = "https://ardia.dev/release-notes";
+  overrideServicesForTests({ releaseNotesUrl: "https://notes.example.test/release-notes" });
   appInfo.forceReleaseNotes = true;
   docs.set("release-notes.json", JSON.stringify({ lastVersion: "4.0", pending: null, version: 1 }));
   docs.set("onboarding.json", JSON.stringify({ completedAt: 1, version: 1 }));
   try {
     const record = await launch(first, { done: new Set(["versionUpdated"]), savedSession: true });
     assert.deepEqual(record.completions, ["version", "onboarding", "releaseNotes", "defaultBrowserOffer"]);
-    assert.ok(Object.values(useBrowser.getState().tabs).some((tab) => (tab.url ?? tab.navigation?.url ?? "").startsWith("https://ardia.dev/release-notes")));
+    assert.ok(Object.values(useBrowser.getState().tabs).some((tab) => (tab.url ?? tab.navigation?.url ?? "").startsWith("https://notes.example.test/release-notes")));
   } finally {
-    delete appInfo.releaseNotesURL;
+    resetServicesForTests();
     delete appInfo.forceReleaseNotes;
   }
 });
 
 test("a changed app version counts as an update but opens no release-notes tab on an isolated or unreleased build, even with a release-notes page set", async () => {
   const releaseNoteTabs = () => Object.values(useBrowser.getState().tabs).filter((tab) => tabURL(tab).includes("release-notes"));
-  appInfo.releaseNotesURL = "https://ardia.dev/release-notes";
+  overrideServicesForTests({ releaseNotesUrl: "https://notes.example.test/release-notes" });
   try {
     for (const [before, after] of [["156.0.8078.79", "0.2.44-nightly.3"], ["0.2.44-nightly.3", "156.0.8078.79"]]) {
       const { first } = twoWindows();
@@ -398,7 +391,7 @@ test("a changed app version counts as an update but opens no release-notes tab o
     assert.equal(releaseNoteTabs().length, 1);
   } finally {
     appInfo.appVersion = "1.0";
-    delete appInfo.releaseNotesURL;
+    resetServicesForTests();
     delete appInfo.forceReleaseNotes;
   }
 });

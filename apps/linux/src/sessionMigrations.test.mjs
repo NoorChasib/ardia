@@ -57,14 +57,14 @@ test("every shared migration after the saved version runs, in order, on the shap
     for (const step of Object.keys(original)) {
       Object.defineProperty(table, step, { configurable: true, enumerable: true, writable: true, value: (doc) => { seen.push(Number(step)); return original[step](doc); } });
     }
-    const saved = olderSession({ littleArdiaOpensNewTabLinks: false });
+    const saved = olderSession({ littleNillaOpensNewTabLinks: false });
     const shaped = linuxSessionShape(saved);
     assert.deepEqual(seen, Array.from({ length: added - SNIFFED_SESSION_VERSION }, (_, i) => SNIFFED_SESSION_VERSION + i));
-    assert.equal("littleArdiaOpensNewTabLinks" in shaped.settings, false);
+    assert.equal("littleNillaOpensNewTabLinks" in shaped.settings, false);
     seen.length = 0;
-    const stampedOneBehind = linuxSessionShape({ ...olderSession({ littleArdiaOpensNewTabLinks: false }), version: added - 1 });
+    const stampedOneBehind = linuxSessionShape({ ...olderSession({ littleNillaOpensNewTabLinks: false }), version: added - 1 });
     assert.deepEqual(seen, [added - 1]);
-    assert.equal(stampedOneBehind.settings.littleArdiaOpensNewTabLinks, false);
+    assert.equal(stampedOneBehind.settings.littleNillaOpensNewTabLinks, false);
     assert.equal("showUnreadCounts" in stampedOneBehind.settings, false);
 
     seen.length = 0;

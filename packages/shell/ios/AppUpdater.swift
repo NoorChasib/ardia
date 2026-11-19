@@ -8,7 +8,7 @@ public final class AppUpdater: NSObject {
   static var feedOverride: String? {
     let config = LaunchConfig.shared
     if let feed = config.instance("updateFeed") ?? UserDefaults.standard.string(forKey: "ACUpdateFeedURL") { return feed }
-    return config.background ? "https://github.com/mantrakp04/ardia/releases/latest/download/appcast.xml" : nil
+    return ServicesConfig.macFeedURL?.absoluteString
   }
 
   static let channelDefaultsKey = "ACUpdateChannel"
@@ -86,7 +86,7 @@ public final class AppUpdater: NSObject {
       case .release(let waits):
         for wait in waits { quitWaits.removeValue(forKey: wait)?() }
       case .log(let line):
-        NSLog("Ardia: \(line)")
+        NSLog("Nilla: \(line)")
       }
     }
   }
@@ -94,14 +94,14 @@ public final class AppUpdater: NSObject {
   private func checkSwitchedChannel() {
     switchCheck.handle(.started)
     guard updater.canCheckForUpdates else {
-      NSLog("Ardia: Sparkle can't check the \(channel) channel after the switch yet")
+      NSLog("Nilla: Sparkle can't check the \(channel) channel after the switch yet")
       return switchCheck.handle(.finished(failed: true))
     }
     userDriver.quietCheck = !switchCheck.userAsked
     updater.checkForUpdates()
   }
 
-  private static let files = DispatchQueue(label: "com.ardia.updater.staged-copies", qos: .userInitiated)
+  private static let files = DispatchQueue(label: "com.nilladigital.nilla.updater.staged-copies", qos: .userInitiated)
 
   static let quitWaitLimit: TimeInterval = 8
 
@@ -139,15 +139,16 @@ public final class AppUpdater: NSObject {
     return "\(version[..<range.lowerBound]) Nightly \(number)"
   }
 
-  static let aboutNotice = "© 2026 Mantra Patel. Ardia is free software under the GNU General Public License v3, with ABSOLUTELY NO WARRANTY. Its source is at the link below. It's built on Chromium and uBlock Origin, each under its own license."
+  static let aboutNotice = "© 2026 Noor Chasib. Based on Ardia, © 2026 Mantra Patel. Nilla is free software under the GNU General Public License v3, with ABSOLUTELY NO WARRANTY. Its source is at the link below. It's built on Chromium, Helium and uBlock Origin, each under its own license."
 
   @objc public func showAbout(_ sender: Any?) {
     NSApp.orderFrontStandardAboutPanel(options: [.applicationVersion: Self.displayVersion, .credits: Self.aboutCredits])
   }
 
+  static let sourceRef = "main"
+
   private static var aboutCredits: NSAttributedString {
-    let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
-    let repository = "https://github.com/mantrakp04/ardia"
+    let repository = ServicesConfig.sourceURL.absoluteString
     let centered = NSMutableParagraphStyle()
     centered.alignment = .center
     let plain: [NSAttributedString.Key: Any] = [
@@ -156,9 +157,9 @@ public final class AppUpdater: NSObject {
       .paragraphStyle: centered,
     ]
     let links = [
-      ("Source code", "\(repository)/tree/v\(version)"),
-      ("License", "\(repository)/blob/v\(version)/LICENSE"),
-      ("Credits", "\(repository)/blob/v\(version)/NOTICE"),
+      ("Source code", "\(repository)/tree/\(sourceRef)"),
+      ("License", "\(repository)/blob/\(sourceRef)/LICENSE"),
+      ("Credits", "\(repository)/blob/\(sourceRef)/NOTICE"),
     ]
     let credits = NSMutableAttributedString(string: "\(aboutNotice)\n\n", attributes: plain)
     for (index, (title, url)) in links.enumerated() {
@@ -171,7 +172,7 @@ public final class AppUpdater: NSObject {
   }
 
   private static var isOff: Bool {
-    LaunchConfig.shared.isolated && LaunchConfig.shared.instance("updateFeed") == nil
+    LaunchConfig.shared.isolated && LaunchConfig.shared.instance("updateFeed") == nil && !ServicesConfig.testsMacFeed
   }
 
   private lazy var userDriver = ChannelUserDriver(
@@ -197,7 +198,7 @@ public final class AppUpdater: NSObject {
   public var isConfigured: Bool {
     guard !Self.isOff else { return false }
     let info = Bundle.main.infoDictionary ?? [:]
-    let feed = (Self.feedOverride ?? info["SUFeedURL"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+    let feed = (Self.feedOverride ?? "").trimmingCharacters(in: .whitespaces)
     let key = (info["SUPublicEDKey"] as? String ?? "").trimmingCharacters(in: .whitespaces)
     guard let scheme = URL(string: feed)?.scheme?.lowercased() else { return false }
     return (scheme == "https" || scheme == "http") && !key.isEmpty
@@ -211,7 +212,7 @@ public final class AppUpdater: NSObject {
     do {
       try updater.start()
     } catch {
-      NSLog("Ardia: couldn't start the updater: \(error.localizedDescription)")
+      NSLog("Nilla: couldn't start the updater: \(error.localizedDescription)")
     }
     sessionObservation = updater.observe(\.sessionInProgress, options: [.new]) { [weak self] _, change in
       guard change.newValue == false else { return }
@@ -224,7 +225,7 @@ public final class AppUpdater: NSObject {
   @objc public func checkForUpdates(_ sender: Any?) {
     guard isConfigured else {
       if LaunchConfig.shared.background {
-        return NSLog("Ardia: update checks are off in this instance")
+        return NSLog("Nilla: update checks are off in this instance")
       }
       return showNotSetUp()
     }
@@ -295,12 +296,12 @@ extension AppUpdater: SPUUpdaterDelegate {
   }
 
   public func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
-    NSLog("Ardia: update found: \(item.displayVersionString) (build \(item.versionString)\(item.channel.map { ", \($0)" } ?? "")) on the \(channel) channel")
+    NSLog("Nilla: update found: \(item.displayVersionString) (build \(item.versionString)\(item.channel.map { ", \($0)" } ?? "")) on the \(channel) channel")
     switchCheck.handle(.found(version: Self.displayVersion(of: item.displayVersionString)))
   }
 
   public func updaterDidNotFindUpdate(_ updater: SPUUpdater, error: Error) {
-    NSLog("Ardia: no update on the \(channel) channel")
+    NSLog("Nilla: no update on the \(channel) channel")
     let reason = ((error as NSError).userInfo[SPUNoUpdateFoundReasonKey] as? NSNumber).flatMap { SPUNoUpdateFoundReason(rawValue: $0.int32Value) }
     switchCheck.handle(.notFound(newerThanLatest: reason == .onNewerThanLatestVersion))
   }

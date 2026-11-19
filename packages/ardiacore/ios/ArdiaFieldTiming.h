@@ -6,12 +6,12 @@ NS_ASSUME_NONNULL_BEGIN
 extern "C" {
 #endif
 
-BOOL ArdiaFieldTimingEnabled(void);
-double ArdiaFieldNow(void);
-void ArdiaFieldMark(NSString *_Nullable key, NSString *kind, double at);
-void ArdiaFieldMarkNow(NSString *_Nullable key, NSString *kind);
-void ArdiaFieldMarkAtCommit(NSString *_Nullable key, NSString *kind);
-void ArdiaWebViewsSetFieldTiming(BOOL on);
+BOOL NillaFieldTimingEnabled(void);
+double NillaFieldNow(void);
+void NillaFieldMark(NSString *_Nullable key, NSString *kind, double at);
+void NillaFieldMarkNow(NSString *_Nullable key, NSString *kind);
+void NillaFieldMarkAtCommit(NSString *_Nullable key, NSString *kind);
+void NillaWebViewsSetFieldTiming(BOOL on);
 
 #ifdef __cplusplus
 }

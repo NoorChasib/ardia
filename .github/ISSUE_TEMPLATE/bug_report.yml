@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in Ardia crashes, got worse, or behaves wrong.
+description: Something in Nilla crashes, got worse, or behaves wrong.
 labels: [bug]
 body:
   - type: textarea
@@ -13,8 +13,8 @@ body:
     id: version
     attributes:
       label: Version and channel
-      description: Settings › General shows both.
-      placeholder: 0.2.42, nightly
+      description: Settings › General shows both, or the commit you built from.
+      placeholder: 0.1.0, development build at 1a2b3c4
     validations:
       required: true
   - type: dropdown
@@ -44,5 +44,5 @@ body:
     id: crash-report
     attributes:
       label: Crash report
-      description: If it crashed, paste the report from ~/Library/Logs/DiagnosticReports.
+      description: If it crashed, paste the report (on a Mac, from ~/Library/Logs/DiagnosticReports).
       render: text

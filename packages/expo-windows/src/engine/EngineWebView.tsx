@@ -64,7 +64,7 @@ const PICTURE_DEADLINE_MS = 1000;
 
 type Picture = Awaited<ReturnType<WebViewHandle["capturePicture"]>>;
 
-const appWindows = () => requireNativeModule<Pick<AppWindowsModule, "setPageFullScreen" | "capturePage">>("ArdiaAppWindows");
+const appWindows = () => requireNativeModule<Pick<AppWindowsModule, "setPageFullScreen" | "capturePage">>("NillaAppWindows");
 
 type Shown = { visible: boolean; placed: string; shows: number };
 
@@ -198,7 +198,7 @@ export const EngineWebView = forwardRef<unknown, Props>(function EngineWebView(p
               };
             }
             return async () => {
-              noteMissing(`<ArdiaWebView>.${method}`);
+              noteMissing(`<NillaWebView>.${method}`);
               return Object.hasOwn(ANSWERS, method) ? ANSWERS[method] : null;
             };
           },

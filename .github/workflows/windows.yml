@@ -18,7 +18,7 @@ on:
       - ".github/workflows/windows.yml"
       - ".github/actions/bun-install/**"
   push:
-    branches: [main, t3/windows-linux-release-priority]
+    branches: [main]
     paths:
       - "apps/browser/windows/**"
       - "apps/browser/NuGet.config"
@@ -37,7 +37,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version; set, the run also names the installers Ardia-<version>-windows-<cpu>-setup.exe and packs the engine's source, as the artifacts windows-release-x64, windows-release-arm64 and windows-release-source
+        description: Release version; set, the run also names the installers Nilla-<version>-windows-<cpu>-setup.exe and packs the engine's source, as the artifacts windows-release-x64, windows-release-arm64 and windows-release-source
         type: string
         default: ""
   workflow_call:
@@ -48,10 +48,10 @@ on:
         required: true
     outputs:
       version:
-        description: The version stamped in Ardia.build.json
+        description: The version stamped in Nilla.build.json
         value: ${{ jobs.identity.outputs.version }}
       build:
-        description: The build number stamped in Ardia.build.json
+        description: The build number stamped in Nilla.build.json
         value: ${{ jobs.identity.outputs.build }}
 
 permissions:
@@ -62,28 +62,15 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  gate:
+  depth:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: read
     outputs:
-      run: ${{ steps.vouch.outputs.run }}
       full: ${{ steps.depth.outputs.full }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          persist-credentials: false
-          sparse-checkout: .github
-      - id: vouch
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          retries: 3
-          script: |
-            const vouch = require(`${process.env.GITHUB_WORKSPACE}/.github/vouch/vouch.cjs`);
-            await vouch.gate({ github, context, core });
       - id: depth
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
@@ -98,8 +85,6 @@ jobs:
             core.info(full ? "Full run: compile, tours and installers." : "Fast run: reuse a built app when the native code is unchanged, then launch it.");
 
   identity:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
@@ -111,23 +96,23 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
-          sparse-checkout: apps/browser/macos/Ardia.xcodeproj/project.pbxproj
+          sparse-checkout: apps/browser/macos/Nilla.xcodeproj/project.pbxproj
           sparse-checkout-cone-mode: false
       - id: identity
         env:
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};.*/\1/p' apps/browser/macos/Ardia.xcodeproj/project.pbxproj | head -1)
+          project=$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};.*/\1/p' apps/browser/macos/Nilla.xcodeproj/project.pbxproj | head -1)
           version="${RELEASE_VERSION:-$project}"
           [[ "$version" =~ ^[0-9A-Za-z][0-9A-Za-z.+-]{0,63}$ ]] || { echo "::error::'$version' isn't a version the updater reads"; exit 1; }
           build=$(git rev-list --count HEAD)
           { echo "version=$version"; echo "build=$build"; } >> "$GITHUB_OUTPUT"
-          echo "Ardia $version, Windows build $build (the commits in $(git rev-parse --short HEAD)'s history)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Nilla $version, Windows build $build (the commits in $(git rev-parse --short HEAD)'s history)" >> "$GITHUB_STEP_SUMMARY"
 
   source:
     needs: identity
-    if: inputs.version
+    if: inputs.version && vars.NILLA_RELEASES_ENABLED
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -141,7 +126,7 @@ jobs:
           BUILD: ${{ needs.identity.outputs.build }}
         run: |
           set -euo pipefail
-          out="$RUNNER_TEMP/source/Ardia-$VERSION-windows-source.tar.xz"
+          out="$RUNNER_TEMP/source/Nilla-$VERSION-windows-source.tar.xz"
           mkdir -p "$(dirname "$out")"
           scripts/windows/engine-source.sh "$GITHUB_SHA" "$VERSION" "$BUILD" "$out"
           (cd "$(dirname "$out")" && sha256sum "$(basename "$out")" > "$(basename "$out").sha256")
@@ -155,8 +140,6 @@ jobs:
           retention-days: 14
 
   javascript:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -171,22 +154,29 @@ jobs:
         run: |
           entry=index.js
           if [ -f index.windows.js ]; then entry=index.windows.js; fi
-          out="$RUNNER_TEMP/windows-javascript"
+          out="$GITHUB_WORKSPACE/.ci/windows-javascript"
           mkdir -p "$out/Bundle"
           bun x --no-install @react-native-community/cli bundle --platform windows --entry-file "$entry" --bundle-output "$out/Bundle/index.windows.bundle" --assets-dest "$out/Bundle" --dev false --reset-cache --sourcemap-output "$RUNNER_TEMP/index.windows.bundle.packager.map" --minify false
           echo "bundled $entry: $(find "$out/Bundle" -type f | wc -l) files, index.windows.bundle is $(sha256sum "$out/Bundle/index.windows.bundle" | cut -d' ' -f1) before Hermes"
           echo "it holds $(grep -c $'\r' "$out/Bundle/index.windows.bundle" || true) lines with a carriage return"
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+      - name: Hand React Native for Windows' licence to the jobs that ship it
+        run: |
+          set -euo pipefail
+          from=apps/browser/node_modules/react-native-windows
+          [ -f "$from/package.json" ] || from=node_modules/react-native-windows
+          to="$GITHUB_WORKSPACE/.ci/windows-javascript/node_modules/react-native-windows"
+          mkdir -p "$to"
+          cp "$from/LICENSE" "$from/package.json" "$to/"
+          echo "handed over the LICENSE of react-native-windows $(node -p "require(process.argv[1]).version" "$to/package.json")"
+      - name: Hand the bundle to the jobs that launch it
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          name: windows-javascript
-          path: ${{ runner.temp }}/windows-javascript
-          if-no-files-found: error
-          compression-level: 1
-          retention-days: 1
+          path: .ci/windows-javascript
+          key: windows-run-javascript-${{ github.run_id }}
+          enableCrossOsArchive: true
 
   app:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
+    needs: depth
     runs-on: windows-latest
     timeout-minutes: 75
     env:
@@ -194,7 +184,7 @@ jobs:
       SLUG: x64
       APP: apps/browser/windows/x64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
     outputs:
       compiled: ${{ steps.built.outputs.cache-hit != 'true' }}
       key: ${{ steps.native.outputs.key }}
@@ -253,7 +243,7 @@ jobs:
           $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
           $msbuild = "$vs\MSBuild\Current\Bin\arm64\MSBuild.exe"
           "Building with $msbuild"
-          & $msbuild windows\Ardia.sln /nologo /restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform=ARM64 /p:AppxBundle=Never /p:RunAutolinkCheck=false /p:PreferredToolArchitecture=arm64 "/clp:NoSummary;NoItemAndPropertyList;Verbosity=normal" "/bl:windows\msbuild_arm64_build.binlog" "/flp1:errorsonly;logfile=windows\msbuild_arm64_build.err" "/flp2:warningsonly;logfile=windows\msbuild_arm64_build.wrn"
+          & $msbuild windows\Nilla.sln /nologo /restore /p:RestorePackagesConfig=true /p:Configuration=Release /p:Platform=ARM64 /p:AppxBundle=Never /p:RunAutolinkCheck=false /p:PreferredToolArchitecture=arm64 "/clp:NoSummary;NoItemAndPropertyList;Verbosity=normal" "/bl:windows\msbuild_arm64_build.binlog" "/flp1:errorsonly;logfile=windows\msbuild_arm64_build.err" "/flp2:warningsonly;logfile=windows\msbuild_arm64_build.wrn"
           exit $LASTEXITCODE
       - name: Keep the Hermes compiler beside the built app
         if: steps.built.outputs.cache-hit != 'true'
@@ -276,30 +266,25 @@ jobs:
           key: ${{ steps.native.outputs.key }}
       - name: Hand the built app to the jobs that launch it
         if: steps.built.outputs.cache-hit != 'true'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          name: windows-built-${{ env.SLUG }}
           path: |
             ${{ env.APP }}
             .ci/windows-hermes
-          include-hidden-files: true
-          if-no-files-found: error
-          compression-level: 1
-          retention-days: 1
+          key: windows-run-built-${{ env.SLUG }}-${{ github.run_id }}
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: build-logs-${{ env.SLUG }}
+          name: nilla-dev-${{ github.sha }}-windows-build-${{ env.SLUG }}-logs
           path: |
             apps/browser/windows/**/*.binlog
             apps/browser/windows/**/*.err
             apps/browser/windows/**/*.wrn
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
 
   arm64-app:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
+    needs: depth
     runs-on: windows-11-arm
     timeout-minutes: 90
     env:
@@ -307,17 +292,16 @@ jobs:
       SLUG: arm64
       APP: apps/browser/windows/ARM64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
     outputs:
       compiled: ${{ steps.built.outputs.cache-hit != 'true' }}
       key: ${{ steps.native.outputs.key }}
     steps: *build_steps
 
   x64:
-    needs: [gate, identity, javascript, app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, app]
     runs-on: windows-latest
-    timeout-minutes: 60
+    timeout-minutes: 75
     permissions:
       contents: write
     env:
@@ -327,7 +311,7 @@ jobs:
       NO_INPUT: "false"
       APP: apps/browser/windows/x64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.app.outputs.compiled }}
       KEY: ${{ needs.app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}
@@ -339,8 +323,10 @@ jobs:
           sparse-checkout: |
             scripts/windows
             apps/browser/windows/Ardia
-            apps/browser/macos/Ardia.xcodeproj
+            apps/browser/macos/Nilla.xcodeproj
             packages/import/fixtures/home
+            third_party/bangs
+            packages/demo/src/shims/web/symbols
       - name: Check the launch script's process tree
         if: env.SLUG == 'x64' && env.PART == 'launch'
         shell: pwsh
@@ -353,12 +339,19 @@ jobs:
         if: env.SLUG == 'x64' && env.PART == 'launch'
         shell: pwsh
         run: scripts/windows/relaunch-facts.test.ps1
+      - name: Check the no-upstream watch's rules and proxy
+        if: env.PART == 'launch'
+        shell: pwsh
+        run: scripts/windows/upstream-watch.test.ps1
       - name: Take the app this run compiled
         if: env.COMPILED == 'true'
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          name: windows-built-${{ env.SLUG }}
-          path: .
+          path: |
+            ${{ env.APP }}
+            .ci/windows-hermes
+          key: windows-run-built-${{ env.SLUG }}-${{ github.run_id }}
+          fail-on-cache-miss: true
       - name: Take the app built earlier from this native code
         if: env.COMPILED != 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
@@ -368,100 +361,112 @@ jobs:
             .ci/windows-hermes
           key: ${{ env.KEY }}
           fail-on-cache-miss: true
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
+      - name: Take the bundle this run made
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          name: windows-javascript
-          path: ${{ runner.temp }}/javascript
+          path: .ci/windows-javascript
+          key: windows-run-javascript-${{ github.run_id }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+      - name: Check the pinned package licences the package ships
+        if: env.PART == 'launch'
+        shell: pwsh
+        run: scripts/windows/package-licenses.test.ps1
       - name: Put this change's JavaScript in the built app
         if: env.COMPILED != 'true'
         shell: pwsh
-        run: scripts/windows/rebundle.ps1 -App $env:APP -Hermes $env:HERMES -Javascript "${{ runner.temp }}/javascript"
+        run: scripts/windows/rebundle.ps1 -App $env:APP -Hermes $env:HERMES -Javascript "${{ github.workspace }}/.ci/windows-javascript"
       - name: The JavaScript bundled on Linux is what the build bundled
         if: env.COMPILED == 'true' && env.PART == 'launch'
         shell: pwsh
-        run: scripts/windows/rebundle.ps1 -App $env:APP -Hermes $env:HERMES -Javascript "${{ runner.temp }}/javascript" -Verify
-      - if: env.PART == 'launch'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: Ardia-windows-${{ env.SLUG }}-app
-          path: ${{ env.APP }}
-          if-no-files-found: error
-          compression-level: 1
-          retention-days: 7
+        run: scripts/windows/rebundle.ps1 -App $env:APP -Hermes $env:HERMES -Javascript "${{ github.workspace }}/.ci/windows-javascript" -Verify
       - name: Host manifest
         if: ${{ !cancelled() && env.PART == 'launch' }}
         shell: pwsh
         run: |
           $copy = Join-Path "${{ runner.temp }}" "host-manifest-check.exe"
-          Copy-Item "$env:APP/Ardia.exe" $copy
+          Copy-Item "$env:APP/Nilla.exe" $copy
           scripts/windows/host-manifest.ps1 -From "$env:APP/ArdiaApp.dll" -To $copy
       - name: Fetch the engine
         id: engine
-        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        if: ${{ !cancelled() }}
+        continue-on-error: true
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: scripts/windows/fetch-engine.ps1 -Cpu $env:SLUG -Out "${{ runner.temp }}/engine"
+        run: scripts/windows/fetch-engine.ps1 -Cpu $env:SLUG -Out "${{ runner.temp }}/engine" -Repository "${{ vars.WINDOWS_ENGINE_REPO || 'ardia-browser/ardia' }}"
       - name: Assemble with the engine
         id: assemble
         if: ${{ !cancelled() && steps.engine.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/assemble.ps1 -App $env:APP -Engine "${{ runner.temp }}/engine" -Out "${{ runner.temp }}/Ardia" -Version $env:VERSION -Build $env:BUILD
+        run: scripts/windows/assemble.ps1 -App $env:APP -Engine "${{ runner.temp }}/engine" -Out "${{ runner.temp }}/Nilla" -Version $env:VERSION -Build $env:BUILD
+      - name: The engine-dependent checks are unverified without an assembled engine
+        if: ${{ !cancelled() && steps.assemble.outcome != 'success' }}
+        shell: pwsh
+        env:
+          FETCHED: ${{ steps.engine.outcome }}
+          ASSEMBLED: ${{ steps.assemble.outcome }}
+        run: |
+          $reason = if ($env:FETCHED -ne 'success') { "the fetch ended $env:FETCHED (its log above has the reason)" } else { "the assembly ended $env:ASSEMBLED (its log above has the reason)" }
+          Write-Host "::warning::No assembled engine for $env:SLUG`: $reason. The install, relaunch, AUMID and engine tour checks, the no-upstream exercise and Chromium probe with the engine and the engine's bare launch are skipped: unverified, not passed. The watch and the bare launch still cover the app alone."
+          "- $env:SLUG engine: $reason; install, relaunch, AUMID, engine tours, the no-upstream exercise, the Chromium probe and the engine's bare launch **unverified** (skipped); the app alone is still watched and bare-launched, which verifies nothing about the engine's folders" >> $env:GITHUB_STEP_SUMMARY
       - name: Every DLL the assembled app needs is in it or in a clean Windows 11
         if: ${{ !cancelled() && steps.assemble.outcome == 'success' && env.PART == 'launch' }}
         shell: pwsh
-        run: scripts/windows/dependency-check.ps1 -App "${{ runner.temp }}/Ardia"
+        run: scripts/windows/dependency-check.ps1 -App "${{ runner.temp }}/Nilla"
+      - name: Watch for upstream traffic until the bare launch is done
+        id: watch
+        if: ${{ !cancelled() }}
+        timeout-minutes: 5
+        shell: pwsh
+        env:
+          ASSEMBLED: ${{ steps.assemble.outcome }}
+        run: |
+          $probe = if ($env:ASSEMBLED -eq 'success') { "${{ runner.temp }}/engine/chrome.exe" } else { "" }
+          scripts/windows/upstream-watch.ps1 -Start -Out "${{ runner.temp }}/no-upstream" -State "${{ runner.temp }}/no-upstream-state" -Program "$env:APP", "${{ runner.temp }}/Nilla" -ProgramFile "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe" -Installed (Join-Path $env:LOCALAPPDATA "Programs\Nilla") -EngineProgram "${{ runner.temp }}/Nilla/Nilla.exe", (Join-Path $env:LOCALAPPDATA "Programs\Nilla\Nilla.exe") -Probe $probe
       - name: Launch it
-        if: ${{ !cancelled() && (env.FULL == 'true' || steps.engine.outcome != 'success' || env.COMPILED == 'true') }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && (env.FULL == 'true' || steps.assemble.outcome != 'success' || env.COMPILED == 'true') }}
         timeout-minutes: 12
         shell: pwsh
-        run: scripts/windows/launch-smoke.ps1 -App "$env:APP/Ardia.exe" -Out "${{ runner.temp }}/launch" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
+        env: &watched
+          HTTPS_PROXY: ${{ steps.watch.outputs.proxy }}
+          HTTP_PROXY: ${{ steps.watch.outputs.proxy }}
+          NO_PROXY: 127.0.0.1,localhost,::1
+        run: scripts/windows/launch-smoke.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/launch" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
       - name: Tour
-        if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' }}
         continue-on-error: true
         timeout-minutes: 12
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/tour.ps1 -App "$env:APP/Ardia.exe" -Out "${{ runner.temp }}/tour"
+          scripts/windows/tour.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/tour"
           if (Test-Path "${{ runner.temp }}/tour/tour.md") { Get-Content "${{ runner.temp }}/tour/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Make the installer
         id: installer
-        if: ${{ !cancelled() && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
+        if: ${{ !cancelled() && env.PART == 'launch' && env.FULL == 'true' && steps.assemble.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/make-installer.ps1 -Source "${{ runner.temp }}/Ardia" -Out "${{ runner.temp }}/installer" -Cpu $env:SLUG -Version $env:VERSION
+        run: scripts/windows/make-installer.ps1 -Source "${{ runner.temp }}/Nilla" -Out "${{ runner.temp }}/installer" -Cpu $env:SLUG -Version $env:VERSION
       - name: Install and uninstall it
-        if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && steps.installer.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/installer-check.ps1 -Setup "${{ runner.temp }}/installer/Ardia-Setup-$env:SLUG.exe"
+        env: *watched
+        run: scripts/windows/installer-check.ps1 -Setup "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe"
       - name: Close and reopen the installed app
         id: relaunch
-        if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && steps.installer.outcome == 'success' }}
         timeout-minutes: 15
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/relaunch-check.ps1 -Setup "${{ runner.temp }}/installer/Ardia-Setup-$env:SLUG.exe" -Out "${{ runner.temp }}/relaunch"
+          scripts/windows/relaunch-check.ps1 -Setup "${{ runner.temp }}/installer/Nilla-Setup-$env:SLUG.exe" -Out "${{ runner.temp }}/relaunch"
           if (Test-Path "${{ runner.temp }}/relaunch/relaunch.md") { "### Close and reopen ($env:SLUG)" >> $env:GITHUB_STEP_SUMMARY; Get-Content "${{ runner.temp }}/relaunch/relaunch.md" | ForEach-Object { "- $_" } >> $env:GITHUB_STEP_SUMMARY }
-      - if: ${{ !cancelled() && steps.relaunch.outcome != 'skipped' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: relaunch-${{ env.SLUG }}
-          path: ${{ runner.temp }}/relaunch
-          if-no-files-found: ignore
-          retention-days: 14
       - name: Name it for a release
         id: release-files
         if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
         shell: pwsh
-        run: scripts/windows/release-files.ps1 -Installer "${{ runner.temp }}/installer" -Identity "${{ runner.temp }}/Ardia/Ardia.build.json" -Cpu $env:SLUG -Out "${{ runner.temp }}/release"
-      - if: ${{ !cancelled() && steps.installer.outcome == 'success' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: Ardia-Setup-${{ env.SLUG }}
-          path: ${{ runner.temp }}/installer
-          if-no-files-found: ignore
-          compression-level: 0
-          retention-days: 14
-      - if: ${{ inputs.version && steps.release-files.outcome == 'success' }}
+        run: scripts/windows/release-files.ps1 -Installer "${{ runner.temp }}/installer" -Identity "${{ runner.temp }}/Nilla/Nilla.build.json" -Cpu $env:SLUG -Out "${{ runner.temp }}/release"
+      - if: ${{ vars.NILLA_RELEASES_ENABLED && inputs.version && steps.release-files.outcome == 'success' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: windows-release-${{ env.SLUG }}
@@ -470,85 +475,148 @@ jobs:
           compression-level: 0
           retention-days: 14
       - name: Launch it with the engine
-        if: ${{ !cancelled() && steps.engine.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && steps.assemble.outcome == 'success' }}
         timeout-minutes: 12
         shell: pwsh
-        run: scripts/windows/launch-smoke.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/launch-engine" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
+        env: *watched
+        run: scripts/windows/launch-smoke.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/launch-engine" -Part $env:PART -NoInput:($env:NO_INPUT -eq 'true')
       - name: Tour the pages
-        if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.assemble.outcome == 'success' }}
         continue-on-error: true
         timeout-minutes: 20
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/tour-engine" -Only pages,peek,peek-dark,peek-tabs,peek-layouts
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/tour-engine" -Only pages,peek,peek-dark,peek-tabs,peek-layouts
           if (Test-Path "${{ runner.temp }}/tour-engine/tour.md") { Get-Content "${{ runner.temp }}/tour-engine/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Tour the first run
-        if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.assemble.outcome == 'success' }}
         timeout-minutes: 40
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/tour-first-run" -Only first-run
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/tour-first-run" -Only first-run
           if (Test-Path "${{ runner.temp }}/tour-first-run/tour.md") { Get-Content "${{ runner.temp }}/tour-first-run/tour.md" >> $env:GITHUB_STEP_SUMMARY }
       - name: Tour the typing
-        if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.engine.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && env.SLUG == 'x64' && env.PART == 'launch' && env.FULL == 'true' && steps.assemble.outcome == 'success' }}
         timeout-minutes: 18
         shell: pwsh
+        env: *watched
         run: |
-          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Ardia/Ardia.exe" -Out "${{ runner.temp }}/tour-typing" -Only typing
+          scripts/windows/tour.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/tour-typing" -Only typing
           if (Test-Path "${{ runner.temp }}/tour-typing/tour.md") { Get-Content "${{ runner.temp }}/tour-typing/tour.md" >> $env:GITHUB_STEP_SUMMARY }
+      - name: Exercise the network with the engine, timers included
+        if: ${{ !cancelled() && env.PART == 'launch' && steps.assemble.outcome == 'success' && steps.watch.outcome == 'success' }}
+        timeout-minutes: 16
+        shell: pwsh
+        env: *watched
+        run: |
+          $seconds = if ($env:FULL -eq 'true') { 660 } else { 120 }
+          scripts/windows/upstream-exercise.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/no-upstream/exercise" -Proxy "${{ steps.watch.outputs.proxy }}" -Seconds $seconds
+      - name: The tours and the installer left nothing of the upstream app's
+        if: ${{ !cancelled() }}
+        shell: pwsh
+        run: scripts/windows/upstream-traces.ps1 -Out "${{ runner.temp }}/no-upstream/traces-after-tours.json" -Label "after the tours and the installer check"
+      - name: Bare launch with the assembled engine, last on the runner (a known Layer 2 failure)
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && steps.assemble.outcome == 'success' }}
+        continue-on-error: true
+        timeout-minutes: 5
+        shell: pwsh
+        env: *watched
+        run: scripts/windows/bare-launch.ps1 -App "${{ runner.temp }}/Nilla/Nilla.exe" -Out "${{ runner.temp }}/bare-launch" -KnownLimit "The pinned engine's launch guard runs before the app (GuardBrowserLaunch in the engine's win/main.cc) and, with no ARDIA_DATA_DIR, creates the upstream app's folder in %LOCALAPPDATA% itself (AppDataDirectory in the engine's launch_guard.cc). Only a Nilla engine (Layer 2) or a boundary in front of the engine fixes it; until then this row fails and stays recorded as a Layer 2 limit."
+      - name: Bare launch of the app alone, last on the runner (unverified for the engine)
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' && steps.assemble.outcome != 'success' }}
+        timeout-minutes: 5
+        shell: pwsh
+        env: *watched
+        run: scripts/windows/bare-launch.ps1 -App "$env:APP/Nilla.exe" -Out "${{ runner.temp }}/bare-launch" -AppOnly
+      - name: Stop the watch and fail on any upstream attempt
+        if: ${{ !cancelled() && steps.watch.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: pwsh
+        run: scripts/windows/upstream-watch.ps1 -Stop -Out "${{ runner.temp }}/no-upstream" -State "${{ runner.temp }}/no-upstream-state"
+      - name: Only logs and smoke results go up
+        if: ${{ !cancelled() }}
+        shell: bash
+        env:
+          UPLOADS: relaunch launch-engine tour-engine tour-first-run tour-typing tour launch no-upstream bare-launch
+        run: |
+          set -euo pipefail
+          temp="$(cygpath -u "$RUNNER_TEMP" 2>/dev/null || printf '%s' "$RUNNER_TEMP")"
+          removed=0
+          for name in $UPLOADS; do
+            [ -d "$temp/$name" ] || continue
+            rm -rf "$temp/$name/cold-app"
+            while IFS= read -r -d '' file; do
+              magic="$(head -c 4 "$file" | od -An -tx1 | tr -d ' \n')"
+              case "$magic" in
+                4d5a* | 7f454c46 | cffaedfe | cefaedfe | cafebabe | 504b0304 | 1f8b* | fd377a58 | 28b52ffd | 377abcaf | 213c6172 | 4d534346) ;;
+                *) printf '%s\n' "$file" | grep -qiE '\.(exe|dll|sys|msi|msix|appx|node|so|dylib|deb|rpm|appimage|apk|ipa|dmg)$' || continue ;;
+              esac
+              echo "::error::${file#"$temp/"} is a program or an archive, not a log or a smoke result; it was removed before the upload"
+              rm -f "$file"
+              removed=1
+            done < <(find "$temp/$name" -type f -print0)
+          done
+          exit "$removed"
+      - if: ${{ !cancelled() && steps.relaunch.outcome != 'skipped' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: nilla-dev-${{ github.sha }}-windows-relaunch-${{ env.SLUG }}-logs
+          path: ${{ runner.temp }}/relaunch
+          if-no-files-found: ignore
+          retention-days: 3
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: launch-engine${{ env.SUFFIX }}
+          name: nilla-dev-${{ github.sha }}-windows-launch-engine${{ env.SUFFIX }}-logs
           path: |
             ${{ runner.temp }}/launch-engine
             !${{ runner.temp }}/launch-engine/*-data
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
       - if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: tour-engine
+          name: nilla-dev-${{ github.sha }}-windows-tour-engine-logs
           path: |
             ${{ runner.temp }}/tour-engine
             !${{ runner.temp }}/tour-engine/data
             ${{ runner.temp }}/tour-first-run
             !${{ runner.temp }}/tour-first-run/data
+            !${{ runner.temp }}/tour-first-run/cold-app
             ${{ runner.temp }}/tour-typing
             !${{ runner.temp }}/tour-typing/data
           if-no-files-found: ignore
-          retention-days: 14
-      - name: Remove the test marker
-        if: ${{ !cancelled() && env.PART == 'launch' && env.FULL == 'true' }}
-        shell: pwsh
-        run: Get-ChildItem -LiteralPath "${{ runner.temp }}/Ardia" -Recurse -File -Force -Filter "Ardia.test-build" -ErrorAction SilentlyContinue | Remove-Item -Force
-      - if: ${{ !cancelled() && env.PART == 'launch' && env.FULL == 'true' }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
-        with:
-          name: Ardia-windows-${{ env.SLUG }}
-          path: ${{ runner.temp }}/Ardia
-          if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
       - if: ${{ !cancelled() && env.SLUG == 'x64' && env.PART == 'launch' }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: tour
+          name: nilla-dev-${{ github.sha }}-windows-tour-logs
           path: ${{ runner.temp }}/tour
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: launch${{ env.SUFFIX }}
+          name: nilla-dev-${{ github.sha }}-windows-launch${{ env.SUFFIX }}-logs
           path: ${{ runner.temp }}/launch
           if-no-files-found: ignore
-          retention-days: 14
+          retention-days: 3
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: nilla-dev-${{ github.sha }}-windows-independence${{ env.SUFFIX }}-logs
+          path: |
+            ${{ runner.temp }}/no-upstream
+            ${{ runner.temp }}/bare-launch
+          if-no-files-found: ignore
+          retention-days: 3
 
   x64-gate:
-    needs: [gate, identity, javascript, app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, app]
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 50
     permissions:
       contents: write
     env:
@@ -558,7 +626,7 @@ jobs:
       NO_INPUT: "false"
       APP: apps/browser/windows/x64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.app.outputs.compiled }}
       KEY: ${{ needs.app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}
@@ -566,10 +634,9 @@ jobs:
     steps: *launch_steps
 
   arm64:
-    needs: [gate, identity, javascript, arm64-app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, arm64-app]
     runs-on: windows-11-arm
-    timeout-minutes: 60
+    timeout-minutes: 75
     permissions:
       contents: write
     env:
@@ -579,7 +646,7 @@ jobs:
       NO_INPUT: "true"
       APP: apps/browser/windows/ARM64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.arm64-app.outputs.compiled }}
       KEY: ${{ needs.arm64-app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}
@@ -587,10 +654,9 @@ jobs:
     steps: *launch_steps
 
   arm64-gate:
-    needs: [gate, identity, javascript, arm64-app]
-    if: needs.gate.outputs.run == 'true'
+    needs: [depth, identity, javascript, arm64-app]
     runs-on: windows-11-arm
-    timeout-minutes: 45
+    timeout-minutes: 50
     permissions:
       contents: write
     env:
@@ -600,7 +666,7 @@ jobs:
       NO_INPUT: "true"
       APP: apps/browser/windows/ARM64/Release
       HERMES: .ci/windows-hermes/hermes.exe
-      FULL: ${{ needs.gate.outputs.full }}
+      FULL: ${{ needs.depth.outputs.full }}
       COMPILED: ${{ needs.arm64-app.outputs.compiled }}
       KEY: ${{ needs.arm64-app.outputs.key }}
       VERSION: ${{ needs.identity.outputs.version }}

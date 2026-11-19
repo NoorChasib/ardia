@@ -1,7 +1,7 @@
 # Linux acceptance suite
 
-`apps/linux/scripts/acceptance` runs headless acceptance scenarios against a packaged Linux Ardia. Each scenario
-launches Ardia with throwaway profiles and checks a feature through the shell, the page and CDP. The suite prints one
+`apps/linux/scripts/acceptance` runs headless acceptance scenarios against a packaged Linux Nilla. Each scenario
+launches Nilla with throwaway profiles and checks a feature through the shell, the page and CDP. The suite prints one
 result per scenario as JSON:
 
 - `pass`: every check passed;
@@ -14,7 +14,7 @@ No scenario runs in CI. The package job runs `scripts/linux/smoke.mjs` only (see
 
 ```sh
 bun run --cwd apps/linux build
-bun run acceptance:linux <path to the packaged ardia executable> apps/linux/dist
+bun run acceptance:linux <path to the packaged executable> apps/linux/dist
 ```
 
 - **Where to run it.** From the repository root, from `apps/linux`, or from a folder with no `package.json` of its own.
@@ -26,7 +26,7 @@ bun run acceptance:linux <path to the packaged ardia executable> apps/linux/dist
   it was called from.)
 - **UI directory.** The second argument is optional. When given, the UI is loaded from it (`--ardia-ui-dir`);
   otherwise the bundled UI is used.
-- **`--only F01,#33`** runs a subset by scenario id or issue number.
+- **`--only F01,F23`** runs a subset by scenario id.
 - **`--list`** prints every scenario.
 - **`--results <dir>`** chooses where evidence goes. The default is a new temporary directory.
 - **`--keep`** keeps every scratch profile, not only failing ones.
@@ -39,7 +39,7 @@ Results go to stdout and to `<results>/results.json`. Each scenario writes its c
 `<results>/<id>/`. A failing scenario keeps its scratch profiles, including the browser log and `*-command.json` with
 the exact command line.
 
-`bun run --cwd apps/linux acceptance:self-test` tests the harness without an Ardia build: the CDP client against a
+`bun run --cwd apps/linux acceptance:self-test` tests the harness without a Nilla build: the CDP client against a
 mock peer, the launch plumbing and shell driver against a mock host, the runner and its report, the classifiers, the
 fixture servers and certificates, and `scripts/linux/smoke.mjs`. When `/usr/bin/chromium` (or
 `ARDIA_ACCEPTANCE_CHROMIUM`) is installed, it also checks SPKI trust, resolver mapping, gated downloads, synthesized
@@ -57,7 +57,7 @@ drops, kiosk print to PDF, process-group cleanup and the content blocker's bridg
   what is left.
 - **Seeds.** Profiles start with a one-window `linux-session.json` and a completed `onboarding.json`, unless the
   scenario tests those.
-- **Network.** `*.ardia.test` resolves to local fixture servers through `--host-resolver-rules`, and every other host
+- **Network.** `*.nilla.test` resolves to local fixture servers through `--host-resolver-rules`, and every other host
   to `NOTFOUND`, so nothing leaves the machine. HTTPS fixtures use a CA generated for the run, trusted only through
   `--ignore-certificate-errors-spki-list`. The default search engine's suggestion host is mapped to a local server that
   logs request headers.
@@ -66,19 +66,19 @@ Requirements: `openssl` and Node 22 or newer (for the built-in WebSocket client)
 
 ## Scenarios
 
-| Id | Issue | Checks |
-| --- | --- | --- |
-| F01 | #11 | Find, Print, Save Page and DevTools act on the exact pane |
-| F02 | #12 | Isolated and shared-data profiles, private windows |
-| F03 | #13 | Site panel connection security for HTTPS, HTTP, mixed, bad-certificate and internal pages |
-| F23 | #33 | History jumps of two or more, zoom feedback, reset and per-site persistence |
-| F08 | #18 | Download events, controls, settings and restart |
-| F09 | #19 | Extension management, toolbar action, popup and side panel, with `fixtures/extension/` |
-| F10 | #20 | Online search suggestions through the native host, only when enabled, and never from a private window |
-| F26 | #36 | Unsupported platform settings are hidden and startup has no backend rejections |
-| F27 | #37 | Onboarding starts once on a fresh profile and app services run once per launch |
-| F28 | #2341 | Sidebar rows and Top Apps tiles reorder by drag in a space the window switched to, not only the one it opened in |
-| F29 | — | Settings › Tabs › Close button position: the hover ✕ sits 6 pt from the row's end on the Right and over the favicon on the Left (tab, active, pinned, group member, split pane, live item and PR rows), titles don't move, Back to Pinned URL moves trailing beside a spinner or badge, renaming shows none, both sides close, unload and hide, at widths 160 and 400 with the sidebar on either side, and the choice survives a relaunch |
+| Id | Checks |
+| --- | --- |
+| F01 | Find, Print, Save Page and DevTools act on the exact pane |
+| F02 | Isolated and shared-data profiles, private windows |
+| F03 | Site panel connection security for HTTPS, HTTP, mixed, bad-certificate and internal pages |
+| F23 | History jumps of two or more, zoom feedback, reset and per-site persistence |
+| F08 | Download events, controls, settings and restart |
+| F09 | Extension management, toolbar action, popup and side panel, with `fixtures/extension/` |
+| F10 | Online search suggestions through the native host, only when enabled, and never from a private window |
+| F26 | Unsupported platform settings are hidden and startup has no backend rejections |
+| F27 | Onboarding starts once on a fresh profile and app services run once per launch |
+| F28 | Sidebar rows and Top Apps tiles reorder by drag in a space the window switched to, not only the one it opened in |
+| F29 | Settings › Tabs › Close button position: the hover ✕ sits 6 pt from the row's end on the Right and over the favicon on the Left (tab, active, pinned, group member, split pane, live item and PR rows), titles don't move, Back to Pinned URL moves trailing beside a spinner or badge, renaming shows none, both sides close, unload and hide, at widths 160 and 400 with the sidebar on either side, and the choice survives a relaunch |
 
 Each scenario's report lists its manual steps, such as touchpad pinch zoom, Web Store installs, popup placement and
 onboarding by hand.
@@ -88,8 +88,8 @@ onboarding by hand.
 A scenario that fails because a label or flow changed, rather than because the feature broke, says in the failing
 check's `detail` what it waited for. The kept scratch profile has the browser log.
 
-- **Shell hooks:** `ardiaLinux.store`, `emitCommand`, `webviews`, `extensions` and `openExtension`.
+- **Shell hooks:** `nillaLinux.store`, `emitCommand`, `webviews`, `extensions` and `openExtension`.
 - **Bridge:** `__ardiaHost.invoke`, `__ardiaHost.call` and `__ardiaHost.on`.
-- **Window marker:** `[data-ardia-linux-window]`.
+- **Window marker:** `[data-nilla-linux-window]`.
 - **Visible labels:** labels from the shared components, such as `Site Controls`, `Zoom: N%`, `Find on Page` and the
   Settings pane names.

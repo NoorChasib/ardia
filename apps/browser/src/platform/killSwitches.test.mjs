@@ -4,8 +4,13 @@ import { test } from "node:test";
 
 globalThis.__DEV__ = false;
 const { docs, launch } = await import("../test-native/index.ts");
+const SWITCHES_URL = "https://switches.example.test/switches.json";
+launch.services = { switchesUrl: SWITCHES_URL };
 const ks = await import("./killSwitches.ts");
-const { reloadLaunchConfigForTests } = await import("./launchConfig.ts");
+const { appServices, reloadLaunchConfigForTests } = await import("./launchConfig.ts");
+const { overrideServicesForTests, resetServicesForTests } = await import("@nilla/core/src/services.testing.ts");
+const { startKillSwitches } = await import("./killSwitchesLaunch.ts");
+const { firstWindowCommitted } = await import("../lib/afterFirstWindow.ts");
 
 const names = Object.keys(ks.SWITCHES);
 const reset = () => {
@@ -32,8 +37,13 @@ test("at most 8 live switches, each on by default with an owner and a removal da
   for (const name of names) assert.equal(ks.switchOn(name), true, `${name} defaults on`);
 });
 
-test("the site's switches.json is a version 1 file naming only switches the app knows, as booleans", () => {
-  const site = JSON.parse(readFileSync(new URL("../../../site/public/switches.json", import.meta.url), "utf8"));
+test("a services snapshot from the launch config is adopted before the first read", () => {
+  assert.equal(appServices().switchesUrl, SWITCHES_URL);
+  assert.equal(appServices().telemetryUrl, null);
+});
+
+test("the switches.json fixture is a version 1 file naming only switches the app knows, as booleans", () => {
+  const site = JSON.parse(readFileSync(new URL("./fixtures/switches.json", import.meta.url), "utf8"));
   assert.equal(site.version, 1);
   for (const [name, value] of Object.entries(site.switches)) {
     assert.ok(names.includes(name), `switches.json names ${name}, which the app doesn't have: remove it`);
@@ -87,7 +97,7 @@ test("a fetch asks for the plain URL (no cookies, no query), saves the answer, a
     return answer(file({ sidebarSlide: false, lazySidebarRows: false }))();
   };
   assert.equal(await ks.refreshSwitches(fetchFn), "updated");
-  assert.equal(asked.url, "https://ardia.dev/switches.json");
+  assert.equal(asked.url, SWITCHES_URL);
   assert.equal(asked.init.credentials, "omit");
   assert.equal(asked.init.headers, undefined);
   assert.ok(!asked.url.includes("?"));
@@ -160,4 +170,43 @@ test("every switch and experiment native and engine code read by name is in the 
     const registry = /^[sS]witchOn$/.test(kind) ? ks.SWITCHES : ks.EXPERIMENTS;
     assert.ok(Object.hasOwn(registry, name), `${kind}("${name}") reads a name the registry in platform/killSwitches.ts doesn't have`);
   }
+});
+
+test("with no switches URL nothing is fetched, cached remote values are ignored, and launch schedules nothing", async () => {
+  delete launch.services;
+  resetServicesForTests();
+  try {
+    reset();
+    docs.set("switches-cache.json", JSON.stringify(file({ sidebarSlide: false })));
+    let fetched = 0;
+    const fetchFn = async () => (fetched++, answer(file({ sidebarSlide: false }))());
+    assert.equal(await ks.refreshSwitches(fetchFn), "off");
+    assert.equal(ks.switchOn("sidebarSlide"), true);
+    let refreshed = null;
+    startKillSwitches(fetchFn, (result) => (refreshed = result));
+    firstWindowCommitted();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    assert.equal(fetched, 0);
+    assert.equal(refreshed, null);
+    launch.switches = { sidebarSlide: false };
+    reloadLaunchConfigForTests();
+    assert.equal(ks.switchOn("sidebarSlide"), false);
+  } finally {
+    launch.switches = {};
+    launch.services = { switchesUrl: SWITCHES_URL };
+    overrideServicesForTests({ switchesUrl: SWITCHES_URL });
+  }
+});
+
+test("with a switches URL, launch refreshes after the first window whatever the updater says", async () => {
+  overrideServicesForTests({ switchesUrl: SWITCHES_URL });
+  reset();
+  const asked = [];
+  let refreshed = null;
+  startKillSwitches(async (url) => (asked.push(url), answer(file({}))()), (result) => (refreshed = result));
+  firstWindowCommitted();
+  const deadline = Date.now() + 1000;
+  while (refreshed === null && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.deepEqual(asked, [SWITCHES_URL]);
+  assert.equal(refreshed, "updated");
 });

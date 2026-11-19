@@ -1,7 +1,7 @@
 import unittest
 
-from ardia_cli import command_metrics
-from ardia_cli.browse.script import split_command_line
+from nilla_browser_cli import command_metrics
+from nilla_browser_cli.browse.script import split_command_line
 
 
 class ScriptCommandLine(unittest.TestCase):

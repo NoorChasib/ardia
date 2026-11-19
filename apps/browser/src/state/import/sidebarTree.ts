@@ -1,4 +1,4 @@
-import { TAB_GROUP_COLORS, type TabGroupColor } from "@ardia/core";
+import { TAB_GROUP_COLORS, type TabGroupColor } from "@nilla/core";
 import type { BookmarkNode as ImportedNode, ImportedFavicon, SpaceSuggestion } from "../../platform/importModule";
 import { addGroupsFromDrafts } from "../bookmarks/bookmarkGroups";
 import type { GroupDraft } from "../groups/draftGroups";

@@ -81,7 +81,7 @@ function openDomBand({ hold, right }: RevealBandSide, entered: (point: EdgePoint
   const regions = inputRegions();
   if (!regions || typeof document === "undefined") return null;
   const band = document.createElement("div");
-  band.dataset.testid = "ardia-sidebar-reveal-band";
+  band.dataset.testid = "nilla-sidebar-reveal-band";
   Object.assign(band.style, {
     position: "fixed",
     top: "0",

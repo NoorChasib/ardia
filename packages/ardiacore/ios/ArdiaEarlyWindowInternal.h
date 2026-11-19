@@ -4,7 +4,7 @@
 
 #include <os/lock.h>
 
-@interface ArdiaEarlyShown : NSObject
+@interface NillaEarlyShown : NSObject
 @property(nonatomic, strong) NSWindow *window;
 @property(nonatomic, copy) NSString *appWindow;
 @property(nonatomic, copy) NSString *profile;
@@ -26,7 +26,7 @@
 @property(nonatomic, strong) id closeObserver;
 @end
 
-@interface ArdiaEarlyVeil : NSObject
+@interface NillaEarlyVeil : NSObject
 @property(nonatomic, strong) NSView *view;
 @property(nonatomic, strong) id inputBlock;
 @property(nonatomic) BOOL restoreFocus;
@@ -36,7 +36,7 @@
 @property(nonatomic, copy) NSString *armedShown;
 @end
 
-@interface ArdiaPageEmits : NSObject
+@interface NillaPageEmits : NSObject
 @property(nonatomic) NSUInteger generation;
 @property(nonatomic, strong) NSMutableOrderedSet<NSString *> *current;
 @property(nonatomic, strong) NSMutableOrderedSet<NSString *> *older;
@@ -44,7 +44,7 @@
 @property(nonatomic) CFTimeInterval firstEmitAt;
 @end
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 extern NSString *gLayoutPath;
 extern NSString *gDirectory;
@@ -58,29 +58,29 @@ extern dispatch_group_t gPrefetch;
 extern NSString *gLaunchURL;
 NSHashTable<ArdiaCoreTab *> *Watched();
 dispatch_queue_t Writer();
-NSMutableArray<ArdiaEarlyShown *> *Shown();
-ArdiaEarlyShown *ShownForWindow(NSWindow *window);
-NSString *StateOf(ArdiaSavedSession *session, NSString *windowId);
-NSString *ContentOf(ArdiaSavedSession *session, NSString *windowId);
+NSMutableArray<NillaEarlyShown *> *Shown();
+NillaEarlyShown *ShownForWindow(NSWindow *window);
+NSString *StateOf(NillaSavedSession *session, NSString *windowId);
+NSString *ContentOf(NillaSavedSession *session, NSString *windowId);
 bool ReadInsets(id value, CGFloat out[4]);
 bool Fits(const CGFloat insets[4], NSView *host);
 NSRect RectFromInsets(const CGFloat insets[4], NSView *host);
 NSString *PicturePath(NSString *windowId);
-BOOL CapturePicture(ArdiaWindowController *controller, NSString *windowId, NSMutableDictionary *layout);
+BOOL CapturePicture(NillaWindowController *controller, NSString *windowId, NSMutableDictionary *layout);
 void DropPictureFile(NSString *windowId);
 void LoadLayouts();
 void Record(BOOL wait);
 BOOL ShowsLaunchOrigin(ArdiaCoreTab *tab, NSString *launchURL);
 BOOL ReleaseFocusFrom(NSView *page);
 void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement);
-void DropCover(ArdiaEarlyShown *s);
-void ClearRootFill(ArdiaEarlyShown *s, NSView *root);
-void DropPictures(ArdiaEarlyShown *s);
-void HandOffPictures(ArdiaEarlyShown *s);
-void Forget(ArdiaEarlyShown *s);
-void Abandon(ArdiaEarlyShown *s);
+void DropCover(NillaEarlyShown *s);
+void ClearRootFill(NillaEarlyShown *s, NSView *root);
+void DropPictures(NillaEarlyShown *s);
+void HandOffPictures(NillaEarlyShown *s);
+void Forget(NillaEarlyShown *s);
+void Abandon(NillaEarlyShown *s);
 NSView *Cover(NSView *host, NSDictionary *layout, NSRect *pageRect);
-void Shield(ArdiaEarlyShown *s);
+void Shield(NillaEarlyShown *s);
 void ApplyLights(NSWindow *window, NSDictionary *layout);
 CGImageRef DecodeOutsideHeap(CGImageRef encoded);
 CGImageRef TakePrefetched(NSString *windowId);

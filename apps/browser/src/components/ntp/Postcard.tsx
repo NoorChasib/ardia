@@ -93,7 +93,7 @@ export function ReleaseNotesPostcard({ notes, size, onOpen, onDismiss }: { notes
             transform: [{ rotate: `${CARD.tilt}deg` }, { scale }],
           }}
         >
-          <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel="What's new in Ardia" style={FILL}>
+          <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel="What's new in Nilla" style={FILL}>
             <Panel style={StyleSheet.absoluteFill} radius={CARD.radius} fill={ink.clear} border={null} shadow={postcard.cardShadow} />
             <Artwork notes={notes} radius={CARD.radius} titleSize={40} hidden={{ top: CARD.overhangTop, right: CARD.overhangRight }} />
           </Pressable>
@@ -137,7 +137,7 @@ function Artwork({ notes, radius, titleSize, hidden }: { notes: ReleaseNotes; ra
     <View style={{ flex: 1, borderRadius: radius, overflow: "hidden", backgroundColor: mix(colors[0], colors[1], 0.5) }}>
       <WindowBackdrop colors={colors} angle={150} grainOpacity={0.1} style={StyleSheet.absoluteFill} />
       <View style={{ flex: 1, padding: pad, paddingTop: pad + (hidden?.top ?? 0), paddingRight: pad + (hidden?.right ?? 0), justifyContent: "space-between" }}>
-        <Text style={{ ...ntpType.artworkVersion, fontSize: ntpType.artworkVersion.fontSize * k, letterSpacing: ntpType.artworkVersion.letterSpacing * k, color: postcard.artworkVersion }}>{`ARDIA ${notes.version}`}</Text>
+        <Text style={{ ...ntpType.artworkVersion, fontSize: ntpType.artworkVersion.fontSize * k, letterSpacing: ntpType.artworkVersion.letterSpacing * k, color: postcard.artworkVersion }}>{`NILLA ${notes.version}`}</Text>
         <Text style={{ ...ntpType.artworkTitle, fontSize: titleSize, letterSpacing: ntpType.artworkTitle.letterSpacing * k, color: postcard.artworkTitle }}>{"What's new"}</Text>
       </View>
     </View>

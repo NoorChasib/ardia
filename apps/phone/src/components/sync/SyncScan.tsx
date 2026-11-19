@@ -63,7 +63,7 @@ export function SyncScan({ onScan, onEnterWords, onCancel, inline = false }: Pro
                 <Text accessibilityRole="header" style={[font.title3, styles.bold, styles.white]}>
                   Scan the Code on Your Mac
                 </Text>
-                <Text style={[font.subheadline, styles.soft]}>In Ardia on your Mac, open Settings › Sync › Connect Another Device.</Text>
+                <Text style={[font.subheadline, styles.soft]}>In Nilla on your Mac, open Settings › Sync › Connect Another Device.</Text>
               </View>
               <FinderCorners />
               {rejected ? (
@@ -81,7 +81,7 @@ export function SyncScan({ onScan, onEnterWords, onCancel, inline = false }: Pro
           <Unavailable
             icon="gearshape"
             title="Allow Camera Access"
-            message="Ardia uses the camera only to read the code your Mac shows. You can allow it in Settings, or type the 24 words instead."
+            message="Nilla uses the camera only to read the code your Mac shows. You can allow it in Settings, or type the 24 words instead."
             onSettings={openCameraSettings}
             onEnterWords={onEnterWords}
           />

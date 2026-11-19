@@ -304,15 +304,15 @@ const SCENARIOS = (() => {
 
 const HELPERS = `
 const st = () => ac.store.getState();
-const D = globalThis.expo.modules.ArdiaDev;
+const D = globalThis.expo.modules.NillaDev;
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const frames = (n) => new Promise((r) => { let k = 0; const f = () => (++k >= n ? r() : requestAnimationFrame(f)); requestAnimationFrame(f); });
 const nativeOf = (frame) => ac.engine.call("windows.list").then((ws) => {
   const found = ws.filter((w) => w.hasRoot).find((w) => { const r = w.frame.match(/[-\\d.]+/g).map(Number); return r.every((v, i) => Math.abs(v - frame[i]) < 1); });
   return found ? found.window : null;
 });
-const classify = (h) => /_NSTheme/.test(h) ? "L" : /^ArdiaShell\\.WindowDragRegion/.test(h) ? "D" : /^(RCTScrollContentView|NSClipView)/.test(h) ? "S" : /^NativeWidgetMac/.test(h) ? "E"
-  : /FileDragView/.test(h) ? "T" : /^(RCTView < )+ArdiaShell\\.ContextMenuArea < ArdiaShell\\.FileDropView/.test(h) ? "X" : "I";
+const classify = (h) => /_NSTheme/.test(h) ? "L" : /^NillaShell\\.WindowDragRegion/.test(h) ? "D" : /^(RCTScrollContentView|NSClipView)/.test(h) ? "S" : /^NativeWidgetMac/.test(h) ? "E"
+  : /FileDragView/.test(h) ? "T" : /^(RCTView < )+NillaShell\\.ContextMenuArea < NillaShell\\.FileDropView/.test(h) ? "X" : "I";
 const hitRow = (n, width, y) => {
   const xs = []; for (let x = 0; x < width; x++) xs.push(x);
   const out = [];

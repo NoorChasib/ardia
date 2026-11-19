@@ -1,4 +1,4 @@
-import { TAB_GROUP_COLORS } from "@ardia/core";
+import { TAB_GROUP_COLORS } from "@nilla/core";
 import { isFields, isNumber, isString } from "../../lib/decode";
 import type { GroupColor } from "../browser/types";
 

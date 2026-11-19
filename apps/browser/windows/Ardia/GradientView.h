@@ -14,7 +14,7 @@
 #include "MaterialSupport.h"
 #include "MaterialViewParts.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace GradientParts {
 

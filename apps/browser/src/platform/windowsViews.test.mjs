@@ -12,17 +12,17 @@ const sourcesIn = (folder) =>
     .map((file) => read(folder + file));
 
 const ASKED_BY = ["packages/shell/src/", "packages/ardiacore/src/", "packages/shaders/src/", "packages/import/src/", "packages/sync/src/"];
-const DRAWN_AS_NOTHING_ON_WINDOWS = ["ArdiaMeadow", "ArdiaPowerUp", "ArdiaReport", "ArdiaWebKit"];
+const DRAWN_AS_NOTHING_ON_WINDOWS = ["NillaMeadow", "NillaPowerUp", "NillaReport", "NillaWebKit"];
 
 const asked = () => {
   const names = new Set();
-  for (const folder of ASKED_BY) for (const source of sourcesIn(folder)) for (const [, name] of source.matchAll(/requireNativeViewManager(?:<[^(]*>)?\("(Ardia[A-Za-z]+)"\)/g)) names.add(name);
+  for (const folder of ASKED_BY) for (const source of sourcesIn(folder)) for (const [, name] of source.matchAll(/requireNativeViewManager(?:<[^(]*>)?\("(Nilla[A-Za-z]+)"\)/g)) names.add(name);
   return [...names].sort();
 };
 
 const known = () => {
   const names = new Set();
-  for (const source of [read("packages/expo-windows/src/views/index.ts"), read("packages/expo-windows/src/views/registry.tsx")]) for (const [, name] of source.matchAll(/\["(Ardia[A-Za-z]+)",/g)) names.add(name);
+  for (const source of [read("packages/expo-windows/src/views/index.ts"), read("packages/expo-windows/src/views/registry.tsx")]) for (const [, name] of source.matchAll(/\["(Nilla[A-Za-z]+)",/g)) names.add(name);
   return names;
 };
 

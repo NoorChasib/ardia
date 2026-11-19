@@ -1,0 +1,237 @@
+import { Button, ContextMenuArea, PinchArea, pinchScale, pinchSettle, reduceMotion, useHover, WindowBackdrop, WindowDragRegion, type PinchMotion, type SwipeEvent } from "../ui";
+import { setTrafficLightsCenter } from "../../state/windows/nativeWindow";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, StyleSheet, View } from "react-native";
+import { useTheme } from "../ui/theme";
+import { useProfileOrder } from "../../state/profiles/hooks";
+import { openPanel } from "../../state/windows/actions";
+import { useActiveTab, useSettings, useWindowFullScreen, useWindowId, useWindowProfile, useWindowUi } from "../../state/browser/hooks";
+import type { Tab } from "../../state/browser/types";
+import { CommandPanel } from "../omnibox/CommandPanel";
+import { ContentCard } from "../window/ContentCard";
+import { BrowserWindowControls } from "../window/BrowserWindowControls";
+import { DownloadsPopover } from "../downloads/Downloads";
+import { ExtensionOverlays } from "../extensions/ExtensionOverlays";
+import { ToolbarPopupAnchor } from "../extensions/ToolbarExtensions";
+import { setUrlAnchor, usePageFrameInset, windowCornerRadius } from "../../state/windows/layout";
+import { showUrlBarMenu } from "../../state/omnibox/paste";
+import { copyPageUrl } from "../../state/site/selection";
+import { ProfileBadge } from "../profiles/ProfileIcons";
+import { closeLittleNilla, openInMainWindow, openLittleNillaProfileMenu } from "../../state/littleNilla/actions";
+import { isWindowClosing } from "../../state/windows/closeAnimated";
+import { notePinch, noteSwipeClose } from "../../state/telemetry/usage";
+import { SwipeCloseContext } from "../window/swipeClose";
+import { useCardFrame } from "../window/cardFrame";
+import { startLittleNillaNewTabLinks } from "../../state/littleNilla/newTabLinks";
+import { PageLabel, SMALL_BAR_BUTTON, SmallBar } from "./SmallChrome";
+import { SMALL_LIGHTS_CENTER } from "../../state/windows/small";
+import { littleNillaBarLayout } from "./barLayout";
+import { HistoryButton } from "../toolbar/NavButtons";
+import { toolbarPalette } from "../ui/toolbarColors";
+import { useHistoryAvailability } from "../../state/tabs/navigation";
+import { LITTLE_NILLA_PINCH, LITTLE_NILLA_SWIPE_CLOSE, SMALL_FIELD_MAX_WIDTH, smallBarRow } from "./tokens";
+import { perLook } from "../ui/tokens";
+import { keyText } from "../../state/commands/keyText";
+
+const BAR = littleNillaBarLayout();
+const NAV_HIT = perLook(() => ({ width: SMALL_BAR_BUTTON, height: SMALL_BAR_BUTTON, plateX: 0, plateY: 0, box: smallBarRow().button, radius: smallBarRow().buttonRadius }));
+const BACK_AT = perLook(() => ({ style: { position: "absolute" as const, top: BAR.buttonTop, left: BAR.navLeft }, hit: NAV_HIT() }));
+const FORWARD_AT = perLook(() => ({ style: { position: "absolute" as const, top: BAR.buttonTop, left: BAR.navLeft + BAR.navPitch }, hit: NAV_HIT() }));
+const alreadyFocused = () => {};
+const SPREAD_STARTS = 0.0001;
+
+export function LittleNillaWindow() {
+  const theme = useTheme();
+  const windowId = useWindowId();
+  const fullScreen = useWindowFullScreen(windowId);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const frame = usePageFrameInset();
+  const cardRadius = useCardFrame().radius;
+  const gestures = !fullScreen;
+  const pinch = useLittleNillaPinch(windowId);
+  const swipe = useLittleNillaSwipeClose(windowId);
+  const windowRadius = windowCornerRadius();
+  const headroom = Math.min(BAR.height, windowRadius);
+  const corner = useMemo(
+    () => zoomedCorner(pinch.scale, { ...size, inset: frame, cardRadius, windowRadius }),
+    [pinch.scale, size.width, size.height, frame, cardRadius, windowRadius],
+  );
+  useEffect(startLittleNillaNewTabLinks, []);
+  return (
+    <View
+      style={{ flex: 1 }}
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+      }}
+    >
+      <Animated.View style={{ ...StyleSheet.absoluteFillObject, opacity: swipe.opacity, transform: [{ translateX: swipe.x }] }}>
+        <WindowBackdrop vibrancy {...theme.backdrop} colors={theme.windowTint} grainOpacity={theme.grain} style={StyleSheet.absoluteFill} />
+        <PinchArea enabled={gestures} motion={pinch.motion} style={StyleSheet.absoluteFill}>
+          <Animated.View style={{ flex: 1, transform: [{ scale: pinch.scale }] }}>
+            <SwipeCloseContext.Provider value={gestures ? swipe.onSwipe : null}>
+              <View style={{ flex: 1, flexDirection: "row", paddingTop: BAR.height - headroom, paddingLeft: frame, paddingRight: frame, paddingBottom: frame }}>
+                <Animated.View pointerEvents="box-none" style={{ flex: 1, flexDirection: "row", paddingTop: headroom, ...(corner ? { borderRadius: corner, overflow: "hidden" } : null) }}>
+                  <ContentCard />
+                </Animated.View>
+              </View>
+            </SwipeCloseContext.Provider>
+            <View style={{ position: "absolute", left: 0, right: 0, top: 0 }}>
+              <LittleNillaBar />
+            </View>
+          </Animated.View>
+        </PinchArea>
+      </Animated.View>
+      <CommandPanel windowWidth={size.width} />
+      <DownloadsPopover />
+      <ExtensionOverlays />
+      <BrowserWindowControls />
+    </View>
+  );
+}
+
+function zoomedCorner(scale: Animated.Value, { width, height, inset, cardRadius, windowRadius }: { width: number; height: number; inset: number; cardRadius: number; windowRadius: number }) {
+  if (inset <= 0 || width <= 0 || height <= 0) return null;
+  const spreading = 1 + SPREAD_STARTS;
+  const touchesEdge = Math.max(1 + (2 * inset) / Math.max(width, height), spreading + SPREAD_STARTS);
+  return Animated.divide(scale.interpolate({ inputRange: [1, spreading, touchesEdge], outputRange: [0, cardRadius, windowRadius], extrapolate: "clamp" }), scale);
+}
+
+function useLittleNillaPinch(windowId: string) {
+  const [scale] = useState(() => new Animated.Value(1));
+  const leaving = useRef(false);
+  const settle = () => pinchSettle([{ value: scale, to: 1 }]);
+  const motion: PinchMotion = {
+    get reduce() {
+      return reduceMotion() === true;
+    },
+    idle: () => leaving.current || isWindowClosing(windowId),
+    begin: () => scale.stopAnimation(),
+    follow: (magnification) => scale.setValue(pinchScale(magnification, LITTLE_NILLA_PINCH.smallest, LITTLE_NILLA_PINCH.largest)),
+    settle,
+    open: () => {
+      notePinch("littleNilla", "open");
+      openInMainWindow(windowId);
+      settle();
+    },
+    close: () => {
+      notePinch("littleNilla", "close");
+      leaving.current = true;
+      closeLittleNilla(windowId);
+      if (isWindowClosing(windowId)) return;
+      leaving.current = false;
+      settle();
+    },
+  };
+  return { scale, motion };
+}
+
+function useLittleNillaSwipeClose(windowId: string) {
+  const [x] = useState(() => new Animated.Value(0));
+  const opacity = useMemo(() => x.interpolate({ inputRange: [0, LITTLE_NILLA_SWIPE_CLOSE.fadeOver], outputRange: [1, 0], extrapolate: "clamp" }), [x]);
+  const settle = () => pinchSettle([{ value: x, to: 0 }]);
+  const close = () => {
+    noteSwipeClose(true);
+    if (reduceMotion() === true) return closeLittleNilla(windowId);
+    Animated.timing(x, { toValue: LITTLE_NILLA_SWIPE_CLOSE.fadeOver, duration: LITTLE_NILLA_SWIPE_CLOSE.leaveMs, useNativeDriver: true }).start(() => {
+      closeLittleNilla(windowId);
+      if (!isWindowClosing(windowId)) x.setValue(0);
+    });
+  };
+  const onSwipe = (e: SwipeEvent) => {
+    if (isWindowClosing(windowId)) return;
+    if (e.phase === "swipe") return close();
+    if (e.phase === "began") return x.stopAnimation();
+    if (e.phase === "changed") return x.setValue(Math.max(0, e.distance));
+    if (e.phase === "ended" && (e.distance >= LITTLE_NILLA_SWIPE_CLOSE.distance || (e.distance > 0 && e.velocity >= LITTLE_NILLA_SWIPE_CLOSE.velocity))) return close();
+    if (e.phase === "ended" || e.phase === "cancelled") {
+      noteSwipeClose(false);
+      settle();
+    }
+  };
+  return { x, opacity, onSwipe };
+}
+
+function LittleNillaBar() {
+  const windowId = useWindowId();
+  const tab = useActiveTab();
+  const panelOpen = useWindowUi().panel.open;
+  const severalProfiles = useProfileOrder((order) => order.length > 1);
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    void setTrafficLightsCenter(windowId, SMALL_LIGHTS_CENTER);
+  }, [windowId]);
+  useEffect(() => () => clearTimeout(copiedTimer.current), []);
+
+  const copy = () => {
+    if (!tab?.url) return;
+    void copyPageUrl(tab.id);
+    setCopied(true);
+    clearTimeout(copiedTimer.current);
+    copiedTimer.current = setTimeout(() => setCopied(false), 1400);
+  };
+
+  return (
+    <SmallBar
+      height={BAR.height}
+      trailingRoom={BAR.trailingRoom}
+      fieldLeft={BAR.fieldLeft}
+      field={tab ? <PageField tab={tab} windowId={windowId} hidden={panelOpen} /> : null}
+      buttons={[
+        { icon: copied ? "checkmark" : "link", disabled: !tab?.url, tooltip: `Copy Link (${keyText("⇧⌘C")})`, onPress: copy },
+        { icon: "arrow.up.left.and.arrow.down.right", tooltip: `Open in Nilla (${keyText("⌘O")})`, onPress: () => openInMainWindow(windowId) },
+      ]}
+      trailing={severalProfiles ? <ProfileButton windowId={windowId} /> : undefined}
+    >
+      <WindowDragRegion style={StyleSheet.absoluteFill} />
+      {tab ? <HistoryButtons tabId={tab.id} windowId={windowId} /> : null}
+      {tab ? <ToolbarPopupAnchor windowId={windowId} tabId={tab.id} top={BAR.buttonTop} right={BAR.controlsRight} /> : null}
+    </SmallBar>
+  );
+}
+
+function HistoryButtons({ tabId, windowId }: { tabId: string; windowId: string }) {
+  const palette = toolbarPalette(useTheme(), null);
+  const history = useHistoryAvailability(tabId);
+  return (
+    <>
+      <HistoryButton place={BACK_AT()} tabId={tabId} windowId={windowId} direction={-1} disabled={!history.back} palette={palette} onFocus={alreadyFocused} />
+      <HistoryButton place={FORWARD_AT()} tabId={tabId} windowId={windowId} direction={1} disabled={!history.forward} palette={palette} onFocus={alreadyFocused} />
+    </>
+  );
+}
+
+function ProfileButton({ windowId }: { windowId: string }) {
+  const profile = useWindowProfile();
+  const iconsShown = useSettings((s) => s.profileSwitcherIcons);
+  return (
+    <Button variant="icon" look="row" tooltip={`Profile: ${profile.name}`} onPress={() => void openLittleNillaProfileMenu(windowId)}>
+      <ProfileBadge profile={iconsShown ? profile : { ...profile, icon: null }} size={16} />
+    </Button>
+  );
+}
+
+function PageField({ tab, windowId, hidden }: { tab: Tab; windowId: string; hidden: boolean }) {
+  const { hovered, hoverProps } = useHover();
+  const field = useRef<View>(null);
+  const anchor = () =>
+    field.current?.measureInWindow((x, y, width, height) => {
+      if (width) setUrlAnchor(windowId, { left: x, top: y, width, sidebar: { height } });
+    });
+
+  return (
+    <View ref={field} onLayout={anchor} {...hoverProps} style={{ flex: 1, opacity: hidden ? 0 : 1 }}>
+      <ContextMenuArea style={{ flex: 1 }} onContextMenu={() => tab.url && void showUrlBarMenu(tab)}>
+        <WindowDragRegion
+          clickable
+          accessibilityRole="button"
+          onRegionClick={() => openPanel(windowId, tab.url)}
+          style={{ flex: 1 }}
+        >
+          <PageLabel tab={tab} hovered={hovered} />
+        </WindowDragRegion>
+      </ContextMenuArea>
+    </View>
+  );
+}

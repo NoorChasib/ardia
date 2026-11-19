@@ -2,7 +2,7 @@
 
 #include <os/lock.h>
 
-@implementation ArdiaTransferLedger {
+@implementation NillaTransferLedger {
   os_unfair_lock _lock;
   NSInteger _lastGeneration;
   NSMutableDictionary<NSString *, NSNumber *> *_prepared;

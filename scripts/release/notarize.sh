@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage="usage: scripts/release/notarize.sh <Ardia.app or .dmg> <log dir>  (notarizes it and staples the ticket to it)"
+usage="usage: scripts/release/notarize.sh <Nilla.app or .dmg> <log dir>  (notarizes it and staples the ticket to it)"
 target="${1:?$usage}"
 logs="${2:?$usage}"
 . "$(dirname "$0")/lib.sh"
 load_notary_auth
+has_notary_auth || die "no notarytool credentials: $notary_setup_hint"
 
 submit() {
   echo "Notarizing $(basename "$1")"

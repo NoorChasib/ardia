@@ -2,7 +2,7 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_web_view;
+using namespace nilla_web_view;
 
 namespace {
 
@@ -19,13 +19,13 @@ struct FirstPaintHolds {
   NSUInteger timedOut{};
   double heldMs{};
 
-  void note(ArdiaHeldPageEnd end, CFTimeInterval seconds) {
+  void note(NillaHeldPageEnd end, CFTimeInterval seconds) {
     switch (end) {
-      case ArdiaHeldPageEnd::Painted: painted++; break;
-      case ArdiaHeldPageEnd::Loaded: loaded++; break;
-      case ArdiaHeldPageEnd::Pressed: pressed++; break;
-      case ArdiaHeldPageEnd::TimedOut: timedOut++; break;
-      case ArdiaHeldPageEnd::Detached: return;
+      case NillaHeldPageEnd::Painted: painted++; break;
+      case NillaHeldPageEnd::Loaded: loaded++; break;
+      case NillaHeldPageEnd::Pressed: pressed++; break;
+      case NillaHeldPageEnd::TimedOut: timedOut++; break;
+      case NillaHeldPageEnd::Detached: return;
     }
     held++;
     heldMs += seconds * 1000;
@@ -39,7 +39,7 @@ struct FirstPaintHolds {
 FirstPaintHolds gFirstPaintHolds;
 }
 
-@implementation ArdiaWebView (FirstPaint)
+@implementation NillaWebView (FirstPaint)
 
 - (void)holdPageUntilPainted:(BOOL)created {
   NSView *page = _tab.view;
@@ -57,10 +57,10 @@ FirstPaintHolds gFirstPaintHolds;
   [CATransaction commit];
   [self callFrame:@"" kind:@"firstPaint" json:@"{}"];
   const NSUInteger generation = ++_firstPaint.generation;
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kHeldPageSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
-    if (view && view->_firstPaint.generation == generation) [view showHeldPage:ArdiaHeldPageEnd::TimedOut];
+    NillaWebView *view = weakSelf;
+    if (view && view->_firstPaint.generation == generation) [view showHeldPage:NillaHeldPageEnd::TimedOut];
   });
 }
 
@@ -70,7 +70,7 @@ FirstPaintHolds gFirstPaintHolds;
   if (_tab.loading) [self holdPageUntilPainted:YES];
 }
 
-- (void)showHeldPage:(ArdiaHeldPageEnd)end {
+- (void)showHeldPage:(NillaHeldPageEnd)end {
   if (!_firstPaint.held) return;
   _firstPaint.held = NO;
   _firstPaint.settled = YES;
@@ -81,13 +81,13 @@ FirstPaintHolds gFirstPaintHolds;
   [CATransaction begin];
   [CATransaction setDisableActions:YES];
   layer.opacity = _firstPaint.opacity;
-  if (end != ArdiaHeldPageEnd::Detached) {
+  if (end != NillaHeldPageEnd::Detached) {
     CABasicAnimation *fade = [CABasicAnimation animationWithKeyPath:@"opacity"];
     fade.fromValue = @0;
     fade.toValue = @(_firstPaint.opacity);
     fade.duration = 0.16;
     fade.timingFunction = [CAMediaTimingFunction functionWithControlPoints:0.23 :1 :0.32 :1];
-    [layer addAnimation:fade forKey:@"ardia.held.page"];
+    [layer addAnimation:fade forKey:@"nilla.held.page"];
   }
   [CATransaction commit];
 }
@@ -95,7 +95,7 @@ FirstPaintHolds gFirstPaintHolds;
 - (void)showHeldPageOnNextFrame {
   if (!_firstPaint.held) return;
   NSView *widget = RenderWidgetIn(_tab.view);
-  if (!widget) return [self showHeldPage:ArdiaHeldPageEnd::Loaded];
+  if (!widget) return [self showHeldPage:NillaHeldPageEnd::Loaded];
   [self showHeldPageWhenFrameLeaves:FrameMarkOf(widget) generation:_firstPaint.generation until:CACurrentMediaTime() + kLoadedFrameWaitSeconds];
 }
 
@@ -103,21 +103,21 @@ FirstPaintHolds gFirstPaintHolds;
   if (!_firstPaint.held) return;
   if (!_firstPaint.scripted) return [self showHeldPageOnNextFrame];
   const NSUInteger generation = _firstPaint.generation;
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kScriptedLoadWaitSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
-    if (view && view->_firstPaint.held && view->_firstPaint.generation == generation) [view showHeldPage:ArdiaHeldPageEnd::Loaded];
+    NillaWebView *view = weakSelf;
+    if (view && view->_firstPaint.held && view->_firstPaint.generation == generation) [view showHeldPage:NillaHeldPageEnd::Loaded];
   });
 }
 
 - (void)showHeldPageWhenFrameLeaves:(NSArray *)mark generation:(NSUInteger)generation until:(CFTimeInterval)deadline {
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kFrameCheckSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
+    NillaWebView *view = weakSelf;
     if (!view || !view->_firstPaint.held || view->_firstPaint.generation != generation) return;
     NSView *widget = RenderWidgetIn(view->_tab.view);
     if (!widget || ![FrameMarkOf(widget) isEqualToArray:mark] || CACurrentMediaTime() >= deadline)
-      return [view showHeldPage:ArdiaHeldPageEnd::Loaded];
+      return [view showHeldPage:NillaHeldPageEnd::Loaded];
     [view showHeldPageWhenFrameLeaves:mark generation:generation until:deadline];
   });
 }

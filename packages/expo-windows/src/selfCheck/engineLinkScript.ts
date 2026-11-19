@@ -50,7 +50,7 @@ function counted(rounds: Round[], what: string) {
   const reached = rounds.length - lost.length;
   const lostBy = (paint: Paint) => lost.filter((round) => round.paint === paint).length;
   console.info(
-    `[ardia windows] self-check note: link script rounds, ${what}: ${reached} of ${rounds.length} clicks delivered (reached the page as a trusted press), ${missed} of those missed by the link script, ${lost.length} never reached it (sent ${lostBy("before")} before first contentful paint, ${lostBy("after")} after it, ${lostBy("unknown")} with no paint entry; first contentful paint is not when the browser starts accepting input, so these are data, not a verdict)`,
+    `[nilla windows] self-check note: link script rounds, ${what}: ${reached} of ${rounds.length} clicks delivered (reached the page as a trusted press), ${missed} of those missed by the link script, ${lost.length} never reached it (sent ${lostBy("before")} before first contentful paint, ${lostBy("after")} after it, ${lostBy("unknown")} with no paint entry; first contentful paint is not when the browser starts accepting input, so these are data, not a verdict)`,
   );
   return { missed, reached };
 }

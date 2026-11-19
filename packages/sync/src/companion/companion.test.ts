@@ -256,7 +256,6 @@ function seedMac(mac: Mac) {
   mac.put(s1, "bm:orphan", { k: "u", p: "gone", t: "Orphan", u: "https://orphan.example/", a: 4, pos: "5" });
   mac.put(s1, "bm:c1", { k: "f", p: "c2", t: "Loop A", a: 5, pos: "1" });
   mac.put(s1, "bm:c2", { k: "f", p: "c1", t: "Loop B", a: 6, pos: "1" });
-  mac.put(s1, "bm:legacy", { k: "u", p: "bar", t: "Game", u: "netnyahoo://yahu", a: 7, pos: "2" });
   mac.put(s1, "pws:https://bank.example\nluke", { o: "https://bank.example", u: "luke", s: "sealed-login" });
   mac.put(s1, "ext:abc", { on: true, inc: false, pin: true });
   mac.visit(s1, "https://read.example/", "Reading", START - 2 * DAY);
@@ -680,9 +679,8 @@ test("the view orders pins, bookmarks, profiles and search as the Mac does", asy
     "tab" in s ? s.tab.key : { [s.group.name]: s.group.items.map(describe) };
   assert.deepEqual(personal.pinned.sections.map(describe), ["r1", { Projects: ["m1", { Sub: ["m2"] }] }, "r2"]);
   const shape = (b: (typeof personal.bookmarks)[number]): unknown => (b.children ? { [b.title]: b.children.map(shape) } : b.title);
-  assert.deepEqual(personal.bookmarks.filter((b) => b.root === "bar").map(shape), [{ Work: ["Wiki", "Docs"] }, "Game"]);
+  assert.deepEqual(personal.bookmarks.filter((b) => b.root === "bar").map(shape), [{ Work: ["Wiki", "Docs"] }]);
   assert.deepEqual(personal.bookmarks.filter((b) => b.root === "other").map(shape), [{ "Loop A": [{ "Loop B": [] }] }, "Orphan"]);
-  assert.equal(personal.bookmarks.find((b) => b.title === "Game")!.url, "ardia://game");
   assert.deepEqual(view.search, { engineId: "duckduckgo", customURL: null, customEngines: [{ id: "c1", name: "Docs", keyword: "docs", url: "https://docs.example/?q=%s" }] });
   assert.deepEqual(view.look, { interfaceStyle: "classic", appearance: "dark" });
   const school = view.profiles.find((p) => p.name === "School")!;

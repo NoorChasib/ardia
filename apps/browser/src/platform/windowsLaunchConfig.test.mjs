@@ -16,7 +16,7 @@ test("Windows native code reads the environment only in the launch config", () =
 });
 
 test("the launcher, which runs before the app's DLL, reads only ARDIA_BACKGROUND, and only to keep a failure quiet", () => {
-  const launcher = readFileSync(new URL("../../windows/ArdiaLauncher/Launcher.cpp", import.meta.url), "utf8");
+  const launcher = readFileSync(new URL("../../windows/NillaLauncher/Launcher.cpp", import.meta.url), "utf8");
   const reads = launcher.match(ENVIRONMENT_READ) ?? [];
   assert.equal(reads.length, 1);
   assert.match(launcher, /DWORD length = GetEnvironmentVariableW\(L"ARDIA_BACKGROUND", value, 4\);/);
@@ -31,7 +31,8 @@ test("only LaunchConfig.h reads ARDIA_TEST, ARDIA_TRACE, ARDIA_CONFIG_DIR and AR
   }
   const config = source("LaunchConfig.h");
   assert.match(config, /config\.testInstance = refusal\.empty\(\);/);
-  assert.match(config, /if \(config\.testInstance\) return config;[\s\S]*config\.trace\.clear\(\);\n  config\.test\.clear\(\);/);
+  assert.match(config, /if \(config\.testInstance\) \{\n    Note\(L"app test gate: a test instance"\);\n    return config;\n  \}[\s\S]*config\.trace\.clear\(\);\n  config\.test\.clear\(\);/);
+  assert.match(config, /if \(EngineTestGate\(\) && !EngineTestGate\(\)->empty\(\)\) return \*EngineTestGate\(\);\n  return isolated \? TestGate::Refusal\(\) : /, "an engine that approves still needs the app's own gate");
   assert.match(config, /TestOnlyInstanceKeys\(\) noexcept \{\n  static const std::vector<std::string_view> keys\{"updateFeed", "importSourceDir", "importSafariHome"\};/);
   assert.match(config, /std::wstring chosen = testInstance \? Paths::Environment\(L"ARDIA_CONFIG_DIR"\) : std::wstring\{\};/);
 });
@@ -41,9 +42,16 @@ test("a test instance needs an absolute scratch folder clear of the real profile
   assert.match(gate, /if \(!requested\.is_absolute\(\)\) return/);
   assert.match(gate, /FOLDERID_LocalAppData, L"LOCALAPPDATA"\) \/ L"Ardia"/);
   assert.match(gate, /FOLDERID_RoamingAppData, L"APPDATA"\) \/ L"Ardia"/);
+  assert.match(gate, /folders\.push_back\(Paths::UserFolder\(FOLDERID_LocalAppData, L"LOCALAPPDATA"\) \/ L"Nilla"\);/);
+  assert.match(gate, /folders\.push_back\(Paths::UserFolder\(FOLDERID_RoamingAppData, L"APPDATA"\) \/ L"Nilla"\);/);
+  assert.match(gate, /UpstreamFolders\(\) noexcept \{\n  return \{\n(?: {6}Paths::UserFolder\([^\n]+\n){2} {2}\};/);
+  assert.match(gate, /RealFolderClash\([^\n]+\{\n  return ClashWith\(RealFolders\(\), checked, variable\);/);
   assert.match(gate, /RealFolderClash\(\{Paths::DataDirectory\(\), Paths::DataDirectory\(\) \/ L"Chromium", Paths::DataDirectory\(\) \/ L"Sync"\}, L"ARDIA_DATA_DIR"\)/);
   assert.match(source("LaunchConfig.h"), /TestGate::RealFolderClash\(\{requested\}, L"ARDIA_CONFIG_DIR"\);\n    if \(clash\.empty\(\)\) return Paths::Ensured\(requested\);/);
-  assert.match(gate, /VOLUME_NAME_GUID \| FILE_NAME_NORMALIZED/);
+  assert.match(gate, /CanonicalPath\(std::filesystem::path const &path\) noexcept \{ return Paths::Resolved\(path, VOLUME_NAME_GUID\); \}/);
+  const paths = source("Paths.h");
+  assert.match(paths, /DWORD flags = volume \| FILE_NAME_NORMALIZED;\n  DWORD size = GetFinalPathNameByHandleW\(handle, nullptr, 0, flags\);/);
+  assert.match(paths, /if \(std::filesystem::exists\(entry\)\) \{\n    if \(!std::filesystem::exists\(path, error\)\) return std::nullopt;/);
   assert.match(gate, /if \(!TestBuild\(\)\) return/);
 });
 
@@ -53,7 +61,9 @@ test("the test-build marker never reaches an installer, and the harnesses that n
   assert.match(script("make-installer.ps1"), /-Filter "Ardia\.test-build"[^\n]*throw/);
   assert.match(script("installer-check.ps1"), /-Filter "Ardia\.test-build"[^\n]*throw/);
   const smoke = script("launch-smoke.ps1");
-  for (const kind of ["no test-build marker", "a relative ARDIA_DATA_DIR", "the real profile folder", "a junction to the real profile folder"]) assert.ok(smoke.includes(`"${kind}"`), kind);
+  for (const kind of ["no test-build marker", "a relative ARDIA_DATA_DIR", "the real profile folder", "a junction to the real profile folder", "Nilla's own profile folder", "Nilla's roaming folder", "a junction to Nilla's own profile folder"]) assert.ok(smoke.includes(`"${kind}"`), kind);
+  assert.match(smoke, /function Test-RefusedByTheApp\(/);
+
   assert.match(script("launch-smoke.ps1"), /"Ardia\.test-build"\r?\nNew-Item -ItemType File -Force -Path \$testBuild/);
   assert.match(script("tour.ps1"), /exit 0\r?\n\}\r?\n\$App = \(Resolve-Path -LiteralPath \$App\)\.Path\r?\nNew-Item -ItemType File -Force -Path \(Join-Path \(Split-Path -Parent \$App\) "Ardia\.test-build"\)/);
   for (const packaging of ["make-installer.ps1", "installer-check.ps1"]) assert.match(script(packaging), /-Recurse -File -Force -Filter "Ardia\.test-build"/, packaging);
@@ -75,7 +85,7 @@ test("a test instance seals its sync key under its own DPAPI purpose, so it can'
 test("an app folder the Windows workflow uploads has lost its test-build marker, with no harness run after that", () => {
   const workflow = readFileSync(new URL("../../../../.github/workflows/windows.yml", import.meta.url), "utf8").replace(/\r\n/g, "\n");
   const harness = /launch-smoke\.ps1|tour\.ps1/;
-  const appFolder = /^\s+(?:path: )?(\$\{\{ runner\.temp \}\}\/Ardia|\$\{\{ env\.APP \}\}|apps\/browser\/windows\/\w+\/Release)$/gm;
+  const appFolder = /^\s+(?:path: )?(\$\{\{ runner\.temp \}\}\/Nilla|\$\{\{ env\.APP \}\}|apps\/browser\/windows\/\w+\/Release)$/gm;
   const stepLists = workflow.split(/\n  (?=[a-z0-9-]+:\n)/).slice(1).flatMap((job) => {
     const at = job.search(/\n    steps:(?: &\w+)?\n/);
     return at < 0 ? [] : [job.slice(at).split("\n      - ").slice(1)];
@@ -99,5 +109,82 @@ test("an app folder the Windows workflow uploads has lost its test-build marker,
     });
     if (strip >= 0) assert.ok(!steps.slice(strip + 1).some((step) => harness.test(step)), "no harness runs after the marker is removed");
   }
-  assert.ok(uploaded.beforeAnyHarness > 0 && uploaded.afterRemoval > 0, `the workflow uploads app folders: ${JSON.stringify(uploaded)}`);
+  assert.ok(uploaded.beforeAnyHarness > 0, `the workflow caches or uploads app folders: ${JSON.stringify(uploaded)}`);
+});
+
+test("the app folder and the installer carry the same licence texts, and the install check compares them with the repository's bytes", () => {
+  const script = (name) => readFileSync(new URL(name, scripts), "utf8");
+  const repository = new URL("../../../../", import.meta.url);
+  const table = (name) => {
+    const text = script(name);
+    const block = text.match(/\$licenses = \[ordered\]@\{\r?\n([\s\S]*?)\r?\n\}/);
+    assert.ok(block, `${name} lists its licence texts`);
+    return Object.fromEntries([...block[1].matchAll(/^\s+"([^"]+)" = "([^"]+)"$/gm)].map(([, shipped, source]) => [shipped, source]));
+  };
+  const assembled = table("assemble.ps1");
+  assert.deepEqual(Object.keys(assembled), ["LICENSE", "LICENSE.Apache-2.0", "NOTICE", "bangs-LICENSE", "symbols-THIRD_PARTY_NOTICES.txt"]);
+  for (const source of Object.values(assembled)) assert.ok(readFileSync(new URL(source.replace(/\\/g, "/"), repository)).length > 0, source);
+  assert.deepEqual(table("make-installer.ps1"), assembled);
+  assert.deepEqual(table("installer-check.ps1"), assembled);
+  assert.match(script("assemble.ps1"), /Copy-Item -LiteralPath \$source -Destination \$target\n\}\n\nMove-Item/);
+  assert.match(script("installer-check.ps1"), /Get-FileHash -LiteralPath \(Join-Path \$repository \$licenses\[\$name\]\)/);
+  const installer = script("installer/Nilla.iss");
+  assert.match(installer, /^UninstallDisplayIcon=\{app\}\\Nilla\.ico$/m);
+  assert.match(installer, /DestName: "Nilla\.ico"/);
+  assert.match(script("installer-check.ps1"), /\$shipped = @\([^)]*"Nilla\.ico"/);
+});
+
+test("the install check finds no shortcut, registration, start or upstream folder, and the installer has nothing that makes them", () => {
+  const check = readFileSync(new URL("installer-check.ps1", scripts), "utf8");
+  const asked = (name) => check.split(`Assert-Nothing (${name})`).length - 1;
+  for (const leftover of ["Get-Registrations", "Get-Shortcuts", "Get-UpstreamFolders"]) assert.equal(asked(leftover), 3, `${leftover} before the install, after it and after the uninstall`);
+  assert.equal(asked("Get-RunningFromInstall"), 1);
+  assert.match(check, /\$entry = "\$uninstallKeys\\\{996E41A5-7F20-415A-BD04-91E365610996\}_is1"/);
+  assert.match(readFileSync(new URL("installer/Nilla.iss", scripts), "utf8"), /^AppId=\{\{996E41A5-7F20-415A-BD04-91E365610996\}$/m);
+  assert.doesNotMatch(check, /System\.AppUserModel\.ID|CreateShortcut\(\$shortcut\)/);
+  assert.equal(check.split("= Start-StartWatch").length - 1, 2, "the install and the uninstall are each watched from before they start");
+  assert.equal(check.split("Assert-Nothing (Stop-StartWatch $").length - 1, 2);
+  assert.match(check, /Register-CimIndicationEvent -ClassName Win32_ProcessStartTrace/);
+  const installer = readFileSync(new URL("installer/Nilla.iss", scripts), "utf8");
+  for (const name of ["Registry", "Icons", "Run", "Dirs", "Tasks", "UninstallRun"]) assert.doesNotMatch(installer, new RegExp(`^\\[${name}\\]$`, "m"), name);
+  const code = installer.slice(installer.indexOf("[Code]"));
+  assert.doesNotMatch(code, /\b(?:Exec|ShellExec|ExecAsOriginalUser|ShellExecAsOriginalUser|RegWrite\w*|CreateShellLink)\s*\(/i, "the installer's code starts and registers nothing");
+});
+
+test("the config folder beside a custom data folder must stay out of the upstream folders, and no config file read may lead into them", () => {
+  const config = source("LaunchConfig.h");
+  assert.match(config, /std::filesystem::path besideData = Paths::DataDirectory\(\) \/ L"config";\n    std::wstring clash = TestGate::UpstreamClash\(\{besideData\}, L"the config folder"\);\n    if \(clash\.empty\(\)\) clash = TestGate::UpstreamClash\(\{Paths::Ensured\(besideData\)\}, L"the config folder"\);\n    if \(clash\.empty\(\)\) return besideData;\n    Note\(L"config folder ignored: " \+ clash\);/);
+  const gate = source("TestGate.h");
+  assert.match(gate, /inline bool OpenedInsideUpstream\(HANDLE opened\) noexcept \{\n  std::optional<std::wstring> final = Paths::FinalPathOf\(opened, VOLUME_NAME_GUID\);\n  if \(!final\) return true;/);
+  const module = source("ConfigModule.h");
+  const read = module.slice(module.indexOf("inline Reading ReadRegularFile("), module.indexOf("inline Reading Read(std::string_view name)"));
+  assert.ok(read.indexOf("TestGate::OpenedInsideUpstream(file)") > 0 && read.indexOf("TestGate::OpenedInsideUpstream(file)") < read.indexOf("ReadFile("), "the opened file is checked before a byte is read");
+  assert.equal(module.split("GENERIC_READ").length - 1, 1, "ReadRegularFile is the only place the config module opens a file to read it");
+  const smoke = readFileSync(new URL("launch-smoke.ps1", scripts), "utf8");
+  assert.match(smoke, /Test-ConfigKeptApart \(Split-Path -Parent \$linkedConfig\) \$protectedConfig "a config folder that is a junction into the real profile folder"/);
+  assert.match(smoke, /\$app = Wait-GateLine \$run \$caseLog "app test gate: a test instance"/);
+});
+
+test("the AppUserModelID reader keeps native HRESULTs, fails windows it can't read, and proves itself on a control window first", () => {
+  const identity = readFileSync(new URL("launcher-identity.ps1", scripts), "utf8");
+  for (const method of ["GetCount", "GetAt", "GetValue", "SetValue", "Commit"]) assert.match(identity, new RegExp(`\\[PreserveSig\\] int ${method}\\(`), method);
+  assert.doesNotMatch(identity, /\$null -eq \$window\.AppUserModelId/);
+  assert.match(identity, /if \(\$unread\.Count\) \{[^\n]*exit 1 \}/);
+  assert.match(identity, /\$control = \[NillaWindowIdentity\]::ControlCheck\("NillaDigital\.LauncherIdentityControl"\)\n  if \(\$control\) \{[^\n]*exit 1 \}\n  \$windows = /);
+});
+
+test("nilla-dev-run.ps1 resolves the data folder through handles before it compares it with the upstream folders, and the gate smoke runs its alias cases", () => {
+  const script = (name) => readFileSync(new URL(name, scripts), "utf8");
+  const run = script("nilla-dev-run.ps1");
+  assert.match(run, /CreateFileW\(path, 0, ShareAll, IntPtr\.Zero, OpenExisting, BackupSemantics \| extra, IntPtr\.Zero\)/);
+  assert.match(run, /GetFinalPathNameByHandleW\(handle, found, \(uint\)found\.Capacity, volume\)/);
+  assert.match(run, /if \(FinalPath\(at, volume, OpenReparsePoint, out ignored\) != null\) return null;/);
+  assert.match(run, /\$data = \$PSCmdlet\.GetUnresolvedProviderPathFromPSPath\(\$DataDir\)/);
+  assert.match(run, /foreach \(\$used in @\(\$Data, \[System\.IO\.Path\]::Combine\(\$Data, "Chromium"\), \[System\.IO\.Path\]::Combine\(\$Data, "Sync"\), \[System\.IO\.Path\]::Combine\(\$Data, "config"\)\)\)/);
+  assert.match(run, /New-Item -ItemType Directory -Force -Path \$data \| Out-Null\nAssert-ApartFromUpstream \$data \$upstream\n/);
+  assert.match(run, /\$data = \$final -replace [^\n]+\n\$env:ARDIA_DATA_DIR = \$data\n/);
+  assert.doesNotMatch(run, /GetFullPath|StartsWith\(/);
+  const cases = script("nilla-dev-run.test.ps1");
+  for (const kind of ["a junction to Ardia's data folder", "Ardia's data folder as an extended path", "Ardia's data folder through an 8.3 short name", "Ardia's data folder as a relative .", "a scratch folder whose Chromium is a junction to Ardia's data folder", "a scratch folder whose config is a junction to Ardia's roaming folder", "a dangling symbolic link"]) assert.ok(cases.includes(`"${kind}"`), kind);
+  assert.match(script("launch-smoke.ps1"), /& \(Join-Path \$PSScriptRoot "nilla-dev-run\.test\.ps1"\)\n  if \(\$LASTEXITCODE -ne 0\)/);
 });

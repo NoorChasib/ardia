@@ -1,4 +1,4 @@
-import type { SurfaceProps } from "@ardia/shell";
+import type { SurfaceProps } from "@nilla/shell";
 import { mixOklab, parseColor, type Rgba } from "./color";
 
 export type GradientFillSource = Pick<SurfaceProps, "fill" | "fillColors" | "fillStops" | "fade" | "fadeStops">;

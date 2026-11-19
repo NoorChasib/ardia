@@ -1,4 +1,4 @@
-import type { KeptFollows } from "@ardia/shell";
+import type { KeptFollows } from "@nilla/shell";
 
 export type FollowKeyboard = (tabId: string, windowId: string) => void;
 

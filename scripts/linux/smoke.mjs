@@ -8,13 +8,13 @@ import { tmpdir } from "node:os";
 import { inflateSync } from "node:zlib";
 import { basename, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { SHELL_PREFIX, closeAllApps, killAllAppsNow, launchArdia, launchArguments, launchEnvironment } from "../../apps/linux/scripts/acceptance/lib/ardia.mjs";
+import { SHELL_PREFIX, closeAllApps, killAllAppsNow, launchNilla, launchArguments, launchEnvironment } from "../../apps/linux/scripts/acceptance/lib/nilla.mjs";
 import { connectCdp, evaluate } from "../../apps/linux/scripts/acceptance/lib/cdp.mjs";
 import { errorText, js, nonce, until, withDeadline } from "../../apps/linux/scripts/acceptance/lib/util.mjs";
 
-export const USAGE = `Usage: node scripts/linux/smoke.mjs --package <Ardia-*linux-x64*.tar.xz|.deb|.AppImage> --results <dir> [--timeout-ms N] [--keep] [--allow-old-engine]
+export const USAGE = `Usage: node scripts/linux/smoke.mjs --package <Nilla-*linux-x64*.tar.xz|.deb|.AppImage> --results <dir> [--timeout-ms N] [--keep] [--allow-old-engine]
 
-Strict smoke gate for a packaged Ardia Linux build. It extracts the tarball into
+Strict smoke gate for a packaged Nilla Linux build. It extracts the tarball into
 a temporary folder, launches ardia/bin/ardia headless (ozone headless, SwiftShader,
 ARDIA_BACKGROUND=1, a throwaway profile and HOME, the sandbox on) without
 --ardia-ui-dir, and checks:
@@ -32,16 +32,16 @@ ARDIA_BACKGROUND=1, a throwaway profile and HOME, the sandbox on) without
                     control file, maintainer scripts, setuid chrome-sandbox, policy and AppArmor profile;
                     for an AppImage its type 2 header, AppRun and no setuid helper
   app-version       systemInfo.appVersion is lib/ardia/VERSION (skip: a package without VERSION)
-  cli-install       the bundled installer installs the bundled CLI into a scratch home, ardia --version
+  cli-install       the bundled installer installs the bundled CLI into a scratch home, nilla-browser --version
                     prints the package version, and a second install is a no-op (skip: no lib/ardia/cli)
   cli-control       in an instance driven over --remote-debugging-pipe (the token server never starts
-                    with --remote-debugging-port), once settings.cliControl is on ardia windows works,
-                    ardia browse opens the fixture in a background tab and reads its title, and
-                    ardia windows lists that tab; ardia windows exits 2 once control is off again
+                    with --remote-debugging-port), once settings.cliControl is on nilla-browser windows works,
+                    nilla-browser browse opens the fixture in a background tab and reads its title, and
+                    nilla-browser windows lists that tab; nilla-browser windows exits 2 once control is off again
                     (skip: no lib/ardia/cli)
-  cli-scripts       in a pipe-driven instance with extensions on and control on, ardia scripts install
-                    loads a userscript that retitles the fixture page, ardia scripts list shows it as
-                    reported, the fixture opens retitled, and after ardia scripts uninstall it opens
+  cli-scripts       in a pipe-driven instance with extensions on and control on, nilla-browser scripts install
+                    loads a userscript that retitles the fixture page, nilla-browser scripts list shows it as
+                    reported, the fixture opens retitled, and after nilla-browser scripts uninstall it opens
                     with its own title (skip: no lib/ardia/cli; old: no ArdiaUserScripts methods)
 
 It writes <results>/results.json ({ok, package, started, assertions[]}) and the
@@ -72,11 +72,11 @@ export const STAGED_FILES = [
 ];
 export const BLOCKER_FILES = ["manifest.json", "js/vapi.js", "js/vapi-common.js", "js/vapi-client.js"];
 export const UBO_TUNING = { selfieDelayInSeconds: 3, autoUpdateDelayAfterLaunch: 600 };
-export const UBO_SEED = "ardia-seed/storage.json";
+export const UBO_SEED = "nilla-seed/storage.json";
 
 export function uboSeedProblems(seedText, start) {
   const problems = [];
-  if (!start.includes("await ardiaSeedFromPackage();")) problems.push("js/start.js doesn't load the seed");
+  if (!start.includes("await nillaSeedFromPackage();")) problems.push("js/start.js doesn't load the seed");
   let storage = null;
   try {
     storage = JSON.parse(seedText ?? "").storage;
@@ -98,7 +98,7 @@ export function uboTuningProblems(background, tuning = UBO_TUNING) {
 export const VERSION_PATTERN = /^[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.[0-9]+)?$/;
 export const CLI_CONTROL_CAPABILITIES = ["engine.setCliControl", "ArdiaCli.install", "ArdiaAutomation.start"];
 export const USER_SCRIPTS_CAPABILITIES = ["ArdiaUserScripts.watch", "ArdiaUserScripts.read", "ArdiaUserScripts.readStatus", "ArdiaUserScripts.writeStatus"];
-export const SCRIPT_NAME = "Ardia smoke script";
+export const SCRIPT_NAME = "Nilla smoke script";
 export const SCRIPT_TITLE_PREFIX = "Scripted: ";
 
 export function userScriptSource() {
@@ -106,7 +106,14 @@ export function userScriptSource() {
 }
 export const CLI_INSTALLER = "ardia-cli-install.sh";
 export const CLI_DIGEST = "ardia-cli.sha256";
+export const CLI_COMMAND = "nilla-browser";
 export const cliTarball = (version) => `ardia-cli-${version}-linux-x64.tar.gz`;
+
+export function cliEnvironment(work) {
+  const home = join(work, "cli-home");
+  const data = join(home, ".local", "share");
+  return { PATH: process.env.PATH ?? "/usr/bin:/bin", LANG: "C.UTF-8", SHELL: "/bin/sh", HOME: home, XDG_DATA_HOME: data, XDG_CONFIG_HOME: join(home, ".config"), XDG_CACHE_HOME: join(home, ".cache"), XDG_STATE_HOME: join(home, ".local", "state"), TMPDIR: work, ARDIA_CLI_HOME: join(data, "nilla", "cli"), ARDIA_CLI_BIN_DIR: join(home, ".local", "bin") };
+}
 const BRIDGE_DIR = new URL("../../engine/ardiacore-linux/content-blocker/", import.meta.url);
 const DEFAULT_TIMEOUT_MS = 300000;
 
@@ -425,7 +432,7 @@ export function pngInk(buffer) {
 }
 
 export function fixturePage(token) {
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Ardia smoke ${token}</title></head><body style="margin:0;background:#fff"><h1 id="smoke-marker" style="font:48px sans-serif;margin:40px">Ardia smoke ${token}</h1></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Nilla smoke ${token}</title></head><body style="margin:0;background:#fff"><h1 id="smoke-marker" style="font:48px sans-serif;margin:40px">Nilla smoke ${token}</h1></body></html>`;
 }
 
 function run(command, args, { timeout = 60000, env, cwd } = {}) {
@@ -519,7 +526,7 @@ class Smoke {
     const extraArgs = [];
     const refused = launchRefusal(launchArguments({ scratch: this.profile, extensions: true, extraArgs }), launchEnvironment({ scratch: this.profile }));
     if (refused) throw new Error(refused);
-    const app = await launchArdia({ executable: this.launcher, scratch: this.profile, extensions: true, extraArgs, label, startTimeout: 60000 });
+    const app = await launchNilla({ executable: this.launcher, scratch: this.profile, extensions: true, extraArgs, label, startTimeout: 60000 });
     this.apps.push(app);
     return app;
   }
@@ -530,7 +537,7 @@ class Smoke {
   }
 
   async extract() {
-    this.work = await mkdtemp(join(tmpdir(), "ardia-smoke-"));
+    this.work = await mkdtemp(join(tmpdir(), "nilla-smoke-"));
     const into = join(this.work, "package");
     await mkdir(into);
     this.format = this.options.format ?? packageFormat(this.packagePath);
@@ -570,13 +577,13 @@ class Smoke {
     if (!bundled.length) throw new Error("the packaged index.html has no module script");
     const assets = new Set(await readdir(join(this.runtime, "ardia-ui", "assets")));
     const page = await until(async () => {
-      const state = await shell.eval(`(() => { const root = document.getElementById("root"); return { href: location.href, readyState: document.readyState, rootChildren: root?.childElementCount ?? -1, rootText: (root?.innerText ?? "").trim().length, windowNode: !!document.querySelector("[data-ardia-linux-window]"), modules: [...document.querySelectorAll('script[type="module"]')].map((s) => s.getAttribute("src")), styles: [...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => l.getAttribute("href")), vite: !!document.querySelector('script[src*="@vite"]') || typeof globalThis.__vite_plugin_react_preamble_installed__ !== "undefined" }; })()`);
+      const state = await shell.eval(`(() => { const root = document.getElementById("root"); return { href: location.href, readyState: document.readyState, rootChildren: root?.childElementCount ?? -1, rootText: (root?.innerText ?? "").trim().length, windowNode: !!document.querySelector("[data-nilla-linux-window]"), modules: [...document.querySelectorAll('script[type="module"]')].map((s) => s.getAttribute("src")), styles: [...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => l.getAttribute("href")), vite: !!document.querySelector('script[src*="@vite"]') || typeof globalThis.__vite_plugin_react_preamble_installed__ !== "undefined" }; })()`);
       return state.readyState === "complete" && state.rootChildren > 0 ? state : false;
     }, { timeout: 30000, label: "the shell document to load with content in #root" });
     const problems = [];
     if (!page.href.startsWith("chrome://ardia/")) problems.push(`the shell is at ${page.href}`);
     if (page.vite) problems.push("the shell loaded the Vite dev client");
-    if (!page.windowNode) problems.push("no [data-ardia-linux-window] node");
+    if (!page.windowNode) problems.push("no [data-nilla-linux-window] node");
     for (const src of bundled) if (!page.modules.includes(src)) problems.push(`the shell did not load the packaged module ${src} (it loaded ${page.modules.join(", ")})`);
     for (const src of [...page.modules, ...page.styles]) if (src.startsWith("/assets/") && !assets.has(src.slice("/assets/".length))) problems.push(`${src} is not in lib/ardia/ardia-ui/assets`);
     const served = [];
@@ -627,7 +634,7 @@ class Smoke {
           problems.push(`the tab's screenshot could not be read: ${errorText(error)}`);
         }
       } else problems.push(`Page.captureScreenshot failed: ${shot.error}`);
-      if (page.text !== `Ardia smoke ${this.fixture.token}`) problems.push(`the marker reads ${JSON.stringify(page.text)}`);
+      if (page.text !== `Nilla smoke ${this.fixture.token}`) problems.push(`the marker reads ${JSON.stringify(page.text)}`);
       if (page.host !== "undefined") problems.push(`typeof window.__ardiaHost is ${page.host} in the web page`);
       if (!(page.rect?.width > 0 && page.rect?.height > 0)) problems.push(`the marker has no size: ${JSON.stringify(page.rect)}`);
       if (!this.fixture.requests.some((r) => r.url?.startsWith("/smoke"))) problems.push("the fixture server saw no request");
@@ -683,14 +690,14 @@ class Smoke {
 
   async quit(app, shell) {
     await shell.command("quit");
-    await until(() => app.exited, { timeout: 30000, label: "Ardia to quit after the quit command" }).catch(async (error) => {
+    await until(() => app.exited, { timeout: 30000, label: "Nilla to quit after the quit command" }).catch(async (error) => {
       const log = await app.logText();
       const prompt = log.split("\n").filter((line) => line.includes("[ardiacore] dialog (background run")).slice(-2);
       throw new Error(`${error.message}${prompt.length ? `; ${prompt.join(" | ")}` : ""}`);
     });
     const code = app.exitCode;
     await this.stopApp(app);
-    if (code !== 0) throw new Error(`Ardia exited with ${code} after the quit command`);
+    if (code !== 0) throw new Error(`Nilla exited with ${code} after the quit command`);
     return code;
   }
 
@@ -708,7 +715,7 @@ class Smoke {
     } finally {
       await session.close().catch(() => {});
     }
-    if (text !== `Ardia smoke ${this.fixture.token}`) throw new Error(`the restored tab reads ${JSON.stringify(text)}`);
+    if (text !== `Nilla smoke ${this.fixture.token}`) throw new Error(`the restored tab reads ${JSON.stringify(text)}`);
     return { app, shell, detail: { exitCode, restoredTab: tab.id, sameTab: tab.id === first.tabId, text, reloaded: this.fixture.requests.length > before } };
   }
 
@@ -800,15 +807,9 @@ class Smoke {
     throw outcome(verdict.status === "old" ? "old" : "fail", verdict.message, { version: this.version, appVersion });
   }
 
-  cliEnvironment() {
-    const home = join(this.work, "cli-home");
-    const data = join(home, ".local", "share");
-    return { PATH: process.env.PATH ?? "/usr/bin:/bin", LANG: "C.UTF-8", SHELL: "/bin/sh", HOME: home, XDG_DATA_HOME: data, XDG_CONFIG_HOME: join(home, ".config"), XDG_CACHE_HOME: join(home, ".cache"), XDG_STATE_HOME: join(home, ".local", "state"), TMPDIR: this.work, ARDIA_CLI_HOME: join(data, "ardia", "cli"), ARDIA_CLI_BIN_DIR: join(home, ".local", "bin") };
-  }
-
-  async ardia(args, { timeout = 60000 } = {}) {
+  async runCli(args, { timeout = 60000 } = {}) {
     const result = await run(this.cliBin, args, { timeout, env: this.cliEnv, cwd: this.work });
-    this.cliLog.push(`$ ardia ${args.join(" ")}\n[exit ${result.code}]\n${result.stdout}${result.stderr}`);
+    this.cliLog.push(`$ ${CLI_COMMAND} ${args.join(" ")}\n[exit ${result.code}]\n${result.stdout}${result.stderr}`);
     return result;
   }
 
@@ -827,7 +828,7 @@ class Smoke {
     const digest = (await readFile(join(this.cliDir, CLI_DIGEST), "utf8")).trim().split(/\s+/)[0];
     const actual = sha256(await readFile(tarball));
     if (digest !== actual) throw new Error(`${CLI_DIGEST} says ${digest}, but ${name} hashes to ${actual}`);
-    this.cliEnv = this.cliEnvironment();
+    this.cliEnv = cliEnvironment(this.work);
     this.cliLog = [];
     await mkdir(this.cliEnv.HOME, { recursive: true });
     const install = async () => {
@@ -835,7 +836,7 @@ class Smoke {
       this.cliLog.push(`$ /bin/sh ${CLI_INSTALLER} --version ${this.version} --sha256 ${digest}\n[exit ${result.code}]\n${result.stdout}${result.stderr}`);
       return result;
     };
-    const bin = join(this.cliEnv.ARDIA_CLI_BIN_DIR, "ardia");
+    const bin = join(this.cliEnv.ARDIA_CLI_BIN_DIR, CLI_COMMAND);
     try {
       const first = await install();
       const last = first.stdout.trim().split("\n").at(-1) ?? "";
@@ -843,8 +844,8 @@ class Smoke {
       const current = await readlink(join(this.cliEnv.ARDIA_CLI_HOME, "current")).catch(() => null);
       if (current !== this.version) throw new Error(`${this.cliEnv.ARDIA_CLI_HOME}/current points at ${JSON.stringify(current)}, not ${this.version}`);
       this.cliBin = bin;
-      const reported = await this.ardia(["--version"], { timeout: 30000 });
-      if (reported.code !== 0 || reported.stdout.trim() !== `ardia ${this.version}`) throw new Error(`ardia --version exited ${reported.code} and printed ${JSON.stringify((reported.stdout + reported.stderr).trim())}, not "ardia ${this.version}"`);
+      const reported = await this.runCli(["--version"], { timeout: 30000 });
+      if (reported.code !== 0 || reported.stdout.trim() !== `${CLI_COMMAND} ${this.version}`) throw new Error(`nilla-browser --version exited ${reported.code} and printed ${JSON.stringify((reported.stdout + reported.stderr).trim())}, not "${CLI_COMMAND} ${this.version}"`);
       const second = await install();
       if (second.code !== 0 || (second.stdout.trim().split("\n").at(-1) ?? "") !== `installed ${bin}`) throw new Error(`the second install exited ${second.code}: ${(second.stdout + second.stderr).trim().split("\n").slice(-3).join(" | ")}`);
       if (installerRanAgain(second.stdout)) throw new Error(`the second install of the current version wasn't a no-op: ${second.stdout.trim().split("\n").join(" | ")}`);
@@ -874,13 +875,13 @@ class Smoke {
     child.once("exit", (code, signal) => { instance.exited = code ?? signal; pipeChildren.delete(child); });
     child.once("error", (error) => { instance.exited = `spawn error ${error.message}`; pipeChildren.delete(child); });
     instance.abort = () => (instance.exited === null ? null : `the browser exited (${instance.exited})`);
-    instance.windows = () => this.ardia(["windows", "--data-dir", profile], { timeout: 30000 });
-    instance.setControl = (on) => instance.cdp.evaluate(instance.shell.sessionId, `(ardiaLinux.store.getState().updateSettings({ cliControl: ${on} }), ardiaLinux.store.getState().settings.cliControl)`);
+    instance.windows = () => this.runCli(["windows", "--data-dir", profile], { timeout: 30000 });
+    instance.setControl = (on) => instance.cdp.evaluate(instance.shell.sessionId, `(nillaLinux.store.getState().updateSettings({ cliControl: ${on} }), nillaLinux.store.getState().settings.cliControl)`);
     instance.shell = await until(async () => {
       const { targetInfos } = await instance.cdp.send("Target.getTargets");
       for (const target of targetInfos.filter((t) => t.type === "page" && t.url.startsWith(SHELL_PREFIX))) {
         const { sessionId } = await instance.cdp.send("Target.attachToTarget", { targetId: target.targetId, flatten: true });
-        const ready = await instance.cdp.evaluate(sessionId, `!!document.querySelector("[data-ardia-linux-window]") && !!globalThis.ardiaLinux?.store && !globalThis.__ardiaHost?.bootstrap?.utility`, 5000).catch(() => false);
+        const ready = await instance.cdp.evaluate(sessionId, `!!document.querySelector("[data-nilla-linux-window]") && !!globalThis.nillaLinux?.store && !globalThis.__ardiaHost?.bootstrap?.utility`, 5000).catch(() => false);
         if (ready) return { sessionId, windowId: await instance.cdp.evaluate(sessionId, "globalThis.__ardiaHost.bootstrap.windowId") };
         await instance.cdp.send("Target.detachFromTarget", { sessionId }).catch(() => {});
       }
@@ -893,7 +894,7 @@ class Smoke {
   }
 
   async stopPipeInstance(instance) {
-    if (instance.shell && instance.exited === null) await instance.cdp.evaluate(instance.shell.sessionId, `ardiaLinux.emitCommand(${js({ command: "quit", windowId: instance.shell.windowId })}), true`).catch(() => {});
+    if (instance.shell && instance.exited === null) await instance.cdp.evaluate(instance.shell.sessionId, `nillaLinux.emitCommand(${js({ command: "quit", windowId: instance.shell.windowId })}), true`).catch(() => {});
     if (instance.shell) await until(() => instance.exited !== null, { timeout: 20000, label: "the pipe instance to quit" }).catch(() => {});
     if (instance.exited === null) {
       try { process.kill(-instance.child.pid, "SIGKILL"); } catch {}
@@ -903,7 +904,7 @@ class Smoke {
   }
 
   async browse(profile, session, args, { timeout = 60000 } = {}) {
-    return this.ardia(["browse", "--data-dir", profile, "--session", session, ...args], { timeout });
+    return this.runCli(["browse", "--data-dir", profile, "--session", session, ...args], { timeout });
   }
 
   async closeBrowseSessions(profile, sessions) {
@@ -911,10 +912,10 @@ class Smoke {
   }
 
   async cliControl() {
-    if (!this.hasCli) throw outcome("skip", "no lib/ardia/cli in the package, so no ardia to drive it with");
+    if (!this.hasCli) throw outcome("skip", "no lib/ardia/cli in the package, so no nilla-browser to drive it with");
     const signals = cliControlSupport(this.capabilities);
     if (!signals.length) throw outcome("old", `the host advertises none of ${CLI_CONTROL_CAPABILITIES.join(", ")}: the engine predates CLI control`, { capabilities: this.capabilities?.length ?? null });
-    if (!this.cliBin) throw new Error("cli-install didn't leave a working ardia to drive the instance with");
+    if (!this.cliBin) throw new Error("cli-install didn't leave a working nilla-browser to drive the instance with");
     const steps = [];
     const brief = (result) => ({ code: result.code, out: (result.stdout + result.stderr).trim().slice(-300) });
     let instance = null;
@@ -924,23 +925,23 @@ class Smoke {
       const { windows, setControl, abort, profile } = instance;
       const off = await windows();
       steps.push({ step: "windows while control is off", ...brief(off) });
-      if (off.code !== 2) throw new Error(`ardia windows exited ${off.code} before control was turned on, not 2`);
+      if (off.code !== 2) throw new Error(`nilla-browser windows exited ${off.code} before control was turned on, not 2`);
       if ((await setControl(true)) !== true) throw new Error("settings.cliControl didn't turn on");
       let last = null;
-      await until(async () => (last = await windows()).code === 0, { timeout: 30000, interval: 500, label: "ardia windows to succeed once control is on", abort }).catch((error) => { throw new Error(`${error.message}; last ${JSON.stringify(last && brief(last))}`); });
+      await until(async () => (last = await windows()).code === 0, { timeout: 30000, interval: 500, label: "nilla-browser windows to succeed once control is on", abort }).catch((error) => { throw new Error(`${error.message}; last ${JSON.stringify(last && brief(last))}`); });
       steps.push({ step: "windows once control is on", ...brief(last) });
-      const fixtureTitle = `Ardia smoke ${this.fixture.token}`;
+      const fixtureTitle = `Nilla smoke ${this.fixture.token}`;
       const opened = await this.browse(profile, "smoke", ["open", this.fixture.url]);
       steps.push({ step: "browse open", ...brief(opened) });
-      if (opened.code !== 0) throw new Error(`ardia browse open exited ${opened.code} and printed ${JSON.stringify(brief(opened).out)}`);
+      if (opened.code !== 0) throw new Error(`nilla-browser browse open exited ${opened.code} and printed ${JSON.stringify(brief(opened).out)}`);
       const title = await this.browse(profile, "smoke", ["get", "title"]);
       steps.push({ step: "browse get title", ...brief(title) });
-      if (title.code !== 0 || !title.stdout.includes(fixtureTitle)) throw new Error(`ardia browse get title exited ${title.code} and printed ${JSON.stringify(brief(title).out)}, not the fixture's title`);
+      if (title.code !== 0 || !title.stdout.includes(fixtureTitle)) throw new Error(`nilla-browser browse get title exited ${title.code} and printed ${JSON.stringify(brief(title).out)}, not the fixture's title`);
       const listed = await windows();
       steps.push({ step: "windows lists the browse tab", ...brief(listed) });
-      if (listed.code !== 0 || !listed.stdout.includes(fixtureTitle)) throw new Error(`ardia windows exited ${listed.code} and printed ${JSON.stringify(brief(listed).out)}, without the tab ardia browse opened`);
+      if (listed.code !== 0 || !listed.stdout.includes(fixtureTitle)) throw new Error(`nilla-browser windows exited ${listed.code} and printed ${JSON.stringify(brief(listed).out)}, without the tab nilla-browser browse opened`);
       if ((await setControl(false)) !== false) throw new Error("settings.cliControl didn't turn off");
-      await until(async () => (last = await windows()).code === 2, { timeout: 20000, interval: 500, label: "ardia windows to exit 2 once control is off", abort }).catch((error) => { throw new Error(`${error.message}; last ${JSON.stringify(last && brief(last))}`); });
+      await until(async () => (last = await windows()).code === 2, { timeout: 20000, interval: 500, label: "nilla-browser windows to exit 2 once control is off", abort }).catch((error) => { throw new Error(`${error.message}; last ${JSON.stringify(last && brief(last))}`); });
       steps.push({ step: "windows once control is off again", ...brief(last) });
       return { signals, steps, controlFiles: await controlFiles() };
     } catch (error) {
@@ -952,13 +953,13 @@ class Smoke {
   }
 
   async cliScripts() {
-    if (!this.hasCli) throw outcome("skip", "no lib/ardia/cli in the package, so no ardia to install a script with");
+    if (!this.hasCli) throw outcome("skip", "no lib/ardia/cli in the package, so no nilla-browser to install a script with");
     const missing = USER_SCRIPTS_CAPABILITIES.filter((name) => !(this.capabilities ?? []).includes(name));
     if (missing.length) throw outcome("old", `the host doesn't advertise ${missing.join(", ")}: the engine predates userscripts on Linux`, { capabilities: this.capabilities?.length ?? null });
-    if (!this.cliBin) throw new Error("cli-install didn't leave a working ardia to install a script with");
+    if (!this.cliBin) throw new Error("cli-install didn't leave a working nilla-browser to install a script with");
     const steps = [];
     const brief = (result) => ({ code: result.code, out: (result.stdout + result.stderr).trim().slice(-400) });
-    const fixtureTitle = `Ardia smoke ${this.fixture.token}`;
+    const fixtureTitle = `Nilla smoke ${this.fixture.token}`;
     const scriptedTitle = `${SCRIPT_TITLE_PREFIX}${fixtureTitle}`;
     const script = join(this.work, "smoke.user.js");
     await writeFile(script, userScriptSource());
@@ -968,27 +969,27 @@ class Smoke {
       const { windows, setControl, abort, profile } = instance;
       if ((await setControl(true)) !== true) throw new Error("settings.cliControl didn't turn on");
       let last = null;
-      await until(async () => (last = await windows()).code === 0, { timeout: 30000, interval: 500, label: "ardia windows to succeed once control is on", abort }).catch((error) => { throw new Error(`${error.message}; last ${JSON.stringify(last && brief(last))}`); });
+      await until(async () => (last = await windows()).code === 0, { timeout: 30000, interval: 500, label: "nilla-browser windows to succeed once control is on", abort }).catch((error) => { throw new Error(`${error.message}; last ${JSON.stringify(last && brief(last))}`); });
       const title = async (step) => {
         const opened = await this.browse(profile, "scripts", ["open", this.fixture.url]);
         steps.push({ step: `${step}: open`, ...brief(opened) });
-        if (opened.code !== 0) throw new Error(`ardia browse open exited ${opened.code}: ${brief(opened).out}`);
+        if (opened.code !== 0) throw new Error(`nilla-browser browse open exited ${opened.code}: ${brief(opened).out}`);
         const result = await this.browse(profile, "scripts", ["get", "title"]);
         steps.push({ step, ...brief(result) });
-        if (result.code !== 0) throw new Error(`ardia browse get title exited ${result.code}: ${brief(result).out}`);
+        if (result.code !== 0) throw new Error(`nilla-browser browse get title exited ${result.code}: ${brief(result).out}`);
         return result.stdout.trim().split("\n").at(-1) ?? "";
       };
-      const install = await this.ardia(["scripts", "install", script, "--data-dir", profile], { timeout: 90000 });
+      const install = await this.runCli(["scripts", "install", script, "--data-dir", profile], { timeout: 90000 });
       steps.push({ step: "scripts install", ...brief(install) });
-      if (install.code !== 0 || !/: loaded$/m.test(install.stdout)) throw new Error(`ardia scripts install exited ${install.code} and printed ${JSON.stringify(brief(install).out)}, not a loaded profile`);
-      const listed = await this.ardia(["scripts", "list", "--data-dir", profile], { timeout: 30000 });
+      if (install.code !== 0 || !/: loaded$/m.test(install.stdout)) throw new Error(`nilla-browser scripts install exited ${install.code} and printed ${JSON.stringify(brief(install).out)}, not a loaded profile`);
+      const listed = await this.runCli(["scripts", "list", "--data-dir", profile], { timeout: 30000 });
       steps.push({ step: "scripts list", ...brief(listed) });
-      if (listed.code !== 0 || !listed.stdout.includes(SCRIPT_NAME) || !/reported by Ardia/.test(listed.stdout)) throw new Error(`ardia scripts list exited ${listed.code} and printed ${JSON.stringify(brief(listed).out)}, not the reported script`);
+      if (listed.code !== 0 || !listed.stdout.includes(SCRIPT_NAME) || !/reported by Nilla/.test(listed.stdout)) throw new Error(`nilla-browser scripts list exited ${listed.code} and printed ${JSON.stringify(brief(listed).out)}, not the reported script`);
       let seen = await title("title with the script installed");
       if (seen !== scriptedTitle) throw new Error(`the fixture's title reads ${JSON.stringify(seen)} with the script installed, not ${JSON.stringify(scriptedTitle)}`);
-      const removed = await this.ardia(["scripts", "uninstall", SCRIPT_NAME, "--data-dir", profile], { timeout: 90000 });
+      const removed = await this.runCli(["scripts", "uninstall", SCRIPT_NAME, "--data-dir", profile], { timeout: 90000 });
       steps.push({ step: "scripts uninstall", ...brief(removed) });
-      if (removed.code !== 0 || !/: removed$/m.test(removed.stdout)) throw new Error(`ardia scripts uninstall exited ${removed.code} and printed ${JSON.stringify(brief(removed).out)}, not a removed profile`);
+      if (removed.code !== 0 || !/: removed$/m.test(removed.stdout)) throw new Error(`nilla-browser scripts uninstall exited ${removed.code} and printed ${JSON.stringify(brief(removed).out)}, not a removed profile`);
       seen = await title("title after the uninstall");
       if (seen !== fixtureTitle) throw new Error(`the fixture's title reads ${JSON.stringify(seen)} after the uninstall, not ${JSON.stringify(fixtureTitle)}`);
       const status = JSON.parse(await readFile(join(profile, "Scripts", "status.json"), "utf8"));
@@ -1028,7 +1029,7 @@ class Smoke {
       return this.shellUi(shell);
     }, { timeout: 120000 });
     if (!first) {
-      for (const name of [...ASSERTIONS.slice(2, 7), "app-version"]) this.skip(name, `Ardia did not start: ${launched.detail.error}`);
+      for (const name of [...ASSERTIONS.slice(2, 7), "app-version"]) this.skip(name, `Nilla did not start: ${launched.detail.error}`);
     } else {
       await this.record("bootstrap", () => this.bootstrap(first.shell));
       this.capabilities = await first.shell.eval("globalThis.__ardiaHost?.bootstrap?.capabilities ?? []").catch(() => null);
@@ -1050,9 +1051,9 @@ class Smoke {
     }
     await this.record("staged-install", () => this.stagedInstall(), { timeout: 150000 });
     await this.record("cli-install", () => this.cliInstall(), { timeout: 240000 });
-    if (!first && this.hasCli) this.skip("cli-control", `Ardia did not start: ${launched.detail.error}`);
+    if (!first && this.hasCli) this.skip("cli-control", `Nilla did not start: ${launched.detail.error}`);
     else await this.record("cli-control", () => this.cliControl(), { timeout: 240000 });
-    if (!first && this.hasCli) this.skip("cli-scripts", `Ardia did not start: ${launched.detail.error}`);
+    if (!first && this.hasCli) this.skip("cli-scripts", `Nilla did not start: ${launched.detail.error}`);
     else await this.record("cli-scripts", () => this.cliScripts(), { timeout: 300000 });
   }
 

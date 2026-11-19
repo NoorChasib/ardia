@@ -1,4 +1,4 @@
-import { actionSheet, ContextMenuView, nativeMenusAvailable, settingsUI, type ContextMenuHandle, type MenuItem as NativeMenuItem } from "@ardia/phone-native";
+import { actionSheet, ContextMenuView, nativeMenusAvailable, settingsUI, type ContextMenuHandle, type MenuItem as NativeMenuItem } from "@nilla/phone-native";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Platform, StyleSheet, View, type StyleProp, type ViewInstance, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";

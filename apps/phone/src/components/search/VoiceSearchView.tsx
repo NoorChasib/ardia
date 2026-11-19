@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { copy } from "../../lib/platformCopy";
 import { PROBLEM_TEXT, voiceControl, type Dictation } from "../../state/voice/dictation";
 import { closeVoiceSearch, openSpeechSettings, searchSpoken, startListening, stopListening, useDictation, useVoiceLevels, useVoicePresented } from "../../state/voice/store";
-import { ArdiaLogo, capsule, font, FrostSource, LookBackdrop, LookFrost, space, Symbol, useCoverFocus, voiceInk, voiceLayout, type SymbolName, useReduceMotion } from "../ui";
+import { NillaLogo, capsule, font, FrostSource, LookBackdrop, LookFrost, space, Symbol, useCoverFocus, voiceInk, voiceLayout, type SymbolName, useReduceMotion } from "../ui";
 
 export function VoiceSearchView() {
   const presented = useVoicePresented();
@@ -54,7 +54,7 @@ function LevelLogo({ level }: { level: number }) {
   const style = useAnimatedStyle(() => ({ transform: [{ scale: reduceMotion ? 1 : 0.92 + shown.value * 0.16 }] }));
   return (
     <Animated.View style={[styles.logo, style]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      <ArdiaLogo width={voiceLayout.logo} />
+      <NillaLogo width={voiceLayout.logo} />
     </Animated.View>
   );
 }

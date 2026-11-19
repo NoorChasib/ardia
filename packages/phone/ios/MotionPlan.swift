@@ -52,7 +52,7 @@ enum MotionChannel: CaseIterable {
     }
   }
 
-  var key: String { "ardia.motion.\(keyPath)" }
+  var key: String { "nilla.motion.\(keyPath)" }
 }
 
 enum MotionCurve: Equatable {

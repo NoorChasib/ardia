@@ -27,11 +27,10 @@ const HANDS_PLATFORM_TO_SCRIPTS = new Set(["components/dev/devHarness.ts"]);
 const RULES = ["layout", "imports", "native-calls", "tokens", "scale", "get-state", "set-state", "store-reads", "store-shape", "size", "env", "naming", "comments", "file-names"];
 const SIZE_CAP = { js: 400, native: 600 };
 const SCOPES = ["apps/browser/src", "packages", "engine/ardiacore/src", "engine/chromium/src"];
-const GENERATED = new Set(["packages/core/src/bangList.ts", "packages/demo/src/shims/web/symbols/data.ts", "apps/browser/src/lib/emojiData.ts", "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-core.js", "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/ardia-sync.js"]);
+const GENERATED = new Set(["packages/core/src/bangList.ts", "packages/demo/src/shims/web/symbols/data.ts", "apps/browser/src/lib/emojiData.ts", "packages/phone/ios/NillaKit/Sources/NillaShared/Scripts/nilla-core.js", "packages/phone/ios/NillaKit/Sources/NillaShared/Scripts/nilla-sync.js"]);
 const ONE_INJECTED_SCRIPT = new Set(["packages/ardiacore/ios/page_script.js"]);
 const FROZEN_SPECS = new Set(["packages/core/src/suggest.reference.ts"]);
 const LAUNCH_CONFIG = [/^packages\/ardiacore\/ios\/ArdiaLaunchConfig\.\w+$/, /^apps\/browser\/src\/platform\/launchConfig\.ts$/];
-const MIGRATION_FILE = /(?:^|\/)(?:LegacyMigration\.swift|legacy\.ts|\w*[Mm]igrations?\.(?:ts|swift|mm|m))$/;
 const TOKEN_FILE = /(?:^|\/)(?:tokens|motion)\.ts$/;
 const ENGINE_ENV_READS = {
   "engine/ardiacore/src/ardia/core/ac_main_delegate.cc": [
@@ -315,14 +314,12 @@ const NUMERIC_BRANCH = new RegExp(String.raw`[?:]\s*(${NUMBER})\s*(?=:|\)|$)`, "
 const ENV_READ =
   /\b(?:secure_)?getenv\s*\(|processInfo(?:\]\s*|\s*\.\s*)environment\b|ProcessInfo\s*\(\s*\)\s*\.\s*environment\b|\bprocess\s*\.\s*env\b|\bbase::Environment\b/g;
 const CEF_NAME = /(?<![A-Za-z])(?:[Cc]ef|CEF)(?![a-z])|(?<=[a-z0-9_])(?:Cef|CEF)(?![a-z])/g;
-const LEGACY_BRAND = /netnyahoo/gi;
-const LEGACY_PREFIX = /\bNN[A-Z][a-z]\w*/g;
 const APP_SIDE_OBJC_FILE = /^(?:AC[A-Z]|ArdiaCore[A-Z])\w*\.(?:h|m|mm|swift)$/;
 const APP_SIDE_OBJC_CLASS =
   /@(?:interface|implementation|protocol)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*\b(?!\s*[(;])|(?<!@)\b(?:class|struct|enum|protocol|actor|typealias)\s+(?:AC[A-Z]|ArdiaCore[A-Z])\w*|@objc\(\s*(?:AC[A-Z]|ArdiaCore[A-Z])\w*\s*\)/g;
 const IMPORT_SPEC =
   /\b(?:import|export)\b[^;"'`]*?\bfrom\s*(["'])([^"'\n]+)\1|\bimport\s*(?:\(\s*)?(["'])([^"'\n]+)\3|\brequire\s*\(\s*(["'])([^"'\n]+)\5/g;
-const NATIVE_PACKAGE = /^(?:@ardia\/(?:ardiacore|shell|shaders|import|sync)(?:\/.*)?|expo-modules-core)$/;
+const NATIVE_PACKAGE = /^(?:@ardia\/ardiacore(?:\/.*)?|@nilla\/(?:shell|shaders|import|sync)(?:\/.*)?|expo-modules-core)$/;
 const NATIVE_GLOBAL = /\bNativeModules\b(?!\s*[,}])|\brequireNative(?:Module|Component|ViewManager)\s*\(/g;
 const COMPONENT_FILE = /^[A-Z][A-Za-z0-9]*(?:\.(?:web|native|macos|ios|windows|linux))?\.tsx$/;
 const MODULE_FILE = /^[a-z][A-Za-z0-9]*(?:\.(?:web|native|macos|ios|windows|linux))?\.(?:ts|mjs)$/;
@@ -403,7 +400,6 @@ function checkFile(path, src, add) {
   if (!LAUNCH_CONFIG.some((allowed) => allowed.test(path))) add("env", path, envReads(path, src, code));
 
   let naming = count(codeAndStrings, CEF_NAME);
-  if (!MIGRATION_FILE.test(path)) naming += count(codeAndStrings, LEGACY_BRAND) + count(code, LEGACY_PREFIX);
   if (/^packages\/[^/]+\/ios\//.test(path)) naming += (APP_SIDE_OBJC_FILE.test(base) ? 1 : 0) + count(code, APP_SIDE_OBJC_CLASS);
   add("naming", path, naming);
 
@@ -492,6 +488,234 @@ function findViolations(files) {
   for (const [path, src] of files) checkFile(path, src, add);
   return found;
 }
+
+const NAMING_ALLOWLIST_PATH = `${APP_SRC}naming-allowlist.json`;
+const RESIDUAL_NAME = /ardia|netnyahoo/gi;
+const RESIDUAL_GATE_FILE = `${APP_SRC}conventions.test.mjs`;
+const KEPT_PATH_GROUPS = ["frozen", "keep", "lead", "generated", "skipTree"];
+const KEPT_PATHS = ["docs/audit/*", RESIDUAL_GATE_FILE];
+
+const globRegex = (glob) => new RegExp(`^${glob.replace(/[.+^${}()|\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".")}$`);
+const regexText = (text) => text.replace(/[.*+?^${}()|[\]\\\/-]/g, "\\$&");
+
+function protectedPattern(entry) {
+  if ("regex" in entry) {
+    const caseless = entry.regex.startsWith("(?i)");
+    const source = caseless ? entry.regex.slice(4) : entry.regex;
+    assert.ok(!source.includes("(?i)"), `${entry.id}: a (?i) flag only at the start`);
+    return new RegExp(source, caseless ? "gmi" : "gm");
+  }
+  const text = regexText(entry.text);
+  if (entry.quoted) return new RegExp(`(?<=["'\`])${text}(?=["'\`])`, "g");
+  if ((entry.boundary ?? "word") !== "word") return new RegExp(text, "g");
+  const before = /\w/.test(entry.text[0]) ? "(?<![A-Za-z0-9_])" : "";
+  const after = /\w/.test(entry.text.at(-1)) ? "(?![A-Za-z0-9_])" : "";
+  return new RegExp(`${before}${text}${after}`, "g");
+}
+
+function namingAllowlist(document) {
+  const unmoved = [
+    ...document.moves.componentMaps
+      .filter((map) => map.replace)
+      .map((map) => [new RegExp(`(^|/)${regexText(map.replace)}(?=/|$)`, "g"), `$1${map.match.replace(/^\^|^\(\^\|\/\)|\$$/g, "").split("/").at(-1)}`]),
+    ...document.moves.componentCase.map(([before, after]) => [new RegExp(after, "g"), before]),
+  ];
+  const beforeRename = (path) => unmoved.reduce((moved, [pattern, before]) => moved.replace(pattern, before), path);
+  const matches = (globs, path) => (globs ?? []).some((glob) => globRegex(glob).test(path) || globRegex(glob).test(beforeRename(path)));
+  const keptPaths = [...KEPT_PATH_GROUPS.flatMap((group) => document.paths[group]), ...KEPT_PATHS];
+  const entries = document.protect.map((entry) => ({ entry, pattern: protectedPattern(entry) }));
+  return {
+    kept: (path) => matches(keptPaths, path),
+    spans(path, text) {
+      const spans = [];
+      for (const { entry, pattern } of entries) {
+        if (entry.scope && !matches(entry.scope, path)) continue;
+        if (entry.except && matches(entry.except, path)) continue;
+        for (const match of text.matchAll(pattern)) if (match[0]) spans.push([match.index, match.index + match[0].length]);
+      }
+      const lines = new Set(document.lines.filter((line) => line.path === path || line.path === beforeRename(path)).map((line) => line.text));
+      if (lines.size) {
+        let start = 0;
+        for (const line of text.split("\n")) {
+          if (lines.has(line)) spans.push([start, start + line.length]);
+          start += line.length + 1;
+        }
+      }
+      return spans;
+    },
+  };
+}
+
+function residualNames(allowlist, files) {
+  const uncovered = [];
+  for (const [path, text] of files) {
+    if (allowlist.kept(path)) continue;
+    const spans = allowlist.spans(path, text);
+    for (const match of text.matchAll(RESIDUAL_NAME)) {
+      const end = match.index + match[0].length;
+      if (spans.some(([from, to]) => from <= match.index && end <= to)) continue;
+      const line = text.slice(0, match.index).split("\n").length;
+      const lineStart = text.lastIndexOf("\n", match.index) + 1;
+      const lineEnd = text.indexOf("\n", match.index);
+      uncovered.push(`${path}:${line}: ${text.slice(lineStart, lineEnd < 0 ? text.length : lineEnd).trim().slice(0, 160)}`);
+    }
+  }
+  return uncovered;
+}
+
+function filesNamingTheUpstream() {
+  const listed = spawnSync("git", ["grep", "--untracked", "-I", "-l", "-z", "-i", "-E", RESIDUAL_NAME.source], { cwd: ROOT, maxBuffer: 1 << 30 });
+  if (listed.status > 1) throw new Error(`git grep: ${listed.stderr}`);
+  return listed.stdout.toString().split("\0").filter((path) => path && existsSync(ROOT + path)).map((path) => [path, readFileSync(ROOT + path, "utf8")]);
+}
+
+function staleLines(document) {
+  return document.lines
+    .filter((line) => !existsSync(ROOT + line.path) || !readFileSync(ROOT + line.path, "utf8").split("\n").includes(line.text))
+    .map((line) => `${line.id} (${line.path}): ${line.text.trim().slice(0, 120)}`);
+}
+
+const ENGINE_CONTRACT = [
+  {
+    name: "the instance switch prefix ardia-",
+    engine: ["engine/ardiacore/src/ardia/core/ac_launch_switches.cc", /const std::string name = "ardia-" \+ std::string\(key\);/],
+    app: [
+      ["packages/ardiacore/ios/ArdiaHost+Launch.mm", /static constexpr std::string_view kEngineSwitchPrefix = "ardia-";/],
+      ["packages/ardiacore/tests/chromium-switches.test.cc", /static constexpr std::string_view kEnginePrefix = "ardia-";/],
+      ["packages/ardiacore/ios/ArdiaLaunchConfig.mm", /@"--ardia-%@=%@"/],
+      ["scripts/lib/launchEnv.mjs", /"--ardia-apply-profile-gate"/],
+    ],
+  },
+  {
+    name: "the CLI control socket ArdiaControl.sock",
+    engine: ["engine/ardiacore-linux/src/ardia/linux/ac_linux_control_core.h", /kSocketName\[\] = "ArdiaControl\.sock";/],
+    app: [
+      ["apps/cli/nilla_browser_cli/control.py", /^SOCKET_FILE = "ArdiaControl\.sock"$/m],
+      ["packages/shell/ios/ControlSocket.swift", /static let socketName = "ArdiaControl\.sock"/],
+    ],
+  },
+  {
+    name: "the CLI control file ArdiaControl.json",
+    engine: ["engine/chromium/src/chrome/browser/ardia/ac_cli_control.cc", /kControlFileName\[\] = "ArdiaControl\.json";/],
+    app: [["apps/cli/nilla_browser_cli/endpoint.py", /^CONTROL_FILE = "ArdiaControl\.json"$/m]],
+  },
+  {
+    name: "the Little window identifier ardia.window.small",
+    engine: ["engine/ardiacore/src/ardia/core/ac_video_upscaling.mm", /kLittleArdiaWindow = @"ardia\.window\.small";/],
+    app: [["packages/ardiacore/ios/ArdiaEarlyWindow.mm", /little\.window\.identifier = @"ardia\.window\.small";/]],
+  },
+  {
+    name: "the Windows app library ArdiaApp.dll",
+    engine: ["scripts/windows/engine/src/ardia/win/main.cc", /path\.append\(L"ArdiaApp\.dll"\);/],
+    app: [
+      ["apps/browser/windows/NillaLauncher/Launcher.cpp", /directory \+ L"ArdiaApp\.dll";/],
+      ["scripts/windows/assemble.ps1", /^\$library = "ArdiaApp\.dll"$/m],
+    ],
+  },
+  ...["ArdiaAppStart", "ArdiaAppPreTranslateMessage", "ArdiaAppStop", "ArdiaAppStartFailure"].map((symbol) => ({
+    name: `the Windows app export ${symbol}`,
+    engine: ["scripts/windows/engine/src/ardia/win/main.cc", new RegExp(`GetProcAddress\\((?:app\\.)?module, "${symbol}"\\)`)],
+    app: [["apps/browser/windows/Ardia/Nilla.cpp", new RegExp(`__declspec\\(dllexport\\) [^\\n(]*\\b${symbol}\\(`)]],
+  })),
+  {
+    name: "the Windows test-build marker Ardia.test-build",
+    engine: ["scripts/windows/engine/src/ardia/win/test_gate.h", /kTestBuildMarker\[\] = L"Ardia\.test-build";/],
+    app: [
+      ["apps/browser/windows/Ardia/TestGate.h", /TestBuildMarker\[\] = L"Ardia\.test-build";/],
+      ["scripts/windows/assemble.ps1", /-ieq "Ardia\.test-build"/],
+    ],
+  },
+  {
+    name: 'the Windows profile folder prefix "Ardia "',
+    engine: ["scripts/windows/engine/src/ardia/win/profiles.cc", /kDirectoryPrefix\[\] = "Ardia ";/],
+    app: [
+      ["apps/browser/windows/Ardia/EngineHostModule.h", /ProfileFolderPrefix = "Ardia ";/],
+      ["packages/expo-windows/src/engine/domains/profiles.ts", /const FOLDER_PREFIX = "Ardia ";/],
+    ],
+  },
+  {
+    name: "the ingest key header X-Ardia-Key",
+    engine: ["engine/ardiacore-linux/src/ardia/linux/ac_linux_telemetry.cc", /SetHeader\("X-Ardia-Key", ingest_key\)/],
+    app: [
+      ["packages/core/src/ingestKeys.ts", /^export const INGEST_KEY_HEADER = "X-Ardia-Key";$/m],
+      ["apps/cli/nilla_browser_cli/telemetry.py", /^INGEST_KEY_HEADER = "X-Ardia-Key"$/m],
+    ],
+  },
+  {
+    name: "the video upscaler trace events ArdiaVSR.*",
+    engine: ["engine/ardiacore/src/ardia/core/ac_video_upscaler.mm", /TRACE_EVENT_INSTANT0\("gpu", "ArdiaVSR\.GateOpen"/],
+    app: [
+      ["apps/browser/scripts/video-upscaling-test.mjs", /String\(e\.name\)\.startsWith\("ArdiaVSR"\)/],
+      ["apps/browser/scripts/video-upscaling-test.mjs", /e\.name === `ArdiaVSR\.\$\{n\}`/],
+    ],
+  },
+  {
+    name: "the product name Ardia on chrome://version",
+    engine: ["engine/patches/build/ardia_namesub.py", /\(r'\(\?<!\[\/\._0-9\]\)Helium\(\?!\[A-Z0-9_\]\)', 'Ardia'\)/],
+    app: [
+      ["packages/ardiacore/scripts/acceptance.mjs", /!\/\^Ardia\\t\/\.test\(product/],
+      ["scripts/release/smoke.mjs", /includes\(`Ardia\\t\$\{chromiumVersion\} \(Official Build\)`\)/],
+    ],
+  },
+  {
+    name: "the engine source list ardia_sources",
+    engine: ["engine/chromium/src/chrome/browser/ardia/BUILD.gn", /^ardia_sources = \[/m],
+    app: [["scripts/linux/syntax_check_156.py", (script, read) => gnSearchesMatch(script, read(LINUX_SYNTAX_GN))]],
+  },
+  {
+    name: "the engine folders the Linux syntax check reads",
+    engine: ["engine/ardiacore-linux/src/ardia/linux/BUILD.gn", /^mojom\("page_mojom"\) \{\n  sources = \[ "mojom\/page\.mojom" \]/m],
+    app: [["scripts/linux/syntax_check_156.py", syntaxCheckFoldersExist]],
+  },
+  {
+    name: "the upstream engine repo the fetch defaults name",
+    engine: ["scripts/linux/fetch-engine.sh", /^repo=\$\{ARDIACORE_PREBUILT_REPO:-ardia-browser\/ardia\}$/m],
+    app: [["scripts/lib/releases.sh", /^ENGINE_REPO="ardia-browser\/ardia"$/m]],
+  },
+];
+
+const LINUX_SYNTAX_GN = "engine/chromium/src/chrome/browser/ardia/BUILD.gn";
+
+function gnSearchesMatch(script, gn) {
+  const searches = [...script.matchAll(/re\.search\(r"((?:[^"\\]|\\.)+)", gn, re\.S\)/g)].map((match) => new RegExp(match[1], "s"));
+  return gn !== undefined && searches.length >= 2 && searches.every((search) => search.test(gn));
+}
+
+function syntaxCheckFoldersExist(script) {
+  const bases = { ROOT: "" };
+  for (const [, name, base, path] of script.matchAll(/^(\w+) = (ROOT|ENGINE|LINUX) \/ "([^"]+)"$/gm)) if (base in bases) bases[name] = `${bases[base]}${path}/`;
+  const read = [...script.matchAll(/\b(ROOT|ENGINE|LINUX|NILLA) \/ "([^"]+)"/g)].map(([, base, path]) => (base in bases ? bases[base] + path : undefined));
+  const mojom = /\(LINUX \/ "([^"]+)\/mojom"\)\.glob\("\*\.mojom"\)/.exec(script)?.[1];
+  return (
+    ["LINUX", "ENGINE", "NILLA"].every((name) => name in bases) &&
+    read.length >= 8 &&
+    read.every((path) => path !== undefined && existsSync(ROOT + path)) &&
+    mojom !== undefined &&
+    script.includes(`mojo / "src/${mojom}/mojom" / mojom.name`) &&
+    script.includes(`f"src/${mojom}/mojom/{m.name}\\n"`) &&
+    script.includes(`(mojo / "gen/${mojom.split("/")[0]}").rglob("*.h")`)
+  );
+}
+
+function engineContractProblems(read) {
+  const problems = [];
+  const holds = (pattern, path) => (typeof pattern === "function" ? pattern(read(path) ?? "", read) : pattern.test(read(path) ?? ""));
+  for (const { name, engine, app } of ENGINE_CONTRACT) {
+    const [enginePath, enginePattern] = engine;
+    if (!holds(enginePattern, enginePath)) problems.push(`${name}: ${enginePath} no longer holds it; update the app side with the engine`);
+    for (const [path, pattern] of app) if (!holds(pattern, path)) problems.push(`${name}: ${path} must hold the engine's spelling`);
+  }
+  return problems;
+}
+
+const CREDITS = [
+  ["NOTICE", /^Ardia\nCopyright 2026 Mantra Patel$/m, "keeps Ardia's NOTICE block"],
+  ["README.md", /^## Acknowledgements\n(?:(?!\n#)[\s\S])*\[Ardia\]\(https:\/\/github\.com\/ardia-browser\/ardia\)(?:(?!\n#)[\s\S])*by Mantra Patel and its contributors/m, "thanks Ardia, Mantra Patel and its contributors"],
+  ["apps/browser/src/state/app/legalNotice.ts", /"Based on Ardia, © 2026 Mantra Patel\."/, "says About is based on Ardia"],
+  ["packages/shell/ios/AppUpdater.swift", /Based on Ardia, © 2026 Mantra Patel\./, "says the Mac About panel is based on Ardia"],
+  ["apps/phone/src/components/settings/DataPages.tsx", /\{ name: "Ardia", use: "[^"]+", license: "Apache License 2\.0", url: "https:\/\/github\.com\/ardia-browser\/ardia" \}/, "lists Ardia in the phone's open source licences"],
+  ["extras/raycast-nilla/package.json", /"contributors": \[\s*"mantrakp04",\s*"ridemountainpig"/, "keeps the Raycast extension's contributors"],
+];
 
 const sorted = (found) =>
   Object.fromEntries(RULES.map((rule) => [rule, Object.fromEntries(Object.entries(found[rule] ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)))]));
@@ -621,6 +845,14 @@ if (process.argv.includes("--write-baseline")) {
     assert.deepEqual(violationsOf("packages/hello/ios/HelloWindow.h", "@class ArdiaCoreTab;\n"), {});
     assert.deepEqual(violationsOf("packages/hello/ios/HelloWindow.h", "@interface ArdiaCoreHello : NSObject\n@end\n"), { naming: 1 });
   });
+  test("a component importing a native package is reported, the engine package and subpaths included", () => {
+    const imports = (spec) => violationsOf("apps/browser/src/components/hello/Hello.tsx", `import { thing } from "${spec}";\n`);
+    for (const spec of ["@ardia/ardiacore", "@ardia/ardiacore/sub", "@nilla/shell", "@nilla/shell/sub", "@nilla/sync", "@nilla/shaders", "@nilla/import", "expo-modules-core"]) {
+      assert.deepEqual(imports(spec), { "native-calls": 1 }, spec);
+    }
+    for (const spec of ["@nilla/core", "@nilla/ardiacore", "@ardia/shell"]) assert.deepEqual(imports(spec), {}, spec);
+    assert.deepEqual(violationsOf("apps/browser/src/platform/hello.ts", 'import { thing } from "@nilla/shell/sub";\n'), {});
+  });
   test("components neither write a store nor subscribe to the workspace store directly", () => {
     const component = (body) => violationsOf("apps/browser/src/components/hello/Hello.tsx", `${body}\n`);
     assert.deepEqual(component("useSidebarUi.setState({ hover: null });"), { "set-state": 1 });
@@ -645,6 +877,59 @@ if (process.argv.includes("--write-baseline")) {
     assert.deepEqual(violationsOf(policy, '    if (const char* home = getenv("HOME")) {\n'), {});
     assert.deepEqual(violationsOf(policy, '    const char* user = getenv("USER");\n'), { env: 1 });
     assert.deepEqual(violationsOf("engine/chromium/src/chrome/browser/ardia/ac_other.cc", '    if (const char* home = getenv("HOME")) {\n'), { env: 1 });
+  });
+  test("the residual-name gate covers a name only with an allowlist entry, a kept path or a protected token", () => {
+    const allowlist = namingAllowlist({
+      paths: { frozen: ["engine/*"], keep: [], lead: [], generated: [], finalByD: ["README.md"], skipTree: [], skipHand: { "scripts/linux/package.py": "C-linux" } },
+      moves: { componentMaps: [{ match: "^apps/cli/ardia_cli$", replace: "nilla_browser_cli" }], componentCase: [["Ardia", "Nilla"], ["ardia", "nilla"]] },
+      protect: [
+        { id: "env", regex: "ARDIA_[A-Z_]*" },
+        { id: "core", regex: "(?i)[a-z]*ardiacore[a-z]*" },
+        { id: "word", text: "ArdiaShell", scope: ["apps/linux/*"] },
+        { id: "cli", regex: "(?i)ardia", scope: ["apps/cli/ardia_cli/upstream.py"] },
+      ],
+      lines: [{ path: "apps/browser/src/state/report/actions.ts", text: 'const URL = "https://ardia.dev";' }],
+    });
+    const files = [
+      ["engine/x.cc", "ardia"],
+      ["scripts/linux/package.py", "ardia"],
+      ["README.md", "Ardia"],
+      ["apps/browser/src/a.ts", "ARDIA_DATA_DIR ArdiaCoreTab NillaShell"],
+      ["apps/linux/src/b.ts", '"ArdiaShell.quit"'],
+      ["apps/cli/nilla_browser_cli/upstream.py", "an installed Ardia"],
+      ["apps/browser/src/state/report/actions.ts", 'const URL = "https://ardia.dev";\nconst other = "https://ardia.dev";'],
+      ["apps/browser/src/c.ts", 'const a = "ArdiaShell";\nconst b = "Netnyahoo";'],
+    ];
+    assert.deepEqual(residualNames(allowlist, files), [
+      "scripts/linux/package.py:1: ardia",
+      "README.md:1: Ardia",
+      'apps/browser/src/state/report/actions.ts:2: const other = "https://ardia.dev";',
+      'apps/browser/src/c.ts:1: const a = "ArdiaShell";',
+      'apps/browser/src/c.ts:2: const b = "Netnyahoo";',
+    ]);
+  });
+  test("every Ardia or Netnyahoo name left is one the naming allowlist keeps", () => {
+    const allowlist = namingAllowlist(JSON.parse(readFileSync(ROOT + NAMING_ALLOWLIST_PATH, "utf8")));
+    const uncovered = residualNames(allowlist, filesNamingTheUpstream());
+    assert.equal(uncovered.length, 0, `Names outside ${NAMING_ALLOWLIST_PATH} (docs/conventions.md › Names):\n${uncovered.join("\n")}`);
+  });
+  test("every naming allowlist line is still in its file", () => {
+    const stale = staleLines(JSON.parse(readFileSync(ROOT + NAMING_ALLOWLIST_PATH, "utf8")));
+    assert.equal(stale.length, 0, `Lines entries in ${NAMING_ALLOWLIST_PATH} that no longer match a line (regenerate the allowlist):\n${stale.join("\n")}`);
+  });
+  test("the app keeps every name today's engines read, spelled as the engines spell it", () => {
+    const read = (path) => (existsSync(ROOT + path) ? readFileSync(ROOT + path, "utf8") : undefined);
+    const problems = engineContractProblems(read);
+    assert.equal(problems.length, 0, `Engine contract (docs/conventions.md › Names):\n${problems.join("\n")}`);
+    const renamed = (path) => read(path)?.replace(/Ardia/g, "Nilla").replace(/ardia/g, "nilla");
+    const broken = engineContractProblems((path) => (path.startsWith("engine/") || path.startsWith("scripts/windows/engine/") || path === "scripts/linux/fetch-engine.sh" ? read(path) : renamed(path)));
+    assert.equal(broken.length, ENGINE_CONTRACT.reduce((sum, { app }) => sum + app.length, 0), `a renamed app side fails every row:\n${broken.join("\n")}`);
+  });
+  test("Nilla keeps its credit to Ardia", () => {
+    for (const [path, credit, what] of CREDITS) assert.match(readFileSync(ROOT + path, "utf8"), credit, `${path} ${what}`);
+    const [readmePath, readmeCredit] = CREDITS.find(([path]) => path === "README.md");
+    const creditMovedOut = readFileSync(ROOT + readmePath, "utf8").replace("## Acknowledgements\n", "## Acknowledgements\n\nNo credits here.\n\n## Engine source\n");
+    assert.doesNotMatch(creditMovedOut, readmeCredit, "the README credit counts only inside its Acknowledgements section");
   });
   test("conventions hold, except what the baseline lists", (t) => {
     const baseline = JSON.parse(readFileSync(ROOT + BASELINE_PATH, "utf8"));

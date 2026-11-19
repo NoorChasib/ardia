@@ -1,9 +1,9 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react";
 import { View } from "react-native";
-import { toAppUrl, toEngineUrl } from "@ardia/core";
-import type { WebViewHandle, WebViewProps } from "@ardia-real/ardiacore";
+import { toAppUrl, toEngineUrl } from "@nilla/core";
+import type { WebViewHandle, WebViewProps } from "@nilla-real/ardiacore";
 import { setPagePicturesSupported } from "../../../../browser/src/platform/webviews";
-import { ardiaHost, hostSupports, reportHostError, type ArdiaHost } from "../../host";
+import { nillaHost, hostSupports, reportHostError, type ArdiaHost } from "../../host";
 import { PAGE_PICTURE_COMMAND } from "../../hostCapabilities";
 import { HostPageEvents } from "../../hostPageEvents";
 import { applyHostPageThemeState, forgetHostPageState, resetHostPageState } from "../../hostPageHooks";
@@ -20,10 +20,10 @@ import { focusPageIfShellUnfocused, notePageFocusRequest, notingPageFocus } from
 import { withPopupDismissal } from "../../popupDismissal";
 import { registerSwitchView } from "../../tabSwitchAhead";
 
-setPagePicturesSupported(!!ardiaHost && hostSupports(PAGE_PICTURE_COMMAND, ardiaHost));
+setPagePicturesSupported(!!nillaHost && hostSupports(PAGE_PICTURE_COMMAND, nillaHost));
 
 export const HostWebView = forwardRef<WebViewHandle, WebViewProps>(function HostWebView(props, ref) {
-  return props.extensionHost && extensionViewsSupported(ardiaHost) ? <HostExtensionWebView ref={ref} {...props} /> : <HostTabWebView ref={ref} {...props} />;
+  return props.extensionHost && extensionViewsSupported(nillaHost) ? <HostExtensionWebView ref={ref} {...props} /> : <HostTabWebView ref={ref} {...props} />;
 });
 
 const HostTabWebView = forwardRef<WebViewHandle, WebViewProps>(function HostTabWebView(props, ref) {
@@ -45,7 +45,7 @@ const HostTabWebView = forwardRef<WebViewHandle, WebViewProps>(function HostTabW
     (state) => { const tabId = latest.current.tabId; if (tabId) applyHostPageThemeState(tabId, state); }, rebound);
 
   useEffect(() => {
-    const host = ardiaHost!;
+    const host = nillaHost!;
     const current = new HostTab(host, { key: key.current, temporary: !props.tabId, profile: props.profile, url: toEngineUrl(props.url ?? "about:blank"), ...(props.adoptId ? { adoptId: props.adoptId } : {}) }, receive, page);
     tab.current = current;
     void current.ready.catch((error) => {
@@ -79,10 +79,10 @@ const HostTabWebView = forwardRef<WebViewHandle, WebViewProps>(function HostTabW
     };
   }, []);
 
-  return <View style={[props.style, { backgroundColor: "transparent" }]}><div ref={element} data-ardia-native-tab={key.current} style={{ position: "absolute", inset: 0 }} /></View>;
+  return <View style={[props.style, { backgroundColor: "transparent" }]}><div ref={element} data-nilla-native-tab={key.current} style={{ position: "absolute", inset: 0 }} /></View>;
 });
 
-export function hostTabHandle(mounted: () => HostTab | null, host: ArdiaHost | undefined = ardiaHost): WebViewHandle {
+export function hostTabHandle(mounted: () => HostTab | null, host: ArdiaHost | undefined = nillaHost): WebViewHandle {
   return new Proxy({} as WebViewHandle, {
     get(_target, property) {
       if (typeof property !== "string" || property === "then") return undefined;
@@ -90,7 +90,7 @@ export function hostTabHandle(mounted: () => HostTab | null, host: ArdiaHost | u
       if (property === "capturePicture" && !(host && hostSupports(PAGE_PICTURE_COMMAND, host))) return async () => null;
       return async (...args: unknown[]) => {
         const current = mounted();
-        if (!current) throw new Error("Ardia tab is not mounted");
+        if (!current) throw new Error("Nilla tab is not mounted");
         if (property === "loadUrl") {
           args[0] = toEngineUrl(args[0] as string);
           if (current.repeatsCreate(args[0] as string)) return undefined;

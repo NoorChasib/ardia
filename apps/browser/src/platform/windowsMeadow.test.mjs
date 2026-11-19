@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { turboModules } from "../test-native/reactNative.ts";
 
-turboModules.ArdiaEngineHost = { available: () => true, hostCall: async () => JSON.stringify({ ok: true }), engineCall: async () => "{}" };
+turboModules.NillaEngineHost = { available: () => true, hostCall: async () => JSON.stringify({ ok: true }), engineCall: async () => "{}" };
 
 const repo = new URL("../../../../", import.meta.url);
 const { meadowPageConfig, meadowPageUrl, base64InThrees, meadowScriptsCode } = await import("../../../../packages/expo-windows/src/meadow/pageUrl.ts");
@@ -168,9 +168,9 @@ test("ready makes the scene live, tones reach the app, and the page closes when 
   await page.advance(1);
   assert.equal(page.closed, 1);
   assert.equal(session.phase(), "closed");
-  assert.ok(page.logs.includes("[ardia windows] meadow page created"));
-  assert.ok(page.logs.some((line) => /^\[ardia windows\] meadow \d+ frames in \d+ ms$/.test(line)));
-  assert.ok(page.logs.some((line) => line.startsWith("[ardia windows] meadow page closed after") && line.endsWith("(finished)")));
+  assert.ok(page.logs.includes("[nilla windows] meadow page created"));
+  assert.ok(page.logs.some((line) => /^\[nilla windows\] meadow \d+ frames in \d+ ms$/.test(line)));
+  assert.ok(page.logs.some((line) => line.startsWith("[nilla windows] meadow page closed after") && line.endsWith("(finished)")));
 });
 
 test("the exit's hold is where the RN intro's opacity starts to fall", () => {
@@ -250,9 +250,9 @@ test("scripts that do not run fall back at once", async () => {
 
 test("the scripts are added as one inline script, so they run in the page's own scope like the Mac's", () => {
   const code = meadowScriptsCode();
-  assert.ok(code.startsWith("if (!window.ardiaIntro) { const script = document.createElement(\"script\"); script.textContent = "));
+  assert.ok(code.startsWith("if (!window.nillaIntro) { const script = document.createElement(\"script\"); script.textContent = "));
   assert.ok(code.includes(JSON.stringify(MEADOW_PAGE_SCRIPT)));
-  assert.ok(code.endsWith(`post("result", JSON.stringify(!!window.ardiaIntro));`));
+  assert.ok(code.endsWith(`post("result", JSON.stringify(!!window.nillaIntro));`));
 });
 
 test("Skip in the page skips the intro and closes the page once the skip has faded it", async () => {
@@ -283,7 +283,7 @@ test("Mute in the page reaches the app, and the app's mute and night reach the p
   session.setNight(true);
   assert.equal(page.ran.length, 1);
   session.setMuted(false);
-  assert.equal(page.ran.at(-1), "window.ardiaIntro && window.ardiaIntro.muted(false)");
+  assert.equal(page.ran.at(-1), "window.nillaIntro && window.nillaIntro.muted(false)");
 });
 
 test("an intro that ends first stops the session without closing twice", async () => {
@@ -338,7 +338,7 @@ test("a mute set before the page's scripts are in reaches the page once they are
   session.setMuted(true);
   page.report([]);
   await page.advance(MEADOW_POLL_MS);
-  assert.equal(page.ran.at(-1), "window.ardiaIntro && window.ardiaIntro.muted(true)");
+  assert.equal(page.ran.at(-1), "window.nillaIntro && window.nillaIntro.muted(true)");
   session.setMuted(true);
   assert.equal(page.ran.filter((code) => code.includes("muted(")).length, 1, "a mute the page already has is not sent again");
 });
@@ -348,7 +348,7 @@ test("a scene that fails says why in the launch log", async () => {
   startMeadowSession(startedNow, false, URL_OF_PAGE, deps);
   page.report([{ state: "failed", detail: "WebGL2 unavailable; webgl2 unavailable" }]);
   await page.advance(MEADOW_POLL_MS);
-  assert.ok(page.logs.some((line) => line === "[ardia windows] meadow fell back: the scene failed (WebGL2 unavailable; webgl2 unavailable)"), page.logs.join("\n"));
+  assert.ok(page.logs.some((line) => line === "[nilla windows] meadow fell back: the scene failed (WebGL2 unavailable; webgl2 unavailable)"), page.logs.join("\n"));
 });
 
 test("a Skip that arrives in the same poll as the first frame keeps its quick close", async () => {

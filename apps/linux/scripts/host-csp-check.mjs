@@ -17,7 +17,7 @@ if (process.argv.includes("--help") || process.argv.includes("-h")) {
 
 const browser = process.argv[2] ?? process.env.ARDIA_CSP_BROWSER ?? "/usr/bin/chromium";
 const root = fileURLToPath(new URL("..", import.meta.url));
-const profile = await mkdtemp(join(tmpdir(), "ardia-csp-check-"));
+const profile = await mkdtemp(join(tmpdir(), "nilla-csp-check-"));
 const children = [];
 const within = async (ms, what, promise) => {
   let timer;

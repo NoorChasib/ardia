@@ -6,9 +6,9 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
-@implementation ArdiaPiPZoom {
+@implementation NillaPiPZoom {
   __weak NSWindow *_window;
   NSRect _last;
   double _width;
@@ -20,15 +20,15 @@ using namespace ardia_pip;
 
 + (BOOL)zooms:(NSWindow *)window {
   if (!window.visible || !(window.styleMask & NSWindowStyleMaskResizable)) return NO;
-  ArdiaPiPController *controller = [ArdiaPiPController forWindow:window];
-  if (controller) return controller.stashedEdge == ArdiaPiPEdgeNone;
+  NillaPiPController *controller = [NillaPiPController forWindow:window];
+  if (controller) return controller.stashedEdge == NillaPiPEdgeNone;
   return IsChromeDocumentPictureInPicture(window) && IsChromeFloatingWindow(window);
 }
 
 + (instancetype)forWindow:(NSWindow *)window {
-  ArdiaPiPZoom *zoom = objc_getAssociatedObject(window, kZoomKey);
+  NillaPiPZoom *zoom = objc_getAssociatedObject(window, kZoomKey);
   if (!zoom) {
-    zoom = [[ArdiaPiPZoom alloc] init];
+    zoom = [[NillaPiPZoom alloc] init];
     zoom->_window = window;
     objc_setAssociatedObject(window, kZoomKey, zoom, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   }
@@ -39,7 +39,7 @@ static __weak NSWindow *gZoomGesture;
 
 + (BOOL)handle:(NSEvent *)event {
   BOOL handled = [self route:event];
-  static BOOL trace = [ArdiaLaunchConfig.shared traced:@"pipZoom"];
+  static BOOL trace = [NillaLaunchConfig.shared traced:@"pipZoom"];
   if (trace)
     NSLog(@"[pip-zoom] type %lu window %ld (%@) cmd %d phase %lu/%lu dy %.2f precise %d mag %.3f -> %@ %@", (unsigned long)event.type,
           (long)event.windowNumber, event.window.className, (event.modifierFlags & NSEventModifierFlagCommand) != 0,
@@ -75,13 +75,13 @@ static __weak NSWindow *gZoomGesture;
     if (momentum & (NSEventPhaseEnded | NSEventPhaseCancelled)) gZoomGesture = nil;
     double dy = event.scrollingDeltaY;
     if (dy == 0) return YES;
-    [[self forWindow:window] zoomBy:ardia_pip_zoom::ScrollFactor(dy, event.hasPreciseScrollingDeltas)
+    [[self forWindow:window] zoomBy:nilla_pip_zoom::ScrollFactor(dy, event.hasPreciseScrollingDeltas)
                                  at:[self screenPoint:event]
                                ease:!event.hasPreciseScrollingDeltas];
     return YES;
   }
   if (!window || ![self zooms:window] || ![self enabled]) return NO;
-  [[self forWindow:window] zoomBy:ardia_pip_zoom::MagnifyFactor(event.magnification)
+  [[self forWindow:window] zoomBy:nilla_pip_zoom::MagnifyFactor(event.magnification)
                                at:[self screenPoint:event]
                              ease:NO];
   return YES;
@@ -98,7 +98,7 @@ static __weak NSWindow *gZoomGesture;
 
 - (void)zoomBy:(double)factor at:(NSPoint)pointer ease:(BOOL)ease {
   NSWindow *window = _window;
-  [[ArdiaPiPController forWindow:window] stopMotion];
+  [[NillaPiPController forWindow:window] stopMotion];
   NSRect frame = window.frame;
   if (!NSEqualRects(frame, _last) || _width <= 0) {
     double aspect = NSWidth(frame) / MAX(NSHeight(frame), 1);
@@ -112,12 +112,12 @@ static __weak NSWindow *gZoomGesture;
     return [self step:factor];
   }
   double low, high;
-  ardia_pip_zoom::WidthLimits(_aspect, [self minSize], [self maxSize], [self visible], &low, &high);
+  nilla_pip_zoom::WidthLimits(_aspect, [self minSize], [self maxSize], [self visible], &low, &high);
   _target = MIN(MAX((_target > 0 ? _target : _width) * factor, low), high);
   if (_ease) return;
-  __weak ArdiaPiPZoom *weakSelf = self;
+  __weak NillaPiPZoom *weakSelf = self;
   _ease = [NSTimer timerWithTimeInterval:1.0 / 120 repeats:YES block:^(NSTimer *timer) {
-    ArdiaPiPZoom *strongSelf = weakSelf;
+    NillaPiPZoom *strongSelf = weakSelf;
     if (!strongSelf || !strongSelf->_window.visible || !NSEqualRects(strongSelf->_window.frame, strongSelf->_last)) {
       if (strongSelf) strongSelf->_ease = nil, strongSelf->_target = 0;
       return [timer invalidate];
@@ -133,17 +133,17 @@ static __weak NSWindow *gZoomGesture;
   _last = frame;
 }
 
-- (ardia_pip_zoom::Size)minSize {
+- (nilla_pip_zoom::Size)minSize {
   NSSize size = _window.contentMinSize;
   return {size.width, size.height};
 }
 
-- (ardia_pip_zoom::Size)maxSize {
+- (nilla_pip_zoom::Size)maxSize {
   NSSize size = _window.contentMaxSize;
   return {size.width > 0 ? size.width : CGFLOAT_MAX, size.height > 0 ? size.height : CGFLOAT_MAX};
 }
 
-- (ardia_pip_zoom::Rect)visible {
+- (nilla_pip_zoom::Rect)visible {
   NSRect visible = ScreenFor(_window.frame).visibleFrame;
   return {NSMinX(visible), NSMinY(visible), NSWidth(visible), NSHeight(visible)};
 }
@@ -151,7 +151,7 @@ static __weak NSWindow *gZoomGesture;
 - (void)step:(double)factor {
   NSWindow *window = _window;
   NSRect frame = window.frame;
-  ardia_pip_zoom::Result result = ardia_pip_zoom::Zoom(
+  nilla_pip_zoom::Result result = nilla_pip_zoom::Zoom(
       {NSMinX(frame), NSMinY(frame), NSWidth(frame), NSHeight(frame)}, _width, _aspect, factor, {_pointer.x, _pointer.y},
       [self visible], [self minSize], [self maxSize]);
   _width = result.width;

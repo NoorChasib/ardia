@@ -26,14 +26,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <profileable android:shell="${ardiaProfileable}" tools:targetApi="29" />
+        <profileable android:shell="${nillaProfileable}" tools:targetApi="29" />
 
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|uiMode|density|fontScale|assetsPaths"
             android:exported="true"
             android:launchMode="singleTask"
-            android:screenOrientation="${ardiaScreenOrientation}"
+            android:screenOrientation="${nillaScreenOrientation}"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -50,7 +50,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="ardia" />
+                <data android:scheme="nilla" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.WEB_SEARCH" />
@@ -126,7 +126,7 @@
 
         <receiver
             android:name=".system.MacTabsWidgetReceiver"
-            android:enabled="@bool/ardia_sync_offered"
+            android:enabled="@bool/nilla_sync_offered"
             android:exported="true"
             android:label="@string/widget_mac_tabs_name">
             <intent-filter>

@@ -5,7 +5,7 @@ import subprocess
 import time
 from pathlib import Path
 
-import ardia_side
+import nilla_side
 import browsers
 import grading
 import opencode_side
@@ -13,10 +13,10 @@ import registry
 import servers
 from procs import front_pid, http, kill_group, read_json, spawn_agent, write_json
 
-ROOT = Path(os.environ.get("BENCH_BROWSERAGENT_HOME", Path.home() / "ardia-scratch/browser-use-agent"))
+ROOT = Path(os.environ.get("BENCH_BROWSERAGENT_HOME", Path.home() / "nilla-scratch/browser-use-agent"))
 WORKER = Path(__file__).resolve().parent / "browseragent_worker.py"
 DEFAULTS = {
-    "browser": "ardia",
+    "browser": "nilla",
     "model": "gpt-6.1-terra",
     "effort": "medium",
     "venv": str(ROOT / "venv"),
@@ -32,7 +32,7 @@ KEPT_ENV = ("PATH", "HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "SSL_C
 
 
 def log(msg):
-    ardia_side.log(f"browseragent: {msg}")
+    nilla_side.log(f"browseragent: {msg}")
 
 
 def options(overrides=None):
@@ -93,7 +93,7 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
     if stale:
         log(f"{opts['lane']}: stopped leftovers {stale}")
     try:
-        baseline = ardia_side.reset_task(task)
+        baseline = nilla_side.reset_task(task)
         if home.exists():
             shutil.rmtree(home)
         (home / "bh").mkdir(parents=True)
@@ -103,8 +103,8 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
         busy = opencode_side.listener_pids(opts["cdp_port"])
         if busy:
             raise SystemExit(f"port {opts['cdp_port']} is used by pid {busy}, not by this harness")
-        if opts["browser"] == "ardia":
-            browser = browsers.launch_ardia(opts["app"], home / "ardia-data", opts["cdp_port"])
+        if opts["browser"] == "nilla":
+            browser = browsers.launch_nilla(opts["app"], home / "nilla-data", opts["cdp_port"])
         else:
             with open(home / "browser.log", "ab") as logs:
                 browser = browsers.launch_chrome(opts.get("chrome"), home, opts["cdp_port"], logs)

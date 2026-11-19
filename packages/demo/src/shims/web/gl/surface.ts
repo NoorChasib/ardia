@@ -72,7 +72,7 @@ function compile(gl: WebGL2RenderingContext, fragment: string): Program {
     const s = gl.createShader(type)!;
     gl.shaderSource(s, source);
     gl.compileShader(s);
-    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS) && !gl.isContextLost()) throw new Error(`[ardia shaders] ${gl.getShaderInfoLog(s)}`);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS) && !gl.isContextLost()) throw new Error(`[nilla shaders] ${gl.getShaderInfoLog(s)}`);
     return s;
   };
   const program = gl.createProgram()!;
@@ -83,7 +83,7 @@ function compile(gl: WebGL2RenderingContext, fragment: string): Program {
   gl.linkProgram(program);
   gl.deleteShader(vs);
   gl.deleteShader(fs);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS) && !gl.isContextLost()) throw new Error(`[ardia shaders] ${gl.getProgramInfoLog(program)}`);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS) && !gl.isContextLost()) throw new Error(`[nilla shaders] ${gl.getProgramInfoLog(program)}`);
   const uniforms = new Map<string, { location: WebGLUniformLocation; type: number }>();
   const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS) as number;
   for (let i = 0; i < count; i++) {
@@ -103,7 +103,7 @@ function setUniform(gl: WebGL2RenderingContext, type: number, location: WebGLUni
     case gl.FLOAT_VEC2: return gl.uniform2fv(location, list);
     case gl.FLOAT_VEC4: return gl.uniform4fv(location, list);
     case gl.INT: case gl.BOOL: return gl.uniform1iv(location, list.map(Math.trunc));
-    default: throw new Error(`[ardia shaders] unsupported uniform type ${type}`);
+    default: throw new Error(`[nilla shaders] unsupported uniform type ${type}`);
   }
 }
 

@@ -41,7 +41,7 @@ function linuxWatcher() {
     native.band = over && bandable() && inset() >= native.hold;
     send(over);
   };
-  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false) => {
+  shellNativeModules.NillaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false) => {
     native.calls++;
     if (!on) Object.assign(native, { watching: false, over: false, band: false });
     else {
@@ -79,7 +79,7 @@ function exactHoldWatcher({ answersOnTick }) {
       native.unanswered = false;
       report(fresh);
     }, WINDOWS_TICK_MS);
-  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false) => {
+  shellNativeModules.NillaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false) => {
     native.calls++;
     if (!on) Object.assign(native, { watching: false, over: false });
     else {
@@ -293,7 +293,7 @@ for (const right of [false, true]) {
 
 test("Slower with the shell's strip and no native band (macOS framed): the strip alone confirms the wait, and leaving it ends the wait", (t) => {
   const s = harness(t, { borderless: false });
-  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0) => {
+  shellNativeModules.NillaAppWindows.watchSidebarEdge = (id, on, hold = 0) => {
     if (on) setTimeout(() => windows.emit({ type: "sidebarEdge", id: "w", over: hold > PEEK_EDGE_STRIP && s.native.x < hold, point: [s.native.x, 300] }), 1);
     return Promise.resolve();
   };
@@ -306,7 +306,7 @@ test("Slower with the shell's strip and no native band (macOS framed): the strip
 
 test("Slower with the shell's strip on macOS framed: stepping back off the strip never opens it", (t) => {
   const s = harness(t, { borderless: false });
-  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on) => {
+  shellNativeModules.NillaAppWindows.watchSidebarEdge = (id, on) => {
     if (on) setTimeout(() => windows.emit({ type: "sidebarEdge", id: "w", over: false, point: [s.native.x, 300] }), 1);
     return Promise.resolve();
   };

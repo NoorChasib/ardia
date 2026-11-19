@@ -1,5 +1,5 @@
 import { forwardRef, type ReactNode } from "react";
-import type { DockSelectionProps } from "@ardia/shell";
+import type { DockSelectionProps } from "@nilla/shell";
 import { Image, StyleSheet, Text, View, type ViewStyle } from "react-native";
 import { Bands } from "./Bands";
 import { colorOrUndefined, finite } from "./shared";

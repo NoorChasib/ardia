@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The Mac half of a sync test for an Android phone that has no Mac: a hidden Ardia for Mac on this Mac, syncing to
+// The Mac half of a sync test for an Android phone that has no Mac: a hidden Nilla for Mac on this Mac, syncing to
 // a folder here. phone-sync-relay.mjs, on the machine the phone is plugged into, mirrors that folder to the phone.
 //
 //   node apps/phone/scripts/phone-sync-mac.mjs start  [--work DIR] [--app APP] [--metro-port PORT] [--seed PROFILE_COPY]
@@ -19,7 +19,7 @@
 // Mac, where a tab sent from the phone arrives; sync syncs now and prints the same. send opens URL in a background
 // tab on the Mac and sends it to the phone (the only device it can send to, or --to). stop quits the instance and
 // the Metro it started (or hands that Metro to another phone's instance still using it), and deletes <work> unless
-// --keep. The default work folder is /tmp/ardia-phone-sync-mac; the default app is the Debug build that
+// --keep. The default work folder is /tmp/nilla-phone-sync-mac; the default app is the Debug build that
 //   ARDIACORE_FRAMEWORK="$(packages/ardiacore/scripts/fetch-engine.sh --nearest)" \
 //     XCODE_XCCONFIG_FILE="$PWD/apps/browser/macos/AdHoc.xcconfig" scripts/agent/build-app --as phone-sync-mac
 // makes (sync's test hooks exist only in Debug). Never an installed app. check (and start, before it launches) refuses an
@@ -32,10 +32,10 @@ import { fileURLToPath } from "node:url";
 import { attach, isAlive, launch, listenerPids, sleep } from "../../../scripts/lib/instance.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
-const defaultApp = path.join(repo, "apps/browser/build-phone-sync-mac/Build/Products/Debug/Ardia.app");
+const defaultApp = path.join(repo, "apps/browser/build-phone-sync-mac/Build/Products/Debug/Nilla.app");
 
 function options(argv) {
-  const found = { command: argv[0], work: "/tmp/ardia-phone-sync-mac", app: defaultApp, metroPort: 8099, keep: false, rest: [] };
+  const found = { command: argv[0], work: "/tmp/nilla-phone-sync-mac", app: defaultApp, metroPort: 8099, keep: false, rest: [] };
   for (let index = 1; index < argv.length; index += 1) {
     const [name, value] = [argv[index], argv[index + 1]];
     if (name === "--work") (found.work = path.resolve(value)), (index += 1);
@@ -64,7 +64,7 @@ export function appProblems(app, files = { source: nativeApiSource, js: nativeAp
   const wanted = /export const NATIVE_API_VERSION = (\d+);/.exec(fs.readFileSync(files.js, "utf8"))?.[1];
   const declared = /Constant\("apiVersion"\)\s*\{\s*\(\)\s*->\s*Int\s+in\s+(\d+)\s*\}/.exec(fs.readFileSync(files.source, "utf8"))?.[1];
   if (!fs.existsSync(app)) return [`no app at ${app}`];
-  const binaries = ["Contents/MacOS/Ardia.debug.dylib", "Contents/MacOS/Ardia"].map((name) => path.join(app, name)).filter((file) => fs.existsSync(file));
+  const binaries = ["Contents/MacOS/Nilla.debug.dylib", "Contents/MacOS/Nilla"].map((name) => path.join(app, name)).filter((file) => fs.existsSync(file));
   const builtAt = Math.max(0, ...binaries.map((file) => fs.statSync(file).mtimeMs));
   const changedAt = fs.statSync(files.source).mtimeMs;
   if (builtAt < changedAt) {
@@ -84,7 +84,7 @@ const bringUpToDate = (problems) =>
     "bring it up to date from the repo root, then start again:",
     ...(problems.some((problem) => problem.includes("Pods")) ? ["  scripts/agent/locked pod -- sh -c 'cd apps/browser/macos && LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 pod install'"] : []),
     '  ARDIACORE_FRAMEWORK="$(packages/ardiacore/scripts/fetch-engine.sh --nearest)" XCODE_XCCONFIG_FILE="$PWD/apps/browser/macos/AdHoc.xcconfig" scripts/agent/build-app --as phone-sync-mac',
-    "  git diff --stat apps/browser/macos/Ardia.xcodeproj/project.pbxproj   # pod install can re-quote MARKETING_VERSION there; if that is all it changed, write back HEAD's copy with git show HEAD:<that path> > <that path>",
+    "  git diff --stat apps/browser/macos/Nilla.xcodeproj/project.pbxproj   # pod install can re-quote MARKETING_VERSION there; if that is all it changed, write back HEAD's copy with git show HEAD:<that path> > <that path>",
   ].join("\n");
 
 function check(opts) {

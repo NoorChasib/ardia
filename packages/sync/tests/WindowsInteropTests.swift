@@ -1,14 +1,14 @@
 import CoreGraphics
 import Foundation
 import XCTest
-@testable import ArdiaSyncCore
+@testable import NillaSyncCore
 
 final class WindowsInteropTests: XCTestCase {
   static let entropy = Data((1...32).map(UInt8.init))
   static let fixtures = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("fixtures/windows-interop", isDirectory: true)
   static let documents: [(scope: String, json: String)] = [
-    ("app", #"{"records":{"pw:1":{"k":"pw:1","v":{"o":"https://example.com","u":"ada","p":"correct horse"}}},"pw:2":{"v":{"o":"https://ardia.dev","u":"grace","p":"battery staple"}}}"#),
-    ("profile-mac", #"{"title":"Ünïcode ✓","bookmarks":["https://ardia.dev/"]}"#),
+    ("app", #"{"records":{"pw:1":{"k":"pw:1","v":{"o":"https://example.com","u":"ada","p":"correct horse"}}},"pw:2":{"v":{"o":"https://example.org","u":"grace","p":"battery staple"}}}"#),
+    ("profile-mac", #"{"title":"Ünïcode ✓","bookmarks":["https://example.org/"]}"#),
   ]
   static let password = (origin: "https://example.com", username: "ada", password: "correct horse")
   static let local = #"{"state":1}"#

@@ -1,5 +1,5 @@
 {
-  "name": "@ardia/import",
+  "name": "@nilla/import",
   "version": "0.0.0",
   "private": true,
   "description": "Import bookmarks, history, tabs, passwords and Arc spaces from other browsers",
@@ -8,11 +8,11 @@
   "type": "module",
   "scripts": {
     "check": "tsc -p .",
-    "test": "swift test --scratch-path \"${TMPDIR:-/tmp}/ardia-import-swiftpm\"",
+    "test": "swift test --scratch-path \"${TMPDIR:-/tmp}/nilla-import-swiftpm\"",
     "fixtures": "python3 fixtures/generate.py"
   },
   "dependencies": {
-    "@ardia/core": "workspace:*"
+    "@nilla/core": "workspace:*"
   },
   "peerDependencies": {
     "expo": "*",

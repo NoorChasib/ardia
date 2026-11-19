@@ -90,7 +90,7 @@ export const SIDEBAR_SHADOW = {
   tabSwitcher: { ...shadow.dialog, opacity: { dark: 0.45, light: 0.45 }, radius: 32, offset: [0, 14] },
 } satisfies Record<string, ShadowLevel>;
 
-export const TAB_SWITCHER_SCROLL_ID = "ardia-tab-switcher";
+export const TAB_SWITCHER_SCROLL_ID = "nilla-tab-switcher";
 
 export const TAB_SWITCHER = {
   card: 168,

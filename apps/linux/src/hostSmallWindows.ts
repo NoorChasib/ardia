@@ -9,7 +9,7 @@ export type SeedStorage = Pick<Storage, "getItem" | "setItem" | "removeItem" | "
 type Frame = [number, number, number, number];
 export type ScreenArea = { width: number; height: number; availLeft: number; availTop: number; availWidth: number; availHeight: number };
 
-export const SMALL_WINDOW_SEED_PREFIX = "ardia.smallWindow.";
+export const SMALL_WINDOW_SEED_PREFIX = "nilla.smallWindow.";
 export const SMALL_WINDOW_SEED_LIFE = 60_000;
 export const SMALL_WINDOW_MIN_SIZE: [number, number] = [420, 300];
 export const SMALL_WINDOWS_CAPABILITY = "ArdiaShell.smallWindows";

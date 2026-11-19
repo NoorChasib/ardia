@@ -1,6 +1,6 @@
 import { emptyScope, SyncNative, type Adapter, type ExtensionsAdapter } from "../../platform/sync";
 import { useBrowser } from "../browser/store";
-import { bookmarksAdapter, deviceAdapter, deviceTabsAdapter, inTodaysNames, passwordsAdapter, sharedDataAdapter } from "./adapters";
+import { bookmarksAdapter, deviceAdapter, deviceTabsAdapter, passwordsAdapter, sharedDataAdapter } from "./adapters";
 import { historyAdapter } from "./historyAdapter";
 import { profileOpenTabsAdapter, profilesAdapter, profileThemesAdapter, profileTopAppsAdapter } from "./profileAdapters";
 import { settingsAdapter } from "./settingsAdapter";
@@ -53,7 +53,7 @@ export function appAdapters(doc: SyncDoc, retiring: boolean): Adapter[] {
   const enabledLinks = () => Object.fromEntries(Object.entries(doc.profiles).filter(([, l]) => l.enabled));
   const removed = () => removedRecordKeys(doc);
   return [
-    ...(doc.types.settings ? [inTodaysNames(settingsAdapter)] : []),
+    ...(doc.types.settings ? [settingsAdapter] : []),
     sharedDataAdapter(() => doc.profiles, removed),
     profilesAdapter(withSharedOwners(doc, enabledLinks), removed),
     profileThemesAdapter(enabledLinks, () => doc.scopes[APP_SCOPE]?.records, removed),
@@ -95,9 +95,9 @@ export function profileAdapters(doc: SyncDoc, profileId: string, retiring: boole
   return [
     ...(synced("pinned") ? pinnedAreaAdapters(profileId) : []),
     ...openTabs,
-    ...(synced("bookmarks") ? [inTodaysNames(bookmarksAdapter(profileId))] : []),
-    ...(synced("history") ? [inTodaysNames(historyAdapter(profileId))] : []),
-    inTodaysNames(deviceTabsAdapter(profileId, id, deviceName, !synced("tabs"))),
+    ...(synced("bookmarks") ? [bookmarksAdapter(profileId)] : []),
+    ...(synced("history") ? [historyAdapter(profileId)] : []),
+    deviceTabsAdapter(profileId, id, deviceName, !synced("tabs")),
     sentTabsAdapter(id, () => sendLedger(doc, profileScope(doc.profiles[profileId]!.syncId)), (arrived) => deliverSentTabs(doc, profileId, arrived)),
     ...(synced("passwords") ? [passwords(forcePasswords)] : []),
     ...(synced("extensions") ? [extensionsOf(profileId)] : []),

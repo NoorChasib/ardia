@@ -1,4 +1,4 @@
-import type { WindowsNative } from "@ardia/shell";
+import type { WindowsNative } from "@nilla/shell";
 import { engineAvailable, hostCall, onEngineTopic } from "../engine/host";
 import { requireNativeModule } from "../modules";
 import type { DialogsModule, MenusModule } from "../nativeModuleTypes";
@@ -11,9 +11,9 @@ const SHOWN_MS = 4000;
 const CLOSED_MS = 1000;
 const GIVE_UP_MS = 5000;
 
-const menus = () => requireNativeModule<Pick<MenusModule, "openCount" | "devHoldMenu">>("ArdiaMenus");
-const dialogs = () => requireNativeModule<Pick<DialogsModule, "devReleaseDialogs">>("ArdiaDialogs");
-const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds" | "openWindow" | "closeWindow">>("ArdiaAppWindows");
+const menus = () => requireNativeModule<Pick<MenusModule, "openCount" | "devHoldMenu">>("NillaMenus");
+const dialogs = () => requireNativeModule<Pick<DialogsModule, "devReleaseDialogs">>("NillaDialogs");
+const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds" | "openWindow" | "closeWindow">>("NillaAppWindows");
 const MENU_OWNER = "self-check-menu-owner";
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 

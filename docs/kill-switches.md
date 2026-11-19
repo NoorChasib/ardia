@@ -1,8 +1,10 @@
 # Kill switches
 
 A speed change people can feel ships behind a switch, so a release that turns out slow or broken on some Macs can be
-backed out without another build. `apps/browser/src/platform/killSwitches.ts` is the registry; `apps/site/public/switches.json`
-(served at `https://ardia.dev/switches.json`) says which are off.
+backed out without another build. `apps/browser/src/platform/killSwitches.ts` is the registry. A file served at
+`services.switchesUrl` (`docs/services.md`) says which are off; Nilla ships with that URL `null`, so no file is read,
+every switch keeps its default, and only `ARDIA_SWITCHES` changes one. `apps/browser/src/platform/fixtures/switches.json`
+is the test fixture for the file's format.
 
 ## Rules
 
@@ -21,24 +23,25 @@ backed out without another build. `apps/browser/src/platform/killSwitches.ts` is
 ```
 
 Only names the app knows and booleans count; anything else is ignored. Leaving a switch out means on (the cache follows
-the file, not the first answer). Editing the file is a site deploy (`bun run --cwd apps/site deploy`: an owner-approved
-public action like any other).
+the file, not the first answer). `killSwitches.test.mjs` checks the fixture names only switches the app has.
 
 ## The request
 
-Once a launch, after the first window, and only where the update check runs too (an updater that's set up, automatic
-checks on: `killSwitchesLaunch.ts`). A plain GET of the static file: no cookies (`credentials: "omit"`), no headers of ours,
-no query string, no ID, a 5 s timeout, 4 KB at most. The answer is cached in the data dir (`switches-cache.json`) and used
-offline; a failed or odd answer leaves the cache as it was. The same file goes to everyone, so it can't tell one Mac from
-another. Disclosed in Settings › What's Sent (“Even with sharing off”) and next to the update check in Settings › General
-(`state/telemetry/copy.ts`, `switchFile`).
+Only while `services.switchesUrl` is set: once a launch, after the first window, whatever the updater says
+(`killSwitchesLaunch.ts`). `refreshSwitches()` answers `"off"` without a request while the URL is `null`, and
+`switchOn()` ignores cached remote values then. A plain GET of the static file: no cookies (`credentials: "omit"`), no
+headers of ours, no query string, no ID, a 5 s timeout, 4 KB at most. The answer is cached in the data dir
+(`switches-cache.json`) and used offline; a failed or odd answer leaves the cache as it was. The same file goes to
+everyone, so it can't tell one Mac from another. Disclosed in Settings › What's Sent (“Even with sharing off”) and next to
+the update check in Settings › General (`state/telemetry/copy.ts`, `switchFile`). On Linux the engine's
+`NillaShell.fetchKillSwitches` stays behind the Layer 1 gate whatever the URL says.
 
 ## For a bench or a test instance
 
 `ARDIA_SWITCHES="newTabPrewarm=off,lazySidebarRows=off"` sets a launch's values over everything else, in every build.
-`ArdiaLaunchConfig` parses it once; native code asks it (`switchOn:`, `experimentOn:`), JS through
-`platform/launchConfig.ts`, and the engine's browser process gets it as `--ardia-switches`. A test instance has no
-updater, so it never fetches.
+`NillaLaunchConfig` parses it once; native code asks it (`switchOn:`, `experimentOn:`), JS through
+`platform/launchConfig.ts`, and the engine's browser process gets it as `--ardia-switches`. A test instance fetches only
+when its services snapshot sets `switchesUrl` (`ARDIA_TEST="services=<path>"`, `docs/services.md`).
 
 ## The switches (see `SWITCHES` for owners and dates)
 
@@ -56,17 +59,13 @@ updater, so it never fetches.
 ## Experiments (off by default; `EXPERIMENTS`)
 
 A change still being tried, off for everyone until `ARDIA_SWITCHES` turns it on for a launch. Experiments have an owner
-and a `removeBy` like the switches, don't count against the 8, and the site's switches.json can't name them.
+and a `removeBy` like the switches, don't count against the 8, and the switches file can't name them.
 
 | Experiment | On means |
 |---|---|
 | `serverWindowDragAllOpen` | with `serverWindowDrag`, every view in the titlebar band is left open to window moves (`ServerWindowDrag.swift`) |
-| `dragRegionEveryMount` | with `serverWindowDrag`, every React Native mount rebuilds each window's title-bar drag region 0.1 s later, as before #1682; off, a mount rebuilds only the window whose title bar the pointer is in and leaves the others for the pointer's arrival (read natively, once a launch: `ServerWindowDrag.swift`) |
+| `dragRegionEveryMount` | with `serverWindowDrag`, every React Native mount rebuilds each window's title-bar drag region 0.1 s later, as it once did; off, a mount rebuilds only the window whose title bar the pointer is in and leaves the others for the pointer's arrival (read natively, once a launch: `ServerWindowDrag.swift`) |
 | `webkitSignIn` | moving a Chromium page to WebKit first copies the cookies that page's own address gets (HttpOnly included, partitioned ones left out) into the profile's WebKit store, so a cookie sign-in (Netflix, Disney+…) comes along; at most 1.5 s, then the move goes ahead either way (`state/engines/engineSignIn.ts`, `WebKitCookieImport.swift`) |
 
 The environment-only switches of 2026-10-17 to 10-20 (`ARDIA_EARLY_WINDOW_FIRST`, `ARDIA_SCROLL_FULL_RATE`,
 `ARDIA_WALLET_PASSES`, …) shipped their default in 0.2.40 and are gone with their other branch.
-
-## Staged rollout
-
-A release can also reach people in steps: `scripts/release.sh <version> --phased <seconds>` and the release skill's step 5b.

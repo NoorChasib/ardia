@@ -436,7 +436,7 @@ test("favicons.fetch answers the icon Chromium stored for that address, with its
 });
 
 const GENERATED = "p-mhw3k2x1-1f";
-const NOT_ARDIAS = "data (the profile's id isn't one Ardia makes)";
+const NOT_NILLAS = "data (the profile's id isn't one Nilla makes)";
 
 async function deletedBy(profile, removal = "removed") {
   const engine = hostedEngine(removal, () => '{"ok":true}');
@@ -444,12 +444,12 @@ async function deletedBy(profile, removal = "removed") {
   return { reply, removed: engine.removed.map(([folder]) => folder), calls: engine.calls.map((c) => c.name) };
 }
 
-test("only an id Ardia makes is deleted by its folder", async () => {
+test("only an id Nilla makes is deleted by its folder", async () => {
   assert.deepEqual(await deletedBy(GENERATED), { reply: { remaining: [] }, removed: [`Ardia ${GENERATED}`], calls: [] });
   assert.deepEqual(await deletedBy("a".repeat(238)), { reply: { remaining: [] }, removed: [`Ardia ${"a".repeat(238)}`], calls: [] });
   for (const profile of ["work.1", "work_1", "Work", "work\u0000x", "incognitoWork", "a".repeat(239), "x".repeat(300), "é", "😀", "work 1", "_", "a\ud800b"]) {
     for (const removal of ["removed", "inUse"]) {
-      assert.deepEqual(await deletedBy(profile, removal), { reply: { remaining: [NOT_ARDIAS] }, removed: [], calls: [] }, JSON.stringify(profile));
+      assert.deepEqual(await deletedBy(profile, removal), { reply: { remaining: [NOT_NILLAS] }, removed: [], calls: [] }, JSON.stringify(profile));
     }
   }
 });
@@ -458,7 +458,7 @@ test("an id with @ is a private session to the engine, and anything else gets a 
   assert.deepEqual(await deletedBy("incognito:w1@work"), { reply: { remaining: [] }, removed: [], calls: [] });
   assert.deepEqual(await deletedBy("tab@work"), { reply: { remaining: [] }, removed: [], calls: [] });
   assert.deepEqual((await deletedBy("incognitowork")).removed, ["Ardia incognitowork"]);
-  assert.deepEqual(await deletedBy("work\u0000@x"), { reply: { remaining: [NOT_ARDIAS] }, removed: [], calls: [] });
+  assert.deepEqual(await deletedBy("work\u0000@x"), { reply: { remaining: [NOT_NILLAS] }, removed: [], calls: [] });
 });
 
 const ORIGINAL_STEPS = ["history, cookies and cache", "autocomplete entries", "passwords", "addresses", "cards", "extensions", "site settings", "zoom levels"];
@@ -544,7 +544,7 @@ test("deleting the original profile's data names each step that failed", async (
 
 test("the window list answers an empty list where the engine has none, so a caller that searches it never meets null", async () => {
   const { moduleDefaults } = await import("../../../../packages/expo-windows/src/defaults.ts");
-  assert.equal(await moduleDefaults.ArdiaWindows.call("list"), "[]");
+  assert.equal(await moduleDefaults.NillaWindows.call("list"), "[]");
   assert.equal(rows.missing.windows.includes("list"), true);
 });
 

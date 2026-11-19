@@ -11,10 +11,10 @@ const pageCovers = {
 };
 
 export const engineModules: Record<string, Record<string, unknown>> = {
-  ArdiaPageCovers: pageCovers,
+  NillaPageCovers: pageCovers,
   ...engineDomainModules,
-  ArdiaTabs: {
-    ...engineDomainModules.ArdiaTabs,
+  NillaTabs: {
+    ...engineDomainModules.NillaTabs,
     prepareTransfer: (tabId: string) => parkPage(tabId),
     releaseTransfer: (tabId: string) => releasePage(tabId),
     claimLaunchTab: () => {},

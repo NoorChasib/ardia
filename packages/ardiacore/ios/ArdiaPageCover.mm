@@ -2,9 +2,9 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_window;
+using namespace nilla_window;
 
-namespace ardia_window {
+namespace nilla_window {
 
 BOOL gPageCoverOff = NO;
 }
@@ -12,15 +12,15 @@ BOOL gPageCoverOff = NO;
 static const NSTimeInterval kPageCoverPicture = 0.25;
 static const NSTimeInterval kPageCoverLimit = 4;
 
-@implementation ArdiaPageCover {
+@implementation NillaPageCover {
   CGImageRef _picture;
   NSSize _pictured;
 }
 
-+ (void)coverTabs:(NSArray<ArdiaCoreTab *> *)tabs then:(void (^)(NSArray<ArdiaPageCover *> *covers))then {
-  NSMutableArray<ArdiaPageCover *> *covers = [NSMutableArray array];
++ (void)coverTabs:(NSArray<ArdiaCoreTab *> *)tabs then:(void (^)(NSArray<NillaPageCover *> *covers))then {
+  NSMutableArray<NillaPageCover *> *covers = [NSMutableArray array];
   __block NSUInteger waiting = tabs.count + 1;
-  void (^one)(ArdiaPageCover *) = ^(ArdiaPageCover *cover) {
+  void (^one)(NillaPageCover *) = ^(NillaPageCover *cover) {
     if (cover) [covers addObject:cover];
     if (--waiting == 0) then(covers);
   };
@@ -28,7 +28,7 @@ static const NSTimeInterval kPageCoverLimit = 4;
   one(nil);
 }
 
-+ (void)coverTab:(ArdiaCoreTab *)tab then:(void (^)(ArdiaPageCover *cover))then {
++ (void)coverTab:(ArdiaCoreTab *)tab then:(void (^)(NillaPageCover *cover))then {
   NSView *page = tab.view;
   if (gPageCoverOff || !page.window || page.isHiddenOrHasHiddenAncestor) return then(nil);
   __weak ArdiaCoreTab *weakTab = tab;
@@ -40,7 +40,7 @@ static const NSTimeInterval kPageCoverLimit = 4;
           ArdiaCoreTab *t = weakTab;
           NSView *now = t.view;
           if (!picture || !now.window || now.window != weakWindow || now.superview != weakHost) return then(nil);
-          ArdiaPageCover *cover = [[ArdiaPageCover alloc] initWithFrame:now.bounds picture:picture];
+          NillaPageCover *cover = [[NillaPageCover alloc] initWithFrame:now.bounds picture:picture];
           cover->_tab = t;
           cover->_pictured = pictured;
           [now addSubview:cover];
@@ -55,7 +55,7 @@ static const NSTimeInterval kPageCoverLimit = 4;
     _picture = CGImageRetain(picture);
     self.wantsLayer = YES;
     self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-    __weak ArdiaPageCover *weakSelf = self;
+    __weak NillaPageCover *weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kPageCoverLimit * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
       [weakSelf uncover:NO];
     });
@@ -88,18 +88,18 @@ static const NSTimeInterval kPageCoverLimit = 4;
   ArdiaCoreTab *tab = _tab;
   NSView *page = tab.view;
   if (!self.superview || !page) return;
-  __weak ArdiaPageCover *weakSelf = self;
+  __weak NillaPageCover *weakSelf = self;
   const NSSize before = _pictured;
-  [ArdiaPageDrawWait tab:tab
+  [NillaPageDrawWait tab:tab
                 draws:^NSInteger(BOOL, BOOL) { return NSEqualSizes(page.bounds.size, before) ? 0 : 1; }
                  then:^{
-                   ArdiaPageCover *me = weakSelf;
+                   NillaPageCover *me = weakSelf;
                    ArdiaCoreTab *t = me.tab;
                    const NSSize now = t.view.bounds.size;
                    if (!me.superview || !t || NSEqualSizes(now, before)) return;
                    [t copyPicture:kPageCoverPicture
                        completion:^(CGImageRef picture) {
-                         ArdiaPageCover *again = weakSelf;
+                         NillaPageCover *again = weakSelf;
                          if (!picture || !again.superview) return;
                          CGImageRelease(again->_picture);
                          again->_picture = CGImageRetain(picture);

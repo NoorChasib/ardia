@@ -1,10 +1,163 @@
+[CmdletBinding(DefaultParameterSetName = "Launcher")]
 param(
-  [Parameter(Mandatory = $true)][string]$Icon,
-  [Parameter(Mandatory = $true)][string]$To,
-  [switch]$Check
+  [Parameter(Mandatory = $true, ParameterSetName = "Launcher")][string]$Icon,
+  [Parameter(Mandatory = $true, ParameterSetName = "Launcher")][string]$To,
+  [Parameter(ParameterSetName = "Launcher")][switch]$Check,
+  [Parameter(Mandatory = $true, ParameterSetName = "Windows")][int]$WindowsOf,
+  [Parameter(ParameterSetName = "Windows")][string]$AppUserModelId = "NillaDigital.Nilla"
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($PSCmdlet.ParameterSetName -eq "Windows") {
+  Add-Type -TypeDefinition @"
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class NillaWindowIdentity {
+  [StructLayout(LayoutKind.Sequential)] public struct PropertyKey { public Guid Format; public uint Id; }
+  [StructLayout(LayoutKind.Explicit, Size = 24)] public struct PropVariant { [FieldOffset(0)] public ushort Type; [FieldOffset(8)] public IntPtr Pointer; }
+
+  [ComImport, Guid("886D8EEB-8CF2-4446-8D02-CDBA1DBDCF99"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+  interface IPropertyStore {
+    [PreserveSig] int GetCount(out uint count);
+    [PreserveSig] int GetAt(uint index, out PropertyKey key);
+    [PreserveSig] int GetValue(ref PropertyKey key, out PropVariant value);
+    [PreserveSig] int SetValue(ref PropertyKey key, ref PropVariant value);
+    [PreserveSig] int Commit();
+  }
+
+  const ushort VtEmpty = 0;
+  const ushort VtLpwstr = 31;
+  const uint WsPopup = 0x80000000;
+  const uint WsVisible = 0x10000000;
+  const uint WsExNoActivate = 0x08000000;
+  const uint WsExToolWindow = 0x00000080;
+
+  delegate bool EnumWindowsProc(IntPtr window, IntPtr param);
+  [DllImport("user32.dll")] static extern bool EnumWindows(EnumWindowsProc callback, IntPtr param);
+  [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
+  [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr window);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassNameW(IntPtr window, StringBuilder name, int size);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)] static extern IntPtr CreateWindowExW(uint exStyle, string className, string title, uint style, int x, int y, int width, int height, IntPtr parent, IntPtr menu, IntPtr instance, IntPtr param);
+  [DllImport("user32.dll")] static extern bool DestroyWindow(IntPtr window);
+  [DllImport("kernel32.dll")] static extern uint GetCurrentProcessId();
+  [DllImport("shell32.dll")] static extern int SHGetPropertyStoreForWindow(IntPtr window, ref Guid iid, [MarshalAs(UnmanagedType.Interface)] out IPropertyStore store);
+  [DllImport("ole32.dll")] static extern int PropVariantClear(ref PropVariant value);
+
+  public class Seen { public string Handle; public string ClassName; public string AppUserModelId; public string Problem; }
+
+  static PropertyKey AppUserModelIdKey() { return new PropertyKey { Format = new Guid("9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3"), Id = 5 }; }
+
+  static string Hex(int result) { return "0x" + result.ToString("x8"); }
+
+  static IPropertyStore StoreOf(IntPtr window, out string problem) {
+    problem = null;
+    Guid iid = typeof(IPropertyStore).GUID;
+    IPropertyStore store;
+    int result = SHGetPropertyStoreForWindow(window, ref iid, out store);
+    if (result != 0 || store == null) { problem = "SHGetPropertyStoreForWindow failed with " + Hex(result); return null; }
+    return store;
+  }
+
+  static string AppUserModelIdOf(IntPtr window, out string problem) {
+    IPropertyStore store = StoreOf(window, out problem);
+    if (store == null) return null;
+    try {
+      PropertyKey key = AppUserModelIdKey();
+      PropVariant value;
+      int result = store.GetValue(ref key, out value);
+      if (result != 0) { problem = "GetValue failed with " + Hex(result); return null; }
+      try {
+        if (value.Type == VtEmpty) return "";
+        if (value.Type == VtLpwstr && value.Pointer != IntPtr.Zero) return Marshal.PtrToStringUni(value.Pointer);
+        problem = "GetValue gave a value of type " + value.Type + ", not a string";
+        return null;
+      } finally {
+        PropVariantClear(ref value);
+      }
+    } finally {
+      Marshal.ReleaseComObject(store);
+    }
+  }
+
+  static string Put(IntPtr window, string id) {
+    string problem;
+    IPropertyStore store = StoreOf(window, out problem);
+    if (store == null) return problem;
+    try {
+      PropertyKey key = AppUserModelIdKey();
+      var value = new PropVariant { Type = id == null ? VtEmpty : VtLpwstr, Pointer = id == null ? IntPtr.Zero : Marshal.StringToCoTaskMemUni(id) };
+      try {
+        int result = store.SetValue(ref key, ref value);
+        return result == 0 ? null : "SetValue failed with " + Hex(result);
+      } finally {
+        if (value.Pointer != IntPtr.Zero) Marshal.FreeCoTaskMem(value.Pointer);
+      }
+    } finally {
+      Marshal.ReleaseComObject(store);
+    }
+  }
+
+  public static List<Seen> TopLevelOf(uint process) {
+    var seen = new List<Seen>();
+    EnumWindows((window, param) => {
+      uint owner;
+      GetWindowThreadProcessId(window, out owner);
+      if (owner != process || !IsWindowVisible(window)) return true;
+      var name = new StringBuilder(256);
+      GetClassNameW(window, name, name.Capacity);
+      string problem;
+      string id = AppUserModelIdOf(window, out problem);
+      seen.Add(new Seen { Handle = "0x" + window.ToInt64().ToString("x"), ClassName = name.ToString(), AppUserModelId = id, Problem = problem });
+      return true;
+    }, IntPtr.Zero);
+    return seen;
+  }
+
+  public static string ControlCheck(string id) {
+    IntPtr window = CreateWindowExW(WsExNoActivate | WsExToolWindow, "STATIC", "launcher-identity control", WsPopup | WsVisible, -32000, -32000, 1, 1, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+    if (window == IntPtr.Zero) return "the control window couldn't be made (error " + Marshal.GetLastWin32Error() + ")";
+    try {
+      string put = Put(window, id);
+      if (put != null) return "giving the control window an AppUserModelID: " + put;
+      string handle = "0x" + window.ToInt64().ToString("x");
+      foreach (Seen found in TopLevelOf(GetCurrentProcessId())) {
+        if (found.Handle != handle) continue;
+        if (found.Problem != null) return "reading the control window: " + found.Problem;
+        return found.AppUserModelId == id ? null : "the control window read back \"" + found.AppUserModelId + "\", not \"" + id + "\"";
+      }
+      return "the control window wasn't among this process's top-level windows";
+    } finally {
+      Put(window, null);
+      DestroyWindow(window);
+    }
+  }
+}
+"@
+  $control = [NillaWindowIdentity]::ControlCheck("NillaDigital.LauncherIdentityControl")
+  if ($control) { Write-Host "launcher-identity: the AppUserModelID reader failed its control window ($control), so it can't vouch for process $WindowsOf"; exit 1 }
+  $windows = @([NillaWindowIdentity]::TopLevelOf([uint32]$WindowsOf))
+  if (-not $windows.Count) { Write-Host "launcher-identity: process $WindowsOf has no visible top-level window to ask for its AppUserModelID"; exit 1 }
+  $others = @()
+  $unread = @()
+  foreach ($window in $windows) {
+    if ($window.Problem) {
+      Write-Host "launcher-identity: window $($window.Handle) ($($window.ClassName)) can't be read: $($window.Problem)"
+      $unread += "$($window.ClassName) ($($window.Problem))"
+      continue
+    }
+    $said = if ($window.AppUserModelId -eq "") { "none of its own, so the process's" } else { $window.AppUserModelId }
+    Write-Host "launcher-identity: window $($window.Handle) ($($window.ClassName)) carries AppUserModelID $said"
+    if ($window.AppUserModelId -and $window.AppUserModelId -ne $AppUserModelId) { $others += "$($window.ClassName) carries $($window.AppUserModelId)" }
+  }
+  if ($unread.Count) { Write-Host "launcher-identity: unverified, the AppUserModelID of some windows of process $WindowsOf couldn't be read: $($unread -join '; ')"; exit 1 }
+  if ($others.Count) { Write-Host "launcher-identity: the engine gives windows of process $WindowsOf another AppUserModelID than ${AppUserModelId}: $($others -join '; ')"; exit 1 }
+  Write-Host "launcher-identity: the control window read back its own AppUserModelID, and $($windows.Count) top-level windows of process $WindowsOf take $AppUserModelId (their own or the process's)"
+  exit 0
+}
 
 Add-Type -TypeDefinition @"
 using System;
@@ -13,7 +166,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-public static class ArdiaLauncherIdentity {
+public static class NillaLauncherIdentity {
   const int RT_ICON = 3;
   const int RT_GROUP_ICON = 14;
   const int RT_VERSION = 16;
@@ -253,24 +406,24 @@ public static class ArdiaLauncherIdentity {
 "@
 
 $wanted = [ordered]@{
-  CompanyName = "Ardia"
-  CompanyShortName = "Ardia"
-  FileDescription = "Ardia"
-  ProductName = "Ardia"
-  ProductShortName = "Ardia"
-  InternalName = "Ardia"
-  OriginalFilename = "Ardia.exe"
-  LegalCopyright = "Ardia, built on Chromium. Copyright The Chromium Authors and Ardia's contributors."
+  CompanyName = "Nilla"
+  CompanyShortName = "Nilla"
+  FileDescription = "Nilla"
+  ProductName = "Nilla"
+  ProductShortName = "Nilla"
+  InternalName = "Nilla"
+  OriginalFilename = "Nilla.exe"
+  LegalCopyright = "Copyright 2026 Noor Chasib. Nilla is a modified version of Ardia (Copyright 2026 Mantra Patel and Ardia's contributors), built on Chromium (Copyright The Chromium Authors)."
 }
 
 function Get-Mismatches($reading, $images) {
   $problems = @()
   if (-not $reading.First) { $problems += "it has no icon group" }
-  elseif (-not [ArdiaLauncherIdentity]::SameImages($reading.First.Images, $images)) {
+  elseif (-not [NillaLauncherIdentity]::SameImages($reading.First.Images, $images)) {
     $label = if ($reading.First.Name) { $reading.First.Name } else { "#$($reading.First.Id)" }
-    $problems += "its first icon group ($label) is not Ardia.ico"
+    $problems += "its first icon group ($label) is not the icon in $(Split-Path -Leaf $Icon)"
   }
-  $strings = [ArdiaLauncherIdentity]::VersionStrings($reading.Version)
+  $strings = [NillaLauncherIdentity]::VersionStrings($reading.Version)
   if ($strings.Count -eq 0) { $problems += "it has no version strings" }
   foreach ($key in $wanted.Keys) {
     if ($strings.ContainsKey($key) -and $strings[$key] -ne $wanted[$key]) { $problems += "its $key is '$($strings[$key])'" }
@@ -282,30 +435,30 @@ function Get-Mismatches($reading, $images) {
 if (-not (Test-Path -LiteralPath $Icon -PathType Leaf)) { throw "'$Icon' does not exist" }
 if (-not (Test-Path -LiteralPath $To -PathType Leaf)) { throw "'$To' does not exist" }
 $target = (Resolve-Path -LiteralPath $To).Path
-$images = [ArdiaLauncherIdentity]::ReadIco((Resolve-Path -LiteralPath $Icon).Path)
-$reading = [ArdiaLauncherIdentity]::Read($target)
+$images = [NillaLauncherIdentity]::ReadIco((Resolve-Path -LiteralPath $Icon).Path)
+$reading = [NillaLauncherIdentity]::Read($target)
 $before = @(Get-Mismatches $reading $images)
 
 if ($Check) {
-  if ($before.Count) { Write-Host "launcher-identity: $target is not Ardia's: $($before -join '; ')"; exit 1 }
-  Write-Host "launcher-identity: $target carries Ardia's icon ($($images.Count) images) and name"
+  if ($before.Count) { Write-Host "launcher-identity: $target is not Nilla's: $($before -join '; ')"; exit 1 }
+  Write-Host "launcher-identity: $target carries Nilla's icon ($($images.Count) images) and name"
   exit 0
 }
 
 if ($before.Count -eq 0) {
-  Write-Host "launcher-identity: $target already carries Ardia's icon and name"
+  Write-Host "launcher-identity: $target already carries Nilla's icon and name"
   exit 0
 }
 
-$iconRight = $reading.First -and [ArdiaLauncherIdentity]::SameImages($reading.First.Images, $images)
+$iconRight = $reading.First -and [NillaLauncherIdentity]::SameImages($reading.First.Images, $images)
 $newImages = if ($iconRight) { $null } else { $images }
 $replacements = New-Object 'System.Collections.Generic.Dictionary[string,string]'
 foreach ($key in $wanted.Keys) { $replacements[$key] = $wanted[$key] }
-$newVersion = if ($reading.Version) { [ArdiaLauncherIdentity]::WithStrings($reading.Version, $replacements) } else { $null }
-[ArdiaLauncherIdentity]::Write($target, $reading, $newImages, $newVersion)
+$newVersion = if ($reading.Version) { [NillaLauncherIdentity]::WithStrings($reading.Version, $replacements) } else { $null }
+[NillaLauncherIdentity]::Write($target, $reading, $newImages, $newVersion)
 
-$after = @(Get-Mismatches ([ArdiaLauncherIdentity]::Read($target)) $images)
+$after = @(Get-Mismatches ([NillaLauncherIdentity]::Read($target)) $images)
 if ($after.Count) { Write-Host "launcher-identity: wrote $target but it still differs: $($after -join '; ')"; exit 1 }
 $fixed = $before -join "; "
-Write-Host "launcher-identity: $target now carries Ardia's icon and name (was: $fixed)"
+Write-Host "launcher-identity: $target now carries Nilla's icon and name (was: $fixed)"
 exit 0

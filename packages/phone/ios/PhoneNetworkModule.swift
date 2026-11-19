@@ -7,7 +7,7 @@ final class PhoneNetwork: @unchecked Sendable {
   static let shared = PhoneNetwork()
 
   private let monitor = NWPathMonitor()
-  private let queue = DispatchQueue(label: "ardia.phone.network")
+  private let queue = DispatchQueue(label: "nilla.phone.network")
   private let state = OSAllocatedUnfairLock<(online: Bool?, lostSinceWatch: Bool, listener: (@Sendable (Bool) -> Void)?)>(initialState: (nil, false, nil))
 
   private init() {
@@ -50,7 +50,7 @@ final class PhoneNetwork: @unchecked Sendable {
 
 public final class PhoneNetworkModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneNetwork")
+    Name("NillaPhoneNetwork")
 
     Events("onNetwork")
 

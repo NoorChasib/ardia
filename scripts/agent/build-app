@@ -53,7 +53,7 @@ repo=$(cd "$(dirname "$0")/../.." && pwd)
 app_dir="$repo/apps/browser"
 dd="$app_dir/build-$name"
 log="$dd/build-app.log"
-app="$dd/Build/Products/$config/Ardia.app"
+app="$dd/Build/Products/$config/Nilla.app"
 stamp_file="$dd/.ac-native-stamp-$config"
 
 native_stamp() {
@@ -64,7 +64,8 @@ native_stamp() {
       'packages/*/ios/*' 'packages/*/expo-module.config.json' packages/shell/docktile \
       packages/ardiacore/scripts/embed.sh packages/ardiacore/scripts/stage-framework.sh packages/ardiacore/scripts/ubo.sh \
       packages/ardiacore/extensions \
-      packages/ardiacore/scripts/signing engine/ardiacore/src/ardia/core/public patches bun.lock bunfig.toml
+      packages/ardiacore/scripts/signing engine/ardiacore/src/ardia/core/public patches bun.lock bunfig.toml \
+      LICENSE LICENSE.Apache-2.0 NOTICE third_party/bangs/LICENSE scripts/release/licenses.sh
     echo apps/browser/macos/Pods/Manifest.lock
   ) | python3 -c '
 import hashlib, os, sys
@@ -95,7 +96,7 @@ echo "build-app: $config into ${dd#"$repo"/} (log: ${log#"$repo"/})"
 (
   cd "$app_dir" &&
     "$repo/scripts/agent/locked" xcodebuild --wait "$wait" --as "$name" -- \
-      xcodebuild -workspace macos/Ardia.xcworkspace -scheme Ardia-macOS -derivedDataPath "$dd" \
+      xcodebuild -workspace macos/Nilla.xcworkspace -scheme Nilla-macOS -derivedDataPath "$dd" \
       -destination 'platform=macOS,arch=arm64' -configuration "$config" -hideShellScriptEnvironment build
 ) >"$log" 2>&1
 status=$?

@@ -3,7 +3,7 @@ import { getAnimatedStyle } from "react-native-reanimated";
 import { act } from "react-test-renderer";
 import { StartScreen } from "../components/search/StartScreen";
 import { DeckBar } from "../components/tabs/DeckBar";
-import { ArdiaLogo, DesignProvider, FloatingMenu } from "../components/ui";
+import { NillaLogo, DesignProvider, FloatingMenu } from "../components/ui";
 import type { Design } from "../lib/design";
 import { haptics } from "../state/app/haptics";
 import { useBrowse } from "../state/browse/store";
@@ -19,7 +19,7 @@ const mockMotion = { reduced: false };
 jest.mock("../state/app/systemLook", () => ({ ...jest.requireActual("../state/app/systemLook"), useReduceMotion: () => mockMotion.reduced }));
 
 const safeArea = require("react-native-safe-area-context") as { useSafeAreaInsets: () => { top: number; bottom: number; left: number; right: number } };
-const lookModule = require("@ardia/phone-native/src/look") as typeof import("@ardia/phone-native/src/look");
+const lookModule = require("@nilla/phone-native/src/look") as typeof import("@nilla/phone-native/src/look");
 
 const HEIGHT = 873;
 const WIDTH = 393;
@@ -87,7 +87,7 @@ const style = (root: Root, testID: string) => StyleSheet.flatten(host(root, test
 
 test("the original start page keeps its logo and its deck bar, and none of the redesign", () => {
   const root = start("original");
-  expect(root.root.findAll((node) => node.type === ArdiaLogo)).toHaveLength(1);
+  expect(root.root.findAll((node) => node.type === NillaLogo)).toHaveLength(1);
   expect(root.root.findAll((node) => node.type === DeckBar)).toHaveLength(1);
   expect(host(root, "startPage")).toBeUndefined();
   unmount(root);
@@ -95,7 +95,7 @@ test("the original start page keeps its logo and its deck bar, and none of the r
 
 test("the redesigned start page has no logo and no deck bar; its own bar holds Tabs, a 77 by 48 plus and Settings, centred 11 points above the safe bottom (6 above Android's 3-button bar), 12 in from the sides", () => {
   const root = start();
-  expect(root.root.findAll((node) => node.type === ArdiaLogo)).toHaveLength(0);
+  expect(root.root.findAll((node) => node.type === NillaLogo)).toHaveLength(0);
   expect(root.root.findAll((node) => node.type === DeckBar)).toHaveLength(0);
   const bar = style(root, "startBar");
   expect(bar.top + bar.height / 2).toBe(BAR_CENTER_Y);

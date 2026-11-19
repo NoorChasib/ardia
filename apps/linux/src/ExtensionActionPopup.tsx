@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Animated, Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
-import type { WebViewHandle } from "@ardia-real/ardiacore";
+import type { WebViewHandle } from "@nilla-real/ardiacore";
 import { closeExtensionPopup } from "../../browser/src/state/extensions/actions";
 import { useShownPageId } from "../../browser/src/state/peek/hooks";
 import { openFromPage, pageProfileId } from "../../browser/src/state/tabs/openFromPage";
@@ -69,8 +69,8 @@ export function ActionPopup({ windowId, pageProfile, url, anchor }: { windowId: 
 
   return (
     <>
-      <Pressable testID="ardia-extension-popup-dismiss" style={StyleSheet.absoluteFill} onPress={closeExtensionPopup} onLayout={(e) => setWindowWidth(e.nativeEvent.layout.width)} />
-      <Animated.View ref={panel} testID="ardia-extension-popup" style={{ position: "absolute", ...box, opacity: appear, display: revealed ? "flex" : "none" }}>
+      <Pressable testID="nilla-extension-popup-dismiss" style={StyleSheet.absoluteFill} onPress={closeExtensionPopup} onLayout={(e) => setWindowWidth(e.nativeEvent.layout.width)} />
+      <Animated.View ref={panel} testID="nilla-extension-popup" style={{ position: "absolute", ...box, opacity: appear, display: revealed ? "flex" : "none" }}>
         <GlassOptIn.Provider value={true}>
           <Panel radius={PANEL.radius} border={colors.popupBorder} borderWidth={border} shadow={shadow.card} style={{ width: box.width, height: box.height }}>
             <View style={{ flex: 1, borderRadius: placement.radius, overflow: "hidden" }}>

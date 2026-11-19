@@ -9,6 +9,8 @@
 #import "ArdiaStartup.h"
 #import "ArdiaTabParking.h"
 #import "ArdiaWebViewInternal.h"
+#import "NillaChromiumSwitches.h"
+#import "NillaUpstreamFolders.h"
 
 #import <Security/Security.h>
 #import <objc/runtime.h>
@@ -19,20 +21,21 @@
 #include <atomic>
 #include <cctype>
 #include <cstring>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
 
-using namespace ardia_host;
+using namespace nilla_host;
 
 static void TryEarlyLittleWindow();
 
 static NSMutableDictionary<NSString *, NSDictionary *> *gLaunchURLSenders;
 static bool gReplayingLaunchURLs;
 
-static NSString *const kHoldIncomingLinksDefault = @"ArdiaHoldIncomingLinks";
+static NSString *const kHoldIncomingLinksDefault = @"NillaHoldIncomingLinks";
 
-static NSString *const kLinkPolicyStampDefault = @"ArdiaLinkPolicyStamp";
+static NSString *const kLinkPolicyStampDefault = @"NillaLinkPolicyStamp";
 static NSString *const kMissingFileStamp = @"missing";
 static std::atomic<bool> gLinkPolicyReady{false};
 
@@ -55,11 +58,11 @@ static NSString *PathStamp(NSString *path) {
 }
 
 static NSString *HooksFileStamp() {
-  return PathStamp([ArdiaLaunchConfig.shared.configDirectory stringByAppendingPathComponent:@"hooks.json"]);
+  return PathStamp([NillaLaunchConfig.shared.configDirectory stringByAppendingPathComponent:@"hooks.json"]);
 }
 
 static NSString *LinkPolicyFingerprint(NSString *hooksStamp) {
-  NSString *folder = ArdiaLaunchConfig.shared.configDirectory ?: @"";
+  NSString *folder = NillaLaunchConfig.shared.configDirectory ?: @"";
   return [@[
     folder, hooksStamp, PathStamp([folder stringByAppendingPathComponent:@"config.json"]),
     PathStamp([AppDataDirectory() stringByAppendingPathComponent:@"automation-approvals.json"]),
@@ -101,7 +104,7 @@ static NSDictionary *SenderOfCurrentURLEvent() {
   return @{@"bundleId" : app.bundleIdentifier ?: NSNull.null, @"appName" : name.length ? name : NSNull.null};
 }
 
-@implementation ArdiaBootstrapDelegate
+@implementation NillaBootstrapDelegate
 - (instancetype)init {
   if ((self = [super init])) _urls = [NSMutableArray array];
   return self;
@@ -118,14 +121,14 @@ static NSDictionary *SenderOfCurrentURLEvent() {
 @end
 
 static bool LaunchTabSwitchedOff() {
-  return ![ArdiaLaunchConfig.shared switchOn:@"launchTab"];
+  return ![NillaLaunchConfig.shared switchOn:@"launchTab"];
 }
 
 static NSString *AppDataDirectory() {
   NSString *dir = gScratchDataDir ? [gDataDirectory stringByDeletingLastPathComponent] : nil;
   if (dir) return dir;
   NSURL *support = [NSFileManager.defaultManager URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
-  return [support URLByAppendingPathComponent:NSBundle.mainBundle.bundleIdentifier ?: @"Ardia"].path;
+  return [support URLByAppendingPathComponent:NSBundle.mainBundle.bundleIdentifier ?: @"Nilla"].path;
 }
 
 static void ParkLaunchLinks(NSArray<NSURL *> *links, NSString *linkProfile) {
@@ -133,10 +136,10 @@ static void ParkLaunchLinks(NSArray<NSURL *> *links, NSString *linkProfile) {
   NSMutableArray<NSString *> *urls = [NSMutableArray array];
   for (NSURL *link in links)
     if (!link.isFileURL && link.absoluteString.length) [urls addObject:link.absoluteString];
-  [ArdiaWebView startLinkTabs:urls profile:linkProfile];
+  [NillaWebView startLinkTabs:urls profile:linkProfile];
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 void ReplayLaunchURLs(NSArray<NSURL *> *urls) {
   if (![gAppDelegate respondsToSelector:@selector(application:openURLs:)]) return;
@@ -151,9 +154,9 @@ void LinksArrived(NSArray<NSURL *> *urls) {
   if (handled || !urls.count) return;
   handled = true;
   NSArray<NSURL *> *links = [urls copy];
-  [ArdiaLaunchSequence.shared after:ArdiaLaunchJSStarted
+  [NillaLaunchSequence.shared after:NillaLaunchJSStarted
                                  do:^{
-                                   ParkLaunchLinks(links, [ArdiaSavedSession readFrom:AppDataDirectory()].linkProfile);
+                                   ParkLaunchLinks(links, [NillaSavedSession readFrom:AppDataDirectory()].linkProfile);
                                  }];
 }
 
@@ -163,6 +166,22 @@ static std::string FeatureEntryName(const std::string &entry) {
   const size_t start = !entry.empty() && entry[0] == '*' ? 1 : 0;
   const size_t end = entry.find_first_of("<:", start);
   return entry.substr(start, end == std::string::npos ? std::string::npos : end - start);
+}
+
+static constexpr std::string_view kEngineSwitchPrefix = "ardia-";
+
+static std::optional<std::string> ForwardedCallerArgument(const char *raw, const std::string &workingDirectory,
+                                                          const std::vector<std::string> &protectedRoots) {
+  const nilla_switches::Forwarding forwarding =
+      nilla_switches::ForwardedArgument(raw, kEngineSwitchPrefix, workingDirectory, protectedRoots);
+  if (forwarding.refusal == nilla_switches::Refusal::userDataDir)
+    fprintf(stderr, "[ardiacore] ignoring %s: Chromium always gets the data dir Nilla checked, %s\n", forwarding.argument.c_str(),
+            gDataDirectory.fileSystemRepresentation);
+  if (forwarding.refusal == nilla_switches::Refusal::protectedPath)
+    fprintf(stderr, "[ardiacore] ignoring %s: %s leads into an installed Ardia's folders, or where it leads can't be told\n",
+            forwarding.argument.c_str(), forwarding.path.c_str());
+  if (forwarding.refusal != nilla_switches::Refusal::none) return std::nullopt;
+  return forwarding.argument;
 }
 
 static std::vector<std::string> MergeFeatureLists(const std::vector<const char *> &args) {
@@ -213,15 +232,15 @@ static void ReportLoweredWindowOcclusion() {
     [center addObserverForName:name object:nil queue:nil usingBlock:^(NSNotification *note) { report(note.object); }];
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 void StartLaunchTab() {
-  [ArdiaLaunchSequence.shared reach:ArdiaLaunchJSStarted];
-  ArdiaSavedSession *session = [ArdiaSavedSession readFrom:AppDataDirectory()];
+  [NillaLaunchSequence.shared reach:NillaLaunchJSStarted];
+  NillaSavedSession *session = [NillaSavedSession readFrom:AppDataDirectory()];
   NSString *key = session.launchTabId;
   if (!key) return;
-  [ArdiaWebView startLaunchTab:key url:session.launchTabURL profile:session.launchTabProfile];
-  if (ArdiaCoreTab *tab = ArdiaTabParking.launchTab) [ArdiaEarlyWindow attachPage:tab key:key];
+  [NillaWebView startLaunchTab:key url:session.launchTabURL profile:session.launchTabProfile];
+  if (ArdiaCoreTab *tab = NillaTabParking.launchTab) [NillaEarlyWindow attachPage:tab key:key];
 }
 
 }
@@ -229,7 +248,7 @@ void StartLaunchTab() {
 static constexpr NSInteger kOnboardingVersion = 1;
 
 static bool OnboardingPending(NSString *dir) {
-  NSDictionary *saved = [ArdiaSavedDocument read:@"onboarding.json" in:dir oldest:0 newest:kOnboardingVersion];
+  NSDictionary *saved = [NillaSavedDocument read:@"onboarding.json" in:dir oldest:0 newest:kOnboardingVersion];
   if (!saved) return false;
   const bool completed = [saved[@"completedAt"] isKindOfClass:NSNumber.class] && [saved[@"completedAt"] doubleValue] > 0;
   return !completed && [saved[@"startedAt"] isKindOfClass:NSNumber.class];
@@ -237,9 +256,9 @@ static bool OnboardingPending(NSString *dir) {
 
 static void TryEarlyWindow() {
   NSString *dir = AppDataDirectory();
-  ArdiaLaunchSequence *launch = ArdiaLaunchSequence.shared;
+  NillaLaunchSequence *launch = NillaLaunchSequence.shared;
   if (launch.launchedHidden || launch.launchedForDocuments || NSApp.isHidden || gBootstrap.urls.count || LaunchTabSwitchedOff() || OnboardingPending(dir)) return;
-  ArdiaSavedSession *session = [ArdiaSavedSession atLaunch:dir];
+  NillaSavedSession *session = [NillaSavedSession atLaunch:dir];
   NSString *focused = session.focusedWindowId, *key = session.launchTabId, *url = session.launchTabURL, *profile = session.launchTabProfile;
   if (!focused || !key) return;
   NSDictionary *window = [session windowWithId:focused];
@@ -251,23 +270,23 @@ static void TryEarlyWindow() {
   const bool dark = [[NSApp.effectiveAppearance bestMatchFromAppearancesWithNames:@[ NSAppearanceNameDarkAqua, NSAppearanceNameAqua ]]
       isEqualToString:NSAppearanceNameDarkAqua];
   if (!backdrop || ![backdrop[@"dark"] isKindOfClass:NSNumber.class] || [backdrop[@"dark"] boolValue] != dark) return;
-  if (![ArdiaEarlyWindow canShowWindow:focused session:session]) return;
-  ArdiaCoreProfile *loaded = ardia_host::LoadedProfile(profile);
+  if (![NillaEarlyWindow canShowWindow:focused session:session]) return;
+  ArdiaCoreProfile *loaded = nilla_host::LoadedProfile(profile);
   if (!loaded) return;
   [loaded warmSpareRenderer];
-  const BOOL shown = [ArdiaEarlyWindow showWindow:focused
+  const BOOL shown = [NillaEarlyWindow showWindow:focused
                                         frame:window[@"frame"]
                                       display:[window[@"display"] isKindOfClass:NSString.class] ? window[@"display"] : nil
                                           key:key
                                       profile:profile
                                      backdrop:backdrop];
   if (shown) launch.earlyWindowShownAt = NSDate.date.timeIntervalSince1970 * 1000;
-  [ArdiaWebView startLaunchTab:key url:url profile:profile];
+  [NillaWebView startLaunchTab:key url:url profile:profile];
   if (!shown) return;
-  if (ArdiaCoreTab *tab = ArdiaTabParking.launchTab) [ArdiaEarlyWindow attachPage:tab key:key];
+  if (ArdiaCoreTab *tab = NillaTabParking.launchTab) [NillaEarlyWindow attachPage:tab key:key];
 }
 
-static NSArray<NSNumber *> *LittleArdiaFrame(id size) {
+static NSArray<NSNumber *> *LittleNillaFrame(id size) {
   const NSPoint mouse = NSEvent.mouseLocation;
   NSScreen *screen = nil;
   for (NSScreen *each in NSScreen.screens)
@@ -283,7 +302,7 @@ static NSArray<NSNumber *> *LittleArdiaFrame(id size) {
     width = [size[0] doubleValue];
     height = [size[1] doubleValue];
   }
-  const ardia_little_fit::Rect fitted = ardia_little_fit::Fit(
+  const nilla_little_fit::Rect fitted = nilla_little_fit::Fit(
       {visible.origin.x, visible.origin.y, visible.size.width, visible.size.height}, {width, height}, {420, 300});
   return @[ @(fitted.x), @(fitted.y), @(fitted.w), @(fitted.h) ];
 }
@@ -291,8 +310,8 @@ static NSArray<NSNumber *> *LittleArdiaFrame(id size) {
 static bool gEarlyLittleTried;
 
 static void TryEarlyLittleWindow() {
-  ArdiaLaunchSequence *launch = ArdiaLaunchSequence.shared;
-  if (gEarlyLittleTried || !launch.engineRunning || [launch reached:ArdiaLaunchJSStarted] || gBootstrap.urls.count != 1) return;
+  NillaLaunchSequence *launch = NillaLaunchSequence.shared;
+  if (gEarlyLittleTried || !launch.engineRunning || [launch reached:NillaLaunchJSStarted] || gBootstrap.urls.count != 1) return;
   gEarlyLittleTried = true;
   if (HoldsIncomingLinks()) return;
   NSURL *link = gBootstrap.urls.firstObject;
@@ -300,61 +319,61 @@ static void TryEarlyLittleWindow() {
   if (![scheme isEqualToString:@"http"] && ![scheme isEqualToString:@"https"]) return;
   NSString *dir = AppDataDirectory();
   if (launch.launchedHidden || NSApp.isHidden || LaunchTabSwitchedOff() || OnboardingPending(dir)) return;
-  ArdiaSavedSession *session = [ArdiaSavedSession atLaunch:dir];
+  NillaSavedSession *session = [NillaSavedSession atLaunch:dir];
   NSDictionary *settings = session.settings ?: @{};
-  if ([settings[@"openLinksInLittleArdia"] isEqual:@NO]) return;
+  if ([settings[@"openLinksInLittleNilla"] isEqual:@NO]) return;
   NSString *profile = session.linkProfile;
   NSDictionary *backdrop = session.launchBackdrop;
   const bool dark = [[NSApp.effectiveAppearance bestMatchFromAppearancesWithNames:@[ NSAppearanceNameDarkAqua, NSAppearanceNameAqua ]]
       isEqualToString:NSAppearanceNameDarkAqua];
   if (!profile || !backdrop || ![backdrop[@"dark"] isKindOfClass:NSNumber.class] || [backdrop[@"dark"] boolValue] != dark) return;
-  if (!ardia_host::LoadedProfile(profile)) return;
-  NSArray<NSNumber *> *frame = LittleArdiaFrame(settings[@"littleArdiaSize"]);
+  if (!nilla_host::LoadedProfile(profile)) return;
+  NSArray<NSNumber *> *frame = LittleNillaFrame(settings[@"littleNillaSize"]);
   if (!frame) return;
   NSString *url = link.absoluteString;
-  [ArdiaWebView startLinkTabs:@[ url ] profile:profile];
-  ArdiaCoreTab *tab = ArdiaTabParking.firstLinkTab;
-  NSString *mark = tab ? [ArdiaTabParking linkMarkForTab:tab] : nil;
+  [NillaWebView startLinkTabs:@[ url ] profile:profile];
+  ArdiaCoreTab *tab = NillaTabParking.firstLinkTab;
+  NSString *mark = tab ? [NillaTabParking linkMarkForTab:tab] : nil;
   NSString *focused = session.focusedWindowId;
-  if (mark) [ArdiaEarlyWindow showLittleWindowForLink:tab mark:mark url:url frame:frame profile:profile backdrop:backdrop settings:settings like:focused];
+  if (mark) [NillaEarlyWindow showLittleWindowForLink:tab mark:mark url:url frame:frame profile:profile backdrop:backdrop settings:settings like:focused];
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 void StartEarlyWindow() {
   @autoreleasepool {
     TryEarlyWindow();
     TryEarlyLittleWindow();
-    [ArdiaEarlyWindow discardPrefetch];
+    [NillaEarlyWindow discardPrefetch];
   }
 }
 
 }
 
-@implementation ArdiaHost (Launch)
+@implementation NillaHost (Launch)
 
 + (BOOL)holdsIncomingLinks {
   return SavedLinkHold();
 }
 
 + (void)markMainStarted {
-  ArdiaLaunchSequence.shared.mainStartedAt = LaunchNowMs();
+  NillaLaunchSequence.shared.mainStartedAt = LaunchNowMs();
 }
 
 + (nullable NSNumber *)launchedHidden {
-  ArdiaLaunchSequence *launch = ArdiaLaunchSequence.shared;
-  return [launch reached:ArdiaLaunchAppKitDidFinish] ? @(launch.launchedHidden) : nil;
+  NillaLaunchSequence *launch = NillaLaunchSequence.shared;
+  return [launch reached:NillaLaunchAppKitDidFinish] ? @(launch.launchedHidden) : nil;
 }
 
 + (nullable NSString *)launchSource {
-  ArdiaLaunchSequence *launch = ArdiaLaunchSequence.shared;
-  if (![launch reached:ArdiaLaunchAppKitDidFinish]) return nil;
+  NillaLaunchSequence *launch = NillaLaunchSequence.shared;
+  if (![launch reached:NillaLaunchAppKitDidFinish]) return nil;
   if (launch.launchedHidden) return @"login_item";
   return launch.launchedForDocuments ? @"documents" : @"user";
 }
 
 + (NSDictionary<NSString *, NSNumber *> *)launchMarks {
-  ArdiaLaunchSequence *launch = ArdiaLaunchSequence.shared;
+  NillaLaunchSequence *launch = NillaLaunchSequence.shared;
   NSMutableDictionary<NSString *, NSNumber *> *marks = [NSMutableDictionary dictionary];
   if (launch.mainStartedAt > 0) marks[@"mainStarted"] = @(launch.mainStartedAt);
   if (launch.startupPreparedAt > 0) marks[@"startupPrepared"] = @(launch.startupPreparedAt);
@@ -393,7 +412,7 @@ void StartEarlyWindow() {
 }
 
 + (int)runWithArgc:(int)argc argv:(char **)argv delegate:(id<NSApplicationDelegate> (^)(void))makeDelegate {
-  ArdiaLaunchConfig *config = ArdiaLaunchConfig.shared;
+  NillaLaunchConfig *config = NillaLaunchConfig.shared;
   gScratchDataDir = config.dataDirectory != nil;
 #if DEBUG
   if (!gScratchDataDir) {
@@ -401,23 +420,39 @@ void StartEarlyWindow() {
     return 1;
   }
 #endif
-  gMakeDelegate = [makeDelegate copy];
+  if (IsTeamSigned()) {
+    fprintf(stderr, "[ardiacore] a team-signed Nilla build, or one whose signature can't be read, waits for Nilla's own "
+                    "engines: every launch passes today's engine the mock keychain, which turns off its real-profile gate\n");
+    return 1;
+  }
   NSString *scratch = config.dataDirectory;
-  gDataDirectory = scratch ? [scratch stringByAppendingPathComponent:@"Chromium"] : InstalledDataDirectory();
+  NSString *dataDirectory = scratch ? [scratch stringByAppendingPathComponent:@"Chromium"] : InstalledDataDirectory();
+  if (!nilla_upstream::IsOwnFolder(dataDirectory.stringByDeletingLastPathComponent) || !nilla_upstream::IsOwnFolder(dataDirectory)) {
+    fprintf(stderr, "[ardiacore] the data dir %s leads into an installed Ardia's folders, or where it leads can't be told, so "
+                    "Nilla won't read or write it\n", dataDirectory.fileSystemRepresentation);
+    return 1;
+  }
+  if (NSString *entry = nilla_upstream::UnownedDataEntry(dataDirectory)) {
+    fprintf(stderr, "[ardiacore] %s in the data dir %s leads into an installed Ardia's folders, or where it leads can't be told, "
+                    "so Nilla won't start Chromium on it\n", entry.fileSystemRepresentation, dataDirectory.fileSystemRepresentation);
+    return 1;
+  }
+  gMakeDelegate = [makeDelegate copy];
+  gDataDirectory = dataDirectory;
   NSError *dirError;
   if (![NSFileManager.defaultManager createDirectoryAtPath:gDataDirectory withIntermediateDirectories:YES attributes:nil error:&dirError]) {
     fprintf(stderr, "[ardiacore] can't use the data dir %s: %s\n", gDataDirectory.fileSystemRepresentation,
             dirError.localizedDescription.UTF8String ?: "");
     return 1;
   }
-  ardia_host::InstallTestCrashGuard(scratch && config.background ? scratch : nil);
-  ardia_host::InstallActivationGuardsEarly();
-  ardia_host::PrepareContentBlocker();
+  nilla_host::InstallTestCrashGuard(scratch && config.background ? scratch : nil);
+  nilla_host::InstallActivationGuardsEarly();
+  nilla_host::PrepareContentBlocker();
   Method finishLaunching = class_getInstanceMethod(NSApplication.class, @selector(finishLaunching));
   IMP appKitFinishLaunching = method_getImplementation(finishLaunching);
   method_setImplementation(finishLaunching, imp_implementationWithBlock(^(NSApplication *app) {
     if (!gAppDelegate && !app.delegate) {
-      gBootstrap = [ArdiaBootstrapDelegate new];
+      gBootstrap = [NillaBootstrapDelegate new];
       app.delegate = gBootstrap;
     }
     ((void (*)(id, SEL))appKitFinishLaunching)(app, @selector(finishLaunching));
@@ -426,8 +461,8 @@ void StartEarlyWindow() {
                                                   object:nil
                                                    queue:nil
                                               usingBlock:^(NSNotification *) {
-                                                ArdiaLaunchSequence.shared.appKitWillFinishAt = LaunchNowMs();
-                                                [ArdiaLaunchSequence.shared reach:ArdiaLaunchAppKitWillFinish];
+                                                NillaLaunchSequence.shared.appKitWillFinishAt = LaunchNowMs();
+                                                [NillaLaunchSequence.shared reach:NillaLaunchAppKitWillFinish];
                                               }];
   if ([config traced:@"visibility"]) {
     [NSNotificationCenter.defaultCenter addObserverForName:NSWindowDidChangeOcclusionStateNotification
@@ -448,7 +483,7 @@ void StartEarlyWindow() {
         NSLog(@"[ardiacore-vis] workspace %@", note.name);
       }];
   }
-  [ArdiaLaunchSequence.shared after:ArdiaLaunchEngineStarted | ArdiaLaunchAppKitDidFinish do:^{ StartEarlyWindow(); }];
+  [NillaLaunchSequence.shared after:NillaLaunchEngineStarted | NillaLaunchAppKitDidFinish do:^{ StartEarlyWindow(); }];
   [NSNotificationCenter.defaultCenter addObserverForName:NSApplicationDidFinishLaunchingNotification
                                                   object:nil
                                                    queue:nil
@@ -457,8 +492,8 @@ void StartEarlyWindow() {
                                                 const BOOL hidden = event.eventID == kAEOpenApplication &&
                                                                     [event paramDescriptorForKeyword:keyAEPropData].enumCodeValue == keyAELaunchedAsLogInItem;
                                                 const BOOL documents = event && !(event.eventClass == kCoreEventClass && event.eventID == kAEOpenApplication);
-                                                ArdiaLaunchSequence.shared.appKitDidFinishAt = LaunchNowMs();
-                                                [ArdiaLaunchSequence.shared appKitFinishedHidden:hidden forDocuments:documents];
+                                                NillaLaunchSequence.shared.appKitDidFinishAt = LaunchNowMs();
+                                                [NillaLaunchSequence.shared appKitFinishedHidden:hidden forDocuments:documents];
                                               }];
 
   std::vector<std::string> extra = {
@@ -473,11 +508,11 @@ void StartEarlyWindow() {
   };
   const bool mockKeychain = gScratchDataDir || !IsTeamSigned();
   if (mockKeychain) extra.push_back("--use-mock-keychain");
-  ardia_host::PrepareStartup(gDataDirectory);
-  ArdiaLaunchSequence.shared.startupPreparedAt = LaunchNowMs();
+  nilla_host::PrepareStartup(gDataDirectory);
+  NillaLaunchSequence.shared.startupPreparedAt = LaunchNowMs();
   @autoreleasepool {
-    [ArdiaEarlyWindow setDataDirectory:AppDataDirectory()];
-    [ArdiaEarlyWindow prefetchForSession:[ArdiaSavedSession atLaunch:AppDataDirectory()]];
+    [NillaEarlyWindow setDataDirectory:AppDataDirectory()];
+    [NillaEarlyWindow prefetchForSession:[NillaSavedSession atLaunch:AppDataDirectory()]];
   }
   const bool background = config.background;
   if (background && ![config instanceFlag:@"allowOcclusion"]) {
@@ -494,6 +529,13 @@ void StartEarlyWindow() {
                           !strncmp(sw, "--auto-accept-camera-and-microphone-capture", 43));
   };
   for (NSString *sw in config.engineSwitches) extra.push_back(sw.UTF8String);
+  const std::optional<std::vector<std::string>> protectedRoots = nilla_upstream::HomeProtectedRoots();
+  if (!protectedRoots) {
+    fprintf(stderr, "[ardiacore] where an installed Ardia's folders lead can't be told, so Nilla won't start Chromium\n");
+    return 1;
+  }
+  char cwd[PATH_MAX];
+  const std::string workingDirectory = getcwd(cwd, sizeof cwd) ? cwd : "";
   if (NSNumber *port = config.remoteDebuggingPort; port && mockKeychain) {
     extra.push_back(std::string("--remote-debugging-port=") + port.stringValue.UTF8String);
     extra.push_back("--remote-allow-origins=*");
@@ -502,12 +544,12 @@ void StartEarlyWindow() {
     NSString *all = [@" " stringByAppendingString:switches];
     for (NSString *item in [all componentsSeparatedByString:@" --"]) {
       NSString *sw = [item stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+      if (!sw.length) continue;
       std::string full = std::string("--") + sw.UTF8String;
-      if (sw.length && !autoAccepts(full.c_str()) && ![sw hasPrefix:@"ardia-"]) extra.push_back(full);
+      std::optional<std::string> forwarded = ForwardedCallerArgument(full.c_str(), workingDirectory, *protectedRoots);
+      if (forwarded && !autoAccepts(forwarded->c_str())) extra.push_back(*forwarded);
     }
   }
-  std::vector<const char *> args = {argc > 0 && argv[0] ? argv[0] : "Ardia"};
-  for (const std::string &s : extra) args.push_back(s.c_str());
   for (int i = 1; mockKeychain && i < argc; i++) {
     const char *arg = argv[i];
     if (!arg) break;
@@ -517,15 +559,17 @@ void StartEarlyWindow() {
       i++;
       continue;
     }
-    if (autoAccepts(arg) || !strncmp(arg, "--ardia-", 8)) continue;
-    args.push_back(arg);
+    std::optional<std::string> forwarded = ForwardedCallerArgument(arg, workingDirectory, *protectedRoots);
+    if (forwarded && !autoAccepts(forwarded->c_str())) extra.push_back(*forwarded);
   }
+  std::vector<const char *> args = {argc > 0 && argv[0] ? argv[0] : "Nilla"};
+  for (const std::string &s : extra) args.push_back(s.c_str());
   static std::vector<std::string> merged;
   merged = MergeFeatureLists(args);
   args.resize(1);
   for (const std::string &s : merged) args.push_back(s.c_str());
-  static ArdiaHostEngineDelegate *engineDelegate = [ArdiaHostEngineDelegate new];
-  ArdiaLaunchSequence.shared.chromiumEnteredAt = LaunchNowMs();
+  static NillaHostEngineDelegate *engineDelegate = [NillaHostEngineDelegate new];
+  NillaLaunchSequence.shared.chromiumEnteredAt = LaunchNowMs();
   return [ArdiaCoreEngine runWithArgc:(int)args.size() argv:args.data() delegate:engineDelegate];
 }
 

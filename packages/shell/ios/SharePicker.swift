@@ -9,7 +9,7 @@ enum SharePicker {
     let window = windowId.flatMap { WindowManager.shared.window($0) } ?? NSApp.keyWindow
     guard let link = URL(string: url) else { return done() }
     guard let window, let view = window.contentView else {
-      if link.isFileURL { ArdiaWebView.removeSharedImage(link) }
+      if link.isFileURL { NillaWebView.removeSharedImage(link) }
       return done()
     }
     let (rect, edge) = placement(in: view, anchor: anchor)
@@ -21,7 +21,7 @@ enum SharePicker {
       log("share sheet (not shown): \(describe(url, title)) window=#\(window.windowNumber) anchor=\(NSStringFromRect(rect))"
         + " inWindow=\(NSStringFromRect(view.convert(rect, to: nil)))"
         + " services=\(services(for: [link as NSURL]).map(\.title).joined(separator: "|"))")
-      if link.isFileURL { ArdiaWebView.removeSharedImage(link) }
+      if link.isFileURL { NillaWebView.removeSharedImage(link) }
       return done()
     }
     delegate.finish()
@@ -77,7 +77,7 @@ enum SharePicker {
     match.perform(withItems: [link])
   }
 
-  static func services(for items: [Any] = [NSURL(string: "https://ardia.dev")!]) -> [NSSharingService] {
+  static func services(for items: [Any] = [NSURL(string: "https://example.com")!]) -> [NSSharingService] {
     let listed = (NSSharingService.self as AnyObject).perform(NSSelectorFromString("sharingServicesForItems:"), with: items)
     let all = listed?.takeUnretainedValue() as? [NSSharingService] ?? []
     let skipped = Set([NSSharingService.Name.composeEmail, .addToSafariReadingList].compactMap { NSSharingService(named: $0)?.title })
@@ -139,7 +139,7 @@ private final class ShareDelegate: NSObject, NSSharingServicePickerDelegate, NSS
   }
 
   func sharingServicePicker(_ picker: NSSharingServicePicker, didChoose service: NSSharingService?) {
-    if service == nil, let file { ArdiaWebView.removeSharedImage(file) }
+    if service == nil, let file { NillaWebView.removeSharedImage(file) }
     file = nil
     finish()
   }
@@ -151,7 +151,7 @@ private final class ShareDelegate: NSObject, NSSharingServicePickerDelegate, NSS
   }
 
   private func removeSharedImages(in items: [Any]) {
-    items.compactMap { $0 as? URL }.filter(\.isFileURL).forEach(ArdiaWebView.removeSharedImage)
+    items.compactMap { $0 as? URL }.filter(\.isFileURL).forEach(NillaWebView.removeSharedImage)
   }
 
   func sharingService(

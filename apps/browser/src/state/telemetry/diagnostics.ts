@@ -272,7 +272,7 @@ export function trackPageProcessGone(info: { reason: string; code: number }, vis
 
 const HOVER_REASONS = new Set(["halfActive", "staleMenu", "notKeyOrMain", "coveredByView", "responderLost", "coveredByWindow"]);
 const HOVER_RESPONDERS = new Set(["none", "window", "otherWindow", "page", "control"]);
-const HOVER_WINDOW_KINDS = new Set(["none", "hidden", "blockerPage", "internal", "ardiaPanel", "popup", "browser", "other"]);
+const HOVER_WINDOW_KINDS = new Set(["none", "hidden", "blockerPage", "internal", "nillaPanel", "popup", "browser", "other"]);
 const HOVER_COVERS = new Set(["none", "reactNative", "chromium", "other"]);
 const HOVER_ENDINGS = new Set(["hover", "heal", "appInactive", "windowClosed"]);
 

@@ -10,7 +10,7 @@ const state = (overrides = {}) => ({
   windows: [{ id: "w2", title: "Docs" }],
   bookmarkFolders: [{ id: "bar", title: "Bookmarks Bar" }],
   recentBookmarks: [{ id: "b1", title: "Example", url: "https://example.com" }],
-  bookmarksBar: [{ id: "f1", title: "Work", children: [{ id: "b2", title: "", url: "https://ardia.dev" }] }],
+  bookmarksBar: [{ id: "f1", title: "Work", children: [{ id: "b2", title: "", url: "https://example.org" }] }],
   otherBookmarks: [],
   recentlyClosed: [],
   recentlyClosedGroups: [],
@@ -28,7 +28,7 @@ const find = (items, id) => {
 };
 
 test("the menu mirrors the macOS menu bar's top-level menus", () => {
-  assert.deepEqual(appMenuItems(state()).map((item) => item.title), ["Ardia", "File", "Edit", "View", "Tabs", "Bookmarks", "History", "Extensions", "Window", "Help"]);
+  assert.deepEqual(appMenuItems(state()).map((item) => item.title), ["Nilla", "File", "Edit", "View", "Tabs", "Bookmarks", "History", "Extensions", "Window", "Help"]);
 });
 
 test("items carry the menu state's checks, disabled commands and titles", () => {
@@ -41,7 +41,7 @@ test("items carry the menu state's checks, disabled commands and titles", () => 
   assert.equal(find(items, "togglePin:tile"), undefined);
   assert.equal(find(top(items, "Bookmarks").children, "bookmarkPage").title, "Edit Bookmark…");
   assert.equal(find(top(items, "Tabs").children, "moveTabToProfile:p1").checked, true);
-  assert.equal(find(items, "openBookmark:b2").title, "https://ardia.dev");
+  assert.equal(find(items, "openBookmark:b2").title, "https://example.org");
   assert.equal(find(items, "addFolderToSidebar:f1").enabled, true);
   assert.equal(find(items, "openExtension:ext").title, "uBlock");
 });
@@ -51,7 +51,7 @@ test("empty lists show a disabled placeholder and single profiles hide profile m
   const history = top(items, "History").children;
   assert.deepEqual(history.at(-1), { id: "empty", title: "Empty", enabled: false });
   assert.equal(find(items, "menu:Profiles"), undefined);
-  assert.equal(find(items, "menu:New Little Ardia Window in Profile"), undefined);
+  assert.equal(find(items, "menu:New Little Nilla Window in Profile"), undefined);
 });
 
 test("items show the effective Linux shortcut", () => {
@@ -71,10 +71,10 @@ test("choices resolve to commands or window actions and ignore structure rows", 
 
 const rows = (items, title) => top(items, title).children.map((item) => "separator" in item ? "-" : item.title);
 
-test("the Ardia, File, View and Help menus carry the Mac menu bar's entries in its order", () => {
+test("the Nilla, File, View and Help menus carry the Mac menu bar's entries in its order", () => {
   const items = appMenuItems(state(), new Map([["std:quit:", { key: "q", modifiers: ["command", "shift"] }], ["newIncognitoWindow", { key: "n", modifiers: ["command", "shift"] }]]));
-  assert.deepEqual(rows(items, "Ardia"), ["About Ardia", "-", "Settings…", "Import from Another Browser…", "-", "Quit Ardia"]);
-  assert.deepEqual(find(items, "std:quit:"), { id: "std:quit:", title: "Quit Ardia", key: "q", modifiers: ["command", "shift"] });
+  assert.deepEqual(rows(items, "Nilla"), ["About Nilla", "-", "Settings…", "Import from Another Browser…", "-", "Quit Nilla"]);
+  assert.deepEqual(find(items, "std:quit:"), { id: "std:quit:", title: "Quit Nilla", key: "q", modifiers: ["command", "shift"] });
   const file = rows(items, "File");
   assert.deepEqual(file.slice(0, 4), ["New Tab", "New Tab in Group", "New Window", "New Incognito Window"]);
   assert.deepEqual(file.slice(-5), ["Save Page As…", "Share", "Email Page Location", "Print…", "Print Using System Dialog…"]);

@@ -21,7 +21,7 @@ REGIONS = ["page=60,300,960,1400", "full=0,90,1080,2170", "bar=0,2080,1080,190",
 MOVE = 2.0
 QUIET = 0.8
 QUIET_MS = 300
-PACKAGE = "com.ardia.browser.android"
+PACKAGE = "com.nilladigital.nilla.android"
 
 
 def zone():

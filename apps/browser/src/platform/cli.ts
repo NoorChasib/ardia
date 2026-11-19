@@ -1,9 +1,9 @@
 import { call, on, type CliControlStatus } from "@ardia/ardiacore";
-import { nativeModule, type CliInstallResult } from "@ardia/shell";
+import { nativeModule, type CliInstallResult } from "@nilla/shell";
 
 export type { CliControlStatus, CliInstallResult };
 
-const Cli = nativeModule("ArdiaCli");
+const Cli = nativeModule("NillaCli");
 
 export const installedCliVersion = () => Cli.installedVersion();
 export const canInstallCliUnattended = () => Cli.canInstallUnattended();

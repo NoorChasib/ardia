@@ -34,7 +34,7 @@ export default {
       await app.browser.send("Storage.setCookies", { cookies: [{ name: "SID", value: `secret-${run}`, domain: SUGGEST_HOST, path: "/", secure: true, httpOnly: true }] });
       return true;
     });
-    const enabled = `ardia enabled ${run}`;
+    const enabled = `nilla enabled ${run}`;
     await t.check("enabled suggestions arrive from the controlled endpoint", async () => {
       await onPage(shell, t.fixtures.url.page(1, run));
       await typeQuery(shell, enabled);
@@ -52,7 +52,7 @@ export default {
       return { requests: requests.length, origins };
     });
     await closePanel(shell);
-    const disabled = `ardia disabled ${run}`;
+    const disabled = `nilla disabled ${run}`;
     await t.check("disabled suggestions send zero requests", async () => {
       await shell.state("s.updateSettings({ searchSuggestions: false }); return true;");
       await shell.waitState("return s.settings.searchSuggestions === false;", { timeout: 5000 });
@@ -71,7 +71,7 @@ export default {
       const windowId = await shell.state(`return s.createWindow({ kind: "private", profileId: "default" });`);
       const privateShell = await app.shell(windowId, { timeout: 25000 });
       await onPage(privateShell, t.fixtures.url.page(2, run));
-      const query = `ardia private ${run}`;
+      const query = `nilla private ${run}`;
       await typeQuery(privateShell, query);
       await pause(2500);
       const text = await privateShell.text();

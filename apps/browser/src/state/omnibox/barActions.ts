@@ -1,4 +1,4 @@
-import type { CommandAction } from "@ardia/core";
+import type { CommandAction } from "@nilla/core";
 import type { BrowserCommand } from "../../platform/commands";
 import { isBookmarked } from "../bookmarks/bookmarks";
 import { hidesBookmarkCommand } from "../bookmarks/visibility";
@@ -91,7 +91,7 @@ const DEFS: ActionDef[] = [
   { command: "taskManager", icon: "chart.bar", keywords: ["open task manager"] },
   { command: "manageExtensions", icon: "puzzlepiece.extension" },
   { command: "addExtension", icon: "puzzlepiece", keywords: ["install extension"] },
-  { command: "newLittleArdia", icon: "macwindow.badge.plus", keywords: ["little arc", "mini window"] },
+  { command: "newLittleNilla", icon: "macwindow.badge.plus", keywords: ["little arc", "mini window"] },
   { command: "showHistory", keywords: ["show history"] },
   { command: "manageBookmarks", keywords: ["manage bookmarks", "show bookmarks"] },
   { command: "openSettings", keywords: ["preferences", "prefs", "options"] },

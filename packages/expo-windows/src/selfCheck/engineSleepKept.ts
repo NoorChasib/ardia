@@ -12,8 +12,8 @@ const HOLDS_BLOCKING_INDEXEDDB_LOCK = 103;
 const LIVE_CONNECTION = 104;
 const INSPECTED_BY_ANOTHER_CLIENT = 105;
 const SIGNAL_MS = 5000;
-const UNHEARD_POPUP = "ardia-sleep-check-unheard";
-const TAB_POPUP = "ardia-sleep-check-as-tab";
+const UNHEARD_POPUP = "nilla-sleep-check-unheard";
+const TAB_POPUP = "nilla-sleep-check-as-tab";
 const OFFER_MS = 8000;
 
 const DISCARD_REASONS = ["proactive", "urgent", "frozen"] as const;
@@ -71,7 +71,7 @@ const keptChecks: Check[] = [
     run: () =>
       withPages(["lock"], async ([page], windowId) => {
         await show(page!, windowId, LEFT);
-        await evaluate(page!, `navigator.locks.request("ardia-sleep-check", () => new Promise(() => {})); post("result", "null");`);
+        await evaluate(page!, `navigator.locks.request("nilla-sleep-check", () => new Promise(() => {})); post("result", "null");`);
         await hide(page!, windowId);
         await keptWithin(page!, HOLDS_WEB_LOCK, `kept while it holds a Web Lock (${HOLDS_WEB_LOCK})`);
       }),
@@ -84,12 +84,12 @@ const keptChecks: Check[] = [
         await show(waiter!, windowId, RIGHT);
         const opened = await evaluate(
           holder!,
-          `const open = indexedDB.open("ardia-sleep-check", 1); open.onupgradeneeded = () => open.result.createObjectStore("kept"); open.onsuccess = () => { window.ardiaDatabase = open.result; post("result", JSON.stringify("open")); }; open.onerror = () => post("result", JSON.stringify("error"));`,
+          `const open = indexedDB.open("nilla-sleep-check", 1); open.onupgradeneeded = () => open.result.createObjectStore("kept"); open.onsuccess = () => { window.nillaDatabase = open.result; post("result", JSON.stringify("open")); }; open.onerror = () => post("result", JSON.stringify("error"));`,
         );
         expectEqual(opened, "open", "the holder's IndexedDB connection");
         const upgrade = await evaluate(
           waiter!,
-          `const open = indexedDB.open("ardia-sleep-check", 2); window.ardiaUpgrade = open; open.onblocked = () => post("result", JSON.stringify("blocked")); open.onsuccess = () => post("result", JSON.stringify("opened")); open.onerror = () => post("result", JSON.stringify("error"));`,
+          `const open = indexedDB.open("nilla-sleep-check", 2); window.nillaUpgrade = open; open.onblocked = () => post("result", JSON.stringify("blocked")); open.onsuccess = () => post("result", JSON.stringify("opened")); open.onerror = () => post("result", JSON.stringify("error"));`,
         );
         expectEqual(upgrade, "blocked", "the other page's upgrade waits on the holder's connection");
         await hide(holder!, windowId);
@@ -103,7 +103,7 @@ const keptChecks: Check[] = [
         await show(page!, windowId, LEFT);
         const opened = await evaluate(
           page!,
-          `const ws = new WebSocket("ws://" + location.host + "/ws"); window.ardiaSocket = ws; ws.onopen = () => post("result", JSON.stringify("open")); ws.onerror = () => post("result", JSON.stringify("error"));`,
+          `const ws = new WebSocket("ws://" + location.host + "/ws"); window.nillaSocket = ws; ws.onopen = () => post("result", JSON.stringify("open")); ws.onerror = () => post("result", JSON.stringify("error"));`,
         );
         expectEqual(opened, "open", "the WebSocket to the loopback server");
         await hide(page!, windowId);

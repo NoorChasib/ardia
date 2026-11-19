@@ -6,7 +6,7 @@ export type FaviconLook = { tone: FaviconTone; backing: "light" | "dark" | null 
 
 type FaviconNative = { look(url: string, dark: boolean): Promise<FaviconLook | null> };
 
-const native = requireOptionalNativeModule<FaviconNative>("ArdiaPhoneFavicons");
+const native = requireOptionalNativeModule<FaviconNative>("NillaPhoneFavicons");
 
 export const favicons = {
   look: async (url: string, dark: boolean): Promise<FaviconLook | null> => (native ? native.look(url, dark) : null),

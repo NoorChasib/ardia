@@ -1,2 +1,2 @@
-export { defaultBrowser } from "@ardia/phone-native";
-export type { DefaultBrowserStatus } from "@ardia/phone-native";
+export { defaultBrowser } from "@nilla/phone-native";
+export type { DefaultBrowserStatus } from "@nilla/phone-native";

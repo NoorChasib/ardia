@@ -2,7 +2,7 @@
 
 #include <utility>
 
-using namespace ardia_content_blocker;
+using namespace nilla_content_blocker;
 
 namespace {
 
@@ -58,7 +58,7 @@ NSString *LiteMarker(ArdiaCoreProfile *p) {
 
 }
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 bool LiteSettingsPending(ArdiaCoreProfile *p) {
   NSString *marker = LiteMarker(p);
@@ -84,7 +84,7 @@ void ReadLiteSettings(NSString *profile, ArdiaCoreProfile *p, void (^done)(NSDic
   if (!reader) return done(nil, @"the reader isn't in the app");
   if (![[p loadComponentExtension:reader] isEqualToString:kLiteId]) return done(nil, @"the reader didn't load");
   NSString *key = [@"lite:" stringByAppendingString:profile];
-  ArdiaContentBlockerPage *page = HiddenPage(key, profile, p, kLiteId, @"read.html");
+  NillaContentBlockerPage *page = HiddenPage(key, profile, p, kLiteId, @"read.html");
   __block bool answered = false;
   void (^finish)(NSDictionary *, NSString *) = ^(NSDictionary *lite, NSString *error) {
     if (answered) return;
@@ -114,7 +114,7 @@ bool LiteSettingsUsable(NSDictionary *lite) {
 
 }
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 void MoveLiteSettings(NSString *profile, ArdiaCoreProfile *p, void (^done)(void)) {
   done = [done copy];

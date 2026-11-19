@@ -116,10 +116,10 @@ Check "a file that is not a PE image reads as nothing" $true ($null -eq (Read-Pe
 Check "the Visual C++ runtime DLLs never count as Windows" @($true, $true, $true, $true, $true, $true) @("VCRUNTIME140.dll", "vcruntime140_1.dll", "MSVCP140_2.dll", "concrt140.dll", "vccorlib140.dll", "ucrtbased.dll" | ForEach-Object { Test-VcRuntimeName $_ })
 Check "ucrtbase and msvcrt are part of Windows, not the redist" @($false, $false) @("ucrtbase.dll", "msvcrt.dll" | ForEach-Object { Test-VcRuntimeName $_ })
 
-$scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("ardia-pe-test-" + [guid]::NewGuid().ToString("N"))
+$scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("nilla-pe-test-" + [guid]::NewGuid().ToString("N"))
 try {
   $app = Join-Path $scratch "app"
-  Write-Pe (Join-Path $app "Ardia.exe") (New-PeBytes -Imports "KERNEL32.dll", "Helper.dll", "msvcp140_app.dll", "api-ms-win-crt-runtime-l1-1-0.dll" -Delayed "NotThere.dll")
+  Write-Pe (Join-Path $app "Nilla.exe") (New-PeBytes -Imports "KERNEL32.dll", "Helper.dll", "msvcp140_app.dll", "api-ms-win-crt-runtime-l1-1-0.dll" -Delayed "NotThere.dll")
   Write-Pe (Join-Path $app "helper.dll") (New-PeBytes -Imports "kernel32.dll")
   Write-Pe (Join-Path $app "msvcp140_app.dll") (New-PeBytes -Imports "VCRUNTIME140.dll" -Forwards "MSVCP140.foo", "msvcp140.bar")
   Write-Pe (Join-Path $app "vcamp140_app.dll") (New-PeBytes -Imports "VCRUNTIME140.dll" -Forwards "vcamp140.foo")
@@ -129,7 +129,7 @@ try {
 
   $unmet = @(Find-UnmetDependencies $app @("kernel32.dll") | Sort-Object Name, By, Kind)
   Check "unmet: the redist DLLs, and an unknown delay-load" @("msvcp140.dll", "notthere.dll", "vcamp140.dll", "vcruntime140.dll", "vcruntime140.dll") @($unmet.Name)
-  Check "unmet: who needs each, and how" @("msvcp140_app.dll forwarded export", "Ardia.exe delay-load", "vcamp140_app.dll forwarded export", "msvcp140_app.dll import", "vcamp140_app.dll import") @($unmet | ForEach-Object { "$($_.By) $($_.Kind)" })
+  Check "unmet: who needs each, and how" @("msvcp140_app.dll forwarded export", "Nilla.exe delay-load", "vcamp140_app.dll forwarded export", "msvcp140_app.dll import", "vcamp140_app.dll import") @($unmet | ForEach-Object { "$($_.By) $($_.Kind)" })
   Check "unmet: only the redist DLLs are marked as the Visual C++ runtime" @($true, $false, $true, $true, $true) @($unmet.VcRuntime)
   Check-Throws "the Visual C++ runtime can't be listed as part of Windows" "never count" { Find-UnmetDependencies $app @("kernel32.dll", "VCRUNTIME140.dll") }
   Check-Throws "an API set can't be listed as part of Windows" "never count" { Find-UnmetDependencies $app @("api-ms-win-core-file-l1-1-0.dll") }
@@ -139,12 +139,12 @@ try {
   Write-Pe (Join-Path $redist "Microsoft.VC145.CRT" "vcruntime140.dll") (New-PeBytes -Imports "KERNEL32.dll")
   Write-Pe (Join-Path $redist "Microsoft.VC145.CRT" "vcruntime140_1.dll") (New-PeBytes -Imports "VCRUNTIME140.dll")
   Write-Pe (Join-Path $redist "Microsoft.VC145.MFC" "mfc140u.dll") (New-PeBytes)
-  Remove-Item -LiteralPath (Join-Path $app "Ardia.exe")
-  Write-Pe (Join-Path $app "Ardia.exe") (New-PeBytes -Imports "KERNEL32.dll", "msvcp140_app.dll")
+  Remove-Item -LiteralPath (Join-Path $app "Nilla.exe")
+  Write-Pe (Join-Path $app "Nilla.exe") (New-PeBytes -Imports "KERNEL32.dll", "msvcp140_app.dll")
   Add-VcRuntime $app "x64" $redist
   [string[]]$names = @(Get-ChildItem -LiteralPath $app -File | ForEach-Object { $_.Name.ToLowerInvariant() })
   [Array]::Sort($names, [StringComparer]::Ordinal)
-  Check "the runtime DLLs the app needs are copied in, with what they need in turn, and an unused forwarder with no target is left out" @("ardia.exe", "helper.dll", "msvcp140.dll", "msvcp140_app.dll", "resources.pak", "vcruntime140.dll") $names
+  Check "the runtime DLLs the app needs are copied in, with what they need in turn, and an unused forwarder with no target is left out" @("nilla.exe", "helper.dll", "msvcp140.dll", "msvcp140_app.dll", "resources.pak", "vcruntime140.dll") $names
   Check "after that nothing is unmet" 0 @(Find-UnmetDependencies $app @("kernel32.dll")).Count
 
   Write-Pe (Join-Path $app "vcamp140_app.dll") (New-PeBytes -Imports "VCRUNTIME140.dll" -Forwards "vcamp140.foo")
@@ -157,7 +157,7 @@ try {
   Write-Pe (Join-Path $arm "Microsoft.VC145.CRT" "vcruntime140.dll") (New-PeBytes -Cpu arm64)
   Write-Pe (Join-Path $arm "Microsoft.VC145.CRT" "vcruntime140_1.dll") (New-PeBytes -Cpu arm64)
   Write-Pe (Join-Path $app "vcruntime140_1_app.dll") (New-PeBytes -Forwards "VCRUNTIME140_1.foo")
-  Write-Pe (Join-Path $app "Ardia.exe") (New-PeBytes -Imports "KERNEL32.dll", "vcruntime140_1_app.dll")
+  Write-Pe (Join-Path $app "Nilla.exe") (New-PeBytes -Imports "KERNEL32.dll", "vcruntime140_1_app.dll")
   Check-Throws "a redist DLL for another CPU is refused" "is not a x64 DLL" { Add-VcRuntime $app "x64" $arm }
   Check-Throws "a redist folder without vcruntime140.dll is refused" "has no vcruntime140.dll" { Add-VcRuntime $app "x64" (Join-Path $redist "Microsoft.VC145.MFC") }
 } finally {

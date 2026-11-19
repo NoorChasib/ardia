@@ -108,7 +108,7 @@ export default {
       const id = await twoPageTab();
       const other = await state.shell.newTab(pages[3]);
       await state.shell.waitTabUrl(other, (u) => u === pages[3]);
-      const discarded = await state.shell.eval(`(async () => { const view = ardiaLinux.webviews.get(${js(id)}); return view ? await view.discard() : "no web view"; })()`);
+      const discarded = await state.shell.eval(`(async () => { const view = nillaLinux.webviews.get(${js(id)}); return view ? await view.discard() : "no web view"; })()`);
       if (discarded !== "discarded") throw new Error(`the background tab wasn't discarded: ${discarded}`);
       await pause(1500);
       await state.shell.state(`s.closeTab(${js(id)}); return true;`);
@@ -119,7 +119,7 @@ export default {
       await state.shell.state(`s.activate(${js(tabId)}); return true;`);
       return { discarded, live };
     });
-    const zoomUrl = url.zoom("zoom.ardia.test") + `?run=${run}`;
+    const zoomUrl = url.zoom("zoom.nilla.test") + `?run=${run}`;
     let base;
     await t.check("zoom in agrees across page scale, percentage and indicator", async () => {
       await navigateTab(state.shell, tabId, zoomUrl, { committed: true });
@@ -158,7 +158,7 @@ export default {
       return { zoomedOut: zoom };
     });
 
-    const persistUrl = url.zoom("persist.ardia.test") + `?run=${run}`;
+    const persistUrl = url.zoom("persist.nilla.test") + `?run=${run}`;
     await t.check("per-site zoom is saved for the site", async () => {
       await navigateTab(state.shell, tabId, persistUrl, { committed: true });
       await state.shell.command("zoomIn");
@@ -167,8 +167,8 @@ export default {
       await waitZoom(state.shell, tabId, 1.25);
       const levels = await until(async () => {
         const l = await zoomLevels(state.shell);
-        return hostListed(l, "persist.ardia.test") ? l : false;
-      }, { timeout: 8000, label: "persist.ardia.test in sites.zoomLevels" });
+        return hostListed(l, "persist.nilla.test") ? l : false;
+      }, { timeout: 8000, label: "persist.nilla.test in sites.zoomLevels" });
       return { levels };
     });
     await t.check("per-site zoom survives restart", async () => {
@@ -190,8 +190,8 @@ export default {
       await waitZoom(state.shell, again, 1);
       const levels = await until(async () => {
         const l = await zoomLevels(state.shell);
-        return hostListed(l, "persist.ardia.test") ? false : l ?? [];
-      }, { timeout: 8000, label: "persist.ardia.test removed from sites.zoomLevels" });
+        return hostListed(l, "persist.nilla.test") ? false : l ?? [];
+      }, { timeout: 8000, label: "persist.nilla.test removed from sites.zoomLevels" });
       await navigateTab(state.shell, again, `${persistUrl}&after=reset`);
       const after = await waitZoom(state.shell, again, 1);
       return { restored: zoom, ratio, freshBase, levels, after };

@@ -1,5 +1,5 @@
 {
-  "name": "@ardia/phone",
+  "name": "@nilla/phone",
   "version": "0.0.0",
   "private": true,
   "packageManager": "bun@1.4.4",
@@ -20,11 +20,12 @@
     "test": "bun run test:unit && bun run test:render",
     "test:unit": "bun test --parallel --timeout=0 --tsconfig-override=../../scripts/lib/test-tsconfig.json --path-ignore-patterns='**/*.render.test.tsx' ./src ./scripts",
     "test:render": "jest --config jest.config.js --ci && jest --config jest.release.config.js --ci",
-    "credits": "node --no-warnings test/credits.ts --write"
+    "credits": "node --no-warnings test/credits.ts --write",
+    "licenses": "node --no-warnings test/licenseTexts.ts --write"
   },
   "dependencies": {
-    "@ardia/core": "link:../../packages/core",
-    "@ardia/phone-native": "workspace:*",
+    "@nilla/core": "link:../../packages/core",
+    "@nilla/phone-native": "workspace:*",
     "@expo/ui": "~58.0.28",
     "expo": "~58.0.25",
     "expo-clipboard": "~58.0.4",

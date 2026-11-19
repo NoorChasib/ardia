@@ -21,7 +21,7 @@ const attributesOf = (log) => Object.fromEntries(log.attributes.map((a) => [a.ke
 
 test("an Error after the label queues its type, message and code, cleaned", () => {
   const error = Object.assign(new Error("release of tab 1234567 failed for https://example.com/a at /Users/me/host.ts"), { code: "ERR_HOST_GONE" });
-  recordLog("error", ["[ardia host] release failed", error]);
+  recordLog("error", ["[nilla host] release failed", error]);
   client.saveQueueNow();
   const log = queued().logs.at(-1);
   const attributes = attributesOf(log);
@@ -31,13 +31,13 @@ test("an Error after the label queues its type, message and code, cleaned", () =
   assert.doesNotMatch(JSON.stringify(log), /example\.com|1234567|\/Users\/me/);
   local.flushLocal();
   const record = stub.telemetryLocal.records().findLast((r) => r.kind === "log");
-  assert.equal(record.message, "[ardia host] release failed");
+  assert.equal(record.message, "[nilla host] release failed");
   assert.equal(record.attributes.error_message, "release of tab <n> failed for <url> at <path>");
   assert.equal(record.attributes.error_code, "ERR_HOST_GONE");
 });
 
 test("an Error with no message or no usable code adds only what it has", () => {
-  recordLog("error", ["[ardia host]", Object.assign(new TypeError(""), { code: "not a code!" })]);
+  recordLog("error", ["[nilla host]", Object.assign(new TypeError(""), { code: "not a code!" })]);
   client.saveQueueNow();
   const attributes = attributesOf(queued().logs.at(-1));
   assert.equal(attributes.error_type, "TypeError");
@@ -56,11 +56,11 @@ test("a log line with no Error keeps error_type none and gets no message or code
 
 test("one label with two different reasons is queued twice, the same reason only once", () => {
   const before = queued().logs.length;
-  recordLog("error", ["[ardia host] release failed", new Error("No owned live tab")]);
-  recordLog("error", ["[ardia host] release failed", new Error("No owned live tab")]);
+  recordLog("error", ["[nilla host] release failed", new Error("No owned live tab")]);
+  recordLog("error", ["[nilla host] release failed", new Error("No owned live tab")]);
   client.saveQueueNow();
   assert.equal(queued().logs.length, before + 1);
-  recordLog("error", ["[ardia host] release failed", new Error("Tab is closing")]);
+  recordLog("error", ["[nilla host] release failed", new Error("Tab is closing")]);
   client.saveQueueNow();
   const logs = queued().logs;
   assert.equal(logs.length, before + 2);

@@ -1,5 +1,5 @@
-import type { MeadowIntro, MeadowIntroEvent, MeadowTone } from "@ardia/shaders";
-import type { AppNative, WindowsNative } from "@ardia/shell";
+import type { MeadowIntro, MeadowIntroEvent, MeadowTone } from "@nilla/shaders";
+import type { AppNative, WindowsNative } from "@nilla/shell";
 import { engineAvailable, hostCall } from "../engine/host";
 import { meadowPageUrl } from "../meadow/pageUrl";
 import { startMeadowSession } from "../meadow/session";
@@ -25,8 +25,8 @@ const FAR_OFF_MS = 600000;
 
 type Probe = { webgl2: boolean; renderer: string };
 
-const launchTest = () => requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().test;
-const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows");
+const launchTest = () => requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().test;
+const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows");
 const pause = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const webglRequired = () => launchTest().meadowWebGL === "required";
 
@@ -91,10 +91,10 @@ export const checks: Check[] = [
       await hostCall("tab.create", { key: PROBE_KEY, url: PROBE_URL, profile: "" }, windowId);
       try {
         const found = await probe(windowId);
-        console.info(`[ardia windows] webgl2 probe: ${found ? `webgl2 ${found.webgl2 ? "available" : "unavailable"}, renderer "${found.renderer}"` : "no answer"}`);
+        console.info(`[nilla windows] webgl2 probe: ${found ? `webgl2 ${found.webgl2 ? "available" : "unavailable"}, renderer "${found.renderer}"` : "no answer"}`);
         await hostCall("tab.show", { key: PROBE_KEY, visible: true, ...INTRO_PLACE }, windowId).catch(() => undefined);
         const seen = await hostCall<{ result?: unknown }>("tab.call", { key: PROBE_KEY, method: "evaluate", code: VISIBILITY_CODE }, windowId).catch(() => null);
-        console.info(`[ardia windows] webgl2 probe, shown page: ${String(seen?.result ?? "no answer")}`);
+        console.info(`[nilla windows] webgl2 probe, shown page: ${String(seen?.result ?? "no answer")}`);
         if (webglRequired()) expectTrue(found?.webgl2, `no WebGL2 in an engine page (${JSON.stringify(found)})`);
       } finally {
         await hostCall("tab.close", { key: PROBE_KEY }).catch(() => undefined);
@@ -139,7 +139,7 @@ export const checks: Check[] = [
         await until("the page drew its first frame or fell back", LIVE_MS, () => told.some((event) => event.kind === "live" || event.kind === "fallback"));
         const live = told.find((event) => event.kind === "live");
         expectTrue(live, `the page fell back: ${JSON.stringify(told)}`);
-        console.info(`[ardia windows] meadow self-check: first frame after ${live.firstFrameMs} ms`);
+        console.info(`[nilla windows] meadow self-check: first frame after ${live.firstFrameMs} ms`);
         await until("the page sent its tone", TONE_MS, () => tones.length > 0);
         expectTrue(tones[0]!.tone === "light" || tones[0]!.tone === "dark", `the tone was ${JSON.stringify(tones[0])}`);
         await call("evaluate", { code: click(".intro-button.circle") });

@@ -15,7 +15,7 @@
 #include "LaunchConfig.h"
 #include "Paths.h"
 
-namespace Ardia {
+namespace Nilla {
 
 REACT_STRUCT(FileDropAreaFrame)
 struct FileDropAreaFrame {
@@ -84,7 +84,7 @@ inline bool IsPlainFileName(std::string_view name) noexcept {
 
 }
 
-REACT_MODULE(FileDropModule, L"ArdiaFileDrop")
+REACT_MODULE(FileDropModule, L"NillaFileDrop")
 struct FileDropModule {
   using JSValue = winrt::Microsoft::ReactNative::JSValue;
 

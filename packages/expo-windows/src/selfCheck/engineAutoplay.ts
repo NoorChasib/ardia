@@ -146,7 +146,7 @@ const autoplayChecks: Check[] = [
     ),
   },
   {
-    name: "engine autoplay: an element named ardiaAutoplayGuard in the page changes nothing",
+    name: "engine autoplay: an element named nillaAutoplayGuard in the page changes nothing",
     run: blocked(() =>
       withMedia("clobber", "clobber", "clobber page", async (key) => {
         await pause(AUTOPLAY_SETTLES_MS);
@@ -204,13 +204,13 @@ const autoplayChecks: Check[] = [
     }),
   },
   {
-    name: "engine autoplay: Ardia's play toggle gives no user activation to a cross-site iframe",
+    name: "engine autoplay: Nilla's play toggle gives no user activation to a cross-site iframe",
     run: () =>
       withMedia("toggle", "framed?quiet", "framed page", async (key) => {
         await until("the iframe reports no activation yet", SETTLE_MS, () => framed(key), (state) => state.active === false);
         await hostCall("tab.call", { key, method: "mediaCommand", action: "toggle" });
         await pause(1000);
-        expectEqual((await framed(key)).active, false, "navigator.userActivation.hasBeenActive in the cross-site iframe after Ardia's toggle");
+        expectEqual((await framed(key)).active, false, "navigator.userActivation.hasBeenActive in the cross-site iframe after Nilla's toggle");
       }),
   },
   {

@@ -4,7 +4,7 @@ import "./styles.css";
 import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { unstable_batchedUpdates } from "react-native";
-import { emitAppEvent, emitCommand, menuShown, setWindowCloseDecider } from "@ardia/shell";
+import { emitAppEvent, emitCommand, menuShown, setWindowCloseDecider } from "@nilla/shell";
 import { WindowRoot } from "../../browser/src/App";
 import { startNativeSync } from "../../browser/src/state/app/nativeSync";
 import { startTabPages } from "../../browser/src/state/tabs/tabPages";
@@ -32,7 +32,7 @@ import { LINUX_APP_COMMANDS, recordFreshProfile, startAppCommands, startLinuxApp
 import { linuxCapabilities } from "./hostCapabilities";
 import { useExtensions } from "../../browser/src/state/extensions/store";
 import { openExtensionFromMenu } from "../../browser/src/state/extensions/bridge";
-import { ardiaHost, invokeHost } from "./host";
+import { nillaHost, invokeHost } from "./host";
 import { takeSwitchAheadCounts, watchTabSwitches } from "./tabSwitchAhead";
 import { takeCompositorLoopCounts } from "./paintMotion";
 import { emitNativeEvent, setSharedCommands } from "./shims/expo-modules-core";
@@ -80,62 +80,64 @@ import { useMeetingAlert } from "../../browser/src/state/live/alerts";
 import { linuxTelemetryHooks, reportRecoverableRender, reportUncaughtRender, startHostTelemetry } from "./hostTelemetry";
 import type { LeaderLocks } from "./telemetryLeader";
 import { setTabMemoryAttributed, useTabMemorySnapshot } from "../../browser/src/state/tabs/tabMemory";
+import { refuseUnisolatedLaunch } from "./unisolatedLaunch";
 
-Object.assign(globalThis, { ardiaLinux: { store: useBrowser, pages: usePages, emitCommand, extensions: useExtensions, openExtension: openExtensionFromMenu, webviews, media: useMedia, lifecycle: { state: useLifecycle }, sync: linuxSyncHooks, live: linuxLiveHooks, toolbar: useToolbarAutoHide, windowMenu: linuxWindowMenu, selection: { state: usePageSelection, jump: jumpToSelection, copyQuoteLink: copyLinkToSelection, replaceInField }, calendar: { state: useCalendar, connect: connectCalendar, refresh: refreshCalendar, hide: setCalendarHidden, alert: useMeetingAlert }, inputRegions, telemetry: linuxTelemetryHooks, tabMemory: useTabMemorySnapshot } });
-setHostPageHooks({ reset: resetHostPage, applyTheme: applyHostPageTheme, depart: (tabId) => ardiaHost && forgetDepartedPage(tabId, ardiaHost.bootstrap.windowId) });
+Object.assign(globalThis, { nillaLinux: { store: useBrowser, pages: usePages, emitCommand, extensions: useExtensions, openExtension: openExtensionFromMenu, webviews, media: useMedia, lifecycle: { state: useLifecycle }, sync: linuxSyncHooks, live: linuxLiveHooks, toolbar: useToolbarAutoHide, windowMenu: linuxWindowMenu, selection: { state: usePageSelection, jump: jumpToSelection, copyQuoteLink: copyLinkToSelection, replaceInField }, calendar: { state: useCalendar, connect: connectCalendar, refresh: refreshCalendar, hide: setCalendarHidden, alert: useMeetingAlert }, inputRegions, telemetry: linuxTelemetryHooks, tabMemory: useTabMemorySnapshot } });
+setHostPageHooks({ reset: resetHostPage, applyTheme: applyHostPageTheme, depart: (tabId) => nillaHost && forgetDepartedPage(tabId, nillaHost.bootstrap.windowId) });
 setWindowCloseDecider(decideLinuxWindowClose);
 
 function FirstWindowCommitted({ typeahead }: { typeahead: boolean }) {
   useEffect(() => {
     firstWindowCommitted();
-    if (ardiaHost) void announceShellPainted(ardiaHost);
-    if (typeahead && ardiaHost) {
-      announceCommandsReady(ardiaHost);
-      announceTypeaheadReady(ardiaHost, { expectsField: () => windowExpectsField(useBrowser.getState(), ardiaHost!.bootstrap.windowId, useOnboarding.getState().windowId) });
+    if (nillaHost) void announceShellPainted(nillaHost);
+    if (typeahead && nillaHost) {
+      announceCommandsReady(nillaHost);
+      announceTypeaheadReady(nillaHost, { expectsField: () => windowExpectsField(useBrowser.getState(), nillaHost!.bootstrap.windowId, useOnboarding.getState().windowId) });
     }
   }, [typeahead]);
   return null;
 }
 
 async function start() {
+  if (!nillaHost) throw new Error("The Linux desktop UI requires a Nilla native host");
+  if (refuseUnisolatedLaunch(nillaHost, document.getElementById("root"))) return;
   setSharedCommands((command) => Object.hasOwn(COMMANDS, command) && !LINUX_APP_COMMANDS.has(command));
-  if (!ardiaHost) throw new Error("The Linux desktop UI requires an Ardia native host");
   setNewTabPrewarm(false);
   setHiddenPanesDetached(true);
-  const { windowId, profileId } = ardiaHost.bootstrap;
+  const { windowId, profileId } = nillaHost.bootstrap;
   const utility = isLinuxUtility(windowId);
-  const configReady = startHostConfig(ardiaHost, () => emitNativeEvent("ArdiaConfig", "onChange", {}));
-  const stored = ardiaHost.bootstrap.session ?? await invokeHost<HydrateData | null>("session.read", {});
+  const configReady = startHostConfig(nillaHost, () => emitNativeEvent("ArdiaConfig", "onChange", {}));
+  const stored = nillaHost.bootstrap.session ?? await invokeHost<HydrateData | null>("session.read", {});
   await configReady;
   const saved = stored ? linuxSessionShape(stored) : stored;
-  const launch = ardiaHost.bootstrap.startup !== false;
+  const launch = nillaHost.bootstrap.startup !== false;
   const restoreSession = launch ? configRestoreSession() : undefined;
   setStoreBatching(unstable_batchedUpdates);
-  hydrateLaunchSession(saved, initialLinuxSession(ardiaHost, saved?.settings && restoreSession !== undefined ? { ...saved, settings: { ...saved.settings, restoreSession } } : saved));
-  followWindowMaximized(ardiaHost, windowId);
+  hydrateLaunchSession(saved, initialLinuxSession(nillaHost, saved?.settings && restoreSession !== undefined ? { ...saved, settings: { ...saved.settings, restoreSession } } : saved));
+  followWindowMaximized(nillaHost, windowId);
   startConfigFiles(colorRoles, launch);
-  startHostTelemetry({ host: ardiaHost, candidate: !utility, locks: navigator.locks as unknown as LeaderLocks });
+  startHostTelemetry({ host: nillaHost, candidate: !utility, locks: navigator.locks as unknown as LeaderLocks });
   countLoginPasswordChecks(linuxTelemetryHooks.leading);
-  const capabilities = linuxCapabilities(ardiaHost);
+  const capabilities = linuxCapabilities(nillaHost);
   setTabMemoryAttributed(capabilities.tabMemory);
   if (capabilities.cliControl) startCliControl();
-  await startLinuxShortcuts(ardiaHost);
+  await startLinuxShortcuts(nillaHost);
   if (utility) {
-    const persistence = startHostPersistence(ardiaHost, useBrowser, stored ?? {}, createUtilitySessionSnapshot(useBrowser.getState(), saved ?? {}));
+    const persistence = startHostPersistence(nillaHost, useBrowser, stored ?? {}, createUtilitySessionSnapshot(useBrowser.getState(), saved ?? {}));
     setSessionFlush(persistence.flush);
     startHostData();
     startAppCommands(windowId, capabilities, undefined, UTILITY_APP_COMMANDS);
-    startLinuxSync({ host: ardiaHost, candidate: false });
-    followExtensionChanges(ardiaHost, settingsShowsExtensions, refreshExtensionsAfterChange);
-    await startUtility(ardiaHost);
+    startLinuxSync({ host: nillaHost, candidate: false });
+    followExtensionChanges(nillaHost, settingsShowsExtensions, refreshExtensionsAfterChange);
+    await startUtility(nillaHost);
   } else {
     if (useBrowser.getState().windows[windowId]?.kind === "main") useBrowser.setState(adoptParkedPins(useBrowser.getState(), windowId, profileId));
     if (opensOnCommandBar(useBrowser.getState(), windowId)) useBrowser.getState().openPanel(windowId, "");
-    watchActiveProfile(ardiaHost, useBrowser);
+    watchActiveProfile(nillaHost, useBrowser);
     startHostData();
-    startHostTabLifecycle(ardiaHost, useBrowser);
-    startShellAbove(ardiaHost);
-    startPipPlayer(ardiaHost);
+    startHostTabLifecycle(nillaHost, useBrowser);
+    startShellAbove(nillaHost);
+    startPipPlayer(nillaHost);
     watchTabSwitches(useBrowser);
     addShellCountSource("switchAhead", takeSwitchAheadCounts);
     addShellCountSource("compositorLoops", takeCompositorLoopCounts);
@@ -143,40 +145,40 @@ async function start() {
     startEditTargets();
     startNotificationResponses();
     startPopoverEscape({ target: window, windowId, menuShown, activeElement: () => document.activeElement, unclaimed: () => emitAppEvent({ type: "unclaimedEscape", windowId }) });
-    const persistence = startHostPersistence(ardiaHost, useBrowser, stored ?? {});
+    const persistence = startHostPersistence(nillaHost, useBrowser, stored ?? {});
     setSessionFlush(persistence.flush);
     setSessionDeparture(persistence);
     if (!saved) await recordFreshProfile();
     await persistence.flush();
     startTabPages();
     startNativeSync();
-    listenForOpenUrls(ardiaHost);
-    startHostDownloads(ardiaHost, useBrowser);
-    watchUnclaimedTabs(ardiaHost, useBrowser);
+    listenForOpenUrls(nillaHost);
+    startHostDownloads(nillaHost, useBrowser);
+    watchUnclaimedTabs(nillaHost, useBrowser);
     startLinuxTabPolicies({
       target: window, provide: provideNativeModuleProvider, startLifecycle: startTabLifecycle, startTrim: startMemoryTrim,
       startProfileUnloading: capabilities.unloadIdleProfiles ? startProfileUnloading : undefined,
-      windowId, locks: navigator.locks, channel: new BroadcastChannel(TAB_POLICY_CHANNEL), privateWindow: !!ardiaHost.bootstrap.privateWindow,
+      windowId, locks: navigator.locks, channel: new BroadcastChannel(TAB_POLICY_CHANNEL), privateWindow: !!nillaHost.bootstrap.privateWindow,
       activity: (listener) => watchHostInputActivity(requireNativeModule("ArdiaEngine"), listener),
     });
-    watchInstallPromptCancellations(ardiaHost, useExtensions);
-    startLinuxSync({ host: ardiaHost, candidate: true, locks: navigator.locks });
-    if (capabilities.cliControl && !ardiaHost.bootstrap.privateWindow) afterFirstWindow(startAutomation);
-    if (capabilities.userScripts && !ardiaHost.bootstrap.privateWindow) afterFirstWindow(() => leadUserScripts({ locks: navigator.locks, start: startUserScripts }));
-    startLinuxUpdates(ardiaHost, navigator.locks);
+    watchInstallPromptCancellations(nillaHost, useExtensions);
+    startLinuxSync({ host: nillaHost, candidate: true, locks: navigator.locks });
+    if (capabilities.cliControl && !nillaHost.bootstrap.privateWindow) afterFirstWindow(startAutomation);
+    if (capabilities.userScripts && !nillaHost.bootstrap.privateWindow) afterFirstWindow(() => leadUserScripts({ locks: navigator.locks, start: startUserScripts }));
+    startLinuxUpdates(nillaHost, navigator.locks);
     const services = startLinuxAppServices({
-      host: ardiaHost,
+      host: nillaHost,
       windowId,
       savedSession: !!saved,
       capabilities,
       locks: navigator.locks,
       marks: sessionStorage,
     });
-    void noticeUnsandboxedLaunch(ardiaHost, windowId, services.launch);
+    void noticeUnsandboxedLaunch(nillaHost, windowId, services.launch);
   }
-  createRoot(document.getElementById("root")!, { onUncaughtError: (error) => { reportUncaughtRender(error); console.error("[ardia linux] crashed", error); }, onRecoverableError: (error) => { reportRecoverableRender(error); console.warn("[ardia linux] recovered", error); } }).render(
-    <div className={`ardia-desktop host ardia-linux${utility ? " utility" : ""}`} data-ardia-linux-window={windowId}>
-      <div className="ardia-window">
+  createRoot(document.getElementById("root")!, { onUncaughtError: (error) => { reportUncaughtRender(error); console.error("[nilla linux] crashed", error); }, onRecoverableError: (error) => { reportRecoverableRender(error); console.warn("[nilla linux] recovered", error); } }).render(
+    <div className={`nilla-desktop host nilla-linux${utility ? " utility" : ""}`} data-nilla-linux-window={windowId}>
+      <div className="nilla-window">
         {!utility && <InWindowPlayer windowId={windowId} />}
         <WindowRoot windowId={windowId} />
       </div>
@@ -187,10 +189,10 @@ async function start() {
 }
 
 void start().catch((error) => {
-  console.error("[ardia linux] startup failed", error);
+  console.error("[nilla linux] startup failed", error);
   const root = document.getElementById("root");
   if (root) {
     root.setAttribute("role", "alert");
-    root.textContent = `Ardia could not start: ${error instanceof Error ? error.message : String(error)}`;
+    root.textContent = `Nilla could not start: ${error instanceof Error ? error.message : String(error)}`;
   }
 });

@@ -1,8 +1,8 @@
-import { nativeModule, type CalendarAccessRequest, type CalendarAuthorization, type CalendarParticipant, type SystemCalendar, type SystemCalendarEvent } from "@ardia/shell";
+import { nativeModule, type CalendarAccessRequest, type CalendarAuthorization, type CalendarParticipant, type SystemCalendar, type SystemCalendarEvent } from "@nilla/shell";
 
 export type { CalendarAccessRequest, CalendarAuthorization, SystemCalendar, SystemCalendarEvent, CalendarParticipant };
 
-const Calendar = nativeModule("ArdiaCalendar");
+const Calendar = nativeModule("NillaCalendar");
 
 export const calendarAuthorization = (): CalendarAuthorization => Calendar.authorizationStatus();
 export const requestCalendarAccess = async (): Promise<CalendarAccessRequest> => {

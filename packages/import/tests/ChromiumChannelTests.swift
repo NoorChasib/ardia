@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import ArdiaImportCore
+@testable import NillaImportCore
 
 final class ChromiumChannelTests: XCTestCase {
   let beta = Fixtures.support("BraveSoftware/Brave-Browser-Beta/Default")
@@ -18,8 +18,9 @@ final class ChromiumChannelTests: XCTestCase {
     let main = source.profiles[0]
     XCTAssertEqual(main.path, beta.path)
     XCTAssertTrue(Set([ImportKind.history, .passwords, .cookies, .tabs]).isSubset(of: main.available))
-    XCTAssertFalse(main.tabsNeedKey)
-    XCTAssertTrue(source.profiles[1].tabsNeedKey)
+    XCTAssertEqual(source.profiles.map(\.tabsNeedKey), [false, false])
+    let definition = try XCTUnwrap(BrowserDefinition.find("braveBeta"))
+    XCTAssertEqual(Fixtures.discovery().profilesNeedingKey(definition, ["Default", "Profile 1"]), ["Profile 1"])
     XCTAssertEqual(list.first { $0.id == "brave" }?.profiles.first?.path,
                    Fixtures.support("BraveSoftware/Brave-Browser/Default").path)
   }
@@ -94,7 +95,7 @@ final class ChromiumChannelTests: XCTestCase {
   }
 
   func testAnIncompleteCleartextSessionStillAsksForTheKey() throws {
-    let profile = FileManager.default.temporaryDirectory.appendingPathComponent("ardia-sessions-\(UUID().uuidString)")
+    let profile = FileManager.default.temporaryDirectory.appendingPathComponent("nilla-sessions-\(UUID().uuidString)")
     defer { try? FileManager.default.removeItem(at: profile) }
     let fm = FileManager.default
     try fm.createDirectory(at: profile.appendingPathComponent("Sessions"), withIntermediateDirectories: true)

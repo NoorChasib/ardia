@@ -6,11 +6,11 @@ type SyncLabNative = { runtimeChecks?: () => Promise<SyncRuntimeCheck[]>; damage
 
 export const syncLab = {
   runtimeChecks: (): Promise<SyncRuntimeCheck[]> => {
-    const run = requireNativeModule<SyncLabNative>("ArdiaPhoneSync").runtimeChecks;
+    const run = requireNativeModule<SyncLabNative>("NillaPhoneSync").runtimeChecks;
     return run ? run() : Promise.reject(new Error("the sync runtime checks run only in Android lab builds"));
   },
   damageInbox: (): Promise<{ inboxProblem: string | null }> => {
-    const damage = requireNativeModule<SyncLabNative>("ArdiaPhoneSync").damageInbox;
+    const damage = requireNativeModule<SyncLabNative>("NillaPhoneSync").damageInbox;
     return damage ? damage() : Promise.reject(new Error("the inbox can be damaged only in Android lab builds"));
   },
 };

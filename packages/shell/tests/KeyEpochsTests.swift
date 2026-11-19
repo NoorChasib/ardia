@@ -1,5 +1,5 @@
 import XCTest
-@testable import ArdiaUpdaterCore
+@testable import NillaUpdaterCore
 
 final class KeyEpochsTests: XCTestCase {
   func testAWindowThatBecomesKeyAgainAfterTheAppWasReactivatedKeepsItsEpoch() {

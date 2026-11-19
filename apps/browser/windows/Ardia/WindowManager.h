@@ -35,7 +35,7 @@
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "shcore.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 struct OpenWindowRequest {
   std::string id;
@@ -596,7 +596,7 @@ struct WindowManager {
 
   static void Configure(ManagedWindow &entry, OpenWindowRequest const &request) noexcept {
     try {
-      entry.appWindow.Title(winrt::to_hstring(request.title.empty() ? std::string{"Ardia"} : request.title));
+      entry.appWindow.Title(winrt::to_hstring(request.title.empty() ? std::string{"Nilla"} : request.title));
       AppIcon::Apply(entry.hwnd, entry.id);
       auto presenter = entry.appWindow.Presenter().try_as<winrt::Microsoft::UI::Windowing::OverlappedPresenter>();
       double scale = Scale(entry.hwnd);
@@ -1493,7 +1493,7 @@ struct WindowManager {
     event["shiftKey"] = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
     event["ctrlKey"] = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
     event["altKey"] = (GetKeyState(VK_MENU) & 0x8000) != 0;
-    EmitEvent(m_context, L"ArdiaAppWindows", L"onCaptionPress", std::move(event));
+    EmitEvent(m_context, L"NillaAppWindows", L"onCaptionPress", std::move(event));
   }
 
   void SystemMoveBegan(HWND hwnd) noexcept {
@@ -1504,14 +1504,14 @@ struct WindowManager {
   }
 
   void EmitWindow(winrt::Microsoft::ReactNative::JSValueObject &&event) noexcept {
-    if (m_context) EmitEvent(m_context, L"ArdiaAppWindows", L"onWindowEvent", std::move(event));
+    if (m_context) EmitEvent(m_context, L"NillaAppWindows", L"onWindowEvent", std::move(event));
   }
 
   void EmitApp(const char *type) noexcept {
     if (!m_context) return;
     winrt::Microsoft::ReactNative::JSValueObject event;
     event["type"] = type;
-    EmitEvent(m_context, L"ArdiaShell", L"onAppEvent", std::move(event));
+    EmitEvent(m_context, L"NillaShell", L"onAppEvent", std::move(event));
   }
 
   template <class TWork>

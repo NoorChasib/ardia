@@ -83,7 +83,7 @@ test("remove deletes an export and refuses any other folder", () => {
   const made = createExport(root, "HEAD", { install: false, parent });
   assert.throws(() => removeExport(root), /not a bundle export/);
   assert.ok(fs.existsSync(path.join(root, "package.json")));
-  const lookalike = fs.mkdtempSync(path.join(parent, "ardia-bundle-lookalike-"));
+  const lookalike = fs.mkdtempSync(path.join(parent, "nilla-bundle-lookalike-"));
   assert.throws(() => removeExport(lookalike), /not a bundle export/);
   removeExport(made.dir);
   assert.equal(fs.existsSync(made.dir), false);

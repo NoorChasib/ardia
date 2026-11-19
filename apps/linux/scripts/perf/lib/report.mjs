@@ -411,7 +411,7 @@ export function buildReport(out, options = {}) {
   const failed = all.filter((r) => !r.ok);
   const labels = [...new Set(all.map((r) => r.label))];
   const scenarios = [...new Set(ok.flatMap((r) => Object.keys(r.scenarios ?? {})))].sort();
-  const lines = ["# Ardia Linux benchmark report", ""];
+  const lines = ["# Nilla Linux benchmark report", ""];
   lines.push(`Results: \`${out}\`, run${runs.length > 1 ? "s" : ""} ${runs.join(", ")}. ${ok.length} launches ok, ${failed.length} failed.`, "");
   lines.push("| Build | Dir | Commit | UI sha256 | Launches ok | Tabs loaded | Load avg 1m at launch (min-max) |", "| --- | --- | --- | --- | --- | --- | --- |");
   for (const label of labels) {

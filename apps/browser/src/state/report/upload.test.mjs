@@ -16,7 +16,7 @@ function fakeServer({ create = 201, put = () => 200, complete = 200, upload_urls
   const deps = {
     async postJson(url, body, headers) {
       calls.push({ kind: "post", url, body, headers });
-      if (url.endsWith("/complete")) return { status: complete, json: complete < 300 ? { id: "FB-7KQ2", name: "Brave Otter", issue_url: "https://github.com/ardia-browser/ardia/issues/1234" } : { error: "boom" } };
+      if (url.endsWith("/complete")) return { status: complete, json: complete < 300 ? { id: "FB-7KQ2", name: "Brave Otter", issue_url: "https://github.com/NoorChasib/nilla/issues/1234" } : { error: "boom" } };
       return { status: create, json: create < 300 ? { id: "FB-7KQ2", name: "Brave Otter", upload_token: "tok", upload_urls: upload_urls ?? { "recording.mp4": "/api/feedback/FB-7KQ2/files/recording.mp4" } } : { error: "title: required" } };
     },
     async putFile(id, url, headers, file) {
@@ -68,7 +68,7 @@ test("a refused report fails at create with the server's reason and nothing uplo
   assert.equal(result.stage, "create");
   assert.equal(result.created, null);
   assert.equal(result.errorClass, "rejected");
-  assert.equal(result.message, "Ardia's report server couldn't accept this report (title: required). Your draft is kept.");
+  assert.equal(result.message, "Nilla's report server couldn't accept this report (title: required). Your draft is kept.");
   assert.equal(server.calls.length, 1);
   assert.deepEqual(server.deps.sleeps, []);
 });
@@ -83,7 +83,7 @@ test("no connection says so", async () => {
   assert.equal(result.errorClass, "offline");
   assert.equal(result.attempts, 3);
   assert.deepEqual(server.deps.sleeps, [...RETRY_DELAYS_MS]);
-  assert.match(result.message, /^Couldn't reach Ardia's report server\. .*draft is kept\.$/);
+  assert.match(result.message, /^Couldn't reach Nilla's report server\. .*draft is kept\.$/);
 });
 
 test("storage down is retried twice with backoff, then explained in a sentence", async () => {
@@ -95,7 +95,7 @@ test("storage down is retried twice with backoff, then explained in a sentence",
   assert.equal(result.phase, "failed");
   assert.equal(result.errorClass, "storage");
   assert.equal(result.status, 502);
-  assert.equal(result.message, "Ardia's report server couldn't store this right now. Your draft is kept; try again in a minute.");
+  assert.equal(result.message, "Nilla's report server couldn't store this right now. Your draft is kept; try again in a minute.");
 });
 
 test("a server that recovers during the retries sends the report and counts the retries", async () => {
@@ -183,10 +183,10 @@ test("upload urls come from the answer, a list, or the report path", () => {
 });
 
 test("helpers", () => {
-  assert.equal(issueNumberOf("https://github.com/ardia-browser/ardia/issues/77"), 77);
+  assert.equal(issueNumberOf("https://github.com/NoorChasib/nilla/issues/77"), 77);
   assert.equal(issueNumberOf(null), null);
-  assert.equal(resolveUrl("https://ardia.dev/api/feedback", "/api/x"), "https://ardia.dev/api/x");
-  assert.equal(resolveUrl("https://ardia.dev/api/feedback", "https://cdn.dev/x"), "https://cdn.dev/x");
+  assert.equal(resolveUrl("https://feedback.example.test/api/feedback", "/api/x"), "https://feedback.example.test/api/x");
+  assert.equal(resolveUrl("https://feedback.example.test/api/feedback", "https://cdn.dev/x"), "https://cdn.dev/x");
   assert.equal(isBusy({ phase: "creating" }), true);
   assert.equal(isBusy({ phase: "failed", stage: "create", message: "", created: null }), false);
 });

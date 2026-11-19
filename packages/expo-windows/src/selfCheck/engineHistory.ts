@@ -4,8 +4,8 @@ import { expectEqual, type Check } from "./check";
 const DAY_MS = 86_400_000;
 const LOOK_MS = 10_000;
 const POLL_MS = 200;
-const OLD_PAGE = "https://ardia-history-check.example/kept-120-days";
-const RECENT_PAGE = "https://ardia-history-check.example/kept-5-days";
+const OLD_PAGE = "https://nilla-history-check.example/kept-120-days";
+const RECENT_PAGE = "https://nilla-history-check.example/kept-5-days";
 
 type HistoryEntry = { u?: unknown };
 

@@ -17,19 +17,19 @@ NSArray<NSDictionary *> *Dictionaries(id value) {
 
 }
 
-@implementation ArdiaSavedSession
+@implementation NillaSavedSession
 
 + (NSInteger)version {
   return 11;
 }
 
 + (instancetype)readFrom:(NSString *)directory {
-  NSDictionary *document = [ArdiaSavedDocument read:@"session.json" in:directory oldest:0 newest:self.version];
+  NSDictionary *document = [NillaSavedDocument read:@"session.json" in:directory oldest:0 newest:self.version];
   return document ? [[self alloc] initWithDocument:document] : nil;
 }
 
 + (instancetype)atLaunch:(NSString *)directory {
-  static ArdiaSavedSession *session;
+  static NillaSavedSession *session;
   static dispatch_once_t once;
   dispatch_once(&once, ^{
     session = [self readFrom:directory];

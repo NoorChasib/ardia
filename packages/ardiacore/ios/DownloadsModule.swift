@@ -7,7 +7,7 @@ public class DownloadsModule: Module {
     Self.calls.forwardEvents(to: self)
 
     OnCreate {
-      ArdiaServices.watchDownloadEvents()
+      NillaServices.watchDownloadEvents()
     }
 
     Self.calls.function

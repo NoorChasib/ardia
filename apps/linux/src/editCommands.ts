@@ -21,7 +21,7 @@ export const editItem = (id: string) => byId.get(id);
 export const editActionOf = (id: string): EditAction | undefined => byId.get(id)?.action;
 
 const TEXT_FIELD = "textarea, input:not([type]), input[type=text], input[type=search], input[type=url], input[type=email], input[type=password], input[type=tel], input[type=number]";
-const MENU_SURFACE = `[data-ardia-app-menu], .ardia-menu, ${CLUSTER_MENU_BUTTON}`;
+const MENU_SURFACE = `[data-nilla-app-menu], .nilla-menu, ${CLUSTER_MENU_BUTTON}`;
 
 type Matching = Pick<Element, "matches" | "closest">;
 

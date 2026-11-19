@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <vector>
 
-using namespace ardia_little_fit;
+using namespace nilla_little_fit;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

@@ -22,6 +22,6 @@ test("the Windows intro music was rendered with the intro's cues and the Mac's c
 });
 
 test("the Windows resource file embeds the intro music", () => {
-  assert.match(readFileSync(new URL("Ardia.rc", windows), "utf8"), /^IDR_INTRO_MUSIC RCDATA "IntroMusic\.wav"\r?$/m);
+  assert.match(readFileSync(new URL("Nilla.rc", windows), "utf8"), /^IDR_INTRO_MUSIC RCDATA "IntroMusic\.wav"\r?$/m);
   assert.match(readFileSync(new URL("resource.h", windows), "utf8"), /^#define IDR_INTRO_MUSIC \d+\r?$/m);
 });

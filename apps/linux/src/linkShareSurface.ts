@@ -1,4 +1,4 @@
-import { copyText } from "@ardia/shell";
+import { copyText } from "@nilla/shell";
 import { activeTabId } from "../../browser/src/state/browser/model";
 import { useBrowser } from "../../browser/src/state/browser/store";
 import { webviews } from "../../browser/src/platform/webviews";

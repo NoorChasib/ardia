@@ -1,4 +1,4 @@
-import { ArdiaError, ardiaError, type TabGroupColor } from "@ardia/core";
+import { NillaError, nillaError, type TabGroupColor } from "@nilla/core";
 import { requireNativeModule, type EventSubscription } from "expo-modules-core";
 
 export type ImportKind =
@@ -233,7 +233,8 @@ type ImportEvent =
 
 const Native = requireNativeModule<{
   addListener(name: "onImportEvent", listener: (e: ImportEvent) => void): EventSubscription;
-  listBrowsers(): Promise<string>;
+  listBrowsers(only: string[] | null): Promise<string>;
+  profilesNeedingKey?(browserId: string, profileIds: string[]): Promise<string>;
   importData(jobId: string, browserId: string, profileId: string, kinds: ImportKind[], options: NativeImportOptions): Promise<string>;
   cancelImport(jobId: string): void;
   unlockBrowser(browserId: string, primaryPassword: string | null): Promise<null>;
@@ -250,7 +251,7 @@ const Native = requireNativeModule<{
   importPasswordsCSV(path: string): Promise<string>;
   chooseImportFile(kind: "safariExport" | "bookmarksHTML" | "passwordsCSV"): Promise<string | null>;
   readDiaTabs(): Promise<string>;
-}>("ArdiaImport");
+}>("NillaImport");
 
 let jobSeq = 0;
 
@@ -259,13 +260,13 @@ async function call<T>(promise: Promise<string | null>): Promise<T> {
     const json = await promise;
     return (json == null ? undefined : JSON.parse(json)) as T;
   } catch (e) {
-    throw ardiaError(e);
+    throw nillaError(e);
   }
 }
 
 async function job<T>(options: ImportOptions, start: (jobId: string) => Promise<string>): Promise<T> {
   const jobId = `import-${++jobSeq}`;
-  if (options.signal?.aborted) throw new ArdiaError("cancelled", "Import cancelled");
+  if (options.signal?.aborted) throw new NillaError("cancelled", "Import cancelled");
   const sub = Native.addListener("onImportEvent", (e) => {
     if (e.jobId !== jobId) return;
     if (e.type === "history") options.onHistoryChunk?.(JSON.parse(e.entries) as ImportedHistoryEntry[]);
@@ -281,7 +282,15 @@ async function job<T>(options: ImportOptions, start: (jobId: string) => Promise<
   }
 }
 
-export const listBrowsers = () => call<BrowserSource[]>(Native.listBrowsers());
+export async function listBrowsers(only?: readonly string[]): Promise<BrowserSource[]> {
+  const list = await call<BrowserSource[]>(Native.listBrowsers(only ? [...only] : null));
+  return only ? list.filter((source) => only.includes(source.id)) : list;
+}
+
+export async function profilesNeedingKey(browserId: string, profileIds: readonly string[]): Promise<string[]> {
+  if (!Native.profilesNeedingKey) return [];
+  return (await call<string[] | undefined>(Native.profilesNeedingKey(browserId, [...profileIds]))) ?? [];
+}
 
 export function importData(browserId: string, profileId: string, kinds: ImportKind[], options: ImportOptions = {}) {
   const native: NativeImportOptions = {

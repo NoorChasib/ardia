@@ -1,9 +1,9 @@
-REPO="mantrakp04/ardia"
+REPO="NoorChasib/nilla"
 REPO_URL="https://github.com/$REPO"
+ENGINE_REPO="ardia-browser/ardia"
 LATEST_DOWNLOAD_URL="$REPO_URL/releases/latest/download"
-NIGHTLY_DMG_URL="$REPO_URL/releases/download/nightly/Ardia-Nightly.dmg"
-RELEASE_NOTES_URL="https://ardia.dev/release-notes"
-APPCAST_PY="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/.claude/skills/release/scripts/appcast.py"
+RELEASE_NOTES_URL="${RELEASE_NOTES_URL:-}"
+APPCAST_PY="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/scripts/release/appcast.py"
 
 channel_of() {
   if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+-nightly\.[0-9]+$ ]]; then
@@ -24,7 +24,7 @@ apple_version_of() {
 mac_marketing_version() {
   local root
   root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-  sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' "$root/apps/browser/macos/Ardia.xcodeproj/project.pbxproj" | sort -u
+  sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' "$root/apps/browser/macos/Nilla.xcodeproj/project.pbxproj" | sort -u
 }
 
 appcast() { python3 -I "$APPCAST_PY" "$@"; }

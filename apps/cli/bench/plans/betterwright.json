@@ -2,7 +2,7 @@
   "name": "betterwright-2.9.1-2026-11-13",
   "repeats": 3,
   "tasks": "all",
-  "results": "~/ardia-scratch/bench-proper/results/bw-baseline",
+  "results": "~/nilla-scratch/bench-proper/results/bw-baseline",
   "contenders": [
     {
       "id": "bw-claude",

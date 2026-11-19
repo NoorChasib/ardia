@@ -7,14 +7,14 @@ import subprocess
 import time
 from pathlib import Path
 
-import ardia_side
+import nilla_side
 import grading
 import opencode_side
 import registry
 import servers
 from procs import front_pid, http, kill_group, spawn_agent, proc_info, read_json, read_jsonl, sh, terminate, write_json
 
-ROOT = Path(os.environ.get("BENCH_BETTERWRIGHT_HOME", Path.home() / "ardia-scratch/betterwright"))
+ROOT = Path(os.environ.get("BENCH_BETTERWRIGHT_HOME", Path.home() / "nilla-scratch/betterwright"))
 DEFAULTS = {
     "bin": str(ROOT / "bun/bin"),
     "chromium_root": str(ROOT / "chromium"),
@@ -36,7 +36,7 @@ FAILED_CALL = re.compile(r'"ok"\s*:\s*false')
 
 
 def log(msg):
-    ardia_side.log(f"betterwright: {msg}")
+    nilla_side.log(f"betterwright: {msg}")
 
 
 def options(overrides=None):
@@ -80,16 +80,16 @@ def harness_env(opts):
 
 
 def agent_env(opts, extra=None):
-    env = ardia_side.agent_env({"cli": "installed"}, extra)
+    env = nilla_side.agent_env({"cli": "installed"}, extra)
     env = {k: v for k, v in env.items() if not k.startswith(STRIPPED_ENV_PREFIXES)}
-    keep = [p for p in env["PATH"].split(":") if p and Path(p) not in (ardia_side.DEV_BIN, ardia_side.INSTALLED_ARDIA.parent)]
+    keep = [p for p in env["PATH"].split(":") if p and Path(p) not in (nilla_side.DEV_BIN, nilla_side.INSTALLED_NILLA.parent)]
     env["PATH"] = ":".join([str(lane_dir(opts) / "bin"), opts["bin"]] + keep)
     env.update(harness_env(opts))
     return env
 
 
 def agent_binary(name):
-    path = shutil.which(name, path=ardia_side.agent_env({"cli": "installed"})["PATH"])
+    path = shutil.which(name, path=nilla_side.agent_env({"cli": "installed"})["PATH"])
     if not path:
         raise SystemExit(f"{name} is not on PATH")
     return path
@@ -189,7 +189,7 @@ def shell_outputs_claude(events):
             continue
         content = e.get("message", {}).get("content")
         for block in content if isinstance(content, list) else []:
-            if block.get("type") == "tool_use" and block.get("name") in ardia_side.SHELL_TOOLS:
+            if block.get("type") == "tool_use" and block.get("name") in nilla_side.SHELL_TOOLS:
                 commands[block.get("id")] = (block.get("input") or {}).get("command")
             elif block.get("type") == "tool_result":
                 body = block.get("content")
@@ -207,12 +207,12 @@ def failed_calls(pairs):
 
 
 def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_agent_start=None):
-    if agent not in ardia_side.MODELS:
+    if agent not in nilla_side.MODELS:
         raise SystemExit("agent must be claude or codex")
     opts = options(overrides)
     task = registry.task(task_id, int(opts.get("port_offset") or 0))
-    model = opts.get("model") or ardia_side.MODELS[agent][0]
-    effort = opts.get("effort") or ardia_side.MODELS[agent][1]
+    model = opts.get("model") or nilla_side.MODELS[agent][0]
+    effort = opts.get("effort") or nilla_side.MODELS[agent][1]
     deadline = int(opts.get("deadline_s") or task["deadline_s"])
     results_dir = Path(results_dir)
     runs_dir = results_dir / "runs"
@@ -223,9 +223,9 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
     home = lane_dir(opts)
     servers.start(task)
     try:
-        baseline = ardia_side.reset_task(task)
+        baseline = nilla_side.reset_task(task)
         state, setup = prepare(opts, task)
-        workdir = ardia_side.WORK / run_id
+        workdir = nilla_side.WORK / run_id
         if workdir.exists():
             shutil.rmtree(workdir)
         workdir.mkdir(parents=True)
@@ -236,10 +236,10 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
             codex_home = home / "codex-home"
             codex_home.mkdir(parents=True, exist_ok=True)
             env = agent_env(opts, {"HOME": str(codex_home), "CODEX_HOME": str(Path.home() / ".codex")})
-            cmd = ardia_side.codex_command(model, effort, workdir, prompt)
+            cmd = nilla_side.codex_command(model, effort, workdir, prompt)
         else:
             env = agent_env(opts)
-            cmd = ardia_side.claude_command(model, effort, prompt)
+            cmd = nilla_side.claude_command(model, effort, prompt)
         cmd = [agent_binary(cmd[0])] + cmd[1:]
         front_before = front_pid()
         started_at = datetime.datetime.now().astimezone()
@@ -270,7 +270,7 @@ def run(task_id, agent, run_id, results_dir, overrides=None, contender=None, on_
     passed, reset_by_agent = grading.grade(check, timed_out, baseline_reset_at_ms=baseline.get("reset_at_ms"))
     completed = check.get("completed_at_ms")
     lines = read_jsonl(events)
-    parsed = (ardia_side.parse_claude if agent == "claude" else ardia_side.parse_codex)(lines)
+    parsed = (nilla_side.parse_claude if agent == "claude" else nilla_side.parse_codex)(lines)
     _, shell, other = (opencode_side.browse_calls_claude if agent == "claude" else opencode_side.browse_calls_codex)(lines)
     bw_calls = [c for c in shell if c and "betterwright" in c]
     pairs = (shell_outputs_claude if agent == "claude" else shell_outputs_codex)(lines)

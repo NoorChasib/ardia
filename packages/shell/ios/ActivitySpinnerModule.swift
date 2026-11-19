@@ -4,7 +4,7 @@ import ExpoModulesCore
 
 public class ActivitySpinnerModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaActivitySpinner")
+    Name("NillaActivitySpinner")
 
     View(ActivitySpinner.self) {}
   }

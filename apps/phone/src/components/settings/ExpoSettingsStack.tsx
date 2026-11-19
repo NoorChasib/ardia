@@ -56,7 +56,7 @@ const TITLES: Record<SettingsRoute["page"], string> = {
   syncConnect: "Connect to Your Mac",
   syncWords: "Enter Words",
   syncScan: "Scan Code",
-  about: "About Ardia",
+  about: "About Nilla",
   licenses: "Open Source Licenses",
   whatsSent: PHONE_SHARING_COPY.whatsSent,
 };

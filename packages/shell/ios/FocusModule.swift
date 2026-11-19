@@ -12,7 +12,7 @@ public class FocusModule: Module {
   private let switcherPointer = SwitcherPointer()
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaFocus")
+    Name("NillaFocus")
 
     OnCreate {
       self.lifetime.begin(self) {

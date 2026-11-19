@@ -1,4 +1,4 @@
-import { labLog, defaultBrowser, favicons, network, system, systemLab, type DefaultBrowserStatus, type SystemLink } from "@ardia/phone-native";
+import { labLog, defaultBrowser, favicons, network, system, systemLab, type DefaultBrowserStatus, type SystemLink } from "@nilla/phone-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Pressable, StyleSheet, Text, View } from "react-native";
 

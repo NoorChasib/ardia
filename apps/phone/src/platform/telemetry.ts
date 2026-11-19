@@ -1,19 +1,23 @@
-import { APP_INGEST_KEY, INGEST_KEY_HEADER } from "@ardia/core/src/ingestKeys.ts";
+import { INGEST_KEY_HEADER } from "@nilla/core/src/ingestKeys.ts";
+import { services } from "@nilla/core/src/services.ts";
 import Constants from "expo-constants";
 import { requireOptionalNativeModule, uuid } from "expo-modules-core";
 import { Platform } from "react-native";
 import { appVersionOf, osVersionOf, type DeviceFacts } from "../lib/telemetrySchema";
-import { system } from "@ardia/phone-native";
-
-const LOGS_URL = "https://ardia.dev/otel/v1/logs";
+import { system } from "@nilla/phone-native";
 
 export const JS_STARTED_AT = Date.now();
 
-const isLab = process.env.EXPO_PUBLIC_ARDIA_LAB === "true";
+const isLab = process.env.EXPO_PUBLIC_NILLA_LAB === "true";
 
 export const newTelemetryId = () => uuid.v4().toLowerCase();
 
-export const canPostTelemetry = () => !__DEV__;
+const telemetryEndpoint = (): { url: string; key: string } | null => {
+  const { telemetryUrl, ingestKeys } = services();
+  return telemetryUrl && ingestKeys ? { url: telemetryUrl, key: ingestKeys.app } : null;
+};
+
+export const canPostTelemetry = () => !__DEV__ && telemetryEndpoint() !== null;
 
 export function deviceFacts(): DeviceFacts {
   return {
@@ -26,7 +30,7 @@ export function deviceFacts(): DeviceFacts {
 
 type ProcessClock = { processStartedAt?: () => number | Promise<number> };
 
-const processClock = requireOptionalNativeModule<ProcessClock>("ArdiaPhoneSystem");
+const processClock = requireOptionalNativeModule<ProcessClock>("NillaPhoneSystem");
 
 export async function processStartedAt(): Promise<number | null> {
   try {
@@ -47,7 +51,9 @@ export function launchBackdropShownAt(): number | null {
 }
 
 export async function postTelemetry(body: string, signal: AbortSignal): Promise<number> {
-  const response = await fetch(LOGS_URL, { method: "POST", headers: { "Content-Type": "application/json", [INGEST_KEY_HEADER]: APP_INGEST_KEY }, body, signal });
+  const endpoint = telemetryEndpoint();
+  if (!endpoint) return 0;
+  const response = await fetch(endpoint.url, { method: "POST", headers: { "Content-Type": "application/json", [INGEST_KEY_HEADER]: endpoint.key }, body, signal });
   return response.status;
 }
 

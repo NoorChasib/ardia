@@ -1,5 +1,5 @@
-import ArdiaDesign
-import ArdiaSync
+import NillaDesign
+import NillaSync
 import ExpoModulesCore
 import os
 import PhoneSync
@@ -11,7 +11,7 @@ public final class SyncModule: Module {
   private let alive = OSAllocatedUnfairLock(initialState: true)
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneSync")
+    Name("NillaPhoneSync")
 
     Events("onSyncEvent")
 

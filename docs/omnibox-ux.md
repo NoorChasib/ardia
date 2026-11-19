@@ -1,4 +1,4 @@
-# Omnibox / command bar: Chrome's defaults vs Dia vs Ardia
+# Omnibox / command bar: Chrome's defaults vs Dia vs Nilla
 
 Audit of 2026-10-08. Not a spec: a map of what users expect from Chrome's address bar, what Dia does (Dia runs Chromium's
 `AutocompleteController` behind its own Swift UI: its binary has `ArcAutocompleteMatch`, `autocomplete:cursorPosition:preventInlineAutocomplete:`,
@@ -16,15 +16,15 @@ How ours was checked: "pure" = node scripts over `packages/core` and `inline.ts`
 and the omnibox dev driver for logic keys (`ac.omnibox.get(id).key(...)`). Synthetic `devTypeKeys` arrows/Tab/End do **not** reach RN's `onKeyDown` (they move the caret natively),
 so keys marked "read" were checked by reading the code and by driving `onKeyDown` directly.
 
-Status: ✅ compliant, ❌ gap, ⚠️ unsure or a deliberate Dia/Ardia choice.
+Status: ✅ compliant, ❌ gap, ⚠️ unsure or a deliberate Dia/Nilla choice.
 
 ## Behavior table
 
-| Behavior | Chrome (file:function) | Dia | Ardia (file:line, how checked) | |
+| Behavior | Chrome (file:function) | Dia | Nilla (file:line, how checked) | |
 |---|---|---|---|---|
 | Inline completion when | Any edit that isn't a deletion/paste: `EM::StartAutocomplete` sets `prevent_inline_autocomplete = prevent \|\| just_deleted_text_ \|\| paste_state_ != kNone`; one term, caret at end | Types `gi` → `gi`+selected `thub.com`, search row second (recording f003) | `suggest.ts:433` `completes` (one word, website-first, no scope, `!preventInline` in working tree); native guard `InlineCompletionModule.swift:18-20` (caret at end, no marked text). Live ✅ | ✅ |
 | Eligible targets | `HistoryURLProvider` `CanPromoteMatchForInlineAutocomplete` (typed_count ≥ 1 for host-only, ≥ 2 otherwise); `scored_history_match.cc` `likely_can_inline` (single term, no trailing space); bookmarks/open tabs are not inlined | Chromium's providers, so Chrome's rule; the recording only shows a typed-and-visited host (`github.com`), so it neither confirms nor contradicts a looser rule | `suggest.ts` `inlineMatch` + `c.visits > 0` (2026-10-08): host prefix of a **visited** page, or path prefix when the typed text has `/` and the page has no `?#`. A bookmark-only or open-tab-only host no longer completes (still listed). No typed-count gate (needs the typed count from Chrome's history, not in the store) | ⚠️ visited-only now, no typed count |
-| Hosts vs paths | Host first; deeper URL only when typed ≥ 2 (`ConvertToHostOnly`, `PromoteOrCreateShorterSuggestion`) | same | host, then path when typed has `/` (`suggest.ts:541-550`). Pure: `github.com/m`→`antrakp04/ardia`, `google.com/s`→none | ✅ |
+| Hosts vs paths | Host first; deeper URL only when typed ≥ 2 (`ConvertToHostOnly`, `PromoteOrCreateShorterSuggestion`) | same | host, then path when typed has `/` (`suggest.ts:541-550`). Pure: `github.com/m`→`antrakp04/nilla`, `google.com/s`→none | ✅ |
 | Case of what was typed | Typed prefix kept, completion appended in URL's case (`autocomplete_match.cc`, `OnInlineAutocompleteTextMaybeChanged`) | ? | typed text is never rewritten; `GIT`→`GIThub.com` (pure) | ✅ |
 | Never on paste | `OnPaste` → `paste_state_ = kPasting/kPasted` → prevent inline until the next edit (`EM::OnAfterPossibleChange`) | ? (`handlePaste`, `classifyPasteAndGoInput` exist) | `inline.ts` `preventsInline`: an edit that puts in more than one character at once suppresses inline for that change; the next typed key completes again (was: pasting `git` showed `hub.com`) | ✅ (#4) |
 | After deleting (⌫, ⌦, ⌥⌫, ⌘⌫, cut) | `OV::GetStateChanges`: `just_deleted_text = old.size > new.size && caret_after <= selection_min_before` → no inline | recording: ⌫ on `git`+`hub.com` → `git`, search row first, no completion; ⌫ again `gi`, `g`: no completion; typing again completes (f004-f012) | `inline.ts:19-30` `onlyRemoved` + `preventInline` (working tree; HEAD only handled tail deletes). Live ✅ for ⌫ on the selected completion and ⌫ after; ⌫ right after **accepting** with → re-completes (see below) | ✅ fixed 2026-10-08 (live with real ⌫/⌦ keys; see gaps 2, 3) |
@@ -56,7 +56,7 @@ Status: ✅ compliant, ❌ gap, ⚠️ unsure or a deliberate Dia/Ardia choice.
 | Whitespace on Enter | trimmed (`AutocompleteInput`) | ? | `resolveInput` trims (`omnibox.ts:93`) | ✅ |
 | URL vs search | `AutocompleteInput::Parse` (`autocomplete_input.cc`) | Chromium | see "URL heuristics" below | ⚠️ #7 |
 | Suggestions refresh without flicker | default match from local providers is stable; remote suggestions append | stable in recording | first row is computed from local data only, remote rows append (`suggest.ts:516-531`); live: row 0 steady while remote arrived | ✅ |
-| Rows don't move under the pointer | (Chrome has no Go button under its list) | — | while the pointer is over the list or the bottom row, rows that arrive later for the same text and scope wait until it leaves (`components/omnibox/steadyRows.ts`, `steadyRows.test.mjs`), so the Go button and the rows stay where the pointer aimed. New text always shows its own rows. Before, a late search suggestion pushed Go down and a click aimed at Go opened the suggestion (#2102) | ✅ |
+| Rows don't move under the pointer | (Chrome has no Go button under its list) | — | while the pointer is over the list or the bottom row, rows that arrive later for the same text and scope wait until it leaves (`components/omnibox/steadyRows.ts`, `steadyRows.test.mjs`), so the Go button and the rows stay where the pointer aimed. New text always shows its own rows. Before, a late search suggestion pushed Go down and a click aimed at Go opened the suggestion | ✅ |
 | Blur | popup closes, typed text and inline state are kept (`OnKillFocus`, state restored on refocus/tab switch) | panel dismisses | `Omnibox.tsx:326` `onBlur={onCancel}` closes the panel and drops what was typed; outside click does the same (`CommandPanel.tsx`); hero keeps text (`saveNtpQuery`) | ⚠️ by design |
 | Hover vs selection | hover highlights only; Enter uses the keyboard selection | ? | hover sets the selected row (`Omnibox.tsx:355` `hover: setSelected`), so Enter opens the hovered row | ⚠️ |
 

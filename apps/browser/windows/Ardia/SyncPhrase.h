@@ -13,7 +13,7 @@
 #include "SyncCrypto.h"
 #include "SyncWordlist.h"
 
-namespace Ardia::SyncPhrase {
+namespace Nilla::SyncPhrase {
 
 using SyncCrypto::WipedBytes;
 using SyncCrypto::WipedString;

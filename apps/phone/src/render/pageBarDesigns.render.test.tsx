@@ -90,7 +90,7 @@ test("a page loaded over plain http shows a red open lock in place of its icon, 
   unmount(root);
 });
 
-const pageViewModule = require("@ardia/phone-native/src/PageView") as typeof import("@ardia/phone-native/src/PageView");
+const pageViewModule = require("@nilla/phone-native/src/PageView") as typeof import("@nilla/phone-native/src/PageView");
 
 test("in the redesign the page runs full screen under the bar, told the top safe area and the bar's 75 points (more where Android lifts it over a 3-button bar) as obscured insets, and only the bar's pieces take touches", () => {
   jest.spyOn(pageViewModule, "pageObscuresInsets").mockImplementation(() => true);

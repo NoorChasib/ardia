@@ -1,11 +1,11 @@
-import type { OpenWindowOptions, WindowEvent } from "@ardia/shell";
+import type { OpenWindowOptions, WindowEvent } from "@nilla/shell";
 import { TurboModuleRegistry, type TurboModule } from "react-native";
 import { addNativeListener, type EventSubscription } from "../events";
 import type { AppWindowsModule } from "../nativeModuleTypes";
 import { popupFrame, popupSize, popupTitle, type PopupFeatures } from "./popupPlacement";
 import { onEngineTopic } from "./host";
 import { privatePopupShown } from "./privateWindows";
-import { isPopupWindowId, POPUP_WINDOW_PREFIX } from "@ardia/shell/src/windows.ts";
+import { isPopupWindowId, POPUP_WINDOW_PREFIX } from "@nilla/shell/src/windows.ts";
 
 export { isPopupWindowId, POPUP_WINDOW_PREFIX };
 
@@ -34,7 +34,7 @@ type PopupWindowOptions = OpenWindowOptions & { focusWhenFront: string; focusWhe
 type PopupWindows = TurboModule &
   Pick<AppWindowsModule, "closeWindow" | "requestClose" | "windowFrame" | "windowIds" | "setWindowTitle"> & { openWindow(id: string, options: PopupWindowOptions): Promise<void> };
 
-const WINDOWS_MODULE = "ArdiaAppWindows";
+const WINDOWS_MODULE = "NillaAppWindows";
 
 const windows = (): PopupWindows => {
   const native = TurboModuleRegistry.get<PopupWindows>(WINDOWS_MODULE);
@@ -122,10 +122,10 @@ export async function openPopupWindow(ask: PopupWindowAsk): Promise<PopupWindowO
     if (!popups.has(windowId)) return "closed";
     if ((await windows().windowIds()).includes(windowId)) return "shown";
     if (!popups.has(windowId)) return "closed";
-    console.warn("[ardia windows] a pop-up window did not open; its page goes to a tab");
+    console.warn("[nilla windows] a pop-up window did not open; its page goes to a tab");
   } catch (error) {
     if (!popups.has(windowId)) return "closed";
-    console.warn(`[ardia windows] a pop-up window did not open: ${String((error as Error)?.message ?? error)}`);
+    console.warn(`[nilla windows] a pop-up window did not open: ${String((error as Error)?.message ?? error)}`);
   }
   popups.delete(windowId);
   letGoOfPrivateSession(windowId);

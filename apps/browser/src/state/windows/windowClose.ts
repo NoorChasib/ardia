@@ -4,7 +4,7 @@ import { useBrowser } from "../browser/store";
 import { inPinnedContainer, plural, profileFor } from "../browser/model";
 import { tabsLostWithWindow } from "../tabs/sharedWindowClose";
 import { isLastRegularWindow, isOpenRegularWindow, isSmall } from "./small";
-import { closeLittleArdia } from "../littleArdia/actions";
+import { closeLittleNilla } from "../littleNilla/actions";
 import { closeWindowAnimated } from "./closeAnimated";
 import { isEmptyCardTab } from "../omnibox/newTabBarPolicy";
 import { askBeforeQuitting } from "./quitWarning";
@@ -48,7 +48,7 @@ async function requestClose(windowId: string, onceAgreed?: () => void) {
   const s = useBrowser.getState();
   const w = s.windows[windowId];
   if (!w) return closeWindowWithoutTabs(windowId, onceAgreed);
-  if (isSmall(s, windowId)) return closeLittleArdia(windowId);
+  if (isSmall(s, windowId)) return closeLittleNilla(windowId);
   const { decision, suppressWarning, keepsLastWindow } = await decideWindowClose(windowId);
   if (suppressWarning) useBrowser.getState().updateSettings({ warnBeforeClosingWindow: false });
   if (decision === "cancel") return;

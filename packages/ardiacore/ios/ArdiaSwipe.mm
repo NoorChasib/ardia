@@ -1,6 +1,6 @@
 #import "ArdiaSwipeInternal.h"
 
-using namespace ardia_swipe;
+using namespace nilla_swipe;
 
 namespace {
 
@@ -12,7 +12,7 @@ constexpr CGFloat kCancelDominance = 2;
 
 }
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 NSMutableArray *gTrace;
 
@@ -23,7 +23,7 @@ NSMutableArray *gTrace;
     if (gTrace) [gTrace addObject:(__VA_ARGS__)];   \
   } while (0)
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 BOOL gWrongRendererHit;
 
@@ -31,20 +31,20 @@ BOOL gLegacyHitRouting;
 
 }
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 NSArray *RectValue(NSRect r) {
   return @[ @(r.origin.x), @(r.origin.y), @(r.size.width), @(r.size.height) ];
 }
 
-NSHashTable<NSView<ArdiaSwipeTarget> *> *Targets() {
+NSHashTable<NSView<NillaSwipeTarget> *> *Targets() {
   static NSHashTable *targets = [NSHashTable weakObjectsHashTable];
   return targets;
 }
 
 }
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 Gesture gGesture;
 
@@ -56,7 +56,7 @@ int gGestureSeq;
 
 id gMonitor;
 
-__weak NSView<ArdiaSwipeTarget> *gPrepared;
+__weak NSView<NillaSwipeTarget> *gPrepared;
 
 struct OwnedMomentum {
   __weak NSWindow *window;
@@ -73,7 +73,7 @@ constexpr NSTimeInterval kMomentumStartWait = 0.1;
 namespace {
 
 void ReleasePrepared(NSTimeInterval timestamp) {
-  NSView<ArdiaSwipeTarget> *prepared = gPrepared;
+  NSView<NillaSwipeTarget> *prepared = gPrepared;
   gPrepared = nil;
   if (!prepared) return;
   Diag(@{@"diag" : @"pagerAbandon", @"target" : [NSString stringWithFormat:@"%p", prepared]});
@@ -86,7 +86,7 @@ CGFloat TargetPointsPerWindowPoint(NSView *target) {
 }
 
 void Emit(NSString *phase, CGFloat velocity) {
-  NSView<ArdiaSwipeTarget> *target = gGesture.target;
+  NSView<NillaSwipeTarget> *target = gGesture.target;
   if (!target) return;
   const CGFloat perWindowPoint = TargetPointsPerWindowPoint(target);
   const CGFloat distance = gGesture.dx * gGesture.direction * perWindowPoint;
@@ -143,7 +143,7 @@ CGFloat ReleaseVelocity(NSTimeInterval now) {
 NSEvent *HandleWheel(NSEvent *event, NSWindow *window, NSPoint location) {
   CGFloat dx = event.scrollingDeltaX;
   if (fabs(dx) <= fabs(event.scrollingDeltaY)) return event;
-  NSView<ArdiaSwipeTarget> *target = nil;
+  NSView<NillaSwipeTarget> *target = nil;
   BOOL fallback = NO;
   NSView *hit = ResolveHit(window, location, &target, &fallback);
   if (!target || !IsPager(target)) {
@@ -169,7 +169,7 @@ NSEvent *HandleWheel(NSEvent *event, NSWindow *window, NSPoint location) {
 
 void Prepare(NSWindow *window, NSPoint location, NSTimeInterval timestamp) {
   ReleasePrepared(timestamp);
-  NSView<ArdiaSwipeTarget> *target = nil;
+  NSView<NillaSwipeTarget> *target = nil;
   BOOL fallback = NO;
   ResolveHit(window, location, &target, &fallback);
   if (!target || !HasNativePager(target)) return;
@@ -184,7 +184,7 @@ void Begin(NSWindow *window, NSPoint location, BOOL ignoreSystemPreference, NSTi
   gGesture = Gesture();
   gGesture.ignoreSystemPreference = ignoreSystemPreference;
   gGesture.seq = ++gGestureSeq;
-  NSView<ArdiaSwipeTarget> *target = nil;
+  NSView<NillaSwipeTarget> *target = nil;
   BOOL fallback = NO;
   NSView *hit = ResolveHit(window, location, &target, &fallback);
   if (gTrace) {
@@ -219,7 +219,7 @@ void Begin(NSWindow *window, NSPoint location, BOOL ignoreSystemPreference, NSTi
   gGesture.state = State::Pending;
   gGesture.target = target;
   gGesture.hit = hit;
-  ArdiaRendererScroll *renderer = RendererScrollFor(hit);
+  NillaRendererScroll *renderer = RendererScrollFor(hit);
   [renderer reset];
   gGesture.renderer = renderer;
   gGesture.rendererHit = PageViewOf(hit) != nil;
@@ -243,14 +243,14 @@ BOOL Wait(NSString *reason) {
 
 BOOL ShouldTrack() {
   CGFloat dx = gGesture.dx, dy = gGesture.dy;
-  NSView<ArdiaSwipeTarget> *target = gGesture.target;
+  NSView<NillaSwipeTarget> *target = gGesture.target;
   const CGFloat verticalIntent = IsPager(target) ? 3 * kStartDistance : kStartDistance;
   if (fabs(dy) >= verticalIntent && kCancelDominance * fabs(dx) < fabs(dy)) return Reject(@"verticalIntent");
   const BOOL below = HasNativePager(target) ? dx == 0 : fabs(dx) < kStartDistance;
   if (below || kStartDominance * fabs(dx) < fabs(dy)) return Wait(@"belowStart");
   int direction = dx > 0 ? 1 : -1;
 
-  ArdiaRendererScroll *renderer = gGesture.renderer;
+  NillaRendererScroll *renderer = gGesture.renderer;
   if (renderer) {
     switch (renderer.scroll) {
       case RendererScroll::FirstUpdateConsumed:
@@ -295,7 +295,7 @@ BOOL SwallowOwnedMomentum(NSEvent *event, NSWindow *window) {
 
 }
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 NSEvent *HandleScroll(NSEvent *event, NSWindow *window, NSPoint location, BOOL ignoreSystemPreference) {
   NSEventPhase phase = event.phase;
@@ -364,7 +364,7 @@ NSEvent *HandleScroll(NSEvent *event, NSWindow *window, NSPoint location, BOOL i
 BOOL HandleDiscreteSwipe(NSWindow *window, NSPoint location, CGFloat deltaX) {
   if (fabs(deltaX) < 0.5) return NO;
   NSView *hit = HitView(window, location);
-  NSView<ArdiaSwipeTarget> *target = TargetAt(window, location, hit);
+  NSView<NillaSwipeTarget> *target = TargetAt(window, location, hit);
   if (!target) return NO;
   BOOL back = deltaX > 0;
   if (!(back ? target.canSwipeBack : target.canSwipeForward)) return NO;
@@ -406,7 +406,7 @@ void InstallMonitor() {
 
 }
 
-@implementation ArdiaSwipe
+@implementation NillaSwipe
 
 + (void)performHaptic:(NSString *)pattern {
   NSHapticFeedbackPattern p = [pattern isEqualToString:@"levelChange"] ? NSHapticFeedbackPatternLevelChange
@@ -417,12 +417,12 @@ void InstallMonitor() {
   [NSHapticFeedbackManager.defaultPerformer performFeedbackPattern:p performanceTime:time];
 }
 
-+ (void)addTarget:(NSView<ArdiaSwipeTarget> *)target {
++ (void)addTarget:(NSView<NillaSwipeTarget> *)target {
   [Targets() addObject:target];
   InstallMonitor();
 }
 
-+ (void)removeTarget:(NSView<ArdiaSwipeTarget> *)target {
++ (void)removeTarget:(NSView<NillaSwipeTarget> *)target {
   [Targets() removeObject:target];
 }
 

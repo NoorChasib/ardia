@@ -2,9 +2,9 @@
 
 #include <utility>
 
-using namespace ardia_content_blocker;
+using namespace nilla_content_blocker;
 
-@interface ArdiaContentBlockerOp : NSObject
+@interface NillaContentBlockerOp : NSObject
 @property(copy) NSString *profile;
 @property(copy) NSString *expression;
 @property(copy) void (^completion)(id value, NSString *error);
@@ -14,10 +14,10 @@ using namespace ardia_content_blocker;
 @property NSUInteger attempt;
 @end
 
-@implementation ArdiaContentBlockerOp
+@implementation NillaContentBlockerOp
 @end
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 NSString *ScriptWith(NSString *format, NSArray *args) {
   NSMutableString *out = [NSMutableString string];
@@ -50,9 +50,9 @@ NSMutableDictionary<NSString *, ArdiaCoreWindow *> *PageWindows() {
 
 }
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
-NSMutableDictionary<NSString *, ArdiaContentBlockerPage *> *Pages() {
+NSMutableDictionary<NSString *, NillaContentBlockerPage *> *Pages() {
   static NSMutableDictionary *pages = [NSMutableDictionary dictionary];
   return pages;
 }
@@ -65,7 +65,7 @@ NSString *OriginOf(NSString *extensionId) { return [NSString stringWithFormat:@"
 
 }
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 bool IsHiddenPageWindow(NSWindow *window) {
   for (ArdiaCoreWindow *pageWindow in PageWindows().allValues)
@@ -73,8 +73,8 @@ bool IsHiddenPageWindow(NSWindow *window) {
   return false;
 }
 
-ArdiaContentBlockerPage *HiddenPage(NSString *key, NSString *profile, ArdiaCoreProfile *p, NSString *extensionId, NSString *file) {
-  ArdiaContentBlockerPage *page = Pages()[key];
+NillaContentBlockerPage *HiddenPage(NSString *key, NSString *profile, ArdiaCoreProfile *p, NSString *extensionId, NSString *file) {
+  NillaContentBlockerPage *page = Pages()[key];
   if (page.tab.closed) [page fail:@"closed"];
   if (page && !page.dead) return page;
   ArdiaCoreWindow *window = PageWindows()[profile];
@@ -83,14 +83,14 @@ ArdiaContentBlockerPage *HiddenPage(NSString *key, NSString *profile, ArdiaCoreP
     window.internal = YES;
   }
   ArdiaCoreTab *tab = [window openTab:[OriginOf(extensionId) stringByAppendingString:file] profile:p foreground:YES];
-  return Pages()[key] = tab ? [[ArdiaContentBlockerPage alloc] initWithTab:tab origin:OriginOf(extensionId)] : nil;
+  return Pages()[key] = tab ? [[NillaContentBlockerPage alloc] initWithTab:tab origin:OriginOf(extensionId)] : nil;
 }
 
 }
 
 namespace {
 
-ArdiaContentBlockerPage *PageFor(NSString *profile, ArdiaCoreProfile *p) {
+NillaContentBlockerPage *PageFor(NSString *profile, ArdiaCoreProfile *p) {
   return HiddenPage(profile, profile, p, ExtensionId(), @"blank.html");
 }
 
@@ -176,7 +176,7 @@ NSString *const kPrelude =
      ".then((v) => post('result', JSON.stringify({value: v === undefined ? null : v})),"
      "(e) => post('result', JSON.stringify({error: String(e && e.message || e)})))";
 
-NSMutableDictionary<NSString *, NSMutableArray<ArdiaContentBlockerOp *> *> *Queues() {
+NSMutableDictionary<NSString *, NSMutableArray<NillaContentBlockerOp *> *> *Queues() {
   static NSMutableDictionary *queues = [NSMutableDictionary dictionary];
   return queues;
 }
@@ -205,7 +205,7 @@ void CloseWhenIdle(NSString *profile) {
   });
 }
 
-void Finish(ArdiaContentBlockerOp *op, id value, NSString *error) {
+void Finish(NillaContentBlockerOp *op, id value, NSString *error) {
   NSMutableArray *queue = Queues()[op.profile];
   if (queue.firstObject == op) [queue removeObjectAtIndex:0];
   [BusyProfiles() removeObject:op.profile];
@@ -215,24 +215,24 @@ void Finish(ArdiaContentBlockerOp *op, id value, NSString *error) {
   if (!Queues()[op.profile].count) CloseWhenIdle(op.profile);
 }
 
-bool Retriable(NSString *error, ArdiaContentBlockerPage *page) {
+bool Retriable(NSString *error, NillaContentBlockerPage *page) {
   if (!page.onOwnPage) return true;
   for (NSString *sign in @[ @"no reply", @"no answer", @"context invalidated", @"not the extension page", @"renderer ", @"closed" ])
     if ([error containsString:sign]) return true;
   return false;
 }
 
-void Attempt(ArdiaContentBlockerOp *op) {
+void Attempt(NillaContentBlockerOp *op) {
   NSString *profile = op.profile;
-  if (!ArdiaHost.isStarted) return Finish(op, nil, @"unavailable");
+  if (!NillaHost.isStarted) return Finish(op, nil, @"unavailable");
   if (![LoadedProfiles() containsObject:profile]) {
     return LoadIntoProfile(profile, ^(NSString *error) {
       if (error) Finish(op, nil, error);
       else Attempt(op);
     });
   }
-  ArdiaCoreProfile *p = ardia_host::LoadedProfile(profile);
-  ArdiaContentBlockerPage *page = p ? PageFor(profile, p) : nil;
+  ArdiaCoreProfile *p = nilla_host::LoadedProfile(profile);
+  NillaContentBlockerPage *page = p ? PageFor(profile, p) : nil;
   if (!page) return Finish(op, nil, @"not loaded");
   const double leftMs = MAX(0, (op.deadline - NSDate.timeIntervalSinceReferenceDate) * 1000);
   NSString *script = [NSString stringWithFormat:kPrelude, op.failNext ? @"true" : @"false", ScriptWith(@"%@", @[ kOffDirective ]),
@@ -248,7 +248,7 @@ void Attempt(ArdiaContentBlockerOp *op) {
         if ([error containsString:@"timed out"]) [page fail:error];
         const bool inTime = NSDate.timeIntervalSinceReferenceDate < op.deadline;
         if (error && op.attemptsLeft > 0 && inTime && Retriable(error, page) && [LoadedProfiles() containsObject:profile] &&
-            !ardia_host::IsDeletedProfile(profile)) {
+            !nilla_host::IsDeletedProfile(profile)) {
           op.attemptsLeft--;
           [page fail:@"uBlock Origin restarted"];
           dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kRetryMs * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
@@ -262,7 +262,7 @@ void Attempt(ArdiaContentBlockerOp *op) {
 
 void Pump(NSString *profile) {
   if ([BusyProfiles() containsObject:profile]) return;
-  ArdiaContentBlockerOp *op = Queues()[profile].firstObject;
+  NillaContentBlockerOp *op = Queues()[profile].firstObject;
   if (!op) return;
   [BusyProfiles() addObject:profile];
   Attempt(op);
@@ -270,10 +270,10 @@ void Pump(NSString *profile) {
 
 }
 
-namespace ardia_content_blocker {
+namespace nilla_content_blocker {
 
 void Call(NSString *profile, NSString *expression, void (^completion)(id value, NSString *error)) {
-  ArdiaContentBlockerOp *op = [ArdiaContentBlockerOp new];
+  NillaContentBlockerOp *op = [NillaContentBlockerOp new];
   op.profile = profile;
   op.expression = expression;
   op.completion = completion;

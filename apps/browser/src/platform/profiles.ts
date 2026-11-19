@@ -1,7 +1,7 @@
 import { call, on, type BrowsingDataType } from "@ardia/ardiacore";
 
 export type { BrowsingDataType };
-export type { WindowProfileSwapped } from "@ardia/shell";
+export type { WindowProfileSwapped } from "@nilla/shell";
 
 export const clearBrowsingData = (profile: string, types: BrowsingDataType[], since?: number) =>
   call("profiles.clearBrowsingData", { profile, types, since: since ?? null }).then(() => {});

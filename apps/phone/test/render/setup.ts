@@ -61,7 +61,7 @@ jest.mock("@expo/ui/swift-ui", () => {
   };
 });
 
-jest.mock("../../src/platform/appInfo", () => ({ ...jest.requireActual("../../src/platform/appInfo"), appVersion: () => "Ardia Dev (1)" }));
+jest.mock("../../src/platform/appInfo", () => ({ ...jest.requireActual("../../src/platform/appInfo"), appVersion: () => "Nilla Dev (1)" }));
 
 jest.mock("../../src/platform/database", () => {
   const { renderDatabase } = require("./renderDatabase");

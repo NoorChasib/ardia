@@ -4,7 +4,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <dlfcn.h>
 
-using namespace ardia_web_view;
+using namespace nilla_web_view;
 
 namespace {
 
@@ -63,12 +63,12 @@ bool CommandScrollZooms(NSEvent *event, bool trackpad) {
   return (event.modifierFlags & NSEventModifierFlagCommand) && !gGestureTrackpad;
 }
 
-NSMapTable<ArdiaWebView *, NSNumber *> *ArmedViews() {
+NSMapTable<NillaWebView *, NSNumber *> *ArmedViews() {
   static NSMapTable *armed = [NSMapTable weakToStrongObjectsMapTable];
   return armed;
 }
 
-NSMapTable<ArdiaWebView *, NSMutableArray<NSArray<NSNumber *> *> *> *WheelCredits() {
+NSMapTable<NillaWebView *, NSMutableArray<NSArray<NSNumber *> *> *> *WheelCredits() {
   static NSMapTable *credits = [NSMapTable weakToStrongObjectsMapTable];
   return credits;
 }
@@ -81,11 +81,11 @@ int DirectionOf(double delta) {
   return (delta > 0) - (delta < 0);
 }
 
-ArdiaWebView *PageViewAt(NSWindow *window, NSPoint inWindow) {
+NillaWebView *PageViewAt(NSWindow *window, NSPoint inWindow) {
   NSView *content = window.contentView;
   NSView *hit = content ? [content hitTest:[content.superview convertPoint:inWindow fromView:nil]] : nil;
-  while (hit && ![hit isKindOfClass:ArdiaWebView.class]) hit = hit.superview;
-  return (ArdiaWebView *)hit;
+  while (hit && ![hit isKindOfClass:NillaWebView.class]) hit = hit.superview;
+  return (NillaWebView *)hit;
 }
 
 NSWindow *AppWindowAt(NSPoint screen) {
@@ -96,7 +96,7 @@ NSWindow *AppWindowAt(NSPoint screen) {
 
 }
 
-@implementation ArdiaWebView (InputMonitors)
+@implementation NillaWebView (InputMonitors)
 
 - (BOOL)canWakeFrames {
   if (!_tab || !_visible || _frozen || _tab.closed || _tab.discarded || self.isHiddenOrHasHiddenAncestor) return NO;
@@ -111,8 +111,8 @@ NSWindow *AppWindowAt(NSPoint screen) {
   id display = window.screen ?: NSNull.null;
   if (event.timestamp - [lastByDisplay objectForKey:display].doubleValue < kSwitchPrewarmGapSeconds) return NO;
   const NSPoint point = event.locationInWindow;
-  ArdiaWebView *target = nil;
-  for (ArdiaWebView *view in LiveViews()) {
+  NillaWebView *target = nil;
+  for (NillaWebView *view in LiveViews()) {
     if (view.window != window || view.isHiddenOrHasHiddenAncestor) continue;
     if (NSPointInRect(point, [view convertRect:view.bounds toView:nil])) return NO;
     if (!target && view.canWakeFrames) target = view;
@@ -129,19 +129,19 @@ NSWindow *AppWindowAt(NSPoint screen) {
   static id monitor;
   if (monitor) return;
   monitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskLeftMouseDown | NSEventMaskLeftMouseUp handler:^NSEvent *(NSEvent *event) {
-    [ArdiaWebView prewarmForMouseEvent:event];
+    [NillaWebView prewarmForMouseEvent:event];
     return event;
   }];
 }
 
 + (void)setCommandScrollZoomEnabled:(BOOL)enabled {
   gCommandScrollZoom = enabled;
-  if (!enabled) [ArdiaWebView disarmCommandWheels];
+  if (!enabled) [NillaWebView disarmCommandWheels];
 }
 
 + (void)disarmCommandWheels {
   if (!ArmedViews().count) return;
-  for (ArdiaWebView *view in [ArmedViews() keyEnumerator].allObjects) [view pushCommandWheelArmed:NO];
+  for (NillaWebView *view in [ArmedViews() keyEnumerator].allObjects) [view pushCommandWheelArmed:NO];
   [ArmedViews() removeAllObjects];
 }
 
@@ -209,13 +209,13 @@ NSWindow *AppWindowAt(NSPoint screen) {
   flagsMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskFlagsChanged handler:^NSEvent *(NSEvent *event) {
     gCommandHeld = event.modifierFlags & NSEventModifierFlagCommand;
     if (!gCommandHeld) {
-      [ArdiaWebView disarmCommandWheels];
+      [NillaWebView disarmCommandWheels];
       return event;
     }
     if (!gCommandScrollZoom) return event;
     const NSPoint screen = gDevPointer ? gDevPointer.pointValue : NSEvent.mouseLocation;
     NSWindow *window = AppWindowAt(screen);
-    ArdiaWebView *view = window ? PageViewAt(window, [window convertPointFromScreen:screen]) : nil;
+    NillaWebView *view = window ? PageViewAt(window, [window convertPointFromScreen:screen]) : nil;
     if (view && view->_tab && [view runsPageScript]) [view armCommandWheel];
     return event;
   }];
@@ -224,7 +224,7 @@ NSWindow *AppWindowAt(NSPoint screen) {
     BOOL trackpad = event.phase != NSEventPhaseNone && (fingers || FromTrackpad(event));
     if (gDevTrackpad >= 0) gDevZoomMiss = @"not a zoom (a trackpad gesture, or no ⌘)";
     if (!CommandScrollZooms(event, trackpad)) {
-      [ArdiaWebView disarmCommandWheels];
+      [NillaWebView disarmCommandWheels];
       return event;
     }
     if (!gCommandScrollZoom) {
@@ -237,7 +237,7 @@ NSWindow *AppWindowAt(NSPoint screen) {
       window = AppWindowAt(point);
       point = [window convertPointFromScreen:point];
     }
-    ArdiaWebView *view = PageViewAt(window, point);
+    NillaWebView *view = PageViewAt(window, point);
     if (gDevTrackpad >= 0 && (!view || !view->_tab))
       gDevZoomMiss = [NSString stringWithFormat:@"not over a page: window %ld %@, hit %@", (long)window.windowNumber, NSStringFromPoint(point),
                                                 [window.contentView hitTest:[window.contentView.superview convertPoint:point fromView:nil]]];
@@ -255,10 +255,10 @@ NSWindow *AppWindowAt(NSPoint screen) {
 }
 
 + (NSArray<NSNumber *> *)devScrollZoom:(NSArray<NSDictionary<NSString *, id> *> *)steps browser:(int)browserId {
-  ArdiaWebView *view = nil;
-  for (ArdiaWebView *v in LiveViews())
+  NillaWebView *view = nil;
+  for (NillaWebView *v in LiveViews())
     if (v.window.isVisible && !v.isHiddenOrHasHiddenAncestor && v->_tab && v->_visible &&
-        (!browserId || ardia_host::BrowserId(v->_tab) == browserId))
+        (!browserId || nilla_host::BrowserId(v->_tab) == browserId))
       view = v;
   if (!view) return @[];
   NSWindow *window = view.window;

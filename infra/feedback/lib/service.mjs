@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { UploadSizeError } from "./backends.mjs";
-import { APP_INGEST_KEY, CLI_INGEST_KEY, anonymousIdentity } from "./core.mjs";
+import { anonymousIdentity } from "./core.mjs";
+import { surfaceByKey } from "./keys.mjs";
 import { HttpError, rateLimiter, readBody, readJson, sendJson } from "./http.mjs";
 import { newId, normalizeId } from "./ids.mjs";
 import { scrubForIssue } from "./scrub.mjs";
@@ -8,10 +9,9 @@ import { UPLOAD_TOKEN_TTL_MS, bearerToken, issueUploadToken, uploadTokenProblem 
 import { MAX_JSON_BYTES, attachmentRule, validateReport } from "./validate.mjs";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const SURFACE_BY_KEY = new Map([[APP_INGEST_KEY, "app"], [CLI_INGEST_KEY, "cli"]]);
 const FILE_ROUTE = /^\/api\/feedback\/([^/]+)\/files\/([^/]+)$/;
 const COMPLETE_ROUTE = /^\/api\/feedback\/([^/]+)\/complete$/;
-const SERVICE_NAME = "ardia-feedback";
+const SERVICE_NAME = "nilla-feedback";
 const SERVICE_VERSION = "1.0.0";
 const RETRY_AFTER_SECONDS = 60;
 export const EVENT_RETRY_MS = [30_000, 120_000, 600_000, 1_800_000, 3_600_000, 3_600_000, 3_600_000, 3_600_000];
@@ -54,7 +54,7 @@ const tableCell = (value) => String(value).replace(/\|/g, "\\|").replace(/[\r\n]
 export function issueFor(report, dashboardUrl) {
   const version = report.source === "cli"
     ? `CLI ${report.cli_version}${report.app_version ? ` (app ${report.app_version})` : ""}`
-    : `Ardia ${report.app_version}${report.app_build ? ` (${report.app_build})` : ""}${report.channel ? ` ${report.channel}` : ""}`;
+    : `Nilla ${report.app_version}${report.app_build ? ` (${report.app_build})` : ""}${report.channel ? ` ${report.channel}` : ""}`;
   const rows = [["Kind", report.kind], ["Version", version], ["macOS", report.os_version ?? "unknown"], ["Reference", report.id]];
   const body = [
     scrubForIssue(report.description),
@@ -117,7 +117,7 @@ export function feedbackEvent(report, { attachments, issue, completedAtMs }) {
     resourceLogs: [{
       resource: { attributes: [{ key: "service.name", value: { stringValue: SERVICE_NAME } }, { key: "service.version", value: { stringValue: SERVICE_VERSION } }] },
       scopeLogs: [{
-        scope: { name: "ardia.analytics" },
+        scope: { name: "nilla.analytics" },
         logRecords: [{ timeUnixNano: `${completedAtMs}000000`, severityNumber: 9, severityText: "INFO", body: { stringValue: "feedback_submitted" }, attributes }],
       }],
     }],
@@ -126,7 +126,8 @@ export function feedbackEvent(report, { attachments, issue, completedAtMs }) {
 
 const laterTimer = (fn, ms) => setTimeout(fn, ms).unref();
 
-export function createService({ store: rawStore, events: rawEvents, issues: rawIssues, secret, publicUrl, dashboardUrl, rateLimits = true, now = Date.now, log = console.log, later = laterTimer }) {
+export function createService({ store: rawStore, events: rawEvents, issues: rawIssues, keys, secret, publicUrl, dashboardUrl, rateLimits = true, now = Date.now, log = console.log, later = laterTimer }) {
+  const surfaces = surfaceByKey(keys);
   const store = blame("storage", rawStore);
   const events = blame("collector", rawEvents);
   const issues = blame("issues", rawIssues);
@@ -146,7 +147,7 @@ export function createService({ store: rawStore, events: rawEvents, issues: rawI
   };
 
   const surfaceOf = (req) => {
-    const surface = SURFACE_BY_KEY.get(req.headers["x-ardia-key"]);
+    const surface = surfaces.get(req.headers["x-ardia-key"]);
     if (!surface) throw new HttpError(403, "bad_key", "X-Ardia-Key is missing or unknown");
     return surface;
   };

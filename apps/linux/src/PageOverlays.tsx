@@ -8,7 +8,7 @@ export * from "../../browser/src/components/window/PageOverlays";
 
 export function PageOverlays(props: ComponentProps<typeof BrowserPageOverlays>) {
   return (
-    <PageOverlayRegion testID="ardia-page-overlays">
+    <PageOverlayRegion testID="nilla-page-overlays">
       <BrowserPageOverlays {...props} />
     </PageOverlayRegion>
   );
@@ -16,7 +16,7 @@ export function PageOverlays(props: ComponentProps<typeof BrowserPageOverlays>) 
 
 export function BesidePeekPopovers(props: ComponentProps<typeof BrowserBesidePeekPopovers>) {
   return (
-    <PageOverlayRegion testID="ardia-beside-peek-popovers">
+    <PageOverlayRegion testID="nilla-beside-peek-popovers">
       <BrowserBesidePeekPopovers {...props} />
     </PageOverlayRegion>
   );

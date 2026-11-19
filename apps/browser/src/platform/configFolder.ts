@@ -1,8 +1,8 @@
-import { nativeModule, type ConfigFileRead } from "@ardia/shell";
+import { nativeModule, type ConfigFileRead } from "@nilla/shell";
 
 export type { ConfigFileRead };
 
-const Config = nativeModule("ArdiaConfig");
+const Config = nativeModule("NillaConfig");
 
 export const readConfigFile = (name: string): ConfigFileRead => Config.readFile(name);
 export const watchConfigFiles = (names: string[]) => Config.watch(names);

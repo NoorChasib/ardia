@@ -1,6 +1,6 @@
 import type { Settings } from "../settings/settings";
 
-export type BrowserSourceId = "arc" | "dia" | "chrome" | "safari" | "firefox" | "zen" | "brave" | "edge" | "helium" | "chromium" | "vivaldi" | "opera" | "fresh";
+export type BrowserSourceId = "arc" | "dia" | "chrome" | "safari" | "firefox" | "zen" | "brave" | "edge" | "helium" | "chromium" | "vivaldi" | "opera" | "ardia" | "fresh";
 
 export type Preset = BrowserSourceId;
 
@@ -17,7 +17,8 @@ export const PRESET_NAMES: Record<Preset, string> = {
   chromium: "Chromium",
   vivaldi: "Vivaldi",
   opera: "Opera",
-  fresh: "Ardia",
+  ardia: "Ardia",
+  fresh: "Nilla",
 };
 
 const CLASSIC_TABS: Partial<Settings> = {
@@ -39,7 +40,7 @@ const CLASSIC_TABS: Partial<Settings> = {
   hideToolbarWhileScrolling: false,
   bookmarksBar: "newTab",
   searchEngine: "google",
-  openLinksInLittleArdia: false,
+  openLinksInLittleNilla: false,
   profileSwitcherIcons: false,
   peekLinksToOtherSites: false,
   newTabLinksOpenIn: "tab",
@@ -65,7 +66,7 @@ export const PRESETS: Record<Preset, Partial<Settings>> = {
     hideToolbarWhileScrolling: true,
     bookmarksBar: "never",
     searchEngine: "google",
-    openLinksInLittleArdia: true,
+    openLinksInLittleNilla: true,
     profileSwitcherIcons: false,
     peekLinksToOtherSites: true,
     newTabLinksOpenIn: "peek",
@@ -89,7 +90,7 @@ export const PRESETS: Record<Preset, Partial<Settings>> = {
     hideToolbarWhileScrolling: true,
     bookmarksBar: "never",
     searchEngine: "google",
-    openLinksInLittleArdia: true,
+    openLinksInLittleNilla: true,
     profileSwitcherIcons: true,
     peekLinksToOtherSites: true,
     newTabLinksOpenIn: "peek",
@@ -113,7 +114,7 @@ export const PRESETS: Record<Preset, Partial<Settings>> = {
     hideToolbarWhileScrolling: false,
     bookmarksBar: "never",
     searchEngine: "google",
-    openLinksInLittleArdia: false,
+    openLinksInLittleNilla: false,
     profileSwitcherIcons: true,
     peekLinksToOtherSites: true,
     newTabLinksOpenIn: "peek",
@@ -127,6 +128,7 @@ export const PRESETS: Record<Preset, Partial<Settings>> = {
   chromium: CLASSIC_TABS,
   vivaldi: CLASSIC_TABS,
   opera: CLASSIC_TABS,
+  ardia: {},
   fresh: { addressBar: "sidebar", commandBarPlacement: "centred", newTabPosition: "nextToCurrent", newTabButtonPosition: "bottom", profileSwitcherIcons: false },
 };
 

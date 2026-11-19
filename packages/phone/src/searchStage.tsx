@@ -51,12 +51,12 @@ type NativeProps = Omit<SearchStageProps, "onLift" | "onReveal" | "onSettled" | 
   onSettled?: (event: NativeSyntheticEvent<{ landed: boolean }>) => void;
 };
 
-const hasNative = Platform.OS === "ios" && requireOptionalNativeModule("ArdiaPhoneSearchStage") !== null;
+const hasNative = Platform.OS === "ios" && requireOptionalNativeModule("NillaPhoneSearchStage") !== null;
 
 let stageView: ComponentType<NativeProps> | undefined;
 let panelView: ComponentType<ViewProps> | undefined;
-const stage = () => (stageView ??= requireNativeViewManager<NativeProps>("ArdiaPhoneSearchStage", "SearchStage"));
-const panel = () => (panelView ??= requireNativeViewManager<ViewProps>("ArdiaPhoneSearchStage", "SearchStagePanel"));
+const stage = () => (stageView ??= requireNativeViewManager<NativeProps>("NillaPhoneSearchStage", "SearchStage"));
+const panel = () => (panelView ??= requireNativeViewManager<ViewProps>("NillaPhoneSearchStage", "SearchStagePanel"));
 
 export const searchStageIsNative = () => hasNative;
 

@@ -4,10 +4,10 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
-namespace ardia_web_view {
+namespace nilla_web_view {
 
 NSString *gPeekModifier = @"shift";
 }
@@ -21,7 +21,7 @@ NSSet<NSString *> *gPeekOtherSiteTabs = [NSSet set];
 static const NSEventModifierFlags kPeekKeyMask = NSEventModifierFlagOption | NSEventModifierFlagShift | NSEventModifierFlagCommand | NSEventModifierFlagControl;
 static NSEventModifierFlags gPeekUpKeys = 0;
 static CFTimeInterval gPeekUpAt = -1;
-static __weak ArdiaWebView *gPeekUpView;
+static __weak NillaWebView *gPeekUpView;
 static NSPoint gPeekUpPoint;
 static NSUInteger gPeekUpSeq = 0;
 static NSUInteger gPeekUsedSeq = 0;
@@ -38,17 +38,17 @@ static NSMapTable<NSWindow *, NSNumber *> *InputTimesByWindow() {
   return times;
 }
 
-static ArdiaWebView *PageViewUnder(NSEvent *event) {
+static NillaWebView *PageViewUnder(NSEvent *event) {
   NSView *content = event.window.contentView;
   NSView *root = content.superview ?: content;
   NSView *hit = root ? [root hitTest:[root convertPoint:event.locationInWindow fromView:nil]] : nil;
   for (NSView *view = hit; view; view = view.superview)
-    if ([view isKindOfClass:ArdiaWebView.class]) return (ArdiaWebView *)view;
+    if ([view isKindOfClass:NillaWebView.class]) return (NillaWebView *)view;
   return nil;
 }
 
 static BOOL PeekTestHooks() {
-  static const BOOL on = ardia_host::Background() && ArdiaLaunchConfig.shared.testInstance;
+  static const BOOL on = nilla_host::Background() && NillaLaunchConfig.shared.testInstance;
   return on;
 }
 
@@ -61,7 +61,7 @@ static NSString *PeekKeyNames(NSEventModifierFlags flags) {
   return names;
 }
 
-namespace ardia_web_view {
+namespace nilla_web_view {
 
 void InstallPeekMonitor() {
   static id monitor;
@@ -95,7 +95,7 @@ BOOL PeekTracing() {
 }
 
 void PeekTrace(NSDictionary *entry) {
-  NSString *dir = ArdiaLaunchConfig.shared.dataDirectory;
+  NSString *dir = NillaLaunchConfig.shared.dataDirectory;
   if (!PeekTracing() || !dir) return;
   NSString *path = [dir stringByAppendingPathComponent:@"peek.log"];
   NSData *line = [[NSString stringWithFormat:@"%@ %@\n", NSDate.date, JSONText(entry)] dataUsingEncoding:NSUTF8StringEncoding];
@@ -109,14 +109,14 @@ NSString *SplitLinkModifier() {
   return [gSplitLinkModifier isEqualToString:@"alt"] && ![gPeekModifier isEqualToString:@"alt"] ? @"alt" : @"altShift";
 }
 
-NSDictionary *RecentClickPoint(ArdiaWebView *view) {
+NSDictionary *RecentClickPoint(NillaWebView *view) {
   NSWindow *window = view.window;
   if (!window || gPeekUpView != view || gPeekUpAt < 0 || CACurrentMediaTime() - gPeekUpAt > kPeekGestureLifetime) return nil;
   const NSPoint inRoot = RootPointFromWindow(window, gPeekUpPoint);
   return @{@"x" : @(inRoot.x), @"y" : @(inRoot.y)};
 }
 
-BOOL TakeShiftClick(ArdiaWebView *view) {
+BOOL TakeShiftClick(NillaWebView *view) {
   const BOOL fresh = gPeekUpAt >= 0 && CACurrentMediaTime() - gPeekUpAt <= kShiftClickLifetime && !gPeekPressedSinceUp && !gPeekOtherPressSinceUp;
   if (!fresh || gPeekUpView != view || gPeekUpKeys != NSEventModifierFlagShift || gPeekUpSeq == gPeekUsedSeq) return NO;
   gPeekUsedSeq = gPeekUpSeq;
@@ -128,7 +128,7 @@ BOOL MayHoldUserActivation(NSWindow *window) {
   return at && CACurrentMediaTime() - at.doubleValue <= kUserActivationLifespan;
 }
 
-NSString *PeekConfigJSON(ArdiaWebView *view) {
+NSString *PeekConfigJSON(NillaWebView *view) {
   return JSONText(@{@"modifier" : gPeekModifier, @"split" : SplitLinkModifier(), @"trace" : @(PeekTracing()), @"otherSites" : @(view.peeksLinksToOtherSites)});
 }
 }
@@ -152,12 +152,12 @@ static NSString *LinkKeyAction(NSString *key) {
   return nil;
 }
 
-@implementation ArdiaWebView (Peek)
+@implementation NillaWebView (Peek)
 
 + (BOOL)devPostPeekMouseUp:(NSString *)keys over:(NSString *)transferKey {
   if (!PeekTestHooks()) return NO;
-  ArdiaWebView *target = nil;
-  for (ArdiaWebView *view in LiveViews().allObjects)
+  NillaWebView *target = nil;
+  for (NillaWebView *view in LiveViews().allObjects)
     if (view->_visible && view.window && (!transferKey.length || [view.transferKey isEqualToString:transferKey])) target = view;
   NSWindow *window = target.window;
   if (!window) return NO;
@@ -185,7 +185,7 @@ static NSString *LinkKeyAction(NSString *key) {
   NSString *next = [@[ @"alt", @"shift" ] containsObject:modifier ?: @""] ? modifier : @"off";
   if ([next isEqualToString:gPeekModifier]) return;
   gPeekModifier = [next copy];
-  for (ArdiaWebView *view in LiveViews().allObjects) [view pushPeekModifier];
+  for (NillaWebView *view in LiveViews().allObjects) [view pushPeekModifier];
 }
 
 + (void)setPeekOtherSiteTabs:(NSArray<NSString *> *)tabIds {
@@ -198,7 +198,7 @@ static NSString *LinkKeyAction(NSString *key) {
   [kept intersectSet:gPeekOtherSiteTabs];
   [changed minusSet:kept];
   gPeekOtherSiteTabs = next;
-  for (ArdiaWebView *view in LiveViews().allObjects)
+  for (NillaWebView *view in LiveViews().allObjects)
     if (view->_transferKey.length && [changed containsObject:view->_transferKey]) [view pushPeekModifier];
 }
 
@@ -211,7 +211,7 @@ static NSString *LinkKeyAction(NSString *key) {
   NSString *next = [modifier isEqualToString:@"alt"] ? @"alt" : @"altShift";
   if ([next isEqualToString:gSplitLinkModifier]) return;
   gSplitLinkModifier = [next copy];
-  for (ArdiaWebView *view in LiveViews().allObjects) [view pushPeekModifier];
+  for (NillaWebView *view in LiveViews().allObjects) [view pushPeekModifier];
 }
 
 - (void)pushPeekModifier {
@@ -254,7 +254,7 @@ static NSString *LinkKeyAction(NSString *key) {
   const BOOL otherSite = [key isEqualToString:kOtherSiteKey];
   NSString *action = otherSite ? (self.peeksLinksToOtherSites ? @"peek" : nil) : LinkKeyAction(key);
   const CFTimeInterval sinceUp = gPeekUpAt < 0 ? -1 : CACurrentMediaTime() - gPeekUpAt;
-  static const BOOL strict = [ArdiaLaunchConfig.shared testFlag:@"peekStrict"];
+  static const BOOL strict = [NillaLaunchConfig.shared testFlag:@"peekStrict"];
   const BOOL test = PeekTestHooks() && !strict;
   NSString *refused = nil;
   if (!action) refused = @"that key opens nothing now";

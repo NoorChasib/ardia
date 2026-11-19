@@ -1,4 +1,4 @@
-import { ArdiaError, ardiaError } from "@ardia/core";
+import { NillaError, nillaError } from "@nilla/core";
 import { requireNativeModule, type EventSubscription } from "expo-modules-core";
 import type { EngineCalls, EngineEvents, LinuxHostEvents, WindowsHostEvents } from "./api";
 
@@ -19,7 +19,7 @@ const modules = new Map<string, DomainModule>();
 export function domainModule<Module = DomainModule>(domain: string): Module {
   let module = modules.get(domain);
   if (!module) {
-    module = requireNativeModule<DomainModule>(`Ardia${domain[0]!.toUpperCase()}${domain.slice(1)}`);
+    module = requireNativeModule<DomainModule>(`Nilla${domain[0]!.toUpperCase()}${domain.slice(1)}`);
     modules.set(domain, module);
   }
   return module as Module;
@@ -32,12 +32,12 @@ export async function decodeReply<T>(reply: Promise<string>): Promise<T> {
   try {
     json = await reply;
   } catch (error) {
-    throw ardiaError(error);
+    throw nillaError(error);
   }
   try {
     return JSON.parse(json) as T;
   } catch {
-    throw new ArdiaError("ERR_BAD_REPLY", "the reply isn't JSON");
+    throw new NillaError("ERR_BAD_REPLY", "the reply isn't JSON");
   }
 }
 

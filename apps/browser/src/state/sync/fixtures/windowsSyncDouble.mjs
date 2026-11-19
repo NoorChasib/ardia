@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, s
 import { join } from "node:path";
 import { base32, isTag } from "../../../../../../packages/expo-windows/src/sync/base32.ts";
 
-const MAGIC = Buffer.from("NNS1");
-const SALT = Buffer.from("netnyahoo-sync/v1");
+const MAGIC = Buffer.from("NLS1");
+const SALT = Buffer.from("nilla-sync/v1");
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32BE(n);
@@ -130,7 +130,7 @@ export function nativeDouble(keys, { busy = new Set(), placeholders = new Set() 
   const scopePath = (folder, scope) => join(chainPath(folder), keys.scopeTag(scope));
   const filePath = (folder, scope, id) => {
     if (!isTag(id)) throw new Error("not a sync file id");
-    return join(scopePath(folder, scope), `${id}.nns`);
+    return join(scopePath(folder, scope), `${id}.nls`);
   };
   const isDirectory = (path) => existsSync(path) && statSync(path).isDirectory();
   return {
@@ -161,7 +161,7 @@ export function nativeDouble(keys, { busy = new Set(), placeholders = new Set() 
     },
     async open(folder, scope, id) {
       const path = filePath(folder, scope, id);
-      if (busy.has(`${id}.nns`)) return { state: "busy" };
+      if (busy.has(`${id}.nls`)) return { state: "busy" };
       if (!existsSync(path)) return { state: "missing" };
       return keys.opened(keys.scopeTag(scope), id, readFileSync(path));
     },
@@ -171,8 +171,8 @@ export function nativeDouble(keys, { busy = new Set(), placeholders = new Set() 
       const id = base32(randomBytes(16));
       const dir = scopePath(folder, scope);
       mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, `.${id}.nns.partial`), keys.sealFile(keys.scopeTag(scope), id, payload), { flag: "wx" });
-      renameSync(join(dir, `.${id}.nns.partial`), join(dir, `${id}.nns`));
+      writeFileSync(join(dir, `.${id}.nls.partial`), keys.sealFile(keys.scopeTag(scope), id, payload), { flag: "wx" });
+      renameSync(join(dir, `.${id}.nls.partial`), join(dir, `${id}.nls`));
       return id;
     },
     async remove(folder, scope, id) {

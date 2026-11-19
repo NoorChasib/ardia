@@ -2,7 +2,7 @@
 
 #include "LaunchLog.h"
 
-namespace Ardia {
+namespace Nilla {
 
 struct LoggedErrors : winrt::implements<LoggedErrors, winrt::Microsoft::ReactNative::IRedBoxHandler> {
   void ShowNewError(winrt::Microsoft::ReactNative::IRedBoxErrorInfo const &info, winrt::Microsoft::ReactNative::RedBoxErrorType) noexcept {

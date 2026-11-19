@@ -4,7 +4,7 @@ import { PageOverlayRegion } from "./PageOverlayRegion";
 
 export function WindowOverlays(props: ComponentProps<typeof BrowserWindowOverlays>) {
   return (
-    <PageOverlayRegion testID="ardia-window-overlays">
+    <PageOverlayRegion testID="nilla-window-overlays">
       <BrowserWindowOverlays {...props} />
     </PageOverlayRegion>
   );

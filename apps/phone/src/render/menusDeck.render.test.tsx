@@ -3,7 +3,7 @@ import { act, type ReactTestInstance } from "react-test-renderer";
 import { renderSurface, someTabs, unmount } from "../../test/render/harness";
 import { idOf, itemOf, mockNative, resetNativeMenus, titles, type NativeItem } from "./nativeMenusMock";
 
-jest.mock("@ardia/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@ardia/phone-native")));
+jest.mock("@nilla/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@nilla/phone-native")));
 
 const { TabDeck } = require("../components/tabs/TabDeck") as typeof import("../components/tabs/TabDeck");
 const { DesignProvider } = require("../components/ui") as typeof import("../components/ui");

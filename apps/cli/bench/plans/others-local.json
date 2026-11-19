@@ -3,19 +3,19 @@
   "repeats": 3,
   "tasks": "all",
   "max_lanes": 2,
-  "app": "~/ardia-scratch/bench-proper/app-geom/Ardia.app",
+  "app": "~/nilla-scratch/bench-proper/app-geom/Nilla.app",
   "shared_app": true,
   "port": 9371,
   "cli": "dev:bu43",
-  "ardia_test": "cdpTabsVisible",
-  "results": "~/ardia-scratch/bench-others/results/others-local-1",
+  "nilla_test": "cdpTabsVisible",
+  "results": "~/nilla-scratch/bench-others/results/others-local-1",
   "memory_headroom_pct": 15,
   "normal_pressure_only": true,
   "contenders": [
     {
-      "id": "ardia-cli",
-      "label": "Ardia + ardia CLI + Codex (GPT-6.1 Terra medium)",
-      "kind": "ardia",
+      "id": "nilla-cli",
+      "label": "Nilla + nilla CLI + Codex (GPT-6.1 Terra medium)",
+      "kind": "nilla",
       "agent": "codex",
       "model": "gpt-6.1-terra",
       "effort": "medium"
@@ -29,11 +29,11 @@
       "effort": "medium"
     },
     {
-      "id": "opencode-ardia",
-      "label": "OpenCode Browse in Ardia + Codex (GPT-6.1 Terra medium)",
+      "id": "opencode-nilla",
+      "label": "OpenCode Browse in Nilla + Codex (GPT-6.1 Terra medium)",
       "kind": "opencode",
-      "browser": "ardia",
-      "app": "~/ardia-scratch/bench-proper/app-geom/Ardia.app",
+      "browser": "nilla",
+      "app": "~/nilla-scratch/bench-proper/app-geom/Nilla.app",
       "agent": "codex",
       "model": "gpt-6.1-terra",
       "effort": "medium"
@@ -48,21 +48,21 @@
       "effort": "medium"
     },
     {
-      "id": "bh-ardia",
-      "label": "Browser Harness in Ardia + Codex (GPT-6.1 Terra medium)",
+      "id": "bh-nilla",
+      "label": "Browser Harness in Nilla + Codex (GPT-6.1 Terra medium)",
       "kind": "browserharness",
-      "browser": "ardia",
-      "app": "~/ardia-scratch/bench-proper/app-geom/Ardia.app",
+      "browser": "nilla",
+      "app": "~/nilla-scratch/bench-proper/app-geom/Nilla.app",
       "agent": "codex",
       "model": "gpt-6.1-terra",
       "effort": "medium"
     },
     {
-      "id": "bua-ardia",
-      "label": "Browser Use 1.0 agent in Ardia (GPT-6.1 Terra medium)",
+      "id": "bua-nilla",
+      "label": "Browser Use 1.0 agent in Nilla (GPT-6.1 Terra medium)",
       "kind": "browseragent",
-      "browser": "ardia",
-      "app": "~/ardia-scratch/bench-proper/app-geom/Ardia.app",
+      "browser": "nilla",
+      "app": "~/nilla-scratch/bench-proper/app-geom/Nilla.app",
       "model": "gpt-6.1-terra",
       "effort": "medium"
     }

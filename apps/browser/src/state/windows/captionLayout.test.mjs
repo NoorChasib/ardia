@@ -5,8 +5,8 @@ const { toolbarRowOf } = await import("../../lib/toolbarRow.ts");
 const { SMALL_BAR_HEIGHT, SMALL_WINDOW_BAR_HEIGHT } = await import("./small.ts");
 const windows = (await import("../../lib/platformChrome.windows.ts")).WINDOW_CHROME;
 const mac = (await import("../../lib/platformChrome.ts")).WINDOW_CHROME;
-const { littleArdiaBarLayout } = await import("../../components/littleArdia/barLayout.ts");
-const { SMALL_FIELD_HEIGHT, SMALL_BAR_BUTTON } = await import("../../components/littleArdia/tokens.ts");
+const { littleNillaBarLayout } = await import("../../components/littleNilla/barLayout.ts");
+const { SMALL_FIELD_HEIGHT, SMALL_BAR_BUTTON } = await import("../../components/littleNilla/tokens.ts");
 const { BROWSER_WINDOW_BUTTONS, trailingClearance, WINDOW_CONTROLS, windowControlsWidth } = await import("../../lib/windowChrome.ts");
 const { syncCaptionRegions } = await import("./captionRegions.ts");
 
@@ -191,16 +191,16 @@ test("on Windows an empty sidebar header on the left collapses to the page frame
   assert.equal(footer({ tabLayout: "top" }), false);
 });
 
-test("on the Mac Little Ardia's bar keeps its numbers", () => {
+test("on the Mac Little Nilla's bar keeps its numbers", () => {
   const bar = { height: 38, navLeft: 79, navPitch: 30, fieldLeft: 143, fieldTop: 5, buttonTop: 5, trailingRoom: 0, controlsRight: 9 };
-  assert.deepEqual(littleArdiaBarLayout(mac), bar);
-  assert.deepEqual(littleArdiaBarLayout(), bar);
+  assert.deepEqual(littleNillaBarLayout(mac), bar);
+  assert.deepEqual(littleNillaBarLayout(), bar);
   assert.equal(SMALL_FIELD_HEIGHT, 28);
   assert.equal(SMALL_BAR_BUTTON, 28);
 });
 
-test("on Windows Little Ardia's bar starts at the window's left edge and its controls end before the caption buttons", () => {
-  const bar = littleArdiaBarLayout(windows);
+test("on Windows Little Nilla's bar starts at the window's left edge and its controls end before the caption buttons", () => {
+  const bar = littleNillaBarLayout(windows);
   assert.deepEqual(bar, { height: 38, navLeft: 9, navPitch: 30, fieldLeft: 73, fieldTop: 5, buttonTop: 5, trailingRoom: 171, controlsRight: 180 });
   assert.ok(bar.controlsRight >= windows.trailingWidth, "the copy, open and profile buttons stay left of minimize, maximize and close");
   assert.ok(bar.fieldTop >= 0 && bar.fieldTop + SMALL_FIELD_HEIGHT <= bar.height, "the field sits inside the bar");

@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import type { FolderIconProps } from "@ardia/shell";
+import type { FolderIconProps } from "@nilla/shell";
 import { StyleSheet } from "react-native";
 import { Symbol } from "../symbol/Symbol";
 import { folderSymbolFor } from "./folderSymbol";

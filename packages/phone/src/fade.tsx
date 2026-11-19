@@ -7,12 +7,12 @@ export type { FadeEdge } from "./fadeProps";
 
 export type FadeViewProps = ViewProps & FadeEdges;
 
-const hasNative = requireOptionalNativeModule("ArdiaPhoneFade") !== null;
+const hasNative = requireOptionalNativeModule("NillaPhoneFade") !== null;
 
 type NativeFadeProps = ViewProps & Partial<Record<"topFade" | "bottomFade" | "leadingFade" | "trailingFade", FadeEdge>>;
 
 let nativeView: ComponentType<NativeFadeProps> | undefined;
-const view = () => (nativeView ??= requireNativeViewManager<NativeFadeProps>("ArdiaPhoneFade"));
+const view = () => (nativeView ??= requireNativeViewManager<NativeFadeProps>("NillaPhoneFade"));
 
 export const fadeIsNative = () => hasNative;
 

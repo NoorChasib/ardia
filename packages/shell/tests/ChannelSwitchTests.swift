@@ -1,5 +1,5 @@
 import XCTest
-@testable import ArdiaUpdaterCore
+@testable import NillaUpdaterCore
 
 final class ChannelSwitchTests: XCTestCase {
   typealias Copy = ChannelSwitch.Copy

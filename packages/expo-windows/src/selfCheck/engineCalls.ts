@@ -1,5 +1,5 @@
 import type { DomainModule } from "@ardia/ardiacore";
-import type { AppNative, SystemNative } from "@ardia/shell";
+import type { AppNative, SystemNative } from "@nilla/shell";
 import { engineAvailable, engineCallJson, hostCall, profileDataFolder, removeProfileFolder } from "../engine/host";
 import { pngImage } from "../engine/domains/favicons";
 import { profileFolder } from "../engine/domains/profiles";
@@ -7,7 +7,7 @@ import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 import { httpPagesPort } from "./engineBackForward";
 
-const system = () => requireNativeModule<Pick<SystemNative, "fileExists">>("ArdiaSystem");
+const system = () => requireNativeModule<Pick<SystemNative, "fileExists">>("NillaSystem");
 const domain = (name: string) => requireNativeModule<Pick<DomainModule, "call">>(name);
 
 const NEVER_LOADED = "self-check-never-loaded";
@@ -34,7 +34,7 @@ const userDataDir = async () => {
   return folder;
 };
 
-const deleteData = async (profile: string) => JSON.parse(await domain("ArdiaProfiles").call("deleteData", profile, JSON.stringify({ profile }))) as { remaining?: unknown };
+const deleteData = async (profile: string) => JSON.parse(await domain("NillaProfiles").call("deleteData", profile, JSON.stringify({ profile }))) as { remaining?: unknown };
 
 const withEngine: Check[] = [
   {
@@ -59,7 +59,7 @@ const withEngine: Check[] = [
     name: "engine: engine.info answers from the host with its Chromium version and data folder",
     async run() {
       const host = await hostCall<{ chromium?: unknown; userDataDir?: unknown }>("host.info");
-      const info = JSON.parse(await domain("ArdiaEngine").call("info", "", "{}")) as { chromiumVersion?: unknown; dataDirectory?: unknown; engine?: unknown };
+      const info = JSON.parse(await domain("NillaEngine").call("info", "", "{}")) as { chromiumVersion?: unknown; dataDirectory?: unknown; engine?: unknown };
       expectEqual({ chromiumVersion: info.chromiumVersion, dataDirectory: info.dataDirectory, engine: info.engine }, { chromiumVersion: host.chromium, dataDirectory: host.userDataDir, engine: "ardiacore" }, "engine.info");
     },
   },
@@ -67,7 +67,7 @@ const withEngine: Check[] = [
     name: "engine: the engine decided this is a test instance and the app took the same decision",
     async run() {
       const host = await hostCall<{ testInstance?: unknown }>("host.info");
-      const config = requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig();
+      const config = requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig();
       expectEqual({ engine: host.testInstance, app: config.testInstance }, { engine: true, app: true }, "the test-instance decision");
     },
   },
@@ -139,7 +139,7 @@ const withEngine: Check[] = [
   {
     name: "engine: favicons.fetch answers a PNG with its size",
     async run() {
-      const favicons = domain("ArdiaFavicons");
+      const favicons = domain("NillaFavicons");
       const image = JSON.parse(await favicons.call("fetch", "", JSON.stringify({ url: `data:image/png;base64,${ONE_PIXEL_PNG}` })));
       expectEqual(image, pngImage(ONE_PIXEL_PNG), "a PNG data address");
       expectEqual(image?.width, 1, "its width");

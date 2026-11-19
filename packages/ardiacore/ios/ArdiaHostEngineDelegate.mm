@@ -16,11 +16,11 @@
 #include <string>
 #include <vector>
 
-using namespace ardia_host;
+using namespace nilla_host;
 
 static void EndFailedPageDragsAtMouseUp() {
   const SEL begin = @selector(beginDraggingSessionWithItems:event:source:);
-  const bool installed = ardia_runtime::ReplaceMethod(NSClassFromString(@"WebContentsViewCocoa"), begin, ^id(IMP original) {
+  const bool installed = nilla_runtime::ReplaceMethod(NSClassFromString(@"WebContentsViewCocoa"), begin, ^id(IMP original) {
     return ^NSDraggingSession *(NSView *view, NSArray<NSDraggingItem *> *items, NSEvent *event, id<NSDraggingSource> source) {
       NSDraggingSession *session = ((NSDraggingSession * (*)(NSView *, SEL, NSArray<NSDraggingItem *> *, NSEvent *, id<NSDraggingSource>))original)(view, begin, items, event, source);
       session.animatesToStartingPositionsOnCancelOrFail = NO;
@@ -30,30 +30,30 @@ static void EndFailedPageDragsAtMouseUp() {
   if (!installed) NSLog(@"[ardiacore] page drag session override not installed: WebContentsViewCocoa has no %@", NSStringFromSelector(begin));
 }
 
-@implementation ArdiaHostEngineDelegate
+@implementation NillaHostEngineDelegate
 
 - (void)engineDidStart {
-  ArdiaLaunchSequence.shared.engineStartedAt = NSDate.date.timeIntervalSince1970 * 1000;
+  NillaLaunchSequence.shared.engineStartedAt = NSDate.date.timeIntervalSince1970 * 1000;
   NSLog(@"[ardiacore] engine started (Chromium %@)", ArdiaCoreEngine.sharedEngine.chromiumVersion);
-  ArdiaLaunchSequence.shared.engineRunning = YES;
+  NillaLaunchSequence.shared.engineRunning = YES;
   WatchReservedShortcuts();
-  ardia_host::InstallActivationGuardsLate();
+  nilla_host::InstallActivationGuardsLate();
   EndFailedPageDragsAtMouseUp();
-  if (gScratchDataDir && ardia_host::Background())
-    ardia_host::InstallTestCrashGuard([gDataDirectory stringByDeletingLastPathComponent]);
+  if (gScratchDataDir && nilla_host::Background())
+    nilla_host::InstallTestCrashGuard([gDataDirectory stringByDeletingLastPathComponent]);
   ArdiaCoreEngine *engine = ArdiaCoreEngine.sharedEngine;
-  if (ArdiaCoreProfile *profile = ardia_host::PersonalIfLoaded(engine)) Profiles()[@""] = profile;
-  ardia_host::LoadContentBlocker(@"");
-  [ArdiaWebView installScrollZoom];
-  [ArdiaWebView installSwitchPrewarm];
-  [ArdiaWebView removeSharedImages];
-  [ArdiaServices watchDownloads:@""];
+  if (ArdiaCoreProfile *profile = nilla_host::PersonalIfLoaded(engine)) Profiles()[@""] = profile;
+  nilla_host::LoadContentBlocker(@"");
+  [NillaWebView installScrollZoom];
+  [NillaWebView installSwitchPrewarm];
+  [NillaWebView removeSharedImages];
+  [NillaServices watchDownloads:@""];
 
-  NSBundle *bundle = [NSBundle bundleForClass:ArdiaHostEngineDelegate.class];
+  NSBundle *bundle = [NSBundle bundleForClass:NillaHostEngineDelegate.class];
   NSString *path = [bundle pathForResource:@"page_script" ofType:@"js"];
   NSString *script = path ? [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil] : nil;
   if (script) engine.pageScript = script;
-  [ArdiaLaunchSequence.shared reach:ArdiaLaunchEngineStarted];
+  [NillaLaunchSequence.shared reach:NillaLaunchEngineStarted];
 
   CFRunLoopObserverRef idle = CFRunLoopObserverCreateWithHandler(
       nullptr, kCFRunLoopBeforeWaiting, false, 0, ^(CFRunLoopObserverRef observer, CFRunLoopActivity) {
@@ -74,7 +74,7 @@ static void EndFailedPageDragsAtMouseUp() {
 }
 
 - (void)launchApp {
-  ArdiaLaunchSequence.shared.reactNativeStartedAt = NSDate.date.timeIntervalSince1970 * 1000;
+  NillaLaunchSequence.shared.reactNativeStartedAt = NSDate.date.timeIntervalSince1970 * 1000;
   NSArray<NSURL *> *launchURLs = gBootstrap.urls.copy;
   LinksArrived(launchURLs);
   gAppDelegate = gMakeDelegate();
@@ -89,13 +89,13 @@ static void EndFailedPageDragsAtMouseUp() {
   NSApp.delegate = gAppDelegate;
   gBootstrap = nil;
   NSNotification *note = [NSNotification notificationWithName:NSApplicationWillFinishLaunchingNotification object:NSApp];
-  ArdiaLaunchSequence *launch = ArdiaLaunchSequence.shared;
-  if ([launch reached:ArdiaLaunchAppKitWillFinish] && [gAppDelegate respondsToSelector:@selector(applicationWillFinishLaunching:)])
+  NillaLaunchSequence *launch = NillaLaunchSequence.shared;
+  if ([launch reached:NillaLaunchAppKitWillFinish] && [gAppDelegate respondsToSelector:@selector(applicationWillFinishLaunching:)])
     [gAppDelegate applicationWillFinishLaunching:note];
-  if (![launch reached:ArdiaLaunchAppKitDidFinish]) {
+  if (![launch reached:NillaLaunchAppKitDidFinish]) {
     NSLog(@"[ardiacore] app delegate %@ set before AppKit finished launching", NSStringFromClass([gAppDelegate class]));
     if (launchURLs.count)
-      [launch after:ArdiaLaunchAppKitDidFinish
+      [launch after:NillaLaunchAppKitDidFinish
                  do:^{
                    dispatch_async(dispatch_get_main_queue(), ^{ ReplayLaunchURLs(launchURLs); });
                  }];
@@ -109,78 +109,78 @@ static void EndFailedPageDragsAtMouseUp() {
 }
 
 - (void)engineWillShutDown {
-  [ArdiaLaunchSequence.shared engineShutDown];
+  [NillaLaunchSequence.shared engineShutDown];
 }
 
 - (void)engineQuitCancelled {
   NSLog(@"[ardiacore] quit cancelled");
-  if (ArdiaHost.quitCancelledHandler) ArdiaHost.quitCancelledHandler();
+  if (NillaHost.quitCancelledHandler) NillaHost.quitCancelledHandler();
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine permissionRequest:(NSDictionary *)request tab:(ArdiaCoreTab *)tab {
-  if (tab && ardia_host::AskPermissionInPopupWindow(tab, request)) return;
+  if (tab && nilla_host::AskPermissionInPopupWindow(tab, request)) return;
   NSMutableDictionary *payload = [request mutableCopy];
-  payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  if (tab && !ardia_host::AppTabIdOf(tab)) return ardia_host::HoldUntilHosted(tab, @"permissions.requested", payload);
-  [ArdiaEvents emit:@"permissions.requested" data:payload];
+  payload[@"tabId"] = nilla_host::AppTabIdValue(tab);
+  if (tab && !nilla_host::AppTabIdOf(tab)) return nilla_host::HoldUntilHosted(tab, @"permissions.requested", payload);
+  [NillaEvents emit:@"permissions.requested" data:payload];
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine deviceChooser:(NSDictionary *)chooser tab:(ArdiaCoreTab *)tab {
   NSMutableDictionary *payload = [chooser mutableCopy];
-  payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  if ([ArdiaEvents listens:@"media"]) [ArdiaEvents emit:@"media.deviceChooser" data:payload];
+  payload[@"tabId"] = nilla_host::AppTabIdValue(tab);
+  if ([NillaEvents listens:@"media"]) [NillaEvents emit:@"media.deviceChooser" data:payload];
   else if ([payload[@"open"] boolValue])
     [ArdiaCoreEngine cancelDeviceChooser:[payload[@"id"] intValue]];
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine castDialog:(NSDictionary *)dialog tab:(ArdiaCoreTab *)tab {
   NSMutableDictionary *payload = [dialog mutableCopy];
-  payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  if ([ArdiaEvents listens:@"media"]) [ArdiaEvents emit:@"media.castDialog" data:payload];
+  payload[@"tabId"] = nilla_host::AppTabIdValue(tab);
+  if ([NillaEvents listens:@"media"]) [NillaEvents emit:@"media.castDialog" data:payload];
   else if ([payload[@"open"] boolValue])
     [ArdiaCoreEngine closeCastDialog:[payload[@"id"] intValue]];
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine castRoutes:(NSArray *)routes profile:(ArdiaCoreProfile *)profile {
-  if (![ArdiaEvents listens:@"media"]) return;
+  if (![NillaEvents listens:@"media"]) return;
   NSMutableArray<NSString *> *names = [NSMutableArray array];
   if (profile.offTheRecord)
-    for (NSString *name in ardia_host::LoadedProfileNames())
-      if (ardia_host::LoadedProfile(name) == profile) [names addObject:name];
-  if (!names.count) [names addObject:ardia_host::ProfileName(profile)];
-  for (NSString *name in names) [ArdiaEvents emit:@"media.castRoutes" data:@{@"profile" : name, @"routes" : routes ?: @[]}];
+    for (NSString *name in nilla_host::LoadedProfileNames())
+      if (nilla_host::LoadedProfile(name) == profile) [names addObject:name];
+  if (!names.count) [names addObject:nilla_host::ProfileName(profile)];
+  for (NSString *name in names) [NillaEvents emit:@"media.castRoutes" data:@{@"profile" : name, @"routes" : routes ?: @[]}];
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine extensionSidePanel:(NSDictionary *)panel tab:(ArdiaCoreTab *)tab {
   NSMutableDictionary *payload = [panel mutableCopy];
-  payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  [ArdiaEvents emit:@"extensions.sidePanel" data:payload];
+  payload[@"tabId"] = nilla_host::AppTabIdValue(tab);
+  [NillaEvents emit:@"extensions.sidePanel" data:payload];
 }
 
 - (BOOL)engine:(ArdiaCoreEngine *)engine extensionActionPopup:(NSDictionary *)popup tab:(ArdiaCoreTab *)tab {
-  if (![ArdiaEvents listens:@"extensions"] || !tab) {
+  if (![NillaEvents listens:@"extensions"] || !tab) {
     NSLog(@"[ardiacore] action.openPopup for %@: %@", popup[@"extensionId"], tab ? @"the app isn't listening yet" : @"no tab");
     return NO;
   }
   NSMutableDictionary *payload = [popup mutableCopy];
-  payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  [ArdiaEvents emit:@"extensions.actionPopup" data:payload];
+  payload[@"tabId"] = nilla_host::AppTabIdValue(tab);
+  [NillaEvents emit:@"extensions.actionPopup" data:payload];
   return YES;
 }
 
 - (BOOL)engineIsReservedKey:(NSString *)key unshiftedKey:(NSString *)unshiftedKey modifiers:(NSEventModifierFlags)modifiers {
-  return ardia_host::IsReservedBinding(key, unshiftedKey, modifiers);
+  return nilla_host::IsReservedBinding(key, unshiftedKey, modifiers);
 }
 
 - (BOOL)engineIsReservedKeyEvent:(NSEvent *)event {
-  return event.type == NSEventTypeKeyDown && ardia_host::IsReservedKeyEvent(event);
+  return event.type == NSEventTypeKeyDown && nilla_host::IsReservedKeyEvent(event);
 }
 
 - (BOOL)engine:(ArdiaCoreEngine *)engine extensionActionShortcut:(NSDictionary *)shortcut tab:(ArdiaCoreTab *)tab {
-  if (![ArdiaEvents listens:@"extensions"] || !tab) return NO;
+  if (![NillaEvents listens:@"extensions"] || !tab) return NO;
   NSMutableDictionary *payload = [shortcut mutableCopy];
-  payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  [ArdiaEvents emit:@"extensions.actionShortcut" data:payload];
+  payload[@"tabId"] = nilla_host::AppTabIdValue(tab);
+  [NillaEvents emit:@"extensions.actionShortcut" data:payload];
   return YES;
 }
 
@@ -189,29 +189,29 @@ static void EndFailedPageDragsAtMouseUp() {
                    profile:(ArdiaCoreProfile *)profile
                        tab:(ArdiaCoreTab *)tab {
   NSMutableDictionary *payload = [prompt mutableCopy];
-  payload[@"tabId"] = ardia_host::AppTabIdValue(tab);
-  payload[@"profile"] = ardia_host::ProfileName(profile);
+  payload[@"tabId"] = nilla_host::AppTabIdValue(tab);
+  payload[@"profile"] = nilla_host::ProfileName(profile);
   gInstallPrompts[payload[@"requestId"] ?: @""] = payload;
-  [ArdiaEvents emit:@"extensions.installPrompt" data:payload];
+  [NillaEvents emit:@"extensions.installPrompt" data:payload];
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine extensionInstallFailed:(NSString *)message tab:(ArdiaCoreTab *)tab {
-  [ArdiaEvents emit:@"extensions.installFailed" data:@{@"message" : message ?: @"", @"tabId" : ardia_host::AppTabIdValue(tab)}];
+  [NillaEvents emit:@"extensions.installFailed" data:@{@"message" : message ?: @"", @"tabId" : nilla_host::AppTabIdValue(tab)}];
 }
 
 - (void)engine:(ArdiaCoreEngine *)engine permissionRequestDismissed:(NSString *)requestId {
-  ardia_host::DropPopupWindowPermission(requestId ?: @"");
-  ardia_host::DropHeldEvent(@"permissions.requested", requestId ?: @"");
-  [ArdiaEvents emit:@"permissions.dismissed" data:@{@"id" : requestId ?: @""}];
+  nilla_host::DropPopupWindowPermission(requestId ?: @"");
+  nilla_host::DropHeldEvent(@"permissions.requested", requestId ?: @"");
+  [NillaEvents emit:@"permissions.dismissed" data:@{@"id" : requestId ?: @""}];
 }
 
 - (ArdiaCoreWindow *)engineWindowForNewBrowserOfProfile:(ArdiaCoreProfile *)profile type:(NSString *)type {
-  if ([type isEqualToString:@"app"]) ardia_host::ChromeMakesAppWindow(profile);
+  if ([type isEqualToString:@"app"]) nilla_host::ChromeMakesAppWindow(profile);
   if (![type isEqualToString:@"normal"] && ![type isEqualToString:@"popup"]) return nil;
-  if ([type isEqualToString:@"popup"]) return ardia_host::PopupWindowForChromeBrowser(profile);
+  if ([type isEqualToString:@"popup"]) return nilla_host::PopupWindowForChromeBrowser(profile);
   if (!profile.offTheRecord)
-    if (ArdiaWindowController *made = [ArdiaWindowController chromeMadeWindowForProfile:profile]) return made.coreWindow;
-  return [ArdiaWindowController strayWindowForProfile:profile].coreWindow;
+    if (NillaWindowController *made = [NillaWindowController chromeMadeWindowForProfile:profile]) return made.coreWindow;
+  return [NillaWindowController strayWindowForProfile:profile].coreWindow;
 }
 
 @end

@@ -1,4 +1,4 @@
-.ardia-profile-controls {
+.nilla-profile-controls {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -8,7 +8,7 @@
   min-width: 0;
 }
 
-.ardia-header-button {
+.nilla-header-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,15 +22,15 @@
   padding: 0;
 }
 
-.ardia-header-button:hover {
+.nilla-header-button:hover {
   background: rgba(127, 127, 127, 0.16);
 }
 
-.ardia-header-button:active {
+.nilla-header-button:active {
   background: rgba(127, 127, 127, 0.28);
 }
 
-.ardia-current-space {
+.nilla-current-space {
   flex: 0 0 auto;
   margin-right: auto;
   min-width: 0;
@@ -39,7 +39,7 @@
   font-weight: 600;
 }
 
-.ardia-current-space-measure {
+.nilla-current-space-measure {
   position: absolute;
   visibility: hidden;
   pointer-events: none;
@@ -48,69 +48,69 @@
   font-weight: 600;
 }
 
-.ardia-current-space span {
+.nilla-current-space span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.ardia-current-space:disabled {
+.nilla-current-space:disabled {
   background: transparent;
 }
 
-.ardia-app-menu-button {
+.nilla-app-menu-button {
   flex: 0 0 32px;
 }
 
-.ardia-linux button:focus-visible,
-.ardia-window-controls [role="button"]:focus-visible {
+.nilla-linux button:focus-visible,
+.nilla-window-controls [role="button"]:focus-visible {
   outline: 2px solid #5a9bff;
   outline-offset: 2px;
 }
 
-.ardia-linux input,
-.ardia-linux textarea {
+.nilla-linux input,
+.nilla-linux textarea {
   min-width: 0;
 }
 
-.ardia-linux ::-webkit-scrollbar {
+.nilla-linux ::-webkit-scrollbar {
   width: 11px;
   height: 11px;
 }
 
-.ardia-linux ::-webkit-scrollbar-track,
-.ardia-linux ::-webkit-scrollbar-corner {
+.nilla-linux ::-webkit-scrollbar-track,
+.nilla-linux ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-.ardia-linux ::-webkit-scrollbar-button {
+.nilla-linux ::-webkit-scrollbar-button {
   display: none;
 }
 
-.ardia-linux ::-webkit-scrollbar-thumb {
+.nilla-linux ::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 6px;
   background-color: rgba(127, 127, 127, 0.5);
   background-clip: padding-box;
 }
 
-.ardia-linux ::-webkit-scrollbar-thumb:hover {
+.nilla-linux ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(127, 127, 127, 0.75);
 }
 
-.ardia-linux.utility .ardia-window > div:first-child {
+.nilla-linux.utility .nilla-window > div:first-child {
   min-width: 700px;
 }
 
-.ardia-linux.utility .ardia-window {
+.nilla-linux.utility .nilla-window {
   overflow-x: auto;
 }
 
-.ardia-menu-item {
+.nilla-menu-item {
   overflow: hidden;
 }
 
-.ardia-menu-item.expanded:not(.disabled) {
+.nilla-menu-item.expanded:not(.disabled) {
   background: #0a63e0;
   color: #fff;
 }

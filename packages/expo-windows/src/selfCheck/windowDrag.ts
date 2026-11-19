@@ -1,11 +1,11 @@
-import type { CaptionRegion, WindowControlsNative } from "@ardia/shell";
+import type { CaptionRegion, WindowControlsNative } from "@nilla/shell";
 import { requireNativeModule } from "../modules";
 import type { AppWindowsModule } from "../nativeModuleTypes";
 import { hostPath, pressThroughTitleBand, type HostFiber } from "../windowDragRegion";
 import { expectEqual, expectTrue, type Check } from "./check";
 
 
-const windows = () => requireNativeModule<Pick<AppWindowsModule, keyof WindowControlsNative | "windowIds" | "watchSidebarEdge" | "debugDragRegions" | "debugSidebarEdgeWatch">>("ArdiaAppWindows");
+const windows = () => requireNativeModule<Pick<AppWindowsModule, keyof WindowControlsNative | "windowIds" | "watchSidebarEdge" | "debugDragRegions" | "debugSidebarEdgeWatch">>("NillaAppWindows");
 
 const HOST = 5;
 const FUNCTION_COMPONENT = 0;

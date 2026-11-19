@@ -12,11 +12,11 @@ if (!checksFile || !outDirectory) {
 const resultsOf = async (source) => {
   const context = vm.createContext({ __host: { labEcho: (text) => `echo:${text}` } });
   vm.runInContext(source, context, { filename: "sync-runtime-checks.js" });
-  return JSON.stringify(await vm.runInContext("ArdiaSyncChecks.run()", context));
+  return JSON.stringify(await vm.runInContext("NillaSyncChecks.run()", context));
 };
 
 const source = readFileSync(checksFile, "utf8");
 const expected = await resultsOf(source);
 mkdirSync(outDirectory, { recursive: true });
-writeFileSync(resolve(outDirectory, "ardia-sync-checks.js"), source);
-writeFileSync(resolve(outDirectory, "ardia-sync-checks.json"), expected);
+writeFileSync(resolve(outDirectory, "nilla-sync-checks.js"), source);
+writeFileSync(resolve(outDirectory, "nilla-sync-checks.json"), expected);

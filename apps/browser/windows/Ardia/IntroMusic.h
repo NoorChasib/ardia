@@ -18,7 +18,7 @@
 
 #pragma comment(lib, "xaudio2.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 namespace IntroMusic {
 

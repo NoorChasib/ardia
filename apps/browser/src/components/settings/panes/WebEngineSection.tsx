@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AppState, Linking, View } from "react-native";
-import { resolveInput } from "@ardia/core";
+import { resolveInput } from "@nilla/core";
 import { getPasskeyAccess, NO_PASSKEY_ACCESS, requestPasskeyAccess, type PasskeyAccess, type PasskeyAccessStatus } from "../../../state/engines/passkeys";
 import { defaultEngine, ENGINE_NAMES, PROTECTED_VIDEO_SITES, RECOMMENDED_ENGINE, siteOf, type PageEngine } from "../../../state/engines/engines";
 import { setWebsiteEngine } from "../../../state/engines/actions";
@@ -135,13 +135,13 @@ function RuleSheet({ site, engine: initial }: { site?: string; engine?: PageEngi
   );
 }
 
-const PASSKEYS_WAITING = "WebKit pages can't use passkeys until Apple grants Ardia its browser passkey entitlement. Sign in with a passkey in Chromium meanwhile.";
+const PASSKEYS_WAITING = "WebKit pages can't use passkeys until Apple grants Nilla its browser passkey entitlement. Sign in with a passkey in Chromium meanwhile.";
 
 const PASSKEY_STATUS: Record<Exclude<PasskeyAccessStatus, "entitlementRequired">, string> = {
-  deviceNotConfigured: "Passkeys aren't set up on this Mac. Set up iCloud Keychain or another passkey app in System Settings, then reopen Ardia.",
-  notDetermined: "Allow Ardia to use the passkeys saved on this Mac, from the Passwords app and other passkey apps, in WebKit and Chromium pages.",
+  deviceNotConfigured: "Passkeys aren't set up on this Mac. Set up iCloud Keychain or another passkey app in System Settings, then reopen Nilla.",
+  notDetermined: "Allow Nilla to use the passkeys saved on this Mac, from the Passwords app and other passkey apps, in WebKit and Chromium pages.",
   authorized: "Websites can use the passkeys saved on this Mac, in WebKit and Chromium pages.",
-  denied: "Off. Turn Ardia on in System Settings › Privacy & Security › Passkeys Access for Web Browsers.",
+  denied: "Off. Turn Nilla on in System Settings › Privacy & Security › Passkeys Access for Web Browsers.",
 };
 
 function EnginesDifferSheet() {

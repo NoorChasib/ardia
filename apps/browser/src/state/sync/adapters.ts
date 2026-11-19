@@ -7,7 +7,6 @@ import { engineProfile } from "../browser/model";
 import { profileOpened } from "../profiles/profileLoading";
 import { isPeekTab } from "../peek/peek";
 import { fromSync } from "../pins/pinOrderChoices";
-import { fromLegacy } from "../../lib/legacy";
 import { thisDeviceDetails } from "./deviceDetails";
 import type { BookmarkNode } from "../browser/types";
 import { isWebPageUrl } from "../../lib/url";
@@ -16,12 +15,6 @@ import { isAsleep } from "../tabs/pageSession";
 import { withSyncWorkCounts } from "../telemetry/workCounts";
 
 const store = () => useBrowser.getState();
-
-export const inTodaysNames = (adapter: Adapter): Adapter => ({
-  ...adapter,
-  apply: (visible, changed, base, records) =>
-    adapter.apply(new Map([...visible].map(([key, value]) => [key, fromLegacy(value)])), changed, (key) => fromLegacy(base(key)), records),
-});
 
 type ShareLink = { syncId: string; enabled: boolean; retire?: boolean };
 

@@ -1,17 +1,17 @@
 import type { TelemetryLocalExport, TelemetryLocalNative, TelemetryLocalStats } from "../../../packages/shell/src/telemetryLocal";
-import { ardiaHost, callHost, type ArdiaHost } from "./host.ts";
+import { nillaHost, callHost, type ArdiaHost } from "./host.ts";
 import { unavailableError } from "./hostCapabilities.ts";
 import { hostReportExport } from "./hostReport.ts";
 
 const DAY_MS = 86_400_000;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
-const DATABASE = "ardia.telemetry-local";
+const DATABASE = "nilla.telemetry-local";
 const STORE = "chunks";
 const MAX_WRITE_SAMPLES = 4096;
 const SAVE_DEADLINE_MS = 30_000;
 const SAVE_POLL_MS = 100;
 const GATHER_TIMEOUT_MS = 1_000;
-export const TELEMETRY_LOCAL_CHANNEL = "ardia.linux.telemetry-local";
+export const TELEMETRY_LOCAL_CHANNEL = "nilla.linux.telemetry-local";
 const FEATURE = "The local telemetry copy";
 
 export type Chunk = { key: number; day: string; text: string };
@@ -217,7 +217,7 @@ export function createTelemetryLocal(deps: TelemetryLocalDeps): TelemetryLocal {
       if (!store) return null;
       await deps.gather?.().catch(report);
       const { text, lines } = await run(async () => collectSince(await store.all(), at - keepMs));
-      const path = await deps.save(`Ardia data ${utcDay(at)}.jsonl`, text);
+      const path = await deps.save(`Nilla data ${utcDay(at)}.jsonl`, text);
       return path ? { path, bytes: utf8Bytes(text), lines } : null;
     },
     settled: () => run(async () => {}),
@@ -386,7 +386,7 @@ export function startFlushRelay(deps: FlushRelayDeps) {
 
 export const telemetryLocalAvailable = () => typeof indexedDB !== "undefined" && typeof document !== "undefined";
 
-const reportFailure = (error: unknown) => console.warn("[ardia linux] local telemetry copy", error);
+const reportFailure = (error: unknown) => console.warn("[nilla linux] local telemetry copy", error);
 
 function hostTelemetryLocal(host: ArdiaHost | undefined): TelemetryLocal {
   const available = !!host && telemetryLocalAvailable();
@@ -410,7 +410,7 @@ function hostTelemetryLocal(host: ArdiaHost | undefined): TelemetryLocal {
 }
 
 let shared: TelemetryLocal | undefined;
-const local = () => shared ??= hostTelemetryLocal(ardiaHost);
+const local = () => shared ??= hostTelemetryLocal(nillaHost);
 
 export const settledLocalCopy = () => local().settled();
 
@@ -424,4 +424,4 @@ export const TELEMETRY_LOCAL_METHODS: Record<string, (...args: unknown[]) => unk
   exportToDownloads: (now) => local().exportToDownloads(now as number),
 };
 
-if (ardiaHost) local();
+if (nillaHost) local();

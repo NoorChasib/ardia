@@ -60,6 +60,7 @@ public struct BrowserDefinition: Sendable {
     chromium("chromeDev", "Google Chrome Dev", ["com.google.Chrome.dev"], "Google/Chrome Dev", "Chrome"),
     chromium("chromeCanary", "Google Chrome Canary", ["com.google.Chrome.canary"], "Google/Chrome Canary", "Chrome"),
     chromium("chromium", "Chromium", ["org.chromium.Chromium"], "Chromium", "Chromium"),
+    chromium("ardia", "Ardia", ["com.ardia.browser"], "com.ardia.browser/Chromium", "Ardia"),
   ]
 
   static let arc = BrowserDefinition(id: "arc", name: "Arc", family: .arc, bundleIds: ["company.thebrowser.Browser"],
@@ -141,8 +142,8 @@ public struct BrowserDiscovery {
     self.iconFor = iconFor
   }
 
-  public func list() -> [BrowserSource] {
-    BrowserDefinition.all.compactMap(source)
+  public func list(only ids: Set<String>? = nil) -> [BrowserSource] {
+    BrowserDefinition.all.filter { ids?.contains($0.id) ?? true }.compactMap(source)
   }
 
   func asksAppForTabs(_ def: BrowserDefinition) -> Bool {
@@ -215,6 +216,13 @@ public struct BrowserDiscovery {
     return dir
   }
 
+  public func profilesNeedingKey(_ def: BrowserDefinition, _ profileIds: [String]) -> [String] {
+    guard def.family == .chromium, !asksAppForTabs(def) else { return [] }
+    return profileIds.filter { id in
+      chromiumProfiles(def, only: id).contains { ChromiumSessions.needsKey(profile: URL(fileURLWithPath: $0.path, isDirectory: true)) }
+    }
+  }
+
   public func profile(_ def: BrowserDefinition, _ profileId: String) -> BrowserProfile? {
     switch def.family {
     case .chromium, .arc:
@@ -279,7 +287,7 @@ public struct BrowserDiscovery {
         isDefault: dir == (lastUsed ?? "Default") || (dir == "." && lastUsed == nil),
         available: chromiumKinds(path, arc: def.family == .arc),
         spaces: nil,
-        tabsNeedKey: def.family != .arc && ChromiumSessions.needsKey(profile: path)
+        tabsNeedKey: false
       ))
     }
     return out

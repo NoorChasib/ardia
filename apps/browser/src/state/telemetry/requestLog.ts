@@ -4,8 +4,8 @@ const REQUEST_LOG_DOC = "telemetry-requests.log";
 
 export type RequestLogEntry = {
   at: string;
-  kind: "events" | "logs" | "daily";
-  url: string;
+  kind: "events" | "logs";
+  url: string | null;
   count: number;
   bytes: number;
   status: number | null;
@@ -25,5 +25,5 @@ export function logRequest(entry: RequestLogEntry, body: string) {
       writeDocument(REQUEST_LOG_DOC, (readDocument(REQUEST_LOG_DOC) ?? "").slice(-400_000) + `${line}\n`);
     } catch {}
   }
-  if (__DEV__) console.log(`[telemetry] ${entry.dryRun ? "dry run" : "POST"} ${entry.url} ${entry.kind}×${entry.count} → ${entry.status}`);
+  if (__DEV__) console.log(`[telemetry] ${entry.dryRun ? "not sent" : "POST"} ${entry.url ?? "(no endpoint)"} ${entry.kind}×${entry.count} → ${entry.status}`);
 }

@@ -1,5 +1,5 @@
 export type PopupFeatures = { x?: number; y?: number; width?: number; height?: number };
-import type { Rect4 } from "@ardia/shell";
+import type { Rect4 } from "@nilla/shell";
 
 
 export const POPUP_CAPTION_HEIGHT = 32;

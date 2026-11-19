@@ -6,7 +6,7 @@
 
 #include "CommandTable.h"
 
-namespace Ardia::Menus {
+namespace Nilla::Menus {
 
 struct KeyPress {
   UINT virtualKey = 0;

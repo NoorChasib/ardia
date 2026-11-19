@@ -6,7 +6,7 @@
 #include <cmath>
 #include <string_view>
 
-namespace Ardia::Vector {
+namespace Nilla::Vector {
 
 class PathDataReader {
  public:

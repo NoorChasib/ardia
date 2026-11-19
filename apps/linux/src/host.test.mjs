@@ -56,17 +56,15 @@ test("module dispatch keeps the named module and argument list", async () => {
   assert.deepEqual(requests, [["ArdiaShell.openWindow", { args: ["w_linux", { profile: "default" }] }]]);
 });
 
-test("main's swipe haptic, theme key-look hold and unattended ardia command install answer on Linux without reaching the host", async () => {
+test("main's swipe haptic, theme key-look hold and unattended nilla command install answer on Linux without reaching the host", async () => {
   const { host, requests } = fixture();
   assert.equal(resolveHostModule(host, "ArdiaSwipe", "haptic")("levelChange"), undefined);
   assert.equal(await resolveHostModule(host, "ArdiaWindowBackdrop", "holdKeyLook")(true), undefined);
   assert.equal(resolveHostModule(host, "ArdiaCli", "canInstallUnattended")(), false);
   host.bootstrap.capabilities = ["ArdiaCli.install"];
-  assert.equal(resolveHostModule(host, "ArdiaCli", "canInstallUnattended")(), true);
-  host.bootstrap.launchConfig = { isolated: true, instance: { cliHome: "/tmp/cli-home" } };
-  assert.equal(resolveHostModule(host, "ArdiaCli", "canInstallUnattended")(), false, "a test instance installs only into its own folders");
-  host.bootstrap.launchConfig.instance.cliBinDir = "/tmp/cli-bin";
-  assert.equal(resolveHostModule(host, "ArdiaCli", "canInstallUnattended")(), true);
+  assert.equal(resolveHostModule(host, "ArdiaCli", "canInstallUnattended")(), false, "the Layer 1 gate keeps the command install off");
+  host.bootstrap.launchConfig = { isolated: true, instance: { cliHome: "/tmp/cli-home", cliBinDir: "/tmp/cli-bin" } };
+  assert.equal(resolveHostModule(host, "ArdiaCli", "canInstallUnattended")(), false, "even in a test instance with its own folders");
   assert.deepEqual(requests, []);
 });
 
@@ -368,7 +366,7 @@ test("before-close sends debounced changes once while transport is open and tole
   let disposed = false;
   const { host, requests } = fixture(async () => {
     assert.equal(disposed, false);
-    throw new Error("Ardia host closed");
+    throw new Error("Nilla host closed");
   });
   host.onBeforeClose = (callback) => { callbacks.add(callback); return () => callbacks.delete(callback); };
   const store = mutableStore(browserState());
@@ -983,4 +981,102 @@ test("a presentation batch retains its final visibility and reports transport er
   assert.ok(results.every((result) => result.status === "rejected" && result.reason.message === "presentation failed"));
   assert.deepEqual(requests.filter(([method]) => method === "tab.presentations"), [["tab.presentations", { tabs: [{ claim: tab.claim, id: 31, visible: true }] }]]);
   tab.dispose();
+});
+
+test("the Layer 1 gate hides and refuses every service and independence call before the native host, whatever the engine advertises", async () => {
+  const { readdirSync, readFileSync } = await import("node:fs");
+  const { gateHost, GATED_METHODS, isGated, isGatedForAnyHost } = await import("./layer1Gate.ts");
+  const { hostSupports, hostModuleMethod } = await import("./host.ts");
+  const { mock } = await import("bun:test");
+  mock.module(new URL("./shims/shellBase.tsx", import.meta.url).pathname, () => ({ refreshDocument: async () => false }));
+  const { hostTelemetrySend } = await import("./hostTelemetry.ts");
+  const { hostReportPost, hostReportMethod, servesReportSheet } = await import("./hostReport.ts");
+  const { SYNC_CAPABILITIES, syncKeyStoreStatus, syncModuleMethod } = await import("./hostSync.ts");
+  const { LIVE_CAPABILITIES, hostLiveClient } = await import("./hostLive.ts");
+  const { linuxUpdater, linuxSwitchesFetch, updatesAvailable, killSwitchesAvailable } = await import("./hostUpdates.ts");
+  const { linuxCapabilities, unavailableSettingIds, CLI_INSTALL_METHODS } = await import("./hostCapabilities.ts");
+  const engineDir = new URL("../../../engine/ardiacore-linux/src/ardia/linux/", import.meta.url);
+  const advertised = new Set();
+  for (const file of readdirSync(engineDir).filter((name) => /\.(h|cc)$/.test(name))) {
+    const source = readFileSync(new URL(file, engineDir), "utf8");
+    for (const list of source.matchAll(/k\w*Capabilities\[\] = \{([^}]*)\}/g)) for (const [, name] of list[1].matchAll(/"([^"]+)"/g)) advertised.add(name);
+    for (const [, name] of source.matchAll(/capabilities\.Append\("([^"]+)"\)/g)) advertised.add(name);
+  }
+  for (const name of [...SYNC_CAPABILITIES, ...LIVE_CAPABILITIES, ...CLI_INSTALL_METHODS, ...GATED_METHODS]) advertised.add(name);
+  const engine = [...advertised];
+  const gatedNames = engine.filter(isGated);
+  for (const name of ["ArdiaTelemetry.post", "ArdiaUpdates.releases", "ArdiaShell.fetchKillSwitches", "ArdiaReport.upload", "ArdiaReport.post", "report.send", "ArdiaSystem.setAsDefaultBrowser", "ArdiaSystem.setLaunchAtLogin", "ArdiaCli.install", "ArdiaSync.status", "ArdiaLive.connect"]) {
+    assert.ok(gatedNames.includes(name), name);
+  }
+  assert.ok(engine.includes("report.files") && engine.includes("ArdiaShell.fetchBangList"));
+  const nativeCalls = [];
+  const raw = {
+    bootstrap: { windowId: "w_gate", profileId: "default", startup: false, capabilities: engine },
+    invoke: async (method) => (nativeCalls.push(["invoke", method]), { status: 200, body: "{}" }),
+    call: async (name) => (nativeCalls.push(["call", name]), "{}"),
+    onEvent: () => () => {},
+  };
+  const gated = gateHost(Object.freeze({ ...raw, bootstrap: Object.freeze({ ...raw.bootstrap, capabilities: Object.freeze([...engine]) }) }));
+  assert.equal(gateHost(gated), gated);
+  assert.equal("onEvent" in gated, true);
+  assert.deepEqual(gated.bootstrap.capabilities, engine.filter((name) => !isGated(name)));
+  assert.equal(gated.bootstrap.windowId, "w_gate");
+  const settle = async (run) => {
+    try {
+      return await run();
+    } catch (error) {
+      return error;
+    }
+  };
+  assert.equal(isGatedForAnyHost("ArdiaLive.connect"), false, "the engine's live contract suite drives the live client through its own host");
+  for (const host of [raw, gated]) {
+    nativeCalls.length = 0;
+    for (const name of gatedNames) assert.equal(hostSupports(name, host), host === raw && !isGatedForAnyHost(name), name);
+    assert.equal(hostSupports("report.files", host), true);
+    await settle(() => hostTelemetrySend(host)("{}"));
+    await settle(() => hostReportPost(host)?.("https://feedback.example.test/api/feedback", "{}", {}));
+    for (const method of ["post", "upload"]) await settle(() => hostReportMethod(host, method)?.());
+    await settle(() => syncKeyStoreStatus(host));
+    for (const capability of SYNC_CAPABILITIES) {
+      const method = capability.slice("ArdiaSync.".length);
+      const resolved = syncModuleMethod(host, "ArdiaSync", method);
+      if (typeof resolved === "function") await settle(() => resolved("default", null, null));
+      await settle(() => resolveHostModule(host, "ArdiaSync", method)?.("default"));
+    }
+    if (host === gated) {
+      const live = hostLiveClient(host);
+      assert.equal(live.available(), false);
+      await settle(() => live.request("github", "user"));
+      await settle(() => live.connect("github", {}));
+      await settle(() => live.disconnect("github"));
+    }
+    for (const name of gatedNames.filter((n) => /^Ardia[A-Z]\w*\.\w+$/.test(n) && (host === gated || isGatedForAnyHost(n)))) {
+      const [module, method] = name.split(".");
+      await settle(() => hostModuleMethod(module, method, host)());
+      const resolved = await settle(() => resolveHostModule(host, module, method));
+      if (typeof resolved === "function") await settle(() => resolved());
+    }
+    for (const name of gatedNames.filter((n) => host === gated || isGatedForAnyHost(n))) {
+      await settle(() => invokeHost(name, { args: [] }, host));
+      await settle(() => callHost(name, "default", "[]", host));
+    }
+    if (host === gated) for (const name of gatedNames) {
+      await settle(() => host.invoke(name, { args: [] }));
+      await settle(() => host.call(name, "default", "[]"));
+    }
+    const told = [];
+    const updater = linuxUpdater({ host, appVersion: () => "0.2.47", read: () => null, write: () => {}, ask: async () => false, tell: async (title) => void told.push(title), offer: () => {}, open: () => {} });
+    await settle(() => updater.check(true));
+    await settle(() => linuxSwitchesFetch(host, async () => new Response("{}"))("https://ardia.dev/switches.json"));
+    assert.deepEqual(nativeCalls, []);
+    assert.equal(servesReportSheet(host), false);
+    assert.equal(updatesAvailable(host), false);
+    assert.equal(killSwitchesAvailable(host), false);
+    const capabilities = linuxCapabilities(host);
+    assert.equal(capabilities.defaultBrowser, false);
+    assert.equal(capabilities.launchAtLogin, false);
+    assert.equal(capabilities.cliInstall, false);
+    const hidden = unavailableSettingIds(capabilities, []);
+    for (const id of ["general.defaultBrowser", "general.openAtLogin", "general.autoUpdate"]) assert.ok(hidden.has(id), id);
+  }
 });

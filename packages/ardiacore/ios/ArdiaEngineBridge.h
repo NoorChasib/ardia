@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaEngineBridge : NSObject
+@interface NillaEngineBridge : NSObject
 + (void)call:(NSString *)name
        profile:(NSString *)profile
           args:(nullable NSString *)args

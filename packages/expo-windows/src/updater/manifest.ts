@@ -19,10 +19,29 @@ function parsed(text: string): Record<string, unknown> | null {
   }
 }
 
+export function isTrustedFolder(prefix: string): boolean {
+  try {
+    const url = new URL(prefix);
+    return (url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password && !url.search && !url.hash && url.pathname.endsWith("/") && prefix === `${url.origin}${url.pathname}`;
+  } catch {
+    return false;
+  }
+}
+
+function underFolder(address: string, folder: string): boolean {
+  try {
+    const url = new URL(address);
+    const base = new URL(folder);
+    return url.origin === base.origin && url.pathname.startsWith(base.pathname) && address === `${url.origin}${url.pathname}` && address.startsWith(folder);
+  } catch {
+    return false;
+  }
+}
+
 function readInstaller(value: unknown, publishedUnder: string): Installer | null {
-  if (!isRecord(value)) return null;
+  if (!isRecord(value) || !isTrustedFolder(publishedUnder)) return null;
   const { url, sha256, bytes } = value;
-  if (typeof url !== "string" || !url.startsWith(publishedUnder) || !/^[\x21-\x7e]+\.exe$/.test(url) || url.includes("..")) return null;
+  if (typeof url !== "string" || !/^[\x21-\x7e]+\.exe$/.test(url) || /\.\.|[%\\?#@]/.test(url) || !underFolder(url, publishedUnder)) return null;
   if (typeof sha256 !== "string" || !/^[0-9a-f]{64}$/.test(sha256)) return null;
   if (typeof bytes !== "number" || !Number.isSafeInteger(bytes) || bytes < 1 || bytes > LARGEST_INSTALLER_BYTES) return null;
   return { url, sha256, bytes };

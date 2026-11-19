@@ -22,7 +22,7 @@ import { TOP_STRIP_HEIGHT, TopStripPeek, TopTabStrip } from "./components/tabstr
 import { useCardTopInset, usePageFrameInset, useTabLayout } from "./state/windows/layout";
 import { WindowProfile } from "./components/window/WindowProfile";
 import { DockedLayout } from "./components/window/SidebarDock";
-import { LittleArdiaWindow } from "./components/littleArdia/LittleArdiaWindow";
+import { LittleNillaWindow } from "./components/littleNilla/LittleNillaWindow";
 import { SidebarOverlays } from "./components/sidebar/Overlays";
 import { ReportSheetHost } from "./components/report/ReportSheet";
 import { profileAccent, profileTheme, useTheme } from "./components/ui/theme";
@@ -54,7 +54,7 @@ function BrowserWindowRoot({ windowId }: { windowId?: string }) {
   if (!id || !exists) return null;
   return (
     <WindowContext.Provider value={id}>
-      <ThemeScope>{small ? <LittleArdiaWindow /> : <BrowserWindow />}</ThemeScope>
+      <ThemeScope>{small ? <LittleNillaWindow /> : <BrowserWindow />}</ThemeScope>
     </WindowContext.Provider>
   );
 }

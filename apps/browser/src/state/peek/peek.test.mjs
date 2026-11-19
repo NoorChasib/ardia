@@ -224,7 +224,7 @@ test("a pinned tab keeps its peek across a tab switch and closing the pinned tab
   assert.equal(S().tabs[id], undefined);
 });
 
-test("Little Ardia doesn't peek", () => {
+test("Little Nilla doesn't peek", () => {
   S().hydrate({ profiles: { default: PERSONAL }, profileOrder: ["default"] });
   const small = S().createWindow({ kind: "small", url: "https://small.example/" });
   const tab = S().windows[small].tabIds[0];
@@ -370,8 +370,8 @@ test("a clicked new-tab link peeks from a pinned tab when its destination, unwra
   S().activate(pinned);
   const peek = S().openPeek(pinned, "https://peek.example/");
   assert.equal(newTabLinkRoute(S(), peek, away), "tab");
-  S().updateSettings({ newTabLinksOpenIn: "littleArdia" });
-  assert.equal(newTabLinkRoute(S(), regular, away), "littleArdia");
+  S().updateSettings({ newTabLinksOpenIn: "littleNilla" });
+  assert.equal(newTabLinkRoute(S(), regular, away), "littleNilla");
   assert.equal(newTabLinkRoute(S(), pinned, away), "otherSite");
   const small = S().createWindow({ kind: "small", url: "https://little.example/" });
   assert.equal(newTabLinkRoute(S(), S().windows[small].tabIds[0], away), "tab");
@@ -418,7 +418,7 @@ test("a private window's new-tab links stay tabs whatever the setting", async ()
   S().hydrate({ profiles: { default: PERSONAL }, profileOrder: ["default"] });
   const w = S().createWindow({ kind: "private", url: "https://mail.example/" });
   const [tab] = S().windows[w].tabIds;
-  for (const choice of ["peek", "littleArdia"]) {
+  for (const choice of ["peek", "littleNilla"]) {
     S().updateSettings({ newTabLinksOpenIn: choice });
     assert.equal(newTabLinkRoute(S(), tab, "https://other.example/"), "tab", choice);
   }

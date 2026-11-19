@@ -8,7 +8,7 @@ import {
   type SearchEngine,
   type SearchScope,
   type SuggestionResult,
-} from "@ardia/core";
+} from "@nilla/core";
 import { useEffect, useMemo, useState } from "react";
 import { noteSiteSuggestionShown } from "../../state/telemetry/inlineCompletionCounts";
 import { bookmarksByUrl } from "../../state/bookmarks/bookmarks";

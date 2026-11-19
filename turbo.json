@@ -10,7 +10,7 @@
         "dist/**"
       ]
     },
-    "@ardia/browser#build": {
+    "@nilla/browser#build": {
       "dependsOn": [
         "^build"
       ],

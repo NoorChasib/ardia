@@ -331,7 +331,7 @@ function withStrips<Fake extends FakeDomain>(fake: Fake): Fake {
 const loginKey = (args: { origin: string; username: string }) => `${args.origin}\n${args.username}`;
 
 const fakeModules = {
-  ArdiaEngine: domain(
+  NillaEngine: domain(
     "engine",
     {
       components: () => [],
@@ -358,7 +358,7 @@ const fakeModules = {
     },
     { inputIdleSeconds: () => 3600 },
   ),
-  ArdiaTabs: withStrips(domain(
+  NillaTabs: withStrips(domain(
     "tabs",
     {
       routeLinkTabs: () => linkRoute.next,
@@ -376,8 +376,8 @@ const fakeModules = {
       discardOffered: async (adoptId: string) => (discardedOffers.push(adoptId), true),
     },
   )),
-  ArdiaWindows: domain("windows", { list: () => chromeWindowList, dev: () => "" }),
-  ArdiaDownloads: domain("downloads", {
+  NillaWindows: domain("windows", { list: () => chromeWindowList, dev: () => "" }),
+  NillaDownloads: domain("downloads", {
     cancel: ({ id }) => (cancelledDownloads.push(id), null),
     pause: () => null,
     resume: () => null,
@@ -385,13 +385,13 @@ const fakeModules = {
     settings: () => ({ folder: "", askWhereToSave: false, managed: false }),
     setSettings: () => ({ folder: "", askWhereToSave: false, managed: false }),
   }),
-  ArdiaPermissions: domain("permissions", {
+  NillaPermissions: domain("permissions", {
     resolve: ({ id, result, remember }) => (resolvedPermissions.push({ id, result, remember }), null),
     resolveExternalApp: () => null,
     externalAppAllowances: () => [],
     removeExternalAppAllowance: () => null,
   }),
-  ArdiaProfiles: domain("profiles", {
+  NillaProfiles: domain("profiles", {
     loaded: () => {
       if (!profilesLoadedCall.known) throw Object.assign(new Error("profiles.loaded isn't a call"), { code: "ERR_UNKNOWN_CALL" });
       return { profiles: [...loadedEngineProfiles] };
@@ -406,7 +406,7 @@ const fakeModules = {
     deleteData: ({ profile }) => (deletedProfileData.push(profile), { remaining: profileDataLeft.get(profile) ?? [] }),
     clearBrowsingData: () => null,
   }),
-  ArdiaSites: domain("sites", {
+  NillaSites: domain("sites", {
     setSetting: () => null,
     origins: () => [],
     reset: () => null,
@@ -416,7 +416,7 @@ const fakeModules = {
     preloadPages: () => false,
     setPreloadPages: () => null,
   }),
-  ArdiaPasswords: domain(
+  NillaPasswords: domain(
     "passwords",
     {
       list: () => ({
@@ -452,7 +452,7 @@ const fakeModules = {
       },
     },
   ),
-  ArdiaAutofill: domain(
+  NillaAutofill: domain(
     "autofill",
     {
       settings: ({ profile }) => ({ addresses: profileToggle(profile, "addresses"), cards: profileToggle(profile, "cards") }),
@@ -470,7 +470,7 @@ const fakeModules = {
     },
     { saveCard: async () => JSON.stringify({ id: `card-${++autofillIds}` }) },
   ),
-  ArdiaExtensions: domain("extensions", {
+  NillaExtensions: domain("extensions", {
     list: async ({ profile }) => ({ extensions: (await extensionEngine()?.list(profile)) ?? [] }),
     install: async ({ profile, path }) => {
       const engine = extensionEngine();
@@ -496,13 +496,13 @@ const fakeModules = {
     syncState: () => ({ ready: false, extensions: [], pending: [], settling: [], queued: [], intents: [] }),
     syncApply: () => ({ state: "pending" }),
   }),
-  ArdiaSearch: domain("search", {
+  NillaSearch: domain("search", {
     engines: () => ({ list: { engines: [] } }),
     setEngineName: () => null,
     suggest: (args) => testGlobals.acTestSuggest?.(args) ?? { status: 200, body: JSON.stringify([args.url, []]) },
     stopSuggest: () => null,
   }),
-  ArdiaMedia: domain("media", {
+  NillaMedia: domain("media", {
     displayMediaSources: () => [],
     selectDevice: () => null,
     cancelDeviceChooser: () => null,
@@ -517,7 +517,7 @@ const fakeModules = {
     changeCaptureSource: () => false,
     stopCapture: () => false,
   }),
-  ArdiaContentBlocker: domain("contentBlocker", {
+  NillaContentBlocker: domain("contentBlocker", {
     setEnabled: () => null,
     setListEnabled: () => null,
     addList: ({ url }) => ({ id: url, custom: true, existed: false, filters: 1, failed: false }),
@@ -525,24 +525,24 @@ const fakeModules = {
     isAllowed: () => false,
     setAllowed: () => null,
   }),
-  ArdiaHistory: domain("history", {
+  NillaHistory: domain("history", {
     query: ({ profile, ...args }) => queryHistory(profile, args),
     add: ({ profile, ...args }) => addHistoryVisits(profile, args),
     import: ({ profile, ...args }) => importHistoryRows(profile, args),
     deleteUrls: ({ profile, ...args }) => deleteHistoryUrls(profile, args),
     watch: ({ profile }) => (historyWatches.push(profile), null),
   }),
-  ArdiaBookmarks: domain("bookmarks", {
+  NillaBookmarks: domain("bookmarks", {
     tree: ({ profile }) => ({ bar: treeOf(chromeBookmarks(profile), "bar"), other: treeOf(chromeBookmarks(profile), "other") }),
     apply: ({ profile, ...args }) => applyBookmarkOps(profile, args),
     watch: () => null,
   }),
-  ArdiaFavicons: domain("favicons", {
+  NillaFavicons: domain("favicons", {
     get: ({ profile, ...args }) => faviconsFor(profile, args),
     set: () => ({ stored: true }),
     fetch: () => null,
   }),
-  ArdiaWebView: domain("webView", {
+  NillaWebView: domain("webView", {
     setDisplayMediaPicker: () => null,
     setPeekModifier: () => null,
     setSplitLinkModifier: () => null,
@@ -559,7 +559,7 @@ const fakeModules = {
     takeContentDrift: () => ({ layouts: 0, fits: 0, maxPoints: 0 }),
     takeFirstPaintHolds: () => ({ held: 0, painted: 0, loaded: 0, pressed: 0, timedOut: 0, heldMs: 0 }),
   }),
-  ArdiaWebKit: domain("webKit", {
+  NillaWebKit: domain("webKit", {
     endPrivateSession: ({ session }) => (endedWebKitSessions.push(session), null),
     removeDownloadStaging: ({ path }) => (removedStagings.push(path), stagingRemovals.ok),
     cookieStoreKey: ({ profile }) => profile,
@@ -567,14 +567,14 @@ const fakeModules = {
     passkeyAccess: () => ({ entitled: false, status: "entitlementRequired" }),
     requestPasskeyAccess: () => ({ entitled: false, status: "entitlementRequired" }),
   }),
-  ArdiaSwipe: {
+  NillaSwipe: {
     haptic: () => {},
     switchPager: () => Promise.resolve(false),
     stepPager: () => Promise.resolve(false),
     selectPager: () => Promise.resolve(false),
     pagerState: () => null,
     devPagerState: () => Promise.resolve(null),
-    devSimulate: () => unfaked("ArdiaSwipe", "devSimulate"),
+    devSimulate: () => unfaked("NillaSwipe", "devSimulate"),
   },
 };
 

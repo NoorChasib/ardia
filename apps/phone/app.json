@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "Ardia",
-    "slug": "ardia-phone",
+    "name": "Nilla",
+    "slug": "nilla-phone",
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "android": {
-      "package": "com.ardia.browser.android",
+      "package": "com.nilladigital.nilla.android",
       "edgeToEdgeEnabled": true
     },
     "ios": {
-      "bundleIdentifier": "com.ardia.browser.ios",
+      "bundleIdentifier": "com.nilladigital.nilla.ios",
       "supportsTablet": true
     },
     "experiments": {

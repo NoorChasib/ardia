@@ -1,4 +1,4 @@
-import { fixupUrl } from "@ardia/core";
+import { fixupUrl } from "@nilla/core";
 import { forwardRef, useEffect, useRef, type ReactNode } from "react";
 import type { StyleProp, View, ViewStyle } from "react-native";
 import { currentWindow } from "../../state/browser/current";

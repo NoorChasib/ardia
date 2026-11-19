@@ -50,7 +50,7 @@ dist/
 scripts/.notary.env
 *.p8
 
-packages/phone/ios/ArdiaKit/.build/
-packages/phone/ios/ArdiaKit/.swiftpm/
-apps/cli/ardia_cli/vendor/
+packages/phone/ios/NillaKit/.build/
+packages/phone/ios/NillaKit/.swiftpm/
+apps/cli/nilla_browser_cli/vendor/
 __pycache__/

@@ -9,7 +9,7 @@ import { launch, reporter, session, sleep } from "../../../scripts/lib/instance.
 const args = process.argv.slice(2);
 const appArg = args.find((a) => !a.startsWith("--"));
 if (!appArg) {
-  console.error("usage: node tab-drag-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]");
+  console.error("usage: node tab-drag-test.mjs <Debug Nilla.app> [--port=<DevTools port>] [--keep-data]");
   process.exit(2);
 }
 const appPath = resolve(appArg);
@@ -111,7 +111,7 @@ try {
   assert.equal(strip.length, 6, `strip items ${JSON.stringify(strip)}`);
   const mid = (i) => Math.round((strip[i][0] + strip[i][1]) / 2);
 
-  const PREVIEW = `const preview = () => globalThis.expo.modules.ArdiaDev.devDragPreviewState();`;
+  const PREVIEW = `const preview = () => globalThis.expo.modules.NillaDev.devDragPreviewState();`;
   const watch = (w, path, ms) => run(`${PREVIEW}
     const seen = [];
     const iv = setInterval(() => preview().then((p) => seen.push(p)), 30);
@@ -186,7 +186,7 @@ try {
       return wait(100);`);
     const path = [[at(2), 21], [at(2) + 20, 21], [at(3), 21], [at(3) + 75, 21]];
     const seen = await run(`
-      const tabs = globalThis.expo.modules.ArdiaTabs;
+      const tabs = globalThis.expo.modules.NillaTabs;
       const send = tabs.call;
       const t0 = performance.now();
       const log = { commands: [], windows: [], drag: [], picture: [] };

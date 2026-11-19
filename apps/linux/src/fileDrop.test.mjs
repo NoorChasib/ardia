@@ -75,7 +75,7 @@ test("DOM URLs and text stay distinct from native files", () => {
   assert.deepEqual(parseUriList("# comment\r\nhttps://a.test/\n\n  https://b.test/x  \n"), ["https://a.test/", "https://b.test/x"]);
   assert.deepEqual(domDropItems({ uriList: "https://a.test/\nfile:///etc/passwd", text: "https://a.test/" }), [{ kind: "url", url: "https://a.test/" }]);
   assert.deepEqual(domDropItems({ uriList: "file:///home/me/a.txt", text: "file:///home/me/a.txt" }), []);
-  assert.deepEqual(domDropItems({ uriList: "", text: "  ardia.dev  " }), [{ kind: "text", text: "ardia.dev" }]);
+  assert.deepEqual(domDropItems({ uriList: "", text: "  example.org  " }), [{ kind: "text", text: "example.org" }]);
   assert.deepEqual(domDropItems({ uriList: "", text: "x".repeat(9000) }), []);
   assert.equal(domDropItems({ uriList: Array.from({ length: 80 }, (_, n) => `https://a.test/${n}`).join("\n"), text: "" }).length, 50);
   assert.equal(acceptsDrag(["Files"]), true);

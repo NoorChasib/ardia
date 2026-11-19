@@ -12,7 +12,7 @@ export const FIND_WORD = "needle";
 const escapeHtml = (text) => String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 export function suggestionsFor(query) {
-  return [`${query} ardia suggestion one`, `${query} ardia suggestion two`, `${query} ardia suggestion three`];
+  return [`${query} nilla suggestion one`, `${query} nilla suggestion two`, `${query} nilla suggestion three`];
 }
 
 function page(title, body) {
@@ -69,11 +69,11 @@ export async function startFixtures({ tls, slowChunk = 16384, slowInterval = 100
     if (url.pathname === "/insecure") return html("Insecure fixture", "<h1>Insecure fixture</h1>");
     if (url.pathname === "/badcert") return html("Bad certificate fixture", "<h1>Bad certificate fixture</h1>");
     if (url.pathname === "/mixed") {
-      const image = `http://insecure-image.ardia.test:${ports.http}/pixel.png?mixed=${Date.now()}`;
-      const form = `http://insecure-form.ardia.test:${ports.http}/submit`;
+      const image = `http://insecure-image.nilla.test:${ports.http}/pixel.png?mixed=${Date.now()}`;
+      const form = `http://insecure-form.nilla.test:${ports.http}/submit`;
       return html("Mixed fixture", `<h1>Mixed fixture</h1><form id="form" method="post" action="${form}"><input name="q"></form><img id="mixed" src="${image}" width="1" height="1">`);
     }
-    if (url.pathname === "/print") return html("Print fixture", "<h1>Ardia print fixture</h1><p>Printable text.</p>");
+    if (url.pathname === "/print") return html("Print fixture", "<h1>Nilla print fixture</h1><p>Printable text.</p>");
     if (url.pathname === "/zoom") return html("Zoom fixture", "<h1>Zoom fixture</h1>");
     if (url.pathname === "/pixel.png") return send(200, "image/png", PIXEL_PNG);
     const download = /^\/download\/([A-Za-z0-9._-]+)$/.exec(url.pathname);
@@ -129,20 +129,20 @@ export async function startFixtures({ tls, slowChunk = 16384, slowInterval = 100
   const url = {
     http: (host, path) => `http://${host}:${ports.http}${path}`,
     https: (host, path) => `https://${host}:${ports.https}${path}`,
-    page: (n, run = "") => `http://plain.ardia.test:${ports.http}/page/${n}${run ? `?run=${encodeURIComponent(run)}` : ""}`,
-    secure: () => `https://secure.ardia.test:${ports.https}/secure`,
-    insecure: () => `http://plain.ardia.test:${ports.http}/insecure`,
-    mixed: () => `https://mixed.ardia.test:${ports.https}/mixed`,
-    badcert: () => `https://badcert.ardia.test:${ports.https}/badcert`,
-    find: (count, label) => `http://plain.ardia.test:${ports.http}/find?count=${count}&label=${encodeURIComponent(label)}`,
-    isolation: (host = "isolation.ardia.test") => `http://${host}:${ports.http}/isolation`,
-    download: (name, size = 4096) => `https://secure.ardia.test:${ports.https}/download/${name}?size=${size}`,
-    slow: (name, size = 4 << 20) => `https://secure.ardia.test:${ports.https}/slow/${name}?size=${size}`,
-    print: () => `http://plain.ardia.test:${ports.http}/print`,
-    zoom: (host = "zoom.ardia.test") => `http://${host}:${ports.http}/zoom`,
+    page: (n, run = "") => `http://plain.nilla.test:${ports.http}/page/${n}${run ? `?run=${encodeURIComponent(run)}` : ""}`,
+    secure: () => `https://secure.nilla.test:${ports.https}/secure`,
+    insecure: () => `http://plain.nilla.test:${ports.http}/insecure`,
+    mixed: () => `https://mixed.nilla.test:${ports.https}/mixed`,
+    badcert: () => `https://badcert.nilla.test:${ports.https}/badcert`,
+    find: (count, label) => `http://plain.nilla.test:${ports.http}/find?count=${count}&label=${encodeURIComponent(label)}`,
+    isolation: (host = "isolation.nilla.test") => `http://${host}:${ports.http}/isolation`,
+    download: (name, size = 4096) => `https://secure.nilla.test:${ports.https}/download/${name}?size=${size}`,
+    slow: (name, size = 4 << 20) => `https://secure.nilla.test:${ports.https}/slow/${name}?size=${size}`,
+    print: () => `http://plain.nilla.test:${ports.http}/print`,
+    zoom: (host = "zoom.nilla.test") => `http://${host}:${ports.http}/zoom`,
   };
   const chromiumArgs = [
-    `--host-resolver-rules=MAP *.ardia.test 127.0.0.1, MAP *.ardia-keep.test 127.0.0.1, MAP ${SUGGEST_HOST} 127.0.0.1:${ports.https}, ${LIVE_HOSTS.map((host) => `MAP ${host} 127.0.0.1:${ports.https}`).join(", ")}, MAP * ~NOTFOUND, EXCLUDE localhost, EXCLUDE 127.0.0.1`,
+    `--host-resolver-rules=MAP *.nilla.test 127.0.0.1, MAP *.nilla-keep.test 127.0.0.1, MAP ${SUGGEST_HOST} 127.0.0.1:${ports.https}, ${LIVE_HOSTS.map((host) => `MAP ${host} 127.0.0.1:${ports.https}`).join(", ")}, MAP * ~NOTFOUND, EXCLUDE localhost, EXCLUDE 127.0.0.1`,
     ...tls.chromiumArgs,
   ];
   return {

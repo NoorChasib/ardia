@@ -4,7 +4,7 @@
 Samples every task in /proc once per interval: the CPU it last ran on (psr), its
 utime+stime, its cgroup and its allowed CPUs. Each task's CPU time between two samples is
 charged to the CPU it was on at the second sample. Tasks are classed as bench-app (in
-ardiabench.slice and allowed only bench CPUs), bench-other (in ardiabench.slice, e.g. the
+nillabench.slice and allowed only bench CPUs), bench-other (in nillabench.slice, e.g. the
 orchestrator), kernel (kthreads) or foreign. Writes per-second foreign CPU on the bench
 CPUs, the top foreign tasks there, bench-app tasks seen off the bench CPUs, and /proc/stat
 busy time of the bench CPUs. Stops when --until-pid exits or after --seconds.
@@ -38,7 +38,7 @@ def core_busy(cores):
 
 def task_info(pid, cache):
     entry = cache.get(pid)
-    if entry is None or "ardiabench.slice" in entry["cgroup"]:
+    if entry is None or "nillabench.slice" in entry["cgroup"]:
         try:
             with open(f"/proc/{pid}/cgroup") as f:
                 cg = f.read().strip().split("::", 1)[-1]
@@ -107,7 +107,7 @@ def main():
             info = task_info(pid, cache)
             if pid == 2 or info["ppid"] == 2:
                 cls = "kernel"
-            elif "ardiabench.slice" in info["cgroup"]:
+            elif "nillabench.slice" in info["cgroup"]:
                 cls = "bench-app" if info["allowed"] and cpu_list(info["allowed"]) <= bench else "bench-other"
             else:
                 cls = "foreign"

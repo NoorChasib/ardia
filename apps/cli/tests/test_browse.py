@@ -15,14 +15,14 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli.browse import actions, claims, client, human, inputs, media, paths, plugins, readurl, snapshot, vault
-from ardia_cli.browse import cli as browse_cli
-from ardia_cli.browse import commands, daemon
-from ardia_cli.browse.errors import BrowseError, ConnectionLost, Gated, OutcomeUnknown, StaleRef, Usage
-from ardia_cli.browse.page import Ring
-from ardia_cli.browse.state import Ref, RestartedBrowser, State
+from nilla_browser_cli.browse import actions, claims, client, human, inputs, media, paths, plugins, readurl, snapshot, vault
+from nilla_browser_cli.browse import cli as browse_cli
+from nilla_browser_cli.browse import commands, daemon
+from nilla_browser_cli.browse.errors import BrowseError, ConnectionLost, Gated, OutcomeUnknown, StaleRef, Usage
+from nilla_browser_cli.browse.page import Ring
+from nilla_browser_cli.browse.state import Ref, RestartedBrowser, State
 
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 
 
 def scratch_dir(test) -> Path:
@@ -476,7 +476,7 @@ class ClaimsTest(unittest.TestCase):
 
 class TabIdsTest(unittest.TestCase):
     def registries(self):
-        from ardia_cli.browse.tabs import Registry
+        from nilla_browser_cli.browse.tabs import Registry
 
         fd = paths.browse_dir(scratch_dir(self))
         self.addCleanup(os.close, fd)
@@ -507,7 +507,7 @@ class TabIdsTest(unittest.TestCase):
         self.assertEqual(two.others("I"), ({}, {}))
 
     def test_a_session_that_died_without_cleaning_up_is_ignored(self):
-        from ardia_cli.browse.tabs import Registry
+        from nilla_browser_cli.browse.tabs import Registry
 
         fd, one, _ = self.registries()
         ghost = Registry(fd, "gone", "ghost")
@@ -522,8 +522,8 @@ class TabIdsTest(unittest.TestCase):
         state.target_infos = {target: {"targetId": target, "url": url, "title": target} for target, url in targets.items()}
         return state
 
-    def test_app_tab_ids_pair_only_by_the_target_ardia_reports(self):
-        from ardia_cli.browse import tabs
+    def test_app_tab_ids_pair_only_by_the_target_nilla_reports(self):
+        from nilla_browser_cli.browse import tabs
 
         rows = [{"id": "tab-a", "url": "http://b/", "targetId": "A", "pageGeneration": 2}, {"id": "tab-b", "url": "http://a/", "targetId": "B"},
                 {"id": "tab-s", "url": "http://s/", "targetId": None}, {"id": "tab-x", "url": "http://x/", "targetId": "GONE"}]
@@ -531,8 +531,8 @@ class TabIdsTest(unittest.TestCase):
         self.assertEqual(tabs.pair_by_target(rows, infos), {"A": {"app": "tab-a", "generation": 2}, "B": {"app": "tab-b", "generation": None}})
         self.assertEqual(tabs.pair_by_target([{"id": "tab-a", "url": "http://a/"}], infos), {})
 
-    def test_tab_accepts_the_app_tab_id_and_explains_asleep_and_old_ardias(self):
-        from ardia_cli.browse import tabs
+    def test_tab_accepts_the_app_tab_id_and_explains_asleep_and_old_nillas(self):
+        from nilla_browser_cli.browse import tabs
 
         _, one, _ = self.registries()
         state = self.state_with(one, {"A": "http://a/", "B1": "http://b/", "B2": "http://b/"})
@@ -556,7 +556,7 @@ class TabIdsTest(unittest.TestCase):
         self.assertEqual(asyncio.run(state.find_tab(state.tab_id("B2"))), "B2")
 
     def replaced(self, rows, borrowed=False, opened=False):
-        from ardia_cli.browse import tabs
+        from nilla_browser_cli.browse import tabs
 
         _, one, _ = self.registries()
         state = self.state_with(one, {"OLD": "http://a/"})
@@ -583,7 +583,7 @@ class TabIdsTest(unittest.TestCase):
             except BrowseError as error:
                 return state, None, error
 
-    def test_a_session_follows_its_tab_only_where_ardia_says_the_page_went(self):
+    def test_a_session_follows_its_tab_only_where_nilla_says_the_page_went(self):
         state, target, _ = self.replaced([{"id": "tab-a", "url": "http://a/", "targetId": "NEW", "pageGeneration": 3}], borrowed=True)
         self.assertEqual((target, state.current), ("NEW", "NEW"))
         self.assertIn("follows it", state.extras["notice"])
@@ -778,7 +778,7 @@ class RefsTest(unittest.TestCase):
             asyncio.run(state.connect())
 
     def test_eval_quotes_unquoted_attribute_values_in_selector_strings(self):
-        from ardia_cli.browse.commands import quote_selector_literals
+        from nilla_browser_cli.browse.commands import quote_selector_literals
 
         fixed, quoted = quote_selector_literals("document.querySelectorAll('a[href*=/jobs/view/]')")
         self.assertEqual(fixed, "document.querySelectorAll('a[href*=\"/jobs/view/\"]')")
@@ -789,7 +789,7 @@ class RefsTest(unittest.TestCase):
             self.assertEqual(quote_selector_literals(untouched), (untouched, []))
 
     def test_an_empty_untitled_page_says_it_was_likely_turned_away(self):
-        from ardia_cli.browse import readpages
+        from nilla_browser_cli.browse import readpages
 
         empty = readpages.render([{"url": "https://example.test/a", "status": 200, "title": "", "text": ""}], {})
         self.assertIn("the site sent an empty page", empty)
@@ -798,14 +798,14 @@ class RefsTest(unittest.TestCase):
         self.assertNotIn("empty page", titled)
 
     def test_a_missing_name_lists_the_closest_names_first(self):
-        from ardia_cli.browse.commands import closest_names
+        from nilla_browser_cli.browse.commands import closest_names
 
         links = ["Skip to Main Content", "Homepage", "Deals", "Pharmacy", "Gifts", "Registry", "Help", "Account", "Page 1", "Page 2", "Next Page"]
         self.assertEqual(closest_names("Go to Page 2", links)[:2], ["Page 2", "Next Page"])
         self.assertEqual(closest_names("Zebra", links), links[:8])
 
     def test_ref_parsing(self):
-        from ardia_cli.browse.state import parse_ref
+        from nilla_browser_cli.browse.state import parse_ref
 
         self.assertEqual(parse_ref("@e12"), "e12")
         self.assertEqual(parse_ref("ref=e3"), "e3")
@@ -850,7 +850,7 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(error.code, "policy_refused")
 
     def test_a_conditional_refusal_keeps_the_engines_reason(self):
-        from ardia_cli.browse.errors import refusal_reason
+        from nilla_browser_cli.browse.errors import refusal_reason
 
         said = "Command failed: ardia: Target.attachToTarget to that target isn't allowed for the ardia command (code -32000)"
         self.assertEqual(refusal_reason(said, "Target.attachToTarget"), "to that target")
@@ -858,26 +858,26 @@ class RenderTest(unittest.TestCase):
         self.assertEqual(refusal_reason("ardia: Target.getTargetInfo on that target isn't allowed for the ardia command", "Target.getTargetInfo"),
                          "on that target")
         error = Gated("Target.attachToTarget", reason="to that target")
-        self.assertIn("which Ardia allows for the ardia command, but not to that target", error.message)
+        self.assertIn("which Nilla allows for the nilla-browser command, but not to that target", error.message)
         self.assertIn("(Target.attachToTarget to that target isn't allowed for the ardia command)", error.message)
         self.assertNotIn("once the engine's token policy allows it", error.message)
         self.assertEqual((error.code, error.data), ("policy_refused", {"method": "Target.attachToTarget", "reason": "to that target"}))
-        named = error.during("open", "Ardia has it open as tab-1 at chrome://settings/")
-        self.assertTrue(named.message.startswith("`open` needs Target.attachToTarget, which Ardia allows"))
-        self.assertTrue(named.message.endswith("(Ardia has it open as tab-1 at chrome://settings/)"))
+        named = error.during("open", "Nilla has it open as tab-1 at chrome://settings/")
+        self.assertTrue(named.message.startswith("`open` needs Target.attachToTarget, which Nilla allows"))
+        self.assertTrue(named.message.endswith("(Nilla has it open as tab-1 at chrome://settings/)"))
         self.assertEqual(named.reason, "to that target")
         self.assertEqual(Gated("Fetch.enable").data, {"method": "Fetch.enable", "reason": ""})
 
     def test_a_viewport_refused_on_a_tab_the_command_didnt_open_says_where_it_works(self):
-        from ardia_cli.browse.errors import refusal_reason
+        from nilla_browser_cli.browse.errors import refusal_reason
 
         method = "Emulation.setDeviceMetricsOverride"
         said = f"ardia: {method} on a tab the ardia command didn't open isn't allowed for the ardia command"
         reason = refusal_reason(said, method)
         self.assertEqual(reason, "on a tab the ardia command didn't open")
         error = Gated(method, reason=reason).during("set viewport")
-        self.assertTrue(error.message.startswith("`set viewport` needs Emulation.setDeviceMetricsOverride, which Ardia allows"))
-        self.assertIn("only on a tab this command opened: `ardia browse open <url>`", error.message)
+        self.assertTrue(error.message.startswith("`set viewport` needs Emulation.setDeviceMetricsOverride, which Nilla allows"))
+        self.assertIn("only on a tab this command opened: `nilla-browser browse open <url>`", error.message)
         taken = Gated(method, reason="on a tab that isn't off-screen").during("set viewport")
         self.assertIn("only on a tab it has taken off-screen", taken.message)
         self.assertNotIn("once the engine's token policy allows it", error.message)

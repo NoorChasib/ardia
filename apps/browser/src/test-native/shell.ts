@@ -12,7 +12,7 @@ import type {
   SystemSignal,
   UserScriptsFolder,
   WindowEvent,
-} from "@ardia/shell";
+} from "@nilla/shell";
 import { nativeEvents, unfaked } from "./events";
 import { reportModule } from "./report";
 import { telemetryLocalModule } from "./telemetryLocal";
@@ -67,17 +67,17 @@ export const emitCommand = (event: CommandEvent) => shellEvents.emit("onCommand"
 export const emitOpenURLs = (urls: string[], pointer?: [number, number], source?: { bundleId: string | null; appName: string | null }) =>
   shellEvents.emit("onOpenURLs", { urls, pointer, source });
 
-const shell: Modules["ArdiaShell"] = {
+const shell: Modules["NillaShell"] = {
   addListener: shellEvents.addListener,
   copyText: () => {},
   readText: () => Promise.resolve(""),
   startDictation: () => {},
-  fetchBangList: (etag) => (bangListServer.reply ? bangListServer.reply(etag) : unfaked("ArdiaShell", "fetchBangList")),
+  fetchBangList: (etag) => (bangListServer.reply ? bangListServer.reply(etag) : unfaked("NillaShell", "fetchBangList")),
   setAppearance: () => Promise.resolve(),
   isDarkAppearance: () => Promise.resolve(false),
 };
 
-const windowsModule: Modules["ArdiaAppWindows"] & { requestClose(id: string): Promise<void> } = {
+const windowsModule: Modules["NillaAppWindows"] & { requestClose(id: string): Promise<void> } = {
   windowCornerRadius: () => 19,
   addListener: shellEvents.addListener,
   openWindow: (id, options) => {
@@ -136,7 +136,7 @@ export const focusHandoffCounts = {
 };
 export const pressRepeated: { earlier: { landedOn: string; ms: number } | null } = { earlier: null };
 
-const focus: Modules["ArdiaFocus"] = {
+const focus: Modules["NillaFocus"] = {
   setSwitcherCapture: () => Promise.resolve(),
   setDragEscapeCapture: () => Promise.resolve(),
   saveKeyResponder: () => Promise.resolve(0),
@@ -152,7 +152,7 @@ const focus: Modules["ArdiaFocus"] = {
   pressRepeated: () => Promise.resolve(pressRepeated.earlier),
 };
 
-const menus: Modules["ArdiaMenus"] = {
+const menus: Modules["NillaMenus"] = {
   addListener: shellEvents.addListener,
   showMenu: () => Promise.resolve(null),
   updateMenu: () => Promise.resolve(),
@@ -163,14 +163,14 @@ const menus: Modules["ArdiaMenus"] = {
   cancelRecording: () => Promise.resolve(),
 };
 
-const dialogs: Modules["ArdiaDialogs"] = {
+const dialogs: Modules["NillaDialogs"] = {
   confirm: () => Promise.resolve({ confirmed: false, suppressed: false }),
   prompt: () => Promise.resolve(null),
   pickFiles: () => Promise.resolve([]),
   pickFolder: () => Promise.resolve(null),
 };
 
-const documents: Modules["ArdiaDocuments"] = {
+const documents: Modules["NillaDocuments"] = {
   readDocument: (name) => docs.get(name) ?? null,
   writeDocument: (name, contents) => {
     if (refusedWrites.on) throw new Error("write refused");
@@ -187,7 +187,7 @@ const documents: Modules["ArdiaDocuments"] = {
   removeDocument: (name) => void docs.delete(name),
 };
 
-const app: Modules["ArdiaApp"] = {
+const app: Modules["NillaApp"] = {
   interfaceScale: () => interfaceScaleNative.scale,
   interfaceScaleRange: () => [0.8, 1.5],
   setInterfaceScale: (scale) => {
@@ -217,7 +217,7 @@ const app: Modules["ArdiaApp"] = {
   diagnosticsSample: () => Promise.resolve({ ...diagnostics.sample }),
 };
 
-const updater: Modules["ArdiaUpdater"] = {
+const updater: Modules["NillaUpdater"] = {
   updaterState: () => Promise.resolve({ available: false }),
   checkForUpdates: () => Promise.resolve(),
   setAutomaticUpdateChecks: () => Promise.resolve(),
@@ -226,7 +226,7 @@ const updater: Modules["ArdiaUpdater"] = {
 };
 
 const notificationEvents = nativeEvents();
-const notifications: Modules["ArdiaNotifications"] = {
+const notifications: Modules["NillaNotifications"] = {
   addListener: notificationEvents.addListener,
   notificationPermission: () => Promise.resolve("notDetermined"),
   requestNotificationPermission: () => Promise.resolve(false),
@@ -235,7 +235,7 @@ const notifications: Modules["ArdiaNotifications"] = {
   openNotificationSettings: () => Promise.resolve(),
 };
 
-const location: Modules["ArdiaLocation"] = {
+const location: Modules["NillaLocation"] = {
   locationPermission: () => Promise.resolve("notDetermined"),
   requestLocationPermission: () => Promise.resolve("notDetermined"),
   openLocationSettings: () => Promise.resolve(),
@@ -243,13 +243,13 @@ const location: Modules["ArdiaLocation"] = {
 };
 
 const scriptingEvents = nativeEvents();
-const scripting: Modules["ArdiaScripting"] = {
+const scripting: Modules["NillaScripting"] = {
   addListener: scriptingEvents.addListener,
   setScriptState: () => Promise.resolve(),
   replyToScript: () => Promise.resolve(),
 };
 
-const dev: Modules["ArdiaDev"] = {
+const dev: Modules["NillaDev"] = {
   devCrash: () => Promise.resolve(),
   devRenderIntroMusic: () => Promise.resolve(null),
   devRunAppleScript: () => Promise.resolve({ ok: false, error: "no AppleScript in tests" }),
@@ -269,7 +269,7 @@ const dev: Modules["ArdiaDev"] = {
   devURLDelivery: () => Promise.resolve({}),
 };
 
-const system: Modules["ArdiaSystem"] = {
+const system: Modules["NillaSystem"] = {
   isDefaultBrowser: () => Promise.resolve(false),
   setAsDefaultBrowser: () => Promise.resolve(false),
   launchAtLoginStatus: () => Promise.resolve("notRegistered"),
@@ -285,7 +285,7 @@ const system: Modules["ArdiaSystem"] = {
 };
 
 const calendarEvents = nativeEvents();
-const calendar: Modules["ArdiaCalendar"] = {
+const calendar: Modules["NillaCalendar"] = {
   addListener: calendarEvents.addListener,
   authorizationStatus: () => "notDetermined",
   requestAccess: () => Promise.resolve({ granted: false, status: "notDetermined", error: null, responsible: "self", ms: 0 }),
@@ -293,13 +293,13 @@ const calendar: Modules["ArdiaCalendar"] = {
   events: () => Promise.resolve([]),
 };
 
-const keychain: Modules["ArdiaKeychain"] = {
+const keychain: Modules["NillaKeychain"] = {
   get: () => Promise.resolve(null),
   set: () => Promise.resolve(true),
   delete: () => Promise.resolve(true),
 };
 
-const translate: Modules["ArdiaTranslate"] = {
+const translate: Modules["NillaTranslate"] = {
   available: false,
   userLanguages: () => ["en"],
   languageName: (identifier) => identifier,
@@ -313,15 +313,15 @@ const translate: Modules["ArdiaTranslate"] = {
   cancel: () => Promise.resolve(),
 };
 
-const magnifyArea: Modules["ArdiaMagnifyArea"] = { devMagnify: () => unfaked("ArdiaMagnifyArea", "devMagnify") };
-const fileDrop: Modules["ArdiaFileDrop"] = {
-  devDrag: () => unfaked("ArdiaFileDrop", "devDrag"),
+const magnifyArea: Modules["NillaMagnifyArea"] = { devMagnify: () => unfaked("NillaMagnifyArea", "devMagnify") };
+const fileDrop: Modules["NillaFileDrop"] = {
+  devDrag: () => unfaked("NillaFileDrop", "devDrag"),
   devLastFileDrag: () => Promise.resolve([]),
 };
 
 
 const cliEvents = nativeEvents();
-const cli: Modules["ArdiaCli"] = {
+const cli: Modules["NillaCli"] = {
   installedVersion: () => null,
   canInstallUnattended: () => false,
   install: () => Promise.resolve({ ok: false, appVersion: appInfo.appVersion ?? "", error: "no installs in tests", lines: [] }),
@@ -330,7 +330,7 @@ const cli: Modules["ArdiaCli"] = {
 
 const noUserScripts: UserScriptsHost = { watching: [], writes: [], status: null, change: null, read: async () => ({ state: "empty" }) };
 const userScriptsHost = () => testGlobals.acTestUserScripts ?? noUserScripts;
-const userScripts: Modules["ArdiaUserScripts"] = {
+const userScripts: Modules["NillaUserScripts"] = {
   watch: (on) => void userScriptsHost().watching.push(on),
   read: () => userScriptsHost().read(),
   readStatus: async () => userScriptsHost().status,
@@ -347,7 +347,7 @@ const userScripts: Modules["ArdiaUserScripts"] = {
 export const configFolder = { files: new Map<string, string>(), stamps: new Map<string, string>(), watched: [] as string[][], schemaWrites: [] as Record<string, string>[], arming: null as Promise<void> | null };
 const configEvents = nativeEvents();
 export const emitConfigChange = () => configEvents.emit("onChange", {});
-const config: Modules["ArdiaConfig"] = {
+const config: Modules["NillaConfig"] = {
   addListener: configEvents.addListener,
   readFile: (name) => {
     const text = configFolder.files.get(name);
@@ -380,7 +380,7 @@ export function writeHeldReplies() {
   const tickets = controlSocket.held.splice(0);
   if (tickets.length) controlEvents.emit("onWritten", { tickets });
 }
-const automation: Modules["ArdiaAutomation"] = {
+const automation: Modules["NillaAutomation"] = {
   start: async () => {
     if (!controlSocket.running) controlSocket.generation++;
     controlSocket.running = true;
@@ -408,7 +408,7 @@ export const systemSignals = {
 };
 const systemSignalEvents = nativeEvents();
 export const emitSystemSignal = (signal: SystemSignal) => systemSignalEvents.emit("onSystemSignal", signal);
-const systemSignalsModule: Modules["ArdiaSystemSignals"] = {
+const systemSignalsModule: Modules["NillaSystemSignals"] = {
   watchIdle: (thresholds) => void (systemSignals.idleThresholds = [...thresholds]),
   holdsIncomingLinks: () => systemSignals.holdsIncomingLinks,
   setHoldIncomingLinks: (hold, hooksStamp) => void Object.assign(systemSignals, { holdsIncomingLinks: hold, hooksStamp }),
@@ -419,34 +419,34 @@ const systemSignalsModule: Modules["ArdiaSystemSignals"] = {
 };
 
 export const shellNativeModules: Modules = {
-  ArdiaShell: shell,
-  ArdiaAppWindows: windowsModule,
-  ArdiaFocus: focus,
-  ArdiaMenus: menus,
-  ArdiaDialogs: dialogs,
-  ArdiaDocuments: documents,
-  ArdiaApp: app,
-  ArdiaUpdater: updater,
-  ArdiaNotifications: notifications,
-  ArdiaLocation: location,
-  ArdiaScripting: scripting,
-  ArdiaDev: dev,
-  ArdiaSystem: system,
-  ArdiaCalendar: calendar,
-  ArdiaKeychain: keychain,
-  ArdiaGlassEffect: { isLiquidGlass: () => false },
-  ArdiaDockSelection: { iconTheme: () => Promise.resolve(null), iconAccent: () => Promise.resolve(null) },
-  ArdiaInlineCompletion: { complete: () => Promise.resolve(0), copyFieldAs: () => Promise.resolve() },
-  ArdiaTranslate: translate,
-  ArdiaMagnifyArea: magnifyArea,
-  ArdiaFileDrop: fileDrop,
-  ArdiaCli: cli,
-  ArdiaUserScripts: userScripts,
-  ArdiaConfig: config,
-  ArdiaAutomation: automation,
-  ArdiaSystemSignals: systemSignalsModule,
-  ArdiaTelemetryLocal: telemetryLocalModule,
-  ArdiaReport: reportModule,
+  NillaShell: shell,
+  NillaAppWindows: windowsModule,
+  NillaFocus: focus,
+  NillaMenus: menus,
+  NillaDialogs: dialogs,
+  NillaDocuments: documents,
+  NillaApp: app,
+  NillaUpdater: updater,
+  NillaNotifications: notifications,
+  NillaLocation: location,
+  NillaScripting: scripting,
+  NillaDev: dev,
+  NillaSystem: system,
+  NillaCalendar: calendar,
+  NillaKeychain: keychain,
+  NillaGlassEffect: { isLiquidGlass: () => false },
+  NillaDockSelection: { iconTheme: () => Promise.resolve(null), iconAccent: () => Promise.resolve(null) },
+  NillaInlineCompletion: { complete: () => Promise.resolve(0), copyFieldAs: () => Promise.resolve() },
+  NillaTranslate: translate,
+  NillaMagnifyArea: magnifyArea,
+  NillaFileDrop: fileDrop,
+  NillaCli: cli,
+  NillaUserScripts: userScripts,
+  NillaConfig: config,
+  NillaAutomation: automation,
+  NillaSystemSignals: systemSignalsModule,
+  NillaTelemetryLocal: telemetryLocalModule,
+  NillaReport: reportModule,
 };
 
 export const inputSourceKeys = {

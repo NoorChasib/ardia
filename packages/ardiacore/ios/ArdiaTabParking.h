@@ -2,11 +2,11 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol ArdiaParkedPageHolder <ArdiaCoreTabDelegate>
+@protocol NillaParkedPageHolder <ArdiaCoreTabDelegate>
 @property(nonatomic, readonly) BOOL closedByChrome;
 @end
 
-@interface ArdiaTabParking : NSObject
+@interface NillaTabParking : NSObject
 
 + (void)park:(ArdiaCoreTab *)tab forKey:(NSString *)key;
 + (nullable ArdiaCoreTab *)parkedTabForKey:(NSString *)key;
@@ -14,10 +14,10 @@ NS_ASSUME_NONNULL_BEGIN
 + (void)tookTransfer:(NSString *)key;
 + (void)releaseTransfer:(NSString *)key;
 + (BOOL)launchWasClosed:(NSString *)key;
-+ (BOOL)rehomeFromWindow:(ArdiaWindowController *)closing;
++ (BOOL)rehomeFromWindow:(NillaWindowController *)closing;
 
-+ (void)keepOffscreen:(ArdiaCoreTab *)tab holder:(id<ArdiaParkedPageHolder>)holder;
-+ (nullable id<ArdiaParkedPageHolder>)takeHolderOfTab:(ArdiaCoreTab *)tab;
++ (void)keepOffscreen:(ArdiaCoreTab *)tab holder:(id<NillaParkedPageHolder>)holder;
++ (nullable id<NillaParkedPageHolder>)takeHolderOfTab:(ArdiaCoreTab *)tab;
 
 + (void)holdAcrossReload:(NSDictionary<NSString *, ArdiaCoreTab *> *)tabs
                  expired:(void (^)(NSString *key, ArdiaCoreTab *tab))expired;

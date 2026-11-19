@@ -15,13 +15,13 @@ const lease = { claim: "claim", rendererGeneration: "2", bindingGeneration: "3",
 const event = (name, data) => ({ name, data });
 const message = (sequence, name, data) => ({ ...lease, type: "pageEvent", sequence, event: event(name, data) });
 const nowPlaying = {
-  title: "Track", artist: "Artist", album: "Album", artwork: "https://media.ardia.test/art.png", playbackState: "playing",
+  title: "Track", artist: "Artist", album: "Album", artwork: "https://media.nilla.test/art.png", playbackState: "playing",
   position: 12, duration: 200, playbackRate: 1, timestamp: 1700000000000, hasVideo: true, actions: ["play", "pause", "nexttrack"], controllable: true,
 };
 
 function setup() {
   useBrowser.getState().hydrate({});
-  const window = useBrowser.getState().createWindow({ url: "https://media.ardia.test/" });
+  const window = useBrowser.getState().createWindow({ url: "https://media.nilla.test/" });
   const tab = useBrowser.getState().windows[window].tabIds[0];
   const calls = [];
   const props = {
@@ -37,8 +37,8 @@ function setup() {
 }
 
 const mediaSnapshot = (playing, access, pip, extra = []) => [
-  event("navigation", { url: "https://media.ardia.test/", title: "Media", canGoBack: false, canGoForward: false, isLoading: false, themeColor: null, themeColorSource: null }),
-  event("security", { level: "insecure", url: "https://media.ardia.test/", origin: null }),
+  event("navigation", { url: "https://media.nilla.test/", title: "Media", canGoBack: false, canGoForward: false, isLoading: false, themeColor: null, themeColorSource: null }),
+  event("security", { level: "insecure", url: "https://media.nilla.test/", origin: null }),
   event("media", { playing, muted: false }),
   event("nowPlaying", { state: playing ? nowPlaying : null }),
   event("mediaAccess", access),
@@ -91,14 +91,14 @@ test("a restore snapshot replaces media access and a document snapshot replays i
 test("discarded and ready page events drive the shared sleeping state, including a rebind snapshot", () => {
   const h = setup();
   assert.ok(h.receiver.install({ lease, snapshot: { watermark: 1, events: [] } }));
-  h.send(message(2, "discarded", { url: "https://media.ardia.test/page" }));
+  h.send(message(2, "discarded", { url: "https://media.nilla.test/page" }));
   assert.equal(useLifecycle.getState().discarded[h.tab], true);
   h.send(message(3, "ready", {}));
   assert.equal(useLifecycle.getState().discarded[h.tab], undefined);
-  const rebind = { browserId: 9, chromeTabId: 9, lease: { ...lease, bindingGeneration: "4" }, snapshot: { watermark: 1, events: mediaSnapshot(false, { camera: false, microphone: false, screen: false }, { kind: "video", active: false }, [event("discarded", { url: "https://media.ardia.test/swapped" })]) } };
+  const rebind = { browserId: 9, chromeTabId: 9, lease: { ...lease, bindingGeneration: "4" }, snapshot: { watermark: 1, events: mediaSnapshot(false, { camera: false, microphone: false, screen: false }, { kind: "video", active: false }, [event("discarded", { url: "https://media.nilla.test/swapped" })]) } };
   assert.ok(h.send({ ...lease, type: "pageLifecycle", sequence: 4, action: "rebind", creation: rebind }));
   assert.equal(useLifecycle.getState().discarded[h.tab], true);
-  assert.deepEqual(h.calls.filter(([name]) => name === "discarded").map(([, url]) => url), ["https://media.ardia.test/page", "https://media.ardia.test/swapped"]);
+  assert.deepEqual(h.calls.filter(([name]) => name === "discarded").map(([, url]) => url), ["https://media.nilla.test/page", "https://media.nilla.test/swapped"]);
 });
 
 test("known shared page scripts map to native commands and unknown scripts stay unmapped", () => {

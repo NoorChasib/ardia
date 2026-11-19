@@ -1,4 +1,4 @@
-import type { KeptFollows } from "@ardia/shell";
+import type { KeptFollows } from "@nilla/shell";
 import { fieldKeepsKeyboardFrom, focusedFieldInAnotherTab, onFieldAsked } from "../appKeyboard";
 
 const NONE: KeptFollows = { kept: 0, used: 0, dropped: 0 };

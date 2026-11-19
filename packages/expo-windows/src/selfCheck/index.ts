@@ -1,4 +1,4 @@
-import type { AppNative } from "@ardia/shell";
+import type { AppNative } from "@nilla/shell";
 import { requireNativeModule } from "../modules";
 import type { Check } from "./check";
 import { checks as appSystemChecks } from "./appSystem";
@@ -41,28 +41,29 @@ import { checks as shellChecks } from "./shell";
 import { checks as storageChecks } from "./storage";
 import { checks as symbolChecks } from "./symbol";
 import { checks as syncChecks } from "./sync";
+import { checks as syncFolderChecks } from "./syncFolders";
 import { checks as textFocusChecks } from "./textFocus";
 import { checks as viewChecks } from "./views";
 import { checks as windowDragChecks } from "./windowDrag";
 import { checks as windowChecks } from "./windows";
 
-const areas: Check[][] = [windowChecks, appSystemChecks, shellChecks, storageChecks, viewChecks, menuChecks, symbolChecks, motionChecks, pagerChecks, pagePictureChecks, materialChecks, windowDragChecks, popupWindowChecks, fileDropChecks, focusChecks, idleTimeChecks, textFocusChecks, launchLinkChecks, engineHostChecks, engineBackForwardChecks, engineTopEdgeChecks, engineSleepChecks, engineLinkScriptChecks, engineLinkScriptPageChecks, engineSleepKeptChecks, engineSleepNavigationChecks, engineSleepPlaceChecks, engineAutoplayChecks, engineAutoplayAskChecks, engineBlankChecks, engineHistoryChecks, engineCallChecks, importChecks, importFirefoxChecks, introMusicChecks, desktopCallChecks, externalAppChecks, syncChecks, heldDialogChecks, heldMenuChecks, meadowChecks, passwordLoginChecks, engineSettingsChecks];
+const areas: Check[][] = [windowChecks, appSystemChecks, shellChecks, storageChecks, viewChecks, menuChecks, symbolChecks, motionChecks, pagerChecks, pagePictureChecks, materialChecks, windowDragChecks, popupWindowChecks, fileDropChecks, focusChecks, idleTimeChecks, textFocusChecks, launchLinkChecks, engineHostChecks, engineBackForwardChecks, engineTopEdgeChecks, engineSleepChecks, engineLinkScriptChecks, engineLinkScriptPageChecks, engineSleepKeptChecks, engineSleepNavigationChecks, engineSleepPlaceChecks, engineAutoplayChecks, engineAutoplayAskChecks, engineBlankChecks, engineHistoryChecks, engineCallChecks, importChecks, importFirefoxChecks, introMusicChecks, desktopCallChecks, externalAppChecks, syncChecks, syncFolderChecks, heldDialogChecks, heldMenuChecks, meadowChecks, passwordLoginChecks, engineSettingsChecks];
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 
 export async function runSelfCheck() {
   let passed = 0;
   let failed = 0;
-  const only = requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().test.selfCheckOnly;
+  const only = requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().test.selfCheckOnly;
   for (const check of stageChecks() ?? [...areas.flat(), ...registeredChecks()].filter((each) => !only || each.name.startsWith(only))) {
     try {
       await check.run();
       passed += 1;
-      console.info(`[ardia windows] self-check pass: ${check.name}`);
+      console.info(`[nilla windows] self-check pass: ${check.name}`);
     } catch (error) {
       failed += 1;
-      console.info(`[ardia windows] self-check FAIL: ${check.name}: ${message(error)}`);
+      console.info(`[nilla windows] self-check FAIL: ${check.name}: ${message(error)}`);
     }
   }
-  console.info(`[ardia windows] self-check done: ${passed} passed, ${failed} failed`);
+  console.info(`[nilla windows] self-check done: ${passed} passed, ${failed} failed`);
 }

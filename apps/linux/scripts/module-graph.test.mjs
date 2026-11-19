@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import test from "node:test";
-import { build } from "vite";
+import { build, resolveConfig } from "vite";
 import { inputAdapters, rawBookmarkAdapter } from "../inputAdapters.ts";
 
 const nodeBinary = process.versions.bun ? "node" : process.execPath;
@@ -24,7 +25,7 @@ const productionGraph = () => production ??= (async () => {
     logLevel: "error",
     build: { write: false },
     plugins: [{
-      name: "ardia-linux:test-module-graph",
+      name: "nilla-linux:test-module-graph",
       generateBundle() {
         graph = new Map([...this.getModuleIds()].map((id) => [id, this.getModuleInfo(id)]));
       },
@@ -168,12 +169,12 @@ test("production graph uses current Linux adapters and one canonical shared stat
     ["extensions/SidePanel", ["ExtensionSidePanel"]],
     ["bookmarks/BookmarkDialog", ["BookmarkDialog"]],
     ["bookmarks/EditBookmarkDialog", ["EditBookmarkDialog"]],
-    ["littleArdia/LittleArdiaWindow", ["LittleArdiaWindow"]],
+    ["littleNilla/LittleNillaWindow", ["LittleNillaWindow"]],
   ];
   for (const [feature, names] of lazyModules) {
     const original = `${browser}components/${feature}.tsx`;
-    const wrapper = `\0ardia-lazy:${original}`;
-    const eager = `${original}?ardia-eager`;
+    const wrapper = `\0nilla-lazy:${original}`;
+    const eager = `${original}?nilla-eager`;
     assert.ok(graph.has(wrapper), feature);
     assert.ok(graph.has(eager), feature);
     assert.ok(!graph.has(original), `${feature} has no second eager instance`);
@@ -183,7 +184,7 @@ test("production graph uses current Linux adapters and one canonical shared stat
   }
 
   const extensionsPane = graph.get(`${browser}components/settings/panes/ProfileExtensions.tsx`);
-  const lazyOverlays = `\0ardia-lazy:${browser}components/extensions/ExtensionOverlays.tsx`;
+  const lazyOverlays = `\0nilla-lazy:${browser}components/extensions/ExtensionOverlays.tsx`;
   assert.ok(extensionsPane.importedIds.includes(`${linux}SettingsInstallDialog.tsx`), "the Extensions pane hosts its install dialog through the Linux host");
   assert.ok(!extensionsPane.importedIds.includes(lazyOverlays));
   assert.deepEqual(graph.get(`${linux}SettingsInstallDialog.tsx`)?.importers, [`${browser}components/settings/panes/ProfileExtensions.tsx`]);
@@ -271,7 +272,7 @@ test("production SiteConnection replacement reaches the real SiteControls and th
 });
 
 test("the Linux connection wrapper renders unknown honestly and delegates every known state and certificate details", { timeout: 120000 }, async () => {
-  const directory = await mkdtemp(join(tmpdir(), "ardia-site-connection-"));
+  const directory = await mkdtemp(join(tmpdir(), "nilla-site-connection-"));
   const entry = `${root}scripts/.page-state-entry-${process.pid}.tsx`;
   try {
     await writeFile(entry, `import ${JSON.stringify(`${browser}state/browser/store.ts`)};\nimport {createElement} from "react";\nimport {renderToStaticMarkup} from "react-dom/server";\nimport * as linux from ${JSON.stringify(siteConnectionAdapter)};\nimport * as shared from ${JSON.stringify(siteConnection)};\nexport {linux,shared};\nexport const render=(kind,security)=>renderToStaticMarkup(createElement(linux[kind],{security,open:false,onPress:()=>{}}));\n`);
@@ -302,3 +303,25 @@ test("Linux shell exports and shared package Expo dialogs use one adapter", () =
   assert.equal(result.status, 0, result.stderr);
   assert.match(result.stdout, /share the production adapter/);
 });
+
+const shimmedPackages = [
+  ["@ardia/ardiacore", "ardiacore.tsx"],
+  ["@nilla/shell", "shell.tsx"],
+  ["@nilla/sync", "sync.tsx"],
+  ["@nilla/shaders", "shaders.tsx"],
+  ["@nilla/import", "import.tsx"],
+];
+const engineScope = shimmedPackages[0][0].split("/")[0];
+const retiredNativePackages = shimmedPackages.slice(1).map(([spec]) => `${engineScope}/${spec.split("/")[1]}`);
+
+for (const [app, appRoot] of [["Linux", root], ["demo", `${repo}packages/demo/`]]) {
+  test(`${app} resolves the engine package and the renamed native packages to its shims, and @nilla/core to the workspace package`, { timeout: 60000 }, async () => {
+    const config = await resolveConfig({ root: appRoot, configFile: `${appRoot}vite.config.ts`, logLevel: "error" }, "build");
+    const resolve = config.createResolver();
+    const importer = `${browser}platform/nativeApi.ts`;
+    for (const [spec, shim] of shimmedPackages) assert.equal(await resolve(spec, importer), `${appRoot}src/shims/${shim}`, spec);
+    for (const spec of ["@nilla/ardiacore", ...retiredNativePackages]) assert.ok(!(await resolve(spec, importer))?.startsWith(`${appRoot}src/shims/`), spec);
+    const core = await resolve("@nilla/core", importer);
+    assert.ok(core && realpathSync(core) === `${repo}packages/core/src/index.ts`, core);
+  });
+}

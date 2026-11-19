@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import type { FolderIconProps } from "@ardia-real/shell";
+import type { FolderIconProps } from "@nilla-real/shell";
 import { Symbol } from "./Symbol";
 
 const DEFAULT_SIDE = 16;

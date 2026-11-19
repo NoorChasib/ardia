@@ -5,7 +5,7 @@ const listeners = [];
 let on = true;
 globalThis.acTestNativeModules = {
   ...globalThis.acTestNativeModules,
-  ArdiaShell: {
+  NillaShell: {
     isHighContrast: () => Promise.resolve(on),
     addListener: (eventName, listener) => {
       listeners.push([eventName, listener]);
@@ -19,7 +19,7 @@ test("a Windows contrast theme is read from the shell, and a failing call reads 
   assert.equal(await highContrastOn(), true);
   on = false;
   assert.equal(await highContrastOn(), false);
-  globalThis.acTestNativeModules.ArdiaShell.isHighContrast = () => Promise.reject(new Error("gone"));
+  globalThis.acTestNativeModules.NillaShell.isHighContrast = () => Promise.reject(new Error("gone"));
   assert.equal(await highContrastOn(), false);
 });
 

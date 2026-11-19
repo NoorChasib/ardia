@@ -2,15 +2,13 @@
 import PackageDescription
 
 let package = Package(
-  name: "ArdiaSyncCore",
+  name: "NillaSyncCore",
   platforms: [.macOS(.v14), .iOS(.v17)],
   products: [
-    .library(name: "ArdiaSyncCore", targets: ["ArdiaSyncCore"]),
-    .executable(name: "legacy-migration", targets: ["LegacyMigrationTool"]),
+    .library(name: "NillaSyncCore", targets: ["NillaSyncCore"]),
   ],
   targets: [
-    .target(name: "ArdiaSyncCore", path: "ios/Core"),
-    .executableTarget(name: "LegacyMigrationTool", dependencies: ["ArdiaSyncCore"], path: "tools/legacy-migration"),
-    .testTarget(name: "ArdiaSyncCoreTests", dependencies: ["ArdiaSyncCore"], path: "tests", exclude: ["fixtures"]),
+    .target(name: "NillaSyncCore", path: "ios/Core"),
+    .testTarget(name: "NillaSyncCoreTests", dependencies: ["NillaSyncCore"], path: "tests", exclude: ["fixtures"]),
   ]
 )

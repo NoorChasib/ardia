@@ -66,10 +66,10 @@ type NativeProps = Omit<
   onFieldScroll?: () => void;
 };
 
-const hasNative = requireOptionalNativeModule("ArdiaPhoneCompletingField") !== null;
+const hasNative = requireOptionalNativeModule("NillaPhoneCompletingField") !== null;
 
 let nativeView: ComponentType<NativeProps> | undefined;
-const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("ArdiaPhoneCompletingField"));
+const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("NillaPhoneCompletingField"));
 
 export const completingFieldIsNative = () => hasNative;
 

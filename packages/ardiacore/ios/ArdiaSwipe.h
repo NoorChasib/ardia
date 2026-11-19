@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@protocol ArdiaSwipeTarget <NSObject>
+@protocol NillaSwipeTarget <NSObject>
 @property (nonatomic, readonly) BOOL canSwipeBack;
 @property (nonatomic, readonly) BOOL canSwipeForward;
 @property (nonatomic, readonly) BOOL tracksUnavailableDirections;
@@ -13,16 +13,16 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)swipeEvent:(NSDictionary<NSString *, id> *)event;
 @end
 
-@interface ArdiaSwipe : NSObject
+@interface NillaSwipe : NSObject
 
 + (void)performHaptic:(NSString *)pattern;
 
-+ (void)addTarget:(NSView<ArdiaSwipeTarget> *)target;
-+ (void)removeTarget:(NSView<ArdiaSwipeTarget> *)target;
++ (void)addTarget:(NSView<NillaSwipeTarget> *)target;
++ (void)removeTarget:(NSView<NillaSwipeTarget> *)target;
 
 @end
 
-@interface ArdiaSwipe (Simulation)
+@interface NillaSwipe (Simulation)
 
 + (void)simulateInWindow:(NSWindow *)window
                    point:(NSPoint)point

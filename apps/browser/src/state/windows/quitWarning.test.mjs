@@ -43,7 +43,7 @@ test("the warning asks only on Windows, with the setting on, and never on a hidd
 test("the warning uses the Mac's words and its don't-ask-again", () => {
   const mac = readFileSync(new URL("../../../../../packages/shell/ios/QuitFlow.swift", import.meta.url), "utf8");
   assert.match(mac, /Are you sure you want to quit \\\(ProcessInfo\.processInfo\.processName\)\?/);
-  assert.equal(QUIT_WARNING.title, "Are you sure you want to quit Ardia?");
+  assert.equal(QUIT_WARNING.title, "Are you sure you want to quit Nilla?");
   assert.ok(mac.includes(`"${QUIT_WARNING.message}"`));
   assert.ok(mac.includes(`addButton(withTitle: "${QUIT_WARNING.confirmTitle}")`));
   assert.ok(mac.includes(`"${QUIT_WARNING.suppression.replace("’", "'")}"`));
@@ -51,7 +51,7 @@ test("the warning uses the Mac's words and its don't-ask-again", () => {
 
 test("on the Mac closing a window never shows the quit warning", async () => {
   let asked = 0;
-  shellNativeModules.ArdiaDialogs.confirm = () => {
+  shellNativeModules.NillaDialogs.confirm = () => {
     asked += 1;
     return Promise.resolve({ confirmed: false, suppressed: false });
   };
@@ -60,11 +60,11 @@ test("on the Mac closing a window never shows the quit warning", async () => {
   const id = useBrowser.getState().createWindow({ url: "https://a.com" });
   assert.equal(quitWarningMayAsk(), false);
   assert.equal(await askBeforeQuitting(id), "notAsked");
-  const { closeLittleArdia } = await import("../littleArdia/actions.ts");
+  const { closeLittleNilla } = await import("../littleNilla/actions.ts");
   const { isWindowClosing } = await import("./closingWindows.ts");
   const small = useBrowser.getState().createWindow({ url: "https://b.com", kind: "small" });
-  closeLittleArdia(small);
-  assert.equal(isWindowClosing(small) || !useBrowser.getState().windows[small], true, "Little Ardia still starts closing at once");
+  closeLittleNilla(small);
+  assert.equal(isWindowClosing(small) || !useBrowser.getState().windows[small], true, "Little Nilla still starts closing at once");
   assert.equal(asked, 0);
 });
 
@@ -75,7 +75,7 @@ test("only Windows quits when its last window closes", () => {
 });
 
 
-test("an open pop-up keeps Ardia running: closing the last browser window neither asks nor quits, and closing the last pop-up does", () => {
+test("an open pop-up keeps Nilla running: closing the last browser window neither asks nor quits, and closing the last pop-up does", () => {
   assert.deepEqual(staying(["w1", "popup:a1"], ["w1"]), ["popup:a1"], "a pop-up window stays open after the last browser window closes");
   assert.equal(asksBeforeQuit({ ...asking, staysOpen: staying(["w1", "popup:a1"], ["w1"]) }), false, "so closing the last browser window asks nothing");
   const lastPopup = windowsStayingOpen(["popup:a1"], "popup:a1", new Set(), () => false);
@@ -113,7 +113,7 @@ useBrowser.getState().hydrate({});
 useBrowser.getState().updateSettings({ warnBeforeQuitting: true });
 let asked = 0;
 let answer = false;
-shellNativeModules.ArdiaDialogs.confirm = () => { asked += 1; return Promise.resolve({ confirmed: answer, suppressed: false }); };
+shellNativeModules.NillaDialogs.confirm = () => { asked += 1; return Promise.resolve({ confirmed: answer, suppressed: false }); };
 windows.open.set("popup:last", {});
 requestWindowClose("popup:last");
 await settle();
@@ -142,7 +142,7 @@ useBrowser.getState().hydrate({});
 useBrowser.getState().updateSettings({ warnBeforeQuitting: true });
 let asked = 0;
 let answer = false;
-shellNativeModules.ArdiaDialogs.confirm = () => { asked += 1; return Promise.resolve({ confirmed: answer, suppressed: false }); };
+shellNativeModules.NillaDialogs.confirm = () => { asked += 1; return Promise.resolve({ confirmed: answer, suppressed: false }); };
 const closeLast = async (id, close = () => requestWindowClose(id)) => {
   windows.open.clear();
   windows.open.set(id, { kind: id });
@@ -197,7 +197,7 @@ const S = () => useBrowser.getState();
 const settle = async () => { for (let turn = 0; turn < 12; turn++) await new Promise((resolve) => setTimeout(resolve, 0)); };
 const asked = [];
 let answer = { confirmed: false, suppressed: false };
-shellNativeModules.ArdiaDialogs.confirm = (options) => { asked.push(options.title); return Promise.resolve(answer); };
+shellNativeModules.NillaDialogs.confirm = (options) => { asked.push(options.title); return Promise.resolve(answer); };
 const fresh = (settings) => {
   S().hydrate({ profiles: { default: { id: "default", name: "Personal", color: "plum", icon: null, createdAt: 0 } }, profileOrder: ["default"] });
   S().updateSettings({ warnBeforeQuitting: true, warnBeforeClosingWindow: true, warnBeforeClosingLastTab: true, ...settings });
@@ -253,7 +253,7 @@ const asked = [];
 const held = [];
 let holding = false;
 let answer = { confirmed: true, suppressed: false };
-shellNativeModules.ArdiaDialogs.confirm = (options) => {
+shellNativeModules.NillaDialogs.confirm = (options) => {
   asked.push(options.title);
   return holding ? new Promise((resolve) => held.push(resolve)) : Promise.resolve(answer);
 };

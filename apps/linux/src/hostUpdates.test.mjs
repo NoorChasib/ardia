@@ -4,17 +4,17 @@ import { CHECK_EVERY_MS, FIRST_CHECK_AFTER_MS, UPDATE_CHECK_LOCK, UPDATE_PREFERE
 import { compareVersions, linuxReleases, newestRelease } from "./updateReleases.ts";
 import { takeUpdateCounts } from "../../browser/src/state/telemetry/updateCounts.ts";
 
-const page = (tag) => `https://github.com/ardia-browser/ardia/releases/tag/${tag}`;
-const release = (tag, { prerelease = false, draft = false, assets = [`Ardia-${tag.replace(/^v/, "")}-linux-x64.tar.xz`] } = {}) =>
+const page = (tag) => `https://github.com/NoorChasib/nilla/releases/tag/${tag}`;
+const release = (tag, { prerelease = false, draft = false, assets = [`Nilla-${tag.replace(/^v/, "")}-linux-x64.tar.xz`] } = {}) =>
   ({ tag_name: tag, html_url: page(tag), prerelease, draft, assets: assets.map((name) => ({ name })) });
 const LIST = [
   release("engine-0be922b5d707", { prerelease: true, assets: ["ArdiaCore-0be922b5d707-linux-x64.tar.xz"] }),
   release("v0.2.47-nightly.3", { prerelease: true }),
   release("v0.2.47-nightly.2", { prerelease: true }),
-  release("v0.2.46", { assets: ["Ardia-0.2.46.dmg", "Ardia-0.2.46-linux-x64.tar.xz", "Ardia-0.2.46-linux-x64.deb"] }),
-  release("v0.2.48", { assets: ["Ardia-0.2.48.dmg"] }),
+  release("v0.2.46", { assets: ["Nilla-0.2.46.dmg", "Nilla-0.2.46-linux-x64.tar.xz", "Nilla-0.2.46-linux-x64.deb"] }),
+  release("v0.2.48", { assets: ["Nilla-0.2.48.dmg"] }),
   release("v0.2.49", { draft: true }),
-  { ...release("v0.2.50"), html_url: "https://evil.example/ardia" },
+  { ...release("v0.2.50"), html_url: "https://evil.example/nilla" },
 ];
 
 test("release tags compare by version, nightly builds before their stable release", () => {
@@ -64,47 +64,48 @@ function harness({ version = "0.2.45", body = JSON.stringify(LIST), status = 200
   return { updater, docs, seen };
 }
 
-test("Check Now finds the newest stable Linux release, offers its page and records the check", async () => {
+test("Check Now never reaches the engine's release list behind the Layer 1 gate, and says it couldn't check", async () => {
   takeUpdateCounts();
   const { updater, docs, seen } = harness();
   await updater.methods.checkForUpdates();
-  assert.deepEqual(seen.asked, [["0.2.46", "0.2.45"]]);
-  assert.deepEqual(seen.opened, [page("v0.2.46")]);
+  assert.equal(seen.requests, 0);
+  assert.deepEqual(seen.asked, []);
+  assert.deepEqual(seen.opened, []);
+  assert.deepEqual(seen.told, ["Nilla couldn't check for updates"]);
   const state = await updater.methods.updaterState();
-  assert.equal(state.configured, true);
-  assert.equal(state.lastCheck, 1_000);
-  assert.deepEqual(state.switchCheck, { phase: "found", channel: "stable", version: "0.2.46" });
+  assert.equal(state.switchCheck.phase, "failed");
   assert.equal(state.automaticDownloads, false);
-  assert.equal(JSON.parse(docs.get(UPDATE_PREFERENCES)).lastCheck, 1_000);
+  assert.equal(docs.has(UPDATE_PREFERENCES) ? JSON.parse(docs.get(UPDATE_PREFERENCES)).lastCheck : null, null);
   const counts = takeUpdateCounts();
   assert.equal(counts.update_checks_asked, 1);
-  assert.equal(counts.update_checks_found, 1);
-  assert.equal(counts.update_release_page_opens, 1);
+  assert.equal(counts.update_check_failures, 1);
 });
 
-test("a nightly build follows nightly releases, and switching channel checks again", async () => {
+test("a nightly build follows the nightly channel, and switching channel still never reaches the engine", async () => {
   const { updater, seen } = harness({ version: "0.2.47-nightly.2" });
   assert.equal((await updater.methods.updaterState()).channel, "nightly");
   await updater.methods.checkForUpdates();
-  assert.deepEqual(seen.asked.at(-1), ["0.2.47-nightly.3", "0.2.47-nightly.2"]);
   await updater.methods.setUpdateChannel("stable");
   assert.equal((await updater.methods.updaterState()).channel, "stable");
-  assert.deepEqual(seen.told, ["Ardia is up to date"], "0.2.46 is older than this nightly");
+  assert.equal(seen.requests, 0);
+  assert.deepEqual(seen.asked, []);
 });
 
-test("an automatic check offers a new release once and never opens a dialog", async () => {
+test("an automatic check offers nothing and never opens a dialog behind the Layer 1 gate", async () => {
   const { updater, seen } = harness();
   await updater.check(false);
   await updater.check(false);
-  assert.deepEqual(seen.offered, ["0.2.46"]);
+  assert.deepEqual(seen.offered, []);
   assert.deepEqual(seen.asked, []);
+  assert.deepEqual(seen.told, []);
+  assert.equal(seen.requests, 0);
 });
 
 test("a failed check says so when asked, counts the failure and shows failed in Settings", async () => {
   takeUpdateCounts();
   const { updater, seen } = harness({ status: 0, body: "" });
   await updater.methods.checkForUpdates();
-  assert.deepEqual(seen.told, ["Ardia couldn't check for updates"]);
+  assert.deepEqual(seen.told, ["Nilla couldn't check for updates"]);
   assert.equal((await updater.methods.updaterState()).switchCheck.phase, "failed");
   assert.equal(takeUpdateCounts().update_check_failures, 1);
 });
@@ -141,40 +142,39 @@ test("turning automatic checks off or switching channel in the Settings window r
   await settings.updater.methods.setUpdateChannel("nightly");
   assert.equal((await browser.updater.methods.updaterState()).channel, "nightly");
   await browser.updater.methods.checkForUpdates();
-  assert.deepEqual(browser.seen.asked.at(-1), ["0.2.47-nightly.3", "0.2.45"]);
+  assert.equal(browser.seen.requests, 0);
   const saved = JSON.parse(disk.get(UPDATE_PREFERENCES));
-  assert.equal(saved.automaticChecks, false, "recording the check doesn't write the old switch back");
+  assert.equal(saved.automaticChecks, false, "a refused check doesn't write the old switch back");
   assert.equal(saved.channel, "nightly");
-  assert.equal(saved.lastCheck, 1_000);
 });
 
-test("the kill-switch file comes through the native host and every other fetch is left alone", async () => {
+test("the engine's kill-switch file is refused before the native host, and every other fetch is left alone", async () => {
   const calls = [];
   const host = { bootstrap: { capabilities: ["ArdiaShell.fetchKillSwitches"] }, invoke: async (method) => (calls.push(method), { status: 200, body: "{\"version\":1,\"switches\":{}}" }) };
   const original = async (input) => new Response(`original ${input}`);
   const fetchFn = linuxSwitchesFetch(host, original);
-  assert.equal(await (await fetchFn("https://ardia.dev/switches.json")).text(), "{\"version\":1,\"switches\":{}}");
+  await assert.rejects(fetchFn("https://ardia.dev/switches.json"), { code: "ERR_UNSUPPORTED" });
   assert.equal(await (await fetchFn("https://example.com/")).text(), "original https://example.com/");
-  assert.deepEqual(calls, ["ArdiaShell.fetchKillSwitches"]);
-  const refused = linuxSwitchesFetch({ ...host, invoke: async () => ({ status: 0, body: "" }) }, original);
-  await assert.rejects(refused("https://ardia.dev/switches.json"), TypeError);
+  assert.deepEqual(calls, []);
 });
 
-test("the switch refresh through the native host updates the cached switches", async () => {
+test("with no switches URL the switch refresh is off and never asks the native host", async () => {
   globalThis.__DEV__ = false;
   await import("../../browser/src/test-native/index.ts");
   const { refreshSwitches, resetRefreshForTests } = await import("../../browser/src/platform/killSwitches.ts");
   resetRefreshForTests();
-  const host = { bootstrap: { capabilities: [] }, invoke: async () => ({ status: 200, body: JSON.stringify({ version: 1, switches: { newTabPrewarm: false } }) }) };
-  assert.equal(await refreshSwitches(linuxSwitchesFetch(host, async () => { throw new Error("the shell can't fetch"); })), "updated");
+  const asked = [];
+  const host = { bootstrap: { capabilities: [] }, invoke: async (method) => (asked.push(method), { status: 200, body: JSON.stringify({ version: 1, switches: { newTabPrewarm: false } }) }) };
+  assert.equal(await refreshSwitches(linuxSwitchesFetch(host, async () => { throw new Error("the shell can't fetch"); })), "off");
+  assert.deepEqual(asked, []);
 });
 
 test("a launch started with --no-sandbox says why once, in the window that ran the launch, and counts it", async () => {
   const { noticeUnsandboxedLaunch, sandboxNotice } = await import("./sandboxNotice.ts");
   assert.equal(sandboxNotice(undefined), null);
-  const reason = "Ardia was started with --no-sandbox";
-  assert.equal(sandboxNotice(reason).message, "Ardia was started with --no-sandbox. Start Ardia without --no-sandbox to turn the sandbox back on.");
-  assert.match(sandboxNotice("--no-sandbox was passed to chrome directly").message, /^--no-sandbox was passed to chrome directly\. Start Ardia without --no-sandbox/);
+  const reason = "Nilla was started with --no-sandbox";
+  assert.equal(sandboxNotice(reason).message, "Nilla was started with --no-sandbox. Start Nilla without --no-sandbox to turn the sandbox back on.");
+  assert.match(sandboxNotice("--no-sandbox was passed to chrome directly").message, /^--no-sandbox was passed to chrome directly\. Start Nilla without --no-sandbox/);
   takeUpdateCounts();
   const shown = [];
   const host = { bootstrap: { sandboxDecision: reason } };
@@ -188,7 +188,7 @@ test("a launch started with --no-sandbox says why once, in the window that ran t
   assert.deepEqual(shown, [], "the first-run onboarding covers toasts, so the notice waits for it to close");
   close();
   assert.equal(await pending, true);
-  assert.deepEqual(shown.map(([windowId, title]) => [windowId, title]), [["w1", "Ardia is running without Chromium's sandbox"]]);
+  assert.deepEqual(shown.map(([windowId, title]) => [windowId, title]), [["w1", "Nilla is running without Chromium's sandbox"]]);
   assert.equal(takeUpdateCounts().launches_without_sandbox, 1);
 });
 

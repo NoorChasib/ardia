@@ -1,5 +1,5 @@
 import { createElement, forwardRef, useContext, useEffect, useMemo, useRef, type ComponentType, type ReactNode } from "react";
-import type { WindowDragRegionProps } from "@ardia/shell";
+import type { WindowDragRegionProps } from "@nilla/shell";
 import { RootTagContext, View } from "react-native";
 import type { EventSubscription } from "./events";
 import type { Fiber } from "./fiber";
@@ -32,7 +32,7 @@ const HOST_COMPONENT = 5;
 const MOST_ANCESTORS = 512;
 const RIGHT_BUTTON = 2;
 
-const windows = () => requireNativeModule<Pick<AppWindowsModule, "beginWindowDrag" | "pressDragArea" | "toggleMaximize" | "addListener">>("ArdiaAppWindows");
+const windows = () => requireNativeModule<Pick<AppWindowsModule, "beginWindowDrag" | "pressDragArea" | "toggleMaximize" | "addListener">>("NillaAppWindows");
 
 const bands = new Map<number, { current: unknown }>();
 let titleBandPresses: EventSubscription | null = null;
@@ -128,7 +128,7 @@ function dispatchCapture(path: HostFiber[], name: string, nativeEvent: object) {
     try {
       (handler as (event: unknown) => void)(event);
     } catch (error) {
-      console.warn("[ardia windows] a press on the title band could not reach the UI", error);
+      console.warn("[nilla windows] a press on the title band could not reach the UI", error);
     }
     if (stopped) return;
   }

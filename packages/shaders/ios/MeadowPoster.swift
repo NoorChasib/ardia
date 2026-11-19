@@ -7,7 +7,7 @@ struct MeadowPoster: Decodable {
   let aspect: Double
   let horizon: Double
 
-  static let bundle: Bundle? = Bundle(for: MeadowView.self).url(forResource: "ArdiaMeadow", withExtension: "bundle").flatMap(Bundle.init(url:))
+  static let bundle: Bundle? = Bundle(for: MeadowView.self).url(forResource: "NillaMeadow", withExtension: "bundle").flatMap(Bundle.init(url:))
 
   static let all: [MeadowPoster] = {
     guard let url = bundle?.url(forResource: "posters", withExtension: "json"), let data = try? Data(contentsOf: url) else { return [] }

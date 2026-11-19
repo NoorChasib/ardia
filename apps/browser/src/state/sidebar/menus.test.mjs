@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-globalThis.acTestNativeModules = { ArdiaSharedFolders: { location: () => ({ path: "/scratch", iCloudAvailable: true, iCloudPath: "/scratch" }) } };
+globalThis.acTestNativeModules = { NillaSharedFolders: { location: () => ({ path: "/scratch", iCloudAvailable: true, iCloudPath: "/scratch" }) } };
 const { useBrowser } = await import("../browser/store.ts");
 const { tabMenuItems } = await import("./tabMenu.ts");
 const { multiTabMenuItems } = await import("./multiTabMenu.ts");
@@ -266,7 +266,7 @@ test("a group's colour menu: None, Neutral, the site's colour, then the palette;
   const g = S().groupTabs([ids[1]], { name: "G", pinned: false });
   const items = groupMenuItems(S(), w, g);
   assert.deepEqual(sub(items, "color").slice(0, 4), ["None", "Neutral ✓", "Match Site Color (off)", "---"]);
-  const shell = shellNativeModules.ArdiaMenus;
+  const shell = shellNativeModules.NillaMenus;
   const real = shell.showMenu;
   shell.showMenu = (shown) => Promise.resolve(shown.find((it) => it.id === "color").children.find((it) => it.title === "Blue").id);
   try {
@@ -279,7 +279,7 @@ test("a group's colour menu: None, Neutral, the site's colour, then the palette;
 
 test("Move to Window › New Window moves the tab to a new window", async () => {
   const { w, ids } = windowWith("a", "b");
-  const shell = shellNativeModules.ArdiaMenus;
+  const shell = shellNativeModules.NillaMenus;
   const real = shell.showMenu;
   shell.showMenu = (shown) => Promise.resolve(shown.find((it) => it.id === "moveToWindow").children.at(-1).id);
   try {
@@ -333,7 +333,7 @@ test("a rebound key moves the hint with it, and an alternate keeps its pair only
 });
 
 async function whileMenuIsUp(open, meanwhile, choice) {
-  const shell = shellNativeModules.ArdiaMenus;
+  const shell = shellNativeModules.NillaMenus;
   const real = shell.showMenu;
   let pick;
   shell.showMenu = () => new Promise((resolve) => (pick = resolve));
@@ -477,11 +477,11 @@ test("Sleep Tabs on a group asks Chrome about its hidden loaded tabs, nested gro
   takeTabSleepCounts();
   await whileMenuIsUp(() => openGroupMenu(w, outer), () => {}, "sleep");
   await new Promise((resolve) => setImmediate(resolve));
-  assert.deepEqual(asked.map(([id]) => id).sort(), [a, c].sort(), "b plays through Ardia's own player, e is shown and d is outside the group");
+  assert.deepEqual(asked.map(([id]) => id).sort(), [a, c].sort(), "b plays through Nilla's own player, e is shown and d is outside the group");
   assert.ok(asked.every(([, seconds]) => seconds === 0));
   const counts = takeTabSleepCounts();
   assert.equal(counts.groups_slept_from_menu, 1);
-  assert.equal(counts.menu_sleeps_kept_awake, 2, "Ardia kept b and Chrome kept c");
+  assert.equal(counts.menu_sleeps_kept_awake, 2, "Nilla kept b and Chrome kept c");
   useBrowser.setState((s) => ({ live: { ...s.live, [b]: { ...s.live[b], playingAudio: false } } }));
   for (const id of [a, b, c]) lifecycle.noteDiscarded(id);
   assert.ok(top(groupMenuItems(S(), w, inner)).includes("Sleep Tabs [moon.zzz] (off)"), "nothing left to sleep");

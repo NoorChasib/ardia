@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mobileSetSources, mobileSuggest } from "@ardia/core/src/mobile.ts";
+import { mobileSetSources, mobileSuggest } from "@nilla/core/src/mobile.ts";
 import type { BrowserTab } from "../tabs/tabModels.ts";
 import { buildSources, recentSearches } from "./sources.ts";
 

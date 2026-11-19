@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-namespace ardia_pointer {
+namespace nilla_pointer {
 
 constexpr std::size_t kHistoryLength = 16;
 constexpr double kLongLoopSeconds = 5;

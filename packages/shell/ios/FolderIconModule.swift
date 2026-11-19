@@ -4,7 +4,7 @@ import ExpoModulesCore
 
 public class FolderIconModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaFolderIcon")
+    Name("NillaFolderIcon")
 
     View(FolderIconView.self) {
       Prop("open") { (view: FolderIconView, open: Bool) in view.wantsOpen = open }

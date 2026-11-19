@@ -1,13 +1,13 @@
 # Browser-agent bench
 
-Claude Code and Codex driving Ardia through `ardia browse` against Aside's built-in agent. Every contender gets the
+Claude Code and Codex driving Nilla through `nilla-browser browse` against Aside's built-in agent. Every contender gets the
 same nine local web apps and the same prompt. A checker on the app's own server grades each run.
 
 ```
 tasks.json          the registry both harnesses read
 tasks/benchhttp.py  the stdlib HTTP helpers every task server uses
 tasks/<id>/         server.py, fixture/ (the app), selftest.py (checker proof over HTTP)
-harness/bench.py    the Ardia-side harness and the plan runner (python3 -I harness/bench.py --help)
+harness/bench.py    the Nilla-side harness and the plan runner (python3 -I harness/bench.py --help)
 plans/*.json        plans: tasks x contenders x repeats
 ```
 
@@ -68,8 +68,8 @@ three things:
 | `prompt` | the user's request, verbatim, the same for every contender |
 | `today` | the date the task's app treats as today; every side's prompt ends with "Today is Friday, November 6, 2026." so an agent whose own clock has moved past the fixture's dates doesn't stop to ask |
 
-The Ardia side appends one line to the prompt, naming how to reach the instance: ``Use the `ardia` command with
-`--port 9371` to reach this Ardia instance.``
+The Nilla side appends one line to the prompt, naming how to reach the instance: ``Use the `nilla-browser` command with
+`--port 9371` to reach this Nilla instance.``
 
 ## Running
 
@@ -77,27 +77,27 @@ Copy a Release build into the bench home and run the copy. Never run the build i
 never point the harness at `/Applications`:
 
 ```sh
-mkdir -p ~/ardia-scratch/bench-proper/app
-ditto apps/browser/build-engine-cli/Build/Products/Release/Ardia.app ~/ardia-scratch/bench-proper/app/Ardia.app
+mkdir -p ~/nilla-scratch/bench-proper/app
+ditto apps/browser/build-engine-cli/Build/Products/Release/Nilla.app ~/nilla-scratch/bench-proper/app/Nilla.app
 cd apps/cli/bench
 python3 -I harness/bench.py freeze-cli
-python3 -I harness/bench.py run research claude try-1 --results ~/ardia-scratch/bench-proper/results/adhoc
+python3 -I harness/bench.py run research claude try-1 --results ~/nilla-scratch/bench-proper/results/adhoc
 python3 -I harness/bench.py plan plans/full.json --dry-run
-python3 -I harness/bench.py plan plans/full.json --results ~/ardia-scratch/bench-proper/results/<name>
+python3 -I harness/bench.py plan plans/full.json --results ~/nilla-scratch/bench-proper/results/<name>
 python3 -I harness/bench.py plan plans/realism.json --dry-run --max-lanes 12
 python3 -I harness/bench.py servers start calendar --port-offset 1000
 python3 -I harness/bench.py stop
 ```
 
-- **`freeze-cli`** snapshots `apps/cli` into its own venv. Every run uses that `ardia` (`--cli installed` uses
-  `~/.local/bin/ardia` instead), so edits made during a plan don't leak into it. `freeze-cli --name N` freezes into
+- **`freeze-cli`** snapshots `apps/cli` into its own venv. Every run uses that `nilla-browser` (`--cli installed`
+  uses `~/.local/bin/nilla-browser` instead), so edits made during a plan don't leak into it. `freeze-cli --name N` freezes into
   `devbin-N` and `cli/N.json` instead and leaves the default alone; a plan with `"cli": "dev:N"` uses it, so a rerun
   of a changed CLI can run next to a plan still using the old one.
-- **Each Ardia-side run** does the following, in order:
+- **Each Nilla-side run** does the following, in order:
   1. Starts the task's server.
   2. Reuses or launches one hidden instance: `open -g -n` with `ARDIA_BACKGROUND=1`, its own `ARDIA_DATA_DIR`, a
      DevTools port and `ARDIA_TEST=cdpTabsVisible`.
-  3. Stops leftover `ardia browse` daemons and wipes the site notes. Every run is cold unless `--keep-notes`.
+  3. Stops leftover `nilla-browser browse` daemons and wipes the site notes. Every run is cold unless `--keep-notes`.
   4. Resets the task and opens `start_url` as the only tab.
   5. Installs the skill into a fresh workdir.
   6. Starts `claude -p` (stream-json) or `codex exec --json`, with the agent's own variables stripped from its
@@ -121,10 +121,10 @@ python3 -I harness/bench.py stop
   - `"lane_base": N` in the plan numbers its lanes from `N`, so two plans can run at once without sharing task
     servers, ports or lane dirs: with 10, the first lane is `lane10` on +11000. Give the second plan its own
     `BENCH_HOME` too, since `state/servers.json` isn't shared safely between processes.
-  - The plan refuses to start when an offset task port would hit a harness port for any lane (Ardia `port + k`,
+  - The plan refuses to start when an offset task port would hit a harness port for any lane (Nilla `port + k`,
     OpenCode CDP `9571 + k` and relay `19990 + k`, Browser Use CDP `9671 + k`) or land in the ephemeral range
     (49152 and up). `--dry-run` prints that check first.
-  - Aside has one lane, which its contenders take in turn. Each Ardia contender can have several lanes; lane `k`
+  - Aside has one lane, which its contenders take in turn. Each Nilla contender can have several lanes; lane `k`
     gets its own copied app (`app-lane<k>/`), port (`port + k`), data dir and Codex home.
   - Lanes are gated on memory. Used memory is (active + wired + compressed pages) / `hw.memsize`, from `vm_stat`:
     - A new lane opens only under 70%, at least 20 s after the last one started its agent.
@@ -149,15 +149,15 @@ python3 -I harness/bench.py stop
     modeled memory curve.
   - `python3 -I harness/test_scheduler.py` tests the scheduler, and `python3 -I harness/test_grading.py` the pass rule
     and the cleanup of a Chrome or relay that never came up.
-  - Aside contenders shell out to `node ~/ardia-scratch/aside-bench/bin/aside_run.mjs <run_id> --task <id>
+  - Aside contenders shell out to `node ~/nilla-scratch/aside-bench/bin/aside_run.mjs <run_id> --task <id>
     --registry tasks.json --out <results>/aside-raw --model <name> --visibility covered` (`BENCH_ASIDE_DRIVER`
     overrides the path). Their record is normalized into `runs/<run_id>.json`.
   - A plan resumes: finished runs are skipped, and runs that hit a harness error are retried.
 - **A plan file** has `name`, `repeats`, `tasks` (`"all"` or a list of ids; `"all"` is every task in the registry, so
   `full.json`, `opencode.json` and `browseruse.json` now include `bulk`), `contenders`, `results`, and optionally
-  `max_lanes`, `lane_base`, `normal_pressure_only`, `max_load_1m`, `pace_slack`, `max_round_lead` and the Ardia keys (`app`, `port`, `cli`, `ardia_test`). A task the
+  `max_lanes`, `lane_base`, `normal_pressure_only`, `max_load_1m`, `pace_slack`, `max_round_lead` and the Nilla keys (`app`, `port`, `cli`, `nilla_test`). A task the
   registry doesn't have stops the plan, dry run included, with the list of known ids.
-  - `plans/realism.json` re-runs `expenses`, `kanban` and `bulk` three times for all eight contenders (Ardia, OpenCode
+  - `plans/realism.json` re-runs `expenses`, `kanban` and `bulk` three times for all eight contenders (Nilla, OpenCode
     Browse and Browser Use with Claude Code and Codex, and the two Aside agents) on up to 24 lanes (memory gating still
     caps them), into `results/realism-1`.
 - **`summary.json`** is rewritten after every run, in a shape the site renders directly:
@@ -174,11 +174,11 @@ python3 -I harness/bench.py stop
 ## OpenCode Browse side
 
 Contenders with `"kind": "opencode"` (`plans/opencode.json`) run the same agents, models, effort, prompt, deadline,
-checks and token accounting as the Ardia side. Only the browser and its tooling differ: [OpenCode
+checks and token accounting as the Nilla side. Only the browser and its tooling differ: [OpenCode
 Browse](https://github.com/anomalyco/browse), an MCP server and a Chromium extension. The extension drives tabs with
 `chrome.debugger`, and the relay runs the agent's Playwright code over that CDP link.
 
-Everything lives in `BENCH_OPENCODE_HOME` (default `~/ardia-scratch/opencode-browse`). Nothing goes into a real
+Everything lives in `BENCH_OPENCODE_HOME` (default `~/nilla-scratch/opencode-browse`). Nothing goes into a real
 browser profile or an agent's global config:
 
 - `npm/`: `npm install --prefix … @opencode/browse`. `browse install` is never run, since it edits agent configs
@@ -203,7 +203,7 @@ Each run does the following, in order:
    same `node cli.mjs mcp` entry `browse install` writes, plus the isolation variables. The agent sees browse's 29
    MCP tools and no skill file; browse's skill text comes only from its `skill` tool. The prompt's last line is ``Use
    the `browse` MCP tools to reach this browser.``
-7. Records the same fields as an Ardia run. `commands` counts browse MCP calls plus shell commands
+7. Records the same fields as a Nilla run. `commands` counts browse MCP calls plus shell commands
    (`mcp_calls`, `shell_commands`, `browse_calls_by_tool` and `browse_calls` give the split). For Claude,
    `agent_saw` holds the tool list from its init event.
 8. Quits Chrome and the relay.
@@ -216,7 +216,7 @@ Contenders with `"kind": "betterwright"` (`plans/betterwright.json`) run the sam
 deadline, checks and token accounting. The browser is [Betterwright](https://www.npmjs.com/package/betterwright)'s
 headless BetterChromium, driven with Playwright JavaScript through `betterwright run`.
 
-Everything lives in `BENCH_BETTERWRIGHT_HOME` (default `~/ardia-scratch/betterwright`):
+Everything lives in `BENCH_BETTERWRIGHT_HOME` (default `~/nilla-scratch/betterwright`):
 
 - `bun/`: Bun 1.4 or newer and `BUN_INSTALL=… bun install -g betterwright` (the contender's `bin` key points at
   another `bun/bin`).
@@ -236,12 +236,12 @@ Each run does the following, in order:
 4. Starts the agent with the lane's `bin/` first on `PATH`. Its `betterwright` passes every call through, except
    that it refuses `--headed` and `--headed-invisible`, which would put a window on the owner's screen. The prompt's
    last line is ``Use `betterwright run --session lane<k>` to reach this browser.``
-5. Records the same fields as an Ardia run, plus `betterwright_calls`, `shell_commands`,
+5. Records the same fields as a Nilla run, plus `betterwright_calls`, `shell_commands`,
    `failed_betterwright_calls` (results with `"ok": false`) and `headed_refused`.
 6. Closes every session, which stops the daemon and the browser.
 
 One run: `python3 -I harness/bench.py run calendar claude try-1 --side betterwright --results …`.
 
-Scratch lives in `BENCH_HOME` (default `~/ardia-scratch/bench-proper`): `app/`, `cli/`, `devbin/`, `data-ardia/`,
-`work/`, `state/`, `logs/` and `results/`, plus `app-lane<k>/`, `data-ardia-lane<k>/` and `codex-home-lane<k>/`
+Scratch lives in `BENCH_HOME` (default `~/nilla-scratch/bench-proper`): `app/`, `cli/`, `devbin/`, `data-nilla/`,
+`work/`, `state/`, `logs/` and `results/`, plus `app-lane<k>/`, `data-nilla-lane<k>/` and `codex-home-lane<k>/`
 for extra lanes.

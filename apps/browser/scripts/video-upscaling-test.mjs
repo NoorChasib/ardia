@@ -48,7 +48,7 @@ const CHECKS = {
   "hdr-pq": "an HDR10 (PQ) clip: declined",
   "hdr-hlg": "an HLG clip: declined",
   fullscreen: "page full screen (acted): upscaled to the screen",
-  "little-ardia": "a Little Ardia window: nothing",
+  "little-nilla": "a Little Nilla window: nothing",
   teardown: "the gate closing frees the scaler, its session and buffers within a few seconds",
   "idle-teardown": "a paused video that stops presenting still frees everything after 3 s, with no new frame",
   "idle-quiet": "once freed, a page that keeps drawing (no video, or the gate closed) never wakes the idle timer again",
@@ -162,7 +162,7 @@ else {
   instance = await launch(app, {
     data, fresh: true, onboarded: true,
     session: session({ tabs: [{ id: "home", url: "about:blank", title: "Home" }] }),
-    ready: "return !!globalThis.expo?.modules?.ArdiaEngine && Object.keys(ac.store.getState().windows).length > 0",
+    ready: "return !!globalThis.expo?.modules?.NillaEngine && Object.keys(ac.store.getState().windows).length > 0",
   });
 }
 const evalApp = (body, timeout) => instance.eval(body, { timeout });
@@ -432,10 +432,10 @@ await check("fullscreen", async () => {
   }
 });
 
-await check("little-ardia", async () => {
+await check("little-nilla", async () => {
   const before = await evalApp("return Object.keys(ac.store.getState().windows)");
-  await evalApp(`ac.runCommand({ command: "newLittleArdia", arg: null, windowId: null }); return true`);
-  const small = await until("a Little Ardia window", () => evalApp(`const s = ac.store.getState(); return Object.values(s.windows).find((w) => w.kind === "small" && !${JSON.stringify(before)}.includes(w.id))?.id ?? null`));
+  await evalApp(`ac.runCommand({ command: "newLittleNilla", arg: null, windowId: null }); return true`);
+  const small = await until("a Little Nilla window", () => evalApp(`const s = ac.store.getState(); return Object.values(s.windows).find((w) => w.kind === "small" && !${JSON.stringify(before)}.includes(w.id))?.id ?? null`));
   const url = `${base}/index.html?${q480}&n=${Date.now()}`;
   const smallTab = await until("its tab", () => evalApp(`return ac.store.getState().windows[${JSON.stringify(small)}]?.tabIds?.[0] ?? null`));
   await evalApp(`ac.store.getState().navigate(${JSON.stringify(smallTab)}, ${JSON.stringify(url)}, { userInitiated: true }); return true`);
@@ -446,11 +446,11 @@ await check("little-ardia", async () => {
   await win(smallTab, "fakeOcclusion:visible");
   await sleep(2000);
   const g = await gate({ url });
-  if (!g.state.windows.some((w) => w.littleArdia && w.key && w.occlusionVisible)) throw new Error(`Little Ardia isn't the focused, visible window: ${JSON.stringify(g.state.windows)}`);
-  if (g.allowed) throw new Error("the gate is open in Little Ardia");
+  if (!g.state.windows.some((w) => w.littleArdia && w.key && w.occlusionVisible)) throw new Error(`Little Nilla isn't the focused, visible window: ${JSON.stringify(g.state.windows)}`);
+  if (g.allowed) throw new Error("the gate is open in Little Nilla");
   const w = await watch();
   await evalApp(`ac.store.getState().closeWindow?.(${JSON.stringify(small)}); return true`).catch(() => null);
-  if (w.jobs || w.setups.length) throw new Error(`work in Little Ardia: ${fmt(w)}`);
+  if (w.jobs || w.setups.length) throw new Error(`work in Little Nilla: ${fmt(w)}`);
   return fmt(w);
 });
 

@@ -1,4 +1,4 @@
-import { blocking, downloads, pages, type DownloadEvent, type PageEngineEvent, type PageState } from "@ardia/phone-native";
+import { blocking, downloads, pages, type DownloadEvent, type PageEngineEvent, type PageState } from "@nilla/phone-native";
 
 export type TestLine = { step: string; ok: boolean; detail: string };
 
@@ -11,7 +11,7 @@ const DIALOG_PAGE = dataPage(
   "dialogs",
   "<p>dialogs</p><script>setTimeout(()=>{alert('lab alert');const c=confirm('lab confirm?');const p=prompt('lab prompt','default');document.title='c '+c+' p '+p},400)</script>",
 );
-export const LAB_BLOCKING_URL = "https://lab.ardia.dev/blocking";
+export const LAB_BLOCKING_URL = "https://lab.example.test/blocking";
 export const LAB_BLOCKED_REQUESTS = [
   "https://securepubads.g.doubleclick.net/tag/js/gpt.js",
   "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js",
@@ -21,7 +21,7 @@ export const LAB_BLOCKED_REQUESTS = [
   "https://static.hotjar.com/c/hotjar-1.js",
   "https://cdn.taboola.com/libtrc/lab/loader.js",
 ];
-const busted = (url: string, token: string) => `${url}${url.includes("?") ? "&" : "?"}ardia=${token}`;
+const busted = (url: string, token: string) => `${url}${url.includes("?") ? "&" : "?"}nilla=${token}`;
 const freshToken = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 export const labBlockingHtml = (token = freshToken()) =>
   `<!doctype html><meta name="viewport" content="width=device-width"><title>blocking</title><body style="font:18px sans-serif;padding:12px"><p>blocking</p>${LAB_BLOCKED_REQUESTS.map((url) => (url.endsWith(".gif") ? `<img src="${busted(url, token)}">` : `<script async src="${busted(url, token)}"></script>`)).join("")}</body>`;

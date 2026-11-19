@@ -1,6 +1,6 @@
 # Conventions
 
-How Ardia's code is laid out and written. `apps/browser/src/conventions.test.mjs` enforces most of it (see
+How Nilla's code is laid out and written. `apps/browser/src/conventions.test.mjs` enforces most of it (see
 [The check](#the-check)); the rest is on review.
 
 ## Backwards compatibility: migrations only
@@ -11,7 +11,7 @@ its commit's engine key, `engine/engine-key.sh`), so code never tolerates a mism
 - No `respondsToSelector` guards for ArdiaCore's API, no optional `?.()` native calls, no always-true `isAvailable`
   checks, no metadata probes, no aliases for old names, no duplicate overloads. Keep `respondsToSelector` only for
   private AppKit or Chromium classes looked up at runtime.
-- What stays: versioned on-disk data migrations (Netnyahoo → Ardia included), the versioned sync payload (a nightly Mac
+- What stays: versioned on-disk data migrations, the versioned sync payload (a nightly Mac
   syncs with a stable Mac a version behind), and the one app/engine version assertion: `NATIVE_API_VERSION` and
   `apiVersion` in `packages/shell/ios/AppModule.swift`. Bump both when the native surface changes.
 
@@ -34,8 +34,8 @@ lib/                    pure helpers: url, color, time, keys
 | `platform` | `platform`, `lib` |
 | `lib` | `lib` (nothing else in the app) |
 
-- Only `platform/` imports native packages (`@ardia/ardiacore`, `@ardia/shell`, `@ardia/shaders`, `@ardia/import`,
-  `@ardia/sync`), `expo-modules-core` or `NativeModules`. `components/ui/` may import native *views* to wrap them.
+- Only `platform/` imports native packages (`@ardia/ardiacore`, `@nilla/shell`, `@nilla/shaders`, `@nilla/import`,
+  `@nilla/sync`), `expo-modules-core` or `NativeModules`. `components/ui/` may import native *views* to wrap them.
 - `platform/<domain>.ts` holds one domain's native functions and types (`platform/downloads.ts`, `platform/menus.ts`,
   `platform/windows.ts`, …). It binds each one itself, against the typed `call()`/`on()` of `@ardia/ardiacore` or a
   package's typed `nativeModule(…)`, so a call returns and throws exactly what the native API does; the packages keep
@@ -83,7 +83,7 @@ lib/                    pure helpers: url, color, time, keys
   (Surface, Symbol, the web view, …) are wrapped there too. Feature code passes `style` only for layout (flex,
   position, size) and animated values.
 - One copy of each piece. Before writing a button, panel, closing animation, colour maths or a URL helper, use the
-  one in `components/ui/`, `lib/` (`lib/url.ts`, `lib/color.ts`) or `@ardia/core` (`hostOf`).
+  one in `components/ui/`, `lib/` (`lib/url.ts`, `lib/color.ts`) or `@nilla/core` (`hostOf`).
 - Import pieces from the `components/ui` index (`import { Button, Popover } from "../ui"`). Inside `components/ui`,
   modules import each other directly.
 
@@ -121,10 +121,10 @@ Settings › Appearance › Interface size (`interfaceScale`, 0.8 to 1.5) scales
 keeps its frame and takes bounds of frame / scale, so React lays out in **root points** and AppKit scales drawing,
 hit-testing and conversions. JS speaks root points everywhere: styles, `onLayout`, `measure`, `measureInWindow`
 (from the root's top left), touch `pageX`/`pageY`, and every rect or point it sends to native or gets from native for
-layout. Native converts at the boundary with `ArdiaInterfaceScale` (Swift `InterfaceScale`).
+layout. Native converts at the boundary with `NillaInterfaceScale` (Swift `InterfaceScale`).
 
 - **Physical, never scaled:** NSWindow frames and screen coordinates (`window.frame`, saved and closed window frames,
-  `littleArdiaSize`, `openWindow` frame and pointer, `windowFrame()`), PiP geometry, image pixel sizes, CSS
+  `littleNillaSize`, `openWindow` frame and pointer, `windowFrame()`), PiP geometry, image pixel sizes, CSS
   coordinates that go back into a page, and diagnostics that say they are physical. A frame's size used for layout is
   divided by the scale: `windowRootSize` / `useWindowRootWidth` (`state/windows/rootSize.ts`) prefer the root's own
   `onLayout` size and fall back to `rootSizeOfFrame`. A point crossing between windows goes through the screen:
@@ -206,7 +206,7 @@ writeDocument(DOC, versionedJson(data, VERSION));
   `telemetry-queue.json`, `telemetry-daily.json`, `release-notes.json`, `onboarding.json`,
   `default-browser-offer.json`, `sync.json`, `sync-extensions.json`, `live.json`, `shared-folders.json`, `ardia-cli.json`,
   `bangs-state.json`, `Scripts/status.json` and `link-sources.json` (all 1).
-- Native code reads through `ArdiaSavedDocument` (packages/ardiacore/ios), with the same rules: `session.json` and
+- Native code reads through `NillaSavedDocument` (packages/ardiacore/ios), with the same rules: `session.json` and
   `onboarding.json` (any version up to the one JS writes; a test pins each) and `launch-layout.json` (5, written and
   read by native code only, so any other version reads as nothing).
 - The sealed sync files carry their own `version` inside the sealed JSON, because they're written apart from
@@ -222,7 +222,7 @@ writeDocument(DOC, versionedJson(data, VERSION));
 
 - Two Bun workspaces. The root one is the Mac app and its packages (`apps/browser`, `packages/*` but
   `packages/phone`), on the Mac's Expo and react-native-macos. `apps/phone` is its own workspace with `packages/phone`,
-  on the phone's Expo and React Native, with its own lockfile (docs/phone.md › Layout). They share only `@ardia/core`,
+  on the phone's Expo and React Native, with its own lockfile (docs/phone.md › Layout). They share only `@nilla/core`,
   plain TypeScript linked into the phone.
 - A package belongs to one workspace, never both. Install each from its own root under `scripts/agent/locked pod`.
 
@@ -246,11 +246,43 @@ writeDocument(DOC, versionedJson(data, VERSION));
 
 ## Names
 
-- App-side ObjC classes and their files are `Ardia<Thing>`; Swift types use plain names (the module namespaces them).
+- App-side ObjC classes are `Nilla<Thing>`; their files keep the `Ardia<Thing>` names until Layer 2. Swift types use plain names
+  (the module namespaces them).
 - The engine's exported ObjC API is `ArdiaCore*`; engine C/C++ is `ac_*`.
 - No `Cef*`/`CEF`/`cef` names, no `AC*` or app-side `ArdiaCore*` classes in `packages/*/ios`.
-- No `Netnyahoo` or `NN*` names outside migration code (`LegacyMigration.swift`, `legacy.ts`, `*Migration.swift`,
-  `*migrations.ts`).
+- No upstream name (the app Nilla forked, or the name before it) outside what `apps/browser/src/naming-allowlist.json`
+  keeps: its protected names and tokens (the engine interface, credits, history, the upstream prebuilt engine), its
+  reviewed whole lines (each must still be in its file) and its path classes (frozen, kept, lead-owned and generated
+  files, `docs/audit/`). No hand-edited file is exempt as a whole. `conventions.test.mjs` checks every match in
+  `git grep`, and that the credits stay: `NOTICE`'s upstream block, the README's Acknowledgements, the About notice,
+  the phone's licences row and the Raycast extension's contributors.
+- The other way round, `ENGINE_CONTRACT` in `conventions.test.mjs` lists the names today's engines read (the `ardia-`
+  switch prefix, `ArdiaControl.sock` and `.json`, `ardia.window.small`, `ArdiaApp.dll` and its exports,
+  `Ardia.test-build`, the `"Ardia "` profile prefix, `X-Ardia-Key`, `ArdiaVSR.*`, the chrome://version product,
+  `ardia_sources`, the upstream `ENGINE_REPO`), each with the engine file that defines it and the app files that must
+  spell it the same way, so a rename that turns one of them into Nilla fails.
+
+### Names that stay Ardia until Layer 2
+
+Today's prebuilt engines read, write or draw these names, so they keep their spelling until Nilla's own engines exist
+(AGENTS.md has the longer list; the allowlist is the exact one):
+- the engine itself: `engine/`, `scripts/windows/engine/`, the offline game, `docs/brand/ardia/`;
+- the `ArdiaCore` interface: `packages/ardiacore`, `@ardia/ardiacore`, `ac_*`, `AC*` classes and Info.plist keys,
+  `ARDIACORE_*`;
+- every `ARDIA_*` variable and `--ardia-*` switch;
+- files the engine meets the app at: `ArdiaControl.json`, `ArdiaControl.sock`, "Ardia Tab History",
+  `ArdiaPictureInPicture.plist`;
+- page globals, events and hooks: `__ardiaHost`, `__ardia*`, `ardiaOffscreen`, `ardia-reveal`, `ardia-pip-*`,
+  `ardia.window.small`, `ArdiaGlass`;
+- routes and schemes: `ardia://`, `/ardia-oauth`, `chrome://ardia/`, `ardia-ui-dir`;
+- Linux: the wire names (`Ardia<Module>.<method>`), `APP_NAME = "Ardia"` in `apps/linux/src/importUnlock.ts` (the
+  keyring app id the engine registers), `Package: ardia`, `bin/ardia`, `lib/ardia/`, `ardia.desktop`,
+  `dev.ardia.linux`;
+- Windows: `ArdiaApp.dll`, the `ArdiaApp*` exports, `Ardia.test-build`, the folder `apps/browser/windows/Ardia` and
+  `Ardia.ico`;
+- the `X-Ardia-Key` header and the CLI tarball layout (`ardia-cli-<v>/`, `bin/ardia`);
+- text the engine draws: chrome://credits, the Chrome Web Store's "Add to Ardia" button and the engine's own error
+  messages ("Ardia couldn't take that tab off-screen.", the `ardia: ` prefix).
 
 ## Translation layer (JS ↔ Expo modules ↔ ArdiaCore ↔ `ac_*`)
 
@@ -259,7 +291,7 @@ writeDocument(DOC, versionedJson(data, VERSION));
   (`callWithSecret`) and views get dedicated functions.
 - **One error model:** engine errors reject with `{code, message}` (`ERR_ENGINE`, `ERR_UNKNOWN_CALL`,
   `ERR_CONTENT_BLOCKER`, `ERR_BAD_REPLY`, and `ERR_BAD_ARGS` when an argument is missing or of the wrong type: native
-  reads each one as required or optional, never with a silent default); JS throws `ArdiaError` with the code. Refused, absent or unavailable
+  reads each one as required or optional, never with a silent default); JS throws `NillaError` with the code. Refused, absent or unavailable
   answers are values in the function's return type (`false`, `null`, `[]`), not errors. The bridge never falls back
   silently; callers decide (`orWarn(x)` in `lib/fallback.ts` logs and falls back).
 - **One event channel per module.** Event names are `domain.event`; payloads are parsed once.
@@ -267,17 +299,17 @@ writeDocument(DOC, versionedJson(data, VERSION));
   adopt ids and Chrome's int tab ids stay internal, resolved by one native registry. Per-tab operations live on the
   tab's API.
 - **One `PageEngine` protocol** for the Chromium and WebKit page engines: same method names, one event table.
-- **One Expo module per domain** (`ArdiaTabs`, `ArdiaDownloads`, `ArdiaExtensions`, `ArdiaProfiles`,
-  `ArdiaPermissions`, `ArdiaWindows`, `ArdiaMenus`, `ArdiaSystem`, …), each in `<Domain>Module.swift`, registered as
-  `Ardia<Domain>`.
-- ArdiaShell links ArdiaCore directly and calls it with types: no selector strings or string notifications between
+- **One Expo module per domain** (`NillaTabs`, `NillaDownloads`, `NillaExtensions`, `NillaProfiles`,
+  `NillaPermissions`, `NillaWindows`, `NillaMenus`, `NillaSystem`, …), each in `<Domain>Module.swift`, registered as
+  `Nilla<Domain>`.
+- NillaShell links ArdiaCore directly and calls it with types: no selector strings or string notifications between
   them.
 - **One authority per rule:** the engine's off-the-record flag alone decides private profiles; one helper builds
   profile directory names.
 
 ## Environment variables
 
-Read once, in one place: `ArdiaLaunchConfig` (`packages/ardiacore/ios`) reads the environment at start and JS gets it
+Read once, in one place: `NillaLaunchConfig` (`packages/ardiacore/ios`) reads the environment at start and JS gets it
 from `platform/launchConfig.ts`. No `getenv`, `ProcessInfo…environment`, `base::Environment` or `process.env` anywhere
 else in app or engine code (scripts and tests outside the app runtime are free to). The engine reads command-line
 switches, never the environment: the app passes `--ardia-test=<list>`, `--ardia-trace=<list>`,
@@ -300,7 +332,7 @@ still counts:
 | `ARDIA_SWITCHES` | `name=on,…` | The only feature toggle, backed by the registry `platform/killSwitches.ts`: kill switches (on by default, at most 8) and experiments (off by default), each with an owner and `removeBy` |
 | `ARDIA_TRACE` | `pip,visibility,…` | Trace logging per area |
 | `ARDIA_TEST` | `keychain=file,reauth=granted,…` | All test fakes and fixtures |
-| `ARDIA_FEEDBACK_URL` | URL | Where Report a Problem sends (`https://ardia.dev/api/feedback` otherwise); the `ardia` CLI reads the same variable (`docs/feedback.md`) |
+| `ARDIA_FEEDBACK_URL` | URL | Where Report a Problem sends (with it unset there is no feedback service, `docs/services.md`); the `nilla-browser` command reads the same variable (`docs/feedback.md`) |
 
 - `ARDIA_TEST` and `ARDIA_TRACE` work only in a test instance (not signed for distribution, a scratch data dir, the
   mock keychain); a release build ignores them and logs that once. CDP, argv and extra switches reach Chrome only with
@@ -308,7 +340,7 @@ still counts:
 - On Windows the launch config is `apps/browser/windows/Ardia/LaunchConfig.h` (with `Paths.h` and `TestGate.h`), and
   no other native file reads the environment (`platform/windowsLaunchConfig.test.mjs`). Windows builds aren't signed,
   so a test instance there is an absolute scratch `ARDIA_DATA_DIR` that isn't, inside or around the real profile
-  folders (compared by final path) and an `Ardia.test-build` marker beside `Ardia.exe`, which only test harnesses
+  folders (compared by final path) and an `Ardia.test-build` marker beside `Nilla.exe`, which only test harnesses
   write and no installer ships. `ARDIA_CONFIG_DIR` and the test-only `ARDIA_INSTANCE` keys need it too
   (`docs/windows.md` › Test instances).
 - An experiment ends by keeping the winning path and deleting the other branch and its toggle. One still being tried
@@ -332,7 +364,7 @@ still counts:
 | `store-shape` | a zustand store not created as `create<T>()(() => init)` (a `set`/`get` creator, or the uncurried form) |
 | `size` | a file over its line cap |
 | `env` | an environment read outside the launch config and the three exempt engine lines |
-| `naming` | a `Cef`, `AC*`/app-side `ArdiaCore*`, `Netnyahoo` or `NN*` name |
+| `naming` | a `Cef` or `AC*`/app-side `ArdiaCore*` name |
 | `comments` | a comment that isn't a license header or tool directive |
 | `file-names` | a file name breaking the PascalCase/camelCase rule |
 

@@ -38,7 +38,7 @@ export const reproduced: Record<string, Handlers> = {
   webView: webViewCalls,
 };
 
-export const moduleNameOf = (domain: string) => `Ardia${domain[0]!.toUpperCase()}${domain.slice(1)}`;
+export const moduleNameOf = (domain: string) => `Nilla${domain[0]!.toUpperCase()}${domain.slice(1)}`;
 
 export const domainsOf = (rows: Rows) => [...new Set([...Object.keys(rows.forwarded), ...Object.keys(rows.missing), ...Object.keys(reproduced)])].sort();
 

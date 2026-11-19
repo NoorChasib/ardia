@@ -1,4 +1,4 @@
-import { ardiaError } from "@ardia/core";
+import { nillaError } from "@nilla/core";
 import { addHistoryVisits, onHistoryChanged, queryHistory, watchHistory, type EngineHistoryEntry, type HistoryChange } from "../../platform/history";
 import { readDocument } from "../../platform/documents";
 import { useBrowser, type BrowserState } from "../browser/store";
@@ -210,7 +210,7 @@ function load(engine: string): Promise<void> {
         if (inApp(engine)) loaded.add(engine);
       } while (state.again && inApp(engine));
     } catch (error) {
-      const failure = ardiaError(error);
+      const failure = nillaError(error);
       console.warn(`[history] couldn't read ${profileLabel(engine)}'s history: ${failure.code} ${failure.message}`, error);
     } finally {
       loads.delete(engine);

@@ -1,4 +1,4 @@
-import { anonymousIdentity, type AnonymousAvatar } from "@ardia/core";
+import { anonymousIdentity, type AnonymousAvatar } from "@nilla/core";
 import { capture, replaceInstallId } from "./client";
 import { ensureInstallId } from "./installId";
 import { savedChoice, sessionId } from "./choice";

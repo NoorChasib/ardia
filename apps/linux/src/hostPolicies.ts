@@ -3,8 +3,8 @@ type ModuleProvider = (name: string, method: string) => unknown;
 
 const INPUT_EVENTS = ["keydown", "pointerdown", "pointermove", "wheel", "touchstart"] as const;
 
-export const TAB_POLICY_LOCK = "ardia.linux.tab-policies";
-export const TAB_POLICY_CHANNEL = "ardia.linux.tab-policies";
+export const TAB_POLICY_LOCK = "nilla.linux.tab-policies";
+export const TAB_POLICY_CHANNEL = "nilla.linux.tab-policies";
 export const BATTERY_SAVER_WAIT_MS = 2_000;
 
 export function watchInputIdle(target: InputTarget, now: () => number = Date.now) {
@@ -86,7 +86,7 @@ export function startLinuxTabPolicies(deps: LinuxPolicyDeps): () => void {
       becomeOwner();
       return new Promise<void>((resolve) => { release = resolve; });
     }).catch((error: unknown) => {
-      console.warn("[ardia linux] tab policy lock", error);
+      console.warn("[nilla linux] tab policy lock", error);
       becomeOwner();
     });
   };

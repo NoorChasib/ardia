@@ -186,10 +186,10 @@ test("Archive tabs keep their saved state and thumbnail, and Android ids stay ex
   const [news] = readArchivedTabs(run.db, 10);
   assert.equal(news!.id, NEWS);
   assert.equal(news!.archivedAt, T - 7_000);
-  assert.equal(news!.snapshotFileName, "file:///data/user/0/com.ardia.browser.android/files/PageSnapshots/news-1-300x600.jpg");
+  assert.equal(news!.snapshotFileName, "file:///data/user/0/com.nilladigital.nilla.android/files/PageSnapshots/news-1-300x600.jpg");
   assert.equal(readTabState(run.db, NEWS), "BAUG");
   assert.equal(readTabState(run.db, OTTER), "AAECAw==");
-  assert.equal(readOpenTabs(run.db).find((t) => t.id === OTTER)!.snapshotFileName, "file:///data/user/0/com.ardia.browser.android/files/PageSnapshots/otter-1-300x600.jpg");
+  assert.equal(readOpenTabs(run.db).find((t) => t.id === OTTER)!.snapshotFileName, "file:///data/user/0/com.nilladigital.nilla.android/files/PageSnapshots/otter-1-300x600.jpg");
 });
 
 test("on iPhone ids are lowercased with every reference that points at them: state, selection and duplicates", async () => {
@@ -220,7 +220,7 @@ test("every record is imported or excluded with a reason, and the log line holds
   read.preferences["tabs.autoArchiveInterval"] = "fortnight";
   const run = deps(fakeLegacy({ read }));
   assert.deepEqual(await runLegacyImport(run), { kind: "ready", outcome: "imported" });
-  const line = run.lines.find((l) => l.startsWith("ardia-legacy imported"))!;
+  const line = run.lines.find((l) => l.startsWith("nilla-legacy imported"))!;
   assert.match(line, /tabs=2 /);
   assert.match(line, /tabs\.notWeb=1/);
   assert.match(line, /tabs\.malformed=1/);

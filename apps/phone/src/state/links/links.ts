@@ -117,7 +117,7 @@ function quietlyOnDatabase(work: () => void) {
   try {
     work();
   } catch {
-    console.log("ardia-links kept links unavailable");
+    console.log("nilla-links kept links unavailable");
   }
 }
 

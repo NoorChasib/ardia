@@ -13,12 +13,12 @@ export function emitNativeEvent(module: string, event: string, payload: unknown)
 }
 
 const moduleValues: Record<string, Record<string, unknown>> = {
-  ArdiaTranslate: { available: false, userLanguages: () => ["en"], languageName: (id: string) => id },
-  ArdiaGlassEffect: { isLiquidGlass: () => true },
-  ArdiaShell: { copyText: () => {} },
-  ArdiaDocuments: { readDocument: () => null, writeDocument: () => {}, removeDocument: () => {} },
-  ArdiaSystem: { fileExists: () => false, hapticTick: () => {} },
-  ArdiaMenus: { menuShortcuts: async () => [] },
+  NillaTranslate: { available: false, userLanguages: () => ["en"], languageName: (id: string) => id },
+  NillaGlassEffect: { isLiquidGlass: () => true },
+  NillaShell: { copyText: () => {} },
+  NillaDocuments: { readDocument: () => null, writeDocument: () => {}, removeDocument: () => {} },
+  NillaSystem: { fileExists: () => false, hapticTick: () => {} },
+  NillaMenus: { menuShortcuts: async () => [] },
 };
 
 export function provideNativeModule(name: string, values: Record<string, unknown>) {

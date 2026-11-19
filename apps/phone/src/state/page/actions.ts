@@ -1,4 +1,4 @@
-import { mobileClean } from "@ardia/core/src/mobile";
+import { mobileClean } from "@nilla/core/src/mobile";
 import { blocking } from "../../platform/blocking";
 import { downloads, type DownloadEvent } from "../../platform/downloads";
 import { pages, type PageEngineEvent, type PageRequestAnswer } from "../../platform/pages";
@@ -201,7 +201,7 @@ export const setReaderSerif = (serif: boolean) => setPreference("readerSerif", s
 export const setReaderTheme = (theme: "light" | "sepia" | "dark") => setPreference("readerTheme", theme);
 
 const usesSystemFind = () => {
-  const value = launchValues().ArdiaAppFind;
+  const value = launchValues().NillaAppFind;
   return value !== true && value !== "YES" && pages.hasSystemFind();
 };
 

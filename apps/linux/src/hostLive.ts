@@ -1,5 +1,5 @@
 import { LiveError, type LiveErrorKind, type LiveSourceId } from "../../browser/src/state/live/types";
-import { ardiaHost, hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
+import { nillaHost, hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
 
 export const LIVE_CAPABILITIES = ["ArdiaLive.request", "ArdiaLive.connect", "ArdiaLive.cancel", "ArdiaLive.disconnect"] as const;
 
@@ -42,7 +42,7 @@ export function liveRequestId(random: () => number = Math.random): string {
   return `live-${salt}-${++sequence}`;
 }
 
-export function hostLiveClient(host: ArdiaHost | undefined = ardiaHost, connected: (source: LiveSourceId) => boolean = () => false): LiveClient {
+export function hostLiveClient(host: ArdiaHost | undefined = nillaHost, connected: (source: LiveSourceId) => boolean = () => false): LiveClient {
   const available = () => !!host && LIVE_CAPABILITIES.every((method) => hostSupports(method, host));
   const call = <T>(method: string, args: unknown[], source: LiveSourceId, signal?: AbortSignal, id?: string): Promise<T> => {
     if (!available()) return Promise.reject(new LiveError("other", UNAVAILABLE_MESSAGE));

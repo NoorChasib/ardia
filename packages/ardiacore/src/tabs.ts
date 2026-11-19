@@ -1,4 +1,4 @@
-import type { TabGroupColor } from "@ardia/core";
+import type { TabGroupColor } from "@nilla/core";
 import type { OpenWindowRequest } from "./pageTypes";
 import { call } from "./engine/call";
 

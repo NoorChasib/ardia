@@ -2,18 +2,18 @@
 
 #import <AppKit/AppKit.h>
 
-@class ArdiaWebView;
+@class NillaWebView;
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 void WatchZoom();
 
 NSWindow *GrabbedWindow();
 
-void VideoEntered(ArdiaWebView *view, NSString *host);
+void VideoEntered(NillaWebView *view, NSString *host);
 
-void DocumentEntered(ArdiaWebView *view);
+void DocumentEntered(NillaWebView *view);
 
-void TabRequestedActivation(ArdiaWebView *view);
+void TabRequestedActivation(NillaWebView *view);
 
 }

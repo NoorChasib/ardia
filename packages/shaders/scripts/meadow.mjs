@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-const HELP = `Builds the onboarding intro's meadow from ardia.dev's hero scene.
+const HELP = `Builds the onboarding intro's meadow from its hero scene sources in packages/shaders/meadow-src.
 
   node scripts/meadow.mjs           write ios/Meadow (index.html, posters.json and the posters) and windows/meadow/page.ts
-  node scripts/meadow.mjs --check   fail if either differs from what the site's sources build
+  node scripts/meadow.mjs --check   fail if either differs from what the meadow sources build
 
-The page runs apps/site/src/scripts/meadowApp.ts, which starts the site's own createMeadow and
-startSunrise (apps/site/src/scripts/meadow), bundled inline so the pod ships one HTML file. The
-posters are the site's desktop dawn and morning frames from apps/site/src/data/heroPoster.ts; the
+The page runs meadow-src/scripts/meadowApp.ts, which starts the scene's own createMeadow and
+startSunrise (meadow-src/scripts/meadow), bundled inline so the pod ships one HTML file. The
+posters are the desktop dawn and morning frames from meadow-src/data/heroPoster.ts; the
 native view shows the one nearest the window's shape until the scene's first frame.
 
 windows/meadow/page.ts is the same page for the Windows intro, which runs it as an engine page. The
@@ -30,7 +30,7 @@ if (args.includes("-h") || args.includes("--help")) {
 const check = args.includes("--check");
 
 const repo = fileURLToPath(new URL("../../../", import.meta.url));
-const site = join(repo, "apps/site/src");
+const site = join(repo, "packages/shaders/meadow-src");
 const out = fileURLToPath(new URL("../ios/Meadow/", import.meta.url));
 const windowsPage = fileURLToPath(new URL("../windows/meadow/page.ts", import.meta.url));
 const shim = fileURLToPath(new URL("../src/meadowPage/shim.ts", import.meta.url));
@@ -82,7 +82,7 @@ const STYLE = `html,body{margin:0;width:100%;height:100%;overflow:hidden;backgro
 const MAC_LOOK = {
   csp: "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'",
   body: ' aria-hidden="true"',
-  title: '<span class="line"><span class="icon"></span></span><span class="line"><span class="wordmark">Ardia</span></span><span class="line"><span class="tagline">Your new home on the internet</span></span>',
+  title: '<span class="line"><span class="icon"></span></span><span class="line"><span class="wordmark">Nilla</span></span><span class="line"><span class="tagline">Your new home on the internet</span></span>',
   shim: "",
   scripts: true,
 };
@@ -175,7 +175,7 @@ if (check) {
     console.error(`packages/shaders/ios/Meadow or windows/meadow/page.ts is out of date (${[...stale, ...extra].join(", ")}): run node packages/shaders/scripts/meadow.mjs`);
     process.exit(1);
   }
-  console.log(`✓ ios/Meadow and windows/meadow/page.ts match the site's meadow (${files.size + 1} files)`);
+  console.log(`✓ ios/Meadow and windows/meadow/page.ts match the meadow sources (${files.size + 1} files)`);
 } else {
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });

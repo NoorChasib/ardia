@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-using namespace ardia_paint_probe;
+using namespace nilla_paint_probe;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

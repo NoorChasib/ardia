@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import type { MenuItem } from "@ardia-real/shell";
+import type { MenuItem } from "@nilla-real/shell";
 import { useBrowser } from "../../browser/src/state/browser/store";
 import { Symbol } from "./shims/web/Symbol";
 import { formatShortcut } from "./shortcutFormat";
@@ -113,7 +113,7 @@ function MenuList({ items, anchor }: { items: MenuItem[]; anchor: MenuAnchor }) 
       let top: number;
       if ("row" in anchor) {
         const row = anchor.row.getBoundingClientRect();
-        const parent = anchor.row.closest(".ardia-menu")!.getBoundingClientRect();
+        const parent = anchor.row.closest(".nilla-menu")!.getBoundingClientRect();
         left = parent.right - 4;
         top = row.top - 5;
         if (left + width > window.innerWidth - 8) left = parent.left - width + 4;
@@ -147,24 +147,24 @@ function MenuList({ items, anchor }: { items: MenuItem[]; anchor: MenuAnchor }) 
   }, []);
   const symbols = hasSymbolColumn(items);
   return createPortal(
-    <div ref={menuRef} className={`ardia-menu${dark ? " dark" : ""}`} style={{ ...position, width: "max-content", minWidth: 240, maxWidth: "min(420px, calc(100vw - 26px))", maxHeight: "calc(100vh - 26px)", overflowY: "auto" }} onPointerDown={(e) => e.stopPropagation()}>
+    <div ref={menuRef} className={`nilla-menu${dark ? " dark" : ""}`} style={{ ...position, width: "max-content", minWidth: 240, maxWidth: "min(420px, calc(100vw - 26px))", maxHeight: "calc(100vh - 26px)", overflowY: "auto" }} onPointerDown={(e) => e.stopPropagation()}>
       {items.map((item, i) => {
-        if ("separator" in item) return <div key={i} className="ardia-menu-separator" />;
+        if ("separator" in item) return <div key={i} className="nilla-menu-separator" />;
         const next = items[i + 1];
         if (item.alternate ? !alternateShown(items[i - 1], item, modifiers) : next && "id" in next && next.alternate && alternateShown(item, next, modifiers)) return null;
         const enabled = item.enabled !== false;
         return (
           <div
             key={item.id + i}
-            className={`ardia-menu-item${enabled ? "" : " disabled"}${sameItem(sub?.item, item) ? " expanded" : ""}`}
+            className={`nilla-menu-item${enabled ? "" : " disabled"}${sameItem(sub?.item, item) ? " expanded" : ""}`}
             onPointerEnter={(e) => setSub(enabled && item.children ? { item, row: e.currentTarget } : null)}
             onClick={() => enabled && !item.children && pickMenuItem(item.id, item.keepOpen)}
           >
-            <span className="ardia-menu-check">{item.checked ? "✓" : ""}</span>
-            {item.symbol ? <Symbol name={item.symbol} size={12} color="currentColor" style={{ width: 16, height: 16, marginRight: 6 }} /> : symbols && !item.swatch ? <span className="ardia-menu-symbol-gap" style={{ width: 16, marginRight: 6, flex: "none" }} /> : null}
-            {item.swatch ? <span className="ardia-menu-swatch" style={{ background: item.swatch }} /> : null}
-            <span className="ardia-menu-title">{item.title}</span>
-            <span className="ardia-menu-key">{item.children ? "›" : item.key ? formatShortcut({ key: item.key, modifiers: item.modifiers ?? [] }) : ""}</span>
+            <span className="nilla-menu-check">{item.checked ? "✓" : ""}</span>
+            {item.symbol ? <Symbol name={item.symbol} size={12} color="currentColor" style={{ width: 16, height: 16, marginRight: 6 }} /> : symbols && !item.swatch ? <span className="nilla-menu-symbol-gap" style={{ width: 16, marginRight: 6, flex: "none" }} /> : null}
+            {item.swatch ? <span className="nilla-menu-swatch" style={{ background: item.swatch }} /> : null}
+            <span className="nilla-menu-title">{item.title}</span>
+            <span className="nilla-menu-key">{item.children ? "›" : item.key ? formatShortcut({ key: item.key, modifiers: item.modifiers ?? [] }) : ""}</span>
             {sub && sameItem(sub.item, item) && item.children ? <MenuList items={item.children} anchor={{ row: sub.row }} /> : null}
           </div>
         );

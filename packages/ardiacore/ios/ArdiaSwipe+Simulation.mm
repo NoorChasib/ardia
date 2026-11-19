@@ -4,7 +4,7 @@
 
 #import <dlfcn.h>
 
-using namespace ardia_swipe;
+using namespace nilla_swipe;
 
 namespace {
 
@@ -21,7 +21,7 @@ NSDictionary *ResponderReport(NSView *hit) {
 }
 
 NSPoint WindowPointFromRoot(NSWindow *window, NSPoint point) {
-  NSView *root = [ArdiaInterfaceScale rootOfWindow:window] ?: [ArdiaChromeWindowHost rootViewOfWindow:window];
+  NSView *root = [NillaInterfaceScale rootOfWindow:window] ?: [NillaChromeWindowHost rootViewOfWindow:window];
   if (!root) {
     NSView *content = window.contentView;
     return [content convertPoint:content.isFlipped ? point : NSMakePoint(point.x, NSHeight(content.bounds) - point.y) toView:nil];
@@ -81,7 +81,7 @@ NSEvent *SyntheticScroll(NSWindow *window, NSPoint inWindow, NSDictionary *step,
 
 }
 
-@implementation ArdiaSwipe (Simulation)
+@implementation NillaSwipe (Simulation)
 
 + (void)simulateInWindow:(NSWindow *)window
                    point:(NSPoint)point

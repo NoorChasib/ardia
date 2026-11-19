@@ -15,7 +15,7 @@
 // `open -g -n`) with Metro pinned by default (a proxy that refuses reloads: other agents' edits don't restart it).
 // --instance, --test and --trace fill ARDIA_INSTANCE, ARDIA_TEST and ARDIA_TRACE (keys: docs/agent-brief.md); --switch
 // adds a Chrome switch (ARDIA_INSTANCE chromiumSwitches), --arg one launch argument (`--arg=-AppleLanguages --arg='(zh-Hans)'`
-// sets this instance's languages and nothing else's). A build from before ArdiaLaunchConfig gets the old variables.
+// sets this instance's languages and nothing else's). A build from before NillaLaunchConfig gets the old variables.
 // Body or expression `-` reads stdin. Exit 1 on a failure, 3 when the instance has gone.
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -87,10 +87,10 @@ try {
     } else {
       const ps = spawnSync("ps", ["-E", "-ww", "-ax", "-o", "pid=,command="], { encoding: "utf8" }).stdout.split("\n");
       for (const line of ps) {
-        const m = /^\s*(\d+)\s+(\S.*?\/Contents\/MacOS\/Ardia)(?:\s|$)/.exec(line);
+        const m = /^\s*(\d+)\s+(\S.*?\/Contents\/MacOS\/Nilla)(?:\s|$)/.exec(line);
         if (!m || line.includes("--type=")) continue;
         const data = / ARDIA_DATA_DIR=(\S+)/.exec(line)?.[1] ?? "(no data dir: not a test instance)";
-        console.log(`${m[1]}  ${data}  ${m[2].replace(/\/Contents\/MacOS\/Ardia$/, "")}`);
+        console.log(`${m[1]}  ${data}  ${m[2].replace(/\/Contents\/MacOS\/Nilla$/, "")}`);
       }
     }
   } else {

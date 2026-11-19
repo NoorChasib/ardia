@@ -1,4 +1,4 @@
-import type { LaunchLinksNative } from "@ardia/shell";
+import type { LaunchLinksNative } from "@nilla/shell";
 import { TurboModuleRegistry } from "react-native";
 import { emitWhenListened } from "../events";
 import type { WindowsHostModule } from "../nativeModuleTypes";
@@ -9,7 +9,7 @@ let openedAtLaunch = 0;
 
 function launchArguments(): LaunchArguments | null {
   try {
-    return TurboModuleRegistry.get<WindowsHostModule>("ArdiaWindowsHost")?.launchArguments?.() ?? null;
+    return TurboModuleRegistry.get<WindowsHostModule>("NillaWindowsHost")?.launchArguments?.() ?? null;
   } catch {
     return null;
   }
@@ -20,10 +20,10 @@ export function openLaunchLinks() {
   read = true;
   const urls = launchAddresses(launchArguments());
   if (!urls.length) return;
-  console.info(`[ardia windows] launch links: ${urls.length} held until the app listens`);
-  emitWhenListened("ArdiaShell", "onOpenURLs", { urls }, () => {
+  console.info(`[nilla windows] launch links: ${urls.length} held until the app listens`);
+  emitWhenListened("NillaShell", "onOpenURLs", { urls }, () => {
     openedAtLaunch += urls.length;
-    console.info(`[ardia windows] launch links: ${urls.length} sent to the app`);
+    console.info(`[nilla windows] launch links: ${urls.length} sent to the app`);
   });
 }
 

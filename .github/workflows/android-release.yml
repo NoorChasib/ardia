@@ -25,10 +25,21 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RELEASE_SIGNER: "8A:B5:0E:90:D9:09:5D:F3:6A:0C:C7:EA:61:AD:AD:2B:DD:58:26:27:52:D2:9F:1B:83:D9:EA:69:62:41:98:BC"
+  RELEASE_SIGNER: ${{ vars.ANDROID_RELEASE_SIGNER }}
 
 jobs:
+  releases-enabled:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Releases are set up for Nilla
+        env:
+          ENABLED: ${{ vars.NILLA_RELEASES_ENABLED }}
+        run: |
+          [ -n "$ENABLED" ] || { echo "::error::Releases aren't set up for Nilla yet"; exit 1; }
+
   release:
+    needs: releases-enabled
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
@@ -51,7 +62,7 @@ jobs:
             [ -f "$needed" ] || missing="$missing $needed"
           done
           if [ -n "$missing" ]; then
-            echo "::error::This commit doesn't have the Android release scripts (missing:$missing). They arrive with the Expo phone app; until it is merged, dispatch with --ref t3/unify-expo-architecture."
+            echo "::error::This commit doesn't have the Android release scripts (missing:$missing). Dispatch it for a commit that has them."
             exit 1
           fi
           if [ ! -f apps/phone/bun.lock ]; then
@@ -81,7 +92,7 @@ jobs:
             echo "code=$code"
             echo "tag=$tag"
           } >> "$GITHUB_OUTPUT"
-          echo "### Ardia for Android $version ($channel, versionCode $code) from $commit, $MODE" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Nilla for Android $version ($channel, versionCode $code) from $commit, $MODE" >> "$GITHUB_STEP_SUMMARY"
       - name: Room for the build
         run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
@@ -122,7 +133,7 @@ jobs:
             || { echo "::error::missing the secrets ANDROID_RELEASE_KEYSTORE_B64, ANDROID_RELEASE_KEYSTORE_PASSWORD and ANDROID_RELEASE_KEY_ALIAS"; exit 1; }
           out="$RUNNER_TEMP/android-release"
           mkdir -p "$RUNNER_TEMP/release-keys"
-          TMPDIR="$RUNNER_TEMP/release-keys" apps/phone/scripts/sign-release-apk "$out/android-$VERSION.apk" "$out/Ardia-$VERSION.apk" > /dev/null
+          TMPDIR="$RUNNER_TEMP/release-keys" apps/phone/scripts/sign-release-apk "$out/android-$VERSION.apk" "$out/Nilla-$VERSION.apk" > /dev/null
           rm -f "$out/android-$VERSION.apk"
       - name: Check the signed APK
         env:
@@ -130,7 +141,7 @@ jobs:
           VERSION: ${{ steps.plan.outputs.version }}
         run: |
           set -euo pipefail
-          apps/phone/scripts/check-release-apk "$RUNNER_TEMP/android-release/Ardia-$VERSION.apk" --commit "$COMMIT" --version "$VERSION" --signer "$RELEASE_SIGNER" | tee -a "$GITHUB_STEP_SUMMARY"
+          apps/phone/scripts/check-release-apk "$RUNNER_TEMP/android-release/Nilla-$VERSION.apk" --commit "$COMMIT" --version "$VERSION" --signer "$RELEASE_SIGNER" | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Stamp and checksum
         env:
           COMMIT: ${{ steps.plan.outputs.commit }}
@@ -139,7 +150,7 @@ jobs:
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/android-release"
-          apk="Ardia-$VERSION.apk"
+          apk="Nilla-$VERSION.apk"
           sum="$(sha256sum "$out/$apk" | cut -d' ' -f1)"
           {
             echo "apk: $apk"
@@ -157,9 +168,9 @@ jobs:
         with:
           name: android-release-${{ steps.plan.outputs.version }}
           path: |
-            ${{ runner.temp }}/android-release/Ardia-${{ steps.plan.outputs.version }}.apk
-            ${{ runner.temp }}/android-release/Ardia-${{ steps.plan.outputs.version }}.apk.txt
-            ${{ runner.temp }}/android-release/Ardia-${{ steps.plan.outputs.version }}.apk.sha256
+            ${{ runner.temp }}/android-release/Nilla-${{ steps.plan.outputs.version }}.apk
+            ${{ runner.temp }}/android-release/Nilla-${{ steps.plan.outputs.version }}.apk.txt
+            ${{ runner.temp }}/android-release/Nilla-${{ steps.plan.outputs.version }}.apk.sha256
           if-no-files-found: error
           retention-days: 14
       - if: inputs.mode == 'draft'
@@ -171,16 +182,16 @@ jobs:
         run: |
           set -euo pipefail
           out="$RUNNER_TEMP/android-release"
-          apk="Ardia-$VERSION.apk"
+          apk="Nilla-$VERSION.apk"
           {
-            echo "Ardia for Android $VERSION, built from $COMMIT."
+            echo "Nilla for Android $VERSION, built from $COMMIT."
             echo
             echo "For Android 10 or newer on a 64-bit Arm phone. Download $apk, check it against $apk.sha256, and let your browser install it."
-            echo "This release doesn't sync with Ardia for Mac yet."
-            echo "A test build of Ardia installed before this one was signed with another key: uninstall it first."
+            echo "This release doesn't sync with Nilla for Mac yet."
+            echo "A test build of Nilla installed before this one was signed with another key: uninstall it first."
           } > "$out/notes.md"
           gh release create "$TAG" -R "$GITHUB_REPOSITORY" --draft --prerelease --latest=false --target "$COMMIT" \
-            --title "Ardia for Android $VERSION" --notes-file "$out/notes.md" "$out/$apk" "$out/$apk.txt" "$out/$apk.sha256"
+            --title "Nilla for Android $VERSION" --notes-file "$out/notes.md" "$out/$apk" "$out/$apk.txt" "$out/$apk.sha256"
           state="$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isDraft,isPrerelease -q '"\(.isDraft) \(.isPrerelease)"')"
           [ "$state" = "true true" ] || { echo "::error::$TAG isn't a draft prerelease ($state)"; exit 1; }
           echo "Draft prerelease $TAG made; the owner publishes it." >> "$GITHUB_STEP_SUMMARY"

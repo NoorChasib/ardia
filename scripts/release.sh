@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+[ -n "${NILLA_RELEASES_ENABLED:-}" ] || { echo "Releases aren't set up for Nilla yet" >&2; exit 1; }
 
 usage="usage: scripts/release.sh <version> [--rc] [--phased <seconds>] [--phase build|sign|check]  (a -nightly.<n> version is a nightly)"
 version="${1:?$usage}"
@@ -32,11 +33,11 @@ channel="$(channel_of "$version")"
 
 if [ "$rc" = 1 ]; then dist="$root/dist/$version-rc"; else dist="$root/dist/$version"; fi
 [ "$rc" = 1 ] && [ -n "${RC_DIST:-}" ] && dist="$(cd "$root" && mkdir -p "$RC_DIST" && cd "$RC_DIST" && pwd)"
-app="$dist/export/Ardia.app"
+app="$dist/export/Nilla.app"
 cli_tarball="$dist/ardia-cli-$version-macos-arm64.tar.gz"
 build_input="${RELEASE_BUILD_INPUT:-}"
-archive="$dist/Ardia.xcarchive"
-[ "$phase" = sign ] && [ -n "$build_input" ] && archive="$build_input/Ardia.xcarchive"
+archive="$dist/Nilla.xcarchive"
+[ "$phase" = sign ] && [ -n "$build_input" ] && archive="$build_input/Nilla.xcarchive"
 
 if [ "$phase" = check ]; then
   [ -d "$app" ] || die "no $app: run --phase sign first"
@@ -52,27 +53,19 @@ if [ "$phase" = build ]; then
 elif [ -n "$sparkle_key_file" ]; then
   [ -s "$sparkle_key_file" ] || die "SPARKLE_KEY_FILE ($sparkle_key_file) is missing or empty"
 else
-  if [ -n "${SPARKLE_ACCOUNT:-}" ]; then
-    sparkle_account="$SPARKLE_ACCOUNT"
-  else
-    legacy_account="$("$root/scripts/lib/legacy-name.sh" appName | tr '[:upper:]' '[:lower:]')"
-    sparkle_account=ardia
-    for account in ardia $legacy_account; do
-      if "$sparkle/generate_keys" --account "$account" -p >/dev/null 2>&1; then sparkle_account="$account"; break; fi
-    done
-  fi
+  sparkle_account="${SPARKLE_ACCOUNT:?set SPARKLE_ACCOUNT to the keychain account of the Sparkle key, or SPARKLE_KEY_FILE}"
   "$sparkle/generate_keys" --account "$sparkle_account" -p >/dev/null 2>&1 \
     || die "no Sparkle EdDSA key in the login keychain under account $sparkle_account (SPARKLE_ACCOUNT; docs/releasing.md)"
 fi
 
 framework_src="$chromium_framework"
-[ "$phase" = sign ] && framework_src="$archive/Products/Applications/Ardia.app/Contents/Frameworks/Chromium Framework.framework"
+[ "$phase" = sign ] && framework_src="$archive/Products/Applications/Nilla.app/Contents/Frameworks/Chromium Framework.framework"
 [ "$phase" = sign ] && { [ -d "$archive" ] || die "no $archive: run --phase build first"; }
 framework_engine="${ARDIACORE_FRAMEWORK_ENGINE:-}"
 provisioning_profile="${RELEASE_PROVISIONING_PROFILE:-}"
 read -r -a extra_build_settings <<<"${RELEASE_BUILD_SETTINGS:-}"
 
-pbx="$macos/Ardia.xcodeproj/project.pbxproj"
+pbx="$macos/Nilla.xcodeproj/project.pbxproj"
 project_version="$(sed -n 's/.*MARKETING_VERSION = "\{0,1\}\([^";]*\)"\{0,1\};/\1/p' "$pbx" | sort -u)"
 min_macos="$(sed -n 's/.*MACOSX_DEPLOYMENT_TARGET = \([0-9]*\)\.0;/\1/p' "$pbx" | sort -u)"
 [[ "$min_macos" =~ ^[0-9]+$ ]] || die "the project's MACOSX_DEPLOYMENT_TARGET isn't one whole macOS version: '$min_macos'"
@@ -89,15 +82,13 @@ work="$(mktemp -d "${TMPDIR:-/tmp}/ac-release-work.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 notes_body="$work/notes-body.md"
 notes="$root/docs/release-notes/$version.md"
-notes_video=""
 if [ -f "$notes" ]; then
   note() { node "$root/scripts/lib/release-note.mjs" "$notes" "$1"; }
   headline="$(note headline)" || die "$notes: its frontmatter doesn't read (above)"
-  notes_video="$(note video)"
   note body > "$notes_body"
 elif [ "$rc" = 1 ]; then
   headline="Release candidate $version"
-  echo "A release candidate of Ardia $version. Not published." > "$notes_body"
+  echo "A release candidate of Nilla $version. Not published." > "$notes_body"
 else
   die "no release notes: write docs/release-notes/$version.md first"
 fi
@@ -131,19 +122,21 @@ if [ "$phase" != build ]; then
     || die "packages/ardiacore/prebuilt-engines.tsv lists no published engine for this engine key (${engine_tree:0:12}): publish it with scripts/publish-engine.sh, commit the table line, then release"
   case "$engine_release" in engine-*) engine_tag="$engine_release" ;; *) engine_tag="v$engine_release" ;; esac
   [ -n "$engine_release" ] \
-    && engine_source="$REPO_URL/releases/download/$engine_tag/ArdiaCore-${engine_tree:0:12}-source.tar.xz"
+    && engine_source="https://github.com/$ENGINE_REPO/releases/download/$engine_tag/ArdiaCore-${engine_tree:0:12}-source.tar.xz"
 
   identity_name="Developer ID Application"
   identity="$(security find-identity -v -p codesigning | awk -v n="$identity_name" 'index($0, n) { print $2; exit }')"
   [ -n "$identity" ] || die "no $identity_name identity"
   load_notary_auth
   notarize=0
-  if xcrun notarytool history "${notary_auth[@]}" >/dev/null 2>&1; then
+  if has_notary_auth && xcrun notarytool history "${notary_auth[@]}" >/dev/null 2>&1; then
     notarize=1
   elif [ "${ALLOW_UNNOTARIZED:-0}" = 1 ]; then
     echo "warning: no notarytool credentials; the build won't be notarized" >&2
+  elif ! has_notary_auth; then
+    die "no notarytool credentials: $notary_setup_hint"
   else
-    echo "error: notarytool credentials are missing or invalid (scripts/.notary.env or the '${NOTARY_PROFILE:-ardia}' profile):" >&2
+    echo "error: notarytool refuses the credentials from scripts/.notary.env or the environment:" >&2
     xcrun notarytool history "${notary_auth[@]}" 2>&1 | head -2 >&2
     exit 1
   fi
@@ -177,9 +170,9 @@ if [ "$phase" != sign ]; then
   "$stages/archive.sh" "$dist" "$framework_src" "${RELEASE_BUILD_DIR:-$root/apps/browser/build-release}" "$archive_signing" \
     ${version_settings[@]+"${version_settings[@]}"} AC_UPDATE_CHANNEL="$channel" \
     ${extra_build_settings[@]+"${extra_build_settings[@]}"}
-  echo "==> ardia CLI"
+  echo "==> nilla-browser CLI"
   "$root/apps/cli/scripts/build.sh" "$version" "$dist" >"$dist/cli-build.log" 2>&1 \
-    || { tail -20 "$dist/cli-build.log" >&2; die "building the ardia CLI failed ($dist/cli-build.log)"; }
+    || { tail -20 "$dist/cli-build.log" >&2; die "building the nilla-browser CLI failed ($dist/cli-build.log)"; }
 fi
 if [ "$phase" = build ]; then
   echo
@@ -204,12 +197,11 @@ if [ "$notarize" = 1 ]; then
   "$stages/notarize.sh" "$app" "$dist"
 fi
 "$stages/package.sh" "$dist" "$version" "$identity"
-[ "$notarize" = 1 ] && "$stages/notarize.sh" "$dist/Ardia-$version.dmg" "$dist"
+[ "$notarize" = 1 ] && "$stages/notarize.sh" "$dist/Nilla-$version.dmg" "$dist"
 
 echo "==> Release notes"
 notes_args=()
 [ "$notarize" = 1 ] && notes_args+=(--notarized)
-[ -n "$notes_video" ] && notes_args+=(--video "$notes_video")
 [ -n "$engine_source" ] && notes_args+=(--engine-source "$engine_source")
 "$stages/notes.sh" "$version" "$notes_body" "$min_macos" ${notes_args[@]+"${notes_args[@]}"} > "$dist/release-notes.md"
 
@@ -222,7 +214,7 @@ SPARKLE_BIN="$sparkle" SPARKLE_KEY_FILE="$sparkle_key_file" "$stages/appcast.sh"
 echo
 [ "$notarize" = 1 ] && echo "Notarized and stapled." || echo "NOT notarized."
 [ "$rc" = 1 ] && echo "Release candidate: never publish dist/$version-rc."
-[ "$channel" = nightly ] && [ "$rc" = 0 ] && echo "Nightly: publish it with .claude/skills/release/scripts/publish.sh $version (a prerelease; the feed and ardia.dev/nightly follow)."
+[ "$channel" = nightly ] && [ "$rc" = 0 ] && echo "Nightly: publish it with scripts/release/publish.sh $version (a prerelease; the feed follows)."
 [ "$phase" = sign ] && echo "Not launched yet: remove the signing keys, then run the launch check (--phase check)."
 [ -n "$phased" ] && echo "Phased rollout: $phased s between steps (the appcast item has phasedRolloutInterval; the whole release takes $((phased * 7)) s)."
-du -sh "$app" "$dist/Ardia-$version.dmg" "$dist/Ardia-$version.zip" "$cli_tarball" "$dist/appcast.xml" "$dist/release-notes.md"
+du -sh "$app" "$dist/Nilla-$version.dmg" "$dist/Nilla-$version.zip" "$cli_tarball" "$dist/appcast.xml" "$dist/release-notes.md"

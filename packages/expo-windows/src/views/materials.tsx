@@ -1,6 +1,6 @@
 import { usePageCover } from "../engine/usePageCover";
 import { forwardRef, useCallback, useState } from "react";
-import type { GlassEffectProps, GlassGroupProps, NativePopoverBubbleProps, VisualEffectProps } from "@ardia/shell";
+import type { GlassEffectProps, GlassGroupProps, NativePopoverBubbleProps, VisualEffectProps } from "@nilla/shell";
 import { StyleSheet, View, type LayoutChangeEvent, type ViewStyle } from "react-native";
 import { parseColor, rgbaString } from "./color";
 import { bubblePath, NativeMaterialBlur, nativeBlur } from "./nativeMaterials";

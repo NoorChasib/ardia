@@ -3,16 +3,16 @@ import { test } from "node:test";
 import { failureText, feedNotPublished, folderOf, megabytes, offered, readBuild, readManifest } from "../../../../packages/expo-windows/src/updater/manifest.ts";
 import { noteReleaseNotesHeldForFirstRun, takeFirstRunCounts } from "../state/telemetry/firstRunCounts.ts";
 
-const under = "https://github.com/ardia-browser/ardia/releases/download/";
+const under = "https://github.com/NoorChasib/nilla/releases/download/";
 const sha = "a".repeat(64);
 const installer = (name) => ({ url: `${under}windows-alpha/${name}`, sha256: sha, bytes: 180_000_000 });
-const manifest = (changes = {}) => JSON.stringify({ version: "0.2.46", build: 60, x64: installer("Ardia-Setup-x64.exe"), arm64: installer("Ardia-Setup-arm64.exe"), ...changes });
+const manifest = (changes = {}) => JSON.stringify({ version: "0.2.46", build: 60, x64: installer("Nilla-Setup-x64.exe"), arm64: installer("Nilla-Setup-arm64.exe"), ...changes });
 
 test("a published manifest reads with both installers", () => {
   const read = readManifest(manifest(), under);
   assert.equal(read.build, 60);
   assert.equal(read.version, "0.2.46");
-  assert.equal(read.installers.x64.url, `${under}windows-alpha/Ardia-Setup-x64.exe`);
+  assert.equal(read.installers.x64.url, `${under}windows-alpha/Nilla-Setup-x64.exe`);
   assert.equal(read.installers.arm64.bytes, 180_000_000);
 });
 
@@ -24,17 +24,17 @@ test("a manifest that is not JSON, not an object, or has no usable build is refu
 
 test("an installer from another address, with another ending, or a path that climbs is dropped", () => {
   const dropped = [
-    { ...installer("Ardia-Setup-x64.exe"), url: "https://example.com/Ardia-Setup-x64.exe" },
-    { ...installer("Ardia-Setup-x64.exe"), url: `http://github.com/ardia-browser/ardia/releases/download/windows-alpha/Ardia-Setup-x64.exe` },
-    { ...installer("Ardia-Setup-x64.exe"), url: `${under}windows-alpha/Ardia-Setup-x64.msi` },
-    { ...installer("Ardia-Setup-x64.exe"), url: `${under}../../../other/repo/releases/download/x/Setup.exe` },
-    { ...installer("Ardia-Setup-x64.exe"), url: `${under}windows-alpha/Ardia Setup.exe` },
-    { ...installer("Ardia-Setup-x64.exe"), sha256: sha.toUpperCase() },
-    { ...installer("Ardia-Setup-x64.exe"), sha256: "abc" },
-    { ...installer("Ardia-Setup-x64.exe"), bytes: 0 },
-    { ...installer("Ardia-Setup-x64.exe"), bytes: 2 ** 31 },
-    { ...installer("Ardia-Setup-x64.exe"), bytes: "180000000" },
-    "Ardia-Setup-x64.exe",
+    { ...installer("Nilla-Setup-x64.exe"), url: "https://example.com/Nilla-Setup-x64.exe" },
+    { ...installer("Nilla-Setup-x64.exe"), url: `http://github.com/NoorChasib/nilla/releases/download/windows-alpha/Nilla-Setup-x64.exe` },
+    { ...installer("Nilla-Setup-x64.exe"), url: `${under}windows-alpha/Nilla-Setup-x64.msi` },
+    { ...installer("Nilla-Setup-x64.exe"), url: `${under}../../../other/repo/releases/download/x/Setup.exe` },
+    { ...installer("Nilla-Setup-x64.exe"), url: `${under}windows-alpha/Nilla Setup.exe` },
+    { ...installer("Nilla-Setup-x64.exe"), sha256: sha.toUpperCase() },
+    { ...installer("Nilla-Setup-x64.exe"), sha256: "abc" },
+    { ...installer("Nilla-Setup-x64.exe"), bytes: 0 },
+    { ...installer("Nilla-Setup-x64.exe"), bytes: 2 ** 31 },
+    { ...installer("Nilla-Setup-x64.exe"), bytes: "180000000" },
+    "Nilla-Setup-x64.exe",
   ];
   for (const x64 of dropped) {
     const read = readManifest(manifest({ x64 }), under);
@@ -43,10 +43,42 @@ test("an installer from another address, with another ending, or a path that cli
   }
 });
 
+test("with no trusted prefix every installer is dropped, since an empty prefix would match any address", () => {
+  const read = readManifest(manifest(), "");
+  assert.deepEqual(read.installers, {});
+  assert.equal(offered(read, "x64", 1), null);
+});
+
+test("a trusted prefix that isn't a whole folder trusts nothing, so a neighbouring host or folder can't pass", () => {
+  const host = "https://updates.example.test";
+  const neighbour = { ...installer("x"), url: "https://updates.example.test.attacker.test/Setup-x64.exe" };
+  for (const prefix of [host, `${host}/releases`, `${host}/r?x=/`, `https://me@updates.example.test/r/`]) {
+    assert.deepEqual(readManifest(manifest({ x64: neighbour, arm64: { ...installer("x"), url: `${host}/releases/Setup.exe` } }), prefix).installers, {}, prefix);
+  }
+  const folder = `${host}/releases/`;
+  const dropped = [
+    "https://updates.example.test.attacker.test/releases/Setup-x64.exe",
+    "https://updates.example.test:8443/releases/Setup-x64.exe",
+    "https://updates.example.test/releases-old/Setup-x64.exe",
+    "https://updates.example.test/other/Setup-x64.exe",
+    "https://updates.example.test/releases/%2e%2e/Setup-x64.exe",
+    "https://updates.example.test/releases/Setup-x64.exe?x=.exe",
+    "https://updates.example.test/releases/@evil/Setup-x64.exe",
+  ];
+  for (const url of dropped) assert.equal(readManifest(manifest({ x64: { url, sha256: sha, bytes: 10 } }), folder).installers.x64, undefined, url);
+  assert.ok(readManifest(manifest({ x64: { url: `${folder}nightly/Setup-x64.exe`, sha256: sha, bytes: 10 } }), folder).installers.x64);
+});
+
+test("a feed hosted apart from its installers still offers installers under the trusted folder", () => {
+  const folder = "https://downloads.example.test/nilla/";
+  const read = readManifest(manifest({ x64: { url: `${folder}Setup-x64.exe`, sha256: sha, bytes: 10 } }), folder);
+  assert.equal(offered(read, "x64", 1).url, `${folder}Setup-x64.exe`);
+});
+
 test("only a higher build with an installer for this processor is offered", () => {
   const read = readManifest(manifest(), under);
-  assert.equal(offered(read, "x64", 59).url, `${under}windows-alpha/Ardia-Setup-x64.exe`);
-  assert.equal(offered(read, "arm64", 1).url, `${under}windows-alpha/Ardia-Setup-arm64.exe`);
+  assert.equal(offered(read, "x64", 59).url, `${under}windows-alpha/Nilla-Setup-x64.exe`);
+  assert.equal(offered(read, "arm64", 1).url, `${under}windows-alpha/Nilla-Setup-arm64.exe`);
   assert.equal(offered(read, "x64", 60), null);
   assert.equal(offered(read, "x64", 61), null);
   assert.equal(offered(read, "x86", 1), null);
@@ -62,9 +94,9 @@ test("the build file beside the app reads, and anything else means no identity",
 test("a test feed's installers must sit in the feed's own folder", () => {
   const feed = "http://10.0.2.2:18770/feed/windows-update.json";
   assert.equal(folderOf(feed), "http://10.0.2.2:18770/feed/");
-  const local = { url: "http://10.0.2.2:18770/feed/Ardia-Setup-arm64.exe", sha256: sha, bytes: 10 };
+  const local = { url: "http://10.0.2.2:18770/feed/Nilla-Setup-arm64.exe", sha256: sha, bytes: 10 };
   assert.ok(readManifest(manifest({ arm64: local }), folderOf(feed)).installers.arm64);
-  assert.equal(readManifest(manifest({ arm64: installer("Ardia-Setup-arm64.exe") }), folderOf(feed)).installers.arm64, undefined);
+  assert.equal(readManifest(manifest({ arm64: installer("Nilla-Setup-arm64.exe") }), folderOf(feed)).installers.arm64, undefined);
 });
 
 test("a failed check is told in words, whatever shape the failure has", () => {

@@ -12,9 +12,9 @@ export {
   type AppIcon,
   type HardwareInfo,
   type DiagnosticsSample,
-} from "@ardia/shell";
+} from "@nilla/shell";
 import { call } from "@ardia/ardiacore";
-import { nativeModule, type AppEvent, type AppearanceMode, type OpenURLSource, type UpdateChannel } from "@ardia/shell";
+import { nativeModule, type AppEvent, type AppearanceMode, type OpenURLSource, type UpdateChannel } from "@nilla/shell";
 
 export type { AppEvent, OpenURLSource };
 
@@ -25,9 +25,9 @@ export { WIDEVINE_COMPONENT_ID } from "@ardia/ardiacore";
 export const engineInfo = () => call("engine.info");
 export const listComponents = () => call("engine.components");
 
-const Shell = nativeModule("ArdiaShell");
-const App = nativeModule("ArdiaApp");
-const Updater = nativeModule("ArdiaUpdater");
+const Shell = nativeModule("NillaShell");
+const App = nativeModule("NillaApp");
+const Updater = nativeModule("NillaUpdater");
 
 export const setAppearance = (mode: AppearanceMode) => Shell.setAppearance(mode);
 export const isDarkAppearance = () => Shell.isDarkAppearance();

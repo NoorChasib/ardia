@@ -1,4 +1,4 @@
-import { labLog, speech, type SpeechAccess } from "@ardia/phone-native";
+import { labLog, speech, type SpeechAccess } from "@nilla/phone-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "description": "An Ardia theme: colour roles that replace Ardia's own, per appearance, and the type, metrics, layout and icons it draws with",
+  "description": "A Nilla theme: colour roles that replace Nilla's own, per appearance, and the type, metrics, layout and icons it draws with",
   "type": "object",
   "properties": {
     "$schema": {
@@ -8,7 +8,7 @@
     },
     "dark": {
       "type": "object",
-      "description": "Roles for the dark appearance; a role left out keeps Ardia's value",
+      "description": "Roles for the dark appearance; a role left out keeps Nilla's value",
       "properties": {
         "grain": {
           "type": "number",
@@ -468,7 +468,7 @@
     },
     "light": {
       "type": "object",
-      "description": "Roles for the light appearance; a role left out keeps Ardia's value",
+      "description": "Roles for the light appearance; a role left out keeps Nilla's value",
       "properties": {
         "grain": {
           "type": "number",
@@ -1001,7 +1001,7 @@
             }
           },
           "additionalProperties": false,
-          "description": "Text sizes in points, each replacing one step of Ardia's scale"
+          "description": "Text sizes in points, each replacing one step of Nilla's scale"
         },
         "weights": {
           "type": "object",
@@ -1104,7 +1104,7 @@
             }
           },
           "additionalProperties": false,
-          "description": "What each of Ardia's weight names draws with, from \"100\" (thin) to \"900\" (black)"
+          "description": "What each of Nilla's weight names draws with, from \"100\" (thin) to \"900\" (black)"
         }
       },
       "additionalProperties": false,
@@ -1138,7 +1138,7 @@
           "type": "number",
           "minimum": 160,
           "maximum": 400,
-          "description": "The sidebar's width. The sidebar takes it when you switch to the theme or change this value, and a double-click on its edge returns to it; left out, the width is yours (Ardia's default is 190)"
+          "description": "The sidebar's width. The sidebar takes it when you switch to the theme or change this value, and a double-click on its edge returns to it; left out, the width is yours (Nilla's default is 190)"
         },
         "radius": {
           "type": "object",
@@ -1252,7 +1252,7 @@
         "pattern": "^[a-z0-9]+(\\.[a-z0-9]+)*$"
       },
       "default": {},
-      "description": "SF Symbols to draw in place of Ardia's, by name: { \"plus\": \"plus.circle\" }"
+      "description": "SF Symbols to draw in place of Nilla's, by name: { \"plus\": \"plus.circle\" }"
     }
   },
   "additionalProperties": false

@@ -2,7 +2,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface ArdiaSavedSession : NSObject
+@interface NillaSavedSession : NSObject
 
 @property(class, readonly) NSInteger version;
 @property(readonly) NSInteger fileVersion;

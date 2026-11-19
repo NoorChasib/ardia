@@ -116,13 +116,13 @@ extension MainMenu {
     }
     if bound != announcedShortcuts {
       announcedShortcuts = bound
-      ArdiaHost.menuShortcutsChanged()
-      LittleArdiaHotKey.shared.shortcutsChanged()
+      NillaHost.menuShortcutsChanged()
+      LittleNillaHotKey.shared.shortcutsChanged()
     }
   }
 
   static func applyShortcuts(_ bindings: [String: [[String]]]) {
-    LittleArdiaHotKey.bindingHoldsFunction = LittleArdiaHotKey.holdsFunction(bindings)
+    LittleNillaHotKey.bindingHoldsFunction = LittleNillaHotKey.holdsFunction(bindings)
     defer { announceShortcuts() }
     for (id, group) in shortcutGroups() {
       guard let bound = bindings[id] else {

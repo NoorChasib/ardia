@@ -12,7 +12,7 @@ const interop = join(repo, "packages/sync/tests/fixtures/windows-interop");
 const manifestOf = (name) => JSON.parse(readFileSync(join(interop, `${name}.json`), "utf8"));
 const hex = (text) => new Uint8Array(Buffer.from(text, "hex"));
 const counts = () => ({ placeholders: 0, busy: 0 });
-const scratch = () => mkdtempSync(join(tmpdir(), "ardia-sync-"));
+const scratch = () => mkdtempSync(join(tmpdir(), "nilla-sync-"));
 const quoted = (text) => [...text.matchAll(/"([a-z ]+)"/g)].flatMap((m) => m[1].trim().split(/\s+/));
 
 test("the Windows host's wordlist is the Mac's", () => {
@@ -24,8 +24,8 @@ test("the Windows host's wordlist is the Mac's", () => {
 
 test("the format double matches the Mac's known answers", () => {
   const zero = cryptoDouble(new Uint8Array(32));
-  assert.equal(zero.chainTag(), "gbcx4r55mk3rlaegbggknyx4ta");
-  assert.equal(zero.scopeTag("app"), "nr4ncp5iyqzqgjn6ol4zksqtne");
+  assert.equal(zero.chainTag(), "d7edxrj7vwlaygcfhaqnqlb544");
+  assert.equal(zero.scopeTag("app"), "cmuewgnqxzle7emjmpiisvntxi");
   const mac = manifestOf("mac");
   const keys = cryptoDouble(hex(mac.entropy));
   assert.equal(keys.chainTag(), mac.chainTag);
@@ -51,7 +51,7 @@ test("a vault the Mac wrote reads on Windows, with its passwords sealed before t
     if (file.scope === "app") {
       const login = got.records["pw:1"].v;
       assert.equal(keys.openPassword(login.s, login.o, login.u), expected.records["pw:1"].v.p);
-      assert.equal(keys.openPassword(got["pw:2"].v.s, "https://ardia.dev", "grace"), "battery staple");
+      assert.equal(keys.openPassword(got["pw:2"].v.s, expected["pw:2"].v.o, expected["pw:2"].v.u), expected["pw:2"].v.p);
     } else assert.deepEqual(got, expected);
   }
 });
@@ -90,7 +90,7 @@ test("online-only and busy files wait instead of counting as damaged, and a file
   const folder = scratch();
   cpSync(join(interop, "mac"), folder, { recursive: true });
   const [app, profile] = mac.files;
-  const native = nativeDouble(keys, { placeholders: new Set([`${app.id}.nns`]), busy: new Set([`${profile.id}.nns`]) });
+  const native = nativeDouble(keys, { placeholders: new Set([`${app.id}.nls`]), busy: new Set([`${profile.id}.nls`]) });
   const tally = counts();
   const vault = syncVault(native, tally);
   const first = await vault.read(folder, app.scope, []);

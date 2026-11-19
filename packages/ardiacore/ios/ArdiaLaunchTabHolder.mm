@@ -6,10 +6,10 @@
 
 #import <objc/runtime.h>
 
-using namespace ardia_web_view;
-using namespace ardia_runtime;
+using namespace nilla_web_view;
+using namespace nilla_runtime;
 
-@implementation ArdiaLaunchTabHolder {
+@implementation NillaLaunchTabHolder {
   NSMutableArray<NSInvocation *> *_calls;
   NSMutableArray<NSNumber *> *_callOrder;
   NSMutableDictionary<NSString *, NSDictionary *> *_pageState;
@@ -67,8 +67,8 @@ static const NSUInteger kHeldPageStateTotalBytes = 256 * 1024;
 
 static BOOL HeldSelector(SEL selector) {
   struct objc_method_description d = protocol_getMethodDescription(@protocol(ArdiaCoreTabDelegate), selector, NO, YES);
-  if (!d.name || ![ArdiaWebView instancesRespondToSelector:selector]) return NO;
-  NSMethodSignature *signature = [ArdiaWebView instanceMethodSignatureForSelector:selector];
+  if (!d.name || ![NillaWebView instancesRespondToSelector:selector]) return NO;
+  NSMethodSignature *signature = [NillaWebView instanceMethodSignatureForSelector:selector];
   return signature && strcmp(signature.methodReturnType, @encode(void)) == 0;
 }
 
@@ -77,7 +77,7 @@ static BOOL HeldSelector(SEL selector) {
 }
 
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
-  return HeldSelector(selector) ? [ArdiaWebView instanceMethodSignatureForSelector:selector] : [super methodSignatureForSelector:selector];
+  return HeldSelector(selector) ? [NillaWebView instanceMethodSignatureForSelector:selector] : [super methodSignatureForSelector:selector];
 }
 
 - (void)forwardInvocation:(NSInvocation *)invocation {
@@ -102,8 +102,8 @@ static BOOL HeldSelector(SEL selector) {
   if (invocation.selector == @selector(tab:navigationBecameDownload:)) {
     __unsafe_unretained NSString *url = nil;
     [invocation getArgument:&url atIndex:3];
-    if (url.length) ardia_host::NoteNavigationDownload(url, _profile ?: @"");
-    if (_url.length && ![_url isEqualToString:url ?: @""]) ardia_host::NoteNavigationDownload(_url, _profile ?: @"");
+    if (url.length) nilla_host::NoteNavigationDownload(url, _profile ?: @"");
+    if (_url.length && ![_url isEqualToString:url ?: @""]) nilla_host::NoteNavigationDownload(_url, _profile ?: @"");
   }
   if (invocation.selector == @selector(tabDidCommitDocument:) || invocation.selector == @selector(tab:rendererGone:code:))
     [self forgetHeldPageStateWhere:^BOOL(NSDictionary *held) { return YES; }];
@@ -111,7 +111,7 @@ static BOOL HeldSelector(SEL selector) {
       invocation.selector == @selector(tabDidChangeSecurity:)) {
     __unsafe_unretained ArdiaCoreTab *tab = nil;
     [invocation getArgument:&tab atIndex:2];
-    [ArdiaEarlyWindow pageNavigated:tab launchURL:_url];
+    [NillaEarlyWindow pageNavigated:tab launchURL:_url];
   }
   if (!_calls) _calls = [NSMutableArray array];
   if (!_callOrder) _callOrder = [NSMutableArray array];
@@ -126,10 +126,10 @@ static BOOL HeldSelector(SEL selector) {
 
 - (void)tabWillClose:(ArdiaCoreTab *)tab {
   _closedByChrome = YES;
-  [ArdiaEarlyWindow dropPage:tab];
+  [NillaEarlyWindow dropPage:tab];
 }
 
-- (void)replayTo:(ArdiaWebView *)view tab:(ArdiaCoreTab *)tab {
+- (void)replayTo:(NillaWebView *)view tab:(ArdiaCoreTab *)tab {
   NSArray<NSInvocation *> *calls = _calls;
   NSArray<NSNumber *> *callOrder = _callOrder;
   _calls = nil;

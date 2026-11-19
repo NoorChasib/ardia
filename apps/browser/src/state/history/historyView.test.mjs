@@ -213,7 +213,7 @@ test("a history read still running when the owner is deleted lands for the profi
   stub.historyDbs.clear();
   const stop = startHistory();
   await reloadHistory();
-  const fake = stub.ardiaCoreNativeModules.ArdiaHistory;
+  const fake = stub.ardiaCoreNativeModules.NillaHistory;
   const call = fake.call;
   let release;
   const held = new Promise((r) => (release = r));
@@ -375,7 +375,7 @@ test("a history read that fails says why: the error's code and message", async (
   S().hydrate({});
   stub.docs.clear();
   stub.historyDbs.clear();
-  const fake = stub.ardiaCoreNativeModules.ArdiaHistory;
+  const fake = stub.ardiaCoreNativeModules.NillaHistory;
   const call = fake.call;
   const failure = Object.assign(new Error("database is locked"), { code: "ERR_HISTORY_LOCKED" });
   fake.call = (verb, profile, json) => (verb === "query" ? Promise.reject(failure) : call(verb, profile, json));
@@ -402,7 +402,7 @@ test("a profile other than the default is never named by its id in a gap report 
   S().createWindow({ profileId: profile, url: "https://example.com/" });
   const engine = model.engineProfile(S(), profile);
   assert.ok(engine.length > 0, "a non-default profile has an engine id of its own");
-  const fake = stub.ardiaCoreNativeModules.ArdiaHistory;
+  const fake = stub.ardiaCoreNativeModules.NillaHistory;
   const call = fake.call;
   let failing = false;
   fake.call = (verb, id, json) => (verb === "query" && id === engine && failing ? Promise.reject(Object.assign(new Error("database is locked"), { code: "ERR_HISTORY_LOCKED" })) : call(verb, id, json));

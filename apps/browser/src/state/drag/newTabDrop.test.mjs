@@ -66,8 +66,8 @@ test("a link dropped on a New Tab page navigates it, and text searches", () => {
   openDroppedInTab(tab, [{ kind: "url", url: "https://example.com/dropped" }]);
   assert.equal(navigated(tab), "https://example.com/dropped");
   const second = newTabWindow().tab;
-  openDroppedInTab(second, [{ kind: "text", text: "ardia browser drop" }]);
-  assert.match(navigated(second), /[?&]q=ardia(\+|%20)browser(\+|%20)drop/);
+  openDroppedInTab(second, [{ kind: "text", text: "nilla browser drop" }]);
+  assert.match(navigated(second), /[?&]q=nilla(\+|%20)browser(\+|%20)drop/);
 });
 
 test("only absolute local file URLs and non-empty text become inputs", () => {

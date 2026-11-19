@@ -33,8 +33,8 @@ jest.mock("../platform/telemetry", () => ({
   takePendingCounts: () => ({}),
 }));
 
-jest.mock("@ardia/phone-native", () => {
-  const actual = jest.requireActual("@ardia/phone-native");
+jest.mock("@nilla/phone-native", () => {
+  const actual = jest.requireActual("@nilla/phone-native");
   return {
     ...actual,
     closePage: async (id: string) => void mockNative.closed.push(id),
@@ -79,10 +79,10 @@ type Launch = {
 
 const T0 = Date.UTC(2026, 10, 15, 9, 0, 0);
 
-function launch({ syncDemo = false, ardiaDemo = false }: { syncDemo?: boolean; ardiaDemo?: boolean } = {}): Launch {
+function launch({ syncDemo = false, nillaDemo = false }: { syncDemo?: boolean; nillaDemo?: boolean } = {}): Launch {
   jest.clearAllTimers();
   mockNative.syncDemo = syncDemo;
-  mockNative.arguments = ardiaDemo ? { ArdiaDemo: true } : {};
+  mockNative.arguments = nillaDemo ? { NillaDemo: true } : {};
   mockNative.listeners = [];
   let made: Launch | null = null;
   jest.isolateModules(() => {
@@ -271,9 +271,9 @@ test("a sync-demo session never changes the real tab store: tabs, saved states, 
   expect(next.telemetry.usageToday().counts.tabs_opened).toBe(7);
 });
 
-test("an ArdiaDemo launch keeps today's single in-memory store: the tabs come from the same seeded database as the rest, and the real file is never opened", () => {
+test("a NillaDemo launch keeps today's single in-memory store: the tabs come from the same seeded database as the rest, and the real file is never opened", () => {
   const { DEMO_OPEN } = require("../state/app/demoSeed") as typeof import("../state/app/demoSeed");
-  const demo = launch({ syncDemo: true, ardiaDemo: true });
+  const demo = launch({ syncDemo: true, nillaDemo: true });
   demo.browse.startBrowser();
   expect(demo.database.tabDatabase()).toBe(demo.database.browserDatabase());
   expect(demo.tabs.currentTabs().open.map((tab) => tab.url)).toEqual(DEMO_OPEN.map((page) => page.url));

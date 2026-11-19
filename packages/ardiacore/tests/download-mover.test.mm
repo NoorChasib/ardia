@@ -59,11 +59,11 @@ static NSMutableDictionary *FinishedEvent(NSString *path, NSString *downloaded) 
 static NSArray<NSString *> *StagingDirs() {
   NSMutableArray *found = [NSMutableArray array];
   for (NSString *name in [NSFileManager.defaultManager contentsOfDirectoryAtPath:gSource error:nil] ?: @[])
-    if ([name hasPrefix:@".ardia-moving-"]) [found addObject:[gSource stringByAppendingPathComponent:name]];
+    if ([name hasPrefix:@".nilla-moving-"]) [found addObject:[gSource stringByAppendingPathComponent:name]];
   return found;
 }
 
-static NSString *Finished(ArdiaDownloadMover *mover, NSString *name, NSString *text, NSDictionary *extra = @{}) {
+static NSString *Finished(NillaDownloadMover *mover, NSString *name, NSString *text, NSDictionary *extra = @{}) {
   NSString *path = Make([@"src" stringByAppendingPathComponent:name], text);
   NSMutableDictionary *event = FinishedEvent(path, text);
   [event addEntriesFromDictionary:extra];
@@ -77,7 +77,7 @@ static NSString *Reason(NSDictionary *result) {
 
 int main() {
   @autoreleasepool {
-    char base[] = "/tmp/ardia-download-mover-XXXXXX";
+    char base[] = "/tmp/nilla-download-mover-XXXXXX";
     const char *made = mkdtemp(base);
     if (!made) return 1;
     char resolved[PATH_MAX];
@@ -86,7 +86,7 @@ int main() {
     gSource = [gHome stringByAppendingPathComponent:@"src"];
     NSUserDefaults *defaults = [[NSUserDefaults alloc] initWithSuiteName:[gHome stringByAppendingPathComponent:@"prefs"]];
     [NSFileManager.defaultManager createDirectoryAtPath:[gHome stringByAppendingPathComponent:@"Downloads"] withIntermediateDirectories:YES attributes:nil error:nil];
-    ArdiaDownloadMover *mover = [[ArdiaDownloadMover alloc] initWithHome:gHome defaults:defaults];
+    NillaDownloadMover *mover = [[NillaDownloadMover alloc] initWithHome:gHome defaults:defaults];
 
     {
       NSString *stranger = Make(@"src/stranger.txt", @"not ours");
@@ -125,7 +125,7 @@ int main() {
     }
     {
       NSString *path = Finished(mover, @"report.pdf", @"first");
-      setxattr(path.fileSystemRepresentation, "com.apple.quarantine", "0083;00000000;Ardia;", 20, 0, 0);
+      setxattr(path.fileSystemRepresentation, "com.apple.quarantine", "0083;00000000;Nilla;", 20, 0, 0);
       NSDictionary *result = [mover moveDownloadAt:path toFolder:@"~/Downloads/Sorted/2026"];
       CHECK([Reason(result) isEqual:@"ok"]);
       NSString *moved = [gHome stringByAppendingPathComponent:@"Downloads/Sorted/2026/report.pdf"];
@@ -151,7 +151,7 @@ int main() {
       NSString *movedId = [NSString stringWithFormat:@"d%d", gNextId - 2];
       NSDictionary *replayed = [mover noteDownloadEvent:@{@"id" : movedId, @"path" : second, @"state" : @"finished"}];
       CHECK([replayed[@"path"] isEqual:again[@"path"]]);
-      ArdiaDownloadMover *relaunched = [[ArdiaDownloadMover alloc] initWithHome:gHome defaults:defaults];
+      NillaDownloadMover *relaunched = [[NillaDownloadMover alloc] initWithHome:gHome defaults:defaults];
       NSDictionary *afterRelaunch = [relaunched noteDownloadEvent:@{@"id" : movedId, @"path" : second, @"state" : @"finished"}];
       CHECK([afterRelaunch[@"path"] isEqual:again[@"path"]]);
     }
@@ -327,18 +327,18 @@ int main() {
         return path;
       };
       NSString *freed = crashAt(@"crash-free.txt", @"put back", @"claimed");
-      ArdiaDownloadMover *restarted = [[ArdiaDownloadMover alloc] initWithHome:gHome defaults:defaults];
+      NillaDownloadMover *restarted = [[NillaDownloadMover alloc] initWithHome:gHome defaults:defaults];
       CHECK([Text(freed) isEqual:@"put back"]);
       CHECK(StagingDirs().count == 0);
-      CHECK([defaults dictionaryForKey:@"ArdiaDownloadMoveJournal"] == nil);
+      CHECK([defaults dictionaryForKey:@"NillaDownloadMoveJournal"] == nil);
 
       mover = restarted;
       NSString *taken = crashAt(@"crash-taken.txt", @"still mine", @"claimed");
       NSString *takenId = [NSString stringWithFormat:@"d%d", gNextId];
       Make(@"src/crash-taken.txt", @"someone else");
-      restarted = [[ArdiaDownloadMover alloc] initWithHome:gHome defaults:defaults];
+      restarted = [[NillaDownloadMover alloc] initWithHome:gHome defaults:defaults];
       NSString *reported = [restarted noteDownloadEvent:@{@"id" : takenId, @"path" : taken}][@"path"];
-      CHECK([reported hasPrefix:[gSource stringByAppendingPathComponent:@".ardia-moving-"]]);
+      CHECK([reported hasPrefix:[gSource stringByAppendingPathComponent:@".nilla-moving-"]]);
       CHECK([Text(reported) isEqual:@"still mine"]);
       CHECK([Text(taken) isEqual:@"someone else"]);
       [NSFileManager.defaultManager removeItemAtPath:reported.stringByDeletingLastPathComponent error:nil];
@@ -346,7 +346,7 @@ int main() {
       mover = restarted;
       NSString *placed = crashAt(@"crash-placed.txt", @"landed", @"placed");
       NSString *placedId = [NSString stringWithFormat:@"d%d", gNextId];
-      restarted = [[ArdiaDownloadMover alloc] initWithHome:gHome defaults:defaults];
+      restarted = [[NillaDownloadMover alloc] initWithHome:gHome defaults:defaults];
       NSString *landed = [gHome stringByAppendingPathComponent:@"Downloads/Crash/crash-placed.txt"];
       NSDictionary *committed = [restarted noteDownloadEvent:@{@"id" : placedId, @"path" : placed}];
       CHECK([committed[@"path"] isEqual:landed]);
@@ -396,13 +396,13 @@ int main() {
       unlink([gHome stringByAppendingPathComponent:@"Downloads/Large/large.bin"].fileSystemRepresentation);
     }
     {
-      CHECK([[ArdiaDownloadMover safeFileName:@".hidden"] isEqual:@"hidden"]);
-      CHECK([[ArdiaDownloadMover safeFileName:@"a/b:c.txt"] isEqual:@"a_b_c.txt"]);
-      CHECK([[ArdiaDownloadMover safeFileName:@"in‮gnp.exe"] isEqual:@"ingnp.exe"]);
-      CHECK([[ArdiaDownloadMover safeFileName:@"tab\there\n.txt"] isEqual:@"tabhere.txt"]);
-      CHECK([[ArdiaDownloadMover safeFileName:@" .. "] isEqual:@"download"]);
+      CHECK([[NillaDownloadMover safeFileName:@".hidden"] isEqual:@"hidden"]);
+      CHECK([[NillaDownloadMover safeFileName:@"a/b:c.txt"] isEqual:@"a_b_c.txt"]);
+      CHECK([[NillaDownloadMover safeFileName:@"in‮gnp.exe"] isEqual:@"ingnp.exe"]);
+      CHECK([[NillaDownloadMover safeFileName:@"tab\there\n.txt"] isEqual:@"tabhere.txt"]);
+      CHECK([[NillaDownloadMover safeFileName:@" .. "] isEqual:@"download"]);
       NSString *longName = [[@"" stringByPaddingToLength:400 withString:@"é" startingAtIndex:0] stringByAppendingString:@".pdf"];
-      NSString *cut = [ArdiaDownloadMover safeFileName:longName];
+      NSString *cut = [NillaDownloadMover safeFileName:longName];
       CHECK([cut lengthOfBytesUsingEncoding:NSUTF8StringEncoding] <= 255);
       CHECK([cut hasSuffix:@".pdf"]);
     }

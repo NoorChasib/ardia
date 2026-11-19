@@ -321,7 +321,7 @@ final class SidebarEdgeWatcher {
       observers.append(center.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
         self?.updateGlobalMonitor()
       })
-      observers.append(center.addObserver(forName: .ArdiaInterfaceScaleDidChange, object: nil, queue: .main) { [weak self] _ in
+      observers.append(center.addObserver(forName: .NillaInterfaceScaleDidChange, object: nil, queue: .main) { [weak self] _ in
         self?.checkPointer()
       })
       for name in [NSWindow.didMoveNotification, NSWindow.didResizeNotification, NSWindow.didChangeScreenNotification] {

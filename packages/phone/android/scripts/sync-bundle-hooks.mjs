@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
-const BUNDLE_URL = "ardia-sync-bundle:companion";
+const BUNDLE_URL = "nilla-sync-bundle:companion";
 let bundlePath = null;
 
 export function initialize(data) {
@@ -21,8 +21,8 @@ export async function load(url, context, next) {
   const source = readFileSync(bundlePath, "utf8");
   const probe = vm.createContext({});
   vm.runInContext(source, probe);
-  const names = Object.keys(probe.ArdiaSync);
-  const lines = [`(0, eval)(${JSON.stringify(source)});`, "const bundle = globalThis.ArdiaSync;"];
+  const names = Object.keys(probe.NillaSync);
+  const lines = [`(0, eval)(${JSON.stringify(source)});`, "const bundle = globalThis.NillaSync;"];
   for (const name of names) lines.push(`export const ${name} = bundle[${JSON.stringify(name)}];`);
   return { format: "module", source: lines.join("\n"), shortCircuit: true };
 }

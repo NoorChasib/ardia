@@ -67,7 +67,7 @@ export function linuxIntroMusic({ host, track = bundledTrack, createPlayer = (sr
         (error: unknown) => {
           if (playing === audio) playing = null;
           onPlayed?.(false);
-          console.info(`[ardia linux] the intro music didn't play: ${String(error)}`);
+          console.info(`[nilla linux] the intro music didn't play: ${String(error)}`);
         },
       );
     },

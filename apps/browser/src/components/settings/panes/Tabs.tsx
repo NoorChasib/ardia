@@ -17,7 +17,7 @@ import { keyText } from "../../../state/commands/keyText";
 import { PLATFORM_TERMS } from "../../../lib/platformTerms";
 import type { SettingsPlace } from "../../../state/settings/settingsWindows";
 
-const APP = "Ardia";
+const APP = "Nilla";
 
 const SIDEBAR_SIDES: SegmentOption<Settings["sidebarSide"]>[] = [
   { value: "left", title: "Left" },
@@ -71,7 +71,7 @@ const OTHER_SITE_LINKS: Option<OtherSiteLinks>[] = [
 const NEW_TAB_LINKS: Option<Settings["newTabLinksOpenIn"]>[] = [
   { value: "tab", title: "New tab" },
   { value: "peek", title: "Peek" },
-  { value: "littleArdia", title: "Little Ardia" },
+  { value: "littleNilla", title: "Little Nilla" },
 ];
 
 const PEEK_BUTTONS: Option<Settings["peekButtons"]>[] = [
@@ -236,7 +236,7 @@ function NewTabUrlRow({ anchor }: { anchor: SettingId }) {
 }
 
 function LinksSection() {
-  const littleArdia = useSettings((s) => s.openLinksInLittleArdia);
+  const littleNilla = useSettings((s) => s.openLinksInLittleNilla);
   const peekOtherSites = useSettings((s) => s.peekLinksToOtherSites);
   const newTabLinks = useSettings((s) => s.newTabLinksOpenIn);
   const peekButtons = useSettings((s) => s.peekButtons);
@@ -245,10 +245,10 @@ function LinksSection() {
       <SectionHeader title="Links" />
       <Group>
         <SettingToggle
-          anchor="tabs.openLinksInLittleArdia"
+          anchor="tabs.openLinksInLittleNilla"
           description={
-            littleArdia
-              ? `A link from ${PLATFORM_TERMS.linkSourceExamples} opens in Little Ardia, a small window of its own. ${keyText("⌘O")} moves it into ${APP}; closing it throws it away.`
+            littleNilla
+              ? `A link from ${PLATFORM_TERMS.linkSourceExamples} opens in Little Nilla, a small window of its own. ${keyText("⌘O")} moves it into ${APP}; closing it throws it away.`
               : `A link from ${PLATFORM_TERMS.linkSourceExamples} opens as a new tab in the ${APP} window you used last.`
           }
         />

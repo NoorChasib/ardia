@@ -5,7 +5,7 @@
 # native names the JavaScript asks for (a name no Kotlin Name(...) in packages/phone/android defines, or absent from
 # the baseline too, is reported as not built for Android),
 # Room's WorkDatabase_Impl with its no-argument constructor, and Expo's generated package list. Exits 1 on a loss.
-# Components switched on or off by the build's ardia_sync_offered value are listed with it; their classes are still checked.
+# Components switched on or off by the build's nilla_sync_offered value are listed with it; their classes are still checked.
 # check-names.py --self-test checks the constructor match on fixed dexdump records.
 # The SDK is ANDROID_HOME (else ~/Library/Android/sdk), apkanalyzer ARDIA_APKANALYZER (else the SDK's cmdline-tools),
 # and the sources ARDIA_BUILD_ROOT (else this checkout).
@@ -61,9 +61,9 @@ for line in manifest.splitlines():
         components.append(('targetActivity', target.group(1) if not target.group(1).startswith('.') else package + target.group(1)))
 
 values = subprocess.run([str(aapt2), 'dump', 'resources', apk], capture_output=True, text=True).stdout
-offered_id = re.search(r'resource (0x[0-9a-f]+) bool/ardia_sync_offered', values)
+offered_id = re.search(r'resource (0x[0-9a-f]+) bool/nilla_sync_offered', values)
 if offered_id:
-    offered = re.search(r'bool/ardia_sync_offered[^\n]*\n\s*\(\)\s*(true|false)', values)
+    offered = re.search(r'bool/nilla_sync_offered[^\n]*\n\s*\(\)\s*(true|false)', values)
     switched = []
     owner = None
     for line in manifest.splitlines():
@@ -74,7 +74,7 @@ if offered_id:
             owner = name.group(1)
         if re.search(r'android:enabled\(0x0101000e\)=@' + offered_id.group(1) + r'\b', line):
             switched.append(owner or '?')
-    print(f'components switched by ardia_sync_offered ({offered.group(1) if offered else "unknown"} in this build): ' + (', '.join(item.rsplit('.', 1)[-1] for item in switched) or 'none'))
+    print(f'components switched by nilla_sync_offered ({offered.group(1) if offered else "unknown"} in this build): ' + (', '.join(item.rsplit('.', 1)[-1] for item in switched) or 'none'))
 missing = [(kind, name) for kind, name in components if name not in classes]
 print(f'manifest: {len(components)} named classes, {len(missing)} missing')
 for kind, name in missing:

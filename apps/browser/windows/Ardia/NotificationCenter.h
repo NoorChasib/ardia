@@ -35,7 +35,7 @@
 #pragma comment(lib, "shlwapi.lib")
 #pragma comment(lib, "urlmon.lib")
 
-namespace Ardia::NotificationParts {
+namespace Nilla::NotificationParts {
 
 enum class Authorization { NotDetermined, Denied, Granted };
 
@@ -230,7 +230,7 @@ struct AppNotificationsCenter final : ToastCenter {
     }
     try {
       winrt::Microsoft::Windows::AppNotifications::Builder::AppNotificationBuilder builder;
-      builder.AddArgument(L"ardiaId", Paths::Wide(id));
+      builder.AddArgument(L"nillaId", Paths::Wide(id));
       if (request.tabId) builder.AddArgument(L"tabId", Paths::Wide(*request.tabId));
       if (request.windowId) builder.AddArgument(L"windowId", Paths::Wide(*request.windowId));
       if (!request.dataJson.empty()) builder.AddArgument(L"data", Paths::Wide(request.dataJson));
@@ -346,10 +346,10 @@ struct NotificationHub {
     if (std::optional<std::wstring> icon = AppIcon::NotificationIconPath()) {
       try {
         manager.Register(AppIcon::kDisplayName, winrt::Windows::Foundation::Uri{*icon});
-        LaunchLog::Write(L"info", L"notifications: registered as Ardia with Ardia's icon");
+        LaunchLog::Write(L"info", L"notifications: registered as Nilla with Nilla's icon");
         return;
       } catch (winrt::hresult_error const &error) {
-        LaunchLog::Write(L"warning", std::wstring(L"notifications: registering with Ardia's name and icon failed, 0x").append(HexCode(error.code())).append(L": ").append(error.message()));
+        LaunchLog::Write(L"warning", std::wstring(L"notifications: registering with Nilla's name and icon failed, 0x").append(HexCode(error.code())).append(L": ").append(error.message()));
       }
     }
     manager.Register();
@@ -385,9 +385,9 @@ struct NotificationHub {
   static std::optional<NotificationResponse> ResponseFrom(TArgs const &args) noexcept {
     try {
       auto arguments = args.Arguments();
-      if (!arguments || !arguments.HasKey(L"ardiaId")) return std::nullopt;
+      if (!arguments || !arguments.HasKey(L"nillaId")) return std::nullopt;
       NotificationResponse response;
-      response.id = winrt::to_string(arguments.Lookup(L"ardiaId"));
+      response.id = winrt::to_string(arguments.Lookup(L"nillaId"));
       response.action = "click";
       if (arguments.HasKey(L"tabId")) response.tabId = winrt::to_string(arguments.Lookup(L"tabId"));
       if (arguments.HasKey(L"windowId")) response.windowId = winrt::to_string(arguments.Lookup(L"windowId"));
@@ -441,7 +441,7 @@ struct NotificationHub {
   bool Flush() noexcept {
     if (m_pending.empty()) return true;
     if (!m_context || WindowManager::Shared().Ids().empty()) return false;
-    for (NotificationResponse const &response : m_pending) EmitEvent(m_context, L"ArdiaNotifications", L"onNotificationResponse", EventFor(response));
+    for (NotificationResponse const &response : m_pending) EmitEvent(m_context, L"NillaNotifications", L"onNotificationResponse", EventFor(response));
     m_pending.clear();
     return true;
   }

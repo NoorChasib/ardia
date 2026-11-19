@@ -1,4 +1,4 @@
-import { appUrlOrigin, urlForDisplay } from "@ardia/core";
+import { appUrlOrigin, urlForDisplay } from "@nilla/core";
 import { displayHostOf } from "../../lib/url";
 import type { ReactNode, Ref } from "react";
 import { StyleSheet, View, type TextInput } from "react-native";

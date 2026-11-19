@@ -5,15 +5,20 @@ ardiacore="$root/packages/ardiacore"
 
 die() { echo "error: $*" >&2; exit 1; }
 
+notary_setup_hint="set NOTARY_KEY, NOTARY_KEY_ID and NOTARY_ISSUER, or NOTARY_PROFILE, in scripts/.notary.env or the environment"
+
 load_notary_auth() {
-  local profile="${NOTARY_PROFILE:-ardia}"
-  [ -f "$root/scripts/.notary.env" ] && . "$root/scripts/.notary.env"
+  if [ -f "$root/scripts/.notary.env" ]; then . "$root/scripts/.notary.env"; fi
   if [ -n "${NOTARY_KEY:-}" ]; then
-    notary_auth=(--key "$NOTARY_KEY" --key-id "$NOTARY_KEY_ID" --issuer "$NOTARY_ISSUER")
+    notary_auth=(--key "$NOTARY_KEY" --key-id "${NOTARY_KEY_ID:?NOTARY_KEY needs NOTARY_KEY_ID}" --issuer "${NOTARY_ISSUER:?NOTARY_KEY needs NOTARY_ISSUER}")
+  elif [ -n "${NOTARY_PROFILE:-}" ]; then
+    notary_auth=(--keychain-profile "$NOTARY_PROFILE")
   else
-    notary_auth=(--keychain-profile "$profile")
+    notary_auth=()
   fi
 }
+
+has_notary_auth() { [ "${#notary_auth[@]}" -gt 0 ]; }
 
 sign_as() {
   local identity="$1" attempt

@@ -1,4 +1,4 @@
-import type { SealedLogin } from "@ardia-real/sync";
+import type { SealedLogin } from "@nilla-real/sync";
 import type { ArdiaHost } from "./host";
 import { hostProfile, invokeHost } from "./host.ts";
 
@@ -98,7 +98,7 @@ export function keyringMessage(status: SyncKeyStoreStatus | null, saving: boolea
   if (state === "unavailable")
     return saving
       ? "Couldn’t save the sync key: no keyring is running. Start a Secret Service keyring, like GNOME Keyring or KWallet, and try again."
-      : "No keyring is running, so Ardia can’t read this device’s sync key. Start a Secret Service keyring, like GNOME Keyring or KWallet, or enter your recovery phrase.";
+      : "No keyring is running, so Nilla can’t read this device’s sync key. Start a Secret Service keyring, like GNOME Keyring or KWallet, or enter your recovery phrase.";
   if (state === "locked")
     return saving
       ? "Couldn’t save the sync key: your keyring is locked. Unlock it and try again."
@@ -353,7 +353,7 @@ export async function releaseHeldLoginIfGone(host: ArdiaHost, profile: string, o
 
 export class HeldLoginsResetError extends Error {
   constructor() {
-    super("Ardia couldn’t reset the passwords sync was holding, so it undid the change. Try again.");
+    super("Nilla couldn’t reset the passwords sync was holding, so it undid the change. Try again.");
   }
 }
 

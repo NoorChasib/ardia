@@ -16,7 +16,7 @@
 #include "DocumentsModule.h"
 #include "Paths.h"
 
-namespace Ardia {
+namespace Nilla {
 
 class CredentialStore {
  public:
@@ -54,7 +54,7 @@ class CredentialStore {
         DeleteParts(base, Layout{index, next.generation});
         return false;
       }
-      std::wstring comment = L"Ardia g" + std::to_wstring(next.generation) + L" " + std::to_wstring(next.chunks);
+      std::wstring comment = L"Nilla g" + std::to_wstring(next.generation) + L" " + std::to_wstring(next.chunks);
       if (!WritePart(base, user, std::string_view(secret).substr(0, ChunkSize), comment)) {
         DeleteParts(base, next);
         return false;
@@ -92,7 +92,7 @@ class CredentialStore {
 
   static std::wstring const &Prefix() noexcept {
     static const std::wstring prefix = [] {
-      std::wstring service = L"Ardia Connected Accounts";
+      std::wstring service = L"Nilla Connected Accounts";
       if (!Paths::HasCustomDataDirectory()) return service + L"/";
       std::wstring directory = Paths::DataDirectory().wstring();
       for (auto &c : directory) {
@@ -189,7 +189,7 @@ class CredentialStore {
   }
 };
 
-REACT_MODULE(KeychainModule, L"ArdiaKeychain")
+REACT_MODULE(KeychainModule, L"NillaKeychain")
 struct KeychainModule {
   REACT_METHOD(get)
   void get(std::string account, winrt::Microsoft::ReactNative::ReactPromise<std::optional<std::string>> promise) noexcept {

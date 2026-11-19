@@ -2,9 +2,9 @@
 
 #include <utility>
 
-using namespace ardia_content_blocker;
+using namespace nilla_content_blocker;
 
-@implementation ArdiaContentBlockerPage {
+@implementation NillaContentBlockerPage {
   NSMutableArray<NSArray *> *_calls;
   void (^_inflight)(id value, NSString *error);
   BOOL _started;

@@ -5,7 +5,7 @@ URL or a browser websocket URL.
 
   open <endpoint> <url>                  open <url> as the only tab, active and loaded; fails on a network error page
   lend <endpoint> <extension-id> <url>   run the extension's toolbar-click handler for the tab showing <url>, for browsers
-                                         without a toolbar (Ardia hides extension actions)`
+                                         without a toolbar (Nilla hides extension actions)`
 
 const [command, endpoint, ...args] = process.argv.slice(2)
 if (!command || !endpoint || command === "-h" || command === "--help") {

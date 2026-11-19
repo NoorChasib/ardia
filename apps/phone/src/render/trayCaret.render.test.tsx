@@ -6,12 +6,12 @@ const realView = core.requireNativeViewManager;
 const { forwardRef, useImperativeHandle, createElement } = require("react") as typeof import("react");
 const NativeField = forwardRef(function NativeField(props: Record<string, unknown>, ref) {
   useImperativeHandle(ref, () => ({ focus: () => undefined, blur: () => undefined, setText: () => undefined }));
-  return createElement("ArdiaPhoneCompletingField", props);
+  return createElement("NillaPhoneCompletingField", props);
 });
-jest.spyOn(core, "requireOptionalNativeModule").mockImplementation((name: string) => (name === "ArdiaPhoneCompletingField" ? {} : realOptional(name)));
-jest.spyOn(core, "requireNativeViewManager").mockImplementation((name: string) => (name === "ArdiaPhoneCompletingField" ? NativeField : realView(name)));
+jest.spyOn(core, "requireOptionalNativeModule").mockImplementation((name: string) => (name === "NillaPhoneCompletingField" ? {} : realOptional(name)));
+jest.spyOn(core, "requireNativeViewManager").mockImplementation((name: string) => (name === "NillaPhoneCompletingField" ? NativeField : realView(name)));
 
-const { nativeFieldColor } = require("@ardia/phone-native/src/completingField") as typeof import("@ardia/phone-native/src/completingField");
+const { nativeFieldColor } = require("@nilla/phone-native/src/completingField") as typeof import("@nilla/phone-native/src/completingField");
 const { SearchTray } = require("../components/search/SearchTray") as typeof import("../components/search/SearchTray");
 const { useTheme } = require("../components/ui") as typeof import("../components/ui");
 const { withAlpha } = require("../lib/color") as typeof import("../lib/color");
@@ -43,7 +43,7 @@ test("the completing field's caret is the accent and its selection the accent at
       <SearchTray />
     </>,
   );
-  const field = root.root.findAll((node) => node.type === ("ArdiaPhoneCompletingField" as never))[0]!;
+  const field = root.root.findAll((node) => node.type === ("NillaPhoneCompletingField" as never))[0]!;
   expect(field).toBeDefined();
   expect(field.props.cursorColor).toEqual(nativeFieldColor(accent));
   expect(field.props.selectionColor).toEqual(nativeFieldColor(withAlpha(accent, 0.3)));

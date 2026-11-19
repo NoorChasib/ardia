@@ -17,12 +17,12 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import cli, command_metrics, endpoint, telemetry, telemetry_scrub
-from ardia_cli.browse import daemon
-from ardia_cli.browse.errors import StaleRef
+from nilla_browser_cli import cli, command_metrics, endpoint, telemetry, telemetry_scrub
+from nilla_browser_cli.browse import daemon
+from nilla_browser_cli.browse.errors import StaleRef
 
 REAL_SPAWN = telemetry.spawn_flusher
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 INSTALL_ID = "0b6f4c1e-8d2a-4f3b-9c5d-1e2f3a4b5c6d"
 CLEARED = (
     "ARDIA_PORT", "ARDIA_WS", "ARDIA_CDP_URL", "ARDIA_DATA_DIR", "AGENT_BROWSER_CDP", "DO_NOT_TRACK", "ARDIA_TELEMETRY",
@@ -212,7 +212,7 @@ class CommandEventTest(TelemetryCase):
         def closed(argv):
             raise BrokenPipeError(32, "Broken pipe")
 
-        with mock.patch.object(cli, "run", closed), mock.patch("ardia_cli.printable.quiet_stdout") as quiet:
+        with mock.patch.object(cli, "run", closed), mock.patch("nilla_browser_cli.printable.quiet_stdout") as quiet:
             status, _, _ = self.run_cli("windows")
         self.assertEqual(status, 141)
         quiet.assert_called_once()
@@ -311,7 +311,7 @@ class CommandEventTest(TelemetryCase):
         self.assertNotIn("Secret", self.spool_text())
 
     def test_render_counts_snapshot_size_batches_and_truncation(self):
-        from ardia_cli.browse.commands import Result
+        from nilla_browser_cli.browse.commands import Result
 
         request = {"argv": ["snapshot"], "options": {}}
 
@@ -362,7 +362,7 @@ class ExceptionTest(TelemetryCase):
         frames = entry["stacktrace"]["frames"]
         self.assertTrue(frames)
         self.assertEqual(set(frames[0]), {"platform", "lang", "function", "module", "filename", "lineno", "colno", "resolved", "in_app"})
-        self.assertIn("ardia_cli.telemetry", [f["module"] for f in frames])
+        self.assertIn("nilla_browser_cli.telemetry", [f["module"] for f in frames])
         self.assertEqual(records[1]["properties"]["error_code"], "unhandled_exception")
         text = self.spool_text()
         for leak in ("someone", "Secret", "/Users", str(Path.home()), Path.home().name, __file__):
@@ -471,12 +471,12 @@ class FlushTest(TelemetryCase):
         body = self.stub.bodies[0]
         self.assertEqual(list(body), ["resourceLogs"])
         resource = {a["key"]: a["value"] for a in body["resourceLogs"][0]["resource"]["attributes"]}
-        self.assertEqual(resource["service.name"], {"stringValue": "ardia-cli"})
+        self.assertEqual(resource["service.name"], {"stringValue": "nilla-cli"})
         self.assertEqual(resource["deployment.environment"], {"stringValue": "development"})
         self.assertEqual(resource["os.type"], {"stringValue": "linux" if sys.platform.startswith("linux") else "darwin"})
         self.assertIn("host.arch", resource)
         scope = body["resourceLogs"][0]["scopeLogs"][0]
-        self.assertEqual(scope["scope"], {"name": "ardia.analytics"})
+        self.assertEqual(scope["scope"], {"name": "nilla.analytics"})
         record = scope["logRecords"][0]
         self.assertEqual(set(record), {"timeUnixNano", "severityNumber", "severityText", "body", "attributes"})
         self.assertEqual((record["severityNumber"], record["severityText"]), (9, "INFO"))
@@ -485,7 +485,7 @@ class FlushTest(TelemetryCase):
         self.assertEqual([a["key"] for a in record["attributes"][:3]], ["event", "uuid", "distinct_id"])
         attrs = attributes(record)
         self.assertEqual(attrs["distinct_id"], INSTALL_ID)
-        self.assertEqual(attrs["$lib"], "ardia-cli")
+        self.assertEqual(attrs["$lib"], "nilla-cli")
         self.assertEqual(attrs["subcommand"], "session")
         self.assertIs(attrs["$geoip_disable"], True)
         exit_code = next(a for a in record["attributes"] if a["key"] == "exit_code")
@@ -658,7 +658,7 @@ class ReviewFindingsTest(TelemetryCase):
             "import os, sys, time\n"
             f"sys.path.insert(0, {str(Path(__file__).resolve().parents[1])!r})\n"
             "from pathlib import Path\n"
-            "from ardia_cli import telemetry\n"
+            "from nilla_browser_cli import telemetry\n"
             "read = telemetry.read_state\n"
             "telemetry.read_state = lambda fd: (read(fd), time.sleep(0.3))[0]\n"
             "telemetry.spawn_flusher = lambda where: open(sys.argv[2], 'a').write('x')\n"

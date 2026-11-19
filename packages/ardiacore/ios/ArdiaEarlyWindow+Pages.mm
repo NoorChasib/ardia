@@ -14,12 +14,12 @@
 #include <initializer_list>
 #include <mach/mach.h>
 
-using namespace ardia_early_window;
+using namespace nilla_early_window;
 
-@implementation ArdiaEarlyVeil
+@implementation NillaEarlyVeil
 @end
 
-@implementation ArdiaPageEmits
+@implementation NillaPageEmits
 @end
 
 namespace {
@@ -28,20 +28,20 @@ constexpr double kVeilFailSafeSeconds = 2;
 
 constexpr NSUInteger kOlderEmitsKept = 256;
 
-NSMapTable<ArdiaCoreTab *, ArdiaEarlyVeil *> *Veils() {
+NSMapTable<ArdiaCoreTab *, NillaEarlyVeil *> *Veils() {
   static NSMapTable *veils = [NSMapTable weakToStrongObjectsMapTable];
   return veils;
 }
 
-NSMapTable<ArdiaCoreTab *, ArdiaPageEmits *> *Emits() {
+NSMapTable<ArdiaCoreTab *, NillaPageEmits *> *Emits() {
   static NSMapTable *emits = [NSMapTable weakToStrongObjectsMapTable];
   return emits;
 }
 
-ArdiaPageEmits *EmitsOf(ArdiaCoreTab *tab) {
-  ArdiaPageEmits *emits = [Emits() objectForKey:tab];
+NillaPageEmits *EmitsOf(ArdiaCoreTab *tab) {
+  NillaPageEmits *emits = [Emits() objectForKey:tab];
   if (!emits && tab) {
-    emits = [ArdiaPageEmits new];
+    emits = [NillaPageEmits new];
     emits.generation = 1;
     emits.current = [NSMutableOrderedSet orderedSet];
     emits.older = [NSMutableOrderedSet orderedSet];
@@ -50,7 +50,7 @@ ArdiaPageEmits *EmitsOf(ArdiaCoreTab *tab) {
   return emits;
 }
 
-void Archive(ArdiaPageEmits *emits, NSString *url) {
+void Archive(NillaPageEmits *emits, NSString *url) {
   [emits.older removeObject:url];
   [emits.older addObject:url];
   while (emits.older.count > kOlderEmitsKept) {
@@ -61,7 +61,7 @@ void Archive(ArdiaPageEmits *emits, NSString *url) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 NSHashTable<ArdiaCoreTab *> *Watched() {
   static NSHashTable *watched = [NSHashTable weakObjectsHashTable];
@@ -74,7 +74,7 @@ namespace {
 
 NSString *OriginOfURL(NSString *url) {
   if ([url.lowercaseString hasPrefix:@"view-source:"]) url = [url substringFromIndex:12];
-  return ardia_web_view::OriginOf(url);
+  return nilla_web_view::OriginOf(url);
 }
 
 BOOL Untitled(NSString *url) {
@@ -96,7 +96,7 @@ BOOL ShownMatches(NSString *shownURL, ArdiaCoreTab *tab) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 BOOL ShowsLaunchOrigin(ArdiaCoreTab *tab, NSString *launchURL) {
   NSString *launch = OriginOfURL(launchURL);
@@ -124,7 +124,7 @@ BOOL ReleaseFocusFrom(NSView *page) {
 
 namespace {
 
-void PlaceVeil(ArdiaCoreTab *tab, ArdiaEarlyVeil *veil) {
+void PlaceVeil(ArdiaCoreTab *tab, NillaEarlyVeil *veil) {
   NSView *page = tab.view, *host = page.superview;
   if (!host || host == veil.view.superview) return;
   [CATransaction begin];
@@ -134,7 +134,7 @@ void PlaceVeil(ArdiaCoreTab *tab, ArdiaEarlyVeil *veil) {
     veil.view.wantsLayer = YES;
     veil.view.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
   }
-  NSColor *fill = [host isKindOfClass:ArdiaWebView.class] ? ((ArdiaWebView *)host).pageBackgroundColor : nil;
+  NSColor *fill = [host isKindOfClass:NillaWebView.class] ? ((NillaWebView *)host).pageBackgroundColor : nil;
   veil.view.layer.backgroundColor = (fill ?: NSColor.windowBackgroundColor).CGColor;
   veil.view.frame = host.bounds;
   [host addSubview:veil.view positioned:NSWindowAbove relativeTo:page];
@@ -143,7 +143,7 @@ void PlaceVeil(ArdiaCoreTab *tab, ArdiaEarlyVeil *veil) {
 }
 
 void Unveil(ArdiaCoreTab *tab) {
-  ArdiaEarlyVeil *veil = [Veils() objectForKey:tab];
+  NillaEarlyVeil *veil = [Veils() objectForKey:tab];
   if (!veil) return;
   [Veils() removeObjectForKey:tab];
   NSView *host = veil.view.superview;
@@ -151,8 +151,8 @@ void Unveil(ArdiaCoreTab *tab) {
   [CATransaction setDisableActions:YES];
   [veil.view removeFromSuperview];
   [CATransaction commit];
-  if (!veil.restoreFocus || tab.closed || tab.view.superview != host || ![host isKindOfClass:ArdiaWebView.class]) return;
-  ArdiaWebView *web = (ArdiaWebView *)host;
+  if (!veil.restoreFocus || tab.closed || tab.view.superview != host || ![host isKindOfClass:NillaWebView.class]) return;
+  NillaWebView *web = (NillaWebView *)host;
   NSWindow *window = web.window;
   NSResponder *focused = window.firstResponder;
   if (window.isVisible && !window.isMiniaturized && web.visible && !web.isHiddenOrHasHiddenAncestor && (!focused || focused == window)) [tab focus];
@@ -160,15 +160,15 @@ void Unveil(ArdiaCoreTab *tab) {
 
 void Reconcile(ArdiaCoreTab *tab) {
   NSView *host = tab.view.superview;
-  if ([host isKindOfClass:ArdiaWebView.class]) [ArdiaEarlyWindow page:tab shownURL:((ArdiaWebView *)host).shownURL];
+  if ([host isKindOfClass:NillaWebView.class]) [NillaEarlyWindow page:tab shownURL:((NillaWebView *)host).shownURL];
 }
 
-void WatchVeil(ArdiaCoreTab *tab, ArdiaEarlyVeil *veil, double after) {
+void WatchVeil(ArdiaCoreTab *tab, NillaEarlyVeil *veil, double after) {
   __weak ArdiaCoreTab *weakTab = tab;
-  __weak ArdiaEarlyVeil *weakVeil = veil;
+  __weak NillaEarlyVeil *weakVeil = veil;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(after * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
     ArdiaCoreTab *page = weakTab;
-    ArdiaEarlyVeil *still = weakVeil;
+    NillaEarlyVeil *still = weakVeil;
     if (!page || !still || [Veils() objectForKey:page] != still) return;
     if (still.armedGeneration != EmitsOf(page).generation || ![still.armedShown ?: @"" isEqualToString:still.lastShown ?: @""]) return;
     const double left = still.changedAt + kVeilFailSafeSeconds - CACurrentMediaTime();
@@ -181,13 +181,13 @@ void WatchVeil(ArdiaCoreTab *tab, ArdiaEarlyVeil *veil, double after) {
 
 }
 
-namespace ardia_early_window {
+namespace nilla_early_window {
 
 void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement) {
   if (!tab || tab.closed) return;
-  ArdiaEarlyVeil *veil = [Veils() objectForKey:tab];
+  NillaEarlyVeil *veil = [Veils() objectForKey:tab];
   if (!veil) {
-    veil = [ArdiaEarlyVeil new];
+    veil = [NillaEarlyVeil new];
     veil.lastShown = shownAtPlacement;
     veil.changedAt = CACurrentMediaTime();
     [Veils() setObject:veil forKey:tab];
@@ -199,15 +199,15 @@ void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement) {
 
 }
 
-@implementation ArdiaEarlyWindow (Pages)
+@implementation NillaEarlyWindow (Pages)
 
 + (void)pageMoved:(ArdiaCoreTab *)tab {
   if (!tab) return;
-  if (ArdiaEarlyVeil *veil = [Veils() objectForKey:tab]) {
+  if (NillaEarlyVeil *veil = [Veils() objectForKey:tab]) {
     PlaceVeil(tab, veil);
     Reconcile(tab);
   }
-  for (ArdiaEarlyShown *s in [Shown() copy]) {
+  for (NillaEarlyShown *s in [Shown() copy]) {
     if (s.tab != tab || tab.view.superview == s.cover) continue;
     if (s.claimed) Forget(s);
     else if (s.expired) Abandon(s);
@@ -225,11 +225,11 @@ void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement) {
 
 + (void)page:(ArdiaCoreTab *)tab shownURL:(NSString *)url {
   if (!tab) return;
-  ArdiaEarlyVeil *veil = [Veils() objectForKey:tab];
+  NillaEarlyVeil *veil = [Veils() objectForKey:tab];
   if (veil && ![veil.lastShown ?: @"" isEqualToString:url ?: @""]) {
     veil.lastShown = url;
     veil.changedAt = CACurrentMediaTime();
-    ArdiaPageEmits *emits = EmitsOf(tab);
+    NillaPageEmits *emits = EmitsOf(tab);
     const BOOL unknown = url.length && ![emits.current containsObject:url] && ![emits.older containsObject:url];
     if (unknown && !emits.forgot && emits.firstEmitAt > 0 && veil.changedAt > emits.firstEmitAt) {
       const BOOL armed = veil.armedGeneration == emits.generation && veil.armedShown;
@@ -261,13 +261,13 @@ void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement) {
 
 + (void)pageCommitted:(ArdiaCoreTab *)tab shownURL:(NSString *)url {
   if (!tab) return;
-  ArdiaPageEmits *emits = EmitsOf(tab);
+  NillaPageEmits *emits = EmitsOf(tab);
   for (NSString *each in emits.current) Archive(emits, each);
   emits.generation++;
   [emits.current removeAllObjects];
   emits.firstEmitAt = 0;
   if (NSString *visible = tab.url; visible.length) [emits.current addObject:visible];
-  if (ArdiaEarlyVeil *veil = [Veils() objectForKey:tab]) {
+  if (NillaEarlyVeil *veil = [Veils() objectForKey:tab]) {
     veil.armedShown = nil;
     return Reconcile(tab);
   }
@@ -277,7 +277,7 @@ void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement) {
 
 + (void)page:(ArdiaCoreTab *)tab emitted:(NSString *)url {
   if (!tab || !url) return;
-  ArdiaPageEmits *emits = EmitsOf(tab);
+  NillaPageEmits *emits = EmitsOf(tab);
   if (!emits.firstEmitAt) emits.firstEmitAt = CACurrentMediaTime();
   if ([emits.current containsObject:url]) return;
   [emits.current addObject:url];
@@ -290,7 +290,7 @@ void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement) {
 
 + (void)pageNavigated:(ArdiaCoreTab *)tab launchURL:(NSString *)launchURL {
   if (!tab) return;
-  for (ArdiaEarlyShown *s in Shown())
+  for (NillaEarlyShown *s in Shown())
     if (s.tab == tab && !s.shielded && tab.view.superview == s.cover && !ShowsLaunchOrigin(tab, launchURL)) Shield(s);
 }
 
@@ -298,7 +298,7 @@ void CarryShield(ArdiaCoreTab *tab, id inputBlock, NSString *shownAtPlacement) {
   if (!tab) return;
   [Watched() removeObject:tab];
   Unveil(tab);
-  for (ArdiaEarlyShown *s in [Shown() copy])
+  for (NillaEarlyShown *s in [Shown() copy])
     if (s.tab == tab) {
       if (s.claimed) Forget(s);
       else if (s.expired) Abandon(s);

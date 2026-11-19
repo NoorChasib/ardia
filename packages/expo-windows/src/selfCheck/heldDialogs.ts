@@ -1,4 +1,4 @@
-import type { WindowsNative } from "@ardia/shell";
+import type { WindowsNative } from "@nilla/shell";
 import { engineAvailable, hostCall, onEngineTopic } from "../engine/host";
 import { requireNativeModule } from "../modules";
 import type { DialogsModule } from "../nativeModuleTypes";
@@ -12,8 +12,8 @@ const SETTLED_ON_A_COLD_RUNNER_MS = 20000;
 const CANCELLED_WITHIN_MS = 1000;
 const GIVE_UP_MS = 3000;
 
-const dialogs = () => requireNativeModule<Pick<DialogsModule, "openCount" | "shownCount" | "settledCount" | "devHoldConfirm" | "devHoldFileDialog" | "devReleaseDialogs">>("ArdiaDialogs");
-const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows");
+const dialogs = () => requireNativeModule<Pick<DialogsModule, "openCount" | "shownCount" | "settledCount" | "devHoldConfirm" | "devHoldFileDialog" | "devReleaseDialogs">>("NillaDialogs");
+const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const pageLoads = (key: string, title: string, withinMs: number) =>
@@ -99,7 +99,7 @@ async function heldFileDialogCancels(save: boolean, when: CancelWhen) {
     dialogs().devReleaseDialogs();
     const took = await closesWithin(CANCELLED_WITHIN_MS);
     expectTrue(took !== null, `the ${kind} was still open ${CANCELLED_WITHIN_MS} ms after its cancel`);
-    console.info(`[ardia windows] held ${kind}, ${shownAtCancel ? "its window shown" : "still starting"} at its cancel${settledAfter === null ? "" : ` (shown and settled ${settledAfter} ms after the check saw its thread start)`}, closed ${took} ms after it`);
+    console.info(`[nilla windows] held ${kind}, ${shownAtCancel ? "its window shown" : "still starting"} at its cancel${settledAfter === null ? "" : ` (shown and settled ${settledAfter} ms after the check saw its thread start)`}, closed ${took} ms after it`);
     expectTrue(dialogs().shownCount() === 0, `the ${kind}'s window is still recorded as shown after it closed`);
     expectTrue((await held) === false, "the cancelled dialog reported a pick");
   } finally {

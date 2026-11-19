@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { beforeEach, test } from "node:test";
 const stub = await import("../../test-native/index.ts");
 const { useBrowser } = await import("../browser/store.ts");
-const { setLinkGate } = await import("../littleArdia/linkGate.ts");
+const { setLinkGate } = await import("../littleNilla/linkGate.ts");
 const { openFromWindowlessPage } = await import("./openFromWindowlessPage.ts");
 
 const S = () => useBrowser.getState();

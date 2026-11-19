@@ -7,7 +7,7 @@ public class ImportModule: Module {
     let support = LaunchConfig.shared.instance("importSourceDir").map { URL(fileURLWithPath: $0, isDirectory: true) }
       ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     let icons = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-      .appendingPathComponent("\(Bundle.main.bundleIdentifier ?? "Ardia")/ImportIcons", isDirectory: true)
+      .appendingPathComponent("\(Bundle.main.bundleIdentifier ?? "Nilla")/ImportIcons", isDirectory: true)
     return Importer(discovery: BrowserDiscovery(
       applicationSupport: support,
       diaApp: ImportModule.diaBundleId,
@@ -36,16 +36,23 @@ public class ImportModule: Module {
 
   private let jobs = ImportJobs()
   private let vault = ImportVault()
-  private static let work = DispatchQueue(label: "ardia.import", qos: .userInitiated, attributes: .concurrent)
+  private static let work = DispatchQueue(label: "nilla.import", qos: .userInitiated, attributes: .concurrent)
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaImport")
+    Name("NillaImport")
     Events("onImportEvent")
 
     OnCreate { Self.work.async { SQLiteSnapshot.removeLeftovers() } }
 
-    AsyncFunction("listBrowsers") { (promise: Promise) in
-      self.run(promise) { try Self.json(self.importer.discovery.list()) }
+    AsyncFunction("listBrowsers") { (only: [String]?, promise: Promise) in
+      self.run(promise) { try Self.json(self.importer.discovery.list(only: only.map(Set.init))) }
+    }
+
+    AsyncFunction("profilesNeedingKey") { (browserId: String, profileIds: [String], promise: Promise) in
+      self.run(promise) {
+        guard let def = BrowserDefinition.find(browserId) else { return "[]" }
+        return try Self.json(self.importer.discovery.profilesNeedingKey(def, profileIds))
+      }
     }
 
     AsyncFunction("importData") { (jobId: String, browserId: String, profileId: String, kinds: [ImportKind], options: ImportRequestOptions, promise: Promise) in

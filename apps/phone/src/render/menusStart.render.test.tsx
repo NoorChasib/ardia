@@ -2,7 +2,7 @@ import { act, type ReactTestInstance } from "react-test-renderer";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 import { idOf, mockNative, resetNativeMenus, titles, type NativeItem } from "./nativeMenusMock";
 
-jest.mock("@ardia/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@ardia/phone-native")));
+jest.mock("@nilla/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@nilla/phone-native")));
 
 const { StartScreen } = require("../components/search/StartScreen") as typeof import("../components/search/StartScreen");
 const { DesignProvider } = require("../components/ui") as typeof import("../components/ui");

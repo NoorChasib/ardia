@@ -6,7 +6,7 @@ import { createInputRegions, type InputRegionsRegistry, type RegionDeps, type Re
 import { createPageHoles, type PageHoles } from "./pageHoles.ts";
 import { startShellGlass } from "./shellGlass.ts";
 
-export const SHELL_ABOVE_CLASS = "ardia-shell-above";
+export const SHELL_ABOVE_CLASS = "nilla-shell-above";
 const MOTION_EVENTS = ["transitionrun", "transitionend", "transitioncancel", "animationstart", "animationend", "animationcancel"] as const;
 
 let regions: InputRegionsRegistry | null = null;

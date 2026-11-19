@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import ArdiaImportCore
+@testable import NillaImportCore
 
 final class ArcExtrasTests: XCTestCase {
   private let spaces = ["S-PERSONAL": "Personal", "S-WORK": "Work", "S-UNTITLED": "Space 1"]

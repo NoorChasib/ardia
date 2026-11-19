@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
 const folders = await import("../pins/tileFolders.ts");
-const { Clock, emptyScope, syncScope } = await import("@ardia/sync");
+const { Clock, emptyScope, syncScope } = await import("@nilla/sync");
 const pinnedArea = await import("./pinned.ts");
 const previous = await import("./fixtures/pinned-v0.2.40.ts");
 
@@ -127,17 +127,6 @@ test("unpinning a row and a tile in a folder deletes their marks in the same bat
   await syncAll([b, a]);
   assert.deepEqual(area(b), ["cal:Work", "mail:tile", "news:Work"]);
   for (const k of gone) assert.equal(b.scope.records[k]?.v, null, `${k} is a tombstone on B`);
-});
-
-test("a pin another Mac published under the app's old name arrives with today's", async () => {
-  const folder = new Folder();
-  const b = new Device("devB", folder);
-  b.with(() => S().createWindow({ url: "https://b-home.example/" }));
-  const h = new Clock("devOld").tick();
-  const value = { g: null, u: "netnyahoo://history", t: null, i: null, ti: "History", pos: "V" };
-  folder.files.set("old1", { scope: "p", payload: JSON.stringify({ v: 1, kind: "log", device: "devOld", seq: 1, at: Date.now(), ops: [{ k: "pin:t:oldpin", h, v: value }] }) });
-  await b.sync();
-  assert.equal(b.with(() => S().tabs.oldpin?.pinnedUrl), "ardia://history");
 });
 
 const previousVersion = () => [previous.pinnedRowsAdapter("default"), previous.pinnedAdapter("default")];

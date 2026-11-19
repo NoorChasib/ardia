@@ -29,8 +29,8 @@ extension WebKitTab: PageTab {
   }
 
   func followInterfaceScale() {
-    NotificationCenter.default.removeObserver(self, name: .ArdiaInterfaceScaleDidChange, object: nil)
-    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleChanged), name: .ArdiaInterfaceScaleDidChange, object: nil)
+    NotificationCenter.default.removeObserver(self, name: .NillaInterfaceScaleDidChange, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleChanged), name: .NillaInterfaceScaleDidChange, object: nil)
     fitPageToInterfaceScale()
   }
 

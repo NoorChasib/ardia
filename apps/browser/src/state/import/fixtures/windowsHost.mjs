@@ -83,7 +83,7 @@ export function fakeHost(secrets = {}) {
       calls.push(["openSnapshot"]);
       const file = onDisk(path);
       if (!file || !existsSync(file)) return { failure: "missing" };
-      const scratch = mkdtempSync(join(tmpdir(), "ardia-import-test-"));
+      const scratch = mkdtempSync(join(tmpdir(), "nilla-import-test-"));
       copyFileSync(file, join(scratch, "db.sqlite"));
       for (const suffix of ["-wal", "-journal"]) if (existsSync(file + suffix)) copyFileSync(file + suffix, join(scratch, `db.sqlite${suffix}`));
       const id = `s${open.size + 1}-${Math.random()}`;

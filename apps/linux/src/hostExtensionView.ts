@@ -49,7 +49,7 @@ export class HostExtensionView {
     const early: { id: string; event: ExtensionViewEvent }[] = [];
     const deliver = (event: ExtensionViewEvent) => {
       if (event.type === "shown") this.nativeShown(event.value === true);
-      try { onEvent(event); } catch (error) { console.error("[ardia host] extension view listener failed", error); }
+      try { onEvent(event); } catch (error) { console.error("[nilla host] extension view listener failed", error); }
     };
     this.unsubscribe = host.onEvent((module, id, payload) => {
       if (this.disposed || module !== EXTENSION_VIEW_MODULE || !payload || typeof payload !== "object" || !("type" in payload)) return;
@@ -61,7 +61,7 @@ export class HostExtensionView {
     });
     this.ready = this.enqueue(async () => {
       const reply = await invokeHost<{ id: number }>("extensionView.create", { kind: options.kind, url: options.url, profile: hostProfile(options.profile, host) }, host);
-      if (!Number.isInteger(reply?.id) || reply.id <= 0) throw new Error("Invalid Ardia extension view identity");
+      if (!Number.isInteger(reply?.id) || reply.id <= 0) throw new Error("Invalid Nilla extension view identity");
       this.id = reply.id;
       if (!this.disposed) for (const queued of early) if (queued.id === String(reply.id)) deliver(queued.event);
       early.length = 0;
@@ -90,7 +90,7 @@ export class HostExtensionView {
   async command<T = unknown>(command: string, args: unknown[] = []): Promise<T> {
     await this.ready;
     return this.enqueue(async () => {
-      if (this.disposed || this.id === undefined) throw new Error("Ardia extension view released");
+      if (this.disposed || this.id === undefined) throw new Error("Nilla extension view released");
       if (command === "focus" && !this.shown) {
         this.focusWanted = { owner: this.focus.current(), at: this.focus.now() };
         return undefined as T;
@@ -129,7 +129,7 @@ export class HostExtensionView {
     void this.enqueue(async () => {
       if (this.disposed || this.id === undefined || !this.shown || !this.focusStillWanted(wanted)) return;
       await invokeHost<void>("extensionView.command", { id: this.id, command: "focus", args: [] }, this.host);
-    }).catch((error) => console.error("[ardia host] extension view focus failed", error));
+    }).catch((error) => console.error("[nilla host] extension view focus failed", error));
   }
 
   private focusStillWanted({ owner, at }: FocusRequest) {
@@ -141,6 +141,6 @@ export class HostExtensionView {
     if (this.disposed) return;
     this.disposed = true;
     this.unsubscribe();
-    void this.enqueue(() => this.release()).catch((error) => console.error("[ardia host] extension view release failed", error));
+    void this.enqueue(() => this.release()).catch((error) => console.error("[nilla host] extension view release failed", error));
   }
 }

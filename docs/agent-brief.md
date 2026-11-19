@@ -1,7 +1,7 @@
 # Agent brief (read first)
 
 You are one of several engineers working **in parallel in the same working tree** on
-Ardia, a macOS browser that must reach **full feature and visual parity with Dia**
+Nilla, a macOS browser that must reach **full feature and visual parity with Dia**
 (The Browser Company). The feature checklist is `docs/dia-feature-parity.md`; the
 visual spec (colors, sizes, animations recovered from Dia's binary) is `docs/dia-spec.md`.
 The user is demanding: no sloppy work, every hover state/animation/detail matters.
@@ -19,8 +19,8 @@ variables) is in `docs/conventions.md`, enforced by `apps/browser/src/convention
 - Native code lives in Expo modules under `packages/*/ios` (Swift / Objective-C++):
   - `packages/ardiacore`: the web engine, **ArdiaCore**: Chrome's own framework (`Chromium Framework.framework`,
     Chromium 157.0.8103.50 + Helium 0.21.2 + our patch series, `docs/engine-build.md`) with our layer linked
-    in, and the Expo modules and JS API the app uses (`docs/ardiacore-spike.md`, `docs/ardiacore-parity.md`).
-    - **Chromium runs the process.** `main.swift` calls `ArdiaHost.run`: `ChromeMain` starts with our
+    in, and the Expo modules and JS API the app uses (`docs/history/ardia/ardiacore-spike.md`, `docs/history/ardia/ardiacore-parity.md`).
+    - **Chromium runs the process.** `main.swift` calls `NillaHost.run`: `ChromeMain` starts with our
       `ACMainDelegate`, `NSApp` is Chrome's `BrowserCrApplication`, and the React Native host (`AppDelegate`) starts
       inside Chrome's run loop. Nothing may touch `NSApp` before that.
     - **Every app window is one `ArdiaCoreWindow`** (a Views-backed `NSWindow`, so Chrome's bubbles, dialogs, menus and
@@ -28,13 +28,13 @@ variables) is in `docs/conventions.md`, enforced by `apps/browser/src/convention
       `BrowserView`, tab strip or toolbar (`ArdiaChromeWindowHost.mm`, which packages/shell's
       `ChromeWindows.swift` calls through the ArdiaCore pod). Paging between profiles changes the active profile; the window stays.
     - Every tab is a real Chrome tab of its window's Browser; its `WebContents` view is hosted in our React Native
-      views (`ArdiaWebView`). Popups, `target=_blank` and ⌘-click keep Chrome's own new `WebContents`.
+      views (`NillaWebView`). Popups, `target=_blank` and ⌘-click keep Chrome's own new `WebContents`.
     - Passwords, autofill, extensions, zoom and search engines call Chrome's services directly through our
       own Chromium code, `//chrome/browser/ardia` (`engine/chromium`), exported as plain C
-      (`ArdiaEngineBridge`, `ArdiaServices`); ArdiaCore's own layer is `//ardia/core` (`engine/ardiacore`).
+      (`NillaEngineBridge`, `NillaServices`); ArdiaCore's own layer is `//ardia/core` (`engine/ardiacore`).
       No chrome:// page is scripted.
     - JS API in `packages/ardiacore/src`: `engine.call("domain.verb", args)` and `on("domain.event", …)`, typed from
-      `src/engine/api.ts`, plus the views (`WebView`, `SwipeArea`). Each domain is one Expo module, `Ardia<Domain>` in
+      `src/engine/api.ts`, plus the views (`WebView`, `SwipeArea`). Each domain is one Expo module, `Nilla<Domain>` in
       `packages/ardiacore/ios/<Domain>Module.swift` (Engine, WebView, Tabs, Windows, Downloads, Permissions, Profiles,
       Sites, Passwords, Autofill, Extensions, Search, Media, ContentBlocker, History, Bookmarks, Favicons, Swipe,
       WebKit); test scripts reach it through the dev harness's `ac.engine.call` / `ac.engine.on`.
@@ -54,9 +54,9 @@ variables) is in `docs/conventions.md`, enforced by `apps/browser/src/convention
   `node_modules/<pkg>` safe to edit, edit it there, then `scripts/agent/locked pod -- bun patch --commit node_modules/<pkg>`
   (it rewrites the `.patch`, `package.json` and `bun.lock`), and read the new `.patch` for noise such as bogus
   `deleted file` entries (drop them and run `bun install` again under the same lock).
-  Mark edits `[Ardia: … Ardia]`. Current patches: `react-native-macos` (a view's `transform` survives
+  Mark edits `[Nilla: … Nilla]`. Current patches: `react-native-macos` (a view's `transform` survives
   AppKit layout and applies from its centre; RCTTiming's display link, c7ebd600; a view in a scroll view observes its bounds once, not once per re-add; focus() on a text field being edited keeps its edit, caret and selection; a placeholder change on an empty field being edited isn't a blur; a placeholder colour change on a field being edited reaches its field editor, so it shows once the field is emptied, and its text keeps the field's own colour; a single-line field with pastedTypes pastes only those as plain text, line breaks folded as in Chrome's omnibox, a088913e; a container whose children change leaves the ones already in place alone instead of re-adding every one, 6d7277fd; a mouse touch matches its own down on the same button and is never recorded twice, so JS never gets a null touch, 8bd086c8; mounts go through one queue in layout order, and a live-resize layout, which React Native mounts on the main thread at once, first mounts every older one still queued, so a zoomed window never keeps an older layout and its views track the window during the animation, 2f4aa603; a network task's callback blocks are atomic and only one of
-  cancel, error and completion finishes it, so a cancel racing a completion never frees the block being called, #955; a React view whose parent and children are all React views leaves Auto Layout, which every macOS 26+ window engages and whose memory exploded with thousands of sidebar rows, #952; a view whose `overflow` changes redisplays its layer, so one that stops clipping at the same size stops masking its children; `measureInWindow` answers in the owning React root's points from its top left, and border images and decoded images use the view's own backing density, interface size included, and redraw when it changes; on a fractional pixel grid Yoga gives a node thinner than 3 device pixels one whole-pixel size wherever it sits, at least 1, so hairlines and 1 point rules neither vanish nor vary) and `expo-modules-core` (the JS
+  cancel, error and completion finishes it, so a cancel racing a completion never frees the block being called; a React view whose parent and children are all React views leaves Auto Layout, which every macOS 26+ window engages and whose memory exploded with thousands of sidebar rows; a view whose `overflow` changes redisplays its layer, so one that stops clipping at the same size stops masking its children; `measureInWindow` answers in the owning React root's points from its top left, and border images and decoded images use the view's own backing density, interface size included, and redraw when it changes; on a fractional pixel grid Yoga gives a node thinner than 3 device pixels one whole-pixel size wherever it sits, at least 1, so hairlines and 1 point rules neither vanish nor vary) and `expo-modules-core` (the JS
   runtime is prepared on the JS thread only, 364f5f7e).
 
 ## The engine
@@ -72,7 +72,7 @@ variables) is in `docs/conventions.md`, enforced by `apps/browser/src/convention
   with `--as`). Builds are incremental only: `scripts/agent/engine-build [--as <you>] [target…]` (default
   `chrome_framework`; `--help`) runs both `apply.sh` and their checks, then autoninja, under the chromium lock; run it
   with `run_in_background`. By hand, after both `apply.sh`:
-  `cd ~/chromium-build/chromium_git/chromium/src && PATH=$HOME/chromium-build/depot_tools:$PATH DEPOT_TOOLS_UPDATE=0 ~/Documents/ardia/scripts/agent/locked chromium [--as <you>] -- autoninja -C out/Release_GN_arm64 chrome_framework`.
+  `cd ~/chromium-build/chromium_git/chromium/src && PATH=$HOME/chromium-build/depot_tools:$PATH DEPOT_TOOLS_UPDATE=0 ~/Documents/nilla/scripts/agent/locked chromium [--as <you>] -- autoninja -C out/Release_GN_arm64 chrome_framework`.
   `apply.sh` copies the whole working tree, so other agents' uncommitted engine files get compiled too.
   A new framework changes every agent's next build, so say so in your report. To try one privately, build the app with
   `ARDIACORE_FRAMEWORK=<framework> scripts/agent/build-app --as <you>` (it stages into your own derived data).
@@ -93,8 +93,8 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
 | Tab activation | `ardiacore_window.mm` `-activateTab:`, `ac_window_host_tabs.mm` `ActiveTabChanged` | `ArdiaWebView+Tab.mm` `-tabActivatedByChrome:`, `ArdiaTabStrip.mm` | same |
 | Focus guard (test instances) | `ac_window_host.mm` (`WindowHost` activation) | `ArdiaActivation.mm` (`activation.log`), `ArdiaWindowFullScreen.mm` (acted-out occlusion), `ArdiaWebView+Focus.mm` | `packages/shell/ios/WindowManager.swift` |
 | Fullscreen | `ac_browser_window_exclusive_access.mm` (`ExclusiveAccessContext`), `ac_window_host_tabs.mm` `FullscreenChanged` | `ArdiaWindowFullScreen.mm` (acted out in test instances), `ArdiaPageCover.mm` | `components/window/ContentCard.tsx`, `state/tabs/pageState.ts` |
-| Picture in Picture | `ac_picture_in_picture.mm`; Dia's window and controls in `engine/chromium/…/ardia/pip/`; the auto-PiP hook in `engine/ardiacore/apply.sh` | `ArdiaPictureInPicture.mm` (monitors, `ardia_pip`), `ArdiaPiPController.mm` (+`Swipe`, +`Skip`, +`SelfTest`), `ArdiaPiPZoom.mm`, `ArdiaWebView+PictureInPicture.mm` | `state/media/pip.ts` |
-| Password and autofill bubbles | `ac_password_prompt.mm`, `ac_browser_window.h` (`ACAutofillBubbleHandler`), `ac_autofill_trigger.mm` (dropdown) | `ArdiaWindowController.mm` (`window:passwordPrompt:forTab:`) → `ArdiaWebView` event | `components/site/Prompts.tsx`, `site/Autofill.tsx` |
+| Picture in Picture | `ac_picture_in_picture.mm`; Dia's window and controls in `engine/chromium/…/ardia/pip/`; the auto-PiP hook in `engine/ardiacore/apply.sh` | `ArdiaPictureInPicture.mm` (monitors, `nilla_pip`), `ArdiaPiPController.mm` (+`Swipe`, +`Skip`, +`SelfTest`), `ArdiaPiPZoom.mm`, `ArdiaWebView+PictureInPicture.mm` | `state/media/pip.ts` |
+| Password and autofill bubbles | `ac_password_prompt.mm`, `ac_browser_window.h` (`ACAutofillBubbleHandler`), `ac_autofill_trigger.mm` (dropdown) | `ArdiaWindowController.mm` (`window:passwordPrompt:forTab:`) → `NillaWebView` event | `components/site/Prompts.tsx`, `site/Autofill.tsx` |
 | Share tab, screen share | `ardiacore_tab_media.mm` (`TabSharingDelegateFor`), `ac_desktop_capture.mm` | `ArdiaHost.mm` `shareTabInstead`, `MediaModule.swift` | `components/media/ShareBar.tsx`, `SharePicker.tsx` |
 | Restore, discard | `engine/chromium/…/ac_tab_restore.cc` (closed tabs), `ac_tab_restore_history.cc` (each tab's history) | `ArdiaWebView+Tab.mm` (`discard:`), `ArdiaWebView+Transfer.mm` (`transferKey`), `ArdiaTabParking.mm` | `state/tabs/tabLifecycle.ts`, `state/windows/windows.ts` |
 | Permissions | `ac_permissions.mm` | `ArdiaHostEngineDelegate.mm` (`permissionRequest`), `ArdiaPopupWindow.mm` | `state/site/permissions.ts`, `Prompts.tsx` |
@@ -104,18 +104,18 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
   A split class shares its ivars, private methods and helpers through one internal header (`ArdiaWebViewInternal.h`,
   `ArdiaChromeWindowInternal.h`, `ArdiaEarlyWindowInternal.h`, `ArdiaPictureInPictureInternal.h`, `ArdiaSwipeInternal.h`,
   `ArdiaContentBlockerInternal.h`, `ArdiaHostInternal.h`), and the helpers live in one C++ namespace per family
-  (`ardia_web_view`, `ardia_window`, `ardia_early_window`, `ardia_pip`, `ardia_swipe`, `ardia_content_blocker`,
-  `ardia_host`). Property accessors, `+initialize` and `dealloc` stay in the class's primary file, so no category
-  overrides them. `ArdiaWebView` is split into `+Transfer` (parking, launch and link tabs), `+Tab` (attach, detach,
+  (`nilla_web_view`, `nilla_window`, `nilla_early_window`, `nilla_pip`, `nilla_swipe`, `nilla_content_blocker`,
+  `nilla_host`). Property accessors, `+initialize` and `dealloc` stay in the class's primary file, so no category
+  overrides them. `NillaWebView` is split into `+Transfer` (parking, launch and link tabs), `+Tab` (attach, detach,
   Chrome's tab events, discard), `+Painting`, `+StandIn` (a closing page kept up for the next tab), `+Focus`, `+Reveals`, `+PageMessages`, `+Peek`, `+PictureInPicture`,
   `+ContextMenu`, `+Navigation`, `+PageCommands`, `+Site` and `+InputMonitors`. `ArdiaTabRegistry.mm` holds tab
-  ↔ view, offered tabs and browser ids. Windows: `ArdiaWindowController`, `ArdiaChromeWindowHost` (+`Dev`, the dev harness),
-  `ArdiaTrafficLights`, `ArdiaWindowFullScreen`, `ArdiaPopupWindow`, `ArdiaReservedKeys`. Launch: `ArdiaHost+Launch`,
-  `ArdiaHostEngineDelegate`, `ArdiaProfiles`, `ArdiaEarlyWindow` (+`Pages`, `Layouts`, `Covers`, `ArdiaLaunchPicture`).
+  ↔ view, offered tabs and browser ids. Windows: `NillaWindowController`, `NillaChromeWindowHost` (+`Dev`, the dev harness),
+  `NillaTrafficLights`, `NillaWindowFullScreen`, `NillaPopupWindow`, `NillaReservedKeys`. Launch: `NillaHost+Launch`,
+  `NillaHostEngineDelegate`, `NillaProfiles`, `NillaEarlyWindow` (+`Pages`, `Layouts`, `Covers`, `NillaLaunchPicture`).
 - **Call path:** JS `call("domain.verb", args)` (`packages/ardiacore/src/engine/call.ts`) → that domain module's `call`
-  table (`<Domain>Module.swift`, `EngineCall.swift`) → `ArdiaHost` / `ArdiaServices` / `ArdiaWebView` or straight to an
+  table (`<Domain>Module.swift`, `EngineCall.swift`) → `NillaHost` / `NillaServices` / `NillaWebView` or straight to an
   `ac_*` export → `public/ArdiaCore.h` → `ardiacore_<class>.mm` → `ac_*.mm`. Replies cross as JSON, parsed once in JS.
-  App events go through `ArdiaEvents` (`emit:@"domain.event"`) to that domain module's one channel (its event name is the domain); a page's
+  App events go through `NillaEvents` (`emit:@"domain.event"`) to that domain module's one channel (its event name is the domain); a page's
   events come back through an `ArdiaCore*Delegate` method and `-emit:payload:` to the view's one `onPageEvent` channel
   (`PageEvents.swift`, only the names JS listens to), demuxed in `WebView.tsx`. Both page engines implement
   `PageEngine` (`PageEngine.swift`): ids they minted (`wk-…` for WebKit) route to them natively.
@@ -131,22 +131,22 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
   must be named `ArdiaCore*` to be exported (the `ardiacore.exports` wildcard). The pod reads `ArdiaCore.h` from the repo and
   the app and the engine ship together, so the app calls new selectors directly (no `respondsToSelector:`).
 - **Adding an engine call** (Chrome's services are `ac_*` C calls in `engine/chromium`, which the app finds with
-  dlsym through `ArdiaEngineBridge`): (1) write `AC_PROFILE_CALL(ac_<domain>_<verb>) { … }` in
+  dlsym through `NillaEngineBridge`): (1) write `AC_PROFILE_CALL(ac_<domain>_<verb>) { … }` in
   `engine/chromium/src/chrome/browser/ardia/ac_<domain>.cc` (`AC_ARGS_CALL` for a call that needs no profile; conventions
   in `public/ac_engine.h` and `ac_engine.h`; a new file goes in that `BUILD.gn`; `ac_engine.exports` exports every
   `ac_*`). A private window's calls arrive with `offTheRecord: true` and are refused unless the call says
   `ardia::OffTheRecord::kAllow`: the engine alone decides which calls serve a private session; (2) `scripts/agent/engine-build`; (3) call it with
-  `ArdiaEngineBridge call:` (`callWithSecret:` for secrets); for JS, add `"verb": EngineCall.passing("ac_<domain>_<verb>")`
+  `NillaEngineBridge call:` (`callWithSecret:` for secrets); for JS, add `"verb": EngineCall.passing("ac_<domain>_<verb>")`
   to the domain module's call table and its `"domain.verb": [args, result]` row to `packages/ardiacore/src/engine/api.ts`.
 - **The page script** is `packages/ardiacore/ios/page_script.js`, a pod resource: `ArdiaHostEngineDelegate.mm` hands it to the
   engine at launch and the renderer runs it in every http(s) and file frame. Changing it needs an app rebuild, not an
-  engine one. Its `post(kind, json)` crosses the page channel to `-[ArdiaWebView tab:didReceivePageMessage:…]` (`ArdiaWebView+PageMessages.mm`),
+  engine one. Its `post(kind, json)` crosses the page channel to `-[NillaWebView tab:didReceivePageMessage:…]` (`ArdiaWebView+PageMessages.mm`),
   which handles it or emits `pageMessage` (JS `onPageMessage`).
 - **CEF-era code** (removed in 6bdf66ce): `git show 6bdf66ce^:packages/cef/ios/<file>`. Comments citing
-  `packages/cef/…` mean: `ACBrowserView.mm`, `ACClient.mm` → `ArdiaWebView*.mm`; `ACChromeWindow.mm`,
+  `packages/cef/…` mean: `ACBrowserView.mm`, `ACClient.mm` → `NillaWebView*.mm`; `ACChromeWindow.mm`,
   `ACPopupWindow.mm` → `ArdiaWindowController.mm`, `ArdiaPopupWindow.mm`; `ACActivation`, `ACTabStrip`, `ACPictureInPicture`,
-  `ACContentBlocker`, `ACEngineBridge` → `Ardia<same>*.mm`; `ACPasswords`, `ACAutofill`, `ACZoom` →
-  `ArdiaServices.mm`; `ACExtensions.mm` → `ExtensionsModule.swift`; `ACCef.mm` → `ArdiaHost*.mm`,
+  `ACContentBlocker`, `ACEngineBridge` → `Nilla<same>*.mm`; `ACPasswords`, `ACAutofill`, `ACZoom` →
+  `ArdiaServices.mm`; `ACExtensions.mm` → `ExtensionsModule.swift`; `ACCef.mm` → `NillaHost*.mm`,
   `ArdiaStartup.mm`; `ACEngine.mm` → `ardiacore_*.mm`; `helper/page_script.js` → `packages/ardiacore/ios/`;
   `packages/cef/src` → `packages/ardiacore/src`.
 
@@ -169,7 +169,7 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
     BackgroundOnly and every activation path is guarded (`packages/ardiacore/ios/ArdiaActivation.mm`); each
     attempt is logged to `$ARDIA_DATA_DIR/activation.log`. `lsappinfo front` must never show
     your pid. Its windows never come up over the owner's: every window (Chrome's bubbles and popups, panels, PiP,
-    Little Ardia, sheets) has its level set a band below normal (normal at layer -1000000, floating at -999997), so
+    Little Nilla, sheets) has its level set a band below normal (normal at layer -1000000, floating at -999997), so
     it sits behind every other app's window, above the desktop, in production's order among its own and out of Mission
     Control (same file, "Behind the owner's windows"; `-level` still answers the level asked for).
   - Any standalone test program or prototype window you create must be unable to take focus
@@ -190,12 +190,12 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
     `/tmp/ac-<name>.holder` says who holds a lock. Every `scripts/agent` script takes `--help`.
     When the main session runs the build train (`scripts/agent/train serve`: one shared build of the tree), don't
     build yourself: `train request --as <you>`, then `train wait --as <you>` prints the app to run.
-  - Run: `scripts/agent/ac launch apps/browser/build-<you>/Build/Products/Debug/Ardia.app --data <scratch>/data`
+  - Run: `scripts/agent/ac launch apps/browser/build-<you>/Build/Products/Debug/Nilla.app --data <scratch>/data`
     (hidden: `open -g -n`, `ARDIA_BACKGROUND=1`, its own data dir and DevTools port; prints the pid and port).
     `ac eval|page|quit|status` take that data dir (`--help`); scripts use `scripts/lib/instance.mjs` (`launch`,
     `attach`, `session`, `reporter`), whose pid is the DevTools port's listener, never a process-list diff
     (`ARDIA_DATA_DIR` isolates Chrome's and the app's data; a Debug build refuses to start without one).
-    Quit only your own instance (`ac quit`), never `pkill Ardia`.
+    Quit only your own instance (`ac quit`), never `pkill Nilla`.
   - Open a URL in your instance: CDP `Target.createTarget`, or the dev harness
     (`ac.actions.openUrls([url])`); `open -a` routes to whichever instance macOS picks.
   - Metro (JS dev server) is already running on :8081 and serves this working tree to every
@@ -250,7 +250,7 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
     key as AppKit dispatches it (Chrome's window, then the menu bar), `ac.shell.devTypeKeys("key", text, ms)` types
     into whatever window is key, and
     `node apps/browser/scripts/shortcuts-test.mjs <Debug app>` checks every shortcut in every focus.
-    `expo.modules.ArdiaDev.devMenuBar()` returns the whole menu bar (titles, keys, hidden, checked, enabled) to diff
+    `expo.modules.NillaDev.devMenuBar()` returns the whole menu bar (titles, keys, hidden, checked, enabled) to diff
     a menu change before and after. The menu's titles and default keys live in `state/commands/commandCatalog.ts`;
     after editing it, run `node apps/browser/scripts/command-tables.mjs` to regenerate `BrowserCommand` and
     `packages/shell/ios/CommandTable.swift`.
@@ -258,20 +258,22 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
     (`http://localhost:<port>/json`, `Runtime.evaluate`, `Page.captureScreenshot`). A `ARDIA_BACKGROUND` instance's windows answer NO to
     `-[NSWindow isOccluded]` (`ArdiaHost+Launch.mm`), so a covered window shows a tab at once instead of after Chrome's 1 s
     occlusion delay; launch with `--instance allowOcclusion` to test occlusion itself.
-  - CDP (`ARDIA_REMOTE_DEBUGGING_PORT`), argv and `ARDIA_INSTANCE` `chromiumSwitches` only reach Chrome where it runs on its mock
-    keychain: a scratch `ARDIA_DATA_DIR`, or a build without a team signature (ad hoc copies such as carryover.sh's). A
-    team-signed build on its real data dir forwards none of them (`ArdiaHost+Launch.mm`), and its browser process removes
-    every switch that opens the profile to outside control (remote debugging, unpacked extensions, automation, proxies,
-    certificate overrides, net-log), also after chrome://flags have been applied, and unsets `SSLKEYLOGFILE`
-    (`ac_main_delegate.cc`), so nothing drives or records the real profile, with its real Safe Storage key; Chrome 136
-    did the same for its default profile.
+  - CDP (`ARDIA_REMOTE_DEBUGGING_PORT`), argv and `ARDIA_INSTANCE` `chromiumSwitches` reach Chrome in every Layer 1
+    build that starts, because every Layer 1 launch runs Chrome on its mock keychain (`NillaLaunchConfig`
+    `engineSwitches`). A team-signed build (Apple Development or Developer ID) refuses to start, before it chooses a
+    data dir (`ArdiaHost+Launch.mm`): under the mock keychain today's engine turns off its real-profile gate, the one
+    that removes every switch opening the profile to outside control (remote debugging, unpacked extensions,
+    automation, proxies, certificate overrides, net-log) and unsets `SSLKEYLOGFILE` (`ac_main_delegate.cc`). So test
+    with a build signed without a team (`Nilla.xcconfig` ships `NILLA_TEAM_ID` empty; `AdHoc.xcconfig`; carryover.sh's
+    ad hoc copies) on a scratch `ARDIA_DATA_DIR`; a signed build on a real profile, with its own Safe Storage key,
+    waits for Layer 2 and Nilla's own engines.
   - Native UI: `screencapture -l <windowID> -o` (find the id with CGWindowList by owner PID; a test window's layer is negative). It captures the
     window's own content even while the owner's windows cover it, which a test window's always may. Wrap every capture in `timeout 20`: with the screen locked they can hang instead of failing.
     For the New Tab intro, launch with `--test shadersKeyWindow` (it only plays in a key window).
   - The user's screen may be locked: screen captures then fail or deliver no frames. Fall back to
     `ac.shell.devSnapshotWindow(windowId, path)` (`false` means it failed; the window's layers at 2x; Metal views
     render blank; text opacity is applied twice, so a label at α reads 1 − (1 − α)², don't match colours on it),
-    `globalThis.expo.modules.ArdiaAreaLight.debugSnapshot(dir)` (every Metal view, offscreen, with its frame),
+    `globalThis.expo.modules.NillaAreaLight.debugSnapshot(dir)` (every Metal view, offscreen, with its frame),
     the accessibility tree and store state, and list "needs visual check" items in your report.
   - Hover and pressed states in a hidden instance (Debug builds): `ac.shell.devSetPointer(windowId, { x, y })` puts the
     pointer at a window point (points from the window's top left) for every hover check, `null` gives the real pointer back.
@@ -287,7 +289,7 @@ Engine files are in `engine/ardiacore/src/ardia/core`, app files in `packages/ar
 
 ## Launch variables
 
-The only variables the app and engine read, through `ArdiaLaunchConfig` (`packages/ardiacore/ios`; JS:
+The only variables the app and engine read, through `NillaLaunchConfig` (`packages/ardiacore/ios`; JS:
 `platform/launchConfig.ts`; the engine gets `--ardia-*` switches from it, `ac_launch_switches.cc`). Set them with
 `scripts/agent/ac launch … --instance K=V --test K[=V] --trace AREA`, or `launch(app, { instance, test, trace })` in
 `scripts/lib/instance.mjs`. A list splits at a comma unless the entry before it takes commas (paths, URLs,
@@ -295,18 +297,18 @@ The only variables the app and engine read, through `ArdiaLaunchConfig` (`packag
 
 | Variable | Key / value | What it does |
 | --- | --- | --- |
-| `ARDIA_DATA_DIR` | path | Scratch data dir: Chrome's data in `<dir>/Chromium`, the app's documents, defaults, keychain items and Sparkle state (`packages/shell/ios/ArdiaIsolation.m`); Chrome gets `--use-mock-keychain`. A Debug build refuses to start without one |
+| `ARDIA_DATA_DIR` | path | Scratch data dir: Chrome's data in `<dir>/Chromium`, the app's documents, defaults, keychain items and Sparkle state (`packages/shell/ios/NillaIsolation.m`); Chrome gets `--use-mock-keychain`. A Debug build refuses to start without one |
 | `ARDIA_BACKGROUND` | `1` (anything but empty or `0`) | Hidden test instance (Rules › never steal focus; `docs/testing.md`) |
 | `ARDIA_REMOTE_DEBUGGING_PORT` | port | CDP on that port, only on the mock keychain |
 | `ARDIA_INSTANCE` | `jsLocation=host:port` | This launch's Metro (Debug builds) |
-| | `chromiumSwitches=--a --b=x,y` | Extra Chrome switches, space-separated, only on the mock keychain; background mode drops the auto-accept capture ones, and `--ardia-*` never passes |
+| | `chromiumSwitches=--a --b=x,y` | Extra Chrome switches, space-separated, only on the mock keychain; background mode drops the auto-accept capture ones, and `--ardia-*` and `--user-data-dir` never pass (from argv either, in either dash spelling; the data dir is always the checked `ARDIA_DATA_DIR`) |
 | | `downloadsDir=<dir>` | Chrome's default download folder for this launch, never written to the profile |
 | | `updateFeed=<url>` | Sparkle's feed; a scratch instance checks for updates only with one |
 | | `allowAudio` · `allowOcclusion` | Background mode keeps sound · keeps Chrome's occlusion |
-| | `releaseNotes` | Opens the release notes as after an update (works on a Developer ID build: the release smoke) |
-| | `cliHome=<dir>` · `cliBinDir=<dir>` · `cliUrl=<url>` | Where the `ardia` command installs, links and downloads from (`docs/cli.md`); a test instance installs only with the first two |
+| | `releaseNotes` | Opens the release notes as after an update (the release smoke's check; a Developer ID build refuses to start in Layer 1, so the smoke waits for Layer 2) |
+| | `cliHome=<dir>` · `cliBinDir=<dir>` · `cliUrl=<url>` | Where the `nilla-browser` command installs, links and downloads from (`docs/cli.md`); a test instance installs only with the first two |
 | | `syncFolder=<dir>` | The sync folder (`packages/sync/scripts/e2e.mjs`) |
-| | `sharedFolders=<dir>` | Where Share Folder… creates shared folders and where Add Shared Folder… starts (`iCloud Drive › Ardia Shared` otherwise; a scratch data dir uses `<data dir>/Ardia Shared`), `docs/shared-folders.md` |
+| | `sharedFolders=<dir>` | Where Share Folder… creates shared folders and where Add Shared Folder… starts (`iCloud Drive › Nilla Shared` otherwise; a scratch data dir uses `<data dir>/Nilla Shared`), `docs/shared-folders.md` |
 | | `importSourceDir=<dir>` · `importSafariHome=<dir>` | Where import looks for other browsers and Safari's home, so a scratch instance never sees the owner's profiles |
 | `ARDIA_SWITCHES` | `name=on\|off,…` | Kill switches (`platform/killSwitches.ts` `SWITCHES`, at most 8, on by default) and experiments (`EXPERIMENTS`: `serverWindowDragAllOpen`, `dragRegionEveryMount`, `webkitSignIn`, off by default). Honoured in every build (`docs/kill-switches.md`) |
 | `ARDIA_TRACE` | `visibility` | Occlusion and each WebView attach/detach, `[ardiacore-vis]` in the system log |
@@ -321,17 +323,16 @@ The only variables the app and engine read, through `ArdiaLaunchConfig` (`packag
 | | `applyProfileGate` | Applies the real-profile switch gate on the mock keychain too |
 | | `screenRecording=allowed\|denied` | What the share sheet is told about macOS Screen Recording permission (Chrome still checks the real one); background mode never asks macOS for it |
 | | `contextMenu` | Context menus dump to `<data dir>/context-menu.json` and take their pick from `….pick` |
-| | `systemLocationPermission=ask\|denied\|granted` | The app's macOS location access (`ArdiaLocation`): `ask` is not determined and a request answers Allow. A background instance never asks macOS and reads as not determined without it |
+| | `systemLocationPermission=ask\|denied\|granted` | The app's macOS location access (`NillaLocation`): `ask` is not determined and a request answers Allow. A background instance never asks macOS and reads as not determined without it |
 | | `appMenu` · `appDialog` | The app's own menus (`showMenu`) dump to `<data dir>/menu.json` and take their pick from `….pick` · `confirm` and `prompt` dump to `dialog.json` and take their answer from `….pick` |
 | | `pipSelfTest=close\|backToTab\|hover\|style` · `pipHover=close\|back` | PiP self-tests on the first PiP window (background mode), results in the data dir |
 | | `fakeFullScreenMs=<ms>` | Length of the acted-out full-screen transition |
 | | `shadersKeyWindow` | Metal views act as in the key window (the New Tab intro) |
 | | `peekStrict` | Peek's test hooks stop relaxing its click checks |
 | | `importSecret=<s>` · `importDiaBundleId=<id>` · `importDiaWindows=<json>` | Import's Safe Storage secret · the app Dia's tabs come from (opened hidden and quit by the import) · fixture windows answering for it, with no Automation prompt |
-| | `cliInstallScript=<path>` | Another `ardia` installer script |
-| | `legacySource=<home>` · `legacyCrashAfter=<step>` | The Netnyahoo → Ardia migration from a scratch home |
+| | `cliInstallScript=<path>` | Another `nilla-browser` installer script |
 | | `bangsUrl` · `onboarding` · `whatsNew` · `telemetry` · `liveMock=<url>` · `calendarFixture` | Debug builds only: bang list, run onboarding, show What's New, send telemetry, live folders from a mock, the calendar fixture |
-| | `cdpTabsVisible` | A tab that a DevTools-port client (`ARDIA_REMOTE_DEBUGGING_PORT`) attaches to stays visible to its renderer until that session detaches, as on the `ardia` command's token path (`ac_cli_visible_tabs.cc`; `docs/cli.md` › Input) |
+| | `cdpTabsVisible` | A tab that a DevTools-port client (`ARDIA_REMOTE_DEBUGGING_PORT`) attaches to stays visible to its renderer until that session detaches, as on the `nilla-browser` command's token path (`ac_cli_visible_tabs.cc`; `docs/cli.md` › Input) |
 | | `nativeDragRefused` | The engine refuses every macOS drag session a page asks for, as when one is already open, and ends the page's drag (`drag-end-check.mjs`; `docs/engine-build.md`, `chromium-drag-always-ends.patch`) |
 | | `externalAppLaunch=1` | Windows self-check only: run each link in the data folder's `external-app-links.txt` through the real app-link gate and launch (`!` first marks one that must stay refused) |
 | | `loginsDelay=<profile\|account>:<ms>`, `loginsReleaseAfter=<profile\|account>`, `loginsTimeout=<s>` | Sync's password read (`ac_passwords_logins`): hold one store's answer, drop the read as a profile shutdown does once that store has answered, and the bridge's deadline (30 s otherwise) |
@@ -341,7 +342,7 @@ The only variables the app and engine read, through `ArdiaLaunchConfig` (`packag
 `ARDIA_TEST` and `ARDIA_TRACE` count only in a test instance: a build that isn't signed for distribution (Debug and
 train builds qualify; `release.sh` builds don't), a scratch `ARDIA_DATA_DIR`, and, in the engine, `--user-data-dir` at
 `<data dir>/Chromium` on the mock keychain. Otherwise they're ignored with one log line. Seams marked background mode
-also need `ARDIA_BACKGROUND`. A build from before ArdiaLaunchConfig gets the old variable names from
+also need `ARDIA_BACKGROUND`. A build from before NillaLaunchConfig gets the old variable names from
 `scripts/lib/launchEnv.mjs`, so benches and carry-over checks against the previous stable still work.
 
 ## Report format (your final message)

@@ -1,7 +1,7 @@
 import "./styles.css";
 import { createRoot } from "react-dom/client";
 import { unstable_batchedUpdates } from "react-native";
-import { emitCommand } from "@ardia/shell";
+import { emitCommand } from "@nilla/shell";
 import { WindowRoot } from "../../../apps/browser/src/App";
 import { startNativeSync } from "../../../apps/browser/src/state/app/nativeSync";
 import { startTabPages } from "../../../apps/browser/src/state/tabs/tabPages";
@@ -29,7 +29,7 @@ const params = new URLSearchParams(location.search);
 const embed = params.has("embed");
 const bare = embed || params.has("bare");
 
-Object.assign(globalThis, { ardiaDemo: { store: useBrowser, emitCommand } });
+Object.assign(globalThis, { nillaDemo: { store: useBrowser, emitCommand } });
 
 function warmOtherProfiles() {
   const s = useBrowser.getState();
@@ -45,8 +45,8 @@ if (!embed || params.has("warm")) idle(warmOtherProfiles);
 
 function DemoWindow() {
   return (
-    <div className={embed ? "ardia-desktop embed" : bare ? "ardia-desktop" : "ardia-desktop with-controls"}>
-      <div className="ardia-window">
+    <div className={embed ? "nilla-desktop embed" : bare ? "nilla-desktop" : "nilla-desktop with-controls"}>
+      <div className="nilla-window">
         <WindowRoot />
         <TrafficLights />
       </div>
@@ -56,6 +56,6 @@ function DemoWindow() {
   );
 }
 
-createRoot(document.getElementById("root")!, { onUncaughtError: (error) => console.error("[ardia demo] crashed", error) }).render(<DemoWindow />);
+createRoot(document.getElementById("root")!, { onUncaughtError: (error) => console.error("[nilla demo] crashed", error) }).render(<DemoWindow />);
 
 if (embed) startEmbed();

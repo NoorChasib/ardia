@@ -8,13 +8,16 @@ import { runInNewContext } from "node:vm";
 const bootstrap = readFileSync(new URL("../../../engine/ardiacore-linux/src/ardia/linux/bootstrap.js", import.meta.url), "utf8");
 const hostModules = new URL("./hostModules.ts", import.meta.url).href;
 const hostEvents = new URL("./hostEvents.ts", import.meta.url).href;
+const engineModuleNames = new URL("./engineModuleNames.ts", import.meta.url).href;
 
 const nativeShim = `data:text/javascript,${encodeURIComponent(`
 import { resolveHostModule } from ${JSON.stringify(hostModules)};
 import { createNativeEvents } from ${JSON.stringify(hostEvents)};
+import { engineModuleName } from ${JSON.stringify(engineModuleNames)};
 const events = createNativeEvents();
 globalThis.__siteControlsHost.onEvent((module, event, payload) => events.emit(module, event, payload));
-export function requireNativeModule(name) {
+export function requireNativeModule(appName) {
+  const name = engineModuleName(appName);
   return new Proxy({}, { get(_target, key) {
     if (key === "addListener") return (event, listener) => events.add(name, event, listener);
     return resolveHostModule(globalThis.__siteControlsHost, name, key);
@@ -116,7 +119,7 @@ test("content blocker calls use the app-level contentBlocker domain and surface 
   await blocker.setContentBlockerAllowed("example.com", true);
   assert.deepEqual(last(), { name: "contentBlocker.setAllowed", profile: "default", args: { host: "example.com", allowed: true } });
   replies.set("contentBlocker.setEnabled", { fail: { code: "ERR_CONTENT_BLOCKER_UNAVAILABLE", message: "the content blocker is not installed" } });
-  await assert.rejects(blocker.setContentBlockerEnabled(true), (error) => error.name === "ArdiaError" && error.code === "ERR_CONTENT_BLOCKER_UNAVAILABLE");
+  await assert.rejects(blocker.setContentBlockerEnabled(true), (error) => error.name === "NillaError" && error.code === "ERR_CONTENT_BLOCKER_UNAVAILABLE");
 });
 
 test("hidden element calls carry the named profile on the transport and only the filters in their arguments", async () => {
@@ -141,7 +144,7 @@ test("adding and removing a filter list by address send only the address or id, 
   assert.equal(await blocker.removeFilterList("https://lists.example/mine.txt"), null);
   assert.deepEqual(last(), { name: "contentBlocker.removeList", profile: "default", args: { id: "https://lists.example/mine.txt" } });
   replies.set("contentBlocker.addList", { fail: { code: "ERR_PROFILE_PRIVATE", message: "Private windows can't change the content blocker" } });
-  await assert.rejects(blocker.addFilterList("https://lists.example/mine.txt"), (error) => error.name === "ArdiaError" && error.code === "ERR_PROFILE_PRIVATE");
+  await assert.rejects(blocker.addFilterList("https://lists.example/mine.txt"), (error) => error.name === "NillaError" && error.code === "ERR_PROFILE_PRIVATE");
   replies.set("contentBlocker.addList", { fail: { code: "ERR_CONTENT_BLOCKER_UNAVAILABLE", message: "uBlock Origin turned the list down" } });
   await assert.rejects(blocker.addFilterList("https://lists.example/mine.txt"), (error) => error.code === "ERR_CONTENT_BLOCKER_UNAVAILABLE");
   replies.delete("contentBlocker.addList");

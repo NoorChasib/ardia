@@ -2,7 +2,7 @@ export { isDarkColor } from "../../lib/color";
 export { AppIcon } from "./AppIcon";
 export { useWarningInk } from "./warningInk";
 export { PrimaryButton, primaryButtonHeight } from "./PrimaryButton";
-export { ArdiaLogo } from "./ArdiaLogo";
+export { NillaLogo } from "./NillaLogo";
 export { Backdrop } from "./Backdrop";
 export { barCenterFromBottom, barHeight, deckCenterFromBottom } from "./barGeometry";
 export { CodeCamera } from "./CodeCamera";
@@ -32,6 +32,6 @@ export { useIncreasedContrast, useReduceMotion, useReduceTransparency } from "./
 export { FadingBackdrop } from "./FadingBackdrop";
 export { ChromeSurface, DeckLookBackdrop, DeckLookBackdropBase, LookBackdrop, LookBackdropBase, LookFrost, LookGlass, SURFACES_FROST, usesGlass } from "./LookViews";
 export { appDesign, DesignProvider, useDesign, usePageUnderBars } from "./design";
-export { FadeView, fadeIsNative, FrostSource, motionReportsNearEnd, pageObscuresInsets, pageReportsDrawn, PasteButton, pasteButtonIsNative, ScrollActions } from "@ardia/phone-native";
-export { MotionView, type MotionCurve, type MotionTarget } from "@ardia/phone-native";
+export { FadeView, fadeIsNative, FrostSource, motionReportsNearEnd, pageObscuresInsets, pageReportsDrawn, PasteButton, pasteButtonIsNative, ScrollActions } from "@nilla/phone-native";
+export { MotionView, type MotionCurve, type MotionTarget } from "@nilla/phone-native";
 export { AppIconPreview, CheckmarkLabel, chromeSurface, ColorSwatch, contentMargins, FilterTextEditor, FullScreenCover, GlassCircleButton, legibleInk, minListRowHeight, modifierList, navigationBarBackButtonHidden, PinnedTiles, pressableStyle, profileLook, settingsChrome, SettingsHeroContent, SettingsIconTile, settingsPage, SettingsRowLabel, SettingsShortcuts, settingsSwitchStyle, settingsUIAvailable, SetupStepRow, spaceBackdrop, spaceColor, spaceMenuSymbol, SpacePageDots, spaceSymbol, SpaceTitle, type ProfilePresetName, type SettingsTintName, type SetupProgress } from "./settingsPieces";

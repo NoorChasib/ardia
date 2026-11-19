@@ -3,9 +3,9 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 
-NSNotificationName const ArdiaInterfaceScaleDidChange = @"ArdiaInterfaceScaleDidChange";
-NSNotificationName const ArdiaInterfaceScaleRootDidAttach = @"ArdiaInterfaceScaleRootDidAttach";
-NSNotificationName const ArdiaInterfaceScaleDidSettle = @"ArdiaInterfaceScaleDidSettle";
+NSNotificationName const NillaInterfaceScaleDidChange = @"NillaInterfaceScaleDidChange";
+NSNotificationName const NillaInterfaceScaleRootDidAttach = @"NillaInterfaceScaleRootDidAttach";
+NSNotificationName const NillaInterfaceScaleDidSettle = @"NillaInterfaceScaleDidSettle";
 
 namespace {
 
@@ -30,7 +30,7 @@ CGFloat Clamped(CGFloat scale) {
 }
 
 void FitRoot(NSView *root) {
-  const CGFloat scale = ArdiaInterfaceScale.scale;
+  const CGFloat scale = NillaInterfaceScale.scale;
   const NSSize frame = root.frame.size;
   const NSSize want = NSMakeSize(frame.width / scale, frame.height / scale);
   if (NSEqualSizes(root.bounds.size, want)) return;
@@ -43,7 +43,7 @@ BOOL DrawsItsOwnPixels(NSView *view) {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
     NSMutableArray<Class> *found = [NSMutableArray array];
-    for (NSString *name in @[@"ArdiaWebView", @"WKWebView", @"MTKView"])
+    for (NSString *name in @[@"NillaWebView", @"WKWebView", @"MTKView"])
       if (Class cls = NSClassFromString(name)) [found addObject:cls];
     classes = found;
   });
@@ -69,11 +69,11 @@ CGFloat ContentTop(NSWindow *window) {
 
 }
 
-@interface ArdiaRootFrameWatch : NSObject
+@interface NillaRootFrameWatch : NSObject
 - (instancetype)initWithRoot:(NSView *)root;
 @end
 
-@implementation ArdiaRootFrameWatch {
+@implementation NillaRootFrameWatch {
   id _observer;
 }
 
@@ -97,7 +97,7 @@ CGFloat ContentTop(NSWindow *window) {
 
 @end
 
-@implementation ArdiaInterfaceScale
+@implementation NillaInterfaceScale
 
 + (CGFloat)minimum {
   return kMinimum;
@@ -122,7 +122,7 @@ CGFloat ContentTop(NSWindow *window) {
   gScale = scale;
   [NSUserDefaults.standardUserDefaults setDouble:scale forKey:kScaleDefault];
   for (NSView *root in Roots().allObjects) FitRoot(root);
-  [NSNotificationCenter.defaultCenter postNotificationName:ArdiaInterfaceScaleDidChange object:nil];
+  [NSNotificationCenter.defaultCenter postNotificationName:NillaInterfaceScaleDidChange object:nil];
   for (NSView *root in Roots().allObjects) RedrawAtDensity(root);
   const NSUInteger change = ++gChange;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(kSettleFallbackSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
@@ -133,21 +133,21 @@ CGFloat ContentTop(NSWindow *window) {
 + (void)layoutSettled {
   gSettledChange = gChange;
   for (NSView *root in Roots().allObjects) RedrawAtDensity(root);
-  [NSNotificationCenter.defaultCenter postNotificationName:ArdiaInterfaceScaleDidSettle object:nil];
+  [NSNotificationCenter.defaultCenter postNotificationName:NillaInterfaceScaleDidSettle object:nil];
 }
 
 + (void)follow:(NSView *)root {
   if ([Roots() containsObject:root]) return;
   [Roots() addObject:root];
   root.postsFrameChangedNotifications = YES;
-  objc_setAssociatedObject(root, kFrameWatchKey, [[ArdiaRootFrameWatch alloc] initWithRoot:root], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+  objc_setAssociatedObject(root, kFrameWatchKey, [[NillaRootFrameWatch alloc] initWithRoot:root], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   FitRoot(root);
 }
 
 + (void)rootAttached:(NSView *)root {
   [self follow:root];
   FitRoot(root);
-  [NSNotificationCenter.defaultCenter postNotificationName:ArdiaInterfaceScaleRootDidAttach object:root];
+  [NSNotificationCenter.defaultCenter postNotificationName:NillaInterfaceScaleRootDidAttach object:root];
 }
 
 + (void)fitPageHost:(NSView *)host {

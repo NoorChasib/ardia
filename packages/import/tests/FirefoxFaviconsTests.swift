@@ -2,7 +2,7 @@ import Foundation
 import ImageIO
 import SQLite3
 import XCTest
-@testable import ArdiaImportCore
+@testable import NillaImportCore
 
 final class FirefoxFaviconsTests: XCTestCase {
   private var directories: [URL] = []

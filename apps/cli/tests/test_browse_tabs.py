@@ -9,11 +9,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli.browse import paths, tabs
-from ardia_cli.browse.errors import BrowseError
-from ardia_cli.browse.tabs import Registry
+from nilla_browser_cli.browse import paths, tabs
+from nilla_browser_cli.browse.errors import BrowseError
+from nilla_browser_cli.browse.tabs import Registry
 
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 
 
 class RegistryTest(unittest.TestCase):

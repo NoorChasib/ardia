@@ -6,7 +6,7 @@
 
 #import <objc/message.h>
 
-namespace ardia_host {
+namespace nilla_host {
 
 namespace hover_probe {
 
@@ -15,7 +15,7 @@ NSString *ReasonName(HoverReason reason) {
 }
 
 NSString *KindName(FocusWindowKind kind) {
-  return @[ @"none", @"hidden", @"blockerPage", @"internal", @"ardiaPanel", @"popup", @"browser", @"other" ][(NSUInteger)kind];
+  return @[ @"none", @"hidden", @"blockerPage", @"internal", @"nillaPanel", @"popup", @"browser", @"other" ][(NSUInteger)kind];
 }
 
 NSString *CoverName(PageCover cover) {
@@ -70,8 +70,8 @@ bool MenuShown(NSWindow *browser) {
 }
 
 bool IsBrowserWindow(NSWindow *window) {
-  if (!window || ardia_content_blocker::IsHiddenPageWindow(window)) return false;
-  ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window];
+  if (!window || nilla_content_blocker::IsHiddenPageWindow(window)) return false;
+  NillaWindowController *controller = [NillaWindowController forNSWindow:window];
   return controller.root && !controller.standalone && !controller.stray && !controller.coreWindow.internal;
 }
 
@@ -81,11 +81,11 @@ bool Invisible(NSWindow *window) {
 
 FocusWindowKind KindOf(NSWindow *window, bool evenInvisible = false) {
   if (!window) return FocusWindowKind::none;
-  if (ardia_content_blocker::IsHiddenPageWindow(window)) return FocusWindowKind::blockerPage;
+  if (nilla_content_blocker::IsHiddenPageWindow(window)) return FocusWindowKind::blockerPage;
   if (!evenInvisible && Invisible(window)) return FocusWindowKind::hidden;
-  if (ArdiaWindowController *controller = [ArdiaWindowController forNSWindow:window]) {
+  if (NillaWindowController *controller = [NillaWindowController forNSWindow:window]) {
     if (controller.standalone || controller.stray || controller.coreWindow.internal) return FocusWindowKind::internal;
-    return controller.root ? FocusWindowKind::browser : FocusWindowKind::ardiaPanel;
+    return controller.root ? FocusWindowKind::browser : FocusWindowKind::nillaPanel;
   }
   if ([window isKindOfClass:NSPanel.class] || window.isSheet || window.parentWindow || window.level > NSNormalWindowLevel ||
       [window.className containsString:@"Menu"])
@@ -210,7 +210,7 @@ bool IsProblem(const HoverCheck &check, HoverTrigger trigger) {
     case HoverReason::fine: return false;
     case HoverReason::notKeyOrMain:
       if (trigger == HoverTrigger::click)
-        return check.key != FocusWindowKind::popup && check.key != FocusWindowKind::ardiaPanel && check.key != FocusWindowKind::internal &&
+        return check.key != FocusWindowKind::popup && check.key != FocusWindowKind::nillaPanel && check.key != FocusWindowKind::internal &&
                !NSApp.modalWindow;
       return Unseen(check.key) && Unseen(check.main);
     case HoverReason::coveredByView: return check.cover != PageCover::reactNative || check.coverClear;
@@ -243,10 +243,10 @@ bool FullScreenMoving() {
   return false;
 }
 
-bool OtherArdiaWindowActive(NSWindow *window) {
+bool OtherNillaWindowActive(NSWindow *window) {
   for (NSWindow *other in NSApp.windows) {
     if (other == window || !(other.isKeyWindow || other.isMainWindow)) continue;
-    if (KindOf(other) != FocusWindowKind::hidden && KindOf(other) != FocusWindowKind::blockerPage && [ArdiaWindowController forNSWindow:other])
+    if (KindOf(other) != FocusWindowKind::hidden && KindOf(other) != FocusWindowKind::blockerPage && [NillaWindowController forNSWindow:other])
       return true;
   }
   return false;
@@ -257,7 +257,7 @@ bool SafeToHeal(NSWindow *window, const HoverCheck &check, HoverTrigger trigger)
   if (check.menuActive || MenuShown(window) || FullScreenMoving()) return false;
   if (check.reason == HoverReason::halfActive) return trigger == HoverTrigger::click && check.key != FocusWindowKind::popup;
   if (check.reason == HoverReason::responderLost) return trigger == HoverTrigger::click && check.overPage && check.windowKey;
-  return check.reason == HoverReason::notKeyOrMain && check.activation.appActive && Unseen(check.key) && !OtherArdiaWindowActive(window);
+  return check.reason == HoverReason::notKeyOrMain && check.activation.appActive && Unseen(check.key) && !OtherNillaWindowActive(window);
 }
 
 HoverEpisode gEpisode;
@@ -335,7 +335,7 @@ void CloseEpisode(NSString *endedBy) {
   if (!gDevHoverEvents) gDevHoverEvents = [NSMutableArray array];
   [gDevHoverEvents addObject:payload];
   if (gDevHoverEvents.count > kDevHoverEventsKept) [gDevHoverEvents removeObjectAtIndex:0];
-  [ArdiaEvents emit:@"engine.hoverLost" data:payload];
+  [NillaEvents emit:@"engine.hoverLost" data:payload];
 }
 
 bool Recovered(const HoverCheck &check, HoverReason healed) {

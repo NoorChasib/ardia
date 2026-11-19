@@ -5,7 +5,7 @@ import { privateLeaks } from "../lib/assertions.mjs";
 import { readSavedSession, restartBrowser, startBrowser, waitSavedSession } from "../lib/flows.mjs";
 import { js, nonce, pause, until } from "../lib/util.mjs";
 
-const COOKIE = "ardia_acceptance";
+const COOKIE = "nilla_acceptance";
 
 export async function profilePage(app, shell, url) {
   const tabId = await shell.newTab(url);
@@ -16,8 +16,8 @@ export async function profilePage(app, shell, url) {
   return { tabId, target, session, browserContextId: info?.browserContextId ?? null };
 }
 
-const writeMarks = (session, value) => evaluate(session, `(() => { document.cookie = ${js(`${COOKIE}=${value}; max-age=3600; path=/`)}; localStorage.setItem('ardiaAcceptance', ${js(value)}); return { cookie: document.cookie, storage: localStorage.getItem('ardiaAcceptance') }; })()`);
-const readMarks = (session) => evaluate(session, `({ cookie: document.cookie.split('; ').find(c => c.startsWith(${js(`${COOKIE}=`)}))?.split('=')[1] ?? null, storage: localStorage.getItem('ardiaAcceptance') })`);
+const writeMarks = (session, value) => evaluate(session, `(() => { document.cookie = ${js(`${COOKIE}=${value}; max-age=3600; path=/`)}; localStorage.setItem('nillaAcceptance', ${js(value)}); return { cookie: document.cookie, storage: localStorage.getItem('nillaAcceptance') }; })()`);
+const readMarks = (session) => evaluate(session, `({ cookie: document.cookie.split('; ').find(c => c.startsWith(${js(`${COOKIE}=`)}))?.split('=')[1] ?? null, storage: localStorage.getItem('nillaAcceptance') })`);
 
 export async function openProfileWindow(app, shell, body, label) {
   const before = await shell.windowIds();
@@ -40,7 +40,7 @@ export default {
   async run(t) {
     const run = nonce("f02");
     let state = await startBrowser(t, { name: "profiles" });
-    const defaultUrl = t.fixtures.url.isolation("isolation.ardia.test") + `?p=default-${run}`;
+    const defaultUrl = t.fixtures.url.isolation("isolation.nilla.test") + `?p=default-${run}`;
     let defaultPage;
     await t.check("default profile stores a cookie and localStorage", async () => {
       defaultPage = await profilePage(state.app, state.shell, defaultUrl);
@@ -51,7 +51,7 @@ export default {
     await t.check("an isolated profile opens its own window and browser context", async () => {
       const profileId = await state.shell.state(`return s.createProfile({ name: ${js(`Isolated ${run}`)} });`);
       const opened = await openProfileWindow(state.app, state.shell, `return s.createWindow({ profileId: ${js(profileId)} });`, "isolated window");
-      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.ardia.test") + `?p=isolated-${run}`);
+      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.nilla.test") + `?p=isolated-${run}`);
       if (!page.browserContextId || page.browserContextId === defaultPage.browserContextId) throw new Error(`isolated page context ${page.browserContextId} matches default ${defaultPage.browserContextId}`);
       isolated = { profileId, ...opened, page };
       return { profileId, windowId: opened.windowId, pageProfile: opened.shell.pageProfile, context: page.browserContextId };
@@ -76,7 +76,7 @@ export default {
     await t.check("a regular window hosts a tab of another regular profile natively, in that profile's context", async () => {
       const key = `cross-${run}`;
       const claim = `cross-claim-${run}`;
-      const crossUrl = t.fixtures.url.isolation("isolation.ardia.test") + `?p=cross-${run}`;
+      const crossUrl = t.fixtures.url.isolation("isolation.nilla.test") + `?p=cross-${run}`;
       const reply = await isolated.shell.invoke("tab.create", { key, claim, profile: "", url: crossUrl });
       if (!reply.ok) throw new Error(`the isolated window refused a default-profile tab: ${reply.code} ${reply.message}`);
       const target = await state.app.pageLoaded(crossUrl, { timeout: 20000 });
@@ -88,7 +88,7 @@ export default {
     await t.check("a shared-data profile shares the default profile's data", async () => {
       const profileId = await state.shell.state(`return s.createProfile({ name: ${js(`Shared ${run}`)}, shareWith: "default" });`);
       const opened = await openProfileWindow(state.app, state.shell, `return s.createWindow({ profileId: ${js(profileId)} });`, "shared window");
-      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.ardia.test") + `?p=shared-${run}`);
+      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.nilla.test") + `?p=shared-${run}`);
       const marks = await readMarks(page.session);
       if (marks.cookie !== `default-${run}` || marks.storage !== `default-${run}`) throw new Error(`shared profile reads ${JSON.stringify(marks)}`);
       if (page.browserContextId !== defaultPage.browserContextId) throw new Error("shared profile runs in another browser context");
@@ -100,7 +100,7 @@ export default {
     let privateWindow;
     await t.check("a private window runs off the record", async () => {
       const opened = await openProfileWindow(state.app, state.shell, `return s.createWindow({ kind: "private", profileId: "default" });`, "private window");
-      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.ardia.test") + `?p=private-${run}`);
+      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.nilla.test") + `?p=private-${run}`);
       if (!page.browserContextId || page.browserContextId === defaultPage.browserContextId) throw new Error("the private page shares the default browser context");
       const marks = await readMarks(page.session);
       if (marks.cookie || marks.storage) throw new Error(`private window read regular data ${JSON.stringify(marks)}`);
@@ -125,7 +125,7 @@ export default {
       await until(async () => !(await state.shell.windowIds()).includes(privateWindow.windowId), { timeout: 15000, label: "private native window to close" });
       await until(async () => !(await state.app.browserTargets()).some((t) => t.browserContextId === privateWindow.page.browserContextId), { timeout: 15000, label: "private browser context to empty" });
       const opened = await openProfileWindow(state.app, state.shell, `return s.createWindow({ kind: "private", profileId: "default" });`, "second private window");
-      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.ardia.test") + `?p=private-again-${run}`);
+      const page = await profilePage(state.app, opened.shell, t.fixtures.url.isolation("isolation.nilla.test") + `?p=private-again-${run}`);
       const marks = await readMarks(page.session);
       await opened.shell.state("s.closeWindow(windowId); return true;").catch(() => {});
       if (marks.cookie || marks.storage) throw new Error(`private data survived ${JSON.stringify(marks)}`);
@@ -149,7 +149,7 @@ export default {
       state = await restartBrowser(t, state);
       const windows = await state.shell.state("return Object.values(s.windows).map(w => ({ id: w.id, incognito: w.kind === 'private', profileId: w.profileId }));");
       if (windows.some((w) => w.incognito || /^incognito:/.test(w.profileId))) throw new Error(`private window restored ${JSON.stringify(windows)}`);
-      const page = await profilePage(state.app, state.shell, t.fixtures.url.isolation("isolation.ardia.test") + `?p=after-restart-${run}`);
+      const page = await profilePage(state.app, state.shell, t.fixtures.url.isolation("isolation.nilla.test") + `?p=after-restart-${run}`);
       const marks = await readMarks(page.session);
       if (marks.cookie !== `default-${run}`) throw new Error(`default cookie lost across restart ${JSON.stringify(marks)}`);
       return { windows, marks };

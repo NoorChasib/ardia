@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-@implementation ArdiaSavedDocument
+@implementation NillaSavedDocument
 
 + (NSDictionary *)read:(NSString *)name in:(NSString *)directory oldest:(NSInteger)oldest newest:(NSInteger)newest {
   NSData *data = directory.length ? [NSData dataWithContentsOfFile:[directory stringByAppendingPathComponent:name]] : nil;

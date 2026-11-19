@@ -19,7 +19,7 @@ import { BarButton, Group, IconTile, NavRow, PickerRow, SettingsPage, ToggleRow 
 import { syncOffered } from "../../state/sync/offer";
 
 const APP_LINKS = [
-  { id: "ardia" as const, title: "Ardia" },
+  { id: "nilla" as const, title: "Nilla" },
   { id: "app" as const, title: "App" },
 ];
 
@@ -123,7 +123,7 @@ export function SettingsRoot() {
           <Text style={[font.body, { color: theme.label }]}>Show Onboarding</Text>
         </Pressable>
         <View style={[styles.divider, { backgroundColor: theme.separator }]} />
-        <NavRow title="About Ardia" icon="info" tint={settingsTint.neutral} onPress={() => pushSettings({ page: "about" })} />
+        <NavRow title="About Nilla" icon="info" tint={settingsTint.neutral} onPress={() => pushSettings({ page: "about" })} />
       </Group>
       <Text style={[font.footnote, styles.centered, { color: theme.secondaryLabel }]}>{appVersion()}</Text>
     </SettingsPage>

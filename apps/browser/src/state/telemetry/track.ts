@@ -3,7 +3,7 @@ import { appInfo } from "./transport";
 import { launchFirstWindow } from "./journeys";
 import type { PanelState } from "../browser/types";
 import type { AutofillToggle } from "../../platform/autofill";
-import type { SuggestionVia } from "@ardia/core";
+import type { SuggestionVia } from "@nilla/core";
 
 export type SuggestionType = "history" | "bookmark" | "tab" | "url" | "search" | "calc" | "action" | "create" | "extension" | "provider" | "typed";
 

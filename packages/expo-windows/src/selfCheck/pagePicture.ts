@@ -2,7 +2,7 @@ import type { AppWindowsModule } from "../nativeModuleTypes";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
-const windows = () => requireNativeModule<Pick<AppWindowsModule, "windowIds" | "capturePage">>("ArdiaAppWindows");
+const windows = () => requireNativeModule<Pick<AppWindowsModule, "windowIds" | "capturePage">>("NillaAppWindows");
 
 const JPEG_BASE64 = "/9j/";
 

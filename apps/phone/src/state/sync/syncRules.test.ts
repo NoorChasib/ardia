@@ -68,8 +68,9 @@ test("every connect result has the Compose wording, and a cancelled pick says no
   assert.match(connectMessage({ result: "mismatch" })!, /doesn’t match the synced data/);
   assert.match(connectMessage({ result: "noSyncData" })!, /no synced data in this folder yet/);
   assert.match(connectMessage({ result: "folderUnavailable" })!, /can’t open this folder/);
+  assert.equal(connectMessage({ result: "folderUnavailable", problem: "This storage app doesn’t tell Nilla which folders the one you chose is in" }), "This storage app doesn’t tell Nilla which folders the one you chose is in");
   assert.equal(connectMessage({ result: "keyStoreFailed" }), "Couldn’t save the sync key on this phone.");
-  assert.equal(connectMessage({ result: "busy" }), "Ardia is still turning off sync. Try again in a moment.");
+  assert.equal(connectMessage({ result: "busy" }), "Nilla is still turning off sync. Try again in a moment.");
 });
 
 test("the phrase footer shows the problem, the all-clear, or where to find the words", () => {
@@ -217,8 +218,8 @@ test("the Mac's search engine carries over", () => {
 test("a set-aside inbox shows the module's message and that Sync Now tries again", () => {
   assert.equal(inboxNotice(status()), null);
   assert.equal(inboxNotice(status({ inboxProblem: "  " })), null);
-  assert.deepEqual(inboxNotice(status({ inboxProblem: "Ardia set aside some tabs and history changes from your Mac it couldn’t read." })), {
-    message: "Ardia set aside some tabs and history changes from your Mac it couldn’t read.",
+  assert.deepEqual(inboxNotice(status({ inboxProblem: "Nilla set aside some tabs and history changes from your Mac it couldn’t read." })), {
+    message: "Nilla set aside some tabs and history changes from your Mac it couldn’t read.",
     footer: "Sync couldn’t read some changes your Mac sent and set that file aside. Sync Now tries again.",
   });
 });
@@ -226,8 +227,8 @@ test("a set-aside inbox shows the module's message and that Sync Now tries again
 test("a scanned code is used when it is a valid phrase, rejected once otherwise, and the same code twice is ignored", () => {
   const judge = scanJudge((payload) => payload.trim().split(/\s+/).length === 24);
   const phrase = Array.from({ length: 24 }, (_, i) => `word${i}`).join(" ");
-  assert.deepEqual(judge("https://ardia.dev"), { kind: "reject" });
-  assert.deepEqual(judge("https://ardia.dev"), { kind: "repeat" });
+  assert.deepEqual(judge("https://example.com"), { kind: "reject" });
+  assert.deepEqual(judge("https://example.com"), { kind: "repeat" });
   assert.deepEqual(judge(` ${phrase} `), { kind: "accept", phrase });
   assert.deepEqual(judge(` ${phrase} `), { kind: "repeat" });
 });

@@ -1,4 +1,4 @@
-import type { SearchScope } from "@ardia/core";
+import type { SearchScope } from "@nilla/core";
 import { useLayoutEffect, useRef, type ComponentProps, type RefObject } from "react";
 import { findNodeHandle, TextInput } from "react-native";
 import { useTheme } from "../ui";

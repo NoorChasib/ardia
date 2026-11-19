@@ -1,6 +1,7 @@
-import { APP_INGEST_KEY, INGEST_KEY_HEADER } from "@ardia/core";
+import { INGEST_KEY_HEADER } from "@nilla/core";
 import { cancelUploads, fileSize, onReportEvent, postReportJson, removeReportFile, uploadFile } from "../../platform/report";
-import { feedbackURLOverride } from "../../platform/launchConfig";
+import { appServices } from "../../platform/launchConfig";
+import { copyText } from "../../platform/clipboard";
 import { confirm } from "../../platform/dialogs";
 import { readDocument, removeDocument, writeDocument } from "../../platform/documents";
 import { fileExists } from "../../platform/files";
@@ -10,7 +11,7 @@ import { reportIdentity, telemetryIdentity, type ReportIdentity } from "../telem
 import { localEventsSince } from "../telemetry/localStore";
 import { startWatch } from "../telemetry/watch";
 import { appInfo } from "../telemetry/transport";
-import { pageAddressOf, reportDiagnostics, systemLine, updateChannel } from "./details";
+import { pageAddressOf, reportDiagnostics, systemDetails, systemLine, updateChannel } from "./details";
 import {
   buildPayload,
   clampContact,
@@ -33,7 +34,36 @@ import { isBusy, sendReport, type UploadDeps, type UploadState } from "./upload"
 export const FEEDBACK_URL = "https://ardia.dev/api/feedback";
 const POST_TIMEOUT_MS = 30_000;
 
-export const feedbackEndpoint = () => feedbackURLOverride() ?? FEEDBACK_URL;
+export const feedbackEndpoint = (): string | null => appServices().feedbackUrl;
+
+export const REPORT_ISSUE_BODY = "What happened?\n\n\nWhat did you expect?\n\n\n";
+
+export const issuePageUrl = () => `${appServices().issueUrl}?body=${encodeURIComponent(REPORT_ISSUE_BODY)}`;
+
+export async function reportDetailsText(): Promise<string> {
+  const details = await systemDetails().catch((): Record<string, string | number | null> => ({}));
+  return [systemLine(), ...Object.entries(details).map(([key, value]) => `${key}: ${value ?? "none"}`)].join("\n");
+}
+
+async function offerDetailsToCopy(windowId: string) {
+  try {
+    const details = await reportDetailsText();
+    const answer = await confirm({
+      title: "Add details to your report?",
+      message: `The issue page opened without them. Copy these and paste them in if they help:\n\n${details}`,
+      confirmTitle: "Copy Details",
+      cancelTitle: "Close",
+      windowId,
+    });
+    if (answer.confirmed) copyText(details);
+  } catch {}
+}
+
+export function openIssuePage(windowId: string, source: "menu" | "check_in" = "menu") {
+  capture("report_sheet_opened", { source, form: "issue_page" });
+  openUrls([issuePageUrl()], windowId);
+  void offerDetailsToCopy(windowId);
+}
 
 let identity: ReportIdentity | null = null;
 let cancelled = false;
@@ -73,6 +103,7 @@ function restoreDraftOnce(): { recording: boolean } | null {
 
 export function openReport(windowId: string | null, source: "menu" | "check_in" = "menu") {
   if (!windowId) return;
+  if (!feedbackEndpoint()) return openIssuePage(windowId, source);
   if (currentReport().recording.phase === "recording") return;
   const restored = restoreDraftOnce();
   if (currentReport().sent) resetReport();
@@ -204,7 +235,13 @@ export async function sendCurrentReport() {
   let resume = failed && failed.errorClass !== "expired" ? failed.created : null;
   const sharing = isSharing();
   const files = reportFiles(s);
-  const endpoint = { url: feedbackEndpoint(), key: APP_INGEST_KEY, keyHeader: INGEST_KEY_HEADER };
+  const url = feedbackEndpoint();
+  const key = appServices().ingestKeys?.app;
+  if (!url || !key) {
+    if (s.windowId) openIssuePage(s.windowId);
+    return;
+  }
+  const endpoint = { url, key, keyHeader: INGEST_KEY_HEADER };
   const onState = (upload: UploadState) => !cancelled && patchReport({ upload });
   const attempt = async () => {
     const shown = resume && identity ? identity : reportIdentity(s.draft.watch && !sharing);

@@ -252,7 +252,7 @@ export function createHostImport(host: ArdiaHost, ImportError: ImportErrorClass,
   };
 
   return {
-    async listBrowsers() {
+    async listBrowsers(only?: readonly string[]) {
       const list = await invoke<unknown>("listBrowsers", []);
       if (!Array.isArray(list)) throw failure("unreadable", "The browser list is not a list");
       const sources = list.filter((source): source is ImportApi.BrowserSource =>
@@ -263,7 +263,7 @@ export function createHostImport(host: ArdiaHost, ImportError: ImportErrorClass,
         families.set(source.id, source.family);
         if (source.family === "chromium" && source.needsKeychain === true) keychains.add(source.id);
       }
-      return sources;
+      return only ? sources.filter((source) => only.includes(source.id)) : sources;
     },
     importData,
     async unlockBrowser(browserId, options: UnlockOptions = {}) {

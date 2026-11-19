@@ -5,7 +5,7 @@ import { EVENTS_SCOPE, eventRecord, LOGS_SCOPE, logRecord, logsRequest, outcome,
 import { cleanProperties } from "./sanitize";
 import type { SavedContext } from "./savedContext";
 import type { RequestLogEntry } from "./requestLog";
-import { appInfo, mayPost, post, telemetryHost } from "./transport";
+import { appInfo, mayPost, NOT_SENT, post, telemetryHost } from "./transport";
 import { telemetryRelay, type AskPlacement, type CaptureOptions, type SharingSource } from "./relay";
 import { uuidv4, uuidv7 } from "./ids";
 import { parseSaved, versionedJson } from "../../lib/savedDocument";
@@ -34,9 +34,9 @@ export const environment = (): "dev" | "test" | "production" =>
 function context(): Record<string, unknown> {
   const info = appInfo();
   return {
-    $lib: "ardia-telemetry",
+    $lib: "nilla-telemetry",
     $lib_version: "1",
-    $app_name: "Ardia",
+    $app_name: "Nilla",
     $app_version: info.appVersion,
     $app_build: info.appBuild,
     $os: telemetryHost().os,
@@ -142,7 +142,7 @@ export function capture(event: string, props: Record<string, unknown> = {}, opti
       timestamp: new Date(at).toISOString(),
       properties: { ...context(), ...cleanProperties(props), ...options.raw },
     };
-    recordLocal("event", sharing, { event, uuid: record.uuid, distinct_id: sharing ? installId : null, properties: record.properties }, at);
+    recordLocal("event", sharing && mayPost(), { event, uuid: record.uuid, distinct_id: sharing ? installId : null, properties: record.properties }, at);
     if (!sharing) {
       droppedWhileOff++;
       return;
@@ -162,7 +162,7 @@ export function queueLog(level: "warn" | "error", message: string, attributes: R
     const sharing = !relay && saved().sharing;
     const at = Date.now();
     const withSession = { ...attributes, $session_id: sessionId() };
-    recordLocal("log", sharing, { level, message, attributes: withSession }, at);
+    recordLocal("log", sharing && mayPost(), { level, message, attributes: withSession }, at);
     if (!sharing) return;
     loadQueue();
     queue.logs.push(logRecord(level, message, withSession, at));
@@ -202,7 +202,7 @@ async function send(kind: RequestLogEntry["kind"], body: string, count: number) 
 export function resource(): Record<string, unknown> {
   const info = appInfo();
   return {
-    "service.name": "ardia-app",
+    "service.name": "nilla-app",
     "service.version": info.appVersion,
     "deployment.environment": environment() === "production" ? "production" : "development",
     "os.type": telemetryHost().osType,
@@ -221,7 +221,7 @@ const eventsBody = (batch: QueuedEvent[]) =>
 
 const logsBody = (batch: OtlpLogRecord[]) => logsRequest(resource(), LOGS_SCOPE, batch);
 
-type DrainResult = "done" | "failed" | "stale";
+type DrainResult = "done" | "failed" | "stale" | "held";
 
 async function drain<T>(
   kind: RequestLogEntry["kind"],
@@ -239,6 +239,7 @@ async function drain<T>(
     }
     const status = await send(kind, body, batch.length);
     if (gen !== generation) return "stale";
+    if (status === NOT_SENT) return "held";
     const result = outcome(status, batch.length);
     if (result === "retry") return "failed";
     if (result === "split") size = Math.ceil(batch.length / 2);
@@ -387,4 +388,4 @@ export const saveContext = (context: SavedContext | null) => saved().sharing && 
 export const crashCursor = () => saved().crashCursor;
 export const advanceCrashCursor = (to: number) => to > saved().crashCursor && save({ crashCursor: to });
 
-export const devState = () => ({ saved: saved(), queued: { events: queue.events.length, logs: queue.logs.length }, droppedWhileOff, canSend: mayPost("events") });
+export const devState = () => ({ saved: saved(), queued: { events: queue.events.length, logs: queue.logs.length }, droppedWhileOff, canSend: mayPost() });

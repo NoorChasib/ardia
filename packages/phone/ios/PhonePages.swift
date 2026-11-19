@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import CryptoKit
 import ExpoModulesCore
 import Foundation
@@ -37,7 +37,7 @@ final class PhonePages {
     var isPrivate: Bool
   }
 
-  static let launchPermissionSuite = "ardia.phone.pages.launchPermissions"
+  static let launchPermissionSuite = "nilla.phone.pages.launchPermissions"
   static let remembersSitePermissions = true
 
   static func launchPermissionDefaults() -> UserDefaults {
@@ -47,13 +47,13 @@ final class PhonePages {
   }
 
   private init() {
-    defaults = UserDefaults(suiteName: "ardia.phone.pages") ?? .standard
+    defaults = UserDefaults(suiteName: "nilla.phone.pages") ?? .standard
     container = (try? BrowserStore.makeContainer(.inMemory)) ?? (try! BrowserStore.makeContainer(.inMemory))
     let tabs = TabStore(context: container.mainContext, defaults: defaults)
     tabs.autoArchiveInterval = .never
     let blocker = PhoneBlocking.blocker(isDemo: PhoneTestBuild.isDemo, defaults: defaults)
     let permissions = SitePermissions(defaults: Self.remembersSitePermissions ? defaults : Self.launchPermissionDefaults())
-    if PhoneTestBuild.isDemo, !PhoneTestBuild.flag("ArdiaNoSitePermissions"), permissions.grants.isEmpty {
+    if PhoneTestBuild.isDemo, !PhoneTestBuild.flag("NillaNoSitePermissions"), permissions.grants.isEmpty {
       permissions.allow([.location], origin: "https://maps.apple.com", host: "maps.apple.com")
       permissions.allow([.camera, .microphone], origin: "https://meet.google.com", host: "meet.google.com")
       permissions.allow([.microphone], origin: "https://music.youtube.com", host: "music.youtube.com")

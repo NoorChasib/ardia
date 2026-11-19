@@ -39,17 +39,37 @@ function Install-Compiler([string]$installed, [string]$scratch) {
   if ($run.ExitCode -ne 0) { throw "Inno Setup's installer exited with $($run.ExitCode)" }
 }
 
-if (-not (Test-Path -LiteralPath (Join-Path $Source "Ardia.exe") -PathType Leaf)) { throw "'$Source' has no Ardia.exe" }
+if (-not (Test-Path -LiteralPath (Join-Path $Source "Nilla.exe") -PathType Leaf)) { throw "'$Source' has no Nilla.exe" }
 if (-not (Test-Path -LiteralPath (Join-Path $Source "chrome.dll") -PathType Leaf)) { throw "'$Source' has no chrome.dll: the installer ships the app assembled with the engine" }
 $sourceRoot = (Resolve-Path -LiteralPath $Source).Path
 if (Get-ChildItem -LiteralPath $sourceRoot -Recurse -File -Force -Filter "Ardia.test-build" | Select-Object -First 1) { throw "'$Source' holds an Ardia.test-build marker: an installer never ships it, so a build people install ignores test keys" }
+$licenses = [ordered]@{
+  "LICENSE" = "LICENSE"
+  "LICENSE.Apache-2.0" = "LICENSE.Apache-2.0"
+  "NOTICE" = "NOTICE"
+  "bangs-LICENSE" = "third_party\bangs\LICENSE"
+  "symbols-THIRD_PARTY_NOTICES.txt" = "packages\demo\src\shims\web\symbols\THIRD_PARTY_NOTICES.txt"
+}
+foreach ($name in $licenses.Keys) {
+  $packaged = Join-Path $sourceRoot "Licenses\$name"
+  if (-not (Test-Path -LiteralPath $packaged -PathType Leaf)) { throw "'$Source' has no Licenses\${name}: assemble.ps1 ships every licence text with the app" }
+  if ((Get-FileHash -LiteralPath $packaged -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath (Join-Path $repository $licenses[$name]) -Algorithm SHA256).Hash) { throw "'$Source' has a Licenses\$name that is not the repository's $($licenses[$name])" }
+}
+. (Join-Path $PSScriptRoot "package-licenses.ps1")
+$packageLicenses = Get-PinnedPackageLicenses $repository
+foreach ($name in $packageLicenses.Keys) {
+  $packaged = Join-Path $sourceRoot "Licenses\$name"
+  $pinned = $packageLicenses[$name]
+  if (-not (Test-Path -LiteralPath $packaged -PathType Leaf)) { throw "'$Source' has no Licenses\${name}: assemble.ps1 ships $($pinned.package) $($pinned.version)'s $($pinned.license) notice with the app" }
+  if ((Get-FileHash -LiteralPath $packaged -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $pinned.source -Algorithm SHA256).Hash) { throw "'$Source' has a Licenses\$name that is not $($pinned.package) $($pinned.version)'s $($pinned.source)" }
+}
 New-Item -ItemType Directory -Force -Path $Out | Out-Null
 $outRoot = (Resolve-Path -LiteralPath $Out).Path
 if (-not $Version) { $Version = & (Join-Path $PSScriptRoot "project-version.ps1") }
 $icon = Join-Path $repository "apps\browser\windows\Ardia\Ardia.ico"
-$script = Join-Path $PSScriptRoot "installer\Ardia.iss"
+$script = Join-Path $PSScriptRoot "installer\Nilla.iss"
 
-$scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("ardia-installer-" + [guid]::NewGuid().ToString("N"))
+$scratch = Join-Path ([System.IO.Path]::GetTempPath()) ("nilla-installer-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Force -Path $scratch | Out-Null
 try {
   $installed = Join-Path $scratch "inno"
@@ -62,10 +82,10 @@ try {
   Write-Host "make-installer: using $iscc"
   & $iscc "/Q" "/DSource=$sourceRoot" "/DOut=$outRoot" "/DCpu=$Cpu" "/DAllowed=$($allowed[$Cpu])" "/DVersion=$Version" "/DIcon=$icon" $script
   if ($LASTEXITCODE -ne 0) { throw "ISCC exited with $LASTEXITCODE" }
-  $setup = Join-Path $outRoot "Ardia-Setup-$Cpu.exe"
+  $setup = Join-Path $outRoot "Nilla-Setup-$Cpu.exe"
   if (-not (Test-Path -LiteralPath $setup -PathType Leaf)) { throw "ISCC wrote no $setup" }
   $size = [Math]::Round((Get-Item -LiteralPath $setup).Length / 1MB)
-  Write-Host "make-installer: Ardia $Version for $Cpu is $setup ($size MB)"
+  Write-Host "make-installer: Nilla $Version for $Cpu is $setup ($size MB)"
 } finally {
   Remove-Item -LiteralPath $scratch -Recurse -Force -ErrorAction SilentlyContinue
 }

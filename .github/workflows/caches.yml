@@ -44,13 +44,14 @@ jobs:
           --newest-only xcode-cas-ios-
           --newest-only windows-app-x64-
           --newest-only windows-app-arm64-
+          --newest-only windows-run-built-x64-
+          --newest-only windows-run-built-arm64-
+          --newest-only windows-run-javascript-
           --newest-only swiftpm-xcode-
           --newest-only turbo-
           --newest-only bun-install-root-Linux-X64-
           --newest-only bun-install-root-macOS-ARM64-
           --newest-only bun-install-root-Windows-X64-
           --newest-only bun-install-root-Windows-ARM64-
-          --newest-only bun-install-site-Linux-X64-
-          --newest-only bun-install-hexclave-Linux-X64-
           --newest-only bun-install-phone-Linux-X64-
           --newest-only bun-install-phone-macOS-ARM64- | tee -a "$GITHUB_STEP_SUMMARY"

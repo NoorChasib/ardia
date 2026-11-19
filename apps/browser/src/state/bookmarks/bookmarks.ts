@@ -1,5 +1,4 @@
 import type { StateCreator } from "zustand";
-import { LEGACY_BOOKMARK_SEED } from "../../lib/legacy";
 import type { BrowserState } from "../browser/store";
 import { engineProfile, without } from "../browser/model";
 import type { BookmarkFolder, BookmarkNode, Bookmarks } from "../browser/types";
@@ -27,6 +26,8 @@ export type RemovedBookmarks = { nodes: BookmarkNode[]; places: { id: string; pa
 
 const EMPTY_BOOKMARKS: Bookmarks = { nodes: {} };
 
+const BOOKMARK_UUID_SEED = "nilla-bookmark:";
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 export const isBookmarkUuid = (id: string) => UUID.test(id);
 
@@ -40,7 +41,7 @@ export const newBookmarkId = () => uuidFrom(Array.from({ length: 4 }, () => Math
 
 export function bookmarkUuidFor(id: string): string {
   if (isBookmarkUuid(id)) return id;
-  const text = `${LEGACY_BOOKMARK_SEED}${id}`;
+  const text = `${BOOKMARK_UUID_SEED}${id}`;
   let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
   for (let i = 0; i < text.length; i++) {
     const k = text.charCodeAt(i);

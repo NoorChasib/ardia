@@ -8,7 +8,7 @@
 
 #import "ArdiaNativeMessaging.h"
 
-namespace ardia_host {
+namespace nilla_host {
 
 namespace {
 
@@ -22,7 +22,7 @@ bool ChromeRunsOn(NSString *userDataDir) {
 
 void KeepWebsiteLanguages(NSString *userDataDir) {
   NSFileManager *files = NSFileManager.defaultManager;
-  NSString *marker = [userDataDir stringByAppendingPathComponent:@".ardia-website-languages-kept"];
+  NSString *marker = [userDataDir stringByAppendingPathComponent:@".nilla-website-languages-kept"];
   if ([files fileExistsAtPath:marker] || ChromeRunsOn(userDataDir)) return;
   for (NSString *name in [files contentsOfDirectoryAtPath:userDataDir error:nil]) {
     NSString *path = [[userDataDir stringByAppendingPathComponent:name] stringByAppendingPathComponent:@"Preferences"];
@@ -46,10 +46,10 @@ void KeepWebsiteLanguages(NSString *userDataDir) {
 
 void PrepareStartup(NSString *userDataDir) {
   KeepWebsiteLanguages(userDataDir);
-  static dispatch_queue_t syncQueue = dispatch_queue_create("ardia.native-messaging", DISPATCH_QUEUE_SERIAL);
+  static dispatch_queue_t syncQueue = dispatch_queue_create("nilla.native-messaging", DISPATCH_QUEUE_SERIAL);
   static std::atomic<bool> resyncQueued{false};
   NSString *dir = [userDataDir copy];
-  dispatch_sync(syncQueue, ^{ ardia_native_messaging::SyncHosts(dir); });
+  dispatch_sync(syncQueue, ^{ nilla_native_messaging::SyncHosts(dir); });
   [NSNotificationCenter.defaultCenter addObserverForName:NSApplicationDidBecomeActiveNotification
                                                   object:nil
                                                    queue:nil
@@ -57,7 +57,7 @@ void PrepareStartup(NSString *userDataDir) {
                                                 if (resyncQueued.exchange(true)) return;
                                                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, kActivationResyncDelay), syncQueue, ^{
                                                   resyncQueued = false;
-                                                  ardia_native_messaging::SyncHosts(dir);
+                                                  nilla_native_messaging::SyncHosts(dir);
                                                 });
                                               }];
 }

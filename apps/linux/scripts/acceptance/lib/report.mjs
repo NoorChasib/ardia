@@ -32,7 +32,7 @@ export function summarizeScenario(scenario, record) {
 export function buildReport({ executable, uiDir, startedAt, finishedAt, results, environment = {} }) {
   const byStatus = Object.fromEntries(STATUSES.map((status) => [status, results.filter((r) => r.status === status).map((r) => r.issue)]));
   return {
-    suite: "ardia-linux-native-acceptance",
+    suite: "nilla-linux-native-acceptance",
     executable,
     uiDir: uiDir ?? null,
     startedAt,

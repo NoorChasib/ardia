@@ -7,7 +7,7 @@ import { splitViewAvailable } from "../splits/splits";
 
 type Keys = readonly string[];
 type Scope = "page" | "window";
-type InLittleArdia = "page" | "off";
+type InLittleNilla = "page" | "off";
 type Variant = { title?: string; barTitle?: string; symbol?: string; keys?: Keys };
 type BooleanSetting = { [K in keyof Settings]: Settings[K] extends boolean ? K : never }[keyof Settings];
 type ChoiceSetting = { [K in keyof Settings]: Settings[K] extends string ? K : never }[keyof Settings];
@@ -15,7 +15,7 @@ export type CommandSpec = Variant & {
   scope?: Scope;
   onInternalPages?: true;
   app?: true;
-  littleArdia?: InLittleArdia;
+  littleNilla?: InLittleNilla;
   variants?: Readonly<Record<string, Variant>>;
   toggles?: BooleanSetting;
   chooses?: ChoiceSetting;
@@ -23,31 +23,31 @@ export type CommandSpec = Variant & {
 
 const inWindow = { scope: "window" } as const;
 const appWide = { app: true } as const;
-const pageInLittleArdia = { scope: "page", littleArdia: "page" } as const;
-const offInLittleArdia = { littleArdia: "off" } as const;
-const windowOffInLittleArdia = { scope: "window", littleArdia: "off" } as const;
+const pageInLittleNilla = { scope: "page", littleNilla: "page" } as const;
+const offInLittleNilla = { littleNilla: "off" } as const;
+const windowOffInLittleNilla = { scope: "window", littleNilla: "off" } as const;
 
 export const COMMANDS = {
   newTab: { title: "New Tab", symbol: "plus", keys: ["⌘T"] },
   newWindow: { title: "New Window", symbol: "macwindow", keys: ["⌘N"] },
   newIncognitoWindow: { title: "New Incognito Window", symbol: "eyeglasses", keys: ["⇧⌘N"] },
-  newLittleArdia: { title: "New Little Ardia Window", keys: ["⌥⌘N"] },
-  toggleOpenLinksInLittleArdia: { title: "Open Links from Other Apps in Main Window" },
-  reopenClosedTab: { title: "Reopen Closed Tab", symbol: "arrow.uturn.backward", keys: ["⇧⌘T"], littleArdia: "page" },
+  newLittleNilla: { title: "New Little Nilla Window", keys: ["⌥⌘N"] },
+  toggleOpenLinksInLittleNilla: { title: "Open Links from Other Apps in Main Window" },
+  reopenClosedTab: { title: "Reopen Closed Tab", symbol: "arrow.uturn.backward", keys: ["⇧⌘T"], littleNilla: "page" },
   reopenClosedWindow: { title: "Reopen Closed Window" },
-  restoreClosed: { littleArdia: "page" },
+  restoreClosed: { littleNilla: "page" },
   clearRecentlyClosed: { title: "Clear Recently Closed", symbol: "trash", ...appWide },
   focusCommandBar: { title: "Open Command Bar", keys: ["⌘L", "⌃F5"], ...inWindow },
   closeTab: { title: "Close Tab", symbol: "xmark", keys: ["⌘W"], ...inWindow },
-  closeAllTabs: { title: "Close All Tabs", symbol: "xmark.square", keys: ["⇧⌘K"], ...windowOffInLittleArdia },
-  print: { title: "Print…", symbol: "printer", keys: ["⌘P"], ...pageInLittleArdia },
-  copyUrl: { title: "Copy URL", symbol: "link", keys: ["⇧⌘C"], ...pageInLittleArdia, onInternalPages: true },
-  copyUrlAsMarkdown: { title: "Copy URL as Markdown", symbol: "link", keys: ["⌥⇧⌘C"], ...pageInLittleArdia, onInternalPages: true },
-  findInPage: { title: "Find…", barTitle: "Find in Page", symbol: "text.magnifyingglass", keys: ["⌘F"], ...pageInLittleArdia },
-  findNext: { title: "Find Next", keys: ["⌘G"], ...pageInLittleArdia },
-  findPrevious: { title: "Find Previous", keys: ["⇧⌘G"], ...pageInLittleArdia },
-  hideElement: { title: "Hide Element…", barTitle: "Hide an Element on This Page", symbol: "eye.slash", keys: ["⇧⌘H"], ...pageInLittleArdia },
-  showHiddenElements: { title: "Hidden Elements on This Site…", barTitle: "Show Hidden Elements on This Site", symbol: "eye", keys: ["⇧⌘U"], ...pageInLittleArdia },
+  closeAllTabs: { title: "Close All Tabs", symbol: "xmark.square", keys: ["⇧⌘K"], ...windowOffInLittleNilla },
+  print: { title: "Print…", symbol: "printer", keys: ["⌘P"], ...pageInLittleNilla },
+  copyUrl: { title: "Copy URL", symbol: "link", keys: ["⇧⌘C"], ...pageInLittleNilla, onInternalPages: true },
+  copyUrlAsMarkdown: { title: "Copy URL as Markdown", symbol: "link", keys: ["⌥⇧⌘C"], ...pageInLittleNilla, onInternalPages: true },
+  findInPage: { title: "Find…", barTitle: "Find in Page", symbol: "text.magnifyingglass", keys: ["⌘F"], ...pageInLittleNilla },
+  findNext: { title: "Find Next", keys: ["⌘G"], ...pageInLittleNilla },
+  findPrevious: { title: "Find Previous", keys: ["⇧⌘G"], ...pageInLittleNilla },
+  hideElement: { title: "Hide Element…", barTitle: "Hide an Element on This Page", symbol: "eye.slash", keys: ["⇧⌘H"], ...pageInLittleNilla },
+  showHiddenElements: { title: "Hidden Elements on This Site…", barTitle: "Show Hidden Elements on This Site", symbol: "eye", keys: ["⇧⌘U"], ...pageInLittleNilla },
   setAppearance: {
     chooses: "appearance",
     variants: {
@@ -56,59 +56,59 @@ export const COMMANDS = {
       dark: { title: "Dark", barTitle: "Dark Appearance", symbol: "moon" },
     },
   },
-  reload: { title: "Refresh", barTitle: "Reload Page", symbol: "arrow.clockwise", keys: ["⌘R"], ...pageInLittleArdia },
-  forceReload: { title: "Force Refresh the Page", barTitle: "Force Reload Page", symbol: "arrow.clockwise", keys: ["⇧⌘R"], ...pageInLittleArdia },
-  toggleTabLayout: { title: "Show Tabs in Sidebar", keys: ["⇧⌘S"], ...windowOffInLittleArdia },
-  toggleSidebarSide: { title: "Sidebar on Right", symbol: "sidebar.right", ...offInLittleArdia },
-  toggleSidebar: { title: "Auto-Hide Tabs", symbol: "sidebar.left", keys: ["⌘S", "⇧⌘L", "⇧⌘F"], ...windowOffInLittleArdia },
-  openSplitPane: { title: "Open Split Pane", keys: ["⌃⇧=", "⌃+"], ...windowOffInLittleArdia },
-  useSelectionForFind: { title: "Use Selection for Find", keys: ["⌘E"], ...pageInLittleArdia },
-  findAndReplace: { title: "Find and Replace…", keys: ["⌥⌘F"], ...pageInLittleArdia },
-  jumpToSelection: { title: "Jump to Selection", keys: ["⌘J"], ...pageInLittleArdia },
-  focusNextPane: { title: "Focus Next Split Pane", keys: ["⌃⇧]", "⌃}"], ...offInLittleArdia },
-  focusPreviousPane: { title: "Focus Previous Split Pane", keys: ["⌃⇧[", "⌃{"], ...offInLittleArdia },
+  reload: { title: "Refresh", barTitle: "Reload Page", symbol: "arrow.clockwise", keys: ["⌘R"], ...pageInLittleNilla },
+  forceReload: { title: "Force Refresh the Page", barTitle: "Force Reload Page", symbol: "arrow.clockwise", keys: ["⇧⌘R"], ...pageInLittleNilla },
+  toggleTabLayout: { title: "Show Tabs in Sidebar", keys: ["⇧⌘S"], ...windowOffInLittleNilla },
+  toggleSidebarSide: { title: "Sidebar on Right", symbol: "sidebar.right", ...offInLittleNilla },
+  toggleSidebar: { title: "Auto-Hide Tabs", symbol: "sidebar.left", keys: ["⌘S", "⇧⌘L", "⇧⌘F"], ...windowOffInLittleNilla },
+  openSplitPane: { title: "Open Split Pane", keys: ["⌃⇧=", "⌃+"], ...windowOffInLittleNilla },
+  useSelectionForFind: { title: "Use Selection for Find", keys: ["⌘E"], ...pageInLittleNilla },
+  findAndReplace: { title: "Find and Replace…", keys: ["⌥⌘F"], ...pageInLittleNilla },
+  jumpToSelection: { title: "Jump to Selection", keys: ["⌘J"], ...pageInLittleNilla },
+  focusNextPane: { title: "Focus Next Split Pane", keys: ["⌃⇧]", "⌃}"], ...offInLittleNilla },
+  focusPreviousPane: { title: "Focus Previous Split Pane", keys: ["⌃⇧[", "⌃{"], ...offInLittleNilla },
   toggleFullUrl: { title: "Show Full URL", symbol: "text.alignleft", toggles: "showFullUrl" },
   toggleJavaScriptFromAppleEvents: { title: "Allow JavaScript from Apple Events", toggles: "allowJavaScriptFromAppleEvents" },
-  toggleAddressBar: { title: "Show Address Bar in Sidebar", ...offInLittleArdia },
-  toggleMinimalism: { title: "Minimalism Mode", barTitle: "Toggle Minimalism Mode", symbol: "rectangle.leftthird.inset.filled", keys: ["⌃⌘M"], toggles: "minimalismMode", ...offInLittleArdia },
-  cast: { title: "Cast…", littleArdia: "page" },
-  zoomReset: { title: "Zoom to Actual Size", barTitle: "Actual Size", symbol: "1.magnifyingglass", keys: ["⌘0"], ...pageInLittleArdia },
-  zoomIn: { title: "Zoom In", symbol: "plus.magnifyingglass", keys: ["⌘+", "⌘="], ...pageInLittleArdia },
-  zoomOut: { title: "Zoom Out", symbol: "minus.magnifyingglass", keys: ["⌘-"], ...pageInLittleArdia },
-  devTools: { title: "Developer Tools", symbol: "hammer", keys: ["⌥⌘I"], ...pageInLittleArdia },
-  toggleDevTools: { title: "Toggle Developer Tools", keys: ["F12"], ...pageInLittleArdia },
-  javaScriptConsole: { title: "JavaScript Console", keys: ["⌥⌘J"], ...pageInLittleArdia },
-  inspectElements: { title: "Inspect Elements", keys: ["⌥⌘C"], ...pageInLittleArdia },
-  viewSource: { title: "View Source", keys: ["⌥⌘U"], ...pageInLittleArdia },
-  back: { title: "Go Back", keys: ["⌘[", "⌘←"], scope: "window", littleArdia: "page" },
-  forward: { title: "Go Forward", keys: ["⌘]", "⌘→"], scope: "window", littleArdia: "page" },
-  nextTab: { title: "Next Tab", keys: ["⇧⌘]", "⌘}", "⌃⇥", "⌃⇟", "⌥⌘↓"], ...windowOffInLittleArdia },
-  previousTab: { title: "Previous Tab", keys: ["⇧⌘[", "⌘{", "⌃⇧⇥", "⌃⇞", "⌥⌘↑"], ...windowOffInLittleArdia },
+  toggleAddressBar: { title: "Show Address Bar in Sidebar", ...offInLittleNilla },
+  toggleMinimalism: { title: "Minimalism Mode", barTitle: "Toggle Minimalism Mode", symbol: "rectangle.leftthird.inset.filled", keys: ["⌃⌘M"], toggles: "minimalismMode", ...offInLittleNilla },
+  cast: { title: "Cast…", littleNilla: "page" },
+  zoomReset: { title: "Zoom to Actual Size", barTitle: "Actual Size", symbol: "1.magnifyingglass", keys: ["⌘0"], ...pageInLittleNilla },
+  zoomIn: { title: "Zoom In", symbol: "plus.magnifyingglass", keys: ["⌘+", "⌘="], ...pageInLittleNilla },
+  zoomOut: { title: "Zoom Out", symbol: "minus.magnifyingglass", keys: ["⌘-"], ...pageInLittleNilla },
+  devTools: { title: "Developer Tools", symbol: "hammer", keys: ["⌥⌘I"], ...pageInLittleNilla },
+  toggleDevTools: { title: "Toggle Developer Tools", keys: ["F12"], ...pageInLittleNilla },
+  javaScriptConsole: { title: "JavaScript Console", keys: ["⌥⌘J"], ...pageInLittleNilla },
+  inspectElements: { title: "Inspect Elements", keys: ["⌥⌘C"], ...pageInLittleNilla },
+  viewSource: { title: "View Source", keys: ["⌥⌘U"], ...pageInLittleNilla },
+  back: { title: "Go Back", keys: ["⌘[", "⌘←"], scope: "window", littleNilla: "page" },
+  forward: { title: "Go Forward", keys: ["⌘]", "⌘→"], scope: "window", littleNilla: "page" },
+  nextTab: { title: "Next Tab", keys: ["⇧⌘]", "⌘}", "⌃⇥", "⌃⇟", "⌥⌘↓"], ...windowOffInLittleNilla },
+  previousTab: { title: "Previous Tab", keys: ["⇧⌘[", "⌘{", "⌃⇧⇥", "⌃⇞", "⌥⌘↑"], ...windowOffInLittleNilla },
   selectTab: {
-    ...windowOffInLittleArdia,
+    ...windowOffInLittleNilla,
     variants: Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((n) => [String(n), { title: `Select Tab ${n}`, keys: [`⌘${n}`] }])),
   },
-  selectLastTab: { title: "Select Last Tab", keys: ["⌘9"], ...windowOffInLittleArdia },
+  selectLastTab: { title: "Select Last Tab", keys: ["⌘9"], ...windowOffInLittleNilla },
   togglePin: {
     title: "Move to Top Apps",
     symbol: "pin",
-    ...windowOffInLittleArdia,
+    ...windowOffInLittleNilla,
     variants: { tile: { title: "Move Pinned Tab to Top Apps" }, row: {} },
   },
-  togglePinnedRow: { title: "Move to Pinned", keys: ["⌥⇧⌘D"], ...windowOffInLittleArdia },
-  duplicateTab: { title: "Duplicate", barTitle: "Duplicate Tab", symbol: "plus.square.on.square", ...windowOffInLittleArdia },
-  moveTabToProfile: windowOffInLittleArdia,
-  moveTabToWindow: windowOffInLittleArdia,
-  bookmarkPage: { title: "Add to Bookmarks…", symbol: "bookmark", keys: ["⌘D"], ...pageInLittleArdia, onInternalPages: true },
-  addBookmarkToFolder: { ...pageInLittleArdia, onInternalPages: true },
-  openBookmark: { scope: "window", littleArdia: "page" },
+  togglePinnedRow: { title: "Move to Pinned", keys: ["⌥⇧⌘D"], ...windowOffInLittleNilla },
+  duplicateTab: { title: "Duplicate", barTitle: "Duplicate Tab", symbol: "plus.square.on.square", ...windowOffInLittleNilla },
+  moveTabToProfile: windowOffInLittleNilla,
+  moveTabToWindow: windowOffInLittleNilla,
+  bookmarkPage: { title: "Add to Bookmarks…", symbol: "bookmark", keys: ["⌘D"], ...pageInLittleNilla, onInternalPages: true },
+  addBookmarkToFolder: { ...pageInLittleNilla, onInternalPages: true },
+  openBookmark: { scope: "window", littleNilla: "page" },
   addFolderToSidebar: {},
   restoreArcFolders: {},
-  toggleMute: { title: "Mute Tab", symbol: "speaker.slash", ...pageInLittleArdia },
+  toggleMute: { title: "Mute Tab", symbol: "speaker.slash", ...pageInLittleNilla },
   togglePageEngine: { title: "Open Page in WebKit" },
-  toggleReader: { title: "Show Reader", barTitle: "Toggle Reading Mode", symbol: "doc.plaintext", keys: ["⌥⌘R"], ...pageInLittleArdia },
-  downloads: { title: "Downloads", symbol: "arrow.down.circle", keys: ["⇧⌘J", "⌥⌘L"], scope: "window", littleArdia: "page" },
-  mergeAllWindows: { title: "Merge All Windows", symbol: "rectangle.stack", ...windowOffInLittleArdia },
+  toggleReader: { title: "Show Reader", barTitle: "Toggle Reading Mode", symbol: "doc.plaintext", keys: ["⌥⌘R"], ...pageInLittleNilla },
+  downloads: { title: "Downloads", symbol: "arrow.down.circle", keys: ["⇧⌘J", "⌥⌘L"], scope: "window", littleNilla: "page" },
+  mergeAllWindows: { title: "Merge All Windows", symbol: "rectangle.stack", ...windowOffInLittleNilla },
   switchProfile: inWindow,
   nextProfile: { title: "Next Profile", keys: ["⌥⌘→"], ...inWindow },
   previousProfile: { title: "Previous Profile", keys: ["⌥⌘←"], ...inWindow },
@@ -119,25 +119,25 @@ export const COMMANDS = {
   clearBrowsingData: { title: "Clear Browsing Data…", symbol: "trash", keys: ["⇧⌘⌫"] },
   manageBookmarks: { title: "Manage Bookmarks", barTitle: "Bookmarks", symbol: "book", keys: ["⌥⌘B"] },
   exportBookmarks: { title: "Export Bookmarks…", symbol: "square.and.arrow.up" },
-  bookmarkAllTabs: { title: "Bookmark All Tabs…", keys: ["⇧⌘D"], ...offInLittleArdia },
+  bookmarkAllTabs: { title: "Bookmark All Tabs…", keys: ["⇧⌘D"], ...offInLittleNilla },
   setBookmarksBar: { chooses: "bookmarksBar", variants: { always: { title: "Always" }, newTab: { title: "On New Tab Only" }, never: { title: "Never" } } },
   toggleBookmarksBar: { title: "Toggle Bookmarks Bar", symbol: "menubar.rectangle", keys: ["⇧⌘B"] },
-  newTabInGroup: { title: "New Tab in Group", keys: ["⌥⌘T", "⌃⌘C"], ...windowOffInLittleArdia },
-  newGroupWithTabs: { title: "New Group with Tab", symbol: "folder.badge.plus", keys: ["⌃⌘N", "⌃⌘P"], ...windowOffInLittleArdia },
-  cleanUpTabs: { title: "Clean Up Tabs", symbol: "sparkles", keys: ["⌥⌘K"], ...windowOffInLittleArdia },
+  newTabInGroup: { title: "New Tab in Group", keys: ["⌥⌘T", "⌃⌘C"], ...windowOffInLittleNilla },
+  newGroupWithTabs: { title: "New Group with Tab", symbol: "folder.badge.plus", keys: ["⌃⌘N", "⌃⌘P"], ...windowOffInLittleNilla },
+  cleanUpTabs: { title: "Clean Up Tabs", symbol: "sparkles", keys: ["⌥⌘K"], ...windowOffInLittleNilla },
   tidyPins: { title: "Tidy Pins", symbol: "sparkles" },
-  searchTabs: { title: "Search Tabs…", symbol: "magnifyingglass", keys: ["⇧⌘A"], ...windowOffInLittleArdia },
-  renameTab: { title: "Rename…", barTitle: "Rename Tab", symbol: "pencil", ...windowOffInLittleArdia },
-  changeTabIcon: { title: "Change Icon…", ...windowOffInLittleArdia },
-  returnToPinnedUrl: { title: "Back to Pinned URL", keys: ["⌘↩"], ...windowOffInLittleArdia },
+  searchTabs: { title: "Search Tabs…", symbol: "magnifyingglass", keys: ["⇧⌘A"], ...windowOffInLittleNilla },
+  renameTab: { title: "Rename…", barTitle: "Rename Tab", symbol: "pencil", ...windowOffInLittleNilla },
+  changeTabIcon: { title: "Change Icon…", ...windowOffInLittleNilla },
+  returnToPinnedUrl: { title: "Back to Pinned URL", keys: ["⌘↩"], ...windowOffInLittleNilla },
   tabSwitcher: {
-    ...windowOffInLittleArdia,
+    ...windowOffInLittleNilla,
     variants: {
       forward: { title: "Tab Switcher (forward)" },
       backward: { title: "Tab Switcher (backward)" },
     },
   },
-  share: { title: "Share…", symbol: "square.and.arrow.up", keys: ["⌥⌘S"], ...pageInLittleArdia },
+  share: { title: "Share…", symbol: "square.and.arrow.up", keys: ["⌥⌘S"], ...pageInLittleNilla },
   reportProblem: { title: "Report a Problem…", keys: ["⌥⇧⌘I"], ...appWide },
   keyboardShortcuts: { title: "Keyboard Shortcuts", symbol: "keyboard" },
   copyDiagnostics: { title: "Copy Diagnostics", ...appWide },
@@ -146,23 +146,23 @@ export const COMMANDS = {
   releaseNotes: { title: "Release Notes", ...appWide },
   showOnboarding: { title: "Show Onboarding", ...appWide },
   taskManager: { title: "Task Manager", ...appWide },
-  openExtension: { littleArdia: "page" },
-  addExtension: { title: "Add Extension…", littleArdia: "page" },
+  openExtension: { littleNilla: "page" },
+  addExtension: { title: "Add Extension…", littleNilla: "page" },
   manageExtensions: { title: "Manage Extensions…" },
   pinExtensions: { title: "Pin Extensions…" },
   autofill: {
-    littleArdia: "page",
+    littleNilla: "page",
     variants: { contact: { title: "Contact…" }, passwords: { title: "Passwords…" }, creditCard: { title: "Credit Card…" } },
   },
   openFile: { title: "Open File…", keys: ["⌘O"] },
-  savePage: { title: "Save Page As…", ...pageInLittleArdia },
-  emailPageLocation: { title: "Email Page Location", keys: ["⇧⌘I"], ...pageInLittleArdia },
-  printWithSystemDialog: { title: "Print Using System Dialog…", keys: ["⌥⌘P"], ...pageInLittleArdia },
-  stop: { title: "Stop", keys: ["⌘."], ...pageInLittleArdia },
-  caretBrowsing: { title: "Caret Browsing", keys: ["F7"], ...pageInLittleArdia },
-  moveTabDown: { title: "Move Tab Down", keys: ["⌃⇧⇟"], ...windowOffInLittleArdia },
-  moveTabUp: { title: "Move Tab Up", keys: ["⌃⇧⇞"], ...windowOffInLittleArdia },
-  closeTabGroup: { title: "Close Group", keys: ["⌃⌘W"], ...windowOffInLittleArdia },
+  savePage: { title: "Save Page As…", ...pageInLittleNilla },
+  emailPageLocation: { title: "Email Page Location", keys: ["⇧⌘I"], ...pageInLittleNilla },
+  printWithSystemDialog: { title: "Print Using System Dialog…", keys: ["⌥⌘P"], ...pageInLittleNilla },
+  stop: { title: "Stop", keys: ["⌘."], ...pageInLittleNilla },
+  caretBrowsing: { title: "Caret Browsing", keys: ["F7"], ...pageInLittleNilla },
+  moveTabDown: { title: "Move Tab Down", keys: ["⌃⇧⇟"], ...windowOffInLittleNilla },
+  moveTabUp: { title: "Move Tab Up", keys: ["⌃⇧⇞"], ...windowOffInLittleNilla },
+  closeTabGroup: { title: "Close Group", keys: ["⌃⌘W"], ...windowOffInLittleNilla },
   openProfileMenu: { title: "Show Profiles Menu", keys: ["⇧⌘M"], ...inWindow },
 } as const satisfies Record<BrowserCommand, CommandSpec>;
 
@@ -217,7 +217,7 @@ const commandsWhere = (test: (spec: CommandSpec) => boolean) => ALL_COMMANDS.fil
 export const PAGE_COMMANDS = commandsWhere((c) => c.scope === "page");
 export const PAGE_COMMANDS_OFF_INTERNAL_PAGES = commandsWhere((c) => c.scope === "page" && !c.onInternalPages);
 export const WINDOW_COMMANDS = commandsWhere((c) => c.scope !== undefined);
-export const LITTLE_ARDIA_DISABLED_COMMANDS = commandsWhere((c) => c.littleArdia === "off");
+export const LITTLE_NILLA_DISABLED_COMMANDS = commandsWhere((c) => c.littleNilla === "off");
 export const SPLIT_VIEW_COMMANDS: readonly BrowserCommand[] = ["openSplitPane", "focusNextPane", "focusPreviousPane"];
 export const EXPORT_COMMANDS: readonly BrowserCommand[] = ["exportBookmarks"];
 export const WEBKIT_COMMANDS: readonly BrowserCommand[] = ["togglePageEngine"];
@@ -228,7 +228,7 @@ export const UNAVAILABLE_COMMANDS: ReadonlySet<string> = new Set([
   ...(PLATFORM_FEATURES.webKit ? [] : WEBKIT_COMMANDS),
   ...(PLATFORM_FEATURES.contentBlocker ? [] : HIDING_COMMANDS),
 ]);
-export const LITTLE_ARDIA_PAGE_COMMANDS: ReadonlySet<string> = new Set(commandsWhere((c) => c.littleArdia === "page"));
+export const LITTLE_NILLA_PAGE_COMMANDS: ReadonlySet<string> = new Set(commandsWhere((c) => c.littleNilla === "page"));
 
 const APP_COMMANDS: ReadonlySet<string> = new Set(commandsWhere((c) => !!c.app));
 export const isAppCommand = (command: BrowserCommand): command is AppCommand => APP_COMMANDS.has(command);
@@ -289,7 +289,7 @@ export function shortcutSources(profileIds: readonly string[], overriddenIds: re
     ...STATIC_SOURCES,
     ...profileIds.flatMap((id, i) => [
       source(`switchProfile:${id}`, i < PROFILE_SHORTCUT_COUNT ? [profileSwitchKey(i + 1)] : []),
-      source(`newLittleArdia:${id}`),
+      source(`newLittleNilla:${id}`),
     ]),
     ...perItem.map((id) => source(id)),
   ];

@@ -3,7 +3,7 @@ import { act } from "react-test-renderer";
 import { renderSurface, unmount } from "../../test/render/harness";
 import { mockNative, resetNativeMenus } from "./nativeMenusMock";
 
-jest.mock("@ardia/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@ardia/phone-native")));
+jest.mock("@nilla/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@nilla/phone-native")));
 
 const { MenuTrigger, confirmInSheet, nativeMenu } = require("../components/ui/MenuTrigger") as typeof import("../components/ui/MenuTrigger");
 type MenuItem = import("../components/ui").MenuItem;

@@ -7,7 +7,7 @@
 
 #include <winrt/Microsoft.UI.Dispatching.h>
 
-namespace Ardia {
+namespace Nilla {
 
 struct WindowMotion {
   static constexpr std::chrono::milliseconds kMainEntrance{250};

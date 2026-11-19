@@ -1,6 +1,6 @@
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { launchArdia } from "./ardia.mjs";
+import { launchNilla } from "./nilla.mjs";
 import { summarizeScenario } from "./report.mjs";
 import { errorText, settles, withDeadline, withSignal } from "./util.mjs";
 
@@ -12,7 +12,7 @@ export async function cleanupActiveScenarios() {
   await Promise.all([...activeContexts].map((t) => t.cleanup({ keep: true }).catch(() => {})));
 }
 
-export function createContext({ scenario, options, fixtures, resultsDir, scratchRoot, launch = launchArdia, log = () => {}, drainTimeout = 15000 }) {
+export function createContext({ scenario, options, fixtures, resultsDir, scratchRoot, launch = launchNilla, log = () => {}, drainTimeout = 15000 }) {
   const checks = [];
   const apps = new Set();
   const scratches = [];
@@ -60,7 +60,7 @@ export function createContext({ scenario, options, fixtures, resultsDir, scratch
       scratches.push(dir);
       return dir;
     },
-    async launch({ scratch, label = "ardia", background = true, extensions = false, extraArgs = [], env = {}, ozone, startTimeout, coreDumps } = {}) {
+    async launch({ scratch, label = "nilla", background = true, extensions = false, extraArgs = [], env = {}, ozone, startTimeout, coreDumps } = {}) {
       if (!scratch) throw new Error("launch needs a scratch directory");
       refuseAfterAbort("launch a browser");
       const app = await launch({

@@ -9,7 +9,7 @@ type SystemLookNative = {
   addListener?: (eventName: "onSystemLookChange", listener: (now: SystemLookNow) => void) => Subscription;
 };
 
-const native = requireOptionalNativeModule<SystemLookNative>("ArdiaPhoneLook");
+const native = requireOptionalNativeModule<SystemLookNative>("NillaPhoneLook");
 const nativeReads = Platform.OS === "android" && typeof native?.systemLook === "function";
 
 const store = createSystemLookStore({

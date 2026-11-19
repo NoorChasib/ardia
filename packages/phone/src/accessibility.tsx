@@ -15,10 +15,10 @@ type NativeProps = Omit<ScrollActionsProps, "onScrollAction"> & {
   onScrollAction: (event: NativeSyntheticEvent<{ direction: ScrollActionDirection }>) => void;
 };
 
-const hasNative = requireOptionalNativeModule("ArdiaPhoneAccessibility") !== null;
+const hasNative = requireOptionalNativeModule("NillaPhoneAccessibility") !== null;
 
 let nativeView: ComponentType<NativeProps> | undefined;
-const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("ArdiaPhoneAccessibility", "ScrollActions"));
+const view = () => (nativeView ??= requireNativeViewManager<NativeProps>("NillaPhoneAccessibility", "ScrollActions"));
 
 export function ScrollActions({ onScrollAction, canScrollForward, canScrollBackward, ...rest }: ScrollActionsProps) {
   if (!hasNative) return createElement(View, rest);

@@ -1,6 +1,6 @@
 import { moveCompletedDownload, setApprovedDownloadFolders, setHoldIncomingLinks } from "../../platform/systemSignals";
 import { setOpeningGate } from "../tabs/openingGate";
-import { setLinkGate, type LinkGateResult, type LinkSourceInfo } from "../littleArdia/linkGate";
+import { setLinkGate, type LinkGateResult, type LinkSourceInfo } from "../littleNilla/linkGate";
 import { setPermissionGate } from "../site/permissionGate";
 import { cancelAllDecisions } from "./decideSocket";
 import { decideLink, decideOpening, decidePermission, type LinkVerdict } from "./decisions";

@@ -12,7 +12,7 @@ let closeWhileOpening = false;
 let refuseCreates = false;
 const shownPages = new Set(["opener-page"]);
 
-turboModules.ArdiaEngineHost = {
+turboModules.NillaEngineHost = {
   available: () => true,
   hostCall: async (verb, argsJson, windowId) => {
     calls.push({ verb, args: JSON.parse(argsJson), windowId });
@@ -23,19 +23,19 @@ turboModules.ArdiaEngineHost = {
   engineCall: async () => "{}",
 };
 
-turboModules.ArdiaAppWindows = {
+turboModules.NillaAppWindows = {
   openWindow: async (id, options) => {
     opened.push({ id, options });
     if (!refuseWindows) openIds.add(id);
     if (closeWhileOpening) {
       openIds.delete(id);
-      DeviceEventEmitter.emit("ArdiaAppWindows:onWindowEvent", { type: "close", id });
+      DeviceEventEmitter.emit("NillaAppWindows:onWindowEvent", { type: "close", id });
     }
   },
   closeWindow: async (id) => {
     closed.push(id);
     openIds.delete(id);
-    DeviceEventEmitter.emit("ArdiaAppWindows:onWindowEvent", { type: "close", id });
+    DeviceEventEmitter.emit("NillaAppWindows:onWindowEvent", { type: "close", id });
   },
   windowFrame: async (id) => (id === "main" ? [100, 50, 1200, 800] : null),
   windowIds: async () => [...openIds],
@@ -48,7 +48,7 @@ const { popupWindowInfo, isPopupWindowId } = await import("../../../../packages/
 const { privateWindowShown, releaseProfile } = await import("../../../../packages/expo-windows/src/engine/privateWindows.ts");
 const { hostCall } = await import("../../../../packages/expo-windows/src/engine/host.ts");
 
-const emitTopic = (topic, payload) => DeviceEventEmitter.emit("ArdiaEngineHost:event", { topic, json: JSON.stringify(payload) });
+const emitTopic = (topic, payload) => DeviceEventEmitter.emit("NillaEngineHost:event", { topic, json: JSON.stringify(payload) });
 const settle = async () => {
   for (let turn = 0; turn < 5; turn++) await new Promise((resolve) => setTimeout(resolve, 0));
 };
@@ -85,7 +85,7 @@ test("closing a pop-up window closes its tab, and one never mounted gives its of
   const closeShown = mountPage(info.pageKey, { url: "", profile: info.profile, adopt: info.adopt, windowId: made.id }, () => {});
   await settle();
   assert.ok(calls.some((call) => call.verb === "tab.create" && call.args.adopt === "ardiacore:2" && call.windowId === made.id), "the pop-up adopts the engine's tab in its own window");
-  turboModules.ArdiaAppWindows.closeWindow(made.id);
+  turboModules.NillaAppWindows.closeWindow(made.id);
   await settle();
   assert.ok(calls.some((call) => call.verb === "tab.close" && call.args.key === info.pageKey), "the tab closes with its window");
   assert.equal(popupWindowInfo(made.id), null);
@@ -93,7 +93,7 @@ test("closing a pop-up window closes its tab, and one never mounted gives its of
 
   popupOpened("ardiacore:3", {});
   await settle();
-  turboModules.ArdiaAppWindows.closeWindow(opened.at(-1).id);
+  turboModules.NillaAppWindows.closeWindow(opened.at(-1).id);
   await settle();
   assert.ok(calls.some((call) => call.verb === "tab.discard" && call.args.adopt === "ardiacore:3"), "an offered tab nobody adopted is discarded");
   unmount();
@@ -165,7 +165,7 @@ test("a private pop-up keeps its private session while it is open, after its ope
   unmount();
   await settle();
   assert.equal(released(), 0, "the window sync's release of the closed opener window waits while its pop-up is open");
-  turboModules.ArdiaAppWindows.closeWindow(made.id);
+  turboModules.NillaAppWindows.closeWindow(made.id);
   await settle();
   assert.equal(released(), 1, "the private session ends when its pop-up closes");
 });
@@ -180,7 +180,7 @@ test("a pop-up leaves the focus decision to the moment it opens: its opener's wi
   assert.equal(made.options.focusWhenFront, "main", "the native side activates it only if the opener's window is in front then");
   assert.equal(made.options.focusWhenPage, "opener-page", "and only if the opener page holds the keyboard then");
   assert.equal(calls.filter((call) => call.verb === "tabs.list").length, 0, "nothing is decided ahead of time from a list that can go stale");
-  turboModules.ArdiaAppWindows.closeWindow(made.id);
+  turboModules.NillaAppWindows.closeWindow(made.id);
   await settle();
   unmount();
 });
@@ -191,7 +191,7 @@ test("a pop-up whose opener page is unknown never takes focus", async () => {
   const made = opened.at(-1);
   assert.equal(made.options.focus, false);
   assert.equal(popupWindowInfo(made.id)?.focused, false, "its page does not take the keyboard either");
-  turboModules.ArdiaAppWindows.closeWindow(made.id);
+  turboModules.NillaAppWindows.closeWindow(made.id);
   await settle();
 });
 
@@ -211,8 +211,8 @@ test("a pop-up opened from a pop-up is placed and focused by the pop-up that ope
   assert.equal(second.options.focusWhenFront, first.id, "focus follows the pop-up that opened it");
   assert.equal(second.options.focusWhenPage, firstInfo.pageKey);
   assert.equal(popupWindowInfo(second.id)?.openerKey, "opener-page", "its tabs and prompts still go to the main page");
-  turboModules.ArdiaAppWindows.closeWindow(second.id);
-  turboModules.ArdiaAppWindows.closeWindow(first.id);
+  turboModules.NillaAppWindows.closeWindow(second.id);
+  turboModules.NillaAppWindows.closeWindow(first.id);
   await settle();
   firstShown();
   unmount();
@@ -235,7 +235,7 @@ test("a link a pop-up page opens in a new window (shift-click) goes to the pop-u
   assert.equal(asked[0].url, "https://auth.example/help");
   assert.equal(asked[0].disposition, "window");
   assert.equal(asked[0].point, undefined);
-  turboModules.ArdiaAppWindows.closeWindow(made.id);
+  turboModules.NillaAppWindows.closeWindow(made.id);
   await settle();
   closeShown();
   unmount();
@@ -275,7 +275,7 @@ test("a pop-up whose page closed itself closes its window at once, without the c
 const { answerExternalAppsWith } = await import("../../../../packages/expo-windows/src/engine/pages.ts");
 const { addNativeListener } = await import("../../../../packages/expo-windows/src/events.ts");
 const windowRequests = [];
-addNativeListener("ArdiaTabs", "tabs", (event) => event?.name === "tabs.windowRequest" && windowRequests.push(event.data));
+addNativeListener("NillaTabs", "tabs", (event) => event?.name === "tabs.windowRequest" && windowRequests.push(event.data));
 const discarded = (adopt) => calls.some((call) => call.verb === "tab.discard" && call.args.adopt === adopt);
 
 async function lonePopup(adopt, profile = "p-work") {
@@ -290,14 +290,14 @@ async function lonePopup(adopt, profile = "p-work") {
   await settle();
   unmountOpener();
   await settle();
-  return { made, info, inPopup, done: async () => { unmountPopupPage(); turboModules.ArdiaAppWindows.closeWindow(made.id); await settle(); } };
+  return { made, info, inPopup, done: async () => { unmountPopupPage(); turboModules.NillaAppWindows.closeWindow(made.id); await settle(); } };
 }
 
 test("an app-link ask from a pop-up left without its opener's window, with no browser page of its profile, is forgotten instead of waiting forever", async () => {
   const forgotten = [];
-  answerExternalAppsWith({ ask: async () => ({ id: "lone-ask", url: "ardiatest:hello" }), forget: (id) => forgotten.push(id), forgetPage: () => {} });
+  answerExternalAppsWith({ ask: async () => ({ id: "lone-ask", url: "nillatest:hello" }), forget: (id) => forgotten.push(id), forgetPage: () => {} });
   const popup = await lonePopup("ardiacore:70");
-  emitTopic("tab", { key: popup.info.pageKey, name: "externalApp", data: { id: "e1", url: "ardiatest:hello" } });
+  emitTopic("tab", { key: popup.info.pageKey, name: "externalApp", data: { id: "e1", url: "nillatest:hello" } });
   await settle();
   assert.deepEqual(forgotten, ["lone-ask"], "nobody can show the prompt, so the ask is forgotten in the app and the engine");
   assert.equal(popup.inPopup.filter(([name]) => name === "externalApp").length, 0, "the pop-up's own window never gets it");
@@ -401,7 +401,7 @@ async function popupOfMovedOpener(adopt, from = "p-work", to = "p-home") {
     done: async () => {
       unmountMoved();
       unmountPopupPage();
-      turboModules.ArdiaAppWindows.closeWindow(made.id);
+      turboModules.NillaAppWindows.closeWindow(made.id);
       await settle();
     },
   };
@@ -448,9 +448,9 @@ test("opener moved to another profile: a link its pop-up opens in a new window g
 
 test("opener moved to another profile: an app-link ask from its pop-up is never shown on the opener's page in the new profile", async () => {
   const forgotten = [];
-  answerExternalAppsWith({ ask: async () => ({ id: "moved-ask", url: "ardiatest:hello" }), forget: (id) => forgotten.push(id), forgetPage: () => {} });
+  answerExternalAppsWith({ ask: async () => ({ id: "moved-ask", url: "nillatest:hello" }), forget: (id) => forgotten.push(id), forgetPage: () => {} });
   const popup = await popupOfMovedOpener("ardiacore:85");
-  emitTopic("tab", { key: popup.info.pageKey, name: "externalApp", data: { id: "e2", url: "ardiatest:hello" } });
+  emitTopic("tab", { key: popup.info.pageKey, name: "externalApp", data: { id: "e2", url: "nillatest:hello" } });
   await settle();
   assert.equal(popup.inMoved.filter(([name]) => name === "externalApp").length, 0, "the other profile's page never shows it");
   assert.deepEqual(forgotten, ["moved-ask"], "with no page of the pop-up's profile, the ask is forgotten");
@@ -489,7 +489,7 @@ test("a private pop-up still reaches its opener: a tab it opens goes to the open
   assert.deepEqual(asked, ["ardiacore:88", "https://help.example/new"]);
   unmountPopupPage();
   unmount();
-  turboModules.ArdiaAppWindows.closeWindow(made.id);
+  turboModules.NillaAppWindows.closeWindow(made.id);
   await settle();
 });
 
@@ -532,7 +532,7 @@ test("with pop-ups as tabs on, a page's pop-up goes to it as the Mac's foregroun
   await settle();
   assert.equal(opened.length, before + 1, "with the setting off again, the next pop-up is a window");
   assert.equal(openWindowAsks(events).length, 1);
-  turboModules.ArdiaAppWindows.closeWindow(opened.at(-1).id);
+  turboModules.NillaAppWindows.closeWindow(opened.at(-1).id);
   await settle();
   unmount();
 });
@@ -579,17 +579,17 @@ test("with pop-ups as tabs on, a pop-up from a pop-up window opens as a tab besi
   assert.equal(openWindowAsks(inPopup).length, 0, "nor a tab inside the pop-up");
   assert.deepEqual(openWindowAsks(events).map(({ adoptId, popup }) => ({ adoptId, popup })), [{ adoptId: "ardiacore:104", popup: true }]);
   assert.ok(popupWindowInfo(first.id), "and the first pop-up stays open");
-  turboModules.ArdiaAppWindows.closeWindow(first.id);
+  turboModules.NillaAppWindows.closeWindow(first.id);
   await settle();
   shown();
   unmount();
 });
 
-test("with pop-ups as tabs on, a pop-up from Little Ardia stays a pop-up window, as on the Mac", async () => {
+test("with pop-ups as tabs on, a pop-up from Little Nilla stays a pop-up window, as on the Mac", async () => {
   assert.match(windowsSource("modules.ts"), /openWindow: \(native\) => \(id, options\) => \{\n(?:.*\n){0,2}\s+noteAppWindow\(String\(id\), \(options as OpenWindowOptions \| null\)\?\.kind\);\n(?:.*\n){0,2}\s+return native\(id, options\);/);
-  noteAppWindow("little-ardia-1", "small");
+  noteAppWindow("little-nilla-1", "small");
   const events = [];
-  const unmount = mountPage("little-page", { url: "https://app.example/", profile: "p-work", windowId: "little-ardia-1" }, (name, data) => events.push([name, data]));
+  const unmount = mountPage("little-page", { url: "https://app.example/", profile: "p-work", windowId: "little-nilla-1" }, (name, data) => events.push([name, data]));
   await settle();
   const before = opened.length;
   await withPopupsAsTabs(async () => {
@@ -599,8 +599,8 @@ test("with pop-ups as tabs on, a pop-up from Little Ardia stays a pop-up window,
   assert.equal(opened.length, before + 1);
   assert.equal(popupWindowInfo(opened.at(-1).id)?.openerKey, "little-page");
   assert.equal(openWindowAsks(events).length, 0);
-  turboModules.ArdiaAppWindows.closeWindow(opened.at(-1).id);
-  DeviceEventEmitter.emit("ArdiaAppWindows:onWindowEvent", { type: "close", id: "little-ardia-1" });
+  turboModules.NillaAppWindows.closeWindow(opened.at(-1).id);
+  DeviceEventEmitter.emit("NillaAppWindows:onWindowEvent", { type: "close", id: "little-nilla-1" });
   await settle();
   unmount();
 });
@@ -632,7 +632,7 @@ test("with pop-ups as tabs on, a pop-up with no page to open beside stays a wind
   });
   assert.equal(opened.length, before + 1);
   assert.equal(opened.at(-1).options.focus, false);
-  turboModules.ArdiaAppWindows.closeWindow(opened.at(-1).id);
+  turboModules.NillaAppWindows.closeWindow(opened.at(-1).id);
   await settle();
 });
 
@@ -645,7 +645,7 @@ test("with pop-ups as tabs on, a pop-up whose opener moved to another profile go
     popupOpened("ardiacore:108", {}, "moved-opener-108");
     await settle();
     assert.equal(opened.length, before + 1, "with no page of its profile showing, it opens as a window");
-    turboModules.ArdiaAppWindows.closeWindow(opened.at(-1).id);
+    turboModules.NillaAppWindows.closeWindow(opened.at(-1).id);
     await settle();
     const inWork = [];
     const unmountWork = mountPage("work-page-108", { url: "https://work.example/", profile: "p-work", windowId: "work-window" }, (name, data) => inWork.push([name, data]));

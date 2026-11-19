@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public class SurfaceModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaSurface")
+    Name("NillaSurface")
 
     View(Surface.self) {
       Prop("fill") { (view: Surface, hex: String?) in view.surfaceFill = hex.flatMap { RGBA(hex: $0)?.srgb } }

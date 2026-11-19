@@ -1,4 +1,4 @@
-import { system } from "@ardia/phone-native";
+import { system } from "@nilla/phone-native";
 import { Platform, StatusBar } from "react-native";
 
 export function setSystemBarIcons(lightStatus: boolean, lightNavigation: boolean) {

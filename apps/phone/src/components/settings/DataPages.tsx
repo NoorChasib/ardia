@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { services } from "@nilla/core/src/services.ts";
 import { haptics } from "../../state/app/haptics";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { appVersion, clearBrowsingData, openFromSettings, websiteDataClearsByTime } from "../../state/settings/actions";
@@ -7,6 +8,7 @@ import { CLEAR_RANGES, clearChoice, clearFooter, clearIsEmpty, clearMessage, cle
 import { AppIcon, appIconLayout, ConfirmDialog, font, settingsLayout, space, Symbol, useTheme, type Confirmation, type SymbolName } from "../ui";
 import { copy } from "../../lib/platformCopy";
 import { libraryCredits } from "../../state/settings/libraryCredits";
+import { LICENSE_TEXTS, type LicenseText } from "../../state/settings/licenseTexts";
 import { ButtonRow, Divider, Group, NavRow, PickerRow, SettingsPage, ToggleRow, ValueRow } from "./SettingsKit";
 
 export function ClearDataPage() {
@@ -68,20 +70,18 @@ function LinkRow({ title, icon, url, divider }: { title: string; icon: SymbolNam
 export function AboutPage() {
   const theme = useTheme();
   return (
-    <SettingsPage title="About Ardia" onBack={popSettings}>
+    <SettingsPage title="About Nilla" onBack={popSettings}>
       <View style={styles.hero}>
         <AppIcon side={appIconLayout.about} shadow />
         <View style={styles.heroText}>
           <Text accessibilityRole="header" style={[font.title, styles.heavy, styles.rounded, { color: theme.label }]}>
-            Ardia
+            Nilla
           </Text>
           <Text style={[font.subheadline, { color: theme.secondaryLabel }]}>{appVersion()}</Text>
         </View>
       </View>
       <Group footer={copy().privacy}>
-        <LinkRow title="ardia.dev" icon="globe" url="https://ardia.dev" divider />
-        <LinkRow title="Release Notes" icon="sparkles" url="https://ardia.dev/release-notes" divider />
-        <LinkRow title="Source Code" icon="code" url="https://github.com/mantrakp04/ardia" />
+        <LinkRow title="Source Code" icon="code" url={`https://github.com/${services().sourceRepo}`} />
       </Group>
       <Group>
         <NavRow title="Open Source Licenses" onPress={() => pushSettings({ page: "licenses" })} />
@@ -91,11 +91,13 @@ export function AboutPage() {
 }
 
 export const dataCredits = () => [
-  { name: "Ardia", use: copy().ardiaCredit, license: "Apache License 2.0", url: "https://github.com/mantrakp04/ardia" },
+  { name: "Nilla", use: copy().nillaCredit, license: "Apache License 2.0", url: `https://github.com/${services().sourceRepo}` },
+  { name: "Ardia", use: "The browser Nilla is forked from.", license: "Apache License 2.0", url: "https://github.com/ardia-browser/ardia" },
   { name: "EasyList", use: "The list behind Block Ads.", license: "CC BY-SA 3.0 or GPLv3", url: "https://easylist.to" },
   { name: "EasyPrivacy", use: "The list behind Block Trackers.", license: "CC BY-SA 3.0 or GPLv3", url: "https://easylist.to" },
   { name: "Fanboy’s Cookie Monster List", use: "The list behind Block Cookie Banners.", license: "CC BY-SA 3.0 or GPLv3", url: "https://secure.fanboy.co.nz" },
   { name: "Public Suffix List", use: "Tells which part of an address is the site.", license: "Mozilla Public License 2.0", url: "https://publicsuffix.org" },
+  { name: "!Bang List", use: "The shortcuts behind !bang searches, by Kagi Search and imput.", license: "MIT License", url: "https://github.com/kagisearch/bangs" },
 ];
 
 export const LIBRARY_CREDITS = libraryCredits(Platform.OS);
@@ -119,6 +121,11 @@ export function LicensesPage() {
           </Pressable>
         </Group>
       ))}
+      <Group header="License Texts">
+        {LICENSE_TEXTS.map((license, index) => (
+          <LicenseTextRow key={license.id} license={license} divider={index < LICENSE_TEXTS.length - 1} />
+        ))}
+      </Group>
       <Group header="Code in This App">
         {LIBRARY_CREDITS.map((credit, index) => (
           <View key={`${credit.name}@${credit.detail}`}>
@@ -146,6 +153,31 @@ export function LicensesPage() {
   );
 }
 
+function LicenseTextRow({ license, divider }: { license: LicenseText; divider: boolean }) {
+  const theme = useTheme();
+  const [open, setOpen] = useState(false);
+  return (
+    <View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={license.title}
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen((shown) => !shown)}
+        style={({ pressed }) => [styles.row, pressed ? { backgroundColor: theme.rowHighlight } : null]}
+      >
+        <Text style={[font.body, styles.fill, { color: theme.label }]}>{license.title}</Text>
+        <Symbol name={open ? "chevronUp" : "chevronDown"} size={14} color={theme.tertiaryLabel} />
+      </Pressable>
+      {open ? (
+        <Text selectable style={[font.footnote, styles.licenseText, { color: theme.secondaryLabel }]}>
+          {license.text.trim()}
+        </Text>
+      ) : null}
+      {divider ? <Divider /> : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: settingsLayout.rowMinHeight, paddingHorizontal: settingsLayout.rowInset, paddingVertical: space.s },
   fill: { flex: 1 },
@@ -156,4 +188,5 @@ const styles = StyleSheet.create({
   bold: { fontWeight: "600" },
   library: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: settingsLayout.rowMinHeight, paddingHorizontal: settingsLayout.rowInset, paddingVertical: space.s },
   credit: { paddingHorizontal: settingsLayout.rowInset, paddingVertical: space.m, gap: space.xs },
+  licenseText: { paddingHorizontal: settingsLayout.rowInset, paddingBottom: space.m },
 });

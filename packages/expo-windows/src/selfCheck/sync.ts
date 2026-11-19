@@ -1,5 +1,5 @@
 import { TurboModuleRegistry } from "react-native";
-import type { SyncNative } from "@ardia/sync";
+import type { SyncNative } from "@nilla/sync";
 import { requireNativeModule } from "../modules";
 import type { WindowsSyncModule } from "../nativeModuleTypes";
 import { NATIVE_SYNC } from "../sync";
@@ -13,7 +13,7 @@ const native = () => {
   return module;
 };
 
-const contract = () => requireNativeModule<NonNullable<typeof SyncNative>>("ArdiaSync");
+const contract = () => requireNativeModule<NonNullable<typeof SyncNative>>("NillaSync");
 
 const PRIMITIVES = ["aead", "kdf", "hmac", "tags", "words", "padding", "logins", "passwordless", "passwordWins", "protectedStorage"];
 
@@ -57,7 +57,7 @@ export const checks: Check[] = [
       const wanted = { root: "0", scope: "0", publish: "ok", inScope: "yes", inWorkingFolder: "no", read: "0:hello", remove: "removed", afterRemove: "gone", removeFolder: "ok" };
       const got = Object.fromEntries(Object.keys(wanted).map((key) => [key, report[key]]));
       expectEqual(got, wanted, `file steps (${JSON.stringify(report)})`);
-      expectTrue(report.list?.includes('"name":"aaaaaaaaaaaaaaaaaaaaaaaaaa.nns"'), `the listing was ${report.list}`);
+      expectTrue(report.list?.includes('"name":"aaaaaaaaaaaaaaaaaaaaaaaaaa.nls"'), `the listing was ${report.list}`);
     },
   },
   {

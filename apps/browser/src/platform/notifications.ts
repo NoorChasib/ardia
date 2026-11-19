@@ -1,8 +1,8 @@
-import { nativeModule, type NotificationOptions, type NotificationPostResult, type NotificationResponse } from "@ardia/shell";
+import { nativeModule, type NotificationOptions, type NotificationPostResult, type NotificationResponse } from "@nilla/shell";
 
 export type { NotificationPostResult, NotificationResponse };
 
-const Notifications = nativeModule("ArdiaNotifications");
+const Notifications = nativeModule("NillaNotifications");
 
 export const notificationPermission = () => Notifications.notificationPermission();
 export const requestNotificationPermission = () => Notifications.requestNotificationPermission();

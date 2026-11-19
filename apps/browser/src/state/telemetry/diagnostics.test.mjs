@@ -231,7 +231,7 @@ test("the context sample records the built-in page the active tab is on, and a n
   }
 });
 
-test("the built-in page comes from the focused window's tab, a Little Ardia window included", async () => {
+test("the built-in page comes from the focused window's tab, a Little Nilla window included", async () => {
   const { useBrowser } = await import("../browser/store.ts");
   const S = () => useBrowser.getState();
   S().hydrate({});

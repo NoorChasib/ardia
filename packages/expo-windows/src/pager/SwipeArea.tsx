@@ -56,7 +56,7 @@ export const SwipeArea = forwardRef<View, NativeSwipeAreaProps>(function SwipeAr
 
   useEffect(() => {
     noteFirstWindow();
-    noteMissing("<ArdiaSwipe> swipe gestures");
+    noteMissing("<NillaSwipe> swipe gestures");
   }, []);
 
   useLayoutEffect(() => {

@@ -6,7 +6,7 @@ import { newIncognitoTab, newRegularTab, newTab, openArchive, openSpaces, reopen
 import { useSyncEnabled } from "../../state/sync/hooks";
 import { useSearchOpen } from "../../state/search/hooks";
 import { useCanReopen, useHasTabs, useIncognito } from "../../state/tabs/hooks";
-import { ArdiaLogo, browseLayout, deckCenterFromBottom, FrostSource, iPhoneOr, LookBackdrop, LookBackdropBase, Menu, moveTo, tabsCurve, tabsLayout, trayMotion, type MenuItem, useDesign, useReduceMotion } from "../ui";
+import { NillaLogo, browseLayout, deckCenterFromBottom, FrostSource, iPhoneOr, LookBackdrop, LookBackdropBase, Menu, moveTo, tabsCurve, tabsLayout, trayMotion, type MenuItem, useDesign, useReduceMotion } from "../ui";
 import { openSettings } from "../../state/settings/hooks";
 import { DeckBar } from "../tabs/DeckBar";
 import { StartPage } from "./StartPage";
@@ -58,7 +58,7 @@ function OriginalStart() {
       </FrostSource>
       <View style={[styles.logo, { paddingBottom: BAR_RESERVE / 2 }]} pointerEvents="none" importantForAccessibility={trayUp ? "no-hide-descendants" : "auto"} accessibilityElementsHidden={trayUp}>
         <Animated.View style={logoStyle}>
-          <ArdiaLogo width={browseLayout.logoWidth} />
+          <NillaLogo width={browseLayout.logoWidth} />
         </Animated.View>
       </View>
       <Animated.View

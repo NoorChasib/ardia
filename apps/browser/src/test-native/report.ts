@@ -1,4 +1,4 @@
-import type { ReportEvent, ShellNativeModules, UploadReply } from "@ardia/shell";
+import type { ReportEvent, ShellNativeModules, UploadReply } from "@nilla/shell";
 import { nativeEvents } from "./events";
 
 const events = nativeEvents();
@@ -12,7 +12,7 @@ export const reportFake = {
   emit: (event: ReportEvent) => events.emit("onReport", event),
 };
 
-export const reportModule: ShellNativeModules["ArdiaReport"] = {
+export const reportModule: ShellNativeModules["NillaReport"] = {
   draftDirectory: () => "/tmp/report-draft",
   fileSize: (path) => reportFake.sizes.get(path) ?? -1,
   removeFile: (path) => void reportFake.removed.push(path),

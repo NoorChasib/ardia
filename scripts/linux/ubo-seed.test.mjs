@@ -33,15 +33,15 @@ async function runLoader({ stored = {}, seed = { storage: storage() }, languages
     if (path === "/assets/assets.json") return { ok: true, json: async () => ASSETS };
     throw new Error(`unexpected fetch ${path}`);
   };
-  const run = new Function("vAPI", "µb", "fetch", "ubolog", `${loader}\nreturn ardiaSeedFromPackage();`);
+  const run = new Function("vAPI", "µb", "fetch", "ubolog", `${loader}\nreturn nillaSeedFromPackage();`);
   await run(vAPI, µb, fetch, () => {});
   return { writes, fetched };
 }
 
 test("patching start.js loads the seed before uBlock Origin's own start sequence", () => {
   const patched = patchStart(START);
-  assert.match(patched, /const ardiaSeedFromPackage = async/);
-  assert.ok(patched.indexOf("await ardiaSeedFromPackage();") < patched.indexOf("await µb.restoreAdminSettings();"));
+  assert.match(patched, /const nillaSeedFromPackage = async/);
+  assert.ok(patched.indexOf("await nillaSeedFromPackage();") < patched.indexOf("await µb.restoreAdminSettings();"));
   assert.throws(() => patchStart(patched), /already loads a package seed/);
   assert.throws(() => patchStart("const x = 1;"), /no longer has exactly one start sequence/);
 });

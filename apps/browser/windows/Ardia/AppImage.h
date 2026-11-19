@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace Ardia {
+namespace Nilla {
 
 struct AppImage {
   static HMODULE &Handle() noexcept {

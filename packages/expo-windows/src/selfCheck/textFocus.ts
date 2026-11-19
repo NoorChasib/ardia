@@ -4,7 +4,7 @@ import { expectEqual, type Check } from "./check";
 
 type TextField = Parameters<typeof textFocusForCheck.focus>[0];
 
-const focus = () => requireNativeModule<Pick<FocusOnWindows, "textInputFocused">>("ArdiaFocus");
+const focus = () => requireNativeModule<Pick<FocusOnWindows, "textInputFocused">>("NillaFocus");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const standIn = (): TextField => JSON.parse("{}");
 

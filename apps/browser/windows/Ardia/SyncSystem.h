@@ -25,7 +25,7 @@
 #include "SyncCrypto.h"
 #include "SyncLogins.h"
 
-namespace Ardia::SyncSystem {
+namespace Nilla::SyncSystem {
 
 using SyncCrypto::WipedString;
 using Answer = std::function<void(std::shared_ptr<WipedString>)>;
@@ -265,11 +265,7 @@ inline std::string DocumentsFolder() noexcept {
 }
 
 inline std::wstring KitFolder() {
-  wchar_t temp[MAX_PATH + 1]{};
-  DWORD size = GetTempPathW(MAX_PATH, temp);
-  std::wstring base = size ? std::wstring{temp, size} : std::wstring{};
-  while (!base.empty() && (base.back() == L'\\' || base.back() == L'/')) base.pop_back();
-  return base + L"\\Ardia Recovery Kit";
+  return (Paths::DataDirectory() / L"Recovery Kit").wstring();
 }
 
 }

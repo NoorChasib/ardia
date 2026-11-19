@@ -11,8 +11,8 @@ const NOT_LANDED = "The password store didn't take the change";
 const answers = { "https://refused.example": REFUSED, "https://slow.example": NOT_LANDED, "https://broken.example": "Not authenticated" };
 let csv = [];
 globalThis.acTestNativeModules = {
-  ArdiaImport: { chooseImportFile: async () => "/scratch/passwords.csv", importPasswordsCSV: async () => JSON.stringify(csv) },
-  ArdiaPasswords: {
+  NillaImport: { chooseImportFile: async () => "/scratch/passwords.csv", importPasswordsCSV: async () => JSON.stringify(csv) },
+  NillaPasswords: {
     save: async (_profile, origin) => {
       if (answers[origin]) throw new Error(answers[origin]);
       return JSON.stringify({ ok: true });
@@ -20,6 +20,8 @@ globalThis.acTestNativeModules = {
   },
 };
 
+const { overrideServicesForTests } = await import("@nilla/core/src/services.testing.ts");
+overrideServicesForTests({ telemetryUrl: "https://logs.example.test/v1/logs", ingestKeys: { app: "app-key", cli: "cli-key", site: "site-key" } });
 const stub = await import("../../test-native/index.ts");
 Object.assign(stub.appInfo, { appVersion: "0.3.0", appBuild: "300", osVersion: "27.0.1", arch: "arm64", isolatedInstance: false });
 stub.docs.set("telemetry.json", JSON.stringify({ version: 1, sharing: true, decidedAt: 1, askDoneAt: 1, installId: "install-1", crashCursor: 0, lastVersion: "0.3.0", sessionOpen: false }));

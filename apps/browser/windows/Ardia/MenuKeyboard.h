@@ -19,14 +19,14 @@
 #include "Paths.h"
 #include "WindowManager.h"
 
-namespace Ardia::Menus {
+namespace Nilla::Menus {
 
 struct ActiveWindow {
   HWND hwnd = nullptr;
   std::string id;
 };
 
-inline ActiveWindow ActiveArdiaWindow() noexcept {
+inline ActiveWindow ActiveNillaWindow() noexcept {
   HWND active = GetActiveWindow();
   if (!active) return {};
   HWND root = GetAncestor(active, GA_ROOTOWNER);
@@ -39,7 +39,7 @@ inline ActiveWindow ActiveArdiaWindow() noexcept {
 }
 
 inline HWND MenuOwnerWindow() noexcept {
-  if (HWND active = ActiveArdiaWindow().hwnd) return active;
+  if (HWND active = ActiveNillaWindow().hwnd) return active;
   return WindowManager::Shared().ActiveHwnd();
 }
 
@@ -101,14 +101,14 @@ struct MenuKeyboard {
     if (command == "newTab" || command == "focusCommandBar") generation = FocusHold::Shared().Begin(WindowManager::Shared().Hwnd(windowId), command);
     else FocusHold::Shared().OtherCommand();
     payload["focusGeneration"] = generation ? JSValue{static_cast<int64_t>(generation)} : JSValue{nullptr};
-    EmitEvent(context, L"ArdiaMenus", L"onCommand", std::move(payload));
+    EmitEvent(context, L"NillaMenus", L"onCommand", std::move(payload));
     LaunchLog::Write(L"command", Paths::Wide(command));
   }
 
   void EmitSwitcherReleased(bool afterMenu = false) noexcept {
     winrt::Microsoft::ReactNative::JSValueObject event{{"type", "switcherReleased"}};
     if (afterMenu) event["afterMenu"] = winrt::Microsoft::ReactNative::JSValue{true};
-    EmitEvent(context, L"ArdiaShell", L"onAppEvent", std::move(event));
+    EmitEvent(context, L"NillaShell", L"onAppEvent", std::move(event));
   }
 
   void ReconcileAfterMenu() noexcept {
@@ -138,7 +138,7 @@ struct MenuKeyboard {
   }
 
   bool CaptureEscape() noexcept {
-    EmitEvent(context, L"ArdiaShell", L"onAppEvent", winrt::Microsoft::ReactNative::JSValueObject{{"type", "dragEscape"}});
+    EmitEvent(context, L"NillaShell", L"onAppEvent", winrt::Microsoft::ReactNative::JSValueObject{{"type", "dragEscape"}});
     LaunchLog::Write(L"keys", L"escape sent to the open popover or drag");
     return true;
   }
@@ -156,7 +156,7 @@ struct MenuKeyboard {
     else if (press.virtualKey == VK_RIGHT) key = "next";
     else if (press.virtualKey == VK_LEFT) key = "previous";
     else if (ClosesSwitcherRow(press, repeat)) key = "close";
-    if (key) EmitEvent(context, L"ArdiaShell", L"onAppEvent", winrt::Microsoft::ReactNative::JSValueObject{{"type", "switcherKey"}, {"key", key}});
+    if (key) EmitEvent(context, L"NillaShell", L"onAppEvent", winrt::Microsoft::ReactNative::JSValueObject{{"type", "switcherKey"}, {"key", key}});
     return true;
   }
 
@@ -267,7 +267,7 @@ struct MenuKeyboard {
     MenuStore &store = MenuStore::Shared();
     CommandEntry const *entry = store.Match(press);
     if (!entry) return false;
-    ActiveWindow window = ActiveArdiaWindow();
+    ActiveWindow window = ActiveNillaWindow();
     if (entry->Native()) {
       if (!NativeActionAvailable(entry->id, window)) return false;
       PerformNative(entry->id, window);
@@ -495,7 +495,7 @@ struct MenuKeyboard {
     std::string windowId = windowsKeyHold->windowId;
     LetPageGo({});
     ++pagesGivenBack;
-    EmitEvent(context, L"ArdiaShell", L"onAppEvent", winrt::Microsoft::ReactNative::JSValueObject{{"type", "snapKeyHandedBack"}, {"windowId", windowId}});
+    EmitEvent(context, L"NillaShell", L"onAppEvent", winrt::Microsoft::ReactNative::JSValueObject{{"type", "snapKeyHandedBack"}, {"windowId", windowId}});
     LaunchLog::Write(L"keys", L"snap keys: the keyboard went back to the page " + std::wstring{when} + L" (" + std::to_wstring(pagesGivenBack) + L" so far)");
   }
 
@@ -545,7 +545,7 @@ struct MenuKeyboard {
     ++pageReturnRequestsAfterMenu;
     winrt::Microsoft::ReactNative::JSValueObject event{{"type", "snapKeyHandedBack"}, {"windowId", left.windowId}};
     event["afterMenu"] = winrt::Microsoft::ReactNative::JSValue{true};
-    EmitEvent(context, L"ArdiaShell", L"onAppEvent", std::move(event));
+    EmitEvent(context, L"NillaShell", L"onAppEvent", std::move(event));
     LaunchLog::Write(L"keys", L"menu: asked to give the keyboard back to the page the right-click took it from (" + std::to_wstring(pageReturnRequestsAfterMenu) + L" so far)");
   }
 
@@ -576,7 +576,7 @@ struct MenuKeyboard {
     if (recording) {
       handled = Record(press);
     } else {
-      ActiveWindow window = ActiveArdiaWindow();
+      ActiveWindow window = ActiveNillaWindow();
       if (!window.hwnd) return false;
       if (switcherCaptured) handled = CaptureSwitcherKey(press, (flags & (1u << 30)) != 0);
       else if (escapeCaptured && BareEscape(press)) handled = CaptureEscape();

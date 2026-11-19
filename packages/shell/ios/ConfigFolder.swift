@@ -19,8 +19,8 @@ enum ConfigFolder {
   static func path(_ name: String) -> String { (directory as NSString).appendingPathComponent(name) }
 
   static func read(_ name: String) -> [String: Any] {
-    guard isWatchable(name) else { return ["status": "unreadable"] }
-    return readRegularFile(path(name), stamped: name == "hooks.json")
+    guard isWatchable(name), let target = UpstreamAppFolders.ownPath(path(name)) else { return ["status": "unreadable"] }
+    return readRegularFile(target, stamped: name == "hooks.json")
   }
 
   static func readRegularFile(_ path: String, stamped: Bool = false) -> [String: Any] {
@@ -28,11 +28,11 @@ enum ConfigFolder {
     if fd < 0 {
       let error = errno
       var result: [String: Any] = ["status": error == ENOENT || error == ENOTDIR ? "missing" : "unreadable"]
-      if stamped && error == ENOENT { result["stamp"] = ArdiaHost.missingFileStamp }
+      if stamped && error == ENOENT { result["stamp"] = NillaHost.missingFileStamp }
       return result
     }
     defer { close(fd) }
-    let stamp = stamped ? ArdiaHost.fileStamp(ofDescriptor: fd) : nil
+    let stamp = stamped ? NillaHost.fileStamp(ofDescriptor: fd) : nil
     var info = stat()
     guard fstat(fd, &info) == 0 else { return ["status": "unreadable"] }
     guard info.st_mode & S_IFMT == S_IFREG else { return ["status": "notFile"] }
@@ -61,13 +61,16 @@ enum ConfigFolder {
   }
 
   static func writeSchemas(_ files: [String: String]) throws -> [String] {
-    let schemaDir = try DocumentStore.url("config-schema").path
-    try FileManager.default.createDirectory(atPath: schemaDir, withIntermediateDirectories: true)
-    let folders = folderExists() ? [schemaDir, directory] : [schemaDir]
+    var folders: [String] = []
+    if let schemaDir = UpstreamAppFolders.ownPath(try DocumentStore.url("config-schema").path) {
+      try FileManager.default.createDirectory(atPath: schemaDir, withIntermediateDirectories: true)
+      folders.append(schemaDir)
+    }
+    if folderExists(), let configFolder = UpstreamAppFolders.ownPath(directory) { folders.append(configFolder) }
     var written: [String] = []
     for folder in folders {
       for (name, contents) in files where schemaNames.contains(name) {
-        let target = (folder as NSString).appendingPathComponent(name)
+        guard let target = UpstreamAppFolders.ownPath((folder as NSString).appendingPathComponent(name)) else { continue }
         if let current = readRegularFile(target)["text"] as? String, current == contents { continue }
         try replace(target, with: Data(contents.utf8))
         written.append(target)

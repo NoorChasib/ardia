@@ -27,7 +27,7 @@ final class LittleLandingFit {
 
   func fit() {
     guard !stopped, let window = currentWindow(), window.isVisible, !window.styleMask.contains(.fullScreen),
-      let frame = ArdiaChromeWindowHost.littleFrameFittingLanding(of: window, minimumSize: window.minSize)?.rectValue
+      let frame = NillaChromeWindowHost.littleFrameFittingLanding(of: window, minimumSize: window.minSize)?.rectValue
     else { return }
     apply(window, frame)
   }

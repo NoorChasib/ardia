@@ -5,13 +5,13 @@ usage() {
   cat <<'USAGE'
 Usage: install.sh [--prefix DIR] [--destdir DIR]
 
-Installs an extracted Ardia Linux package.
+Installs an extracted Nilla Linux package.
 
   --prefix DIR   absolute install prefix (default /usr)
   --destdir DIR  staging root for distribution packages (default none)
 
-Ardia goes under PREFIX/lib/ardia with PREFIX/bin/ardia, its desktop entry
-and icon. Run as root without --destdir, it makes lib/ardia/chrome-sandbox
+Nilla goes under PREFIX/lib/ardia with PREFIX/bin/ardia, its desktop entry,
+icons and licence texts (PREFIX/share/doc/nilla). Run as root without --destdir, it makes lib/ardia/chrome-sandbox
 setuid root, Chromium's sandbox where user namespaces are unavailable. The polkit policy always goes to DESTDIR/usr/share/polkit-1/actions,
 the only directory polkit reads actions from, whatever the prefix.
 Without --destdir it must run as root, and installed files are owned by root.
@@ -51,7 +51,7 @@ fi
 source_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 for required in lib/ardia/chrome share/polkit-1/actions/dev.ardia.linux.policy share/applications/ardia.desktop share/apparmor.d/ardia; do
   if [[ ! -e "$source_root/$required" ]]; then
-    echo "install.sh: $source_root is not an extracted Ardia package (missing $required)" >&2
+    echo "install.sh: $source_root is not an extracted Nilla package (missing $required)" >&2
     exit 1
   fi
 done
@@ -75,10 +75,15 @@ install -m 0755 "$launcher" "$target/bin/ardia"
 sed "s|^Exec=ardia |Exec=$prefix/bin/ardia |" "$source_root/share/applications/ardia.desktop" > "$launcher"
 install -m 0644 "$launcher" "$target/share/applications/ardia.desktop"
 
-icon=share/icons/hicolor/256x256/apps/ardia.png
-if [[ -f "$source_root/$icon" ]]; then
-  install -D -m 0644 "$source_root/$icon" "$target/$icon"
-fi
+for icon in "$source_root"/share/icons/hicolor/*/apps/ardia.*; do
+  [[ -f "$icon" ]] || continue
+  install -D -m 0644 "$icon" "$target/${icon#"$source_root/"}"
+done
+
+for text in "$source_root"/share/doc/nilla/*; do
+  [[ -f "$text" ]] || continue
+  install -D -m 0644 "$text" "$target/share/doc/nilla/${text##*/}"
+done
 
 install -D -m 0644 "$source_root/share/polkit-1/actions/dev.ardia.linux.policy" \
   "$destdir/usr/share/polkit-1/actions/dev.ardia.linux.policy"

@@ -14,7 +14,7 @@
 #include "SyncHandles.h"
 #include "SyncVault.h"
 
-namespace Ardia::SyncSelfTest {
+namespace Nilla::SyncSelfTest {
 
 using SyncCrypto::Keys;
 using SyncCrypto::WipedBytes;
@@ -63,7 +63,7 @@ inline std::optional<Keys> ZeroKeys() { return Keys::Derive(std::string(32, '\0'
 
 inline bool TagsKnownAnswer() {
   std::optional<Keys> keys = ZeroKeys();
-  return keys && keys->ChainTag() == "gbcx4r55mk3rlaegbggknyx4ta" && keys->ScopeTag("app") == std::optional<std::string>{"nr4ncp5iyqzqgjn6ol4zksqtne"};
+  return keys && keys->ChainTag() == "d7edxrj7vwlaygcfhaqnqlb544" && keys->ScopeTag("app") == std::optional<std::string>{"cmuewgnqxzle7emjmpiisvntxi"};
 }
 
 inline std::string Repeated(std::string const &word, size_t times, std::string const &last) {
@@ -170,7 +170,7 @@ inline std::string FileSteps(std::string const &folder) {
   SyncHandles::OpenedFolder scope = SyncHandles::OpenFolderAt(held.handle.get(), L"scope", true);
   note("scope", std::to_string(static_cast<int>(scope.state)));
   if (scope.state != SyncHandles::Folder::Directory) return report + "}";
-  std::wstring name = L"aaaaaaaaaaaaaaaaaaaaaaaaaa.nns";
+  std::wstring name = L"aaaaaaaaaaaaaaaaaaaaaaaaaa.nls";
   try {
     SyncHandles::PublishAt(scope.handle.get(), name, "hello");
     note("publish", "ok");

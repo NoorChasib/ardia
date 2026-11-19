@@ -73,7 +73,7 @@ export function watchMenus(watcher: () => void): () => void {
 }
 
 export function showMenu(items: MenuItem[], onKeepOpenPick?: (id: string) => MenuItem[]): Promise<string | null> {
-  const menus = nativeModule("ArdiaMenus");
+  const menus = nativeModule("NillaMenus");
   const picks = onKeepOpenPick && menus.addListener("onCommand", (e) => e.command === "menu.pick" && void menus.updateMenu(onKeepOpenPick(e.arg)));
   menusChanged(1);
   return Promise.resolve(menus.showMenu(items)).finally(() => {

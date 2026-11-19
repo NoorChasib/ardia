@@ -106,7 +106,7 @@ export function profileNamed(given: unknown): string | null {
   return id && !isIncognitoProfile(id) ? id : null;
 }
 
-const OPEN = new Set(["tab", "littleArdia", "window"]);
+const OPEN = new Set(["tab", "littleNilla", "window"]);
 
 function routeOf(profile: unknown, open: unknown, window: unknown): LinkVerdict | null {
   const profileId = profile === undefined ? null : profileNamed(profile);

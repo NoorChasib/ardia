@@ -5,7 +5,7 @@ import type { SwipeModule } from "./swipe";
 type Secret = Promise<string>;
 
 export type ArdiaCoreNativeModules = {
-  ArdiaTabs: {
+  NillaTabs: {
     prepareTransfer(tabId: string): void;
     releaseTransfer(tabId: string): void;
     claimLaunchTab(tabId: string, url: string, profile: string): void;
@@ -14,13 +14,13 @@ export type ArdiaCoreNativeModules = {
     revealOffered(adoptId: string, overTabId: string): void;
     discardOffered(adoptId: string): Promise<boolean>;
   };
-  ArdiaEngine: { inputIdleSeconds(): number };
-  ArdiaPasswords: {
+  NillaEngine: { inputIdleSeconds(): number };
+  NillaPasswords: {
     save(profile: string, origin: string, username: string, password: string): Secret;
     update(profile: string, origin: string, username: string, newUsername: string | null, newPassword: string | null): Secret;
   };
-  ArdiaAutofill: { saveCard(profile: string, card: CardInput, number: string | null): Secret };
-  ArdiaSwipe: SwipeModule;
+  NillaAutofill: { saveCard(profile: string, card: CardInput, number: string | null): Secret };
+  NillaSwipe: SwipeModule;
 };
 
 const domainOfModule = (name: string) => `${name[5]!.toLowerCase()}${name.slice(6)}`;

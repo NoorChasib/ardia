@@ -9,18 +9,16 @@
   "store-reads": {},
   "store-shape": {},
   "size": {
-    "packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Blocking/FilterListConverter.swift": 1,
-    "packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Blocking/FilterLists.swift": 1,
-    "packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Tabs/TabStore.swift": 1,
-    "packages/phone/ios/ArdiaKit/Sources/ArdiaBrowser/Web/WebTab.swift": 1,
-    "packages/phone/ios/ArdiaKit/Sources/ArdiaSync/SyncService.swift": 1
+    "packages/phone/ios/NillaKit/Sources/NillaBrowser/Blocking/FilterListConverter.swift": 1,
+    "packages/phone/ios/NillaKit/Sources/NillaBrowser/Blocking/FilterLists.swift": 1,
+    "packages/phone/ios/NillaKit/Sources/NillaBrowser/Tabs/TabStore.swift": 1,
+    "packages/phone/ios/NillaKit/Sources/NillaBrowser/Web/WebTab.swift": 1,
+    "packages/phone/ios/NillaKit/Sources/NillaSync/SyncService.swift": 1
   },
   "env": {},
-  "naming": {
-    "packages/phone/ios/ArdiaKit/Sources/ArdiaSync/SyncFolderAccess.swift": 1
-  },
+  "naming": {},
   "comments": {
-    "packages/phone/ios/ArdiaKit/Tests/ArdiaBrowserTests/BlockingTests.swift": 2
+    "packages/phone/ios/NillaKit/Tests/NillaBrowserTests/BlockingTests.swift": 2
   },
   "file-names": {}
 }

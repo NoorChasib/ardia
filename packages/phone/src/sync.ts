@@ -29,7 +29,7 @@ export type ConnectResult =
   | { result: "invalidPhrase"; problem: string }
   | { result: "mismatch" }
   | { result: "noSyncData" }
-  | { result: "folderUnavailable" }
+  | { result: "folderUnavailable"; problem?: string }
   | { result: "keyStoreFailed" }
   | { result: "busy" }
   | { result: "cancelled" };
@@ -104,7 +104,7 @@ type SyncNative = {
   check(phrase: string): PhraseCheck;
   deviceId?(): string | null;
   connect(phrase: string): Promise<ConnectResult>;
-  pickFolder?(): Promise<SyncFolderPick | null>;
+  pickFolder?(): Promise<SyncFolderPick | ConnectResult | null>;
   connectWithFolder?(phrase: string, folder: string): Promise<ConnectResult>;
   forgetFolder?(folder: string): Promise<void>;
   changeFolder(): Promise<ConnectResult>;
@@ -124,7 +124,7 @@ type SyncNative = {
 };
 
 let loaded: SyncNative | undefined;
-const native = () => (loaded ??= requireNativeModule<SyncNative>("ArdiaPhoneSync"));
+const native = () => (loaded ??= requireNativeModule<SyncNative>("NillaPhoneSync"));
 
 export const sync = {
   status: () => native().status(),
@@ -133,7 +133,7 @@ export const sync = {
   check: (phrase: string) => native().check(phrase),
   deviceId: (): string | null => native().deviceId?.() ?? null,
   canPickFolderFirst: (): boolean => typeof native().pickFolder === "function" && typeof native().connectWithFolder === "function",
-  pickFolder: async (): Promise<SyncFolderPick | null> => (native().pickFolder ? native().pickFolder!() : null),
+  pickFolder: async (): Promise<SyncFolderPick | ConnectResult | null> => (native().pickFolder ? native().pickFolder!() : null),
   connect: (phrase: string, folder?: SyncFolderPick | null): Promise<ConnectResult> =>
     folder && native().connectWithFolder ? native().connectWithFolder!(phrase, folder.folder) : native().connect(phrase),
   forgetFolder: async (folder: SyncFolderPick): Promise<void> => {

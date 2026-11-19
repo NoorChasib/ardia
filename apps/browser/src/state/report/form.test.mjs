@@ -13,9 +13,9 @@ const context = (patch = {}) => ({
   channel: "nightly",
   osVersion: "27.2",
   arch: "arm64",
-  pageAddress: "https://ardia.dev/release-notes?ref=x",
+  pageAddress: "https://news.example.test/release-notes?ref=x",
   sharing: false,
-  diagnostics: { system: { app: "Ardia 0.2.47" } },
+  diagnostics: { system: { app: "Nilla 0.2.47" } },
   files: [],
   ...patch,
 });
@@ -91,7 +91,7 @@ test("the payload follows the contract and leaves out what isn't ticked", () => 
 
 test("the page address and contact go only when given", () => {
   const payload = form.buildPayload(draft({ contact: " @me ", attach: { ...form.DEFAULT_ATTACH, page: true } }), context());
-  assert.equal(payload.page_address, "https://ardia.dev/release-notes?ref=x");
+  assert.equal(payload.page_address, "https://news.example.test/release-notes?ref=x");
   assert.equal(payload.contact, "@me");
   assert.equal(form.buildPayload(draft({ attach: { ...form.DEFAULT_ATTACH, page: true } }), context({ pageAddress: null })).page_address, undefined);
 });

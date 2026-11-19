@@ -10,7 +10,7 @@ const { USAGE_COUNTS_EVENT, withHourlyExtras } = await import("./hourlyExtras.ts
 const { addShellCountSource } = await import("./shellCounts.ts");
 const { noteSessionWrite } = await import("./sessionWrites.ts");
 
-const CHANNEL = "ardia-test-shell-count-consent";
+const CHANNEL = "nilla-test-shell-count-consent";
 const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
 
 function leaderWindow() {

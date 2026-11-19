@@ -13,7 +13,7 @@
 #include "Paths.h"
 #include "SystemModule.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace ExternalApps {
 
@@ -191,7 +191,7 @@ inline bool Launch(std::wstring const &target) noexcept {
 
 }
 
-REACT_MODULE(ExternalAppsModule, L"ArdiaExternalApps")
+REACT_MODULE(ExternalAppsModule, L"NillaExternalApps")
 struct ExternalAppsModule {
   REACT_METHOD(describe)
   void describe(std::string scheme, winrt::Microsoft::ReactNative::ReactPromise<winrt::Microsoft::ReactNative::JSValue> promise) noexcept {
@@ -207,7 +207,7 @@ struct ExternalAppsModule {
     std::optional<std::string> scheme = ExternalApps::SchemeOf(url);
     if (!scheme || ExternalApps::BrowserScheme(*scheme) || name.empty()) return promise.Resolve(false);
     if (AppLaunch::Background() && !ExternalApps::LaunchAskedByTest()) {
-      AppLaunch::Note(L"ArdiaExternalApps: background instance, not opening an app link");
+      AppLaunch::Note(L"NillaExternalApps: background instance, not opening an app link");
       return promise.Resolve(false);
     }
     std::wstring target = Paths::Wide(ExternalApps::EscapedForHandler(url));
@@ -216,11 +216,11 @@ struct ExternalAppsModule {
     std::optional<std::wstring> widePath = path ? std::optional<std::wstring>(Paths::Wide(*path)) : std::nullopt;
     bool started = AppShell::RunOnShellThread([target, wideScheme, wideName, widePath, promise]() noexcept {
       if (!ExternalApps::SameHandler(wideScheme, wideName, widePath)) {
-        AppLaunch::Note(L"ArdiaExternalApps: the link's handler isn't the one the prompt named, not opening");
+        AppLaunch::Note(L"NillaExternalApps: the link's handler isn't the one the prompt named, not opening");
         return promise.Resolve(false);
       }
       bool opened = ExternalApps::Launch(target);
-      AppLaunch::Note(opened ? L"ArdiaExternalApps: opened an app link" : L"ArdiaExternalApps: the app link didn't open");
+      AppLaunch::Note(opened ? L"NillaExternalApps: opened an app link" : L"NillaExternalApps: the app link didn't open");
       promise.Resolve(opened);
     });
     if (!started) promise.Resolve(false);

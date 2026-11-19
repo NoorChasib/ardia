@@ -34,7 +34,7 @@ describe("fixture servers and certificates", () => {
   let tls;
   let fixtures;
   before(async () => {
-    root = await mkdtemp(join(tmpdir(), "ardia-acceptance-fixtures-"));
+    root = await mkdtemp(join(tmpdir(), "nilla-acceptance-fixtures-"));
     tls = await generateTls(join(root, "tls"));
     fixtures = await startFixtures({ tls, slowInterval: 10 });
   });
@@ -56,7 +56,7 @@ describe("fixture servers and certificates", () => {
     assert.match(secure.body.toString(), /Secure fixture/);
     await assert.rejects(get(fixtures.url.badcert(), { ca: tls.ca }), /self-signed|self signed/);
     const bad = await get(fixtures.url.badcert());
-    assert.equal(bad.certificate.subject.CN, "badcert.ardia.test");
+    assert.equal(bad.certificate.subject.CN, "badcert.nilla.test");
   });
 
   it("answers suggestions in the Firefox JSON shape and logs headers", async () => {
@@ -69,9 +69,9 @@ describe("fixture servers and certificates", () => {
     assert.match((await get(fixtures.url.page(3, "r"))).body.toString(), /<title>Acceptance page 3<\/title>/);
     assert.equal((await get(fixtures.url.find(4, "x"))).body.toString().match(/needle/g).length, 4);
     const mixed = (await get(fixtures.url.mixed())).body.toString();
-    assert.match(mixed, /src="http:\/\/insecure-image\.ardia\.test:\d+\/pixel\.png/);
-    assert.match(mixed, /action="http:\/\/insecure-form\.ardia\.test:\d+\/submit"/);
-    assert.equal((await get(fixtures.url.http("insecure-image.ardia.test", "/pixel.png"))).headers["content-type"], "image/png");
+    assert.match(mixed, /src="http:\/\/insecure-image\.nilla\.test:\d+\/pixel\.png/);
+    assert.match(mixed, /action="http:\/\/insecure-form\.nilla\.test:\d+\/submit"/);
+    assert.equal((await get(fixtures.url.http("insecure-image.nilla.test", "/pixel.png"))).headers["content-type"], "image/png");
     const file = await get(fixtures.url.download("a.bin", 100));
     assert.equal(file.headers["content-disposition"], 'attachment; filename="a.bin"');
     assert.equal(file.body.length, 100);
@@ -103,7 +103,7 @@ describe("fixture servers and certificates", () => {
 
   it("maps the test hosts and the suggestion host and blocks everything else", () => {
     const rules = fixtures.chromiumArgs.find((a) => a.startsWith("--host-resolver-rules="));
-    assert.match(rules, /MAP \*\.ardia\.test 127\.0\.0\.1/);
+    assert.match(rules, /MAP \*\.nilla\.test 127\.0\.0\.1/);
     assert.match(rules, new RegExp(`MAP ${SUGGEST_HOST.replace(/\./g, "\\.")} 127\\.0\\.0\\.1:${fixtures.ports.https}`));
     assert.match(rules, /MAP \* ~NOTFOUND/);
   });

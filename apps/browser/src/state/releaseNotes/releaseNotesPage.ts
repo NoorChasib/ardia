@@ -1,9 +1,10 @@
 import { systemInfo } from "../../platform/app";
+import { appServices } from "../../platform/launchConfig";
 import { openUrls } from "../browser/actions";
 
 function releaseNotesUrl(version = systemInfo().appVersion): string | null {
-  const page = systemInfo().releaseNotesURL;
-  if (!page || !/^https?:\/\//i.test(page)) return null;
+  const page = appServices().releaseNotesUrl;
+  if (!page) return null;
   return version ? `${page}#${version}` : page;
 }
 

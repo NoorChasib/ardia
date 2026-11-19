@@ -15,7 +15,7 @@ let heldScope = null;
 let held = null;
 let ids = 0;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     newDeviceId: () => `id${++ids}`,
     deviceName: () => "Test Mac",
     createPhrase: async () => true,
@@ -47,7 +47,7 @@ globalThis.acTestNativeModules = {
 const shell = await import("../../test-native/index.ts");
 const { useBrowser } = await import("../browser/store.ts");
 const { engineProfile } = await import("../browser/model.ts");
-const { emptyScope, canonical } = await import("@ardia/sync");
+const { emptyScope, canonical } = await import("@nilla/sync");
 const S = () => useBrowser.getState();
 const reset = () => {
   shell.docs.clear();

@@ -1,7 +1,7 @@
 import Foundation
 
 enum LaunchLook {
-  static let key = "ardia.phone.launchLook"
+  static let key = "nilla.phone.launchLook"
 
   @MainActor private static var remembered: LookColors?
 

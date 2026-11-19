@@ -6,7 +6,7 @@ export function createNativeEvents() {
   return {
     emit(module: string, event: string, payload: unknown) {
       for (const { listener } of [...(listeners.get(key(module, event)) ?? [])]) {
-        try { listener(payload); } catch (error) { console.error(`[ardia host] ${module}.${event} listener failed`, error); }
+        try { listener(payload); } catch (error) { console.error(`[nilla host] ${module}.${event} listener failed`, error); }
       }
     },
     add(module: string, event: string, listener: NativeListener) {

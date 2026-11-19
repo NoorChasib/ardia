@@ -1,11 +1,14 @@
 #pragma once
 
 #include <winhttp.h>
+#include <winrt/Windows.Data.Json.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <iterator>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -22,11 +25,118 @@
 #pragma comment(lib, "winhttp.lib")
 #pragma comment(lib, "bcrypt.lib")
 
-namespace Ardia {
+namespace Nilla {
+
+namespace AppServices {
+
+inline constexpr uint64_t kLargestFileBytes = 64 * 1024;
+inline constexpr std::wstring_view kUrlFields[] = {L"telemetryUrl", L"feedbackUrl", L"switchesUrl", L"macFeedUrl", L"windowsFeedUrl", L"windowsTrustedPrefix", L"linuxReleasesUrl", L"releaseNotesUrl", L"siteUrl", L"issueUrl"};
+inline constexpr std::wstring_view kIngestKeyFields[] = {L"app", L"cli", L"site"};
+inline constexpr std::wstring_view kBuiltWindowsFeedUrl = L"";
+inline constexpr std::wstring_view kBuiltWindowsTrustedPrefix = L"";
+
+struct Snapshot {
+  std::string json;
+  std::wstring windowsFeedUrl{kBuiltWindowsFeedUrl};
+  std::wstring windowsTrustedPrefix{kBuiltWindowsTrustedPrefix};
+};
+
+inline constexpr std::wstring_view kHttps = L"https://";
+
+inline bool IsHttps(std::wstring_view text) noexcept {
+  return text.size() > kHttps.size() && text.substr(0, kHttps.size()) == kHttps && text.find_first_of(L" \\") == std::wstring_view::npos;
+}
+
+inline bool IsFolderPrefix(std::wstring_view text) noexcept {
+  if (!IsHttps(text) || text.back() != L'/' || text.find(L"..") != std::wstring_view::npos || text.find_first_of(L"%?#@") != std::wstring_view::npos) return false;
+  size_t hostEnd = text.find(L'/', kHttps.size());
+  return hostEnd != std::wstring_view::npos && hostEnd > kHttps.size();
+}
+
+inline bool IsUrlField(std::wstring_view field) noexcept {
+  return std::find(std::begin(kUrlFields), std::end(kUrlFields), field) != std::end(kUrlFields);
+}
+
+inline std::wstring Refusal(winrt::Windows::Data::Json::JsonObject const &fields) noexcept {
+  using winrt::Windows::Data::Json::JsonValueType;
+  try {
+    for (auto const &pair : fields) {
+      std::wstring field{pair.Key()};
+      auto value = pair.Value();
+      auto type = value.ValueType();
+      if (field == L"ingestKeys") {
+        if (type == JsonValueType::Null) continue;
+        if (type != JsonValueType::Object) return field + L" has the wrong type";
+        auto keys = value.GetObject();
+        if (keys.Size() != std::size(kIngestKeyFields)) return field + L" has the wrong type";
+        for (auto key : kIngestKeyFields) {
+          if (!keys.HasKey(key) || keys.GetNamedValue(key).ValueType() != JsonValueType::String || keys.GetNamedString(key).empty()) return field + L" has the wrong type";
+        }
+      } else if (field == L"sourceRepo") {
+        if (type != JsonValueType::String) return field + L" has the wrong type";
+        std::wstring repo{value.GetString()};
+        size_t slash = repo.find(L'/');
+        if (slash == std::wstring::npos || slash == 0 || slash + 1 == repo.size() || repo.find(L'/', slash + 1) != std::wstring::npos) return field + L" has the wrong type";
+      } else if (field == L"windowsTrustedPrefix") {
+        if (type == JsonValueType::Null) continue;
+        if (type != JsonValueType::String) return field + L" has the wrong type";
+        if (!IsFolderPrefix(std::wstring_view{value.GetString()})) return field + L" is not a folder URL";
+      } else if (IsUrlField(field)) {
+        if (type == JsonValueType::Null && field != L"issueUrl") continue;
+        if (type != JsonValueType::String) return field + L" has the wrong type";
+        if (!IsHttps(std::wstring_view{value.GetString()})) return field + L" is not an https URL";
+      } else {
+        return field + L" is not a known field";
+      }
+    }
+    return {};
+  } catch (...) {
+    return L"the file could not be read";
+  }
+}
+
+inline std::wstring StringField(winrt::Windows::Data::Json::JsonObject const &fields, std::wstring_view field, std::wstring_view built) noexcept {
+  try {
+    if (!fields.HasKey(field)) return std::wstring{built};
+    if (fields.GetNamedValue(field).ValueType() != winrt::Windows::Data::Json::JsonValueType::String) return {};
+    return std::wstring{fields.GetNamedString(field)};
+  } catch (...) {
+    return {};
+  }
+}
+
+inline Snapshot Read() noexcept {
+  Snapshot snapshot;
+  try {
+    std::optional<std::string> path = AppLaunch::TestValue("services");
+    if (!path || path->empty()) return snapshot;
+    auto contents = Files::ReadAll(std::filesystem::path(Paths::Wide(*path)));
+    winrt::Windows::Data::Json::JsonObject fields{nullptr};
+    std::wstring refusal;
+    if (!contents || contents->size() > kLargestFileBytes || !Files::IsValidUtf8(*contents) || !winrt::Windows::Data::Json::JsonObject::TryParse(winrt::to_hstring(*contents), fields)) refusal = L"the file could not be read";
+    else refusal = Refusal(fields);
+    if (!refusal.empty()) {
+      AppLaunch::Note(L"services: " + Paths::Wide(*path) + L" refused (" + refusal + L"); the build's own settings stay");
+      return snapshot;
+    }
+    snapshot.json = *contents;
+    snapshot.windowsFeedUrl = StringField(fields, L"windowsFeedUrl", kBuiltWindowsFeedUrl);
+    snapshot.windowsTrustedPrefix = StringField(fields, L"windowsTrustedPrefix", kBuiltWindowsTrustedPrefix);
+  } catch (...) {
+    snapshot = {};
+  }
+  return snapshot;
+}
+
+inline Snapshot const &Shared() noexcept {
+  static const Snapshot snapshot = Read();
+  return snapshot;
+}
+
+}
 
 namespace AppUpdate {
 
-inline constexpr std::wstring_view kPublishedUnder = L"https://github.com/ardia-browser/ardia/releases/download/";
 inline constexpr uint64_t kLargestManifestBytes = 64 * 1024;
 inline constexpr uint64_t kLargestInstallerBytes = 1ull << 30;
 inline constexpr size_t kLargestBuildFileBytes = 4096;
@@ -62,7 +172,7 @@ inline std::string BuildFile() noexcept {
   try {
     std::filesystem::path folder = AppFolder();
     if (folder.empty()) return {};
-    auto contents = Files::ReadAll(folder / L"Ardia.build.json");
+    auto contents = Files::ReadAll(folder / L"Nilla.build.json");
     if (!contents || contents->size() > kLargestBuildFileBytes || !Files::IsValidUtf8(*contents)) return {};
     return *contents;
   } catch (...) {
@@ -85,13 +195,45 @@ inline bool StartsWith(std::wstring_view text, std::wstring_view prefix) noexcep
   return text.size() >= prefix.size() && text.substr(0, prefix.size()) == prefix;
 }
 
+inline bool ServicesConfigured() noexcept {
+  auto const &services = AppServices::Shared();
+  return AppServices::IsHttps(services.windowsFeedUrl) && AppServices::IsFolderPrefix(services.windowsTrustedPrefix);
+}
+
+inline std::wstring Feed() noexcept {
+  try {
+    return ServicesConfigured() ? AppServices::Shared().windowsFeedUrl : FeedOverride();
+  } catch (...) {
+    return {};
+  }
+}
+
+inline std::wstring TrustedPrefix() noexcept {
+  try {
+    if (ServicesConfigured()) return AppServices::Shared().windowsTrustedPrefix;
+    std::wstring feed = FeedOverride();
+    size_t folderEnd = feed.find_last_of(L'/');
+    if (folderEnd == std::wstring::npos || folderEnd < 8) return {};
+    return feed.substr(0, folderEnd + 1);
+  } catch (...) {
+    return {};
+  }
+}
+
+inline bool IsFeed(std::wstring_view url) noexcept {
+  try {
+    std::wstring feed = Feed();
+    return !feed.empty() && url == feed;
+  } catch (...) {
+    return false;
+  }
+}
+
 inline bool Allowed(std::wstring_view url) noexcept {
   if (url.find(L"..") != std::wstring_view::npos || url.find_first_of(L"%\\?#@ ") != std::wstring_view::npos) return false;
-  if (StartsWith(url, kPublishedUnder)) return true;
-  std::wstring feed = FeedOverride();
-  size_t folderEnd = feed.find_last_of(L'/');
-  if (folderEnd == std::wstring::npos || folderEnd < 8) return false;
-  return StartsWith(url, std::wstring_view(feed).substr(0, folderEnd + 1));
+  std::wstring prefix = TrustedPrefix();
+  if (prefix.empty() || Feed().empty()) return false;
+  return StartsWith(url, prefix);
 }
 
 struct Connection {
@@ -130,8 +272,8 @@ inline std::string Fetch(std::wstring const &address, uint64_t largest, Received
     if (path.empty()) path = L"/";
     bool secure = parts.nScheme == INTERNET_SCHEME_HTTPS;
 
-    Connection session{WinHttpOpen(L"Ardia", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0)};
-    if (!session) session.handle = WinHttpOpen(L"Ardia", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    Connection session{WinHttpOpen(L"Nilla", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0)};
+    if (!session) session.handle = WinHttpOpen(L"Nilla", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
     if (!session) return Failed("WinHttpOpen");
     WinHttpSetTimeouts(session.handle, 30000, 30000, 30000, 60000);
     Connection server{WinHttpConnect(session.handle, host.c_str(), parts.nPort, 0)};
@@ -281,7 +423,7 @@ inline Downloaded Download(std::wstring const &address, std::string const &sha25
       result.failure = "the updates folder is a link";
       return result;
     }
-    std::filesystem::path target = folder / (L"Ardia-Setup-" + Paths::Wide(sha256.substr(0, 16)) + L".exe");
+    std::filesystem::path target = folder / (L"Nilla-Setup-" + Paths::Wide(sha256.substr(0, 16)) + L".exe");
     if (AlreadyHere(target, sha256)) {
       result.path = Paths::Utf8(target.wstring());
       return result;
@@ -358,7 +500,7 @@ inline std::string RunInstaller(std::string const &chosen, std::string const &sh
 
 }
 
-REACT_MODULE(UpdateModule, L"ArdiaWindowsUpdate")
+REACT_MODULE(UpdateModule, L"NillaWindowsUpdate")
 struct UpdateModule {
   REACT_CONSTANT(cpu)
   const std::string cpu = AppUpdate::Cpu();
@@ -372,10 +514,19 @@ struct UpdateModule {
   REACT_CONSTANT(feedOverride)
   const std::string feedOverride = Paths::Utf8(AppUpdate::FeedOverride());
 
+  REACT_CONSTANT(services)
+  const std::string services = AppServices::Shared().json;
+
+  REACT_CONSTANT(feed)
+  const std::string feed = Paths::Utf8(AppUpdate::Feed());
+
+  REACT_CONSTANT(publishedUnder)
+  const std::string publishedUnder = Paths::Utf8(AppUpdate::TrustedPrefix());
+
   REACT_METHOD(fetchText)
   void fetchText(std::string url, winrt::Microsoft::ReactNative::ReactPromise<std::string> promise) noexcept {
     std::wstring address = Paths::Wide(url);
-    if (!AppUpdate::Allowed(address)) return promise.Reject("Updates do not come from that address");
+    if (!AppUpdate::IsFeed(address)) return promise.Reject("Updates do not come from that address");
     OnAThread(promise, [address, promise]() noexcept {
       std::string text;
       std::string failure;
@@ -411,7 +562,7 @@ struct UpdateModule {
   void install(std::string path, std::string sha256, winrt::Microsoft::ReactNative::ReactPromise<bool> promise) noexcept {
     if (!AppUpdate::IsSha256(sha256)) return promise.Reject("The update has no usable SHA-256");
     if (AppLaunch::Background()) {
-      AppLaunch::Note(L"ArdiaWindowsUpdate: background instance, not running the installer");
+      AppLaunch::Note(L"NillaWindowsUpdate: background instance, not running the installer");
       return promise.Resolve(false);
     }
     OnAThread(promise, [path, sha256, promise]() noexcept {

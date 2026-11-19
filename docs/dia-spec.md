@@ -85,27 +85,27 @@ Measured materials (our own non-activating panels over solid backdrops; sRGB; ac
 
 - Frame: x = sidebar width, top 6, right 7, bottom 7. Radius 10.
 - Ours: 9 pt on every side, in every layout, by the owner's choice (2026-10-27): top, right, bottom and left at the
-  window's edge, between split panes and beside an extension's side panel, and in Little Ardia (below its bar). Docked
+  window's edge, between split panes and beside an extension's side panel, and in Little Nilla (below its bar). Docked
   beside the sidebar the card starts at its edge and the sidebar's rows, field and tiles sit 9 pt in from both its
   edges (owner, 2026-11-03: the sidebar's side matches the frame's thickness), so they're 9 pt from the window's edge and
   9 pt from the card. Dia's own inset is 6 with the card at the sidebar's width. The traffic lights
   and the sidebar's header row follow the toolbar down to y 30 (`LIGHTS_CENTER`). One constant: `CARD_INSET` in
   `apps/browser/src/lib/windowLayout.ts`. Radius stays 10.
-- The frame is a setting (issue #66, 2026-11-07): `pageFrame`, 0–12 pt, default `CARD_INSET` (9), so the default look
+- The frame is a setting (2026-11-07): `pageFrame`, 0–12 pt, default `CARD_INSET` (9), so the default look
   is the one above. Settings › Appearance › Page Frame and onboarding's "How much frame?" (`pageFrameOf` in
   `windowLayout.ts`, `components/window/cardFrame.ts`). A `borderlessMode` switch (off by default, synced) overrides the
-  effective inset to 0 and leaves `pageFrame` saved. Issue #999 adds two off-by-default synced flags
+  effective inset to 0 and leaves `pageFrame` saved. Two off-by-default synced flags
   (`pageFrameZeroInFullScreen`, `pageFrameZeroWhenTabsHidden`): the first drops the effective inset to 0 in macOS full
   screen; the second only when full screen and Auto-Hide Tabs are both on (`pageFrameInsetOf`); borderless wins over both.
   Otherwise the slider still applies. The inset applies at the window's edges, below the top strip's
-  sides, in Little Ardia below its bar, and to the peek panel's top, bottom and side (its side is `min(5, frame)`);
+  sides, in Little Nilla below its bar, and to the peek panel's top, bottom and side (its side is `min(5, frame)`);
   split panes and the extension side panel sit `max(frame, 2)` apart, so two panes still read as two edge to edge.
   Docked beside the sidebar the card starts at the sidebar's edge for any frame up to 9 (the sidebar's rows keep their
   9 pt), and `frame - 9` past it above that. The corner radius scales with the frame, `10 × min(1, frame / 9)` rounded
   to half points (0 edge to edge, where the window's own corner rounds the page), and the peek's is
   `min(12, radius + frame - its side)`, so its corners still cover the card's. The traffic lights stay 21 pt below the
   card's top (y = frame + 21; the compact toolbar lifts them as before). The sidebar's header and its first row rise by
-  the same lift (`sidebarHeaderOf`, `firstRowTopOf` in `components/sidebar/geometry.ts`; issue #1364), so the first tab or
+  the same lift (`sidebarHeaderOf`, `firstRowTopOf` in `components/sidebar/geometry.ts`), so the first tab or
   Top Apps tile stays 24 pt below the lights; with the address bar in the sidebar the lights are fixed and so is the
   header. Below an 8 pt frame the sidebar's peek strip
   would lie over the page, so the native edge watch takes the 8 pt band instead and clicks there reach the page.
@@ -167,9 +167,9 @@ the same as top"), so if a Dia capture ever differs, the owner's equal insets wi
   chooser) 14.5 → 16.5 on all four sides; blocked pop-ups 13.5 → 16.5; history 13.5 → 16.5 (its favicons 18 in, a 16 pt
   favicon centred in the slot); Cast 14 → 16; Downloads' header caps and rows 16 / 16.
 - Placement in the page (`POPOVER_MARGIN`): every panel sits **8** from the card's side and 8 below the page's top
-  (the card's top with the address bar in the sidebar and in Little Ardia, the toolbar's hairline otherwise); it was 2
+  (the card's top with the address bar in the sidebar and in Little Nilla, the toolbar's hairline otherwise); it was 2
   (Site Controls, Zoom, pop-ups, history) or 4 (prompts, Cast, Share) below the top (owner, 2026-10-15). A panel taller
-  than the page (Site Controls in Little Ardia) scrolls inside an 8 pt margin at the bottom.
+  than the page (Site Controls in Little Nilla) scrolls inside an 8 pt margin at the bottom.
 
 ## Sidebar
 
@@ -188,13 +188,13 @@ the same as top"), so if a Dia capture ever differs, the owner's equal insets wi
       image at 100%). So YouTube gets a red ring, X a black one.
     - < 0.055, one colour → `template`: the tile filled with the mean colour, the icon drawn as a
       white template, the ring white with a soft-light compositing filter. A near-white icon (WCAG
-      relative luminance > 0.88) gets a black fill and an opaque white 30% ring instead. Ardia also gives
+      relative luminance > 0.88) gets a black fill and an opaque white 30% ring instead. Nilla also gives
       that white 30% ring to a near-black fill (luminance < 0.01, ChatGPT's black glyph): soft light can't
       lighten black, so Dia's ring vanishes along the edges and only the anti-aliased corners show
       (`DockSelection.ringStroke`, classic style only, drawn at render time so cached themes get it too).
     - No theme (a non-RGB image, no opaque pixels, no favicon): fill `TabBackgroundSelectedPrimary`
       (black / white), ring `TabDockItemDefaultSelectionStroke` (white .45 dark / black .48 light).
-      Ardia still draws its older look there (white 25% fill, black rim, `TabOutline` bevel).
+      Nilla still draws its older look there (white 25% fill, black rim, `TabOutline` bevel).
     - Only the primary selection draws the ring; a secondary selection is a
       `TabBackgroundSelectedSecondary` fill with no ring. The dock item has no `TabOutline` bevel
       or `TabSelectedShadow` of its own.
@@ -215,14 +215,14 @@ the same as top"), so if a Dia capture ever differs, the owner's equal insets wi
   dark); hover as above. Measured on a 2× capture of 1.50.1 (2026-09-30, dark, hovered): label peak α 0.547, plus 0.24,
   over a 0.16 hover fill. It sits one row gap (3 pt) under the tab above it, background to background.
 - Pinned tile hover: a custom tooltip showing the title and URL.
-- Groups (GitHub issue #154's Dia capture): at rest no box; the header sits on the sidebar like a row (icon at x 15) and
+- Groups (the Dia capture): at rest no box; the header sits on the sidebar like a row (icon at x 15) and
   the group's tabs 16 pt further in (icon at x 31). The box spans the list's width, and the group's rows end 3 pt inside
-  its right and bottom edges, at rest too (issue #154's 2× capture: pinned tiles end at x 221, the selected grouped row at
+  its right and bottom edges, at rest too (the 2× capture: pinned tiles end at x 221, the selected grouped row at
   x 218; the owner's hovered capture of 2026-11-10, 4.15 px per pt from the 34 pt row: right 11 px, bottom 10–11 px, so
   2.7 pt from the box's outer edge, read as 3 pt, the row gap). The box appears while the pointer is over the group:
   `TabGroupNeutralBackground` (white 0.10 dark / black 0.05 light), edge `TabGroupSidebarStroke` (white / black 0.10).
   The header gets no hover fill (owner's capture, 2026-11-10), although the binary carries a
-  `TabGroupNeutralBackgroundHovered` colour (white 0.12 dark / 0.40 light). Fade time not recovered; Ardia uses the hover
+  `TabGroupNeutralBackgroundHovered` colour (white 0.12 dark / 0.40 light). Fade time not recovered; Nilla uses the hover
   card's 0.1 s curve.
 
 ### Tab hover card motion (Dia's binary, 2026-10-20)
@@ -244,7 +244,7 @@ corner**, the corner nearest the row.
   not identified) and **0** when another card is already up. A click or key down dismisses it (local event monitor).
   The leave delay comes from the hover source's dismissal behaviour; no value in the binary. Both need a recording.
 - Ours (`components/sidebar/hoverMotion.ts`): the same curve, spring and scale, anchored at the card's top-left. Unlike Dia,
-  since 2026-11-14 (#1584, #1365) it opens only after the pointer rests 0.8 s on one row (Dia: 0.5 s, then 0 for every
+  since 2026-11-14 it opens only after the pointer rests 0.8 s on one row (Dia: 0.5 s, then 0 for every
   next row), never moves from row to row with the pointer, leaves at once when the pointer leaves away from it (up, out
   of the far edge, or onto another row) and 160 ms after a leave toward it, and never opens for rows a peeking sidebar
   brings under the pointer during its first 0.4 s; Settings › Tabs › Show tab hover menu turns it off. Measured on the native driver's own per-frame values
@@ -265,7 +265,7 @@ Regular rows on the 37 pt pitch; the same for "+ New Tab" and ⌘T, and for the 
 - Curves: the slide is Core Animation's default, cubic-bezier(0.25, 0.1, 0.25, 1) over 0.14 s, no overshoot (a
   spring with ω ≈ 40 rad/s and damping ratio 0.9 fits almost as well). The fade is ease-out, cubic-bezier(0, 0, 0.58,
   1) over 0.10 s, opacity 1 → 0.
-- Ardia (`sidebar/ListMotion.tsx`): the same, for every top-level list entry (rows, splits, group blocks, the + row)
+- Nilla (`sidebar/ListMotion.tsx`): the same, for every top-level list entry (rows, splits, group blocks, the + row)
   and inside an expanded group, whose box grows or shrinks with its rows (a tab added as the group's last row: the box
   takes its height at once and what is below the group slides instead); several closes at once fade together. The row
   just under a new one is clipped at the new row's bottom edge while it slides, which gives Dia's look over our
@@ -331,7 +331,7 @@ Dia's divider under its Pinned section (owner's 2× capture, 2026-11-09): a 1 pt
 6.5 pt above what follows (a group's box or a row), 14 pt edge to edge. Dia shows no labels there; ours carries the
 Pinned fold and Tidy/Clear (10 pt tiny text on a 13 pt line), so its band is the label plus 4 pt each side, keeping a hovered row's
 background off the text: 21 pt at the default Sidebar Text size, 23 pt at Large and 25 pt at Larger.
-What it closes (issue #149): the unselected unpinned tabs (`clearOthers`), keeping the selected tab and, per Arc's 2022
+What it closes: the unselected unpinned tabs (`clearOthers`), keeping the selected tab and, per Arc's 2022
 release notes, tabs playing media. Dia's Close All in the sidebar does the same with the selected tab (the issue's
 recording: of three unpinned tabs, the two unselected close and the selected one stays selected).
 
@@ -586,10 +586,10 @@ Implemented in `apps/browser/src/state/windows/profilePager.ts` (+ `components/w
   page changes.
 - **Wheel mice** (`nonGesturalScrollState`, `0x1005983c4`, events with no phase): scroll deltas add up while they
   come less than ~0.049 s apart; once |Σ| > 1 pt the view pages one page that way (sign flipped by
-  `isDirectionInvertedFromDevice`), then ignores wheel events for 0.25 s. Ardia does not copy the flip: AppKit has
+  `isDirectionInvertedFromDevice`), then ignores wheel events for 0.25 s. Nilla does not copy the flip: AppKit has
   already applied the device's scroll-direction setting to `scrollingDeltaX`, so a scroll left (Δx > 0) shows the
   previous page with Natural scrolling on or off, as the trackpad path does (the flip paged a wheel with it off
-  backwards, #325).
+  backwards).
 - `TabSidebar.PagingContainerViewController` keeps `loadedPages` / `transitionPageIDs` and schedules page cleanup:
   pages beside the current one only exist during a transition. `TabStrip.TabStripSpacePagingController` pages the
   top tab strip too (with a content fade on settle, `settleUsesContentFade`, not decoded).
@@ -716,7 +716,7 @@ than ours at the same cap height.
   else the stored one) and the page card starts at the sidebar's width. A 2× capture of the user's Dia (2026-09-26,
   inactive, dark) has its card at x 191 and rows at 6 … 185: that window's sidebar is 191 wide (resized), with the
   same 6 pt insets. Rows 34 tall (hairline at y 212.0 and 245.5), tiles 54 … 95, favicon, title and colours identical
-  to Ardia's to the pixel.
+  to Nilla's to the pixel.
 - Header (a horizontal stack, spacing 2, 6 after the window controls; items 34 tall): Dia's traffic lights are centred
   at x 24.75 / 47.75 / 70.75, y 26.75.
   - `SidebarProfileIndicatorButton` (`0x10542e234` …): the profile name, 13 pt semibold (NSFontWeightSemibold), single
@@ -745,7 +745,7 @@ than ours at the same cap height.
   shape), 16 pt wide, white 0.28 in dark over any row state (measured; which asset draws it wasn't traced).
 - The clean-tabs upsell is a borderless child window (not a popover), 316 wide: title at (24, 24), a 21 × 26
   illustration, body 16 below, then one row of 32 pt buttons 21 below: Not Now (or Don't Ask Again) at the left,
-  Clean Up Once and Clean Up Daily (8 apart) at the right (`0x103bca7d0`). Ardia's card lives in the 160–400 pt
+  Clean Up Once and Clean Up Daily (8 apart) at the right (`0x103bca7d0`). Nilla's card lives in the 160–400 pt
   sidebar, so it stacks the three buttons.
 
 ### Top tab strip (1.50.1, 2× capture of the user's window, 2026-09-30)
@@ -775,7 +775,7 @@ classes are `TabStrip.TabStripViewController`, `TabStripDockView` (the pinned gr
   the flares start).
 - **"+"**: a plain `plus` glyph, 10 pt wide, centred at (530.5, 20.5): a 32 pt button 4 after the last tab, white ~0.55.
 - Not captured (it would take clicking in Dia): hover and pressed states in the strip, a selected pinned tab, split
-  tabs, and light mode (groups: below). Ardia uses the sidebar's tokens there (`TabBackgroundHovered` 0.16 / 0.55,
+  tabs, and light mode (groups: below). Nilla uses the sidebar's tokens there (`TabBackgroundHovered` 0.16 / 0.55,
   `TabBackgroundPressed` 0.31 / 0.70, in a 32 pt row with radius 10).
 
 #### Groups (1.50.1, owner's 2× screen recording, 2026-09-30)
@@ -810,7 +810,7 @@ theme, a group "X" of five tabs after the pinned dock. Positions in points from 
 - **Picking a member** of an expanded group (13.29 s) selects it and leaves the group open; the group closed at 14.04 s,
   0.38 s after the pointer came to rest on the chip (the chip click, as at every other collapse in the recording), leaving
   the picked tab out after the chip.
-- Ardia (in-process snapshots, same state): dock 86 … 156, container from 164 (8 after the dock), chip 50, the active
+- Nilla (in-process snapshots, same state): dock 86 … 156, container from 164 (8 after the dock), chip 50, the active
   tab 6.5 after the chip, container 4.5 after it, the next tab 8 after the container; spring sampled in the app: response
   0.31 s / damping 0.81 expanding, 0.30 s / 0.82 collapsing, 1.1 % overshoot.
 
@@ -823,7 +823,7 @@ the layout's inputs, which say what it does: `TabStrip.TabStripLayout` takes a `
 `naturalWidth`, `minWidth` and `hasCloseButton`, plus a `primarySelectedTabID`, `tabsWithExpandedPreviewWidth` and a
 `hoverExitLayoutUnlockTask` (widths held until the pointer leaves after a close, Chrome's rule). A
 `TabStripClippingView` and a `fadeWidth` sit next to it. So: the selected tab has its own minimum, narrow tabs drop ×,
-the strip scrolls inside a clipped, faded view. Ardia (2026-11-15, `tabstrip/tokens.ts`): an even share of the room
+the strip scrolls inside a clipped, faded view. Nilla (2026-11-15, `tabstrip/tokens.ts`): an even share of the room
 down to each tab's own minimum, then scrolling: 32 pt for a tab with its own favicon (favicon only below 52 pt), 64 pt
 for a tab whose favicon is shared or missing, 128 pt for the selected tab, 173 pt at most; × on hover only, and not
 below 84 pt; an 88 pt fade (to 0.25 opacity) at an edge that hides tabs; widths spring on a selection change at Dia's
@@ -861,7 +861,7 @@ right split"; the numbers are from the pixels.
   tab-shaped pill in ~0.05 s (1.758 → 1.808 s) and that strip makes room for it; let go there, the tab joins it.
 - **The pill** (rec1027, 1.483 s): for a frame or two before the card, the tab itself (its strip look, title and ✕)
   follows the pointer; then it becomes the card (1.508 s).
-- **Ardia** (`split/splitDrop.ts`, `SplitChrome.tsx`; the picture is `DragPreview` in `packages/shell/ios/DragPreview.swift`):
+- **Nilla** (`split/splitDrop.ts`, `SplitChrome.tsx`; the picture is `DragPreview` in `packages/shell/ios/DragPreview.swift`):
   the same target stages as fractions of the pane's card, the same lean, 0.11 s slide, a 0.2 s / 0.9 spring for the
   sizes; the dashes are React Native's (3 × the width: 2 pt → 6 / 6, 2.33 pt → 7 / 7). The picture is a borderless,
   non-activating panel that takes no mouse: the tab's own strip look as the pill (30 ms, then 60 ms into the card),
@@ -933,12 +933,12 @@ right split"; the numbers are from the pixels.
 Measured from a 13 s recording of the user's Dia (3024 × 1964, YouTube video, dark), frame by frame at 60 fps, the
 window 468 × 263 pt at (1034, 43), where the user had left it. Dia draws its own video PiP window (`PIP.VideoPIPContentController`,
 `PIPWindowController`) and keeps where it was last left (`LastVideoPIPPosition`); the first-ever default wasn't
-recovered (Ardia keeps Chrome's: a fifth of the work area, bottom right). Ardia restyles Chrome's own window
+recovered (Nilla keeps Chrome's: a fifth of the work area, bottom right). Nilla restyles Chrome's own window
 to these numbers (`chrome/browser/ardia/pip/` (`engine/chromium`)); a same-crop comparison is in the table.
 - **At rest**: only the video. Corners circular, **6 pt** (the outline fits a circle to 0.1 px at 2×), with a 1 pt rim
   of white **17 %** just inside the edge (content + 32…40 levels) and a faint shadow that follows the rounded corners
   (the backdrop is 3–4 levels darker next to the window, with a 1 px dark contact line). No title, host label or badge.
-  Ardia: Chrome's square, transparent window gets its content view clipped to 6 pt, the rim drawn over it and its
+  Nilla: Chrome's square, transparent window gets its content view clipped to 6 pt, the rim drawn over it and its
   shadow invalidated (`ArdiaPiPController.mm`); measured on a window capture: 6.0 pt radius, rim + 32…36 levels.
 - **Appears** about 125 ms after the tab switch, at full opacity (one black frame, then the video): no fade, no slide.
 - **Hover**: an even black scrim at **35 %** over the whole video (content × 0.645, same pixels before and after),
@@ -957,7 +957,7 @@ to these numbers (`chrome/browser/ardia/pip/` (`engine/chromium`)); a same-crop 
 - **Back to tab**: the tab shows at once, and the PiP window fades out over it in ~**70 ms** (84, 40, 11, 0 % at 60 fps)
   while the page swaps YouTube's "Playing in picture-in-picture" placeholder for the video (YouTube's own ~220 ms fade).
 
-| Measured (pt) | Dia | Ardia |
+| Measured (pt) | Dia | Nilla |
 |---|---|---|
 | Scrim (content ×) | 0.645 | 0.647 |
 | Back to tab button / glyph | 12, 12, 28 × 28 / ↖ 22.5–30.5 | same / same |
@@ -968,11 +968,11 @@ to these numbers (`chrome/browser/ardia/pip/` (`engine/chromium`)); a same-crop 
 | Controls fade in | ~200 ms ease-in-out | ~190 ms ease-in-out |
 | Fade out: close / back to tab | ~100 / ~70 ms | 100 / 70 ms (Core Animation) |
 
-Ardia differs in: the origin includes a port when the page has one (Chrome's formatting), and the play glyph
+Nilla differs in: the origin includes a port when the page has one (Chrome's formatting), and the play glyph
 (paused) and replay glyph weren't in the recording, so they're a rounded triangle of the same height and Chrome's icon.
-Ardia also has ±10 s buttons, which Dia doesn't (a user's request, issue #129): Chrome's replay 10 / forward 10 icons,
+Nilla also has ±10 s buttons, which Dia doesn't (a user's request): Chrome's replay 10 / forward 10 icons,
 32 pt and bare white like the pause glyph, centred 76 pt either side of it; ← and → seek too. Chrome hides the controls
-2.5 s after the pointer stops; Ardia keeps them while the pointer rests on one of its buttons or the progress bar, so a
+2.5 s after the pointer stops; Nilla keeps them while the pointer rests on one of its buttons or the progress bar, so a
 second click on a still pointer (pause, then play) isn't lost as a window drag.
 
 ### Picture in Picture: moving and throwing it (1.53.0, read from the binary, 2026-10-22)
@@ -1011,12 +1011,12 @@ on its window.
   `LastVideoPIPPosition`. A thrown window is remembered by its corner and a dropped one by its frame.
 - **Tilt**: Dia also tilts the window while it's dragged (`dragAngleAnimation`, 0.005 × speed).
 
-**Ardia** (`ArdiaPiPController.mm`, the maths in `ArdiaPiPThrowMath.h`, tested by `bun run --cwd packages/ardiacore test`)
+**Nilla** (`ArdiaPiPController.mm`, the maths in `ArdiaPiPThrowMath.h`, tested by `bun run --cwd packages/ardiacore test`)
 does the same on Chrome's video PiP window, using the same thresholds, corner rule, 10 pt inset and spring. It
 differs in a few places:
 - Chrome's window can't tilt.
 - The window is remembered by its frame (Chrome's `ArdiaPictureInPicture.plist`), not by its corner.
-- A drag or swipe past a screen side keeps Ardia's 28 pt peek stash rather than Dia's off-screen one.
+- A drag or swipe past a screen side keeps Nilla's 28 pt peek stash rather than Dia's off-screen one.
 - A swipe whose fingers rested more than 0.1 s before lifting doesn't throw.
 - Its screen is the one the window overlaps most.
 - While a swipe or drag moves it, the window keeps at least 60 pt × 40 % on a display. It slides along an edge rather than leaving, and stays below the menu bar and above the Dock unless another display lies that way.

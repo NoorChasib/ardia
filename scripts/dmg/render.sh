@@ -20,8 +20,8 @@ flags=(--user-data-dir="$tmp/profile" --no-first-run --disable-gpu --hide-scroll
 headless() { timeout 60 "$chrome" "${flags[@]}" "$@" "file://$here/background.html" </dev/null 2>/dev/null; }
 
 headless --dump-dom > "$tmp/dom.html" || { echo "error: Chrome failed or timed out ($chrome)" >&2; exit 1; }
-for face in "Mona Sans Variable" "Martian Mono Variable"; do
-  grep -q "data-fonts=\"[^\"]*$face" "$tmp/dom.html" || { echo "error: the $face typeface didn't load" >&2; exit 1; }
+for face in "Helvetica Neue" "Menlo"; do
+  grep -q "data-fonts=\"[^\"]*$face" "$tmp/dom.html" || { echo "error: the $face system typeface isn't installed" >&2; exit 1; }
 done
 
 for scale in 1 2; do

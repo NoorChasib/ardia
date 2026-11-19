@@ -40,7 +40,7 @@ final class PopoverBubble: ExpoView {
     effect.material = .popover
     lens.addSubview(effect)
     addSubview(lens)
-    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .ArdiaInterfaceScaleDidChange, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .NillaInterfaceScaleDidChange, object: nil)
     overlay.wantsLayer = true
     overlay.layer?.masksToBounds = false
     shadowMask.fillRule = .evenOdd

@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { PlatformColor } from "react-native";
-import { Button, Form, HStack, Image, LabeledContent, NavigationLink, Section, Spacer, Text, VStack } from "@expo/ui/swift-ui";
+import { Button, DisclosureGroup, Form, HStack, Image, LabeledContent, NavigationLink, Section, Spacer, Text, VStack } from "@expo/ui/swift-ui";
 import { accessibilityAddTraits, accessibilityHidden, accessibilityHint, font, foregroundStyle, frame, lineLimit, listRowBackground, navigationBarTitleDisplayMode, navigationTitle, opacity, padding, shadow, textSelection, tint, truncationMode } from "@expo/ui/swift-ui/modifiers";
+import { services } from "@nilla/core/src/services.ts";
 import { copy } from "../../lib/platformCopy";
 import { appVersion, openFromSettings } from "../../state/settings/actions";
+import { LICENSE_TEXTS } from "../../state/settings/licenseTexts";
 import { settingsRouteKey } from "../../state/settings/nav";
 import { AppIconPreview, modifierList, settingsChrome, settingsUIAvailable, useTheme } from "../ui";
 import { dataCredits, LIBRARY_CREDITS } from "./DataPages";
@@ -10,23 +13,19 @@ import { dataCredits, LIBRARY_CREDITS } from "./DataPages";
 const FILL = Number.MAX_SAFE_INTEGER;
 const SECONDARY = { type: "hierarchical", style: "secondary" } as const;
 const BLUE = PlatformColor("systemBlue");
-const LINKS = [
-  { title: "ardia.dev", url: "https://ardia.dev" },
-  { title: "Release Notes", url: "https://ardia.dev/release-notes" },
-  { title: "Source Code", url: "https://github.com/mantrakp04/ardia" },
-] as const;
+const LINKS = [{ title: "Source Code", url: `https://github.com/${services().sourceRepo}` }] as const;
 
 const page = (title: string) => modifierList(navigationTitle(title), navigationBarTitleDisplayMode("inline"), tint(BLUE), settingsChrome());
 
 export function ExpoAboutPage() {
   const theme = useTheme();
   return (
-    <Form modifiers={page("About Ardia")}>
+    <Form modifiers={page("About Nilla")}>
       <Section>
         <VStack spacing={12} modifiers={[frame({ maxWidth: FILL }), listRowBackground("clear")]}>
           {settingsUIAvailable() ? <AppIconPreview side={72} modifiers={[shadow({ radius: 10, y: 4, color: "rgba(0,0,0,0.12)" })]} /> : null}
           <VStack spacing={4}>
-            <Text modifiers={[font({ textStyle: "title", weight: "bold" }), accessibilityAddTraits(["isHeader"])]}>Ardia</Text>
+            <Text modifiers={[font({ textStyle: "title", weight: "bold" }), accessibilityAddTraits(["isHeader"])]}>Nilla</Text>
             <Text modifiers={[font({ textStyle: "subheadline" }), foregroundStyle(SECONDARY), textSelection(true)]}>{appVersion()}</Text>
           </VStack>
         </VStack>
@@ -68,6 +67,11 @@ export function ExpoLicensesPage() {
           </Button>
         </Section>
       ))}
+      <Section title="License Texts">
+        {LICENSE_TEXTS.map((license) => (
+          <ExpoLicenseText key={license.id} title={license.title} text={license.text} />
+        ))}
+      </Section>
       <Section title="Code in This App">
         {LIBRARY_CREDITS.map((credit) => (
           <Button key={`${credit.name}@${credit.detail}`} onPress={() => openFromSettings(credit.url)} modifiers={[tint("primary"), accessibilityHint("Opens in a new tab")]}>
@@ -82,5 +86,14 @@ export function ExpoLicensesPage() {
         ))}
       </Section>
     </Form>
+  );
+}
+
+function ExpoLicenseText({ title, text }: { title: string; text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <DisclosureGroup label={title} isExpanded={open} onIsExpandedChange={setOpen}>
+      <Text modifiers={[font({ textStyle: "footnote" }), foregroundStyle(SECONDARY), textSelection(true)]}>{text.trim()}</Text>
+    </DisclosureGroup>
   );
 }

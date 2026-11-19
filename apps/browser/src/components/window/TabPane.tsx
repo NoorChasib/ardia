@@ -33,7 +33,7 @@ import { newTabOpensOf } from "../../state/settings/settings";
 import { markNewTabPane } from "../../state/omnibox/newTabMarks";
 import { detachedPaneStyle } from "../../state/windows/paneHiding";
 
-const LINGERING_PANE = "ardia.lingeringPane";
+const LINGERING_PANE = "nilla.lingeringPane";
 
 export const TabPane = memo(function TabPane({
   tabId,

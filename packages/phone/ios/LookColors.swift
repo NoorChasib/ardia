@@ -1,4 +1,4 @@
-import ArdiaDesign
+import NillaDesign
 
 struct LookColors: Equatable {
   static let incognito = "incognito"

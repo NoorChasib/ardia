@@ -1,9 +1,9 @@
 #import <Foundation/Foundation.h>
 
-enum class ArdiaTabPhase { Waiting, Creating, Attached, Closing };
+enum class NillaTabPhase { Waiting, Creating, Attached, Closing };
 
-struct ArdiaTabLifecycle {
-  ArdiaTabPhase phase{ArdiaTabPhase::Waiting};
+struct NillaTabLifecycle {
+  NillaTabPhase phase{NillaTabPhase::Waiting};
   NSUInteger createEpoch{};
   NSString *pendingURL;
   BOOL pendingUserInitiated{};
@@ -15,37 +15,37 @@ struct ArdiaTabLifecycle {
   BOOL offerClosed{};
   BOOL launchCloseSent{};
 
-  bool closed() const { return phase == ArdiaTabPhase::Closing; }
+  bool closed() const { return phase == NillaTabPhase::Closing; }
 
-  bool canCreate() const { return phase == ArdiaTabPhase::Waiting; }
+  bool canCreate() const { return phase == NillaTabPhase::Waiting; }
 
   NSUInteger beginCreating() {
-    phase = ArdiaTabPhase::Creating;
+    phase = NillaTabPhase::Creating;
     return ++createEpoch;
   }
 
   bool isCurrent(NSUInteger epoch) const { return epoch == createEpoch && !closed(); }
 
   void resumeCreating() {
-    if (phase == ArdiaTabPhase::Waiting) phase = ArdiaTabPhase::Creating;
+    if (phase == NillaTabPhase::Waiting) phase = NillaTabPhase::Creating;
   }
 
   void leaveCreating() {
-    if (phase == ArdiaTabPhase::Creating) phase = ArdiaTabPhase::Waiting;
+    if (phase == NillaTabPhase::Creating) phase = NillaTabPhase::Waiting;
   }
 
   bool canAttach(bool hasTab) const { return !closed() && !hasTab; }
 
-  void attached() { phase = ArdiaTabPhase::Attached; }
+  void attached() { phase = NillaTabPhase::Attached; }
 
   void detached() {
-    if (phase == ArdiaTabPhase::Attached) phase = ArdiaTabPhase::Waiting;
+    if (phase == NillaTabPhase::Attached) phase = NillaTabPhase::Waiting;
   }
 
   void handOff() { createEpoch++; }
 
   void close() {
     createEpoch++;
-    phase = ArdiaTabPhase::Closing;
+    phase = NillaTabPhase::Closing;
   }
 };

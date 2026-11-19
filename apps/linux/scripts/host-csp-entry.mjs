@@ -19,8 +19,8 @@ const connectViolations = [];
 document.addEventListener("securitypolicyviolation", (event) => {
   if (event.effectiveDirective === "connect-src") connectViolations.push(event.blockedURI);
 });
-const suggestionProbes = BUILT_IN_ENGINES.map((engine) => suggestRequestUrl(engine, "ardia csp")).filter(Boolean);
-const blockedProbes = ["https://example.com/collect", "https://www.google.com/search?q=ardia", "https://suggestqueries.google.com/other?q=ardia", "https://evil.duckduckgo.com/ac/?q=ardia"];
+const suggestionProbes = BUILT_IN_ENGINES.map((engine) => suggestRequestUrl(engine, "nilla csp")).filter(Boolean);
+const blockedProbes = ["https://example.com/collect", "https://www.google.com/search?q=nilla", "https://suggestqueries.google.com/other?q=nilla", "https://evil.duckduckgo.com/ac/?q=nilla"];
 const probeConnect = async () => {
   for (const url of [...suggestionProbes, ...blockedProbes]) {
     const controller = new AbortController();
@@ -34,7 +34,7 @@ const probeConnect = async () => {
   const bridged = await new Promise((resolve) => {
     const fetcher = createSuggestFetcher({ fetch: (url, init) => fetch(url, init), delay: 0 });
     const timer = setTimeout(() => resolve(null), 3000);
-    fetcher.request(google, "ardia csp", (list) => { clearTimeout(timer); resolve(list); });
+    fetcher.request(google, "nilla csp", (list) => { clearTimeout(timer); resolve(list); });
   });
   return {
     directFetchBlocked: [...suggestionProbes, ...blockedProbes].filter(blockedBy).length,
@@ -62,7 +62,7 @@ const verify = async () => {
   const check = (condition, message) => { if (!condition) errors.push(message); };
   check(!!globalThis.trustedTypes, "Trusted Types API unavailable");
   check(svgCount === SYMBOL_NAMES.length + 1, `Rendered ${svgCount} SVGs for ${SYMBOL_NAMES.length + 1} expected symbols`);
-  check(uiCount > 0 && document.querySelector(".ardia-desktop.host"), "Host UI failed to initialize");
+  check(uiCount > 0 && document.querySelector(".nilla-desktop.host"), "Host UI failed to initialize");
   check(!gallery.querySelector("script,img,foreignObject,iframe,object,embed"), "Injected non-geometry element");
   check(![...gallery.querySelectorAll("*")].some((element) => [...element.attributes].some((attribute) => /^on/i.test(attribute.name))), "Injected event attribute");
   check(document.querySelector("#hostile-symbol svg[data-symbol] > svg")?.getAttribute("color") === hostileColor, "Color escaped incorrectly");

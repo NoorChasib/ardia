@@ -58,6 +58,7 @@ const { listenForOpenUrls } = await import("./openUrls.ts");
 const { relaysSmallWindows } = await import("./hostSmallWindows.ts");
 const { servesReportSheet } = await import("./hostReport.ts");
 const { deliverPageEvent } = await import("../../../packages/ardiacore/src/pageEvents.ts");
+const { isGated } = await import("./layer1Gate.ts");
 const sharedSettings = await import("../../browser/src/components/settings/settingsIndex.ts");
 
 const find = (items, id) => {
@@ -87,13 +88,19 @@ test("the engine advertises the names the shell gates on, spelled the same", () 
   assert.deepEqual(ENGINE.blockAutoplay, ["webView.setBlockAutoplayEverywhere"]);
 });
 
-test("with every new capability on, each Settings row the engine unlocks is shown and searchable", () => {
+const OFF_IN_LAYER_1 = { "general.defaultBrowser": "ArdiaSystem.setAsDefaultBrowser", "general.openAtLogin": "ArdiaSystem.setLaunchAtLogin" };
+
+test("with every new capability on, each Settings row the engine unlocks is shown and searchable, except the rows the Layer 1 gate keeps off", () => {
   const capabilities = linuxCapabilities(host);
   assert.deepEqual(
-    { defaultBrowser: capabilities.defaultBrowser, launchAtLogin: capabilities.launchAtLogin, thinScrollBars: capabilities.thinScrollBars, externalLinks: capabilities.externalLinks, commandScrollZoom: capabilities.commandScrollZoom, littleArdiaNewTabLinks: capabilities.littleArdiaNewTabLinks, peekOtherSites: capabilities.peekOtherSites, linksFromOtherApps: capabilities.linksFromOtherApps, fullScreen: capabilities.fullScreen, pageEdits: capabilities.pageEdits },
-    { defaultBrowser: true, launchAtLogin: true, thinScrollBars: true, externalLinks: true, commandScrollZoom: true, littleArdiaNewTabLinks: true, peekOtherSites: true, linksFromOtherApps: true, fullScreen: true, pageEdits: true },
+    { defaultBrowser: capabilities.defaultBrowser, launchAtLogin: capabilities.launchAtLogin, thinScrollBars: capabilities.thinScrollBars, externalLinks: capabilities.externalLinks, commandScrollZoom: capabilities.commandScrollZoom, littleNillaNewTabLinks: capabilities.littleNillaNewTabLinks, peekOtherSites: capabilities.peekOtherSites, linksFromOtherApps: capabilities.linksFromOtherApps, fullScreen: capabilities.fullScreen, pageEdits: capabilities.pageEdits },
+    { defaultBrowser: false, launchAtLogin: false, thinScrollBars: true, externalLinks: true, commandScrollZoom: true, littleNillaNewTabLinks: true, peekOtherSites: true, linksFromOtherApps: true, fullScreen: true, pageEdits: true },
   );
-  const unlocked = ["general.defaultBrowser", "general.openAtLogin", "tabs.peekLinksToOtherSites", "tabs.openLinksInLittleArdia", "tabs.appLinksFirst", "automations.meetingAlertCondition"];
+  for (const [id, method] of Object.entries(OFF_IN_LAYER_1)) {
+    assert.ok(ALL.includes(method) && isGated(method), `${method} is advertised and gated`);
+    assert.equal(settings.settingUnavailable(id), true, `${id} stays hidden in Layer 1`);
+  }
+  const unlocked = ["tabs.peekLinksToOtherSites", "tabs.openLinksInLittleNilla", "tabs.appLinksFirst", "automations.meetingAlertCondition"];
   const searchable = new Set(settings.SETTINGS_INDEX.map((item) => item.entry.id));
   const without = unavailableSettingIds(linuxCapabilities(bare), sharedSettings.SETTINGS.map((entry) => entry.id));
   for (const id of unlocked) {
@@ -102,32 +109,41 @@ test("with every new capability on, each Settings row the engine unlocks is show
     assert.ok(searchable.has(id), `${id} is searchable`);
     if (id !== "automations.meetingAlertCondition") assert.ok(without.has(id), `${id} stays hidden on an engine without it`);
   }
-  for (const id of ["tabs.videoUpscaling", "advanced.ardiaCommand", "advanced.compactCliPill"]) assert.equal(settings.settingUnavailable(id), true, `${id} still waits for its own backend`);
+  for (const id of ["tabs.videoUpscaling", "advanced.nillaCommand", "advanced.compactCliPill"]) assert.equal(settings.settingUnavailable(id), true, `${id} still waits for its own backend`);
   for (const id of ["advanced.pageEngine", "advanced.websiteEngines"]) assert.equal(searchable.has(id), false, id);
 });
 
 test("with every new capability on, each command, menu entry and shortcut row appears", () => {
   const capabilities = linuxCapabilities(host);
   const hidden = unavailableCommands(capabilities);
-  for (const command of ["emailPageLocation", "toggleOpenLinksInLittleArdia", FULL_SCREEN_ITEM]) assert.equal(hidden.has(command), false, command);
+  for (const command of ["emailPageLocation", "toggleOpenLinksInLittleNilla", FULL_SCREEN_ITEM]) assert.equal(hidden.has(command), false, command);
   assert.deepEqual([...hidden].sort(), ["toggleJavaScriptFromAppleEvents", "togglePageEngine"]);
-  for (const command of ["emailPageLocation", "toggleOpenLinksInLittleArdia", FULL_SCREEN_ITEM, "hideElement", "showHiddenElements"]) assert.equal(unavailableCommands(linuxCapabilities(bare)).has(command), true, `${command} is hidden without the engine`);
+  for (const command of ["emailPageLocation", "toggleOpenLinksInLittleNilla", FULL_SCREEN_ITEM, "hideElement", "showHiddenElements"]) assert.equal(unavailableCommands(linuxCapabilities(bare)).has(command), true, `${command} is hidden without the engine`);
   const items = appMenuItems(menuState, new Map(), hidden);
-  for (const id of ["emailPageLocation", "toggleOpenLinksInLittleArdia", FULL_SCREEN_ITEM, "reportProblem"]) assert.ok(find(items, id), `${id} is in the menu`);
+  for (const id of ["emailPageLocation", "toggleOpenLinksInLittleNilla", FULL_SCREEN_ITEM, "reportProblem"]) assert.ok(find(items, id), `${id} is in the menu`);
   const bareItems = appMenuItems(menuState, new Map(), unavailableCommands(linuxCapabilities(bare)));
-  for (const id of ["emailPageLocation", "toggleOpenLinksInLittleArdia", FULL_SCREEN_ITEM]) assert.equal(find(bareItems, id), undefined, id);
+  for (const id of ["emailPageLocation", "toggleOpenLinksInLittleNilla", FULL_SCREEN_ITEM]) assert.equal(find(bareItems, id), undefined, id);
   assert.ok(linuxMenuShortcuts().some((row) => row.id === FULL_SCREEN_ITEM));
   assert.ok(staticShortcutSources().some((source) => source.id === FULL_SCREEN_ITEM));
 });
 
-test("with every new capability on, the module calls reach the engine instead of a local answer", async () => {
+test("with every new capability on, the module calls reach the engine instead of a local answer, and the Layer 1 gate's calls never do", async () => {
   invoked.length = 0;
-  const calls = [
+  const offInLayer1 = [
     ["ArdiaSystem", "isDefaultBrowser", []], ["ArdiaSystem", "setAsDefaultBrowser", []], ["ArdiaSystem", "launchAtLoginStatus", []], ["ArdiaSystem", "setLaunchAtLogin", [true]],
+    ["ArdiaReport", "post", ["https://example.com/api/feedback", "{}", {}]],
+  ];
+  for (const [module, method, args] of offInLayer1) {
+    const resolved = resolveHostModule(host, module, method);
+    assert.equal(reachesNativeHostUnchecked(resolved), false, `${module}.${method} is answered locally in Layer 1`);
+    await Promise.resolve().then(() => resolved(...args)).catch(() => {});
+    assert.deepEqual(invoked, [], `${module}.${method} never reaches the engine in Layer 1`);
+  }
+  const calls = [
     ["ArdiaSystem", "setThinScrollBars", [true]], ["ArdiaApp", "openExternalURL", ["mailto:a@b.c"]], ["ArdiaApp", "hardwareInfo", []],
     ["ArdiaApp", "notificationPermission", []], ["ArdiaApp", "requestNotificationPermission", []], ["ArdiaApp", "postNotification", [{ id: "n" }]], ["ArdiaApp", "removeNotifications", [["n"]]],
     ["ArdiaShell", "fetchBangList", [null]], ["ArdiaShell", "toggleFullScreen", ["main"]],
-    ["ArdiaReport", "draftDirectory", []], ["ArdiaReport", "post", ["https://ardia.dev/api/feedback", "{}", {}]],
+    ["ArdiaReport", "draftDirectory", []],
   ];
   for (const [module, method, args] of calls) {
     const resolved = resolveHostModule(host, module, method);
@@ -147,8 +163,9 @@ test("with every new capability on, the module calls reach the engine instead of
   assert.equal(listenForOpenUrls(bare), false);
   assert.equal(relaysSmallWindows(host), true);
   assert.equal(relaysSmallWindows(bare), false);
-  assert.equal(servesReportSheet(host), true);
-  assert.equal(sendsFromSheet(host), true);
+  assert.ok(ALL.includes("report.send") && isGated("report.send"), "report.send is advertised and gated");
+  assert.equal(servesReportSheet(host), false, "the report sheet doesn't send in Layer 1");
+  assert.equal(sendsFromSheet(host), false);
   assert.equal(sendsFromSheet(bare), false);
 });
 

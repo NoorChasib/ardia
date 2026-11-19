@@ -1,20 +1,20 @@
 #!/bin/bash
 # corex-test <commit> [--patch FILE] [--device SERIAL | --device-build | --device-run SERIAL] [Gradle --tests filters…]
-# Runs the phone's Kotlin unit tests (:ardia-phone-native, :app and :ardia-design testDebugUnitTest) on corex, in the bots container, in
+# Runs the phone's Kotlin unit tests (:nilla-phone-native, :app and :nilla-design testDebugUnitTest) on corex, in the bots container, in
 # corex-build's build-only clone at a pushed commit, so no Gradle runs on the Mac. --patch FILE (or - for stdin)
 # applies a diff from the main checkout on top of the commit for this run only; the clone is reset when the run
 # ends, as every build resets it. Waits like corex-build for another busy Gradle run or memory, and holds the clone's lock
 # so a build and a test never share it. Gradle runs without a daemon and Kotlin in-process. Prints each test class's
-# count and every failure; exits 1 when one fails. --device SERIAL runs :ardia-phone-native's device tests
+# count and every failure; exits 1 when one fails. --device SERIAL runs :nilla-phone-native's device tests
 # (src/androidTest) on that phone instead, on demand and never in CI: hold the phone's Simlock lease first, as any
 # phone run does. Gradle installs and removes their test app. --device-build only compiles them and leaves the test app
-# at ~/Developer/ardia-android-build/device-tests.apk. On a phone whose installer stops adb installs (MIUI), install
+# at ~/Developer/nilla-android-build/device-tests.apk. On a phone whose installer stops adb installs (MIUI), install
 # that file with agentos's install tool, then --device-run SERIAL runs the installed tests with am instrument (the
 # filters are class names) and prints the same counts; it builds nothing, and the commit names what was installed.
 # One device test needs UiAutomation, which agentos holds while it leases a phone, so on a leased phone --device-run
 # counts it failed ("UiAutomationService … already registered") while every other one passes: run it through agentos's
-# test tool, package com.ardia.browser.test, runner androidx.test.runner.AndroidJUnitRunner, with the argument
-# class=com.ardia.browser.PageSnapshotTest#aSnapshotRightAfterANightModeChangeShowsThePage.
+# test tool, package com.nilladigital.nilla.test, runner androidx.test.runner.AndroidJUnitRunner, with the argument
+# class=com.nilladigital.nilla.PageSnapshotTest#aSnapshotRightAfterANightModeChangeShowsThePage.
 set -euo pipefail
 if [ $# -lt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
@@ -36,7 +36,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-base="$HOME/Developer/ardia-android-build"
+base="$HOME/Developer/nilla-android-build"
 src="$base/src"
 tools="$base/tools"
 testApp="$base/device-tests.apk"
@@ -44,7 +44,7 @@ testApp="$base/device-tests.apk"
 if [ "${device#run:}" != "$device" ]; then
   serial="${device#run:}"
   adb -s "$serial" get-state > /dev/null 2>&1 || { echo "no phone $serial on adb" >&2; exit 64; }
-  adb -s "$serial" shell pm path com.ardia.browser.test > /dev/null 2>&1 || { echo "the test app com.ardia.browser.test isn't on $serial: install $testApp first" >&2; exit 64; }
+  adb -s "$serial" shell pm path com.nilladigital.nilla.test > /dev/null 2>&1 || { echo "the test app com.nilladigital.nilla.test isn't on $serial: install $testApp first" >&2; exit 64; }
   classes=""
   for filter in ${filters[@]+"${filters[@]}"}; do
     [ "$filter" = "--tests" ] || classes="${classes:+$classes,}$filter"
@@ -52,7 +52,7 @@ if [ "${device#run:}" != "$device" ]; then
   started=$(date +%s)
   status=0
   raw="$base/device-run.txt"
-  adb -s "$serial" shell am instrument -w -r ${classes:+-e class "$classes"} com.ardia.browser.test/androidx.test.runner.AndroidJUnitRunner > "$raw" 2>&1 || true
+  adb -s "$serial" shell am instrument -w -r ${classes:+-e class "$classes"} com.nilladigital.nilla.test/androidx.test.runner.AndroidJUnitRunner > "$raw" 2>&1 || true
   (python3 - "$raw" <<'INSTRUMENTED'
 import re, sys
 text = open(sys.argv[1], encoding="utf-8", errors="replace").read()
@@ -66,7 +66,7 @@ for line in text.splitlines():
     if not code or int(code.group(1)) == 1:
         continue
     result = int(code.group(1))
-    name = current.get("class", "?").replace("com.ardia.phone.", "").replace("com.ardia.browser.", "")
+    name = current.get("class", "?").replace("com.nilladigital.nilla.phone.", "").replace("com.nilladigital.nilla.", "")
     passed, ran = classes.get(name, (0, 0))
     if result in (-3, -4):
         skipped += 1
@@ -159,17 +159,17 @@ export BUN_INSTALL_CACHE_DIR="$base/bun-cache"
 export TMPDIR="$base/tmp"
 export GRADLE_OPTS="${GRADLE_OPTS:-} -Djava.net.preferIPv4Stack=true"
 bash "$tools/apps/phone/scripts/corex-bun" install "$base" "$src" "$tools" --silent
-results=("$src/packages/phone/android/build/test-results/testDebugUnitTest" "$src/apps/phone/android/app/build/test-results/testDebugUnitTest" "$src/apps/phone/android/ardia-design/build/test-results/testDebugUnitTest")
-tasks=(:ardia-phone-native:testDebugUnitTest :app:testDebugUnitTest :ardia-design:testDebugUnitTest)
+results=("$src/packages/phone/android/build/test-results/testDebugUnitTest" "$src/apps/phone/android/app/build/test-results/testDebugUnitTest" "$src/apps/phone/android/nilla-design/build/test-results/testDebugUnitTest")
+tasks=(:nilla-phone-native:testDebugUnitTest :app:testDebugUnitTest :nilla-design:testDebugUnitTest)
 deviceArgs=()
 case "$device" in
   "") ;;
-  build) results=(); tasks=(:ardia-phone-native:assembleDebugAndroidTest) ;;
+  build) results=(); tasks=(:nilla-phone-native:assembleDebugAndroidTest) ;;
   *)
     adb -s "$device" get-state > /dev/null 2>&1 || { echo "no phone $device on adb" >&2; exit 64; }
     export ANDROID_SERIAL="$device"
     results=("$src/packages/phone/android/build/outputs/androidTest-results/connected")
-    tasks=(:ardia-phone-native:connectedDebugAndroidTest)
+    tasks=(:nilla-phone-native:connectedDebugAndroidTest)
     for filter in ${filters[@]+"${filters[@]}"}; do
       [ "$filter" = "--tests" ] || deviceArgs+=("-Pandroid.testInstrumentationRunnerArguments.class=$filter")
     done
@@ -179,7 +179,7 @@ esac
 rm -rf ${results[@]+"${results[@]}"}
 started=$(date +%s)
 status=0
-(cd "$src/apps/phone/android" && ARDIA_LAB=1 EXPO_PUBLIC_ARDIA_LAB=true flock -w 540 /tmp/ardia-android-gradle.lock ./gradlew -PardiaLab=true --no-daemon -Pkotlin.compiler.execution.strategy=in-process "${tasks[@]}" ${filters[@]+"${filters[@]}"} ${deviceArgs[@]+"${deviceArgs[@]}"} --max-workers=4 --console=plain -q > "$base/test.log" 2>&1) || status=$?
+(cd "$src/apps/phone/android" && ARDIA_LAB=1 EXPO_PUBLIC_NILLA_LAB=true flock -w 540 /tmp/nilla-android-gradle.lock ./gradlew -PnillaLab=true --no-daemon -Pkotlin.compiler.execution.strategy=in-process "${tasks[@]}" ${filters[@]+"${filters[@]}"} ${deviceArgs[@]+"${deviceArgs[@]}"} --max-workers=4 --console=plain -q > "$base/test.log" 2>&1) || status=$?
 python3 - ${results[@]+"${results[@]}"} <<'SUMMARY'
 import glob, re, sys
 total = failed = 0
@@ -188,7 +188,7 @@ for path in sorted(p for folder in sys.argv[1:] for p in glob.glob(folder + "/**
     tests, failures, errors = map(int, re.search(r'tests="(\d+)".*?failures="(\d+)".*?errors="(\d+)"', text).groups())
     total += tests
     failed += failures + errors
-    name = path.rsplit("TEST-", 1)[1][:-4].replace("com.ardia.phone.", "")
+    name = path.rsplit("TEST-", 1)[1][:-4].replace("com.nilladigital.nilla.phone.", "")
     print(f"{name}: {tests - failures - errors}/{tests}")
     for case in re.finditer(r'<testcase name="([^"]+)"[^>]*>\s*<(?:failure|error) message="([^"]{0,400})', text):
         print(f"  FAILED {case.group(1)}: {case.group(2)}")

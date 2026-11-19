@@ -19,9 +19,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import automation_cli, cli, control, endpoint, hooks
+from nilla_browser_cli import automation_cli, cli, control, endpoint, hooks, upstream
 
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 COMMANDS = [
     {"id": "newTab", "title": "New Tab", "scope": "window", "variants": None},
     {"id": "selectTab", "title": "Select Tab", "scope": "window", "variants": ["1", "2", "3"]},
@@ -60,7 +60,7 @@ def event(name, **data):
     return {"event": name, "time": 1730400000000, "data": data}
 
 
-class FakeArdia:
+class FakeNilla:
     def __init__(self, path: Path):
         self.path = path
         self.requests = []
@@ -132,7 +132,7 @@ class FakeArdia:
                 return None
             return {"id": ident, **reply}
         if method == "hello":
-            return {"id": ident, "result": {"app": "Ardia", "version": "0.2.44", "protocol": 1}}
+            return {"id": ident, "result": {"app": "Nilla", "version": "0.2.44", "protocol": 1}}
         if method == "commands":
             return {"id": ident, "result": COMMANDS}
         if method == "windows":
@@ -218,8 +218,8 @@ class Base(unittest.TestCase):
             self.addCleanup(patch.stop)
         self.socket = self.data / control.SOCKET_FILE
 
-    def serve(self) -> FakeArdia:
-        server = FakeArdia(self.socket).start()
+    def serve(self) -> FakeNilla:
+        server = FakeNilla(self.socket).start()
         self.addCleanup(server.stop)
         return server
 
@@ -237,7 +237,7 @@ class Discovery(Base):
     def test_missing_socket(self):
         status, _, err = self.run_cli("windows")
         self.assertEqual(status, 2)
-        self.assertEqual(err.strip(), f"ardia: {endpoint.NOT_REACHABLE}")
+        self.assertEqual(err.strip(), f"nilla-browser: {endpoint.NOT_REACHABLE}")
 
     def test_regular_file_is_not_a_socket(self):
         self.socket.write_text("")
@@ -246,7 +246,7 @@ class Discovery(Base):
         self.assertIn("isn't a socket", err)
 
     def test_symlink_is_not_a_socket(self):
-        server = FakeArdia(self.temp / "real.sock").start()
+        server = FakeNilla(self.temp / "real.sock").start()
         self.addCleanup(server.stop)
         os.symlink(self.temp / "real.sock", self.socket)
         status, _, err = self.run_cli("windows")
@@ -292,7 +292,7 @@ class Discovery(Base):
         sock.close()
         status, _, err = self.run_cli("windows")
         self.assertEqual(status, 2)
-        self.assertEqual(err.strip(), f"ardia: {endpoint.NOT_REACHABLE}")
+        self.assertEqual(err.strip(), f"nilla-browser: {endpoint.NOT_REACHABLE}")
 
     def test_installed_data_dir_without_env(self):
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}):
@@ -306,12 +306,12 @@ class Discovery(Base):
         self.assertNotIn("may or may not", err)
         self.assertNotIn("run", [m for m, _ in server.requests])
 
-    def test_not_ardia(self):
+    def test_not_nilla(self):
         server = self.serve()
         server.replies["hello"] = lambda params: {"result": {"app": "Other"}}
         status, _, err = self.run_cli("windows")
         self.assertEqual(status, 2)
-        self.assertIn("something other than Ardia", err)
+        self.assertIn("something other than Nilla", err)
 
 
 class Methods(Base):
@@ -325,8 +325,8 @@ class Methods(Base):
         self.assertEqual(runs, [{"command": "newTab"}, {"command": "selectTab", "arg": "2", "window": 1}, {"command": "selectTab", "arg": "3"}])
         self.assertEqual(server.requests[0][0], "hello")
 
-    def test_hello_names_the_caller_and_announce_tells_ardia(self):
-        from ardia_cli import caller
+    def test_hello_names_the_caller_and_announce_tells_nilla(self):
+        from nilla_browser_cli import caller
 
         server = self.serve()
         claude = caller.Caller("Claude Code")
@@ -341,7 +341,7 @@ class Methods(Base):
         self.assertEqual([m for m, _ in server.requests if m == "caller"], ["caller", "caller"])
 
     def test_announce_never_fails_the_command(self):
-        from ardia_cli import caller
+        from nilla_browser_cli import caller
 
         started = time.monotonic()
         asyncio.run(control.announce(self.temp / "missing.sock", caller.Caller("Codex")))
@@ -614,13 +614,13 @@ class On(Base):
             status, _, err = self.run_cli("on", "tab.opened", "--", sys.executable, "-I", "-c", RECORDER, str(self.out))
         self.assertEqual(status, 130)
         self.assertEqual(len(self.records()), 1)
-        self.assertIn("lost Ardia", err)
+        self.assertIn("lost Nilla", err)
         self.assertIn("events in between may have been missed", err)
 
-    def test_waits_for_ardia_then_connects(self):
+    def test_waits_for_nilla_then_connects(self):
         def later():
             time.sleep(0.3)
-            server = FakeArdia(self.socket).start()
+            server = FakeNilla(self.socket).start()
             self.addCleanup(server.stop)
             server.subscribed.wait(5)
             os.kill(os.getpid(), signal.SIGINT)
@@ -630,7 +630,7 @@ class On(Base):
             status, _, err = self.run_cli("on", "tab.opened", "--", "true")
         self.assertEqual(status, 130)
         self.assertEqual(err.count("retrying"), 1)
-        self.assertIn("connected to Ardia 0.2.44", err)
+        self.assertIn("connected to Nilla 0.2.44", err)
 
 
 class Running(unittest.TestCase):
@@ -942,7 +942,7 @@ class Reload(Base):
     def test_hooks_file_follows_config_resolver(self):
         self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.data / "config" / "hooks.json")
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}), mock.patch.object(endpoint, "LINUX", False):
-            self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.home / ".config" / "ardia" / "hooks.json")
+            self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.home / ".config" / "nilla" / "hooks.json")
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}), mock.patch.object(endpoint, "LINUX", True), mock.patch.object(endpoint, "INSTALLED_DATA_DIR", self.data):
             self.assertEqual(automation_cli.hooks_file(SimpleNamespace(data_dir=None)), self.data / "config" / "hooks.json")
 
@@ -965,6 +965,7 @@ class LaunchAgent(Base):
         launcher = self.temp / "cli" / "current" / "bin" / "ardia"
         launcher.parent.mkdir(parents=True)
         launcher.write_text("#!/bin/sh\n")
+        (self.temp / "cli" / upstream.CLI_HOME_MARK).write_text("")
         self.launcher = launcher
         self.calls = []
 
@@ -984,26 +985,71 @@ class LaunchAgent(Base):
         with self.installed_env():
             status, out, err = self.run_cli("hooks", "install")
         self.assertEqual(status, 0, err)
-        plist = self.home / "Library" / "LaunchAgents" / "dev.ardia.hooks.plist"
+        plist = self.home / "Library" / "LaunchAgents" / "com.nilladigital.nilla.hooks.plist"
         agent = plistlib.loads(plist.read_bytes())
-        self.assertEqual(agent["Label"], "dev.ardia.hooks")
-        self.assertEqual(agent["ProgramArguments"], [str(self.launcher), "hooks", "run", "--log", str(self.home / "Library" / "Logs" / "Ardia" / "hooks.log")])
+        self.assertEqual(agent["Label"], "com.nilladigital.nilla.hooks")
+        self.assertEqual(agent["ProgramArguments"], [str(self.launcher), "hooks", "run", "--log", str(self.home / "Library" / "Logs" / "Nilla" / "hooks.log")])
         self.assertTrue(os.path.isabs(agent["ProgramArguments"][0]))
         self.assertIs(agent["RunAtLoad"], True)
         self.assertIs(agent["KeepAlive"], True)
         self.assertEqual(agent["WorkingDirectory"], str(self.home))
         self.assertEqual(agent["EnvironmentVariables"], {"PATH": "/opt/homebrew/bin:/usr/bin:/bin", "ARDIA_DATA_DIR": ""})
         uid = os.getuid()
-        self.assertEqual(self.calls, [["bootout", f"gui/{uid}/dev.ardia.hooks"], ["bootstrap", f"gui/{uid}", str(plist)]])
+        self.assertEqual(self.calls, [["bootout", f"gui/{uid}/com.nilladigital.nilla.hooks"], ["bootstrap", f"gui/{uid}", str(plist)]])
         self.assertIn("there's no", err)
         with self.installed_env():
             status, out, _ = self.run_cli("hooks", "list")
-        self.assertIn("LaunchAgent dev.ardia.hooks: loaded, running (pid 4242)", out)
+        self.assertIn("LaunchAgent com.nilladigital.nilla.hooks: loaded, running (pid 4242)", out)
         with self.installed_env():
             status, out, _ = self.run_cli("hooks", "uninstall")
-        self.assertEqual((status, out.strip()), (0, "uninstalled dev.ardia.hooks"))
+        self.assertEqual((status, out.strip()), (0, "uninstalled com.nilladigital.nilla.hooks"))
         self.assertFalse(plist.exists())
-        self.assertEqual(self.calls[-1], ["bootout", f"gui/{uid}/dev.ardia.hooks"])
+        self.assertEqual(self.calls[-1], ["bootout", f"gui/{uid}/com.nilladigital.nilla.hooks"])
+
+    def test_never_touches_the_upstream_agent_and_uses_nillas_own_homes(self):
+        from nilla_browser_cli import usage
+
+        agents = self.home / "Library" / "LaunchAgents"
+        agents.mkdir(parents=True)
+        upstream = agents / "dev.ardia.hooks.plist"
+        upstream.write_text("upstream agent")
+        with self.installed_env():
+            os.environ.pop("ARDIA_CLI_HOME")
+            self.assertEqual(usage.cli_home(), self.home / "Library" / "Application Support" / "Nilla" / "CLI")
+            self.assertEqual(hooks.agent_paths().launcher, self.home / "Library" / "Application Support" / "Nilla" / "CLI" / "current" / "bin" / "ardia")
+        with self.installed_env():
+            for verb in ("install", "list", "uninstall", "uninstall"):
+                status, _, err = self.run_cli("hooks", verb)
+                self.assertIn(status, (0, 1), err)
+        self.assertEqual(upstream.read_text(), "upstream agent")
+        self.assertEqual(sorted(p.name for p in agents.iterdir()), ["dev.ardia.hooks.plist"])
+        self.assertEqual(sorted(p.name for p in (self.home / "Library" / "Logs").iterdir()), ["Nilla"])
+        self.assertTrue(self.calls)
+        self.assertFalse([call for call in self.calls if any("dev.ardia" in part for part in call)])
+
+    def test_inherited_roots_inside_the_upstream_mac_folders_are_refused(self):
+        support = self.home / "Library" / "Application Support"
+        bundle_folder = next(folder for folder in upstream.folders() if folder.parent == support and folder.name.startswith("com."))
+        cli_folder = next(folder for folder in upstream.folders() if folder.parent == support and not folder.name.startswith("com."))
+        (bundle_folder / "config").mkdir(parents=True)
+        (bundle_folder / "config" / "hooks.json").write_text('{"hooks": [{"name": "planted-upstream-hook", "on": "tab.opened", "run": "true"}]}\n')
+        (cli_folder / "CLI" / "current" / "bin").mkdir(parents=True)
+        (cli_folder / "CLI" / "current" / "bin" / "ardia").write_text("#!/bin/sh\n")
+        (cli_folder / "CLI" / upstream.CLI_HOME_MARK).write_text("")
+        before = sorted(str(path) for path in self.home.rglob("*"))
+        for env, argv in (
+            ({"ARDIA_DATA_DIR": str(bundle_folder)}, ("config", "init")),
+            ({"ARDIA_DATA_DIR": str(bundle_folder)}, ("hooks", "list")),
+            ({"ARDIA_DATA_DIR": str(bundle_folder / "config" / ".." )}, ("config", "path")),
+            ({"ARDIA_CLI_HOME": str(cli_folder / "CLI")}, ("hooks", "install")),
+        ):
+            with self.subTest(env=env, argv=argv), self.installed_env(), mock.patch.dict(os.environ, env):
+                status, out, err = self.run_cli(*argv)
+                self.assertEqual(status, 2, (out, err))
+                self.assertIn("never reads or writes", err)
+                self.assertNotIn("planted-upstream-hook", out)
+        self.assertEqual(sorted(str(path) for path in self.home.rglob("*")), before)
+        self.assertEqual(self.calls, [])
 
     def test_refused_with_scratch_data_dir(self):
         for verb in ("install", "uninstall"):
@@ -1043,7 +1089,7 @@ class LaunchAgent(Base):
             with self.subTest(verb=verb), self.installed_env(), mock.patch.object(hooks, "launchctl", side_effect=stuck):
                 status, _, err = self.run_cli("hooks", verb)
             self.assertEqual(status, 1)
-            self.assertEqual(err.strip().splitlines()[-1], f"ardia hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/dev.ardia.hooks")
+            self.assertEqual(err.strip().splitlines()[-1], f"nilla-browser hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/{hooks.LABEL}")
             self.assertNotIn("Traceback", err)
 
     def test_list_reports_hooks(self):
@@ -1064,7 +1110,7 @@ class LaunchAgent(Base):
         self.assertIn("fresh  [command]  on app.launched  command newTab", out)
         self.assertIn("standup  [scheduled]  at 09:55 on mon,fri  command openSettings", out)
         self.assertIn("hourly  [scheduled]  every 1h  run ~/bin/tick  timeout 60s", out)
-        self.assertIn("strip  [decide]  on tab.opening  answers in Ardia (rewrite)", out)
+        self.assertIn("strip  [decide]  on tab.opening  answers in Nilla (rewrite)", out)
         self.assertIn("ask  [decide]  on link.opening  run ~/bin/route", out)
         self.assertIn("jira  [omnibox]  omnibox Jira (keyword j)  run ~/bin/jira", out)
         self.assertIn("not installed", out)
@@ -1079,7 +1125,7 @@ class Help(Base):
         for argv in (["run", "--help"], ["events", "--help"], ["on", "--help"], ["hooks", "--help"], ["hooks", "install", "--help"], ["commands", "--help"], ["windows", "--help"]):
             status, out, _ = self.run_cli(*argv)
             self.assertEqual(status, 0, argv)
-            self.assertIn("usage: ardia", out)
+            self.assertIn("usage: nilla-browser", out)
 
 
 if __name__ == "__main__":

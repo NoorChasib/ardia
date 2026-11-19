@@ -14,13 +14,13 @@ static int failures = 0;
   } while (0)
 
 struct Host {
-  ArdiaLaunchSequence *launch = [ArdiaLaunchSequence new];
+  NillaLaunchSequence *launch = [NillaLaunchSequence new];
   std::vector<std::string> log;
 
   void run() {
-    ArdiaLaunchSequence *l = launch;
+    NillaLaunchSequence *l = launch;
     std::vector<std::string> *out = &log;
-    [l after:ArdiaLaunchEngineStarted | ArdiaLaunchAppKitDidFinish
+    [l after:NillaLaunchEngineStarted | NillaLaunchAppKitDidFinish
           do:^{
             out->push_back(std::string("earlyWindow") + (l.launchedHidden ? " hidden" : "") + (l.launchedForDocuments ? " documents" : ""));
           }];
@@ -29,14 +29,14 @@ struct Host {
   void engineStarted() {
     launch.engineRunning = YES;
     log.push_back("setup");
-    [launch reach:ArdiaLaunchEngineStarted];
+    [launch reach:NillaLaunchEngineStarted];
   }
 
   void launchApp(bool urls) {
     std::vector<std::string> *out = &log;
-    if (urls) [launch after:ArdiaLaunchJSStarted do:^{ out->push_back("parkLinks"); }];
-    if (![launch reached:ArdiaLaunchAppKitDidFinish]) {
-      if (urls) [launch after:ArdiaLaunchAppKitDidFinish do:^{ out->push_back("deliverURLs"); }];
+    if (urls) [launch after:NillaLaunchJSStarted do:^{ out->push_back("parkLinks"); }];
+    if (![launch reached:NillaLaunchAppKitDidFinish]) {
+      if (urls) [launch after:NillaLaunchAppKitDidFinish do:^{ out->push_back("deliverURLs"); }];
       return;
     }
     if (urls) log.push_back("deliverURLs");
@@ -45,7 +45,7 @@ struct Host {
   void appKitFinished(bool hidden = false, bool documents = false) { [launch appKitFinishedHidden:hidden forDocuments:documents]; }
 
   void jsStarted() {
-    [launch reach:ArdiaLaunchJSStarted];
+    [launch reach:NillaLaunchJSStarted];
     log.push_back("launchTab");
   }
 };
@@ -111,27 +111,27 @@ int main() {
       CHECK(Is(h.log, {"setup", "earlyWindow documents"}));
     }
     {
-      ArdiaLaunchSequence *l = [ArdiaLaunchSequence new];
+      NillaLaunchSequence *l = [NillaLaunchSequence new];
       __block int outer = 0, inner = 0;
-      [l after:ArdiaLaunchEngineStarted
+      [l after:NillaLaunchEngineStarted
             do:^{
               outer++;
-              [l after:ArdiaLaunchEngineStarted do:^{ inner++; }];
-              [l reach:ArdiaLaunchEngineStarted];
+              [l after:NillaLaunchEngineStarted do:^{ inner++; }];
+              [l reach:NillaLaunchEngineStarted];
             }];
-      [l reach:ArdiaLaunchEngineStarted];
-      [l reach:ArdiaLaunchEngineStarted];
+      [l reach:NillaLaunchEngineStarted];
+      [l reach:NillaLaunchEngineStarted];
       CHECK(outer == 1 && inner == 1);
     }
     {
-      ArdiaLaunchSequence *l = [ArdiaLaunchSequence new];
+      NillaLaunchSequence *l = [NillaLaunchSequence new];
       __block int ran = 0;
       l.engineRunning = YES;
-      [l after:ArdiaLaunchJSStarted do:^{ ran++; }];
+      [l after:NillaLaunchJSStarted do:^{ ran++; }];
       [l engineShutDown];
-      [l reach:ArdiaLaunchJSStarted];
+      [l reach:NillaLaunchJSStarted];
       [l after:0 do:^{ ran++; }];
-      CHECK(ran == 0 && !l.engineRunning && ![l reached:ArdiaLaunchJSStarted]);
+      CHECK(ran == 0 && !l.engineRunning && ![l reached:NillaLaunchJSStarted]);
     }
   }
   if (failures) return 1;

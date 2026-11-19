@@ -30,7 +30,7 @@ test("the WebKit page view puts every mouse button event through the press gate"
 test("a click on something drawn over a WebKit page stays off the page", (t) => {
   const probe = spawnSync(swiftc, ["--version"], { encoding: "utf8" });
   if (probe.error || probe.status !== 0) return t.skip("swiftc is not available");
-  const dir = mkdtempSync(join(tmpdir(), "ardia-page-presses-"));
+  const dir = mkdtempSync(join(tmpdir(), "nilla-page-presses-"));
   try {
     const binary = join(dir, "page-presses-test");
     const built = spawnSync(

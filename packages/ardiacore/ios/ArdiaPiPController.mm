@@ -5,7 +5,7 @@
 #import <objc/runtime.h>
 #import <QuartzCore/QuartzCore.h>
 
-using namespace ardia_pip;
+using namespace nilla_pip;
 
 namespace {
 
@@ -13,7 +13,7 @@ NSString *const kKeepOnTopDefault = @"ACPictureInPictureKeepOnTop";
 
 }
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 NSString *const kZoomDefault = @"ACPictureInPictureZoom";
 
@@ -27,7 +27,7 @@ const void *const kControllerKey = &kControllerKey;
 
 }
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 const void *const kZoomKey = &kZoomKey;
 
@@ -50,7 +50,7 @@ BOOL ShowsPage(NSView *view) {
 
 }
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 BOOL IsChromeFloatingWindow(NSWindow *window) {
   return [ArdiaCoreWindow isChromeFramelessWindow:window] && window.visible && window.level >= NSFloatingWindowLevel &&
@@ -82,7 +82,7 @@ NSScreen *OverlappingScreen(NSRect frame) {
 
 }
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 NSScreen *ScreenFor(NSRect frame) { return OverlappingScreen(frame) ?: NSScreen.mainScreen; }
 
@@ -98,7 +98,7 @@ BOOL ScreenAt(CGFloat x, CGFloat y) {
 
 }
 
-namespace ardia_pip {
+namespace nilla_pip {
 
 void PreventActivation(NSWindow *window) {
   if ([window respondsToSelector:@selector(_setPreventsActivation:)]) [window _setPreventsActivation:YES];
@@ -112,7 +112,7 @@ NSInteger gActivations = 0;
 
 void ActivateApp(NSString *why) {
   gActivations++;
-  if (ardia_host::Background()) return ardia_host::LogActivation([@"activate (skipped in a test instance): " stringByAppendingString:why]);
+  if (nilla_host::Background()) return nilla_host::LogActivation([@"activate (skipped in a test instance): " stringByAppendingString:why]);
   [NSApp activate];
 }
 
@@ -126,15 +126,15 @@ NSPoint PointerOf(NSEvent *event) {
   return NSMakePoint(point.x, NSMaxY(NSScreen.screens.firstObject.frame) - point.y);
 }
 
-ardia_pip_throw::Rect ThrowRect(NSRect r) { return {NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r)}; }
+nilla_pip_throw::Rect ThrowRect(NSRect r) { return {NSMinX(r), NSMinY(r), NSWidth(r), NSHeight(r)}; }
 
 int ScreenIndex(NSScreen *screen) {
   const NSUInteger index = screen ? [NSScreen.screens indexOfObjectIdenticalTo:screen] : NSNotFound;
   return index == NSNotFound ? -1 : (int)index;
 }
 
-std::vector<ardia_pip_throw::Screen> ThrowScreens() {
-  std::vector<ardia_pip_throw::Screen> screens;
+std::vector<nilla_pip_throw::Screen> ThrowScreens() {
+  std::vector<nilla_pip_throw::Screen> screens;
   for (NSScreen *screen in NSScreen.screens) screens.push_back({ThrowRect(screen.frame), ThrowRect(screen.visibleFrame)});
   return screens;
 }
@@ -145,17 +145,17 @@ namespace {
 
 NSString *CornerName(int corner) {
   switch (corner) {
-    case ardia_pip_throw::kTopLeft: return @"topLeft";
-    case ardia_pip_throw::kTopRight: return @"topRight";
-    case ardia_pip_throw::kBottomLeft: return @"bottomLeft";
-    case ardia_pip_throw::kBottomRight: return @"bottomRight";
+    case nilla_pip_throw::kTopLeft: return @"topLeft";
+    case nilla_pip_throw::kTopRight: return @"topRight";
+    case nilla_pip_throw::kBottomLeft: return @"bottomLeft";
+    case nilla_pip_throw::kBottomRight: return @"bottomRight";
     default: return @"none";
   }
 }
 
 }
 
-@implementation ArdiaPiPController
+@implementation NillaPiPController
 
 + (instancetype)forWindow:(NSWindow *)window {
   return objc_getAssociatedObject(window, kControllerKey);
@@ -164,9 +164,9 @@ NSString *CornerName(int corner) {
 - (instancetype)initWithWindow:(NSWindow *)window {
   if ((self = [super init])) {
     _window = window;
-    NSView *root = ArdiaWindowRootView(window);
-    _overlay = [[ArdiaPiPOverlay alloc] initWithFrame:root.bounds];
-    __weak ArdiaPiPController *weakSelf = self;
+    NSView *root = NillaWindowRootView(window);
+    _overlay = [[NillaPiPOverlay alloc] initWithFrame:root.bounds];
+    __weak NillaPiPController *weakSelf = self;
     _overlay.handle.onClick = ^{ [weakSelf unstash]; };
     [root addSubview:_overlay];
     objc_setAssociatedObject(window, kControllerKey, self, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -204,7 +204,7 @@ NSString *CornerName(int corner) {
 }
 
 - (void)detach {
-  [ArdiaPiPController abandonSwipeOn:_window];
+  [NillaPiPController abandonSwipeOn:_window];
   for (id observer in _observers) [NSNotificationCenter.defaultCenter removeObserver:observer];
   [_observers removeAllObjects];
   [NSObject cancelPreviousPerformRequestsWithTarget:self];
@@ -232,7 +232,7 @@ NSString *CornerName(int corner) {
 }
 
 - (CGFloat)cornerRadius {
-  return ardia_pip_throw::CornerRadius(ThrowRect(_window.frame), ThrowRect([self homeScreen].visibleFrame));
+  return nilla_pip_throw::CornerRadius(ThrowRect(_window.frame), ThrowRect([self homeScreen].visibleFrame));
 }
 
 - (void)fitCorners:(BOOL)animated {
@@ -288,7 +288,7 @@ NSString *CornerName(int corner) {
 - (void)backToTabFromMenu:(id)sender { [self backToTab]; }
 
 - (void)backToTab {
-  ArdiaWebView *view = self.view;
+  NillaWebView *view = self.view;
   if (!view) return;
   ActivateApp(@"Back to Tab (menu)");
   [view emit:@"activateRequest" payload:@{@"reason" : @"pictureInPicture"}];
@@ -310,7 +310,7 @@ NSString *CornerName(int corner) {
   [self homeScreen];
   if (!_animating) [self fitCorners:YES];
   if (_animating || (_swiping && NSProcessInfo.processInfo.systemUptime - _swipeLastAt < 1)) return;
-  if (_swiping) [ArdiaPiPController abandonSwipeOn:_window];
+  if (_swiping) [NillaPiPController abandonSwipeOn:_window];
   if (_dragging || (NSEvent.pressedMouseButtons & 1)) _sawDrag = YES;
   [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(settle) object:nil];
   [self performSelector:@selector(settle) withObject:nil afterDelay:0.12];
@@ -322,13 +322,13 @@ NSString *CornerName(int corner) {
   return screen ?: _lastScreen ?: NSScreen.mainScreen;
 }
 
-- (ArdiaPiPEdge)edgeBeyond {
+- (NillaPiPEdge)edgeBeyond {
   NSRect frame = _window.frame;
   NSRect visible = [self homeScreen].visibleFrame;
   CGFloat half = NSWidth(frame) / 2;
-  if (NSMaxX(frame) - NSMaxX(visible) > half && !ScreenAt(NSMaxX(visible) + 1, NSMidY(frame))) return ArdiaPiPEdgeRight;
-  if (NSMinX(visible) - NSMinX(frame) > half && !ScreenAt(NSMinX(visible) - 1, NSMidY(frame))) return ArdiaPiPEdgeLeft;
-  return ArdiaPiPEdgeNone;
+  if (NSMaxX(frame) - NSMaxX(visible) > half && !ScreenAt(NSMaxX(visible) + 1, NSMidY(frame))) return NillaPiPEdgeRight;
+  if (NSMinX(visible) - NSMinX(frame) > half && !ScreenAt(NSMinX(visible) - 1, NSMidY(frame))) return NillaPiPEdgeLeft;
+  return NillaPiPEdgeNone;
 }
 
 - (void)settle {
@@ -338,54 +338,54 @@ NSString *CornerName(int corner) {
   }
   BOOL dragged = _sawDrag;
   _sawDrag = NO;
-  ArdiaPiPEdge edge = [self edgeBeyond];
-  if (edge != ArdiaPiPEdgeNone) return [self stashAt:edge];
-  if (_stashedEdge != ArdiaPiPEdgeNone && !dragged) return [self stashAt:_stashedEdge];
-  if (_stashedEdge != ArdiaPiPEdgeNone) [self setStashedEdge:ArdiaPiPEdgeNone];
+  NillaPiPEdge edge = [self edgeBeyond];
+  if (edge != NillaPiPEdgeNone) return [self stashAt:edge];
+  if (_stashedEdge != NillaPiPEdgeNone && !dragged) return [self stashAt:_stashedEdge];
+  if (_stashedEdge != NillaPiPEdgeNone) [self setStashedEdge:NillaPiPEdgeNone];
   [self rescueIfLost];
 }
 
 - (NSScreen *)gestureHome {
-  return _stashedEdge != ArdiaPiPEdgeNone && _stashScreen ? _stashScreen : [self homeScreen];
+  return _stashedEdge != NillaPiPEdgeNone && _stashScreen ? _stashScreen : [self homeScreen];
 }
 
 - (void)rescueIfLost {
-  if (_stashedEdge != ArdiaPiPEdgeNone || _animating || _swiping || !_window.visible) return;
+  if (_stashedEdge != NillaPiPEdgeNone || _animating || _swiping || !_window.visible) return;
   const auto screens = ThrowScreens();
   const auto rescued =
-      ardia_pip_throw::Rescue(ThrowRect(_window.frame), screens.data(), (int)screens.size(), ScreenIndex([self homeScreen]));
+      nilla_pip_throw::Rescue(ThrowRect(_window.frame), screens.data(), (int)screens.size(), ScreenIndex([self homeScreen]));
   const NSRect target = NSMakeRect(rescued.x, rescued.y, rescued.w, rescued.h);
   if (!NSEqualRects(target, _window.frame)) [self animateTo:target];
 }
 
-- (NSRect)frameStashedAt:(ArdiaPiPEdge)edge {
+- (NSRect)frameStashedAt:(NillaPiPEdge)edge {
   NSRect frame = _window.frame;
   NSRect visible = [self homeScreen].visibleFrame;
-  frame.origin.x = edge == ArdiaPiPEdgeRight ? NSMaxX(visible) - kPeek : NSMinX(visible) - NSWidth(frame) + kPeek;
+  frame.origin.x = edge == NillaPiPEdgeRight ? NSMaxX(visible) - kPeek : NSMinX(visible) - NSWidth(frame) + kPeek;
   frame.origin.y = MIN(MAX(NSMinY(frame), NSMinY(visible)), NSMaxY(visible) - NSHeight(frame));
   return frame;
 }
 
-- (void)stashAt:(ArdiaPiPEdge)edge {
+- (void)stashAt:(NillaPiPEdge)edge {
   _stashScreen = [self homeScreen];
   [self setStashedEdge:edge];
   [self animateTo:[self frameStashedAt:edge]];
 }
 
 - (void)unstash {
-  ArdiaPiPEdge edge = _stashedEdge;
-  if (edge == ArdiaPiPEdgeNone) return;
+  NillaPiPEdge edge = _stashedEdge;
+  if (edge == NillaPiPEdgeNone) return;
   NSRect frame = _window.frame;
   NSRect visible = [self homeScreen].visibleFrame;
-  frame.origin.x = edge == ArdiaPiPEdgeRight ? NSMaxX(visible) - NSWidth(frame) - kReturnMargin : NSMinX(visible) + kReturnMargin;
-  [self setStashedEdge:ArdiaPiPEdgeNone];
+  frame.origin.x = edge == NillaPiPEdgeRight ? NSMaxX(visible) - NSWidth(frame) - kReturnMargin : NSMinX(visible) + kReturnMargin;
+  [self setStashedEdge:NillaPiPEdgeNone];
   [self animateTo:frame];
 }
 
-- (void)setStashedEdge:(ArdiaPiPEdge)edge {
+- (void)setStashedEdge:(NillaPiPEdge)edge {
   _stashedEdge = edge;
-  ArdiaPiPHandle *handle = _overlay.handle;
-  if (edge != ArdiaPiPEdgeNone) {
+  NillaPiPHandle *handle = _overlay.handle;
+  if (edge != NillaPiPEdgeNone) {
     handle.edge = edge;
     handle.hidden = NO;
     _overlay.needsLayout = YES;
@@ -393,10 +393,10 @@ NSString *CornerName(int corner) {
   [NSAnimationContext
       runAnimationGroup:^(NSAnimationContext *context) {
         context.duration = 0.25;
-        handle.animator.alphaValue = edge != ArdiaPiPEdgeNone ? 1 : 0;
+        handle.animator.alphaValue = edge != NillaPiPEdgeNone ? 1 : 0;
       }
       completionHandler:^{
-        if (self->_stashedEdge == ArdiaPiPEdgeNone) handle.hidden = YES;
+        if (self->_stashedEdge == NillaPiPEdgeNone) handle.hidden = YES;
       }];
 }
 
@@ -406,9 +406,9 @@ NSString *CornerName(int corner) {
   if (NSEqualRects(from, target)) return;
   _animating = YES;
   CFTimeInterval start = CACurrentMediaTime();
-  __weak ArdiaPiPController *weakSelf = self;
+  __weak NillaPiPController *weakSelf = self;
   _slide = [NSTimer scheduledTimerWithTimeInterval:1.0 / 120 repeats:YES block:^(NSTimer *timer) {
-    ArdiaPiPController *strongSelf = weakSelf;
+    NillaPiPController *strongSelf = weakSelf;
     double t = MIN((CACurrentMediaTime() - start) / 0.25, 1);
     double eased = 1 - pow(1 - t, 3);
     NSRect frame = NSMakeRect(round(NSMinX(from) + (NSMinX(target) - NSMinX(from)) * eased),
@@ -432,21 +432,21 @@ NSString *CornerName(int corner) {
 - (BOOL)throwFrom:(NSPoint)grab velocity:(NSPoint)velocity {
   NSRect frame = _window.frame;
   NSScreen *screen = [self homeScreen];
-  ardia_pip_throw::Corner corner =
-      ardia_pip_throw::PickCorner({grab.x, grab.y}, {velocity.x, velocity.y}, ThrowRect(screen.frame));
-  if (corner == ardia_pip_throw::kNoCorner) return NO;
-  ardia_pip_throw::Rect target =
-      ardia_pip_throw::CornerFrame(corner, NSWidth(frame), NSHeight(frame), ThrowRect(screen.visibleFrame));
+  nilla_pip_throw::Corner corner =
+      nilla_pip_throw::PickCorner({grab.x, grab.y}, {velocity.x, velocity.y}, ThrowRect(screen.frame));
+  if (corner == nilla_pip_throw::kNoCorner) return NO;
+  nilla_pip_throw::Rect target =
+      nilla_pip_throw::CornerFrame(corner, NSWidth(frame), NSHeight(frame), ThrowRect(screen.visibleFrame));
   [self throwTo:NSMakeRect(target.x, target.y, target.w, target.h) velocity:velocity corner:corner];
   return YES;
 }
 
 - (void)throwTo:(NSRect)target velocity:(NSPoint)velocity corner:(int)corner {
   [self stopMotion];
-  [self bendCornersTo:ardia_pip_throw::kFreeRadius animated:NO];
+  [self bendCornersTo:nilla_pip_throw::kFreeRadius animated:NO];
   [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(settle) object:nil];
   _sawDrag = NO;
-  if (_stashedEdge != ArdiaPiPEdgeNone) [self setStashedEdge:ArdiaPiPEdgeNone];
+  if (_stashedEdge != NillaPiPEdgeNone) [self setStashedEdge:NillaPiPEdgeNone];
   const NSRect from = _window.frame;
   NSMutableArray *trace = [NSMutableArray array];
   NSMutableDictionary *record = [@{
@@ -459,9 +459,9 @@ NSString *CornerName(int corner) {
   _lastThrow = record;
   _animating = YES;
   const CFTimeInterval start = CACurrentMediaTime();
-  __weak ArdiaPiPController *weakSelf = self;
+  __weak NillaPiPController *weakSelf = self;
   _slide = [NSTimer scheduledTimerWithTimeInterval:1.0 / 120 repeats:YES block:^(NSTimer *timer) {
-    ArdiaPiPController *strongSelf = weakSelf;
+    NillaPiPController *strongSelf = weakSelf;
     NSWindow *window = strongSelf.window;
     if (!strongSelf || !window.visible) {
       [timer invalidate];
@@ -469,9 +469,9 @@ NSString *CornerName(int corner) {
       return;
     }
     const double t = CACurrentMediaTime() - start;
-    const auto x = ardia_pip_throw::SpringAt(NSMinX(from) - NSMinX(target), velocity.x, t);
-    const auto y = ardia_pip_throw::SpringAt(NSMinY(from) - NSMinY(target), velocity.y, t);
-    const BOOL done = ardia_pip_throw::Resolved(x, y);
+    const auto x = nilla_pip_throw::SpringAt(NSMinX(from) - NSMinX(target), velocity.x, t);
+    const auto y = nilla_pip_throw::SpringAt(NSMinY(from) - NSMinY(target), velocity.y, t);
+    const BOOL done = nilla_pip_throw::Resolved(x, y);
     const NSPoint origin = done ? target.origin : NSMakePoint(round(NSMinX(target) + x.offset), round(NSMinY(target) + y.offset));
     if (!NSEqualPoints(origin, window.frame.origin)) {
       [window setFrameOrigin:origin];
@@ -491,8 +491,8 @@ NSString *CornerName(int corner) {
 
 - (void)dragReleasedAt:(NSPoint)pointer velocity:(NSPoint)velocity {
   const BOOL reduceMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-  const BOOL flings = ThrowEnabled() && !reduceMotion && ardia_pip_throw::DragFlings({velocity.x, velocity.y}) &&
-                      [self edgeBeyond] == ArdiaPiPEdgeNone;
+  const BOOL flings = ThrowEnabled() && !reduceMotion && nilla_pip_throw::DragFlings({velocity.x, velocity.y}) &&
+                      [self edgeBeyond] == NillaPiPEdgeNone;
   const BOOL thrown = flings && [self throwFrom:pointer velocity:velocity];
   _lastRelease = @{
     @"pointer" : NSStringFromPoint(pointer),
@@ -516,15 +516,15 @@ NSString *CornerName(int corner) {
   _swipePointer = NSEvent.mouseLocation;
   _swipeBeganAt = CACurrentMediaTime();
   _swipeLastDelta = NSZeroPoint;
-  if (!ardia_host::Background()) [NSCursor setHiddenUntilMouseMoves:YES];
+  if (!nilla_host::Background()) [NSCursor setHiddenUntilMouseMoves:YES];
   [self swipeMoved:event];
 }
 
-- (void)moveBy:(ardia_pip_throw::Point)delta {
+- (void)moveBy:(nilla_pip_throw::Point)delta {
   if (delta.x == 0 && delta.y == 0) return;
   const auto screens = ThrowScreens();
   const auto next =
-      ardia_pip_throw::SwipeStep(ThrowRect(_window.frame), delta, screens.data(), (int)screens.size(), ScreenIndex(_swipeHome));
+      nilla_pip_throw::SwipeStep(ThrowRect(_window.frame), delta, screens.data(), (int)screens.size(), ScreenIndex(_swipeHome));
   const NSPoint origin = NSMakePoint(next.x, next.y);
   if (!NSEqualPoints(origin, _window.frame.origin)) [_window setFrameOrigin:origin];
 }
@@ -532,41 +532,41 @@ NSString *CornerName(int corner) {
 - (void)abandonSwipe {
   if (!_swiping) return;
   _swiping = NO;
-  if (!ardia_host::Background()) [NSCursor setHiddenUntilMouseMoves:NO];
+  if (!nilla_host::Background()) [NSCursor setHiddenUntilMouseMoves:NO];
 }
 
 - (void)swipeMoved:(NSEvent *)event {
-  const auto delta = ardia_pip_throw::FingerDelta(event.scrollingDeltaX, event.scrollingDeltaY, event.isDirectionInvertedFromDevice);
+  const auto delta = nilla_pip_throw::FingerDelta(event.scrollingDeltaX, event.scrollingDeltaY, event.isDirectionInvertedFromDevice);
   _swipeLastDelta = NSMakePoint(delta.x, delta.y);
   _swipeLastAt = NSProcessInfo.processInfo.systemUptime;
   [self moveBy:delta];
 }
 
 - (void)swipeEnded:(NSEvent *)event cancelled:(BOOL)cancelled {
-  [self moveBy:ardia_pip_throw::FingerDelta(event.scrollingDeltaX, event.scrollingDeltaY, event.isDirectionInvertedFromDevice)];
+  [self moveBy:nilla_pip_throw::FingerDelta(event.scrollingDeltaX, event.scrollingDeltaY, event.isDirectionInvertedFromDevice)];
   _swiping = NO;
   const NSPoint last = _swipeLastDelta;
-  const BOOL fresh = NSProcessInfo.processInfo.systemUptime - _swipeLastAt <= ardia_pip_throw::kVelocityWindow;
+  const BOOL fresh = NSProcessInfo.processInfo.systemUptime - _swipeLastAt <= nilla_pip_throw::kVelocityWindow;
   const BOOL flings = !cancelled && fresh && !NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion &&
-                      ardia_pip_throw::SwipeFlings({last.x, last.y});
+                      nilla_pip_throw::SwipeFlings({last.x, last.y});
   const NSRect frame = _window.frame;
   const NSPoint grab = NSMakePoint(NSMinX(frame) + _swipeGrab.x, NSMinY(frame) + _swipeGrab.y);
-  const ArdiaPiPEdge edge = [self edgeBeyond];
+  const NillaPiPEdge edge = [self edgeBeyond];
   BOOL thrown = NO;
   NSRect destination = frame;
-  if (edge != ArdiaPiPEdgeNone) {
+  if (edge != NillaPiPEdgeNone) {
     destination = [self frameStashedAt:edge];
     [self stashAt:edge];
   } else {
-    if (_stashedEdge != ArdiaPiPEdgeNone) [self setStashedEdge:ArdiaPiPEdgeNone];
-    const auto velocity = ardia_pip_throw::SwipeVelocity({last.x, last.y});
+    if (_stashedEdge != NillaPiPEdgeNone) [self setStashedEdge:NillaPiPEdgeNone];
+    const auto velocity = nilla_pip_throw::SwipeVelocity({last.x, last.y});
     thrown = flings && [self throwFrom:grab velocity:NSMakePoint(velocity.x, velocity.y)];
     if (thrown) destination = NSRectFromString(_lastThrow[@"target"]);
   }
   const NSPoint landing = NSMakePoint(NSMinX(destination) + _swipeGrab.x, NSMinY(destination) + _swipeGrab.y);
   const BOOL unmoved = NSEqualPoints(NSEvent.mouseLocation, _swipePointer);
-  const BOOL warp = edge == ArdiaPiPEdgeNone && unmoved && (!thrown || CACurrentMediaTime() - _swipeBeganAt >= 0.15);
-  if (!ardia_host::Background()) {
+  const BOOL warp = edge == NillaPiPEdgeNone && unmoved && (!thrown || CACurrentMediaTime() - _swipeBeganAt >= 0.15);
+  if (!nilla_host::Background()) {
     if (warp) {
       CGWarpMouseCursorPosition(CGPointMake(landing.x, NSMaxY(NSScreen.screens.firstObject.frame) - landing.y));
       [NSCursor setHiddenUntilMouseMoves:YES];

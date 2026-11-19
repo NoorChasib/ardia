@@ -2,7 +2,7 @@ import { hostSupports, invokeHost, type ArdiaHost } from "./host.ts";
 
 export const REPORT_FILES = "report.files";
 export const REPORT_SEND = "report.send";
-export const REPORT_EXPORT_FOLDER_KEY = "ardia.report.exportFolder";
+export const REPORT_EXPORT_FOLDER_KEY = "nilla.report.exportFolder";
 export const LOCAL_EVENTS_FILE = "local-events.jsonl.gz";
 
 const FILE_METHODS: ReadonlySet<string> = new Set(["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText"]);

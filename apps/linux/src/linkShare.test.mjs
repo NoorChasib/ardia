@@ -17,35 +17,35 @@ const surface = (choice = null) => {
 afterEach(() => setShareSurface(null));
 
 test("an email link carries the title as its subject and the address as its body", () => {
-  assert.equal(mailtoLink("https://ardia.dev/a b?x=1&y=2", "Ardia & friends"), "mailto:?subject=Ardia%20%26%20friends&body=https%3A%2F%2Fardia.dev%2Fa%20b%3Fx%3D1%26y%3D2");
-  assert.equal(mailtoLink("https://ardia.dev/", null), "mailto:?subject=https%3A%2F%2Fardia.dev%2F&body=https%3A%2F%2Fardia.dev%2F");
+  assert.equal(mailtoLink("https://example.org/a b?x=1&y=2", "Nilla & friends"), "mailto:?subject=Nilla%20%26%20friends&body=https%3A%2F%2Fexample.org%2Fa%20b%3Fx%3D1%26y%3D2");
+  assert.equal(mailtoLink("https://example.org/", null), "mailto:?subject=https%3A%2F%2Fexample.org%2F&body=https%3A%2F%2Fexample.org%2F");
 });
 
 test("Share offers Copy Link and Email Link for a web page and only Copy Link for a file", () => {
-  assert.deepEqual(linkShareItems("https://ardia.dev").map((item) => item.title), ["Copy Link", "Email Link"]);
+  assert.deepEqual(linkShareItems("https://example.org").map((item) => item.title), ["Copy Link", "Email Link"]);
   assert.deepEqual(linkShareItems("file:///home/me/links").map((item) => item.title), ["Copy Link"]);
 });
 
 test("Share opens below its anchor, copies the link, or emails it through the window's page", async () => {
   const copy = surface("copy");
-  await appModuleFallback(host, "ArdiaApp", "share")("https://ardia.dev/", "Ardia", "w1", [10, 20, 30, 40]);
+  await appModuleFallback(host, "ArdiaApp", "share")("https://example.org/", "Nilla", "w1", [10, 20, 30, 40]);
   assert.deepEqual(copy.menus[0].at, { x: 10, y: 64 });
-  assert.deepEqual(copy.copied, ["https://ardia.dev/"]);
+  assert.deepEqual(copy.copied, ["https://example.org/"]);
   const email = surface("email");
-  await shareLink("https://ardia.dev/", "Ardia", "w1", null);
+  await shareLink("https://example.org/", "Nilla", "w1", null);
   assert.equal(email.menus[0].at, undefined);
-  assert.deepEqual(email.opened, [["mailto:?subject=Ardia&body=https%3A%2F%2Fardia.dev%2F", "w1"]]);
+  assert.deepEqual(email.opened, [["mailto:?subject=Nilla&body=https%3A%2F%2Fexample.org%2F", "w1"]]);
   const dismissed = surface(null);
-  await shareLink("https://ardia.dev/", "Ardia", "w1", null);
+  await shareLink("https://example.org/", "Nilla", "w1", null);
   assert.deepEqual([dismissed.copied, dismissed.opened], [[], []]);
 });
 
 test("a chosen service acts without a menu, and an unknown one is refused", async () => {
   const seen = surface();
-  await appModuleFallback(host, "ArdiaApp", "shareVia")("copy", "https://ardia.dev/", null, "w1");
-  await appModuleFallback(host, "ArdiaApp", "shareVia")("email", "https://ardia.dev/", null, "w1");
-  assert.deepEqual(seen, { menus: [], copied: ["https://ardia.dev/"], opened: [["mailto:?subject=https%3A%2F%2Fardia.dev%2F&body=https%3A%2F%2Fardia.dev%2F", "w1"]] });
-  await assert.rejects(shareLinkVia("com.apple.share.AirDrop", "https://ardia.dev/", null, "w1"), { code: "ERR_UNAVAILABLE" });
+  await appModuleFallback(host, "ArdiaApp", "shareVia")("copy", "https://example.org/", null, "w1");
+  await appModuleFallback(host, "ArdiaApp", "shareVia")("email", "https://example.org/", null, "w1");
+  assert.deepEqual(seen, { menus: [], copied: ["https://example.org/"], opened: [["mailto:?subject=https%3A%2F%2Fexample.org%2F&body=https%3A%2F%2Fexample.org%2F", "w1"]] });
+  await assert.rejects(shareLinkVia("com.apple.share.AirDrop", "https://example.org/", null, "w1"), { code: "ERR_UNAVAILABLE" });
   await assert.rejects(shareLinkVia("email", "file:///home/me/links", null, "w1"), { code: "ERR_UNAVAILABLE" });
 });
 
@@ -57,7 +57,7 @@ test("sharing text offers Copy", async () => {
 });
 
 test("without a window to show it in, Share is refused instead of silently doing nothing", async () => {
-  await assert.rejects(shareLink("https://ardia.dev/", null, null, null), { code: "ERR_UNAVAILABLE" });
+  await assert.rejects(shareLink("https://example.org/", null, null, null), { code: "ERR_UNAVAILABLE" });
   await assert.rejects(shareText("words", null, null), { code: "ERR_UNAVAILABLE" });
 });
 
@@ -67,7 +67,7 @@ test("openExternalURL sends an email link through the page and refuses every oth
   const seen = surface();
   assert.equal(await open("mailto:?subject=a&body=b"), true);
   assert.equal(await open("x-apple.systempreferences:com.apple.preference"), false);
-  assert.equal(await open("https://ardia.dev/"), false);
+  assert.equal(await open("https://example.org/"), false);
   assert.deepEqual(seen.opened, [["mailto:?subject=a&body=b", null]]);
   assert.equal(openMailLink("MAILTO:someone@example.com", "w2"), true);
 });

@@ -1,4 +1,4 @@
-import type { DialogPagesNative } from "@ardia/shell";
+import type { DialogPagesNative } from "@nilla/shell";
 
 const STALLED_AFTER_MS = 10000;
 

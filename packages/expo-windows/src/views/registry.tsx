@@ -8,9 +8,9 @@ import { WindowDragRegion } from "../windowDragRegion";
 import { viewsDrawnInJs } from "./index";
 import type { ViewByName } from "./shared";
 
-const known = new Map<string, ViewByName>([...viewsDrawnInJs, ["ArdiaAppWindows", WindowDragRegion], ["ArdiaSymbol", Symbol]]);
+const known = new Map<string, ViewByName>([...viewsDrawnInJs, ["NillaAppWindows", WindowDragRegion], ["NillaSymbol", Symbol]]);
 
-const withEngine = new Map<string, ViewByName>([["ArdiaWebView", EngineWebView]]);
+const withEngine = new Map<string, ViewByName>([["NillaWebView", EngineWebView]]);
 
 const views = new Map<string, ViewByName>();
 

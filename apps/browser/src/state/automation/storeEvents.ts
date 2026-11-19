@@ -28,9 +28,9 @@ export function diffMore(s: BrowserState, prev: BrowserState, send: EventSend, w
     for (const id in s.windows) {
       const w = s.windows[id]!;
       const before = prev.windows[id];
-      if (wants.has("littleArdia.opened") && !before && eligibleKind(s, id) === "little") {
+      if (wants.has("littleNilla.opened") && !before && eligibleKind(s, id) === "little") {
         const tabId = activeTabId(s, id);
-        send("littleArdia.opened", { windowId: id, profile: w.profileId, ...(tabId && isEligibleTab(s, tabId) ? { tabId, ...shownPage(s.tabs[tabId]!) } : {}) });
+        send("littleNilla.opened", { windowId: id, profile: w.profileId, ...(tabId && isEligibleTab(s, tabId) ? { tabId, ...shownPage(s.tabs[tabId]!) } : {}) });
       }
       if (wants.has("profile.switched") && before && before.profileId !== w.profileId && eligibleKind(s, id) && eligibleKind(prev, id)) {
         send("profile.switched", { windowId: id, from: before.profileId, profile: w.profileId, profileName: s.profiles[w.profileId]?.name ?? "" });
@@ -139,7 +139,7 @@ export type StoreFeedNeeds = { events: ReadonlySet<string>; tabIdle: ReadonlySet
 
 export function startStoreEvents(send: EventSend, needs: StoreFeedNeeds): () => void {
   const stops: (() => void)[] = [];
-  const diffing = ["littleArdia.opened", "profile.switched", "peek.opened", "peek.closed", "split.created", "split.closed", "tab.moved", "pin.added", "pin.removed", "media.started", "media.stopped"];
+  const diffing = ["littleNilla.opened", "profile.switched", "peek.opened", "peek.closed", "split.created", "split.closed", "tab.moved", "pin.added", "pin.removed", "media.started", "media.stopped"];
   if (diffing.some((name) => needs.events.has(name))) stops.push(useBrowser.subscribe((s, prev) => diffMore(s, prev, send, needs.events)));
   if (needs.events.has("tab.crashed")) stops.push(startCrashes(send));
   if (needs.tabIdle.size && (needs.events.has("tab.idle") || needs.events.has("tab.resumed"))) stops.push(startTabIdle(send, needs.tabIdle));

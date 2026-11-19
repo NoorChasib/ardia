@@ -1,8 +1,9 @@
 import { createElement, forwardRef, type ComponentType } from "react";
 import { View } from "react-native-web";
 import { noteMissing } from "./missing";
-import { ardiaHost, hostSupports } from "../host";
+import { nillaHost, hostSupports } from "../host";
 import { createNativeEvents } from "../hostEvents";
+import { engineModuleName } from "../engineModuleNames";
 import { resolveHostModule } from "../hostModules";
 import { sidebarEdgeEvent } from "../shellMethods";
 import { sidebarEdgeReported } from "../sidebarRevealBand";
@@ -14,7 +15,7 @@ export const uuid = { v4: (): string => crypto.randomUUID() };
 type Listener = (event: unknown) => void;
 const events = createNativeEvents();
 
-ardiaHost?.onEvent((module, event, payload) => {
+nillaHost?.onEvent((module, event, payload) => {
   const report = sidebarEdgeEvent(module, event, payload);
   emitNativeEvent(module, event, report);
   if (module === "ArdiaShell" && event === "onWindowEvent") sidebarEdgeReported(report);
@@ -68,7 +69,8 @@ const SHELL_PARTS = ["ArdiaAppWindows", "ArdiaFocus", "ArdiaMenus", "ArdiaDialog
 const APP_PARTS = ["ArdiaUpdater", "ArdiaNotifications", "ArdiaScripting", "ArdiaDev"];
 const SHELL_DOCUMENT_METHODS = ["readDocument", "writeDocument", "saveDocument", "documentSaved", "removeDocument", "refreshDocument", "deleteDocument"];
 
-export function hostModuleName(name: string, method?: string): string {
+export function hostModuleName(appName: string, method?: string): string {
+  const name = engineModuleName(appName);
   if (SHELL_PARTS.includes(name)) return "ArdiaShell";
   if (APP_PARTS.includes(name)) return "ArdiaApp";
   if (name === "ArdiaDocuments" && method !== undefined && SHELL_DOCUMENT_METHODS.includes(method)) return "ArdiaShell";
@@ -95,8 +97,8 @@ function nativeModule(name: string): object {
           const value = provider(target, key);
           if (value !== undefined) return value;
         }
-        if (ardiaHost) {
-          return resolveHostModule(ardiaHost, target, key);
+        if (nillaHost) {
+          return resolveHostModule(nillaHost, target, key);
         }
         const values = moduleValues[target];
         if (values && key in values) return values[key];
@@ -114,7 +116,7 @@ export function requireNativeModule<T = unknown>(name: string): T {
 
 export function requireOptionalNativeModule<T = unknown>(name: string): T | null {
   const host = hostModuleName(name);
-  if (ardiaHost) return ardiaHost.bootstrap.nativeModules?.[host] || ardiaHost.bootstrap.capabilities?.some((method) => method.startsWith(`${host}.`)) || hostSupports(host) ? (nativeModule(name) as T) : null;
+  if (nillaHost) return nillaHost.bootstrap.nativeModules?.[host] || nillaHost.bootstrap.capabilities?.some((method) => method.startsWith(`${host}.`)) || hostSupports(host) ? (nativeModule(name) as T) : null;
   return moduleValues[host] ? (nativeModule(name) as T) : null;
 }
 

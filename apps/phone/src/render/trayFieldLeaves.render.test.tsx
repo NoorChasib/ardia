@@ -16,7 +16,7 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-const editableFields = (root: ReturnType<typeof renderSurface>) => root.root.findAll((node) => (node.type === "TextInput" || node.type === ("ArdiaPhoneCompletingField" as never)) && typeof node.type === "string");
+const editableFields = (root: ReturnType<typeof renderSurface>) => root.root.findAll((node) => (node.type === "TextInput" || node.type === ("NillaPhoneCompletingField" as never)) && typeof node.type === "string");
 
 for (const design of ["redesigned", "original"] as Design[]) {
   test(`in the ${design} design, once the tray starts to leave it holds no editable field, so nothing hidden keeps focus or a blinking caret; the words typed stay on show while it leaves`, () => {

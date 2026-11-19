@@ -2,14 +2,14 @@
 import PackageDescription
 
 let package = Package(
-  name: "ArdiaImportCore",
+  name: "NillaImportCore",
   platforms: [.macOS(.v14)],
-  products: [.library(name: "ArdiaImportCore", targets: ["ArdiaImportCore"])],
+  products: [.library(name: "NillaImportCore", targets: ["NillaImportCore"])],
   targets: [
-    .target(name: "ArdiaImportCore", path: "ios/Core", linkerSettings: [.linkedLibrary("sqlite3")]),
+    .target(name: "NillaImportCore", path: "ios/Core", linkerSettings: [.linkedLibrary("sqlite3")]),
     .testTarget(
-      name: "ArdiaImportCoreTests",
-      dependencies: ["ArdiaImportCore"],
+      name: "NillaImportCoreTests",
+      dependencies: ["NillaImportCore"],
       path: "tests"
     ),
   ]

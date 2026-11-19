@@ -5,7 +5,7 @@ on:
     paths:
       - "apps/phone/android/**"
       - "packages/phone/android/**"
-      - "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/**"
+      - "packages/phone/ios/NillaKit/Sources/NillaShared/Scripts/**"
       - "packages/sync/**"
       - "apps/phone/package.json"
       - "apps/phone/bun.lock"
@@ -19,7 +19,7 @@ on:
     paths:
       - "apps/phone/android/**"
       - "packages/phone/android/**"
-      - "packages/phone/ios/ArdiaKit/Sources/ArdiaShared/Scripts/**"
+      - "packages/phone/ios/NillaKit/Sources/NillaShared/Scripts/**"
       - "packages/sync/**"
       - "apps/phone/package.json"
       - "apps/phone/bun.lock"
@@ -37,31 +37,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  gate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      run: ${{ steps.vouch.outputs.run }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          persist-credentials: false
-          sparse-checkout: .github
-      - id: vouch
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
-        with:
-          retries: 3
-          script: |
-            const vouch = require(`${process.env.GITHUB_WORKSPACE}/.github/vouch/vouch.cjs`);
-            await vouch.gate({ github, context, core });
-
   app:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -96,14 +72,15 @@ jobs:
         working-directory: apps/phone/android
         env:
           ARDIA_LAB: "1"
-          EXPO_PUBLIC_ARDIA_LAB: "true"
-        run: ./gradlew -PardiaLab=true --no-daemon :ardia-phone-native:testDebugUnitTest :app:testDebugUnitTest :ardia-design:testDebugUnitTest --continue --console=plain
+          EXPO_PUBLIC_NILLA_LAB: "true"
+        run: ./gradlew -PnillaLab=true --no-daemon :nilla-phone-native:testDebugUnitTest :app:testDebugUnitTest :nilla-design:testDebugUnitTest --continue --console=plain
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: android-unit-test-reports
+          name: nilla-dev-${{ github.sha }}-android-unit-test-logs
           path: |
             packages/phone/android/build/reports/tests
             apps/phone/android/app/build/reports/tests
-            apps/phone/android/ardia-design/build/reports/tests
+            apps/phone/android/nilla-design/build/reports/tests
           if-no-files-found: ignore
+          retention-days: 3

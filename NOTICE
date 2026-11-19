@@ -1,3 +1,37 @@
+Nilla, Copyright 2026 Noor Chasib. Nilla is a modified version of Ardia, forked on 2026-11-18.
+
+Ardia (https://github.com/ardia-browser/ardia, originally https://github.com/mantrakp04/ardia) is by Mantra Patel and
+its contributors. Nilla renames Ardia and changes it in many files; the repository's git history
+(https://github.com/NoorChasib/nilla) records every change, file by file, with its date.
+
+Nilla as distributed (the app with its engine) is licensed under the GNU General Public License, version 3 (see
+LICENSE), because its engine is built with Helium's patches, which are GPL-3.0. Nilla comes with ABSOLUTELY NO
+WARRANTY; see sections 15 and 16 of LICENSE.
+
+Nilla's own source files, and the source files it carries from Ardia, are licensed under the Apache License, Version
+2.0 (see LICENSE.Apache-2.0). Apache-2.0 code may be combined into a GPL-3.0 work, so they keep that licence on their
+own. Nilla cannot relicense the code it carries from Ardia.
+
+Corresponding Source: every Nilla release on GitHub (https://github.com/NoorChasib/nilla/releases) links the
+repository at that release's tag, with the engine's patch series and build scripts (engine/, docs/engine-build.md),
+and carries, for each platform it ships, the source archive of the engine in that platform's build: the Helium
+sources the engine was built from (helium-chromium, helium-macos, helium-linux) with the Linux patch set, and where
+Chromium's source is. Nilla has published no release yet; development builds stay on the machine or CI runner that
+built them.
+
+Nilla builds on and ships third-party software under its own licenses. Besides everything Ardia's NOTICE below
+lists, it includes:
+- Ardia (Apache-2.0 for its source files, GPL-3.0 as distributed), Copyright 2026 Mantra Patel,
+  https://github.com/ardia-browser/ardia: the codebase Nilla is forked from. Its NOTICE is reproduced below.
+- React Native for Windows (MIT), in the Windows app
+
+Nilla is an independent project. It is not affiliated with or endorsed by Ardia or its authors, The Helium Authors,
+or The Chromium Authors and Google. Other product names and logos belong to their owners and appear only to identify
+those products.
+
+------------------------------------------------------------------------------------------------------------------------
+Ardia's NOTICE, as Ardia distributed it (Apache License 2.0, section 4(d)):
+
 Ardia
 Copyright 2026 Mantra Patel
 

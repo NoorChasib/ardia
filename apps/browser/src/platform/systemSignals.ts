@@ -1,10 +1,10 @@
 import type { EventSubscription } from "expo-modules-core";
-import { nativeModule, type MovedDownload, type SystemSignal } from "@ardia/shell";
+import { nativeModule, type MovedDownload, type SystemSignal } from "@nilla/shell";
 
 export type { MovedDownload };
 
-let bound: ReturnType<typeof nativeModule<"ArdiaSystemSignals">> | null = null;
-const Signals = () => (bound ??= nativeModule("ArdiaSystemSignals"));
+let bound: ReturnType<typeof nativeModule<"NillaSystemSignals">> | null = null;
+const Signals = () => (bound ??= nativeModule("NillaSystemSignals"));
 
 const sleepListeners = new Set<() => void>();
 const wakeListeners = new Set<() => void>();

@@ -10,9 +10,9 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import browsing, cli, endpoint, scripts_store, scripts_test, urlmatch, userscript
-from ardia_cli.scripts_store import Store, StoreError
-from ardia_cli.userscript import Meta, ScriptError, build, parse_meta, url_runs
+from nilla_browser_cli import browsing, cli, endpoint, scripts_store, scripts_test, urlmatch, userscript
+from nilla_browser_cli.scripts_store import Store, StoreError
+from nilla_browser_cli.userscript import Meta, ScriptError, build, parse_meta, url_runs
 
 CHROMIUM_URL_CASES = [
     ("http://*/*", "http://google.com/", True),
@@ -263,12 +263,12 @@ class Confinement(unittest.TestCase):
 
     def test_data_dir_by_identity_not_spelling(self):
         support = self.tree / "support"
-        data = support / "com.ardia.browser"
+        data = support / "com.nilladigital.nilla"
         (data / "Chromium").mkdir(parents=True)
         (data / "Chromium" / "secret.js").write_text("export default 1;\n")
         path = support / "s.user.ts"
-        path.write_text("// ==UserScript==\n// @match https://example.com/*\n// ==/UserScript==\nimport s from \"./COM.ARDIA.BROWSER/Chromium/secret.js\";\nconsole.log(s);\n")
-        if not (support / "COM.ARDIA.BROWSER").exists():
+        path.write_text("// ==UserScript==\n// @match https://example.com/*\n// ==/UserScript==\nimport s from \"./COM.NILLADIGITAL.NILLA/Chromium/secret.js\";\nconsole.log(s);\n")
+        if not (support / "COM.NILLADIGITAL.NILLA").exists():
             self.skipTest("case-sensitive file system")
         with self.assertRaisesRegex(ScriptError, "data folder"):
             build(path, data_dirs=[data])
@@ -446,7 +446,7 @@ class Stores(unittest.TestCase):
 class ReadOnlyDefaults(unittest.TestCase):
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix="ardia-cli-default-")).resolve()
-        self.default = self.root / "com.ardia.browser"
+        self.default = self.root / "com.nilladigital.nilla"
         self.default.mkdir()
         self.work = self.root / "work"
         self.work.mkdir()

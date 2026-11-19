@@ -1,4 +1,4 @@
-import type { AppNative, WindowsNative } from "@ardia/shell";
+import type { AppNative, WindowsNative } from "@nilla/shell";
 import { engineAvailable, hostCall, onEngineTopic } from "../engine/host";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
@@ -12,7 +12,7 @@ const ASK_ATTEMPTS = 4;
 type ListedTab = Pick<HostListedTab, "key" | "title">;
 
 export const httpPagesPort = () => {
-  const port = requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().test?.httpPages;
+  const port = requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().test?.httpPages;
   return typeof port === "string" && /^\d+$/.test(port) ? port : null;
 };
 
@@ -41,7 +41,7 @@ const titled = async (titles: string[]) => {
 
 const evaluate = async (code: string) => (await hostCall<{ result?: unknown }>("tab.call", { key: CACHE_KEY, method: "evaluate", code, userGesture: true })).result;
 
-const FLOOD_GUARD_REARM_URL = "hcp:ardia-self-check";
+const FLOOD_GUARD_REARM_URL = "hcp:nilla-self-check";
 const PLACE = { unit: "px", x: 40, y: 60, width: 320, height: 240 };
 
 const askOnce = (link: string, waitMs: number) => {
@@ -81,7 +81,7 @@ const notRestoredReasons = () =>
   );
 
 const firstWindow = async () => {
-  const ids = await requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows").windowIds();
+  const ids = await requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows").windowIds();
   expectTrue(ids.length > 0, "no window is open to host a page");
   return ids[0]!;
 };
@@ -96,7 +96,7 @@ const backForwardChecks = (port: string): Check[] => [
       try {
         await hostCall("tab.show", { key: CACHE_KEY, visible: true, ...PLACE }, windowId);
         await titled(["loaded a"]);
-        const cachedAsk = await ask("ardia-self-check-link:cached");
+        const cachedAsk = await ask("nilla-self-check-link:cached");
         await hostCall("tab.call", { key: CACHE_KEY, method: "loadUrl", url: `${origin}/b` });
         await titled(["loaded b"]);
         await new Promise((resolve) => setTimeout(resolve, CACHED_MS));
@@ -105,7 +105,7 @@ const backForwardChecks = (port: string): Check[] => [
         const back = await titleWithin("restored a", LOAD_MS);
         const reasons = back === "restored a" ? "" : `${JSON.stringify(back)}, notRestoredReasons ${await notRestoredReasons()}`;
         const oldAskAfterBack = await alive(cachedAsk);
-        const freshAsk = await alive(await ask("ardia-self-check-link:after-back"));
+        const freshAsk = await alive(await ask("nilla-self-check-link:after-back"));
         expectEqual(
           { restoredFromTheCache: back === "restored a", whileCached, oldAskAfterBack, freshAsk },
           { restoredFromTheCache: true, whileCached: false, oldAskAfterBack: true, freshAsk: true },

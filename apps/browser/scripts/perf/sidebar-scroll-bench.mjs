@@ -11,7 +11,7 @@ import { framesLibrary } from "./frames-phase.mjs";
 const HELP = `Sidebar scroll cost with real gestures: what one trackpad flick or wheel spin over the sidebar's tab list costs the
 app, at several tab counts, read while the screen may be locked.
 
-  node apps/browser/scripts/perf/sidebar-scroll-bench.mjs run --app <Debug or Release Ardia.app> --scratch <dir>
+  node apps/browser/scripts/perf/sidebar-scroll-bench.mjs run --app <Debug or Release Nilla.app> --scratch <dir>
       [--bundle <main.jsbundle>] [--label <name>] [--tabs 50,150,300] [--profiles 1,2] [--reps 5]
       [--gestures pan,pan-up,wheel,wheel-up] [--pointer over|away] [--port 9631] [--keep] [--attach]
       [--post app|acperf] [--append] [--out <file.json>]
@@ -77,7 +77,7 @@ if (argv[0] !== "run") {
 }
 
 const appArg = flag("app");
-const scratch = resolve(flag("scratch", "/tmp/ardia-perf/sidebar"));
+const scratch = resolve(flag("scratch", "/tmp/nilla-perf/sidebar"));
 const label = flag("label", "run");
 const bundle = flag("bundle");
 const tabCounts = flag("tabs", "50,150,300").split(",").map(Number);

@@ -4,15 +4,16 @@ import { hostSupports, invokeHost } from "./host.ts";
 import { hostLaunchConfig } from "./hostLaunchConfig.ts";
 import { channelOf, compareVersions, isAppVersion, linuxReleases, newestRelease, type Release } from "./updateReleases.ts";
 import { noteUpdateCheck, noteUpdatePageOpened } from "../../browser/src/state/telemetry/updateCounts.ts";
+import { SOURCE_REPO } from "@nilla/core/src/services.ts";
 
 export const UPDATE_METHODS = ["updaterState", "checkForUpdates", "setAutomaticUpdateChecks", "setAutomaticUpdateDownloads", "setUpdateChannel"] as const;
 export const RELEASES_METHOD = "ArdiaUpdates.releases";
 export const KILL_SWITCHES_METHOD = "ArdiaShell.fetchKillSwitches";
 export const UPDATE_PREFERENCES = "linux-updates.json";
-export const RELEASES_PAGE = "https://github.com/ardia-browser/ardia/releases";
+export const RELEASES_PAGE = `https://github.com/${SOURCE_REPO}/releases`;
 export const FIRST_CHECK_AFTER_MS = 30_000;
 export const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
-export const UPDATE_CHECK_LOCK = "ardia.linux.update-checks";
+export const UPDATE_CHECK_LOCK = "nilla.linux.update-checks";
 
 type Preferences = { automaticChecks: boolean; lastCheck: number | null; channel: UpdateChannel | null; notified: string | null };
 type Fetched = { status: number; body: string };
@@ -87,7 +88,7 @@ export function linuxUpdater(deps: UpdateDeps) {
       noteUpdateCheck(asked, newer ? "found" : "upToDate");
       switchCheck = newer ? { phase: "found", channel: wanted, version: release!.version } : { phase: "upToDate", channel: wanted };
       if (!newer) {
-        if (asked) await deps.tell("Ardia is up to date", `You have Ardia ${current}, the newest ${wanted === "nightly" ? "Nightly" : "Stable"} build for Linux.`);
+        if (asked) await deps.tell("Nilla is up to date", `You have Nilla ${current}, the newest ${wanted === "nightly" ? "Nightly" : "Stable"} build for Linux.`);
         return;
       }
       if (asked) {
@@ -103,8 +104,8 @@ export function linuxUpdater(deps: UpdateDeps) {
     } catch (error) {
       noteUpdateCheck(asked, "failed");
       switchCheck = { phase: "failed", channel: wanted };
-      console.info(`[ardia linux] the update check failed: ${String(error)}`);
-      if (asked) await deps.tell("Ardia couldn't check for updates", `Try again later, or see ${RELEASES_PAGE}.`);
+      console.info(`[nilla linux] the update check failed: ${String(error)}`);
+      if (asked) await deps.tell("Nilla couldn't check for updates", `Try again later, or see ${RELEASES_PAGE}.`);
     } finally {
       checking = false;
     }

@@ -85,7 +85,7 @@ async function dockMidClose(windowId: string, moment: DockMoment) {
   await pause(STRAY_WRITES_MS);
   const off = offIdentity(probe());
   if (off) {
-    console.info(`[ardia windows] self-check note: sidebar peek layer rests off identity after docking ${moment.label}: ${off}`);
+    console.info(`[nilla windows] self-check note: sidebar peek layer rests off identity after docking ${moment.label}: ${off}`);
     throw new Error(`the peek layer rests off identity: ${off}`);
   }
   return slideAtDock;
@@ -94,11 +94,11 @@ async function dockMidClose(windowId: string, moment: DockMoment) {
 async function checkSidebarPeek() {
   const windowId = probes.keys().next().value;
   if (windowId === undefined) {
-    console.info("[ardia windows] self-check note: sidebar peek skipped, no window shows tabs in the sidebar");
+    console.info("[nilla windows] self-check note: sidebar peek skipped, no window shows tabs in the sidebar");
     return;
   }
   if (probeFor(windowId).fullscreen) {
-    console.info("[ardia windows] self-check note: sidebar peek skipped, the window is full screen");
+    console.info("[nilla windows] self-check note: sidebar peek skipped, the window is full screen");
     return;
   }
   const wasOpen = probeFor(windowId).open;
@@ -111,7 +111,7 @@ async function checkSidebarPeek() {
     if (probes.has(windowId)) await setDocked(windowId, wasOpen);
   }
   const midClose = slides.filter((slide) => slide > 0 && slide < 1).length;
-  console.info(`[ardia windows] self-check note: sidebar peek, ${slides.length} cycles, ${midClose} docked mid-close, slide at dock ${slides.map((slide) => slide.toFixed(2)).join(" ")}`);
+  console.info(`[nilla windows] self-check note: sidebar peek, ${slides.length} cycles, ${midClose} docked mid-close, slide at dock ${slides.map((slide) => slide.toFixed(2)).join(" ")}`);
   if (midClose === 0) throw new Error(`no cycle docked while the peek was still closing (slide at dock ${slides.join(" ")})`);
   if (numericLayers > 0) throw new Error(`the peek layer took a plain number instead of its gated value in ${numericLayers} renders`);
 }

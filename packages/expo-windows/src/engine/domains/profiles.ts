@@ -9,7 +9,7 @@ const EVERY_KIND = ["history", "siteData", "cache", "downloads", "formData", "si
 const GONE = new Set(["removed", "absent"]);
 const OFF_THE_RECORD = "@";
 const END_OF_NAME = "\u0000";
-const NOT_ARDIAS = "data (the profile's id isn't one Ardia makes)";
+const NOT_NILLAS = "data (the profile's id isn't one Nilla makes)";
 
 export const profileFolder = (profile: string): string | null => (ARDIA_ID.test(profile) ? FOLDER_PREFIX + profile : null);
 
@@ -36,16 +36,16 @@ export const profileCalls: Handlers = {
   },
   deleteData: async (args, engine) => {
     const { profile } = args;
-    if (profile.includes(END_OF_NAME)) return ok({ remaining: [NOT_ARDIAS] });
+    if (profile.includes(END_OF_NAME)) return ok({ remaining: [NOT_NILLAS] });
     if (profile.includes(OFF_THE_RECORD)) return ok({ remaining: [] });
     engine.externalApps?.forgetProfile(profile);
     if (!profile) return ok({ remaining: await deleteOriginalProfileData(engine) });
     const folder = profileFolder(profile);
-    if (!folder) return ok({ remaining: [NOT_ARDIAS] });
+    if (!folder) return ok({ remaining: [NOT_NILLAS] });
     if (!(await sameDataFolder(engine))) return ok({ remaining: ["data (Chromium keeps it in another folder)"] });
     const outcome = await engine.removeProfileFolder(folder);
     if (GONE.has(outcome)) return ok({ remaining: [] });
     if (outcome === "inUse") await served(engine, "ac_browsing_data_clear", profile, { types: EVERY_KIND, since: 0 });
-    return ok({ remaining: [outcome === "inUse" ? "files in use until Ardia restarts" : `files (${outcome})`] });
+    return ok({ remaining: [outcome === "inUse" ? "files in use until Nilla restarts" : `files (${outcome})`] });
   },
 };

@@ -43,7 +43,7 @@ onIos("on iPhone Connect to Your Mac is main's two steps on Expo UI; Enter Words
   const root = renderSurface(<SettingsView />);
   await act(async () => undefined);
   const connect = () => destination(root, "syncConnect");
-  expect(texts(connect())).toEqual(expect.arrayContaining(["Show the code on your Mac", "Choose the Ardia Sync folder"]));
+  expect(texts(connect())).toEqual(expect.arrayContaining(["Show the code on your Mac", "Choose the Nilla Sync folder"]));
   expect(byLabel(connect(), "Scan Code")).toBeTruthy();
   await press(byLabel(connect(), "Enter Words"));
   expect(settingsNav().stack.at(-1)).toEqual({ page: "syncWords" });

@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <string>
 
-using namespace ardia_pointer;
+using namespace nilla_pointer;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

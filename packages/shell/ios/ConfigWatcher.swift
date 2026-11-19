@@ -11,7 +11,7 @@ final class ConfigWatcher {
     var topology = ""
   }
 
-  private let queue = DispatchQueue(label: "ardia.config-watch", qos: .utility)
+  private let queue = DispatchQueue(label: "nilla.config-watch", qos: .utility)
   private var stream: FSEventStreamRef?
   private var topologySource: DispatchSourceFileSystemObject?
   private var targets = Targets()

@@ -4,21 +4,21 @@
 
 #import <objc/message.h>
 
-using namespace ardia_window;
+using namespace nilla_window;
 
 namespace {
 
-NSString *const kQuitIdentifier = @"ardia.shortcut.std:quit:";
-NSString *const kCopyUrlIdentifier = @"ardia.command.copyUrl";
-NSString *const kFullScreenIdentifier = @"ardia.shortcut.std:toggleFullScreen:";
+NSString *const kQuitIdentifier = @"nilla.shortcut.std:quit:";
+NSString *const kCopyUrlIdentifier = @"nilla.command.copyUrl";
+NSString *const kFullScreenIdentifier = @"nilla.shortcut.std:toggleFullScreen:";
 
 NSSet<NSString *> *ReservedIdentifiers() {
   static NSSet<NSString *> *reserved = [NSSet setWithArray:@[
-    @"ardia.command.closeTab", @"ardia.shortcut.std:closeWindow:", @"ardia.command.newIncognitoWindow", @"ardia.command.newTab",
-    @"ardia.command.newWindow", @"ardia.command.reopenClosedTab", @"ardia.command.nextTab", @"ardia.command.previousTab",
-    @"ardia.command.nextProfile", @"ardia.command.previousProfile",
-    @"ardia.command.tabSwitcher", kQuitIdentifier, kCopyUrlIdentifier, @"ardia.command.devTools", @"ardia.command.toggleDevTools",
-    @"ardia.command.searchTabs"
+    @"nilla.command.closeTab", @"nilla.shortcut.std:closeWindow:", @"nilla.command.newIncognitoWindow", @"nilla.command.newTab",
+    @"nilla.command.newWindow", @"nilla.command.reopenClosedTab", @"nilla.command.nextTab", @"nilla.command.previousTab",
+    @"nilla.command.nextProfile", @"nilla.command.previousProfile",
+    @"nilla.command.tabSwitcher", kQuitIdentifier, kCopyUrlIdentifier, @"nilla.command.devTools", @"nilla.command.toggleDevTools",
+    @"nilla.command.searchTabs"
   ]];
   return reserved;
 }
@@ -34,8 +34,8 @@ NSSet<NSString *> *ReservedIdentifiersInFullScreenShowingPage() {
 }
 
 bool ShowsBrowserInFullScreen(NSWindow *window) {
-  ArdiaCoreWindow *coreWindow = [ArdiaWindowController forNSWindow:window].coreWindow;
-  return coreWindow && ![ArdiaWindowFullScreen ofWindow:coreWindow create:NO].pageFullScreen;
+  ArdiaCoreWindow *coreWindow = [NillaWindowController forNSWindow:window].coreWindow;
+  return coreWindow && ![NillaWindowFullScreen ofWindow:coreWindow create:NO].pageFullScreen;
 }
 
 NSSet<NSString *> *ReservedIdentifiersIn(NSWindow *window) {
@@ -99,14 +99,14 @@ struct SidebarKeyPress {
 SidebarKeyPress gSidebarKeyPressForPage;
 
 bool IsSidebarKey(NSEvent *event) {
-  static NSSet<NSString *> *sidebar = [NSSet setWithObject:@"ardia.command.toggleSidebar"];
+  static NSSet<NSString *> *sidebar = [NSSet setWithObject:@"nilla.command.toggleSidebar"];
   return event.type == NSEventTypeKeyDown && MenuItemForEvent(event, sidebar) != nil;
 }
 
 bool IsInDevTools(NSView *view) {
   for (NSView *ancestor = view.superview; ancestor; ancestor = ancestor.superview) {
-    if (![ancestor isKindOfClass:ArdiaWebView.class]) continue;
-    NSView *devTools = ((ArdiaWebView *)ancestor).devtoolsView;
+    if (![ancestor isKindOfClass:NillaWebView.class]) continue;
+    NSView *devTools = ((NillaWebView *)ancestor).devtoolsView;
     return devTools && [view isDescendantOf:devTools];
   }
   return false;
@@ -119,7 +119,7 @@ bool IsDevToolsPickerKey(NSEvent *event) {
 
 }
 
-namespace ardia_window {
+namespace nilla_window {
 
 NSMenuItem *ReservedMenuItemForEvent(NSEvent *event) {
   return MenuItemForEvent(event, ReservedIdentifiersIn(event.window));
@@ -155,12 +155,12 @@ bool KeepsReservedKeyInDevTools(NSWindow *window, NSEvent *event) {
 
 }
 
-BOOL ArdiaPerformReservedKey(NSEvent *event) {
+BOOL NillaPerformReservedKey(NSEvent *event) {
   return event.type == NSEventTypeKeyDown && (IsReservedKey(event) || IsSecondSidebarKeyPress(event)) &&
          [NSApp.mainMenu performKeyEquivalent:event];
 }
 
-namespace ardia_host {
+namespace nilla_host {
 
 bool IsReservedKeyEvent(NSEvent *event) {
   return IsReservedKey(event);

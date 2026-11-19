@@ -23,7 +23,7 @@
 #pragma comment(lib, "comctl32.lib")
 #pragma comment(lib, "ole32.lib")
 
-namespace Ardia::FileDropParts {
+namespace Nilla::FileDropParts {
 
 struct DropArea {
   std::string key;
@@ -369,7 +369,7 @@ struct DropHub {
     event["windowY"] = y;
     event["count"] = static_cast<int64_t>(count);
     event["items"] = ItemsJson(items);
-    EmitEvent(m_context, L"ArdiaFileDrop", L"onWindowDrop", std::move(event));
+    EmitEvent(m_context, L"NillaFileDrop", L"onWindowDrop", std::move(event));
   }
 
   void EmitWindow(WindowDrops const &window, const char *phase) noexcept {
@@ -377,7 +377,7 @@ struct DropHub {
     winrt::Microsoft::ReactNative::JSValueObject event;
     event["windowId"] = window.id;
     event["phase"] = phase;
-    EmitEvent(m_context, L"ArdiaFileDrop", L"onWindowDrag", std::move(event));
+    EmitEvent(m_context, L"NillaFileDrop", L"onWindowDrag", std::move(event));
   }
 
   DropArea const *AreaNamed(WindowDrops const &window, std::string const &key) const noexcept {

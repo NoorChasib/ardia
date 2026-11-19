@@ -3,7 +3,7 @@
 #import "ArdiaFieldTiming.h"
 #import "ArdiaNavigationDownloads.h"
 
-using namespace ardia_web_view;
+using namespace nilla_web_view;
 
 namespace {
 
@@ -46,7 +46,7 @@ NSString *PNGDataURL(NSImage *image) {
 }
 }
 
-@implementation ArdiaWebView (Navigation)
+@implementation NillaWebView (Navigation)
 
 - (void)emitNavigation {
   _sent.navigationQueued = NO;
@@ -55,7 +55,7 @@ NSString *PNGDataURL(NSImage *image) {
   NSString *themeSource = _reports.theme ? _reports.themeSource : (theme ? @"meta" : nil);
   NSString *url = _tab.url ?: @"";
   if (IsRendererDebugURL(url)) url = _sent.navigation[@"url"] ?: @"";
-  [ArdiaEarlyWindow page:_tab emitted:url];
+  [NillaEarlyWindow page:_tab emitted:url];
   NSDictionary *navigation = @{
         @"url" : url,
         @"title" : ReportedTitle(_tab.title, url, _tab.loading),
@@ -69,7 +69,7 @@ NSString *PNGDataURL(NSImage *image) {
     NSMutableDictionary *withInitial = [navigation mutableCopy];
     withInitial[@"initialDocumentAccessed"] = @(_tab.initialDocumentAccessed);
     withInitial[@"committedInitial"] = @(_tab.committedInitial);
-    if (ArdiaWebView.reportsCommits) {
+    if (NillaWebView.reportsCommits) {
       [self noteDocumentCommits];
       withInitial[@"committedUrl"] = [self committedURL];
       withInitial[@"committedAt"] = @(_commits.at);
@@ -118,9 +118,9 @@ NSString *PNGDataURL(NSImage *image) {
 - (void)queueNavigation {
   if (_sent.navigationQueued) return;
   _sent.navigationQueued = YES;
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_async(dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
+    NillaWebView *view = weakSelf;
     if (view && view->_sent.navigationQueued) [view emitNavigation];
   });
 }
@@ -131,13 +131,13 @@ NSString *PNGDataURL(NSImage *image) {
 
 - (void)tabDidChangeURL:(ArdiaCoreTab *)tab {
   [self queueNavigation];
-  [ArdiaEarlyWindow page:tab shownURL:_shownURL];
+  [NillaEarlyWindow page:tab shownURL:_shownURL];
 }
 
 - (void)tabDidChangeLoading:(ArdiaCoreTab *)tab {
   if (!tab.loading && tab.url.length && ![tab.url hasPrefix:@"about:"]) [self showHeldPageAfterLoad];
   if (tab.loading) [self resetBlocked:YES];
-  if (tab.loading) ArdiaFieldMarkNow(_transferKey, @"start");
+  if (tab.loading) NillaFieldMarkNow(_transferKey, @"start");
   [self queueNavigation];
 }
 
@@ -161,8 +161,8 @@ NSString *PNGDataURL(NSImage *image) {
 - (void)tabDidCommitDocument:(ArdiaCoreTab *)tab {
   [self noteDocumentCommits];
   _firstPaint.scripted = NO;
-  ArdiaFieldMarkNow(_transferKey, @"commit");
-  [ArdiaEarlyWindow pageCommitted:tab shownURL:_shownURL];
+  NillaFieldMarkNow(_transferKey, @"commit");
+  [NillaEarlyWindow pageCommitted:tab shownURL:_shownURL];
   _reports.theme = nil;
   _reports.themeSource = nil;
   _sent.favicon = nil;
@@ -175,9 +175,9 @@ NSString *PNGDataURL(NSImage *image) {
   if (progress <= 0.1 || progress >= 1 || wait <= 0) return [self sendProgress];
   if (_sent.progressQueued) return;
   _sent.progressQueued = YES;
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(wait * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
+    NillaWebView *view = weakSelf;
     if (view && view->_sent.progressQueued) [view sendProgress];
   });
 }
@@ -198,7 +198,7 @@ NSString *PNGDataURL(NSImage *image) {
   NSImage *image = tab.favicon;
   if (!image) return;
   NSString *url = tab.faviconURL;
-  if (url.length) [ArdiaFavicons noteImage:image forURL:url profile:_profile];
+  if (url.length) [NillaFavicons noteImage:image forURL:url profile:_profile];
   else url = PNGDataURL(image);
   if (!url.length || [url isEqualToString:_sent.favicon]) return;
   _sent.favicon = url;
@@ -212,7 +212,7 @@ NSString *PNGDataURL(NSImage *image) {
   NSString *creating = _life.creatingURL;
   _life.creatingURL = nil;
   if (_tab && SamePage(url, transferred)) return;
-  if ((_tab || _life.phase == ArdiaTabPhase::Creating) && [url isEqualToString:creating] && CACurrentMediaTime() - _life.creatingAt < 2) return;
+  if ((_tab || _life.phase == NillaTabPhase::Creating) && [url isEqualToString:creating] && CACurrentMediaTime() - _life.creatingAt < 2) return;
   if (_tab) return [self loadNow:url userInitiated:userInitiated];
   _life.pendingURL = url;
   _life.pendingUserInitiated = userInitiated;
@@ -222,7 +222,7 @@ NSString *PNGDataURL(NSImage *image) {
 - (void)loadNow:(NSString *)url userInitiated:(BOOL)userInitiated {
   if ([self skipsNavigationDownload:url userInitiated:userInitiated]) return;
   if (url.length && ![url hasPrefix:@"about:"]) [self holdPageUntilPainted:NO];
-  ArdiaFieldMarkNow(_transferKey, @"request");
+  NillaFieldMarkNow(_transferKey, @"request");
   [_tab loadURL:url userInitiated:userInitiated];
   [self focusAfterLoad];
 }
@@ -231,8 +231,8 @@ NSString *PNGDataURL(NSImage *image) {
   const BOOL first = !_requests.loadedOnce;
   _requests.loadedOnce = YES;
   _life.pendingUserInitiated = NO;
-  if (first && !userInitiated && ardia_host::WasNavigationDownload(url, _profile)) {
-    __weak ArdiaWebView *weakSelf = self;
+  if (first && !userInitiated && nilla_host::WasNavigationDownload(url, _profile)) {
+    __weak NillaWebView *weakSelf = self;
     NSDictionary *payload = @{@"url" : url ?: @"", @"committedUrl" : @"", @"skipped" : @YES};
     dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf emit:@"downloadNavigation" payload:payload]; });
     return YES;
@@ -266,8 +266,8 @@ NSString *PNGDataURL(NSImage *image) {
 }
 
 - (void)tab:(ArdiaCoreTab *)tab navigationBecameDownload:(NSString *)url {
-  ardia_host::NoteNavigationDownload(url, _profile);
-  if (_requests.requestedURL && ![_requests.requestedURL isEqualToString:url]) ardia_host::NoteNavigationDownload(_requests.requestedURL, _profile);
+  nilla_host::NoteNavigationDownload(url, _profile);
+  if (_requests.requestedURL && ![_requests.requestedURL isEqualToString:url]) nilla_host::NoteNavigationDownload(_requests.requestedURL, _profile);
   _requests.requestedURL = nil;
   [self emit:@"downloadNavigation" payload:@{@"url" : url ?: @"", @"committedUrl" : tab.url ?: @"", @"skipped" : @NO}];
 }
@@ -297,10 +297,10 @@ NSString *PNGDataURL(NSImage *image) {
   _reports.lastBlocked = url;
   if (_sent.blockedEmitQueued) return;
   _sent.blockedEmitQueued = YES;
-  __weak ArdiaWebView *weakSelf = self;
+  __weak NillaWebView *weakSelf = self;
   const NSUInteger generation = _sent.blockedGeneration;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 150 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
-    ArdiaWebView *view = weakSelf;
+    NillaWebView *view = weakSelf;
     if (!view || view->_sent.blockedGeneration != generation || !view->_tab) return;
     view->_sent.blockedEmitQueued = NO;
     [view emit:@"contentBlocked" payload:@{@"count" : @(view->_reports.blockedCount), @"url" : view->_reports.lastBlocked ?: @""}];

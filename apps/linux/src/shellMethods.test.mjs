@@ -7,6 +7,7 @@ import { NATIVE_EDGE_ZONE, createRevealBands } from "./sidebarRevealBand.ts";
 import { dominantAccent } from "./iconAccent.ts";
 import { hostModuleName, requireNativeModule } from "./shims/expo-modules-core.ts";
 import { setTrafficLightsCenter } from "./shims/web/windowChrome.tsx";
+import { APP_NAME, reportedSystemInfo } from "./hostSystemInfo.ts";
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const nativeHost = read("../../../engine/ardiacore-linux/src/ardia/linux/ac_linux_host.cc");
@@ -118,7 +119,8 @@ function audit(modules = REQUIRED) {
 }
 
 test("every shared native method resolves to a callable on Linux and reaches a Linux adapter, an advertised or routed native method, or the explicit allow-to-reject list", () => {
-  assert.deepEqual(REQUIRED.filter(({ module }) => hostModuleName(module) === "ArdiaShell").map(({ module }) => module).sort(), ["ArdiaAppWindows", "ArdiaDialogs", "ArdiaFocus", "ArdiaMenus", "ArdiaShell"]);
+  assert.deepEqual(REQUIRED.filter(({ module }) => !/^Nilla[A-Z]/.test(module)).map(({ module }) => module), []);
+  assert.deepEqual(REQUIRED.filter(({ module }) => hostModuleName(module) === "ArdiaShell").map(({ module }) => module).sort(), ["NillaAppWindows", "NillaDialogs", "NillaFocus", "NillaMenus", "NillaShell"]);
   assert.deepEqual(audit(), { missing: [], unchecked: [] });
 });
 
@@ -128,14 +130,14 @@ test("a Linux fallback only stands in for a native shell method the host doesn't
 });
 
 test("a method added to a shared module type without a Linux path fails the audit", () => {
-  const app = REQUIRED.find(({ module }) => module === "ArdiaApp");
-  const shell = REQUIRED.find(({ module }) => module === "ArdiaShell");
-  assert.deepEqual(audit([{ module: "ArdiaApp", methods: [...app.methods, "bogusAppMethod"] }, { module: "ArdiaShell", methods: [...shell.methods, "bogusShellMethod"] }]).unchecked, ["ArdiaApp.bogusAppMethod", "ArdiaShell.bogusShellMethod"]);
+  const app = REQUIRED.find(({ module }) => module === "NillaApp");
+  const shell = REQUIRED.find(({ module }) => module === "NillaShell");
+  assert.deepEqual(audit([{ module: "NillaApp", methods: [...app.methods, "bogusAppMethod"] }, { module: "NillaShell", methods: [...shell.methods, "bogusShellMethod"] }]).unchecked, ["NillaApp.bogusAppMethod", "NillaShell.bogusShellMethod"]);
 });
 
 test("the allow-to-reject list names only methods that still reach the native host unadvertised", () => {
   const host = linuxHost();
-  const declared = new Set(REQUIRED.flatMap(({ module, methods }) => methods.map((method) => `${module}.${method}`)));
+  const declared = new Set(REQUIRED.flatMap(({ module, methods }) => methods.map((method) => `${hostModuleName(module, method)}.${method}`)));
   const stale = [...ALLOWED_TO_REJECT].filter((name) => {
     const [module, method] = name.split(".");
     return !declared.has(name) || !reachesNativeHostUnchecked(resolveHostModule(host, module, method)) || advertised.includes(name) || routedNatively.has(name);
@@ -151,7 +153,7 @@ const olderEngine = (...missing) => {
 
 const NOTIFICATION_CALLS = ["ArdiaApp.notificationPermission", "ArdiaApp.requestNotificationPermission", "ArdiaApp.postNotification", "ArdiaApp.removeNotifications"];
 
-test("Ardia's notifications and the bang list fetch reach the engine that advertises them", async () => {
+test("Nilla's notifications and the bang list fetch reach the engine that advertises them", async () => {
   for (const name of [...NOTIFICATION_CALLS, "ArdiaShell.fetchBangList"]) {
     assert.ok(advertised.includes(name), name);
     const [module, method] = name.split(".");
@@ -212,7 +214,7 @@ test("the bootstrap parser sees capabilities the host appends from its capabilit
   for (const name of advertisedLoops) assert.ok(capabilityArrays.get(name)?.length, `${name} isn't a string array the parser can read`);
 });
 
-test("the ardia command and the user-scripts folder route to the engine that advertises them", async () => {
+test("the nilla-browser command and the user-scripts folder route to the engine that advertises them, and installing the command stays off in Layer 1", async () => {
   for (const name of ["ArdiaCli.installedVersion", "ArdiaCli.install", "ArdiaAutomation.start", "ArdiaAutomation.stop", "ArdiaAutomation.reply", "ArdiaAutomation.broadcast", "ArdiaUserScripts.watch", "ArdiaUserScripts.read", "ArdiaUserScripts.readStatus", "ArdiaUserScripts.writeStatus"]) {
     assert.ok(advertised.includes(name), name);
   }
@@ -221,7 +223,11 @@ test("the ardia command and the user-scripts folder route to the engine that adv
   assert.equal(host.bootstrap.capabilities.some((capability) => cli.includes(capability)), false);
   assert.equal(resolveHostModule(host, "ArdiaCli", "installedVersion")(), null);
   assert.equal((await resolveHostModule(host, "ArdiaCli", "install")().catch((error) => error)).code, "ERR_UNAVAILABLE");
-  await assert.rejects(resolveHostModule(linuxHost(), "ArdiaCli", "install")(), /Unsupported Linux host method: ArdiaCli.install/);
+  const advertising = linuxHost();
+  const reached = [];
+  advertising.invoke = async (method) => (reached.push(method), null);
+  assert.equal((await resolveHostModule(advertising, "ArdiaCli", "install")().catch((error) => error)).code, "ERR_UNAVAILABLE");
+  assert.equal(reached.includes("ArdiaCli.install"), false, "ArdiaCli.install never reaches an engine that advertises it");
 });
 
 test("problem reports without their engine, the local telemetry copy and hardware details answer on Linux without reaching the host, and nothing throws where the shared code doesn't catch", async () => {
@@ -252,13 +258,17 @@ test("problem reports without their engine, the local telemetry copy and hardwar
   assert.equal(unserved("removeFile")("/tmp/x"), undefined);
   assert.equal(unserved("cancelUploads")(), undefined);
   assert.throws(() => unserved("draftDirectory")(), { code: "ERR_UNAVAILABLE" });
-  assert.equal((await unserved("upload")("f", "https://ardia.dev", "PUT", {}, "/tmp/f")).status, 0);
-  assert.equal((await unserved("post")("https://ardia.dev/api/feedback", "{}", {})).status, 0);
+  assert.equal((await unserved("upload")("f", "https://example.org", "PUT", {}, "/tmp/f")).status, 0);
+  assert.equal((await unserved("post")("https://example.org/api/feedback", "{}", {})).status, 0);
   const served = linuxHost();
   const reached = [];
   served.invoke = async (method) => (reached.push(method), null);
-  for (const method of ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText", "upload", "post", "cancelUploads"]) await resolveHostModule(served, "ArdiaReport", method)();
-  assert.deepEqual(reached, ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText", "upload", "post", "cancelUploads"].map((method) => `ArdiaReport.${method}`), "an engine that advertises report.files and report.send is asked");
+  for (const method of ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText"]) await resolveHostModule(served, "ArdiaReport", method)();
+  assert.deepEqual(reached, ["draftDirectory", "fileSize", "removeFile", "gzipFile", "gzipText"].map((method) => `ArdiaReport.${method}`), "an engine that advertises report.files is asked");
+  assert.equal((await resolveHostModule(served, "ArdiaReport", "upload")("f", "https://example.com", "PUT", {}, "/tmp/f")).status, 0);
+  assert.equal((await resolveHostModule(served, "ArdiaReport", "post")("https://example.com/api/feedback", "{}", {})).status, 0);
+  assert.equal(resolveHostModule(served, "ArdiaReport", "cancelUploads")(), undefined);
+  assert.equal(reached.length, 5, "sending stays off in Layer 1 even when the engine advertises report.send");
   const withoutHardware = olderEngine("ArdiaApp.hardwareInfo");
   withoutHardware.invoke = host.invoke;
   assert.deepEqual(await settle(resolveHostModule(withoutHardware, "ArdiaApp", "hardwareInfo")()), { code: "ERR_UNAVAILABLE" });
@@ -316,8 +326,8 @@ test("reading the clipboard uses the shell's own clipboard on Linux until the na
   try {
     withClipboard(undefined);
     assert.equal(await read(), "");
-    withClipboard({ readText: async () => "https://ardia.dev/" });
-    assert.equal(await read(), "https://ardia.dev/");
+    withClipboard({ readText: async () => "https://example.org/" });
+    assert.equal(await read(), "https://example.org/");
     withClipboard({ readText: async () => { throw new DOMException("denied", "NotAllowedError"); } });
     assert.equal(await read(), "");
   } finally {
@@ -507,7 +517,7 @@ function fakeDom() {
       fullscreenElement: null,
       focused: true,
       hasFocus: () => dom.document.focused,
-      querySelector: (selector) => (selector === ".ardia-window" ? frame : null),
+      querySelector: (selector) => (selector === ".nilla-window" ? frame : null),
       getElementById: (id) => head.find((style) => style.id === id) ?? null,
       createElement: () => ({ id: "", textContent: "" }),
       head: { append: (style) => head.push(style) },
@@ -690,4 +700,17 @@ test("Linux never reports screenEdge: its edge watch peeks when the pointer leav
   assert.deepEqual([...sent[0].matchAll(/\.Set\("(\w+)"/g)].map((m) => m[1]), ["type", "id", "over", "point"]);
   const shell = readFileSync(new URL("./shims/web/motion/sidebarEdge.ts", import.meta.url), "utf8");
   assert.ok(!shell.includes("screenEdge"));
+});
+
+test("About and problem reports name the app Nilla while the engine's own system details, bundle id included, pass through", () => {
+  const engineAppName = nativeHost.match(/Set\("appName", "([^"]+)"\)/)?.[1];
+  assert.ok(engineAppName, "the engine reports an appName");
+  const reported = { appName: engineAppName, appVersion: "0.1.0", appBuild: "7", bundleId: "dev.ardia.linux", configuration: "Release", osVersion: "6.8", osBuild: "Linux", arch: "x86_64", model: "PC", memoryGB: 16, locale: "en-US" };
+  const host = { bootstrap: { windowId: "main", profileId: "default", capabilities: [], nativeModules: { ArdiaApp: { systemInfo: reported } } } };
+  assert.equal(APP_NAME, "Nilla");
+  assert.deepEqual(reportedSystemInfo(host), { ...reported, appName: "Nilla" });
+  assert.equal(reported.appName, engineAppName);
+  assert.equal(reportedSystemInfo({ bootstrap: { windowId: "main", profileId: "default", capabilities: [] } }), undefined);
+  assert.equal(reportedSystemInfo(undefined), undefined);
+  assert.match(read("./shims/shellBase.tsx"), /export const systemInfo = \(\): SystemInfo => nillaHost \? reportedSystemInfo\(nillaHost\) \?\? \{/);
 });

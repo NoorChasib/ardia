@@ -1,15 +1,15 @@
 import Foundation
 
 public enum PhoneTestBuild {
-  public static let isOn = (Bundle.main.object(forInfoDictionaryKey: "ArdiaTestBuild") as? String)?.uppercased() == "YES"
+  public static let isOn = (Bundle.main.object(forInfoDictionaryKey: "NillaTestBuild") as? String)?.uppercased() == "YES"
 
   public static func flag(_ key: String) -> Bool {
     isOn && UserDefaults.standard.bool(forKey: key)
   }
 
-  static let argumentPrefixes = ["Ardia", "Browse"]
+  static let argumentPrefixes = ["Nilla", "Browse"]
 
-  public static var isDemo: Bool { flag("ArdiaDemo") || flag("ArdiaSyncDemo") }
+  public static var isDemo: Bool { flag("NillaDemo") || flag("NillaSyncDemo") }
 
   public static var launchArguments: [String: Any] {
     arguments(UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain), allowed: isOn)

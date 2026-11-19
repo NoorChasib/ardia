@@ -163,7 +163,7 @@ test("a window expects a field while it has no active tab or its active tab is a
   const state = (tabs, active) => ({ windows: { w: { id: "w", profileId: "p", activeTabIds: active ? { p: active } : {} } }, tabs });
   assert.equal(windowExpectsField(state({}, null), "w"), true);
   assert.equal(windowExpectsField(state({ t: { id: "t", windowId: "w", url: "" } }, "t"), "w"), true);
-  assert.equal(windowExpectsField(state({ t: { id: "t", windowId: "w", url: "https://ardia.test/" } }, "t"), "w"), false);
+  assert.equal(windowExpectsField(state({ t: { id: "t", windowId: "w", url: "https://nilla.test/" } }, "t"), "w"), false);
   assert.equal(windowExpectsField({ windows: {}, tabs: {} }, "w"), true);
 });
 

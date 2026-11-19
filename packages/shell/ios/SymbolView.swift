@@ -25,8 +25,8 @@ final class SymbolView: ExpoView {
     addSubview(imageView)
     glyph.actions = ["bounds": NSNull(), "position": NSNull(), "contents": NSNull(), "contentsScale": NSNull(), "opacity": NSNull()]
     glyph.contentsGravity = .resize
-    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .ArdiaInterfaceScaleDidChange, object: nil)
-    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .ArdiaInterfaceScaleDidSettle, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .NillaInterfaceScaleDidChange, object: nil)
+    NotificationCenter.default.addObserver(self, selector: #selector(interfaceScaleDidChange), name: .NillaInterfaceScaleDidSettle, object: nil)
     update()
   }
 

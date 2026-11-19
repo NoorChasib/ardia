@@ -10,7 +10,7 @@ import { TitleBandDrag } from "./windowDragRegion";
 
 type RootProps = { children?: ReactNode; initialProps?: { windowId?: unknown } | null };
 
-const selfChecking = () => !!TurboModuleRegistry.get<WindowsHostModule>("ArdiaWindowsHost")?.getConstants?.()?.selfCheck;
+const selfChecking = () => !!TurboModuleRegistry.get<WindowsHostModule>("NillaWindowsHost")?.getConstants?.()?.selfCheck;
 
 function WindowRoot({ children, initialProps }: RootProps) {
   const windowId = typeof initialProps?.windowId === "string" ? initialProps.windowId : "";

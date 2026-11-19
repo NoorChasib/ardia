@@ -1,4 +1,4 @@
-import { actionSheet, ContextMenuView, labLog, nativeMenusAvailable, type MenuItem } from "@ardia/phone-native";
+import { actionSheet, ContextMenuView, labLog, nativeMenusAvailable, type MenuItem } from "@nilla/phone-native";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 

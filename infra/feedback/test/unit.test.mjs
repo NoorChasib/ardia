@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { APP_INGEST_KEY, CLI_INGEST_KEY, SITE_INGEST_KEY } from "../lib/core.mjs";
+import { LOCAL_KEYS, acceptedKeys, isLoopbackHost, surfaceByKey } from "../lib/keys.mjs";
 import { rateLimiter } from "../lib/http.mjs";
 import { ID_ALPHABET, ID_PATTERN, newId, normalizeId, randomId } from "../lib/ids.mjs";
 import { quietMentions, scrubForIssue, scrubText } from "../lib/scrub.mjs";
@@ -137,7 +136,7 @@ test("scrubText removes emails, secrets, URL queries and home paths", () => {
   const ghp = `ghp_${"a1B2".repeat(9)}`;
   const jwt = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U";
   const cases = [
-    ["mail me at jane.doe+ardia@example.co.uk please", "mail me at [email] please"],
+    ["mail me at jane.doe+nilla@example.co.uk please", "mail me at [email] please"],
     [`token ${ghp} leaked`, "token [secret] leaked"],
     [`github_pat_${"x".repeat(30)}`, "[secret]"],
     ["key sk-ant-api03-abcdefghijklmnopqrstuvwxyz0123", "key [secret]"],
@@ -191,7 +190,7 @@ test("scrubText removes emails, secrets, URL queries and home paths", () => {
 });
 
 test("quietMentions keeps GitHub from pinging anyone", () => {
-  assert.equal(quietMentions("ping @mantrakp04 and @org/team"), "ping @\u200bmantrakp04 and @\u200borg/team");
+  assert.equal(quietMentions("ping @alice and @org/team"), "ping @\u200balice and @\u200borg/team");
   assert.equal(quietMentions("`@types/node`"), "`@types/node`");
   assert.equal(scrubForIssue("me@example.com @bob"), "[email] @\u200bbob");
 });
@@ -203,16 +202,16 @@ test("issueFor puts only public-safe fields in the issue", () => {
     contact: "jane@x.io", page_address: "https://secret.example/a", diagnostics: { tabs: 400 },
     attachments: [{ name: "recording.mp4", bytes: 1, type: "video/mp4" }], install_id: INSTALL,
   };
-  const issue = issueFor(report, "https://dash.ardia.dev");
+  const issue = issueFor(report, "https://dash.example.test");
   assert.deepEqual(issue.labels, ["feedback", "bug"]);
   assert.deepEqual(issueFor({ ...report, kind: "bug" }, "https://d").labels, ["feedback", "bug"]);
   assert.deepEqual(issueFor({ ...report, kind: "idea" }, "https://d").labels, ["feedback", "enhancement"]);
   assert.deepEqual(issueFor({ ...report, kind: "other" }, "https://d").labels, ["feedback"]);
   assert.equal(issue.title, "Slow @\u200bbob");
   assert.match(issue.body, /Typing lags at \/Users\/\[user\]\/x, mail \[email\]/);
-  assert.match(issue.body, /\| Version \| Ardia 0\.2\.45 \(45\\\|12\) nightly \|/);
+  assert.match(issue.body, /\| Version \| Nilla 0\.2\.45 \(45\\\|12\) nightly \|/);
   assert.match(issue.body, /\| macOS \| 26\.1 \|/);
-  assert.match(issue.body, /https:\/\/dash\.ardia\.dev\/feedback\/FB-AB23/);
+  assert.match(issue.body, /https:\/\/dash\.example\.test\/feedback\/FB-AB23/);
   for (const secret of ["jane@x.io", "secret.example", "recording.mp4", "400", INSTALL, "arm64"]) assert.ok(!issue.body.includes(secret), secret);
   const leaky = issueFor({ ...report, title: "password=hunter2", description: 'password="part1\\"part2"\nAuthorization: Digest username="bob",\n  response="secretresponse"\ncurl --password hunter3 -H "X-Api-Key: short-secret"\nCookie: session="shortsecret"; other=anothersecret\ncurl --password "part3"\'part4\' x\ncurl --password part5\\ part6\nPASSWORD="part7\npart8"\nAuthorization: Digest realm="api",\n  username*=UTF-8\'\'bob,\n  response="part9",\n  opaque="part10"' }, "https://d");
   const leaky2 = issueFor({ ...report, title: "t", description: ["private_key: -----BEGIN PRIVATE KEY-----\nMC4CAQAwBQYDK2VwBCIEIKEYBODY91\n-----END PRIVATE KEY-----", "curl --password \\\nforgedPass91 https://example.com", "access_tokens:\n- forgedToken93", "curl -udemo:forgedPass94 https://example.com", 'const body = "{\\"password\\":\\"forgedPass95\\"}";', "DATABASE_URL=postgresql://demo:forgedPass96@localhost:5432/app", 'PASSWORD="""\nfirstSegment97"\nsecondSegment98\n"""', "curl -H 'Authorization: Bearer forgedToken99' https://example.com", "1. open a tab"].join("\n") }, "https://d");
@@ -237,9 +236,9 @@ test("feedbackEvent has the shape of other events", () => {
   const attachments = [{ name: "recording.mp4", bytes: 9, type: "video/mp4", received: true }];
   const body = feedbackEvent(report, { attachments, issue: { number: 12, url: "https://github.com/x/y/issues/12" }, completedAtMs: 1762516800000 });
   const [resource] = body.resourceLogs;
-  assert.deepEqual(resource.resource.attributes[0], { key: "service.name", value: { stringValue: "ardia-feedback" } });
+  assert.deepEqual(resource.resource.attributes[0], { key: "service.name", value: { stringValue: "nilla-feedback" } });
   const record = resource.scopeLogs[0].logRecords[0];
-  assert.equal(resource.scopeLogs[0].scope.name, "ardia.analytics");
+  assert.equal(resource.scopeLogs[0].scope.name, "nilla.analytics");
   assert.equal(record.body.stringValue, "feedback_submitted");
   assert.equal(record.timeUnixNano, "1762516800000000000");
   const attrs = Object.fromEntries(record.attributes.map((a) => [a.key, a.value]));
@@ -266,7 +265,15 @@ test("rateLimiter allows a burst per key, then refills over the window", () => {
   assert.equal(allow("a"), true);
 });
 
-test("nginx knows every ingest key", () => {
-  const nginx = readFileSync(new URL("../../site/nginx.conf", import.meta.url), "utf8");
-  for (const key of [APP_INGEST_KEY, CLI_INGEST_KEY, SITE_INGEST_KEY]) assert.ok(nginx.includes(`"${key}"`), key);
+test("production keys come only from the environment, never the local test keys, and --local uses only the test keys", () => {
+  assert.deepEqual(acceptedKeys("local", { FEEDBACK_APP_KEY: "real-app", FEEDBACK_CLI_KEY: "real-cli" }), LOCAL_KEYS);
+  assert.deepEqual(acceptedKeys("production", { FEEDBACK_APP_KEY: "real-app", FEEDBACK_CLI_KEY: "real-cli" }), { app: "real-app", cli: "real-cli" });
+  assert.throws(() => acceptedKeys("production", {}), /required/);
+  assert.throws(() => acceptedKeys("production", { FEEDBACK_APP_KEY: "real-app" }), /required/);
+  assert.throws(() => acceptedKeys("production", { FEEDBACK_APP_KEY: LOCAL_KEYS.app, FEEDBACK_CLI_KEY: "real-cli" }), /refused outside --local/);
+  assert.throws(() => acceptedKeys("production", { FEEDBACK_APP_KEY: "same", FEEDBACK_CLI_KEY: "same" }), /must differ/);
+  assert.deepEqual([...surfaceByKey(LOCAL_KEYS)], [[LOCAL_KEYS.app, "app"], [LOCAL_KEYS.cli, "cli"]]);
+  assert.throws(() => surfaceByKey(undefined), /needs an app key/);
+  for (const host of ["127.0.0.1", "::1", "[::1]", "localhost"]) assert.equal(isLoopbackHost(host), true, host);
+  for (const host of ["0.0.0.0", "192.168.1.2", "example.com", ""]) assert.equal(isLoopbackHost(host), false, host);
 });

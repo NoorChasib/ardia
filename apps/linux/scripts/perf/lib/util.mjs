@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 export const REPO_ROOT = fileURLToPath(new URL("../../../../../", import.meta.url)).replace(/\/$/, "");
 export const ENGINE_STORE = join(REPO_ROOT, "apps/browser/build-ardiacore/prebuilt-linux-x86_64");
 export const DEFAULT_OUT = join(REPO_ROOT, "output/linux-bench");
-export const DEFAULT_LOCK = "/tmp/ardia-perflab.lock";
+export const DEFAULT_LOCK = "/tmp/nilla-perflab.lock";
 
 export const LINUX_BRIDGE = "ardia-linux-bridge.js";
 

@@ -43,7 +43,7 @@ function macWatcher() {
       native.pressedInside = false;
     }
   };
-  shellNativeModules.ArdiaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false, whilePressed = false) => {
+  shellNativeModules.NillaAppWindows.watchSidebarEdge = (id, on, hold = 0, right = false, whilePressed = false) => {
     if (!on) Object.assign(native, { watching: false, over: false });
     else {
       Object.assign(native, { watching: true, hold, whilePressed, unreported: true });

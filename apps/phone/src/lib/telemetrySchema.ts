@@ -1,5 +1,5 @@
-export const PHONE_LIB = "ardia-phone-telemetry";
-export const PHONE_SERVICE = "ardia-phone";
+export const PHONE_LIB = "nilla-phone-telemetry";
+export const PHONE_SERVICE = "nilla-phone";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[47][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const VERSION = /^\d{1,4}(\.\d{1,4}){0,3}(-[a-z]+\.\d{1,4})?$/;
@@ -18,7 +18,7 @@ export type FieldRule =
 export const CONTEXT_FIELDS = {
   $lib: { kind: "const", value: PHONE_LIB },
   $lib_version: { kind: "const", value: "1" },
-  $app_name: { kind: "const", value: "Ardia" },
+  $app_name: { kind: "const", value: "Nilla" },
   app: { kind: "const", value: "phone" },
   platform: { kind: "enum", values: ["android", "ios"] },
   $app_version: { kind: "pattern", pattern: VERSION },
@@ -126,7 +126,7 @@ export function eventContext(device: DeviceFacts, sessionId: string): Record<str
   return {
     $lib: PHONE_LIB,
     $lib_version: "1",
-    $app_name: "Ardia",
+    $app_name: "Nilla",
     app: "phone",
     platform: device.platform,
     $app_version: device.appVersion,

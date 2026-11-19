@@ -1,5 +1,5 @@
 import { call } from "@ardia/ardiacore";
-import type { SearchEngine } from "@ardia/core";
+import type { SearchEngine } from "@nilla/core";
 
 export const setPeekModifier = (modifier: "alt" | "shift" | "off") => call("webView.setPeekModifier", { modifier });
 export const setSplitLinkModifier = (modifier: "alt" | "altShift") => call("webView.setSplitLinkModifier", { modifier });

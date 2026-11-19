@@ -1,4 +1,4 @@
-import { OutsidePressArea, showMenu, type MenuItem } from "@ardia/shell";
+import { OutsidePressArea, showMenu, type MenuItem } from "@nilla/shell";
 import { withIconNames } from "../../lib/activeLook";
 import { POP_UP_CHROME } from "../../lib/platformChrome";
 import { modifiersOf, type ClickModifiers } from "../../lib/keys";

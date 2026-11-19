@@ -35,7 +35,7 @@ test("a profile switch is written to the focus history", () => {
   assert.match(internal, /void NoteProfileSwitch\(ArdiaCoreProfile \*profile, NSWindow \*_Nullable window\);/);
   const show = body(windowHost, "report:(void (^)(BOOL, double, double, BOOL))report");
   const setActive = show.indexOf("coreWindow.activeProfile = p;");
-  const noted = show.indexOf("ardia_host::NoteProfileSwitch(p, coreWindow.window);");
+  const noted = show.indexOf("nilla_host::NoteProfileSwitch(p, coreWindow.window);");
   assert.ok(setActive >= 0 && noted > setActive, "showProfile notes the switch right after it sets the active profile");
 });
 
@@ -47,7 +47,7 @@ test("Copy Diagnostics lists, per browser window, its number, the page's mouse-i
   assert.match(lines, /@"browser #%ld ", \(long\)window\.windowNumber/);
   assert.match(lines, /PageMoveResult\(window, WindowCentre\(window\), NO\)/);
   assert.match(lines, /@"page move at centre %@", move\.length \? move : @"no page view"/);
-  assert.match(lines, /ArdiaChromeWindowHost\.focusHandoffSummaryHandler/);
+  assert.match(lines, /NillaChromeWindowHost\.focusHandoffSummaryHandler/);
   assert.match(lines, /handoff\(window\)/);
   assert.doesNotMatch(lines, /activeSummary/);
 });
@@ -69,12 +69,12 @@ test("a window's key epoch and paste gate are read from FocusHandoff without cha
   assert.match(summary, /paste gate \\\(state\), \\\(gate\.generations\.count\) generations, \\\(gate\.held\.count\) held/);
   assert.doesNotMatch(summary, /(epochs|gates)\[[^\]]*\]\s*(=|\+=)(?!=)/);
   assert.doesNotMatch(summary, /\.(append|insert|remove|end|note)\(/);
-  assert.match(chromeWindows, /ArdiaChromeWindowHost\.focusHandoffSummaryHandler = \{ FocusHandoff\.shared\.summary\(of: \$0\) \}/);
+  assert.match(chromeWindows, /NillaChromeWindowHost\.focusHandoffSummaryHandler = \{ FocusHandoff\.shared\.summary\(of: \$0\) \}/);
   assert.match(windowHostHeader, /@property\(class, nonatomic, copy, nullable\) NSString \*\(\^focusHandoffSummaryHandler\)\(NSWindow \*window\);/);
   assert.match(windowHost, /gFocusHandoffSummary = \[handler copy\];/);
   assert.match(windowHost, /return gFocusHandoffSummary;/);
 });
 
 test("engineInfo already returns the Focus block that Copy Diagnostics prints", () => {
-  assert.match(body(host, "+ (NSDictionary<NSString *, id> *)engineInfo"), /@"focus" : ardia_host::FocusState\(\)/);
+  assert.match(body(host, "+ (NSDictionary<NSString *, id> *)engineInfo"), /@"focus" : nilla_host::FocusState\(\)/);
 });

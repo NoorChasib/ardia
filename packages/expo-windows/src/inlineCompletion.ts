@@ -1,4 +1,4 @@
-import type { InlineCompletionNative, InlineWrite } from "@ardia/shell";
+import type { InlineCompletionNative, InlineWrite } from "@nilla/shell";
 import type { WindowsHostModule } from "./nativeModuleTypes";
 
 const NOT_WRITTEN: InlineWrite = 0;

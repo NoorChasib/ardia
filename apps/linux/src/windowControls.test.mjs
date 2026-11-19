@@ -38,9 +38,9 @@ test("one click on Close shows one confirmation through Linux's own close coordi
   const S = () => useBrowser.getState();
   S().hydrate({ profiles: { default: { id: "default", name: "Personal", color: "plum", icon: null, createdAt: 0 } }, profileOrder: ["default"] });
   S().updateSettings({ warnBeforeClosingWindow: true });
-  S().createWindow({ url: "https://staying.ardia.test/" });
-  const leaving = S().createWindow({ url: "https://one.ardia.test/" });
-  S().newTab(leaving, { url: "https://two.ardia.test/" });
+  S().createWindow({ url: "https://staying.nilla.test/" });
+  const leaving = S().createWindow({ url: "https://one.nilla.test/" });
+  S().newTab(leaving, { url: "https://two.nilla.test/" });
   const asked = [];
   const drained = [];
   let answer = { confirmed: false, suppressed: false };
@@ -66,8 +66,8 @@ test("one click on Close shows one confirmation through Linux's own close coordi
     barrier,
     cancelled: barrier.cancelled,
   });
-  const previous = stub.shellNativeModules.ArdiaAppWindows.closeWindow;
-  stub.shellNativeModules.ArdiaAppWindows.closeWindow = (id) => coordinator.closeWindow(id);
+  const previous = stub.shellNativeModules.NillaAppWindows.closeWindow;
+  stub.shellNativeModules.NillaAppWindows.closeWindow = (id) => coordinator.closeWindow(id);
   const until = async (done) => { for (let i = 0; i < 50 && !done(); i++) await settle(); };
   try {
     const { closeFromWindowControls } = await import("./captionControls.ts");
@@ -83,7 +83,7 @@ test("one click on Close shows one confirmation through Linux's own close coordi
     assert.deepEqual(asked, ["Close 2 tabs?", "Close 2 tabs?"], "one confirmation per click");
     assert.equal(drained.length, 1);
   } finally {
-    stub.shellNativeModules.ArdiaAppWindows.closeWindow = previous;
+    stub.shellNativeModules.NillaAppWindows.closeWindow = previous;
   }
 });
 
@@ -95,7 +95,7 @@ test("never two menu buttons with F11 full screen: the … while the window butt
     assert.equal(menuBesideWindowButtons(state(settings, { fullScreen: true }), "w", false, windowsChrome), false, JSON.stringify(settings));
     assert.equal(linuxSidebarHeaderCollapsed(state(settings, { fullScreen: true }), "w", false, windowsChrome), false, JSON.stringify(settings));
   }
-  assert.equal(menuBesideWindowButtons(state({}, { kind: "small" }), "w", false, windowsChrome), true, "Little Ardia's bar holds it");
+  assert.equal(menuBesideWindowButtons(state({}, { kind: "small" }), "w", false, windowsChrome), true, "Little Nilla's bar holds it");
   const fullScreen = state({}, { fullScreen: true });
   assert.equal(sidebarHeaderCollapsed(fullScreen, "w", windowsChrome), true, "the Windows rule hides the header in full screen");
   assert.equal(linuxSidebarHeaderCollapsed(state(), "w", false, windowsChrome), true, "with the menu beside the buttons the header collapses as on Windows");

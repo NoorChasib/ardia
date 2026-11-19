@@ -40,8 +40,8 @@ final class ContextMenuArea: ExpoView {
 
 enum PressRelease {
   private static let handlerOfView = NSSelectorFromString("touchHandlerForView:")
-  private static let releaseForMenu = NSSelectorFromString("ardia_releaseTouchForMenuWithEvent:")
-  private static let cancelledWithoutRelease = "ardia_touchesCancelledWithoutRelease"
+  private static let releaseForMenu = NSSelectorFromString("nilla_releaseTouchForMenuWithEvent:")
+  private static let cancelledWithoutRelease = "nilla_touchesCancelledWithoutRelease"
   private static let repeatWithin: TimeInterval = 3
   private static let repeatDistance: CGFloat = 12
   private static let classesKept = 4

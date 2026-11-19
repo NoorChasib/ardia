@@ -11,7 +11,7 @@ enum HapticLog {
     return (dir as NSString).appendingPathComponent("haptics.log")
   }()
 
-  private static let queue = DispatchQueue(label: "ardia.haptic-log", qos: .utility)
+  private static let queue = DispatchQueue(label: "nilla.haptic-log", qos: .utility)
   private static let maxBytes: UInt64 = 64 * 1024
 
   static func note(_ pattern: String) {

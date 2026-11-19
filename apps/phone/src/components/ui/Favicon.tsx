@@ -1,4 +1,4 @@
-import { favicons } from "@ardia/phone-native";
+import { favicons } from "@nilla/phone-native";
 import { requireOptionalNativeModule } from "expo-modules-core";
 import { memo, useEffect, useMemo, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
@@ -10,7 +10,7 @@ import { faviconInk } from "./tokens";
 
 const failedIcons = new Set<string>();
 const looks = new Map<string, Promise<FaviconLookResult>>();
-const readsLooks = requireOptionalNativeModule("ArdiaPhoneFavicons") !== null;
+const readsLooks = requireOptionalNativeModule("NillaPhoneFavicons") !== null;
 
 function lookOf(url: string, dark: boolean): Promise<FaviconLookResult> {
   const key = `${dark ? "d" : "l"}|${url}`;

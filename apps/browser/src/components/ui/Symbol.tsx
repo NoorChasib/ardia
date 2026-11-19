@@ -1,4 +1,4 @@
-import { Symbol as NativeSymbol, type SymbolProps } from "@ardia/shell";
+import { Symbol as NativeSymbol, type SymbolProps } from "@nilla/shell";
 import { iconName } from "../../lib/activeLook";
 import { hex, useScopedTheme } from "./theme";
 

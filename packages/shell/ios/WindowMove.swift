@@ -21,7 +21,7 @@ let installWindowMoveFallback: Void = {
 }()
 
 enum WindowMove {
-  static let willDrag = Notification.Name("ArdiaWindowMoveWillDrag")
+  static let willDrag = Notification.Name("NillaWindowMoveWillDrag")
   static let replacesNativeDrag = ProcessInfo.processInfo.isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 27, minorVersion: 2, patchVersion: 0))
   private static var following = false
   private static weak var moving: NSWindow?
@@ -130,11 +130,11 @@ enum WindowMove {
     else { return false }
     following = true
     moving = window
-    ArdiaHost.beginPressLoop("windowMove")
+    NillaHost.beginPressLoop("windowMove")
     ShellEvents.send(.app, ["type": "windowDragLoop"])
     if holdsPlacement { placements.setObject(Placements(), forKey: window) }
     defer {
-      ArdiaHost.endPressLoop()
+      NillaHost.endPressLoop()
       following = false
       moving = nil
       placements.object(forKey: window)?.drainsUntil = CACurrentMediaTime() + echoDrain

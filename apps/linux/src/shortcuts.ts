@@ -1,4 +1,4 @@
-import type { BrowserCommand, MenuShortcut, ShortcutModifier } from "@ardia-real/shell";
+import type { BrowserCommand, MenuShortcut, ShortcutModifier } from "@nilla-real/shell";
 import { commandSpec, LINUX_STANDARD_ITEMS, shortcutSources } from "./commandCatalog";
 import { resolveShortcuts, type ShortcutOverrides } from "./shortcutFormat";
 import { BROWSER_WINDOW_COMMANDS } from "./browserCommandRoute";
@@ -35,12 +35,12 @@ const commandTitle = (id: string) => {
   const spec = commandSpec(command!);
   return (arg && spec?.variants?.[arg]?.title) || spec?.title || `${command!.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase())}${arg ? ` ${arg}` : ""}`;
 };
-const legacyPathOf = (command: string) => LINUX_STANDARD_ITEMS[command]?.path ?? (/Settings|Profile/.test(command) ? "Ardia" : /Tab|Window|Group/.test(command) ? "Tabs" : /find|Find|Selection|copy/.test(command) ? "Edit" : /bookmark|Bookmark/.test(command) ? "Bookmarks" : /History|Browsing|downloads|back|forward/.test(command) ? "History" : "View");
+const legacyPathOf = (command: string) => LINUX_STANDARD_ITEMS[command]?.path ?? (/Settings|Profile/.test(command) ? "Nilla" : /Tab|Window|Group/.test(command) ? "Tabs" : /find|Find|Selection|copy/.test(command) ? "Edit" : /bookmark|Bookmark/.test(command) ? "Bookmarks" : /History|Browsing|downloads|back|forward/.test(command) ? "History" : "View");
 const PROFILES_MENU = ["Window", "Profiles"];
 const PROFILES_MENU_COMMANDS: ReadonlySet<string> = new Set(["switchProfile", "nextProfile", "previousProfile", "newProfile"]);
 const PER_PROFILE_PATHS: Readonly<Record<string, readonly string[]>> = {
   switchProfile: PROFILES_MENU,
-  newLittleArdia: ["File", "New Little Ardia Window in Profile"],
+  newLittleNilla: ["File", "New Little Nilla Window in Profile"],
 };
 export type ProfileNames = Readonly<Record<string, { name: string } | undefined>>;
 const profileRow = (id: string, profileNames: ProfileNames) => {

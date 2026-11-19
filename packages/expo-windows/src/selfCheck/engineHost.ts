@@ -1,5 +1,5 @@
 import type { DomainModule } from "@ardia/ardiacore";
-import type { AppNative, WindowsNative } from "@ardia/shell";
+import type { AppNative, WindowsNative } from "@nilla/shell";
 import { TurboModuleRegistry } from "react-native";
 import type { AppWindowsModule, EngineHostModule } from "../nativeModuleTypes";
 import { engineAvailable, engineCallJson, hostCall, onEngineTopic, removeProfileFolder } from "../engine/host";
@@ -20,24 +20,24 @@ const SHOWN_AT = { unit: "px", x: 40, y: 60, width: 300, height: 240 };
 type KeyboardInfo = { keyboardPage?: unknown; keyboardMayMove?: unknown; keyboardWanted?: unknown };
 const keyboardInfo = () => hostCall<KeyboardInfo>("host.info");
 const focusAsked = async () => ((await keyboardInfo()).keyboardMayMove === true ? {} : { background: true });
-const PAGE_TITLE = "ardia self check";
+const PAGE_TITLE = "nilla self check";
 const PAGE_URL = `data:text/html,<title>${PAGE_TITLE}</title><p>the engine loaded this page</p>`;
-const NEXT_PAGE_TITLE = "ardia self check, next document";
+const NEXT_PAGE_TITLE = "nilla self check, next document";
 const NEXT_PAGE_URL = `data:text/html,<title>${NEXT_PAGE_TITLE}</title><p>the page that replaced the asking document</p>`;
-const FLOOD_GUARD_REARM_URL = "hcp:ardia-self-check";
+const FLOOD_GUARD_REARM_URL = "hcp:nilla-self-check";
 const PAGE_PLACE = { x: 40, y: 60, width: 320, height: 240 };
 const LOAD_MS = 20000;
 const PAINT_MS = 500;
 const JPEG_BASE64 = "/9j/";
 
 const engineHost = () => {
-  const found = TurboModuleRegistry.get<EngineHostModule>("ArdiaEngineHost");
-  expectTrue(found, "ArdiaEngineHost has no native module");
+  const found = TurboModuleRegistry.get<EngineHostModule>("NillaEngineHost");
+  expectTrue(found, "NillaEngineHost has no native module");
   return found;
 };
 
-const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("ArdiaAppWindows");
-const launchData = () => requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().dataDirectory;
+const windows = () => requireNativeModule<Pick<WindowsNative, "windowIds">>("NillaAppWindows");
+const launchData = () => requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().dataDirectory;
 const domain = (name: string) => requireNativeModule<Pick<DomainModule, "call">>(name);
 
 const SECOND_PAGE_KEY = "self-check-second-page";
@@ -98,7 +98,7 @@ const withoutEngine: Check[] = [
       expectEqual(await engineHost().removeProfileFolder("Ardia x"), "refused", "a profile folder with no Chromium data beside it");
       expectEqual(await engineHost().removeProfileFolder("..\\System32"), "refused", "a name that leaves the folder");
       expectEqual(await engineHost().removeProfileFolder("Ardia x (removing)"), "refused", "a name the engine never makes");
-      expectEqual(await engineHost().removeProfileFolder("Ardia Work"), "refused", "a name Ardia never makes");
+      expectEqual(await engineHost().removeProfileFolder("Ardia Work"), "refused", "a name Nilla never makes");
       expectEqual(await engineHost().removeProfileFolder(`Ardia ${"a".repeat(239)}`), "refused", "a name with no room for the removal suffix");
     },
   },
@@ -127,7 +127,7 @@ const withEngine: Check[] = [
       const displayScale = page.width / PAGE_PLACE.width;
       expectTrue(displayScale >= 1 && Math.abs(page.height - PAGE_PLACE.height * displayScale) <= 1, `the page placed at ${PAGE_PLACE.width}×${PAGE_PLACE.height} is ${page.width}×${page.height} pixels`);
       await new Promise<void>((resolve) => setTimeout(resolve, PAINT_MS));
-      const picture = await requireNativeModule<Pick<AppWindowsModule, "capturePage">>("ArdiaAppWindows").capturePage(windowId, PAGE_PLACE.x, PAGE_PLACE.y, PAGE_PLACE.width, PAGE_PLACE.height, 1);
+      const picture = await requireNativeModule<Pick<AppWindowsModule, "capturePage">>("NillaAppWindows").capturePage(windowId, PAGE_PLACE.x, PAGE_PLACE.y, PAGE_PLACE.width, PAGE_PLACE.height, 1);
       expectTrue(picture.startsWith(JPEG_BASE64), `the shown page's picture is ${picture.slice(0, 16) || "empty"}`);
       await hostCall("tab.show", { key: PAGE_KEY, visible: false }, windowId);
       const hidden = (await hostCall<{ tabs: ListedTab[] }>("tabs.list")).tabs.find((tab) => tab.key === PAGE_KEY);
@@ -235,7 +235,7 @@ const withEngine: Check[] = [
   {
     name: "engine: clearing browsing data reaches the engine",
     async run() {
-      const profiles = requireNativeModule<Pick<DomainModule, "call">>("ArdiaProfiles");
+      const profiles = requireNativeModule<Pick<DomainModule, "call">>("NillaProfiles");
       expectEqual(await profiles.call("clearBrowsingData", "", JSON.stringify({ types: ["cache"], since: Date.now() - 60000 })), "null", "the reply to clearing a minute of cache");
       const refused = await profiles.call("clearBrowsingData", "", JSON.stringify({ types: ["no such data"], since: 0 })).then(
         () => false,
@@ -248,7 +248,7 @@ const withEngine: Check[] = [
     name: "engine: private windows of a profile share one session until the last is released, then the next gets a new one",
     async run() {
       const windowId = await firstWindow();
-      const profiles = domain("ArdiaProfiles");
+      const profiles = domain("NillaProfiles");
       const sessionOf = async (key: string) => (await hostCall<{ tabs: ListedTab[] }>("tabs.list")).tabs.find((tab) => tab.key === key)?.session;
       const open = async (key: string, profile: string) => {
         const made = await hostCall<{ tab?: unknown }>("tab.create", { key, url: PAGE_URL, profile }, windowId);
@@ -294,9 +294,9 @@ const withEngine: Check[] = [
         return asked;
       };
       const alive = async (id: unknown) => (await hostCall<{ alive?: unknown }>("tab.call", { key: PAGE_KEY, method: "externalAppAlive", id })).alive;
-      const ask = await pageAsk("ardia-self-check-link:hello", 10000);
+      const ask = await pageAsk("nilla-self-check-link:hello", 10000);
       if (!ask) throw new Error("no externalApp event within 10000 ms");
-      expectEqual({ url: ask.url, origin: ask.origin, offTheRecord: ask.offTheRecord }, { url: "ardia-self-check-link:hello", origin: null, offTheRecord: false }, "the externalApp ask");
+      expectEqual({ url: ask.url, origin: ask.origin, offTheRecord: ask.offTheRecord }, { url: "nilla-self-check-link:hello", origin: null, offTheRecord: false }, "the externalApp ask");
       expectTrue(typeof ask.id === "string" && /^[A-Za-z0-9_.:-]{1,64}$/.test(ask.id), `the ask's id is ${JSON.stringify(ask.id)}`);
       expectEqual(typeof ask.userGesture, "boolean", "the ask's userGesture");
       expectEqual({ whileTheDocumentIsThere: await alive(ask.id), answeredAgain: await alive(ask.id) }, { whileTheDocumentIsThere: true, answeredAgain: false }, "externalAppAlive for the data: page's ask");
@@ -304,10 +304,10 @@ const withEngine: Check[] = [
       for (let attempt = 0; attempt < 4 && !second; attempt++) {
         await hostCall("tab.call", { key: PAGE_KEY, method: "loadUrl", url: FLOOD_GUARD_REARM_URL, userInitiated: true });
         await new Promise((resolve) => setTimeout(resolve, 500));
-        second = await pageAsk("ardia-self-check-link:again", 3000);
+        second = await pageAsk("nilla-self-check-link:again", 3000);
       }
       if (!second) throw new Error("no second externalApp event from the data: page after 4 typed launches of a blocked scheme");
-      expectEqual({ url: second.url, origin: second.origin }, { url: "ardia-self-check-link:again", origin: null }, "the data: page's second externalApp ask");
+      expectEqual({ url: second.url, origin: second.origin }, { url: "nilla-self-check-link:again", origin: null }, "the data: page's second externalApp ask");
       const replaced = pageTitled(NEXT_PAGE_TITLE);
       await hostCall("tab.call", { key: PAGE_KEY, method: "loadUrl", url: NEXT_PAGE_URL });
       await replaced;
@@ -328,7 +328,7 @@ const withEngine: Check[] = [
       });
       try {
         for (let n = 0; n < 12; n++) {
-          await hostCall("tab.call", { key: PAGE_KEY, method: "loadUrl", url: `ardia-self-check-link:ask-${n}`, userInitiated: true });
+          await hostCall("tab.call", { key: PAGE_KEY, method: "loadUrl", url: `nilla-self-check-link:ask-${n}`, userInitiated: true });
           const by = Date.now() + 5000;
           while (ids.length <= n && Date.now() < by) await new Promise((resolve) => setTimeout(resolve, 50));
         }

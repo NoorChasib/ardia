@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { finishOnboarding } from "../../state/onboarding/onboarding";
-import { requestAppDownload } from "../../state/onboarding/demoSteps";
 import { copySetupCode, onboardingSetupCode } from "../../state/presets/actions";
 import { StepActions, StepLayout } from "./StepLayout";
 import { SecondaryButton } from "./Buttons";
@@ -23,20 +22,19 @@ export function SetupCodeOutro() {
     return () => clearTimeout(timer);
   }, [copied]);
 
-  const downloadAndCopy = () => {
+  const copy = () => {
     copySetupCode(code);
-    requestAppDownload();
     setCopied(true);
   };
 
   return (
     <StepLayout
       title="Your setup code"
-      subtitle="Paste it into Ardia after you download it, on its first screen or in Settings › General. Ardia sets itself up just like this."
+      subtitle="Paste it into Nilla on its first screen or in Settings › General, and Nilla sets itself up just like this."
       actions={
         <>
           <StepActions icon="arrow.right" continueTitle="Done" onContinue={() => finishOnboarding()} />
-          <SecondaryButton title={copied ? "Copied, downloading" : "Download & Copy"} filled onPress={downloadAndCopy} />
+          <SecondaryButton title={copied ? "Copied" : "Copy Setup Code"} filled onPress={copy} />
         </>
       }
       preview={<SetupLines heading="You picked:" lines={lines} />}
@@ -47,7 +45,7 @@ export function SetupCodeOutro() {
         </Text>
       </ChoiceCard>
       <Text size="small" color={colors.rowSubtitle} style={{ lineHeight: proseLineHeight.small }}>
-        It holds your layout, look and pinned apps. Search and privacy you pick in Ardia itself.
+        It holds your layout, look and pinned apps. Search and privacy you pick in Nilla itself.
       </Text>
     </StepLayout>
   );

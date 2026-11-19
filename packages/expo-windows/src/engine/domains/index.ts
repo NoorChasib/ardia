@@ -70,7 +70,7 @@ function moduleOf(domain: string, functions: Record<string, unknown> = {}): Reco
     ...functions,
     call: (verb: string, profile: string, argsJson: string) => {
       use(domain);
-      if (domain === "engine" && verb === "trimMemory") console.info("[ardia windows] engine memory trim asked");
+      if (domain === "engine" && verb === "trimMemory") console.info("[nilla windows] engine memory trim asked");
       return call(verb, profile, argsJson);
     },
     addListener: (event: string, listener: (payload: unknown) => void): EventSubscription => {
@@ -83,7 +83,7 @@ function moduleOf(domain: string, functions: Record<string, unknown> = {}): Reco
 const functions: Record<string, Record<string, unknown>> = {
   ...domainFunctions(engine),
   engine: {
-    inputIdleSeconds: () => TurboModuleRegistry.get<WindowsHostModule>("ArdiaWindowsHost")?.inputIdleSeconds() ?? 0,
+    inputIdleSeconds: () => TurboModuleRegistry.get<WindowsHostModule>("NillaWindowsHost")?.inputIdleSeconds() ?? 0,
   },
 };
 

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Symbol, closeWindow, emitCommand } from "@ardia/shell";
+import { Symbol, closeWindow, emitCommand } from "@nilla/shell";
 import { useBrowser } from "../../browser/src/state/browser/store";
 import { menuState } from "../../browser/src/state/commands/menuState";
 import { useTheme } from "../../browser/src/components/ui/theme";
@@ -13,20 +13,28 @@ import { linuxCapabilities, unavailableCommands } from "./hostCapabilities";
 import { videoTourUrl } from "../../browser/src/state/onboarding/tour";
 import { showToast } from "../../browser/src/state/app/toasts";
 import { engineInfo, systemInfo } from "../../browser/src/platform/app";
+import { appServices } from "../../browser/src/platform/launchConfig";
+import { openUrls } from "../../browser/src/state/browser/actions";
+import { FORK_CREDIT, LEGAL_NOTICE, sourceLinks } from "../../browser/src/state/app/legalNotice";
 import "./linkShareSurface";
 
 const hiddenCommands = () => {
   const hidden = unavailableCommands(linuxCapabilities());
   hidden.delete("emailPageLocation");
   if (!videoTourUrl()) hidden.add("videoTour");
-  if (!systemInfo().releaseNotesURL) hidden.add("releaseNotes");
+  if (!appServices().releaseNotesUrl) hidden.add("releaseNotes");
   return hidden;
 };
 
 async function showAbout(windowId: string) {
   const { appName, appVersion, appBuild } = systemInfo();
   const engine = await engineInfo().catch(() => null);
-  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, engine?.chromiumVersion ? `ArdiaCore on Chromium ${engine.chromiumVersion}` : undefined);
+  const chromium = engine?.chromiumVersion ? `Chromium ${engine.chromiumVersion}. ` : "";
+  const { source } = sourceLinks();
+  showToast(windowId, `${appName} ${appVersion} (${appBuild})`, `${chromium}${LEGAL_NOTICE} ${FORK_CREDIT} Source: ${source}`, {
+    sticky: true,
+    action: { title: "Source and Licenses", run: () => openUrls([source, "chrome://credits"], windowId) },
+  });
 }
 
 export async function openAppMenu(windowId: string, button: HTMLElement) {
@@ -61,8 +69,8 @@ export function AppMenuButton({ windowId }: { windowId: string }) {
   return (
     <button
       ref={button}
-      className="ardia-header-button ardia-app-menu-button"
-      data-ardia-app-menu
+      className="nilla-header-button nilla-app-menu-button"
+      data-nilla-app-menu
       aria-label="Menu"
       aria-haspopup="menu"
       title="Menu"

@@ -1,6 +1,6 @@
 import AppKit
 
-@objc(ArdiaScriptTab)
+@objc(NillaScriptTab)
 final class ScriptTab: NSObject {
   @objc let uniqueID: String
 

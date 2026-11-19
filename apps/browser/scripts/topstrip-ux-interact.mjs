@@ -227,7 +227,7 @@ export async function runInteractions(ctx) {
         const before = await measure("c120", `sc0-${kind}`, { hits: false });
         const sim = await run(`const w = st().windows.c120;
           return D.devSetWindowFrame("c120", [40 + Object.keys(st().windows).indexOf("c120") * 11, 60 + Object.keys(st().windows).indexOf("c120") * 7, w.frame[2], ${HEIGHT}]).then((frame) => nativeOf(frame))
-            .then((n) => globalThis.expo.modules.ArdiaSwipe.devSimulate(640, 21, n, ${JSON.stringify(steps.map((s, i) => ({ ...s, timestampMs: i * 16 })))}, true)).then((r) => wait(900).then(() => r));`);
+            .then((n) => globalThis.expo.modules.NillaSwipe.devSimulate(640, 21, n, ${JSON.stringify(steps.map((s, i) => ({ ...s, timestampMs: i * 16 })))}, true)).then((r) => wait(900).then(() => r));`);
         const after = await measure("c120", `sc1-${kind}`, { hits: false });
         const common = Object.keys(before.favX).filter((t) => after.favX[t] !== undefined);
         const shift = common.length ? after.favX[common[0]] - before.favX[common[0]] : before.detail.tabs.length && after.detail.tabs.length ? NaN : 0;
@@ -383,7 +383,7 @@ export async function runInteractions(ctx) {
       let page = null;
       try { page = await pageOf(); } catch (e) { r.pageError = String(e.message); }
       const pageY = async () => (page ? page.eval("window.scrollY") : null);
-      const sim = (x, y, steps) => run(`return ${nativeBody("c120")}.then((n) => globalThis.expo.modules.ArdiaSwipe.devSimulate(${x}, ${y}, n, ${JSON.stringify(steps)}, true)).then(() => wait(900));`, 30000);
+      const sim = (x, y, steps) => run(`return ${nativeBody("c120")}.then((n) => globalThis.expo.modules.NillaSwipe.devSimulate(${x}, ${y}, n, ${JSON.stringify(steps)}, true)).then(() => wait(900));`, 30000);
       const cases = {
         verticalWheelOverStrip: [640, 21, Array.from({ length: 5 }, (_, i) => ({ phase: "wheel", dy: -3, dispatch: "app", timestampMs: i * 40 }))],
         verticalWheelOverPage: [640, 300, Array.from({ length: 5 }, (_, i) => ({ phase: "wheel", dy: -3, dispatch: "app", timestampMs: i * 40 }))],
@@ -488,7 +488,7 @@ export async function runTiming(ctx) {
     results.scroll = await run(`const w = st().windows.c120;
       return D.devSetWindowFrame("c120", [40 + Object.keys(st().windows).indexOf("c120") * 11, 60 + Object.keys(st().windows).indexOf("c120") * 7, w.frame[2], ${HEIGHT}]).then((frame) => nativeOf(frame)).then((n) => {
         const stamps = []; let on = true; const tick = (t) => { stamps.push(t); if (on) requestAnimationFrame(tick); }; requestAnimationFrame(tick);
-        return globalThis.expo.modules.ArdiaSwipe.devSimulate(640, 21, n, ${JSON.stringify(scrollSteps)}, true).then(() => wait(600)).then(() => { on = false; const gaps = stamps.slice(1).map((t, i) => t - stamps[i]); return { frames: gaps.length, over25: gaps.filter((g) => g > 25).length, over50: gaps.filter((g) => g > 50).length, max: Math.round(Math.max(...gaps)) }; });
+        return globalThis.expo.modules.NillaSwipe.devSimulate(640, 21, n, ${JSON.stringify(scrollSteps)}, true).then(() => wait(600)).then(() => { on = false; const gaps = stamps.slice(1).map((t, i) => t - stamps[i]); return { frames: gaps.length, over25: gaps.filter((g) => g > 25).length, over50: gaps.filter((g) => g > 50).length, max: Math.round(Math.max(...gaps)) }; });
       });`);
     results.switchFrames = [];
     for (let i = 0; i < 6; i++)

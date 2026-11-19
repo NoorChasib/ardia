@@ -1,1 +1,1 @@
-export { CompletingField, completingFieldIsNative, type CompletingFieldHandle } from "@ardia/phone-native";
+export { CompletingField, completingFieldIsNative, type CompletingFieldHandle } from "@nilla/phone-native";

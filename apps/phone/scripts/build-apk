@@ -8,7 +8,7 @@
 # working tree during the build don't reach it; the export is deleted afterwards. Kotlin, resources and the native
 # module still build from the working tree, and the stamp says at which commit and whether that tree was clean or
 # written during the build. --direct bundles the working tree instead, behind the bundle guard. Writes
-# $ARDIA_APK_DIR/<name>.apk (default /tmp/ardia-phone) and <name>.txt beside it. --compose-key re-signs it with the
+# $ARDIA_APK_DIR/<name>.apk (default /tmp/nilla-phone) and <name>.txt beside it. --compose-key re-signs it with the
 # Compose app's key (~/.android/debug.keystore) for the upgrade test; --store builds without the lab switch.
 # The release is shrunk with R8, and its reports (mapping, usage, seeds, configuration, missing rules) and the JS
 # bundle's composed source map are kept
@@ -66,7 +66,7 @@ if [ "$bundle" = "1" ] && { [ -n "$compress" ] || [ "$composeKey" = "1" ]; }; th
 fi
 here="$(cd "$(dirname "$0")" && pwd)"
 root="${ARDIA_BUILD_ROOT:-$(cd "$here/../../.." && pwd)}"
-out="${ARDIA_APK_DIR:-/tmp/ardia-phone}"
+out="${ARDIA_APK_DIR:-/tmp/nilla-phone}"
 tools="$(ls -d "${ANDROID_HOME:-$HOME/Library/Android/sdk}"/build-tools/* | sort -V | tail -1)"
 free=$(df -Pk "$root" | awk 'NR==2 {print int($4 / 1048576)}')
 if [ "$free" -lt 10 ]; then
@@ -91,7 +91,7 @@ else
   made="$(node --no-warnings "$here/bundle-export.ts" create --commit "$rev" --root "$root")"
   exportDir="$(printf '%s' "$made" | node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).dir)')"
   commit="$(printf '%s' "$made" | node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).commit)')"
-  gradleArgs=(-PardiaBundleExport="$exportDir")
+  gradleArgs=(-PnillaBundleExport="$exportDir")
   source="export of the commit"
 fi
 echo "bundling $commit from the $source"
@@ -101,11 +101,11 @@ if [ -n "$release" ]; then
   planned="$(node --no-warnings "$here/android-version.ts" "$release")"
   versionName="$(sed -n 's/^name=//p' <<<"$planned")"
   versionCode="$(sed -n 's/^code=//p' <<<"$planned")"
-  gradleArgs+=(-PardiaVersionName="$versionName" -PardiaVersionCode="$versionCode")
+  gradleArgs+=(-PnillaVersionName="$versionName" -PnillaVersionCode="$versionCode")
 fi
 gradleArgs+=(-PreactNativeArchitectures="$abis")
 case ",$compress," in *,libs,*) gradleArgs+=(-Pexpo.useLegacyPackaging=true) ;; esac
-case ",$compress," in *,dex,*) gradleArgs+=(-PardiaCompressDex=true) ;; esac
+case ",$compress," in *,dex,*) gradleArgs+=(-PnillaCompressDex=true) ;; esac
 outputs="$root/apps/phone/android/app/build/outputs"
 if [ "$bundle" = "1" ]; then
   ARDIA_LAB=$lab "$here/gradle-locked" :app:bundleRelease :app:packageReleaseUniversalApk ${gradleArgs[@]+"${gradleArgs[@]}"} --max-workers=4 --console=plain -q
@@ -126,10 +126,10 @@ if [ "$composeKey" = "1" ]; then
 fi
 resources="$("$tools/aapt2" dump resources "$built")"
 stamp() { printf '%s\n' "$resources" | grep -A1 "string/$1" | sed -n 's/.*"\(.*\)".*/\1/p' | head -1; }
-stamped="$(stamp ardia_build_commit)"
-dirty="$(stamp ardia_build_dirty)"
-stampedSource="$(stamp ardia_build_source)"
-nativeStamp="$(stamp ardia_build_native)"
+stamped="$(stamp nilla_build_commit)"
+dirty="$(stamp nilla_build_dirty)"
+stampedSource="$(stamp nilla_build_source)"
+nativeStamp="$(stamp nilla_build_native)"
 if [ "$stamped" != "$commit" ] || [ "$dirty" != "no" ] || [ "$stampedSource" != "$source" ]; then
   mv "$built" "$out/$name.rejected.apk"
   [ "$bundle" = "1" ] && mv "$out/$name.building.aab" "$out/$name.rejected.aab"

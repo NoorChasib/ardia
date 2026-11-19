@@ -8,7 +8,7 @@ type DefaultBrowserNative = {
   openDefaultAppsSettings(): Promise<void>;
 };
 
-const native = requireOptionalNativeModule<DefaultBrowserNative>("ArdiaPhoneDefaultBrowser");
+const native = requireOptionalNativeModule<DefaultBrowserNative>("NillaPhoneDefaultBrowser");
 
 export const defaultBrowser = {
   status: async (): Promise<DefaultBrowserStatus> => (native ? native.status() : { isDefault: false, canAsk: false }),

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { runInNewContext } from "node:vm";
+import { engineModuleName } from "./engineModuleNames.ts";
 import { resolveHostModule } from "./hostModules.ts";
 import { CREDENTIAL_CAPABILITIES, autofillStatus, credentialNotice, credentialNoticeTitle, credentialStorage, passwordStatus } from "./hostCredentials.ts";
 import { randomBytes } from "node:crypto";
@@ -89,8 +90,8 @@ context.top = context;
 runInNewContext(bootstrap, context);
 const host = context.__ardiaHost;
 
-const moduleFor = (name) => new Proxy({}, { get: (_target, key) => (typeof key === "string" ? resolveHostModule(host, name, key) : undefined) });
-globalThis.acTestNativeModules = { ArdiaPasswords: moduleFor("ArdiaPasswords"), ArdiaAutofill: moduleFor("ArdiaAutofill") };
+const moduleFor = (name) => new Proxy({}, { get: (_target, key) => (typeof key === "string" ? resolveHostModule(host, engineModuleName(name), key) : undefined) });
+globalThis.acTestNativeModules = { NillaPasswords: moduleFor("NillaPasswords"), NillaAutofill: moduleFor("NillaAutofill") };
 const originalConsole = { log: console.log, warn: console.warn, error: console.error };
 Object.assign(console, { log: capture, warn: capture, error: capture });
 const passwords = await import("../../browser/src/platform/passwords.ts");
@@ -199,8 +200,8 @@ test("status drives an honest notice", async () => {
   assert.equal(credentialNotice(await autofillStatus(host, ""), "autofill"), null);
   assert.equal(credentialNotice({ passwords: { available: true }, reauth: false, backend: "auto" }, "passwords"),
     "System authentication is unavailable, so saved passwords can't be shown, changed or exported.");
-  assert.equal(credentialNotice({ passwords: { available: true }, reauth: false, reauthReason: "policyMissing", reauthMessage: "Ardia's polkit policy isn't installed, so saved passwords and card numbers can't be shown, changed or exported", backend: "gnome-libsecret" }, "autofill"),
-    "Ardia's polkit policy isn't installed, so saved passwords and card numbers can't be shown, changed or exported.");
+  assert.equal(credentialNotice({ passwords: { available: true }, reauth: false, reauthReason: "policyMissing", reauthMessage: "Nilla's polkit policy isn't installed, so saved passwords and card numbers can't be shown, changed or exported", backend: "gnome-libsecret" }, "autofill"),
+    "Nilla's polkit policy isn't installed, so saved passwords and card numbers can't be shown, changed or exported.");
   assert.equal(credentialNotice(null, "passwords"), null);
 });
 
@@ -228,8 +229,8 @@ test("status names the key provider and warns when a configured keyring silently
   assert.match(credentialStorage({ ...keyring, protection: "none", storage: "no encryption key" }, "passwords"), /no encryption key is available/);
   assert.equal(credentialStorage({ ...keyring, protection: undefined, storage: undefined }, "passwords"), null);
   const unknown = { ...keyring, protection: "unknown", storage: "an unknown key" };
-  assert.equal(credentialStorage(unknown, "passwords"), "Ardia couldn't check which key protects saved passwords, so whether they're encrypted is unknown.");
-  assert.equal(credentialStorage(unknown, "autofill"), "Ardia couldn't check which key protects card numbers, so whether they're encrypted is unknown.");
+  assert.equal(credentialStorage(unknown, "passwords"), "Nilla couldn't check which key protects saved passwords, so whether they're encrypted is unknown.");
+  assert.equal(credentialStorage(unknown, "autofill"), "Nilla couldn't check which key protects card numbers, so whether they're encrypted is unknown.");
   for (const text of [credentialStorage(keyring, "passwords"), credentialStorage(keyring, "autofill"), credentialNotice(fallback, "passwords")]) {
     assert.doesNotMatch(text, /Mac|Keychain|Touch ID/);
   }

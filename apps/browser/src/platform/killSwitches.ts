@@ -1,5 +1,5 @@
 import { readDocument, writeDocument } from "./documents";
-import { switchOverride } from "./launchConfig";
+import { appServices, switchOverride } from "./launchConfig";
 
 type SwitchDef = {
   about: string;
@@ -89,7 +89,6 @@ type SwitchName = keyof typeof SWITCHES;
 type ExperimentName = keyof typeof EXPERIMENTS;
 
 const CACHE_DOC = "switches-cache.json";
-const SWITCHES_URL = "https://ardia.dev/switches.json";
 const FETCH_TIMEOUT_MS = 5000;
 const MAX_BYTES = 4096;
 
@@ -121,7 +120,7 @@ function load() {
 
 export function switchOn(name: SwitchName): boolean {
   if (!loaded) load();
-  return switchOverride(name) ?? cached[name] ?? true;
+  return switchOverride(name) ?? (appServices().switchesUrl ? cached[name] : undefined) ?? true;
 }
 
 export const experimentOn = (name: ExperimentName): boolean => switchOverride(name) ?? false;
@@ -133,16 +132,18 @@ export function reloadSwitches() {
 
 let fetchedThisLaunch = false;
 
-type RefreshResult = "updated" | "failed" | "already";
+type RefreshResult = "updated" | "failed" | "already" | "off";
 
 export async function refreshSwitches(fetchFn: typeof fetch = fetch): Promise<RefreshResult> {
+  const url = appServices().switchesUrl;
+  if (!url) return "off";
   if (fetchedThisLaunch) return "already";
   fetchedThisLaunch = true;
   if (!loaded) load();
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), FETCH_TIMEOUT_MS);
   try {
-    const response = await fetchFn(SWITCHES_URL, { method: "GET", credentials: "omit", cache: "no-store", signal: abort.signal });
+    const response = await fetchFn(url, { method: "GET", credentials: "omit", cache: "no-store", signal: abort.signal });
     if (!response.ok) return "failed";
     const text = await response.text();
     if (text.length > MAX_BYTES) return "failed";

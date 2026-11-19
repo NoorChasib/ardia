@@ -1,4 +1,4 @@
-import { closeWindow, isDarkAppearance, setAppearance } from "@ardia/shell";
+import { closeWindow, isDarkAppearance, setAppearance } from "@nilla/shell";
 import { onAppEvent } from "../../browser/src/platform/app";
 import type { CommandEvent } from "../../browser/src/platform/commands";
 import { onLinuxCommand } from "./shims/expo-modules-core";

@@ -17,7 +17,7 @@ const topApps = await import("./topAppsSharing.ts");
 const defaultBrowser = await import("./defaultBrowserCounts.ts");
 const { takeStuckDragCounts } = await import("./stuckDrags.ts");
 const { takeCliCounts } = await import("./cliCounts.ts");
-const app = stub.shellNativeModules.ArdiaApp;
+const app = stub.shellNativeModules.NillaApp;
 const localModule = stub.telemetryLocalModule;
 after(() => {
   delete globalThis.acTestSystemState;
@@ -135,7 +135,7 @@ test("the local store reading, the local copy export and the launch events taken
 
 test("a repeated row press whose answer arrives after sharing went off and on again isn't counted under the new choice", async () => {
   start(true);
-  const focus = stub.shellNativeModules.ArdiaFocus;
+  const focus = stub.shellNativeModules.NillaFocus;
   const answer = held();
   const pressRepeated = focus.pressRepeated;
   focus.pressRepeated = () => answer.promise;

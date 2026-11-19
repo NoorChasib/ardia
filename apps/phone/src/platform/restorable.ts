@@ -1,4 +1,4 @@
-import { restorableState } from "@ardia/phone-native";
+import { restorableState } from "@nilla/phone-native";
 
 export const restoredValue = (key: string) => restorableState.get(key);
 

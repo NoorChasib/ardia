@@ -4,9 +4,9 @@
 //
 // Gate recipe, what each row means and which rows don't compare across engines: docs/perf/README.md.
 //
-//   node apps/browser/scripts/perf/native-bench.mjs --app <Ardia.app> --out <dir> [options]
+//   node apps/browser/scripts/perf/native-bench.mjs --app <Nilla.app> --out <dir> [options]
 //     --label <name>          name of this set of results (default: the folder two levels above the app, so
-//                             dist/0.2.22/export/Ardia.app is "0.2.22")
+//                             dist/0.2.22/export/Nilla.app is "0.2.22")
 //     --bundle <file>         Hermes bundle of scripts/perf/bench-entry.js to run (built from the working tree when
 //                             omitted). Pass the same file to a before and an after run so only native code differs.
 //                             It must match the app's NATIVE_API_VERSION, or every command fails with the skew.
@@ -15,7 +15,7 @@
 //                             candidate; each side's results land in <out>/<its label>/results.json.
 //     --control-bundle <file> the control's bundle (default: --app's bundle); --control-label <name> (default as --label)
 //     --prepared              --app (and --control) are copies this script already prepared (<out>/<label>/app/
-//                             Ardia.app: bundle swapped in, signed for the marker): run them in place, without
+//                             Nilla.app: bundle swapped in, signed for the marker): run them in place, without
 //                             building a bundle, copying or signing. `--only prepare` makes those copies and exits.
 //     --runs <n>              session and windows runs (default 3); --launch-runs <n> cold launches (default 5)
 //     --idle <secs>           each idle window (default 60)
@@ -148,6 +148,7 @@ import { buildSeed } from "./seed.mjs";
 import { parseSettings, profileSeed } from "./profile-seed.mjs";
 import { writeSwitches } from "./js-bench.mjs";
 import { frameRows, frameTable, framesLibrary, framesRun } from "./frames-phase.mjs";
+import { BENCH_PROBE, probeBlocked, upstreamFetches } from "./upstreamGuard.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = resolve(here, "../..");
@@ -601,9 +602,9 @@ async function launchRun(side, i) {
   if (copy) {
     rmSync(copy, { recursive: true, force: true });
     mkdirSync(copy, { recursive: true });
-    execFileSync("cp", ["-Rc", side.app, join(copy, "Ardia.app")]);
+    execFileSync("cp", ["-Rc", side.app, join(copy, "Nilla.app")]);
   }
-  const app = new Instance(copy ? { ...side, app: join(copy, "Ardia.app") } : side, freshDir(side, `launch-${i}`));
+  const app = new Instance(copy ? { ...side, app: join(copy, "Nilla.app") } : side, freshDir(side, `launch-${i}`));
   const traceFile = join(app.dataDir, "startup-trace.json");
   if (opt["trace-startup"]) {
     app.env.push(`ARDIA_INSTANCE=chromiumSwitches=--trace-startup=${opt["trace-startup"]} --trace-startup-file=${traceFile} --trace-startup-duration=4 --trace-startup-format=json`);
@@ -891,11 +892,14 @@ async function journeyRun(side, i, parts) {
     await app.launch();
     await app.pageState("id=seed", 30_000, (s) => s.fcp);
     await sleep(6000);
-    r.guard = await app.run(`return fetch("https://ardia.dev/otel/v1/logs", { method: "POST", body: "{}" }).then((res) => {
+    r.guard = await app.run(`return fetch(${JSON.stringify(BENCH_PROBE)}, { method: "POST", body: "{}" }).then((res) => {
       const j = ac.journeys();
       return { blocked: res.headers.get("x-bench-blocked"), on: j.on, native: j.native, sharing: ac.telemetry().saved.sharing };
     });`);
     if (r.guard.blocked !== "1") throw new Error("bench-offline.js isn't guarding fetch: refusing to run with sharing on");
+    const probed = await app.run(`return ac.blockedFetches();`);
+    if (!probeBlocked(probed)) throw new Error("bench-offline.js didn't record the probe: refusing to run");
+    if (upstreamFetches(probed).length) throw new Error(`the app tried to reach upstream: ${upstreamFetches(probed).join(", ")}`);
     if (!r.guard.on || !r.guard.native) throw new Error(`field timing isn't on in the app: ${JSON.stringify(r.guard)}`);
     const closeTab = (tab) => tab && app.run(`ac.store.getState().closeTab(${JSON.stringify(tab)}); return true;`);
     if (parts.has("newtabkey")) {
@@ -923,7 +927,10 @@ async function journeyRun(side, i, parts) {
       }
       log(`${side.tag}journeys ${i} j4:`, JSON.stringify([r.j4new.map((x) => Math.round(x.fcp)), r.j4page.map((x) => Math.round(x.fcp))]));
     }
-    r.blocked = (await app.run(`return ac.blockedFetches();`)).length;
+    const blocked = await app.run(`return ac.blockedFetches();`);
+    const upstream = upstreamFetches(blocked);
+    if (upstream.length) throw new Error(`the app tried to reach upstream: ${upstream.join(", ")}`);
+    r.blocked = blocked.length;
     r.load.push(Math.round(loadavg()[0]));
     side.results.journeys.push(r);
   } finally {
@@ -1256,7 +1263,7 @@ const fail = (message) => {
   console.error(message);
   process.exit(64);
 };
-if (!opt.app) fail("usage: native-bench.mjs --app <Ardia.app> [--control <app>] [--out dir] [--only phases] … (--help)");
+if (!opt.app) fail("usage: native-bench.mjs --app <Nilla.app> [--control <app>] [--out dir] [--only phases] … (--help)");
 const JOURNEY_PHASES = ["newtabkey", "navigate"];
 const FRAME_PHASES = ["frames", "framecounts"];
 const PHASES = ["launch", "session", ...SESSION_PARTS, ...JOURNEY_PHASES, ...FRAME_PHASES, "profiles", "windows", "throttle", "churn", "sample", "prepare"];

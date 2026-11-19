@@ -3,14 +3,14 @@ set -euo pipefail
 cd "${ARDIA_BUILD_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}/apps/phone/android"
 lab=()
 if [ "${ARDIA_LAB:-1}" = "1" ]; then
-  export EXPO_PUBLIC_ARDIA_LAB=true
-  lab=(-PardiaLab=true)
+  export EXPO_PUBLIC_NILLA_LAB=true
+  lab=(-PnillaLab=true)
 else
-  unset EXPO_PUBLIC_ARDIA_LAB
+  unset EXPO_PUBLIC_NILLA_LAB
 fi
 fromExport=0
 for argument in "$@"; do
-  case "$argument" in -PardiaBundleExport=*) fromExport=1 ;; esac
+  case "$argument" in -PnillaBundleExport=*) fromExport=1 ;; esac
 done
 for task in "$@"; do
   [ "$fromExport" = "1" ] && break
@@ -26,6 +26,6 @@ if [ "${ARDIA_GRADLE_EPHEMERAL:-0}" = "1" ]; then
   resident=(--no-daemon -Pkotlin.compiler.execution.strategy=in-process)
 fi
 if [ -x /usr/bin/lockf ]; then
-  exec /usr/bin/lockf -t "${ARDIA_GRADLE_WAIT:-540}" /tmp/ardia-android-gradle.lock ./gradlew ${lab[@]+"${lab[@]}"} ${resident[@]+"${resident[@]}"} "$@"
+  exec /usr/bin/lockf -t "${ARDIA_GRADLE_WAIT:-540}" /tmp/nilla-android-gradle.lock ./gradlew ${lab[@]+"${lab[@]}"} ${resident[@]+"${resident[@]}"} "$@"
 fi
-exec flock -w "${ARDIA_GRADLE_WAIT:-540}" /tmp/ardia-android-gradle.lock ./gradlew ${lab[@]+"${lab[@]}"} ${resident[@]+"${resident[@]}"} "$@"
+exec flock -w "${ARDIA_GRADLE_WAIT:-540}" /tmp/nilla-android-gradle.lock ./gradlew ${lab[@]+"${lab[@]}"} ${resident[@]+"${resident[@]}"} "$@"

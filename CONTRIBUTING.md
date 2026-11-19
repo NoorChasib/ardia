@@ -1,78 +1,47 @@
-# Contributing to Ardia
+# Contributing to Nilla
 
-Ardia is a macOS browser with Dia's polish and Arc's sidebar, running on Chrome's own framework (Chromium 157). Two
-people run it, with a lot of help from coding agents, and ship nightlies most days. From outside the team we take bug
-fixes, and only bug fixes. This page is the rules, and what the owner keeps asking for in review, written down so you
-don't have to learn it there.
+Nilla is a Chromium browser with Dia's polish and Arc's sidebar, for macOS, Linux and Windows, running on Chrome's own
+framework (Chromium 157). It is a personal, non-commercial project of Noor Chasib, forked from Ardia, and much of it
+is written with coding agents. Issues and pull requests are welcome. This page is what a good change looks like here,
+written down so you don't have to learn it in review.
 
-## Who can send what
+## What fits
 
-We are short of review time, not of ideas or code. Reviewing a pull request takes longer than writing one, so what
-you can send depends on who you are.
-
-| You are | You can send |
-| --- | --- |
-| Anyone | A bug fix |
-| On the vouched list, `.github/VOUCHED.td` | Bug fixes and features |
-| The team, `.github/TEAM.td` | Anything |
-
-A crash, a regression, and something that shipped and behaves wrong are bugs. A new setting, a new shortcut, a
-restyle, a new platform, and a Dia feature Ardia doesn't have yet are features, even when the pull request calls it a
-fix. Feature ideas go in [Ideas](https://github.com/ardia-browser/ardia/discussions/categories/ideas), not in an
-issue or a pull request.
-
-The best help often isn't a pull request:
-
-- **Duplicates.** Comment on the issue or pull request with a link to the original.
-- **Fixed bugs.** If an open issue no longer happens on the latest nightly, say so and give the version.
-- **A pull request that already covers your bug.** Test it and comment with what you saw. That beats a second one.
-
-Nothing is closed for breaking a rule on this page. The pull request gets a label and waits. A pull request that
-follows every rule can still wait or be declined: we don't owe a review or a merge. These rules apply to pull
-requests opened from 14 November 2026; earlier ones are looked at one by one.
-
-## What we will and won't take
-
-Ardia copies Dia's look and behaviour on purpose, and uses Arc's layout for the sidebar. A change that makes it
-behave more like Dia is almost always welcome. A change that restyles it to taste is not, unless the owner asked.
+Nilla copies Dia's look and behaviour on purpose, and uses Arc's layout for the sidebar. A change that makes it behave
+more like Dia is almost always welcome. A change that restyles it to taste is not, unless the owner asked.
+`docs/dia-feature-parity.md` is the checklist of what's done and what isn't; update its row in the same pull request.
 
 Out of scope:
 
-- **AI features in the base browser.** AI ships only as a first-party plugin on the plugin host (#2462, #2463), off
-  until the user enables it. Dia's AI rows in `docs/dia-feature-parity.md` stay ⏸ until the plugin ships them.
-- **Accounts or sign-in of our own.** Sync goes through the user's iCloud Drive and nothing else.
-- **Telemetry that carries browsing data.** Crash reports are opt-in and never include sites or searches.
-
-`docs/dia-feature-parity.md` is the checklist of what's done and what isn't. If you're vouched and want something to
-do, pick from there, and update its row in the same PR.
+- **AI features in the base browser.** AI ships only as a first-party plugin on the plugin host, off until the user
+  enables it. Dia's AI rows in `docs/dia-feature-parity.md` stay ⏸ until the plugin ships them.
+- **Accounts or sign-in of our own.** Sync goes through a folder the user picks and nothing else.
+- **Telemetry that carries browsing data.** Every service endpoint ships empty, so nothing is sent today
+  (`docs/services.md`). Events count, time and flag; they never carry URLs, page content, titles or free text.
 
 ## Getting it running
 
-You need an Apple Silicon Mac on macOS 14 or later, Xcode, CocoaPods, Node 24 (`.nvmrc`) and Bun 1.4.4, the version
-`package.json`'s `packageManager` pins (`curl -fsSL https://bun.com/install | bash -s bun-v1.4.4`). Linux and Windows
-have their own commands in the README's "Run it".
+The README's "Build and run" has the commands for each platform. On a Mac you need Apple Silicon on macOS 14 or later,
+Xcode, CocoaPods, Node 24 (`.nvmrc`) and Bun 1.4.4, the version `package.json`'s `packageManager` pins.
+
+You don't need to build Chromium. With no Chromium tree of your own, the app's build downloads the prebuilt engine
+that matches your checkout's `engine/` folder (`packages/ardiacore/scripts/fetch-engine.sh`). Nilla has no engines of
+its own yet, so those come from Ardia's releases, and `--nearest` picks the newest one when none matches exactly. If
+you change the engine you need your own Chromium build: `docs/engine-build.md` has the whole thing, and a first build
+takes about five hours.
+
+Every build runs on its own data folder, so it never touches the browser you use, Ardia included. A Debug build
+refuses to start without `ARDIA_DATA_DIR`, and every test instance gets a throwaway one. To run a build without it
+popping up over your work:
 
 ```sh
-bun install --frozen-lockfile
-bun run pods
-bun run dev      # Metro, leave it running
-bun run macos    # builds the Debug app and opens it
+open -g -n --env ARDIA_BACKGROUND=1 --env ARDIA_DATA_DIR="$(mktemp -d)" \
+  --env ARDIA_REMOTE_DEBUGGING_PORT=9333 apps/browser/build/Build/Products/Debug/Nilla.app
 ```
 
-You don't need to build Chromium. When there's no Chromium tree at `~/chromium-build`, the app's build downloads the
-prebuilt engine that matches your checkout's `engine/` folder
-(`packages/ardiacore/scripts/fetch-engine.sh`). That only works while `engine/` is unchanged from a commit on `main`.
-If you change the engine you need your own Chromium build: `docs/engine-build.md` has the whole thing, and a first
-build takes about five hours.
-
-`bun run macos` runs the app on its own data folder, `~/Library/Application Support/Ardia Dev`, so it never touches the
-Ardia you browse with. Keep it that way. A Debug build refuses to start without `ARDIA_DATA_DIR`, and every test
-instance should get a throwaway one. To run a build without it popping up over your work:
-
-```sh
-open -g -n --env ARDIA_BACKGROUND=1 --env ARDIA_DATA_DIR=/tmp/ardia-test \
-  --env ARDIA_REMOTE_DEBUGGING_PORT=9333 apps/browser/build/Build/Products/Debug/Ardia.app
-```
+Linux and Windows builds run only inside a disposable VM, a CI runner or (Linux) a namespace with a scratch `$HOME`,
+because today's engines choose Ardia's default profile before any app code runs. `scripts/linux/nilla-dev-run` and
+`scripts/windows/nilla-dev-run.ps1` start them on a scratch data folder.
 
 A JS-only change doesn't need a rebuild. Metro reloads it, though relaunch the instance before you judge the result.
 
@@ -80,14 +49,15 @@ Where things live:
 
 | Path | What |
 | --- | --- |
-| `apps/browser` | The React Native macOS app: UI, store, actions |
-| `packages/ardiacore` | The engine, ArdiaCore: Chrome's framework and the native modules the app calls |
+| `apps/browser` | The shared UI, store and actions, and the macOS (`macos/`) and Windows (`windows/`) apps |
+| `apps/linux` | The Linux desktop target: the shared UI with Linux adapters |
+| `apps/phone`, `packages/phone` | The Expo app for iPhone and Android, and its native module |
+| `apps/cli` | The `nilla-browser` command |
+| `packages/ardiacore` | The engine's app side, ArdiaCore: Chrome's framework and the native modules the app calls |
 | `packages/shell` | Menus, shortcuts, windows, native views |
 | `packages/core` | Omnibox parsing and suggestions, pure TypeScript with tests |
-| `packages/import`, `packages/sync`, `packages/shaders` | Importing from other browsers, iCloud sync, Metal views |
+| `packages/import`, `packages/sync`, `packages/shaders` | Importing from other browsers, folder sync, Metal views |
 | `engine/` | Our patches to Chromium and our Chrome-side code |
-| `apps/site` | ardia.dev (Astro) |
-| `infra/<service>` | Deploy setups, one folder per service |
 
 `docs/agent-brief.md` explains the architecture in depth. It's written for agents and is just as useful to people.
 
@@ -100,7 +70,7 @@ numbers: sizes, spacing, colours, and for motion, timing in frames. Record both 
 A bug fixed at 24 fps has come back more than once because the glitch lived between frames. `docs/dia-spec.md` holds
 the values already measured from Dia.
 
-Parity covers behaviour too. Most bugs the owner reports are UX that any browser user expects without thinking:
+Parity covers behaviour too. Most bugs are UX that any browser user expects without thinking:
 
 - Dismissing something never pauses playback, opens a window, or drags you to another tab. Closing the mini player
   must not bring the browser forward.
@@ -119,9 +89,9 @@ Parity covers behaviour too. Most bugs the owner reports are UX that any browser
 
 ### It lets Chrome do the work
 
-Ardia is real Chromium. Before writing our own version of something, check whether Chrome already does it and we're
-getting in the way. "Shouldn't Chrome's default behaviour just work here?" is the first question the owner asks about
-a bug, and the answer is often yes. When a fix needs a hook in Chrome's code, keep it the smallest hook that works.
+Nilla is real Chromium. Before writing our own version of something, check whether Chrome already does it and we're
+getting in the way. "Shouldn't Chrome's default behaviour just work here?" is the first question to ask about a bug,
+and the answer is often yes. When a fix needs a hook in Chrome's code, keep it the smallest hook that works.
 
 ### It's simple
 
@@ -132,7 +102,7 @@ layer, not adding a guard. Prefer the change that removes code. Reject complexit
 
 ### It's fast, and stays fast
 
-Performance is judged against the previous stable release: same or better, measured interleaved on a quiet machine
+Performance is judged against the previous release: same or better, measured interleaved on a quiet machine
 (`docs/perf/README.md`). Every cache, prefetch or cut request ships with a staleness test. Create something, reload,
 and it's there. Delete it, and it's gone. Fewer requests isn't a goal by itself, and a metric that hasn't been shown
 to follow real wall-clock time doesn't count as proof.
@@ -140,16 +110,20 @@ to follow real wall-clock time doesn't count as proof.
 ## Code style
 
 - **No comments.** Not in source, scripts or config. Name things so the code says what it does, and put the why in
-  the commit message. Tool directives (`@ts-expect-error`, `#pragma`, `swiftlint:`), shebangs and license headers
-  stay.
+  the commit message. Tool directives (`@ts-expect-error`, `#pragma`, `swiftlint:`), shebangs, the header a script
+  prints as its `--help`, and license headers stay. Never remove a copyright or license header.
 - Read the surrounding code first and match its naming and idioms. New features go in new files where that makes
   sense.
-- Read `docs/store-api.md` before you touch app state.
+- `docs/conventions.md` holds the folder, import, naming and environment-variable rules; its check runs in
+  `bun run --cwd apps/browser test`. Read `docs/store-api.md` before you touch app state.
 - Skills live only in the root `.claude/skills`. Deploy setups live only in `infra/<service>`.
 - Patched npm dependencies live in `patches/`, listed in the root `package.json`'s `patchedDependencies`.
   `docs/agent-brief.md` explains how to change one.
 - When JS starts needing native code older builds lack, bump `NATIVE_API_VERSION` in `apps/browser/src/platform/nativeApi.ts`
   and `apiVersion` in `packages/shell/ios/AppModule.swift` together.
+- Some names keep their Ardia spelling because today's engines read them: the `ARDIA_*` environment variables, the
+  `--ardia-*` switches, `ArdiaCore` and the `ac_*` calls, `ardia://` app URLs, and the names
+  `apps/browser/src/naming-allowlist.json` lists. Leave them as they are; they change together with Nilla's own engines.
 
 ## Testing
 
@@ -170,118 +144,84 @@ The end-to-end checks (shortcuts, tab dragging, profile swipes, windowing, sync,
 need a built app and run hidden instances. `docs/testing.md` lists each one with what it guards. When you fix a
 regression, add its case to the matching check so it can't come back quietly.
 
-Never read a real browser profile in a test, Ardia's included. Build fixtures. Screenshots for the site, the README or
-a PR use neutral pages, never someone's feed or personal data.
+Never read a real browser profile in a test. Build fixtures. Screenshots for the README or a pull request use neutral
+pages, never someone's feed or personal data.
+
+A shared UI change reaches all three desktop platforms, so check the other two before calling it done: Linux's
+`bun run --cwd apps/linux check`, `test:graph` and `test:host`, and the Windows workflow, which runs on every pull
+request that touches shared code.
 
 ## Engine changes
 
 Chromium builds are incremental. Never run `gn clean` or `gclient sync` on a tree you care about, and don't delete
 `out/`: a full rebuild costs about five hours. Patches go in `engine/patches/` in the order `engine/patches/series`
-gives, and our Chrome-side code lives in `engine/chromium` and `engine/ardiacore`. `docs/engine-build.md` covers
-both. A PR that changes `engine/` means the next release publishes a new prebuilt engine, so say so in the
-description.
+gives, and our Chrome-side code lives in `engine/chromium` and `engine/ardiacore` (`engine/ardiacore-linux` on Linux).
+`docs/engine-build.md` covers both. A change under `engine/` has no prebuilt engine until Nilla publishes its own, so
+whoever runs it builds the engine; say so in the pull request.
 
 Security-sensitive code gets extra care. Passwords and card numbers stay on their native path and never go through
 the generic JS-to-engine call. Anything that weakens a Chrome security UI (the full-screen exit notice, permission
-prompts, re-auth) needs a strong reason in the PR.
+prompts, re-auth) needs a strong reason in the pull request.
 
 ## Reporting a bug
 
-Use the bug report form; blank issues are off, and feature requests go to
-[Ideas](https://github.com/ardia-browser/ardia/discussions/categories/ideas). The form adds the `bug` label, and a
-maintainer takes it off when the report turns out to be a feature request.
+Use the bug report form on [Nilla's tracker](https://github.com/NoorChasib/nilla/issues). The fastest bug to fix is
+one with a screen recording. Include:
 
-The fastest bug to fix is one with a screen recording. Include:
-
-- the version and channel (Settings › General; stable or nightly),
-- your layout: sidebar or top address bar, sidebar or horizontal tabs,
+- the version (Settings › General),
+- your platform, and your layout: sidebar or top address bar, sidebar or horizontal tabs,
 - how many profiles and windows you have open,
 - the steps, and how often it happens if it's only sometimes,
 - the same steps recorded in Dia, if Dia behaves differently,
-- the crash report from `~/Library/Logs/DiagnosticReports`, if it crashed.
-
-## Claiming an issue
-
-One person works on an issue at a time, so two people don't fix the same bug. Before you start, look at the issue's
-assignee and its linked pull requests. If either is someone else, the issue is taken: pick another one, or ask on
-it. [This search](https://github.com/ardia-browser/ardia/issues?q=is%3Aissue+is%3Aopen+no%3Aassignee+-linked%3Apr)
-lists the free ones.
-
-- **Take it.** Comment `/take` and you're assigned; or open a pull request, a draft is fine, with `Closes #<issue>`.
-  From outside the vouched list you can take issues labelled `bug`, and be assigned 3 at a time.
-- **Give it back.** Comment `/drop` when you stop, and close your pull request if you opened one: an open pull
-  request holds the issue for as long as it stays open. A claim with no pull request lapses by itself after 5 quiet
-  days: no comment from you, no pull request of yours closed in that time.
-- **Who holds it.** The assignee, or else the author of the earliest open pull request that closes it.
-- **When it's taken.** A pull request for an issue someone else holds gets `already-claimed` and waits. Nothing is
-  closed for it. When two people collide, a maintainer settles it by assigning the issue, and the assignee wins.
-
-This covers pull requests opened from 12:00 UTC on 16 November 2026. Earlier ones still count as holding their
-issue.
+- the crash report, if it crashed. Crash reports stay on your machine (on a Mac, `~/Library/Logs/DiagnosticReports`);
+  nothing is uploaded, so attach the file yourself.
 
 ## Pull requests
 
-- **Issue first.** Every PR closes an issue. Open one (or find the existing one) describing the bug or the request
-  before you open the PR, then put `Closes #<issue>` in the PR description. A PR with no linked issue fails the
-  "Linked issue" check and won't be reviewed. Take the issue first ([Claiming an issue](#claiming-an-issue)): one
-  person's PRs may close the same issue, but a PR for an issue someone else holds gets `already-claimed`. GitHub
-  links an issue only for a PR into `main`; for a PR stacked on another PR's branch the check reads
-  `Closes #<issue>` from the description itself.
-- **A bug fix, unless you're vouched.** From outside the vouched list, the issue your PR closes has to carry the
-  `bug` label. If it doesn't, the PR gets `not-a-bug-fix` and a failed `bug-fix-only` status. When a maintainer
-  labels the issue `bug`, both clear by themselves.
-- **One problem per PR.** Fix one problem and include everything that fix needs: code, tests, docs. Cleanup,
-  refactors and a second fix go in their own PRs. Describe the change the way a user would notice it ("dragging a
-  tab onto another groups them").
+- **One problem per pull request.** Fix one problem and include everything that fix needs: code, tests, docs.
+  Cleanup, refactors and a second fix go in their own pull requests. Describe the change the way a user would notice
+  it ("dragging a tab onto another groups them"). Linking the issue it fixes (`Closes #<issue>`) helps.
 - **Show that it works.** Under Verification, say how you reproduced the bug and what you saw after the fix, with
-  screenshots, or a video when the change is about motion or timing, ideally next to Dia's. Upload them to the PR;
-  don't commit them. "Tests pass" is not evidence. A change with nothing to see still has something to show: the
-  failing check before and the passing one after.
-- **Handle the review bots.** Greptile reviews every PR, and CodeRabbit joins once a maintainer starts it. Fix or
-  answer each comment and resolve its thread.
-- **`ready` and `incomplete`.** A PR is `ready` when it has a screenshot or video, no open bot threads, no conflicts
-  with `main` and no failed check. Otherwise it is `incomplete`. The labels update on every push and once a day;
-  comment `/recheck` to update them now. We look at `ready` PRs first.
-- **3 open PRs per person**, unless you're vouched. A fourth gets `over-limit` and waits until one of your earlier
-  ones is merged or closed.
-- **Keep it mergeable.** `main` moves fast and the owner commits straight to it. A PR that conflicts gets
-  `needs-rebase`; rebase and it comes off.
-- **Getting vouched.** Maintainers vouch for contributors with [vouch](https://github.com/mitchellh/vouch). The list
-  is `.github/VOUCHED.td`; collaborators and bots always count as vouched. Being vouched means we take features from
-  you, so it follows a few good bug fixes, not a first pull request. A maintainer comments `vouch` on your issue or
-  pull request (`vouch @you` on someone else's), which adds you to the list until a maintainer removes you. Until
-  then your PR carries `vouch:unvouched`, and the iOS and Android builds and CodeRabbit wait for a maintainer to
-  start them with the `run-ci` label; you don't need to push again.
-- **Denouncing is for spam and abuse.** A maintainer does it by hand. No automation denounces anyone, and breaking a
-  rule on this page never does. It is the only thing that closes pull requests and issues automatically.
+  screenshots, or a video when the change is about motion or timing, ideally next to Dia's. Upload them to the pull
+  request; don't commit them. "Tests pass" is not evidence. A change with nothing to see still has something to show:
+  the failing check before and the passing one after.
+- **Keep it mergeable.** Rebase on `main` when it conflicts.
 - Commit messages carry the why, since the code doesn't have comments. Look at `git log` for the style: a short
-  subject saying what changed for the user, then a plain paragraph.
-- Sometimes the owner lands your work in a different shape, or pulls part of a PR into their own commit. When that
-  happens you stay on it as a `Co-authored-by:` trailer, and the release notes item ends with "Thanks, @you" linked
-  to your PR.
+  "Area: sentence" subject saying what changed, then a plain paragraph.
+- Sometimes your work lands in a different shape, or part of a pull request goes into another commit. You stay on it
+  as a `Co-authored-by:` trailer.
 
-Releases, the site deploy and anything posted publicly are the owner's job. Don't bump versions or touch the appcast
-in a PR.
+Releases and anything posted publicly are the owner's job. Don't bump versions or touch update feeds in a pull
+request.
 
 ## Writing
 
-Copy in the app, on the site and in release notes is short, plain and a little funny. Internet slang is fine.
-Corporate-cute lines aren't. "Sign-up not included" got cut for being cringe, and so did the "no account" and
-"no sign-up" tags and the price badge. Say what the thing does with a number or a mechanism. Release notes
-follow `docs/release-notes/README.md`. The site has to look right on a phone.
+Copy in the app and in release notes is short, plain and a little funny. Corporate-cute lines aren't. Say what the
+thing does with a number or a mechanism. Copy that names Mac things (⌘, "macOS", the menu bar) needs its Linux and
+Windows wording too. Release notes follow `docs/release-notes/README.md`.
 
 ## Working with a coding agent
 
-Plenty of Ardia was written by agents, so using one is fine. Point it at `AGENTS.md` and `docs/agent-brief.md`
-first. Those files hold the owner's standing rules (hidden test instances, no focus stealing, isolated builds, the
-no-comments rule), and they're why a change goes in without a long back-and-forth. For risky logic (races, object
-lifetimes, security, migrations, sync), get a second model to review the change before and after, and reproduce each
-finding before acting on it. Check the agent's diff yourself before you open the PR. You're the one answering for it.
-End the PR description with the model and harness that did the work.
+Using one is fine. Point it at `AGENTS.md` and `docs/agent-brief.md` first. Those files hold the standing rules
+(hidden test instances, no focus stealing, isolated builds, the no-comments rule), and they're why a change goes in
+without a long back-and-forth. For risky logic (races, object lifetimes, security, migrations, sync), get a second
+model to review the change before and after, and reproduce each finding before acting on it. Check the agent's diff
+yourself before you open the pull request, and verify the change the way "Show that it works" asks. You're the one
+answering for it. Commit messages and pull request descriptions carry no attribution lines for the agent or its
+harness.
 
-## License
+## Upstream
 
-Ardia's own files are Apache-2.0, and Ardia as distributed is GPL-3.0 (see NOTICE). Before your first pull request
-is merged you sign the [Contributor License Agreement](CLA.md): you keep the copyright in your work and license it to
-the project, including the right to relicense it, commercially as well. The CLA bot asks on your pull request, and
-signing is one comment.
+Nilla is a fork of [Ardia](https://github.com/ardia-browser/ardia). A fix that applies to Ardia too is welcome there,
+under Ardia's own rules. Don't open Nilla issues on Ardia's tracker, and don't report Ardia's bugs here unless they
+happen in Nilla.
+
+## License of contributions
+
+Nilla's own files, and those it carries from Ardia, are Apache-2.0, and Nilla as distributed is GPL-3.0 (see
+`NOTICE`). By contributing you agree that your contribution is licensed under the Apache License 2.0, as its section
+5 provides, and as part of Nilla under the GPL-3.0 as distributed. There is no CLA, and nobody gets the right to
+relicense your work. Keep every existing copyright and license header.
+
+You may add a `Signed-off-by:` line to your commits ([Developer Certificate of Origin](https://developercertificate.org));
+it's welcome, not required.

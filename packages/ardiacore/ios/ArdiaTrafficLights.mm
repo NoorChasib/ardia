@@ -10,10 +10,10 @@
 #include <cmath>
 #include <initializer_list>
 
-using namespace ardia_window;
-using namespace ardia_runtime;
+using namespace nilla_window;
+using namespace nilla_runtime;
 
-namespace ardia_window {
+namespace nilla_window {
 
 const void *kLightsCenterKey = &kLightsCenterKey;
 
@@ -102,7 +102,7 @@ void LogLights(NSWindow *window, NSString *what) {
 void InstallTrafficLightsLog() {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    ArdiaLaunchConfig *config = ArdiaLaunchConfig.shared;
+    NillaLaunchConfig *config = NillaLaunchConfig.shared;
     if (![config traced:@"trafficLights"] || !config.dataDirectory) return;
     NSString *path = [config.dataDirectory stringByAppendingPathComponent:@"traffic-lights.log"];
     [NSFileManager.defaultManager createFileAtPath:path contents:nil attributes:nil];
@@ -317,7 +317,7 @@ constexpr int64_t kLightsSettle = 50 * NSEC_PER_MSEC;
 
 }
 
-namespace ardia_window {
+namespace nilla_window {
 
 void RetileTrafficLights(NSWindow *window) {
   NSView *frameView = window.contentView.superview;
@@ -336,7 +336,7 @@ NSArray<NSButton *> *TrafficLightButtons(NSWindow *window) {
 }
 
 NSPoint LightsCenter(NSWindow *window, NSValue *center, NSSize size) {
-  const CGFloat scale = ArdiaInterfaceScale.scale;
+  const CGFloat scale = NillaInterfaceScale.scale;
   if (!center) return NSMakePoint((kTrafficLightInsetX + size.width / 2) * scale, (kTrafficLightTop + size.height / 2) * scale);
   const NSPoint at = center.pointValue;
   const BOOL trailing = objc_getAssociatedObject(window, kLightsTrailingKey) != nil;
@@ -379,7 +379,7 @@ void RefitTrafficLights(NSWindow *window) {
 void FollowInterfaceScaleWithLights() {
   static dispatch_once_t once;
   dispatch_once(&once, ^{
-    [NSNotificationCenter.defaultCenter addObserverForName:ArdiaInterfaceScaleDidChange
+    [NSNotificationCenter.defaultCenter addObserverForName:NillaInterfaceScaleDidChange
                                                     object:nil
                                                      queue:nil
                                                 usingBlock:^(NSNotification *) {
@@ -402,7 +402,7 @@ void InsetTrafficLights(NSWindow *window) {
 
 }
 
-namespace ardia_window {
+namespace nilla_window {
 
 bool MoveTrafficLights(NSWindow *window, NSValue *center) {
   NSArray<NSButton *> *buttons = TrafficLightButtons(window);
@@ -464,8 +464,8 @@ void ConfigureWindow(NSWindow *window) {
   if (!NSEqualRects(window.frame, frame)) [window setFrame:frame display:NO];
   window.titlebarAppearsTransparent = YES;
   window.titleVisibility = NSWindowTitleHidden;
-  window.title = @"Ardia";
-  [ArdiaChromeWindowHost setInterfaceMinSize:NSMakeSize(500, 460) ofWindow:window];
+  window.title = @"Nilla";
+  [NillaChromeWindowHost setInterfaceMinSize:NSMakeSize(500, 460) ofWindow:window];
   window.backgroundColor = WindowColor();
   window.releasedWhenClosed = NO;
   window.tabbingMode = NSWindowTabbingModeDisallowed;
@@ -479,22 +479,22 @@ void InsetUtilityTrafficLights(NSWindow *window) {
 
 }
 
-NSValue *ArdiaTrafficLightsCenter(NSWindow *window) {
+NSValue *NillaTrafficLightsCenter(NSWindow *window) {
   return window ? objc_getAssociatedObject(window, kLightsCenterKey) : nil;
 }
 
-BOOL ArdiaTrafficLightsTrailing(NSWindow *window) {
+BOOL NillaTrafficLightsTrailing(NSWindow *window) {
   return window && objc_getAssociatedObject(window, kLightsTrailingKey) != nil;
 }
 
-@implementation ArdiaChromeWindowHost (AccessibilityTitle)
+@implementation NillaChromeWindowHost (AccessibilityTitle)
 
 + (void)setAccessibilityTitleReadHandler:(void (^)(NSWindow *))handler {
-  ardia_window::gTitleRead = [handler copy];
+  nilla_window::gTitleRead = [handler copy];
 }
 
 + (void (^)(NSWindow *))accessibilityTitleReadHandler {
-  return ardia_window::gTitleRead;
+  return nilla_window::gTitleRead;
 }
 
 @end

@@ -19,7 +19,7 @@ export const AUTOMATION_EVENTS = [
   "notification.shown",
   "peek.opened",
   "peek.closed",
-  "littleArdia.opened",
+  "littleNilla.opened",
   "split.created",
   "split.closed",
   "pin.added",

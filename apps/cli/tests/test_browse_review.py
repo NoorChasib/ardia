@@ -12,13 +12,13 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ardia_cli import redact
-from ardia_cli.browse import actions, capture, client, commands, daemon, inputs, paths, snapshot
-from ardia_cli.browse.errors import BrowseError, CdpError, CdpTimeout, ConnectionLost, Gated, OutcomeUnknown, StaleRef, Unreachable
-from ardia_cli.browse.page import Page
-from ardia_cli.browse.state import State
+from nilla_browser_cli import redact
+from nilla_browser_cli.browse import actions, capture, client, commands, daemon, inputs, paths, snapshot
+from nilla_browser_cli.browse.errors import BrowseError, CdpError, CdpTimeout, ConnectionLost, Gated, OutcomeUnknown, StaleRef, Unreachable
+from nilla_browser_cli.browse.page import Page
+from nilla_browser_cli.browse.state import State
 
-SCRATCH = Path.home() / "ardia-scratch"
+SCRATCH = Path.home() / "nilla-scratch"
 
 
 def scratch(test) -> Path:
@@ -61,7 +61,7 @@ class DeadLinkIsTerminal(unittest.TestCase):
             async def send(self, method, params=None, session=None, timeout=30):
                 return {"targetInfos": []}
 
-        with mock.patch("ardia_cli.browse.state.Browser", FakeBrowser):
+        with mock.patch("nilla_browser_cli.browse.state.Browser", FakeBrowser):
             run(state.connect())
         self.assertEqual(opened, [1])
 
@@ -470,8 +470,8 @@ class DeliveryIsNeverAssumed(unittest.TestCase):
 
 class ElementsFromAnotherWorld(unittest.TestCase):
     def test_an_element_from_an_older_world_is_resolved_again_and_the_call_retried(self):
-        from ardia_cli.browse.errors import CdpError
-        from ardia_cli.browse.page import Element
+        from nilla_browser_cli.browse.errors import CdpError
+        from nilla_browser_cli.browse.page import Element
 
         page = Page(SimpleNamespace(sessions={}, frame_for=lambda page: None), "T")
         page.session_id = "S"
@@ -500,8 +500,8 @@ class ElementsFromAnotherWorld(unittest.TestCase):
 
 class ElementsFromAGonePage(unittest.TestCase):
     def test_an_element_whose_page_is_gone_says_the_page_changed(self):
-        from ardia_cli.browse.errors import CdpError
-        from ardia_cli.browse.page import Element
+        from nilla_browser_cli.browse.errors import CdpError
+        from nilla_browser_cli.browse.page import Element
 
         page = Page(SimpleNamespace(sessions={}, frame_for=lambda page: None), "T")
         page.session_id = "S"
@@ -573,7 +573,7 @@ class MutationsCarryUnknownOutcomes(unittest.TestCase):
         async def fake_dispatch(ctx, name, argv):
             seen.append(name)
             if name == "click":
-                raise OutcomeUnknown("click", "Ardia didn't answer")
+                raise OutcomeUnknown("click", "Nilla didn't answer")
             return commands.Result({"ok": True})
 
         ctx = commands.Ctx(SimpleNamespace(), {}, "/", {}, None, "batch")
@@ -749,7 +749,7 @@ class FocusReplacementIsFollowed(unittest.TestCase):
     def test_the_vault_never_follows_a_replacement(self):
         import inspect
 
-        from ardia_cli.browse import vault
+        from nilla_browser_cli.browse import vault
 
         source = inspect.getsource(vault.login)
         self.assertNotIn("settle_focus", source)
@@ -758,7 +758,7 @@ class FocusReplacementIsFollowed(unittest.TestCase):
 
 class AnnotateListsOnlyWhatIsInTheImage(unittest.TestCase):
     def test_legend_skips_boxes_outside_the_viewport(self):
-        from ardia_cli.browse import media
+        from nilla_browser_cli.browse import media
 
         region = (0, 0, 1280, 577)
         self.assertTrue(media.in_image({"x": 8, "y": 21, "width": 100, "height": 37}, region))
@@ -775,7 +775,7 @@ class BrokenPipeIsQuiet(unittest.TestCase):
         read, write = os.pipe()
         os.close(read)
         try:
-            done = subprocess.run([sys.executable, "-m", "ardia_cli", "browse", "--help"], stdout=write, stderr=subprocess.PIPE,
+            done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--help"], stdout=write, stderr=subprocess.PIPE,
                                   env=dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parents[1])), timeout=60)
         finally:
             os.close(write)

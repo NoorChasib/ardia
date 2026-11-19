@@ -1,4 +1,4 @@
-import type { OpenWindowOptions } from "@ardia/shell";
+import type { OpenWindowOptions } from "@nilla/shell";
 import { TurboModuleRegistry, type TurboModule } from "react-native";
 import { windowsMotion } from "./animation/motion";
 import { addNativeListener, type EventSubscription } from "./events";
@@ -28,17 +28,27 @@ type Call = (...values: unknown[]) => unknown;
 
 const modules = new Map<string, object>();
 
-const RELEASE_NOTES_PAGE = "https://ardia.dev/release-notes";
+function launchServices(): unknown {
+  const constants = ((TurboModuleRegistry.get<TurboModule>("NillaWindowsUpdate") as NativeModule | null)?.getConstants?.() ?? {}) as Record<string, unknown>;
+  const text = constants.services;
+  if (typeof text !== "string" || !text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
 
 const around: Record<string, Record<string, (native: Call) => Call>> = {
-  ArdiaApp: {
-    systemInfo: (native) => () => {
-      const info = stampedSystemInfo(native());
-      if (typeof info !== "object" || info === null) return info;
-      return { releaseNotesURL: RELEASE_NOTES_PAGE, ...info };
+  NillaApp: {
+    launchConfig: (native) => () => {
+      const config = native();
+      if (typeof config !== "object" || config === null) return config;
+      return { ...config, services: launchServices() };
     },
+    systemInfo: (native) => () => stampedSystemInfo(native()),
   },
-  ArdiaAppWindows: {
+  NillaAppWindows: {
     openWindow: (native) => (id, options) => {
       setWindowDark(String(id), !!(options as { incognito?: unknown } | null)?.incognito);
       noteAppWindow(String(id), (options as OpenWindowOptions | null)?.kind);
@@ -49,9 +59,9 @@ const around: Record<string, Record<string, (native: Call) => Call>> = {
 
 const syncOnWindows = windowsSync();
 
-watchDialogsWith(() => (TurboModuleRegistry.get<TurboModule & Pick<DialogsModule, "openCount">>("ArdiaDialogs")?.openCount() ?? 0) + (TurboModuleRegistry.get<TurboModule & Pick<MenusModule, "openCount">>("ArdiaMenus")?.openCount() ?? 0) > 0);
+watchDialogsWith(() => (TurboModuleRegistry.get<TurboModule & Pick<DialogsModule, "openCount">>("NillaDialogs")?.openCount() ?? 0) + (TurboModuleRegistry.get<TurboModule & Pick<MenusModule, "openCount">>("NillaMenus")?.openCount() ?? 0) > 0);
 
-const writtenInJs: Record<string, Record<string, unknown>> = { ...(syncOnWindows ? { ArdiaSync: syncOnWindows } : {}), ArdiaUpdater: windowsUpdater, ArdiaSwipe: windowsSwipe, ArdiaMotion: windowsMotion, ArdiaLaunchLinks: windowsLaunchLinks, ArdiaExternalAppCounts: windowsExternalAppCounts, ArdiaDialogPages: windowsDialogPages, ArdiaImport: windowsImport(), ArdiaInlineCompletion: windowsInlineCompletion(() => TurboModuleRegistry.get<TurboModule & WindowsHostModule>("ArdiaWindowsHost")), ArdiaApp: windowsIntroMusic, ArdiaSelfCheck: windowsSelfChecks };
+const writtenInJs: Record<string, Record<string, unknown>> = { ...(syncOnWindows ? { NillaSync: syncOnWindows } : {}), NillaUpdater: windowsUpdater, NillaSwipe: windowsSwipe, NillaMotion: windowsMotion, NillaLaunchLinks: windowsLaunchLinks, NillaExternalAppCounts: windowsExternalAppCounts, NillaDialogPages: windowsDialogPages, NillaImport: windowsImport(), NillaInlineCompletion: windowsInlineCompletion(() => TurboModuleRegistry.get<TurboModule & WindowsHostModule>("NillaWindowsHost")), NillaApp: windowsIntroMusic, NillaSelfCheck: windowsSelfChecks };
 
 const inert = (module: string, key: string) => () => {
   noteMissing(`${module}.${key}`);

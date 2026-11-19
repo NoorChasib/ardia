@@ -86,6 +86,20 @@ test("listBrowsers keeps well-formed Linux sources and remembers which can decry
   await assert.rejects(failing.api.listBrowsers(), { code: "unreadable" });
 });
 
+test("listBrowsers with a list of ids answers only those browsers and still remembers how every listed one unlocks", async () => {
+  const sources = [
+    { id: "chrome", name: "Google Chrome", family: "chromium", needsKeychain: true, profiles: [] },
+    { id: "chromium", name: "Chromium", family: "chromium", needsKeychain: false, profiles: [] },
+    { id: "firefox", name: "Firefox", family: "firefox", profiles: [] },
+  ];
+  const { api, calls } = fixture({ replies: { "ArdiaImport.listBrowsers": sources } });
+  assert.deepEqual((await api.listBrowsers(["firefox", "brave"])).map((s) => s.id), ["firefox"]);
+  assert.deepEqual(calls, [{ method: "ArdiaImport.listBrowsers", args: [] }]);
+  assert.equal(api.isBrowserUnlocked("chromium"), true);
+  assert.equal(api.isBrowserUnlocked("chrome"), false);
+  assert.deepEqual((await api.listBrowsers([])).map((s) => s.id), []);
+});
+
 test("importData starts a native job, maps only its own progress and resolves a normalized result", async () => {
   const { api, calls, emit, listeners } = fixture();
   const progress = [];

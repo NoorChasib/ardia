@@ -46,10 +46,12 @@ setup() {
   others="$(security list-keychains -d user | tr -d '"' | grep -v "^ *$keychain$" | xargs)"
   read -r -a others_list <<<"$others"
   security list-keychains -d user -s "$keychain" ${others_list[@]+"${others_list[@]}"}
-  security find-identity -v -p codesigning "$keychain" | grep -q 'Developer ID Application: .*(U5L5T3NGVV)' \
-    || die "the keychain has no valid Developer ID Application identity for U5L5T3NGVV: $(security find-identity -v -p codesigning "$keychain" | tail -1)"
+  local team="${APPLE_TEAM_ID:-}"
+  [ -n "$team" ] || die "APPLE_TEAM_ID is empty: set the repository variable to the Apple team that signs Nilla"
+  security find-identity -v -p codesigning "$keychain" | grep -q "Developer ID Application: .*($team)" \
+    || die "the keychain has no valid Developer ID Application identity for $team: $(security find-identity -v -p codesigning "$keychain" | tail -1)"
 
-  local profile="$secrets/ardia.provisionprofile"
+  local profile="$secrets/nilla.provisionprofile"
   decode "$MACOS_PROVISIONING_PROFILE" "$profile"
   security cms -D -i "$profile" >/dev/null 2>&1 || die "MACOS_PROVISIONING_PROFILE isn't a base64 provisioning profile"
 

@@ -23,11 +23,11 @@
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "credui.lib")
 
-namespace Ardia::SyncSecrets {
+namespace Nilla::SyncSecrets {
 
 using SyncCrypto::WipedBytes;
 
-constexpr std::string_view KeyPurpose = "ardia-sync-key/v1";
+constexpr std::string_view KeyPurpose = "nilla-sync-key/v1";
 constexpr std::string_view TestInstancePurpose = "/test-instance";
 
 inline bool IsAccountName(std::string const &account) noexcept {
@@ -57,7 +57,7 @@ inline bool SaveKey(std::string const &account, WipedBytes const &entropy) noexc
     DATA_BLOB plain{static_cast<DWORD>(entropy.size()), const_cast<BYTE *>(entropy.data())};
     DATA_BLOB extra{static_cast<DWORD>(purpose.size()), reinterpret_cast<BYTE *>(purpose.data())};
     DATA_BLOB sealed{};
-    if (!CryptProtectData(&plain, L"Ardia sync key", &extra, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &sealed)) return false;
+    if (!CryptProtectData(&plain, L"Nilla sync key", &extra, nullptr, nullptr, CRYPTPROTECT_UI_FORBIDDEN, &sealed)) return false;
     std::string bytes(reinterpret_cast<char const *>(sealed.pbData), sealed.cbData);
     LocalFree(sealed.pbData);
     std::error_code error;
@@ -174,7 +174,7 @@ inline bool AskPassword(HWND owner, std::wstring const &message) noexcept {
   CREDUI_INFOW info{};
   info.cbSize = sizeof(info);
   info.hwndParent = owner;
-  info.pszCaptionText = L"Ardia";
+  info.pszCaptionText = L"Nilla";
   info.pszMessageText = message.c_str();
   ULONG package = 0;
   LPVOID answer = nullptr;
@@ -253,7 +253,7 @@ class OwnerCheck {
       LaunchLog::Write(L"sync", std::wstring{L"device owner check in a hidden test instance, no prompt: "} + (granted ? L"granted" : L"denied"));
       return granted;
     }
-    std::wstring message = L"Ardia wants to " + reason + L".";
+    std::wstring message = L"Nilla wants to " + reason + L".";
     if (OwnerParts::HelloAvailable()) {
       if (std::optional<bool> answer = OwnerParts::AskHello(owner, message)) return *answer;
     }

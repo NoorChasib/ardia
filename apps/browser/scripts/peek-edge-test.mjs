@@ -8,7 +8,7 @@ import { launch, reporter, session } from "../../../scripts/lib/instance.mjs";
 const args = process.argv.slice(2);
 const appArg = args.find((a) => !a.startsWith("--"));
 if (!appArg) {
-  console.error("usage: node peek-edge-test.mjs <Debug Ardia.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a push 350 ms after the stop goes on through, whatever the reveal speed. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, a tab dragged off it keeps it out until the button comes up even when a stray mouse move makes the edge watcher lose the press, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
+  console.error("usage: node peek-edge-test.mjs <Debug Nilla.app> [--port=<DevTools port>] [--keep-data]\n\nThe auto-hidden sidebar's peek, through the native edge watcher: a pointer resting on the window's bottom or top edge beside the peek keeps it out instead of flicking it shut and open, one that goes well past the edge closes it, an edge crossing outside the sidebar's column never opens it, once it slides away only the window's edge brings it back, in a full-screen window the pointer resting at the screen's edge keeps it out, pressing the other space's dot keeps it out, and with the window against a screen edge another display shares, the pointer stops at that edge to show the sidebar and a push 350 ms after the stop goes on through, whatever the reveal speed. Also (#1297, #1393, #1679): only the last 3 pt or past the edge open it, it stays out 40 pt past its edge and closes 200 ms after the pointer leaves, a drag on its edge resizes it instead of closing it, a tab dragged off it keeps it out until the button comes up even when a stray mouse move makes the edge watcher lose the press, and Reveal hidden tabs on hover off leaves the edge alone. Sidebar reveal speed: Faster and Default open at once and Slower waits 250 ms for the pointer to rest at the edge, in Dia's and Arc's layouts, on either side, in a full-screen window and at a screen-edge stop; with Slower a pass-by or a step back off the edge never opens it, a return while it slides away re-shows at once, ⌘S during the wait docks it with no peek after, and the choice survives a relaunch.");
   process.exit(2);
 }
 const appPath = resolve(appArg);
@@ -32,7 +32,7 @@ const HELPERS = `
 const st = () => ac.store.getState();
 const settle = (ms) => new Promise((r) => setTimeout(r, ms));
 const live = () => !!globalThis.acLayout.peek.w1?.live;
-const at = (x, y) => ac.shell.devSetPointer("w1", { x, y }).then(() => globalThis.expo.modules.ArdiaDev.devSidebarEdgePointer("w1", x, y, true));
+const at = (x, y) => ac.shell.devSetPointer("w1", { x, y }).then(() => globalThis.expo.modules.NillaDev.devSidebarEdgePointer("w1", x, y, true));
 const watchCalls = () => { const p = globalThis.acLayout.peek.w1; const calls = []; const show = p.show, hide = p.hide;
   p.show = (...a) => (calls.push("show"), show(...a)); p.hide = (...a) => (calls.push("hide"), hide(...a));
   return () => { p.show = show; p.hide = hide; return calls; }; };
@@ -84,7 +84,7 @@ try {
 
   await rep.check("a drag that starts on the peek's edge resizes it and keeps it out, even with the pointer ahead of the panel (#1679)", async () => {
     assert.equal(await run(`return peek();`), true);
-    const out = await run(`const dev = globalThis.expo.modules.ArdiaDev; let win;
+    const out = await run(`const dev = globalThis.expo.modules.NillaDev; let win;
       return ac.engine.call("windows.list", {}).then((l) => { win = l.find((x) => x.hasRoot).window; })
         .then(() => at(9 + 160 - 2, 400)).then(() => settle(200))
         .then(() => ac.engine.call("windows.dev", { window: win, action: "mouse:down:" + (9 + 160 - 2) + ",400" })).then(() => settle(100))
@@ -188,18 +188,18 @@ try {
   });
 
   await rep.check("with the window against the screen's edge, crossing to the next display stops at the edge and peeks; a second push goes through", async () => {
-    const frame = (x) => `return globalThis.expo.modules.ArdiaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
+    const frame = (x) => `return globalThis.expo.modules.NillaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
     await run(frame(0));
     assert.equal(await run(`return at(300, 400).then(() => at(-30, 400)).then(() => settle(500)).then(live);`), true, "stopped at the screen edge, peeking");
     assert.equal(await run(`return at(-30, 400).then(() => settle(700)).then(live);`), false, "the second push went on to the next display");
     assert.equal(await run(`return at(300, 400).then(() => settle(500)).then(() => at(-30, 400)).then(() => settle(500)).then(live);`), true, "stops again on the next crossing");
     assert.equal(await run(`return away();`), false);
-    const quick = await run(`const notes = []; const sub = globalThis.expo.modules.ArdiaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
+    const quick = await run(`const notes = []; const sub = globalThis.expo.modules.NillaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
       return at(300, 400).then(() => settle(500)).then(() => at(-30, 400)).then(() => settle(200)).then(() => at(-30, 400)).then(() => settle(300)).then(() => (sub.remove(), notes));`);
     assert.deepEqual(quick, ["stopped"], "a quick second push after the peek opened is the same stop, not a second one");
     assert.equal(await run(`return away();`), false);
     await run(frame(10));
-    const notes = await run(`const notes = []; const sub = globalThis.expo.modules.ArdiaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
+    const notes = await run(`const notes = []; const sub = globalThis.expo.modules.NillaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
       return at(300, 400).then(() => settle(500)).then(() => at(-5, 400)).then(() => settle(100)).then(() => at(-30, 400)).then(() => settle(100)).then(() => at(-30, 400)).then(() => settle(300)).then(() => (sub.remove(), notes));`);
     assert.deepEqual(notes, ["stopped"], "one stop, counted even when the gap beside the window already opened the peek, and a quick second push is not a second stop");
     assert.equal(await run(`return away();`), false);
@@ -208,7 +208,7 @@ try {
   });
 
   await rep.check("a stop at the screen edge ends when the window moves away from that edge", async () => {
-    const frame = (x) => `return globalThis.expo.modules.ArdiaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
+    const frame = (x) => `return globalThis.expo.modules.NillaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
     await run(frame(0));
     assert.equal(await run(`return at(300, 400).then(() => at(-30, 400)).then(() => settle(500)).then(live);`), true, "stopped at the screen edge, peeking");
     await run(frame(300));
@@ -219,7 +219,7 @@ try {
 
   await rep.check("with the sidebar on the right and the window against the screen's right edge, crossing stops there too", async () => {
     const screenWidth = Number(execFileSync("osascript", ["-l", "JavaScript", "-e", 'ObjC.import("AppKit"); $.NSScreen.screens.objectAtIndex(0).frame.size.width']).toString());
-    await run(`st().updateSettings({ sidebarSide: "right" }); return globalThis.expo.modules.ArdiaDev.devSetWindowFrame("w1", [${screenWidth - WIDTH}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(600));`);
+    await run(`st().updateSettings({ sidebarSide: "right" }); return globalThis.expo.modules.NillaDev.devSetWindowFrame("w1", [${screenWidth - WIDTH}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(600));`);
     try {
       assert.equal(await run(`return at(${WIDTH - 300}, 400).then(() => at(${WIDTH + 30}, 400)).then(() => settle(500)).then(live);`), true, "stopped at the right screen edge, peeking");
       assert.equal(await run(`return at(${WIDTH + 30}, 400).then(() => settle(700)).then(live);`), false, "the second push went on to the next display");
@@ -306,10 +306,10 @@ try {
 
   for (const s of ["default", "slower"]) {
     await rep.check(`${s} at a screen-edge stop: a push 200 ms after the stop stays at the edge, one 460 ms after it goes through`, async () => {
-      const frame = (x) => `return globalThis.expo.modules.ArdiaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
+      const frame = (x) => `return globalThis.expo.modules.NillaDev.devSetWindowFrame("w1", [${x}, 100, ${WIDTH}, ${HEIGHT}]).then(() => settle(400));`;
       await run(frame(0));
       try {
-        const out = await run(`const notes = []; const sub = globalThis.expo.modules.ArdiaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
+        const out = await run(`const notes = []; const sub = globalThis.expo.modules.NillaAppWindows.addListener("onWindowEvent", (e) => e.screenEdge && notes.push(e.screenEdge));
           return speed("${s}").then(() => at(300, 400)).then(() => settle(700)).then(() => { const t0 = Date.now(); const opened = firstLive(1200);
             const pushAt = (ms) => settle(Math.max(0, t0 + ms - Date.now())).then(() => at(-30, 400));
             return at(-30, 400).then(() => pushAt(200)).then(() => settle(40)).then(() => ({ early: [...notes] }))
@@ -336,7 +336,7 @@ try {
     await run(`return away().then(() => speed("default"));`);
   });
 } finally {
-  await run(`return globalThis.expo.modules.ArdiaDev.devSidebarEdgePointer("w1", 0, 0, false).then(() => ac.shell.devSetPointer("w1", null));`).catch(() => {});
+  await run(`return globalThis.expo.modules.NillaDev.devSidebarEdgePointer("w1", 0, 0, false).then(() => ac.shell.devSetPointer("w1", null));`).catch(() => {});
   await app?.quit();
   if (!keep) rmSync(data, { recursive: true, force: true });
   else rep.say(`data: ${data}`);

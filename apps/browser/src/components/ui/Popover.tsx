@@ -1,4 +1,4 @@
-import { VisualEffect } from "@ardia/shell";
+import { VisualEffect } from "@nilla/shell";
 import { Symbol } from "./Symbol";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";

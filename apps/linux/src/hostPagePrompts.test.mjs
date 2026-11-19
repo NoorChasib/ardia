@@ -8,13 +8,16 @@ import { runInNewContext } from "node:vm";
 const bootstrap = readFileSync(new URL("../../../engine/ardiacore-linux/src/ardia/linux/bootstrap.js", import.meta.url), "utf8");
 const hostModules = new URL("./hostModules.ts", import.meta.url).href;
 const hostEvents = new URL("./hostEvents.ts", import.meta.url).href;
+const engineModuleNames = new URL("./engineModuleNames.ts", import.meta.url).href;
 
 const nativeShim = `data:text/javascript,${encodeURIComponent(`
 import { resolveHostModule } from ${JSON.stringify(hostModules)};
 import { createNativeEvents } from ${JSON.stringify(hostEvents)};
+import { engineModuleName } from ${JSON.stringify(engineModuleNames)};
 const events = createNativeEvents();
 globalThis.__promptsHost.onEvent((module, event, payload) => events.emit(module, event, payload));
-export function requireNativeModule(name) {
+export function requireNativeModule(appName) {
+  const name = engineModuleName(appName);
   return new Proxy({}, { get(_target, key) {
     if (key === "addListener") return (event, listener) => events.add(name, event, listener);
     return resolveHostModule(globalThis.__promptsHost, name, key);
@@ -112,7 +115,7 @@ test("a request for a tab this window does not show is ignored", () => {
 
 test("the external app answer goes to the engine with its id, and only once", async () => {
   calls.length = 0;
-  const request = { id: "x1", url: "ardiatest://hello", scheme: "ardiatest", origin: "https://app.test", app: "Test", appPath: null, icon: null, title: "Open “Test”?", message: "https://app.test wants to open this application.", remember: "Always allow" };
+  const request = { id: "x1", url: "nillatest://hello", scheme: "nillatest", origin: "https://app.test", app: "Test", appPath: null, icon: null, title: "Open “Test”?", message: "https://app.test wants to open this application.", remember: "Always allow" };
   patchPage("tab-d", { externalApp: request });
   prompts.answerExternalApp("tab-d", true, true);
   prompts.answerExternalApp("tab-d", true, true);
@@ -123,11 +126,11 @@ test("the external app answer goes to the engine with its id, and only once", as
 
 test("remembered external apps are read and removed through the engine routes", async () => {
   calls.length = 0;
-  replies.set("permissions.externalAppAllowances", [{ origin: "https://app.test", scheme: "ardiatest", app: "Test", icon: null }]);
-  assert.deepEqual(await sites.getExternalAppAllowances("default"), [{ origin: "https://app.test", scheme: "ardiatest", app: "Test", icon: null }]);
-  await sites.removeExternalAppAllowance("default", "https://app.test", "ardiatest");
+  replies.set("permissions.externalAppAllowances", [{ origin: "https://app.test", scheme: "nillatest", app: "Test", icon: null }]);
+  assert.deepEqual(await sites.getExternalAppAllowances("default"), [{ origin: "https://app.test", scheme: "nillatest", app: "Test", icon: null }]);
+  await sites.removeExternalAppAllowance("default", "https://app.test", "nillatest");
   assert.deepEqual(calls.map(({ name, args }) => [name, args]), [
     ["permissions.externalAppAllowances", {}],
-    ["permissions.removeExternalAppAllowance", { origin: "https://app.test", scheme: "ardiatest" }],
+    ["permissions.removeExternalAppAllowance", { origin: "https://app.test", scheme: "nillatest" }],
   ]);
 });

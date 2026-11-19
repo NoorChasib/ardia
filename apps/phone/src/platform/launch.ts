@@ -1,4 +1,4 @@
-import { pages } from "@ardia/phone-native";
+import { pages } from "@nilla/phone-native";
 import type { LaunchValue } from "../lib/launchArguments";
 
 export function launchValues(): Record<string, LaunchValue> {

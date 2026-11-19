@@ -1,4 +1,4 @@
-import ArdiaSync
+import NillaSync
 import Foundation
 import SQLite3
 import Testing
@@ -271,7 +271,7 @@ func received(_ key: String, url: String = "https://sent.example/", sentAt: Date
 @Suite struct LegacyImportGateTests {
   func gate(_ scratch: Scratch) -> LegacyImportGate {
     LegacyImportGate(
-      legacyStores: [scratch.root.appending(path: "Group/Browser.store"), scratch.root.appending(path: "Ardia/Browser.store")],
+      legacyStores: [scratch.root.appending(path: "Group/Browser.store"), scratch.root.appending(path: "Nilla/Browser.store")],
       marker: scratch.root.appending(path: "PhoneSync/legacy-imported.json")
     )
   }
@@ -295,8 +295,8 @@ func received(_ key: String, url: String = "https://sent.example/", sentAt: Date
   @Test func aLegacyStoreWithoutTheMarkerHoldsEveryRead() throws {
     let scratch = try Scratch()
     let gate = gate(scratch)
-    try FileManager.default.createDirectory(at: scratch.root.appending(path: "Ardia"), withIntermediateDirectories: true)
-    try Data("store".utf8).write(to: scratch.root.appending(path: "Ardia/Browser.store"))
+    try FileManager.default.createDirectory(at: scratch.root.appending(path: "Nilla"), withIntermediateDirectories: true)
+    try Data("store".utf8).write(to: scratch.root.appending(path: "Nilla/Browser.store"))
     #expect(gate.holdsSync)
     let source = try source(scratch, gate)
     #expect(throws: LocalBrowsingNotReady.self) { try source.beginRead() }
@@ -329,7 +329,7 @@ func received(_ key: String, url: String = "https://sent.example/", sentAt: Date
   @Test func aLegacyInstallWithOnlyPreferencesHoldsSync() throws {
     let scratch = try Scratch()
     let gate = LegacyImportGate(
-      legacyStores: [scratch.root.appending(path: "Ardia/Browser.store")],
+      legacyStores: [scratch.root.appending(path: "Nilla/Browser.store")],
       marker: scratch.root.appending(path: "PhoneSync/legacy-imported.json"),
       hasLegacyPreferences: { true }
     )
@@ -352,8 +352,8 @@ func received(_ key: String, url: String = "https://sent.example/", sentAt: Date
   @Test func aMarkerThatDoesNotDecodeOrHasAnotherVersionDoesNotRelease() throws {
     let scratch = try Scratch()
     let gate = gate(scratch)
-    try FileManager.default.createDirectory(at: scratch.root.appending(path: "Ardia"), withIntermediateDirectories: true)
-    try Data("store".utf8).write(to: scratch.root.appending(path: "Ardia/Browser.store"))
+    try FileManager.default.createDirectory(at: scratch.root.appending(path: "Nilla"), withIntermediateDirectories: true)
+    try Data("store".utf8).write(to: scratch.root.appending(path: "Nilla/Browser.store"))
     try FileManager.default.createDirectory(at: gate.marker.deletingLastPathComponent(), withIntermediateDirectories: true)
     for text in [
       "", "{}", "not json", #"{"recordedAt":1}"#,

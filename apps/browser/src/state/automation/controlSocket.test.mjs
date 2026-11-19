@@ -51,7 +51,7 @@ function fresh() {
 test("hello, unknown methods and malformed lines", async () => {
   fresh();
   await controlOn();
-  assert.deepEqual(call("hello").result, { app: "Ardia", version: "1.0", protocol: 3 });
+  assert.deepEqual(call("hello").result, { app: "Nilla", version: "1.0", protocol: 3 });
   const unknown = call("dance");
   assert.equal(unknown.error.code, "unknown_method");
   const bad = call(null, null, { raw: "not json" });
@@ -118,7 +118,7 @@ test("a request tagged with an old generation, or arriving after Stop, never run
   assert.equal(stub.controlSocket.running, false);
 });
 
-test("windows lists normal and Little Ardia windows, never private ones, and redacts internal pages", async () => {
+test("windows lists normal and Little Nilla windows, never private ones, and redacts internal pages", async () => {
   fresh();
   await controlOn();
   const w = S().createWindow({ url: "https://a.example/" });
@@ -137,7 +137,7 @@ test("windows lists normal and Little Ardia windows, never private ones, and red
   assert.ok(!JSON.stringify(listed).includes("secret"));
 });
 
-test("windows names each tab's DevTools target so the ardia command never pairs tabs by address", async () => {
+test("windows names each tab's DevTools target so the nilla-browser command never pairs tabs by address", async () => {
   fresh();
   await controlOn();
   const w = S().createWindow({ url: "https://same.example/" });
@@ -313,7 +313,7 @@ test("the pill shows for a socket run while CDP is external, and Stop hides it a
   assert.equal(useCliIndicator.getState().shown, false);
 });
 
-test("a Little Ardia target never falls back to a private window", async () => {
+test("a Little Nilla target never falls back to a private window", async () => {
   fresh();
   await controlOn();
   const priv = S().createWindow({ kind: "private", url: "https://secret.example/" });

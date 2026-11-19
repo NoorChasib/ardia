@@ -68,12 +68,12 @@ const importerReplacements = new Map([
   [`${here("../browser/src/state/windows/layout.ts")}\0${here("../browser/src/components/downloads/Downloads.tsx")}`, here("./src/sidebarHeaderLayout.ts")],
   [`${here("../browser/src/state/windows/layout.ts")}\0${here("../browser/src/components/sidebar/AddressBar.tsx")}`, here("./src/sidebarHeaderLayout.ts")],
 ]);
-const siteMeadow = here("../site/src/scripts/meadow/");
+const siteMeadow = here("../../packages/shaders/meadow-src/scripts/meadow/");
 const SITE_MEADOW_TSCONFIG = JSON.stringify({ compilerOptions: { target: "ESNext", verbatimModuleSyntax: true, strict: true } });
 
 function siteMeadowScripts(): Plugin {
   return {
-    name: "ardia-linux:site-meadow",
+    name: "nilla-linux:site-meadow",
     enforce: "pre",
     async transform(code, id) {
       if (!id.startsWith(siteMeadow) || !id.endsWith(".ts")) return null;
@@ -87,7 +87,7 @@ const adapters = new Set([...replacements.values(), ...importerReplacements.valu
 
 function linuxComponents(): Plugin {
   return {
-    name: "ardia-linux:components",
+    name: "nilla-linux:components",
     enforce: "pre",
     transform(code, id) {
       if (!id.includes("/apps/browser/src/components/")) return null;
@@ -108,10 +108,10 @@ function linuxComponents(): Plugin {
 const shell = webShellConfig({
   plugins: [siteMeadowScripts(), linuxComponents(), credentialWording(), linuxWording(), calendarWording(), syncWording()],
   aliases: [
-    { find: /^@ardia\/shell$/, replacement: here("./src/shims/shell.tsx") },
+    { find: /^@nilla\/shell$/, replacement: here("./src/shims/shell.tsx") },
     { find: /^@ardia\/ardiacore$/, replacement: here("./src/shims/ardiacore.tsx") },
-    { find: /^@ardia-site\/meadow\/(scene|clock|cycle)$/, replacement: `${siteMeadow}$1.ts` },
+    { find: /^@nilla-site\/meadow\/(scene|clock|cycle)$/, replacement: `${siteMeadow}$1.ts` },
   ],
 });
 
-export default { ...shell, esbuild: { exclude: [/\.js$/, /\/apps\/site\/src\/scripts\/meadow\//] } };
+export default { ...shell, esbuild: { exclude: [/\.js$/, /\/packages\/shaders\/meadow-src\/scripts\/meadow\//] } };

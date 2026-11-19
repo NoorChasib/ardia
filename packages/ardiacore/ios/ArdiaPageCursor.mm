@@ -5,7 +5,7 @@
 #import <React/RCTCursor.h>
 #import <React/RCTView.h>
 
-namespace ardia_host {
+namespace nilla_host {
 
 namespace {
 
@@ -35,8 +35,8 @@ NSView *EnclosingPageView(NSView *view) {
   return nil;
 }
 
-bool IsArdiaSurface(NSWindow *window, NSView *hit) {
-  if ([ArdiaWindowController forNSWindow:window]) return true;
+bool IsNillaSurface(NSWindow *window, NSView *hit) {
+  if ([NillaWindowController forNSWindow:window]) return true;
   for (NSView *v = hit; v; v = v.superview)
     if ([NSBundle bundleForClass:v.class] == NSBundle.mainBundle) return true;
   return false;
@@ -134,7 +134,7 @@ NSString *CursorName(NSCursor *cursor) {
 
 NSWindow *WindowUnderPointer(NSEvent *event) {
   NSWindow *window = event.window;
-  if (!window || ardia_content_blocker::IsHiddenPageWindow(window)) return nil;
+  if (!window || nilla_content_blocker::IsHiddenPageWindow(window)) return nil;
   if (Background()) return window;
   const NSInteger under = [NSWindow windowNumberAtPoint:NSEvent.mouseLocation belowWindowWithWindowNumber:0];
   return under == window.windowNumber ? window : nil;
@@ -151,7 +151,7 @@ void RestoreCursorOverAppView(NSEvent *event) {
   NSView *hit = ViewAt(window, point);
   if (!hit) return;
   if (EnclosingPageView(hit)) return;
-  if (!IsArdiaSurface(window, hit)) return;
+  if (!IsNillaSurface(window, hit)) return;
   const bool hidden = IsInvisible(current);
   if (!hidden && current != gLastPageCursor) return;
   bool ownsCursor = false;
@@ -163,12 +163,12 @@ void RestoreCursorOverAppView(NSEvent *event) {
   gRestores++;
   if (hidden) gHiddenRestores++;
   gLastRestore = [NSString stringWithFormat:@"%@ -> %@ over %@", CursorName(current), CursorName(wanted), NSStringFromClass(hit.class)];
-  [ArdiaEvents emit:@"engine.cursorRestored" data:@{@"hidden" : @(hidden)}];
+  [NillaEvents emit:@"engine.cursorRestored" data:@{@"hidden" : @(hidden)}];
 }
 
 void RecordPageCursors() {
   SEL update = NSSelectorFromString(@"updateCursor:");
-  ardia_runtime::ReplaceMethod(PageViewClass(), update, ^id(IMP original) {
+  nilla_runtime::ReplaceMethod(PageViewClass(), update, ^id(IMP original) {
     return ^(NSView *page, NSCursor *cursor) {
       ((void (*)(id, SEL, NSCursor *))original)(page, update, cursor);
       if (cursor && NSCursor.currentCursor == cursor) gLastPageCursor = cursor;
@@ -178,13 +178,13 @@ void RecordPageCursors() {
 
 void HoldCursorsOfCoveredPages() {
   SEL shouldChange = NSSelectorFromString(@"shouldChangeCurrentCursor");
-  ardia_runtime::ReplaceMethod(PageViewClass(), shouldChange, ^id(IMP original) {
+  nilla_runtime::ReplaceMethod(PageViewClass(), shouldChange, ^id(IMP original) {
     return ^BOOL(NSView *page) {
       if (!((BOOL(*)(id, SEL))original)(page, shouldChange)) return NO;
       NSWindow *window = page.window;
       if (!window) return YES;
       NSView *hit = ViewAt(window, [window convertPointFromScreen:NSEvent.mouseLocation]);
-      if (!hit || [hit isDescendantOf:page] || !IsArdiaSurface(window, hit)) return YES;
+      if (!hit || [hit isDescendantOf:page] || !IsNillaSurface(window, hit)) return YES;
       gCoveredPageCursorsHeld++;
       return NO;
     };

@@ -1,27 +1,27 @@
 #import "ArdiaSwipe.h"
 #import "ArdiaCore.h"
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 enum class RendererScroll { Idle, AwaitingBegin, AwaitingFirstUpdate, FirstUpdateUnconsumed, FirstUpdateConsumed };
 
 }
 
-@interface ArdiaRendererScroll : NSObject
+@interface NillaRendererScroll : NSObject
 - (void)reset;
-@property (nonatomic) ardia_swipe::RendererScroll scroll;
+@property (nonatomic) nilla_swipe::RendererScroll scroll;
 @property (nonatomic) BOOL overscrolled;
 @property (nonatomic) BOOL overscrollAllowed;
 @end
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 enum class State { Idle, Pending, Tracking, Ignored };
 
 struct Gesture {
   State state = State::Idle;
-  __weak NSView<ArdiaSwipeTarget> *target;
-  __weak ArdiaRendererScroll *renderer;
+  __weak NSView<NillaSwipeTarget> *target;
+  __weak NillaRendererScroll *renderer;
   __weak NSView *hit;
   BOOL rendererHit = NO;
   CGFloat dx = 0, dy = 0;
@@ -38,7 +38,7 @@ struct Gesture {
 
 }
 
-namespace ardia_swipe {
+namespace nilla_swipe {
 
 extern NSMutableArray *gTrace;
 extern BOOL gWrongRendererHit;
@@ -48,18 +48,18 @@ NSEvent *HandleScroll(NSEvent *event, NSWindow *window, NSPoint location, BOOL i
 BOOL HandleDiscreteSwipe(NSWindow *window, NSPoint location, CGFloat deltaX);
 
 NSArray *RectValue(NSRect r);
-NSHashTable<NSView<ArdiaSwipeTarget> *> *Targets();
+NSHashTable<NSView<NillaSwipeTarget> *> *Targets();
 NSView *PageViewOf(NSView *hit);
-ArdiaRendererScroll *RendererScrollFor(NSView *hit);
+NillaRendererScroll *RendererScrollFor(NSView *hit);
 NSView *HitView(NSWindow *window, NSPoint locationInWindow);
-NSView<ArdiaSwipeTarget> *TargetAt(NSWindow *window, NSPoint locationInWindow, NSView *hit, NSMutableArray *why = nil);
+NSView<NillaSwipeTarget> *TargetAt(NSWindow *window, NSPoint locationInWindow, NSView *hit, NSMutableArray *why = nil);
 NSArray *HitChain(NSView *hit);
-BOOL IsPager(NSView<ArdiaSwipeTarget> *target);
-BOOL HasNativePager(NSView<ArdiaSwipeTarget> *target);
+BOOL IsPager(NSView<NillaSwipeTarget> *target);
+BOOL HasNativePager(NSView<NillaSwipeTarget> *target);
 NSView *FirstRenderer(NSView *view);
 NSView *ReactRoot(NSView *view, NSWindow *window);
-NSView<ArdiaSwipeTarget> *MisroutedRendererTarget(NSWindow *window, NSPoint location, NSView *hit);
-NSView *ResolveHit(NSWindow *window, NSPoint location, NSView<ArdiaSwipeTarget> *__strong *target, BOOL *fallback);
+NSView<NillaSwipeTarget> *MisroutedRendererTarget(NSWindow *window, NSPoint location, NSView *hit);
+NSView *ResolveHit(NSWindow *window, NSPoint location, NSView<NillaSwipeTarget> *__strong *target, BOOL *fallback);
 BOOL NativeContentScrolls(NSView *hit, NSView *container, int direction);
 NSArray *NativeScrollReport(NSView *hit, NSView *container);
 

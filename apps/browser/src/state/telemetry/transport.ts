@@ -1,8 +1,9 @@
 import { systemInfo, type SystemInfo } from "../../platform/app";
 import { devTestValue } from "../../platform/launchConfig";
 import { PLATFORM_IDS, PLATFORM_TERMS } from "../../lib/platformTerms";
-import { APP_INGEST_KEY, INGEST_KEY_HEADER } from "@ardia/core";
-import { DEV_SEND_TEST_KEY, LOGS_URL } from "./config";
+import { INGEST_KEY_HEADER } from "@nilla/core";
+import { appServices } from "../../platform/launchConfig";
+import { DEV_SEND_TEST_KEY } from "./config";
 import { logRequest, type RequestLogEntry } from "./requestLog";
 
 let app: SystemInfo | null = null;
@@ -10,8 +11,16 @@ export const appInfo = () => (app ??= systemInfo());
 
 const devSendAllowed = () => devTestValue(DEV_SEND_TEST_KEY) === "1";
 
-export const mayPost = (kind: RequestLogEntry["kind"]) =>
-  kind === "daily" ? devSendAllowed() || (!__DEV__ && appInfo().isolatedInstance === false) : !__DEV__ || devSendAllowed();
+export const NOT_SENT = -1;
+
+export const telemetryEndpoint = (): { url: string; key: string } | null => {
+  const { telemetryUrl, ingestKeys } = appServices();
+  return telemetryUrl && ingestKeys ? { url: telemetryUrl, key: ingestKeys.app } : null;
+};
+
+export const telemetryOffered = () => !!appServices().telemetryUrl;
+
+export const mayPost = () => telemetryEndpoint() !== null && (!__DEV__ || devSendAllowed());
 
 export type TelemetrySend = (body: string, signal?: AbortSignal) => Promise<number>;
 export type TelemetryHost = { os: string; osType: string; send: TelemetrySend | null };
@@ -30,16 +39,17 @@ export function takePostStats() {
   return taken;
 }
 
-export const POST_HEADERS: Readonly<Record<string, string>> = { "Content-Type": "application/json", [INGEST_KEY_HEADER]: APP_INGEST_KEY };
+export const postHeaders = (key: string): Readonly<Record<string, string>> => ({ "Content-Type": "application/json", [INGEST_KEY_HEADER]: key });
 
 export async function post(kind: RequestLogEntry["kind"], body: string, count: number, signal?: AbortSignal): Promise<number> {
-  const entry: RequestLogEntry = { at: new Date().toISOString(), kind, url: LOGS_URL, count, bytes: body.length, status: null };
-  if (!mayPost(kind)) {
-    logRequest({ ...entry, dryRun: true }, body);
-    return 200;
+  const endpoint = telemetryEndpoint();
+  const entry: RequestLogEntry = { at: new Date().toISOString(), kind, url: endpoint?.url ?? null, count, bytes: body.length, status: null };
+  if (!endpoint || !mayPost()) {
+    logRequest({ ...entry, status: NOT_SENT, dryRun: true }, body);
+    return NOT_SENT;
   }
   try {
-    entry.status = host.send ? await host.send(body, signal) : (await fetch(LOGS_URL, { method: "POST", headers: POST_HEADERS, body, signal })).status;
+    entry.status = host.send ? await host.send(body, signal) : (await fetch(endpoint.url, { method: "POST", headers: postHeaders(endpoint.key), body, signal })).status;
   } catch {
     entry.status = 0;
   }

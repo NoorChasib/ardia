@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import type { PageCoverGateProps } from "@ardia/shell";
+import type { PageCoverGateProps } from "@nilla/shell";
 import { PageCovering } from "../engine/coverClip";
 
 export function PageCoverGate({ covering, children }: PageCoverGateProps) {

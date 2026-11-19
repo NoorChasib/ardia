@@ -7,9 +7,9 @@
 - (BOOL)gestureRecognizer:(NSGestureRecognizer *)recognizer shouldAttemptToRecognizeWithEvent:(NSEvent *)event {
   if (event.type != NSEventTypeLeftMouseDown) return YES;
   for (NSView *view = [event.window.contentView.superview hitTest:event.locationInWindow]; view && view != recognizer.view; view = view.superview)
-    if ([view isKindOfClass:ArdiaWebView.class]) {
-      [(ArdiaWebView *)view showHeldPage:ArdiaHeldPageEnd::Pressed];
-      [(ArdiaWebView *)view emit:@"pagePress" payload:@{}];
+    if ([view isKindOfClass:NillaWebView.class]) {
+      [(NillaWebView *)view showHeldPage:NillaHeldPageEnd::Pressed];
+      [(NillaWebView *)view emit:@"pagePress" payload:@{}];
       return NO;
     }
   return YES;

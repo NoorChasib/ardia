@@ -10,7 +10,7 @@ const usage = await import("../telemetry/usage.ts");
 const { useBrowser } = await import("../browser/store.ts");
 const model = await import("../browser/model.ts");
 const { closeNewTabBar, showOnceOverEmptyCard, startNewTabBar } = await import("./newTabBar.ts");
-const { openExternalUrls } = await import("../littleArdia/actions.ts");
+const { openExternalUrls } = await import("../littleNilla/actions.ts");
 after(() => client.setSharing(false, "settings"));
 
 const S = () => useBrowser.getState();
@@ -26,7 +26,7 @@ async function usageCounts() {
 test("launch shows count the bars shown over each launch window's first card, also a window the launch itself opened, never a restored blank tab picked later", async () => {
   client.setSharing(true, "onboarding");
   S().hydrate({ profiles: { default: PERSONAL }, profileOrder: ["default"], windows: {}, tabs: {} });
-  S().updateSettings({ newTabOpens: "commandBar", openLinksInLittleArdia: false });
+  S().updateSettings({ newTabOpens: "commandBar", openLinksInLittleNilla: false });
   const restored = S().createWindow({ url: "https://a.com/" });
   const page = model.activeTabId(S(), restored);
   const blank = S().newTab(restored, { background: true });
@@ -53,7 +53,7 @@ test("launch shows count the bars shown over each launch window's first card, al
 
 test("a link from another app over the launch bar fills the empty card instead of leaving it behind", async () => {
   S().hydrate({ profiles: { default: PERSONAL }, profileOrder: ["default"], windows: {}, tabs: {} });
-  S().updateSettings({ newTabOpens: "commandBar", openLinksInLittleArdia: false });
+  S().updateSettings({ newTabOpens: "commandBar", openLinksInLittleNilla: false });
   const w = S().createWindow({});
   S().setFocusedWindow(w);
   const empty = model.activeTabId(S(), w);

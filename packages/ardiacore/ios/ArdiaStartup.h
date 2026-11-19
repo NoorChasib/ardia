@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-namespace ardia_host {
+namespace nilla_host {
 
 void PrepareStartup(NSString *userDataDir);
 

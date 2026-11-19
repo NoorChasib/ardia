@@ -1,6 +1,6 @@
 import { useLayoutEffect, useMemo, useState } from "react";
 import { Animated, Pressable, StyleSheet, View, type LayoutChangeEvent } from "react-native";
-import { displayUrl } from "@ardia/core";
+import { displayUrl } from "@nilla/core";
 import { useTheme } from "../ui/theme";
 import { useIsBookmarked, useSettings, useSidebarSide, useTab } from "../../state/browser/hooks";
 import { plural, tabTitle } from "../../state/browser/model";

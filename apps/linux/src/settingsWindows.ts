@@ -1,6 +1,6 @@
 import { openWindow, type OpenWindowOptions } from "../../browser/src/platform/windows";
 import { goToSettingsPane, type SettingsPane, type SettingsPlace } from "../../browser/src/state/settings/settingsWindows";
-import { ardiaHost, reportHostError } from "./host";
+import { nillaHost, reportHostError } from "./host";
 import { flushLinuxSession } from "./session";
 
 export * from "../../browser/src/state/settings/settingsWindows";
@@ -15,7 +15,7 @@ export function openSettings(pane?: SettingsPane, profileId?: string | null) {
   void flushLinuxSession().then(() => openWindow("settings", options)).catch(reportHostError);
 }
 
-let preferredImportSource = ardiaHost?.bootstrap.utility?.importSource ?? null;
+let preferredImportSource = nillaHost?.bootstrap.utility?.importSource ?? null;
 export const setPreferredImportSource = (source: string) => void (preferredImportSource = source);
 
 export function takePreferredImportSource() {

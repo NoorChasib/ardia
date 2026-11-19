@@ -1,26 +1,26 @@
 # Config files
 
-Ardia can be set up from plain files, dotfiles style, and from the `ardia` command (`docs/cli.md`). Closes #716.
+Nilla can be set up from plain files, dotfiles style, and from the `nilla-browser` command (`docs/cli.md`).
 
 ## Where
 
-The config folder is `~/.config/ardia/`. An instance started with `ARDIA_DATA_DIR` uses `<data dir>/config` instead,
+On macOS the config folder is `~/.config/nilla/`. An instance started with `ARDIA_DATA_DIR` uses `<data dir>/config` instead,
 so test instances never read the owner's files. On macOS no other environment variable picks it (a Finder-launched app
 never sees the shell's `XDG_CONFIG_HOME`, so honouring it would make the app and the CLI disagree). The app resolves it
-in `ArdiaLaunchConfig`; the CLI resolves it the same way from `--data-dir` / `$ARDIA_DATA_DIR`.
+in `NillaLaunchConfig`; the CLI resolves it the same way from `--data-dir` / `$ARDIA_DATA_DIR`.
 
 Linux is the exception, because there the folder hangs off Chromium's own user data dir, and Chromium already picks
 that from `XDG_CONFIG_HOME` (and the engine from `ARDIA_CONFIG_HOME`). The CLI has to follow the same variables just to
 find `ArdiaControl.json`, so honouring them for the config folder adds no new way for the two to disagree.
-`~/.config/ardia` is that data dir (`Local State`, `Default/`, `ArdiaControl.json`…), so the config folder is always
-`<data dir>/config`: `${XDG_CONFIG_HOME:-~/.config}/ardia/config` by default
-(`$ARDIA_CONFIG_HOME/ardia/config` when that's set, as the engine does), `<user data dir>/config` for an instance
-started with `--user-data-dir`, and `<data dir>/config` for the CLI's `--data-dir` / `$ARDIA_DATA_DIR`. Keeping it a
+`$ARDIA_CONFIG_HOME/ardia` is that data dir (`Local State`, `Default/`, `ArdiaControl.json`…), so the config folder is
+always `<data dir>/config`: `$ARDIA_CONFIG_HOME/ardia/config` (this development build sets no default and never uses
+`~/.config/ardia` itself, so the CLI refuses to guess), `<user data dir>/config` for an instance started with
+`--user-data-dir`, and `<data dir>/config` for the CLI's `--data-dir` / `$ARDIA_DATA_DIR`. Keeping it a
 folder of its own lets a dotfiles repo own it (one symlink) without Chromium's files landing in the repo, and it is
 the same rule a macOS test instance follows. The schemas go to `<data dir>/config-schema/` beside it.
 
 ```
-~/.config/ardia/            (Linux: ~/.config/ardia/config/)
+~/.config/nilla/            (Linux: $ARDIA_CONFIG_HOME/ardia/config/)
   config.json          settings and the theme choice
   hooks.json           automation hooks (docs/automation.md)
   themes/<name>.json   colour overrides
@@ -28,7 +28,7 @@ the same rule a macOS test instance follows. The schemas go to `<data dir>/confi
   theme.schema.json    written by the app
 ```
 
-Ardia never creates the folder. `ardia config init` does, or the user does.
+Nilla never creates the folder. `nilla-browser config init` does, or the user does.
 
 ## config.json
 
@@ -64,12 +64,12 @@ Ardia never creates the folder. `ardia config init` does, or the user does.
   whatever it has. Fixed commands can't be rebound. The app translates to its stored form (`[key, ...modifiers]`); a
   command's own default shortcut drops its override. Each entry stands alone: a bad one is reported and skipped, the
   others apply.
-- `launchActions` is a list of up to 20 Ardia command ids (`"newTab"`, or `"selectTab:2"` for a variant) that the app
+- `launchActions` is a list of up to 20 Nilla command ids (`"newTab"`, or `"selectTab:2"` for a variant) that the app
   runs itself, once per launch, after the session is restored and the first window is up, in the focused window: no
   CLI control and no LaunchAgent needed. `"launchActions": ["newTab"]` keeps your tabs and lands on a new tab.
-  Only commands the ardia command may run (`docs/automation.md`) are accepted; an unknown id or variant makes the
+  Only commands the nilla-browser command may run (`docs/automation.md`) are accepted; an unknown id or variant makes the
   whole setting invalid, with a message naming it (`config.json: launchActions: fooBar isn't a command`). Actions
-  from the safe list (`newTab`, `newWindow`, `newLittleArdia`, `focusCommandBar`, `toggleSidebar`, `nextTab`,
+  from the safe list (`newTab`, `newWindow`, `newLittleNilla`, `focusCommandBar`, `toggleSidebar`, `nextTab`,
   `previousTab`, `selectTab`, `selectLastTab`) run at once; any other waits for approval in Settings › Advanced ›
   Automation. Re-reading config.json never runs them again. The setting isn't synced: it belongs to this Mac.
 - `theme` is a theme name (`^[a-z0-9][a-z0-9_-]*$`, the file `themes/<name>.json`) or `null`. A bad value, or a
@@ -105,20 +105,20 @@ row in it) is reported and skipped, the others apply.
   address.
 - `title` names the provider on its chip and on each of its rows (default: the template's host).
 
-**Approval.** A `suggest` endpoint and every global provider stay off until approved in Ardia. The approval is for
+**Approval.** A `suggest` endpoint and every global provider stay off until approved in Nilla. The approval is for
 the exact definition: editing the entry needs a new one. Static keyword lists and URL templates send nothing and
 need none. Pending ones appear in Settings › Advanced › Automation; in code they're `pendingOmniboxProviders()` and
 `approveOmniboxProvider(key)` (`apps/browser/src/state/omnibox/`); approvals are kept in the app's data dir with
 the other automation approvals and listed in Settings › Advanced › Automation (`docs/automation.md` › Approvals).
 
-**Safety.** Rows only open `http` and `https` URLs (never `javascript:`, `data:`, `file:`, `chrome:` or Ardia's own
+**Safety.** Rows only open `http` and `https` URLs (never `javascript:`, `data:`, `file:`, `chrome:` or Nilla's own
 pages). Titles are capped at 120 characters and subtitles at 160, with control and bidi characters removed, and each
-row shows the destination's host and the provider's title, which Ardia sets. Icons are `https` URLs or
+row shows the destination's host and the provider's title, which Nilla sets. Icons are `https` URLs or
 `data:image` (png, jpeg, gif, webp, ico) up to 16 KB. Suggestion requests carry only what you typed: no cookies,
 referrer, page, history or profile. They go only to `https` URLs on a plain DNS hostname: no IP
 literal of any form (dotted, short, octal, hex or decimal IPv4, IPv6), no percent-encoding, user info or backslash,
 a canonical port, and not `localhost` or a private suffix (`.local`, `.internal`, `.lan`, `.home.arpa`, `.test`,
-`.onion`…). A DNS name that resolves to a private or loopback address is not blocked: Ardia checks the URL, not
+`.onion`…). A DNS name that resolves to a private or loopback address is not blocked: Nilla checks the URL, not
 what the name resolves to. They wait 120 ms after the last key, are cancelled by the next key, give up after 1.5 s, keep at most 4
 requests in flight, and are cached for 5 minutes per profile. A reply over 128 KB (by its Content-Length, or as soon
 as JS sees more than that arrive) is aborted and dropped. That's early cancellation, not a hard memory bound:
@@ -128,8 +128,8 @@ isn't allowed is dropped. Remote, program and extension providers never run in a
 templates do. A test instance (`docs/agent-brief.md` › Launch variables) may also use `http://127.0.0.1` (written
 exactly so) endpoints, for fixtures; other builds refuse them.
 
-**Extensions' `chrome.omnibox` keywords** don't reach Ardia's bar yet. The engine lists them (`ac_search_engines.cc`,
-`isOmniboxExtension`), but Ardia's location bar has no `OmniboxController`, so nothing calls
+**Extensions' `chrome.omnibox` keywords** don't reach Nilla's bar yet. The engine lists them (`ac_search_engines.cc`,
+`isOmniboxExtension`), but Nilla's location bar has no `OmniboxController`, so nothing calls
 `ExtensionOmniboxEventRouter::OnInputStarted/OnInputChanged/OnInputCancelled/OnInputEntered` or listens to
 `OmniboxSuggestionsWatcher`. Wiring them needs engine calls (`ac_omnibox_input_*` wrapping those statics, plus an
 `extensions.omniboxSuggestions` event from the watcher and the stored default suggestion). Accepting a row would also
@@ -139,7 +139,7 @@ stays off until that's decided.
 ### The command bar's start
 
 `settings.commandBarStart` sets what a new tab's command bar (⌘T, with New Tab opening the command bar) lists before
-you type. It has no Settings row: plugins (github.com/mantrakp04/ardia-plugins) and people write it here.
+you type. It has no Settings row: plugins (github.com/NoorChasib/nilla-plugins) and people write it here.
 
 ```json
 "commandBarStart": { "openTabs": { "hidePinned": true, "hideTopApps": true, "limit": 5 } }
@@ -148,36 +148,36 @@ you type. It has no Settings row: plugins (github.com/mantrakp04/ardia-plugins) 
 - `openTabs.hidePinned` leaves out pinned tabs (the sidebar's pinned rows), `openTabs.hideTopApps` leaves out Top Apps
   (the tiles). Typing still finds every open tab.
 - `openTabs.limit` (0–20, default 8) is how many open tabs it lists; 0 lists none.
-- Any other key, or a value of the wrong type, makes the whole setting invalid. `{}` is Ardia's default.
+- Any other key, or a value of the wrong type, makes the whole setting invalid. `{}` is Nilla's default.
 - Code: `state/omnibox/commandBarStart.ts`, used by `useOpenTabsStart` (`components/omnibox/dropdownStart.ts`).
   Telemetry: `settings_snapshot` carries `setting_commandBarStart_hidePinned`, `_hideTopApps` and `_limit` with their
   defaults.
 
 ### The file wins
 
-`config.json` is read-only to the app. Ardia never writes it, so there is nothing to race with.
+`config.json` is read-only to the app. Nilla never writes it, so there is nothing to race with.
 
-- At launch, and every time `config.json` or the active theme changes on disk, Ardia applies every file setting
+- At launch, and every time `config.json` or the active theme changes on disk, Nilla applies every file setting
   whose value is valid and differs from the current one, through `updateSettings` (so it syncs like a change made in
   Settings).
 - A change made in the app, or one that arrives from device sync, stands until the next launch or the next change to
   the file, which puts the file's value back. Sync arrivals don't trigger a re-apply, so two Macs with different
   files can't ping-pong.
-- Taking a key out of the file stops the file from setting it; Ardia keeps the current value. To go back to the
+- Taking a key out of the file stops the file from setting it; Nilla keeps the current value. To go back to the
   default, set the default value.
 - Applying is idempotent: a change event means "read the file again and reconcile", never "something changed once".
-  Several Ardia instances can share the folder.
+  Several Nilla instances can share the folder.
 
 ### Files and links
 
 The config folder, `config.json`, `themes/` and theme files may be symlinks (a dotfiles repo); reads follow them.
-Ardia reads only regular files (checked after resolving), at most 1 MB, opened non-blocking so a FIFO can't hang the
+Nilla reads only regular files (checked after resolving), at most 1 MB, opened non-blocking so a FIFO can't hang the
 watcher. The watcher re-resolves the folder when it changes and notices it appearing after launch.
 
 On Linux the reads and the watcher are native (`ac_linux_config_core.cc`, `ac_linux_config.cc`): reads also refuse
 text that isn't UTF-8, and the watcher is inotify. It watches the resolved folder, the folder of each watched file and
 of its resolved target, `themes/` and its target, and the folder's parent for the folder itself appearing, going or
-being re-linked. It resolves links itself, so every link on the way (`config -> ~/dotfiles/current/ardia`,
+being re-linked. It resolves links itself, so every link on the way (`config -> ~/dotfiles/current/nilla`,
 `current -> release-a`) and a link's missing target are watched too: re-linking `current`, or creating the target of a
 dangling theme link, applies at once. Replacing a real directory further up a link's target (renaming
 `~/dotfiles/themes`'s parent aside and putting another in its place) isn't noticed until the next change, as on
@@ -191,17 +191,17 @@ a launch.
 
 ### Errors
 
-A file that doesn't parse, an unknown key, a wrong value or a missing theme never breaks anything: Ardia applies what
+A file that doesn't parse, an unknown key, a wrong value or a missing theme never breaks anything: Nilla applies what
 is valid, skips the rest (a bad value skips that whole setting), logs it and shows one toast that sums them up
 ("config.json has a problem: selectedTabGlow must be full, soft or off"; past two, "and N more"). The toast stays
 until the file is fixed or you dismiss it; it comes back only for a new problem, waits for another toast (an Undo,
 say) to finish instead of replacing it, and goes away by itself once the files are clean. An unparseable theme file
-keeps the last good version of that theme. `ardia config check` reports the same problems.
+keeps the last good version of that theme. `nilla-browser config check` reports the same problems.
 
 ## Themes
 
 A theme is `<config folder>/themes/NAME.json`; `config.json`'s `theme` picks one. It holds colour roles per
-appearance and four look blocks. Every key is optional, and a block left out is Ardia's own look.
+appearance and four look blocks. Every key is optional, and a block left out is Nilla's own look.
 
 ```json
 {
@@ -220,7 +220,7 @@ appearance and four look blocks. Every key is optional, and a block left out is 
 - `dark` and `light` take any colour role of `colorRoles` (`apps/browser/src/components/ui/tokens.ts`). Colours are
   `#RGB`, `#RRGGBB`, `#RRGGBBAA`, `rgb(r,g,b)` or `rgba(r,g,b,a)` (r, g, b integers 0–255, a 0–1). Number roles are
   finite: `grain` and the `…Opacity` roles 0–1, the `…Radius` roles 0–100. `tabSelectedBorder` takes two colours.
-- The file's roles replace Ardia's in the base palettes, before anything else. Profile colours and custom profile
+- The file's roles replace Nilla's in the base palettes, before anything else. Profile colours and custom profile
   themes keep adding what they add today (backdrop, tint, accent); incognito uses the dark palette, with the file's
   dark roles, plus its tint.
 
@@ -242,7 +242,7 @@ Fonts and text sizes in the interface. Web pages keep their own fonts.
 | `sizes.large` | 13–27 | 17 | large headings, the command bar's field |
 | `weights.regular`, `.medium`, `.semibold`, `.bold` | `"100"`–`"900"` in steps of 100, string or number | `"400"`, `"500"`, `"600"`, `"700"` | what each weight name draws with |
 
-The seven sizes are Ardia's text sizes everywhere in the chrome; line heights scale with them.
+The seven sizes are Nilla's text sizes everywhere in the chrome; line heights scale with them.
 
 ### metrics
 
@@ -280,17 +280,17 @@ downloads button) and `profile` (the profile name in the sidebar header and the 
 
 An object from an SF Symbol name to the one to draw instead, both lowercase letters, digits and dots
 (`"sidebar.left": "rectangle.lefthalf.inset.filled"`). Default `{}`. It replaces the symbol everywhere in the chrome
-and in Ardia's context menus. A name macOS doesn't have draws nothing.
+and in Nilla's context menus. A name macOS doesn't have draws nothing.
 
 ### How a theme applies
 
 - Each bad key or value is reported on its own, in the app's words (`metrics.rowHeight must be a number from 24 to
   56`, `layout.hide has "toolbar", which isn't a part (pinned, newTab, …)`), and the valid rest still applies. A bad
-  key falls back to Ardia's value for that key only. Keys other than `$schema`, `dark`, `light`, `type`, `metrics`,
+  key falls back to Nilla's value for that key only. Keys other than `$schema`, `dark`, `light`, `type`, `metrics`,
   `layout` and `icons`, and names that aren't roles or look keys, are reported (the schema has
   `additionalProperties: false`).
 - A file that doesn't parse keeps the last good version of that theme.
-- `theme: null`, no `theme` key, a missing theme file or no `config.json` means Ardia's own palette and look.
+- `theme: null`, no `theme` key, a missing theme file or no `config.json` means Nilla's own palette and look.
 - Saving the active theme's file, or switching themes, restyles every window at once: no restart, and no page
   reloads. The effective base palette carries a revision, and every cache and snapshot built from roles or the look
   depends on it.
@@ -302,60 +302,60 @@ every launch, and into the config folder whenever it exists, rewriting only when
 rename, replacing a symlinked schema rather than writing through it). They are generated from the allowlisted
 `SETTING_SPECS` entries (each spec carries its schema; a test checks schema and validator agree on samples and
 defaults), the command catalog (the property names of `shortcuts`), `colorRoles` (each role's `default` is
-Ardia's dark or light value) and the look spec in `apps/browser/src/lib/themeLook.ts` (ranges, parts and defaults
+Nilla's dark or light value) and the look spec in `apps/browser/src/lib/themeLook.ts` (ranges, parts and defaults
 of `type`, `metrics`, `layout` and `icons`), so they never drift. They help editors and the CLI; the app always validates with its
 own code.
 
-They use only this subset, which `ardia` checks itself without a JSON Schema library (other keywords are ignored):
+They use only this subset, which `nilla-browser` checks itself without a JSON Schema library (other keywords are ignored):
 `type` (one or a list), `enum`, `const`, `default`, `description`, `minimum`, `maximum`, `exclusiveMinimum`,
 `pattern`, `items`, `prefixItems`, `minItems`, `maxItems`, `properties`, `additionalProperties` (boolean or schema),
 `propertyNames`, `required`, `anyOf`.
 
-## The ardia command
+## The nilla-browser command
 
-None of these need Ardia running; they read and write the files, and a running Ardia picks the change up at once.
+None of these need Nilla running; they read and write the files, and a running Nilla picks the change up at once.
 Keys, values and defaults come from the schemas in the config folder, else `<data dir>/config-schema/` (the
 `--data-dir` / `$ARDIA_DATA_DIR` one, else the installed app's). With neither, `set` writes without checking and says
 so. Exit codes: 0 done, 1 a check failed or the input is wrong.
 
-- `ardia config path` prints the config folder.
-- `ardia config init` creates the folder, a `config.json` (`$schema`, `theme: null`, `settings: {}`) and the schemas
+- `nilla-browser config path` prints the config folder.
+- `nilla-browser config init` creates the folder, a `config.json` (`$schema`, `theme: null`, `settings: {}`) and the schemas
   it can find. It never overwrites a file.
-- `ardia config get [KEY] [--json]` prints one setting from the file (exit 1 if the file doesn't set it), or the whole
+- `nilla-browser config get [KEY] [--json]` prints one setting from the file (exit 1 if the file doesn't set it), or the whole
   file. KEY is a setting name, or `shortcuts.<command id>`.
-- `ardia config set KEY VALUE` parses VALUE as JSON, else takes it as a string (also when the JSON value fails the
+- `nilla-browser config set KEY VALUE` parses VALUE as JSON, else takes it as a string (also when the JSON value fails the
   check and the string passes), checks it, and writes it, creating `config.json` first if needed. It rewrites
-  the file even when the value is already there, so a running Ardia re-applies it. An unknown
+  the file even when the value is already there, so a running Nilla re-applies it. An unknown
   key names the closest ones; a wrong value names what's allowed. The left-out settings are refused with or
   without a schema, and `cmd+shift+t` shortcuts are parsed (modifier and key names) so typos fail; glyph
   shortcuts pass if the schema allows them.
-- `ardia config unset KEY` removes it from the file. Ardia keeps the current value. A key the file doesn't set
+- `nilla-browser config unset KEY` removes it from the file. Nilla keeps the current value. A key the file doesn't set
   is a no-op (exit 0); a name that isn't a setting is an error.
-- `ardia config list [--json]` lists every key with its type or allowed values, default and file value.
-- `ardia config edit` opens `config.json` (created first if needed) in `$VISUAL`, `$EDITOR` (split like a shell
+- `nilla-browser config list [--json]` lists every key with its type or allowed values, default and file value.
+- `nilla-browser config edit` opens `config.json` (created first if needed) in `$VISUAL`, `$EDITOR` (split like a shell
   word list), else `vi` (as git does), waits for the editor to exit, then runs `check`.
-- `ardia config check [--json]` checks `config.json` and the theme it names. Theme problems use the app's wording;
+- `nilla-browser config check [--json]` checks `config.json` and the theme it names. Theme problems use the app's wording;
   the theme schema supplies the role names, each role's kind (from its `default`), the look blocks' keys, ranges,
   parts and defaults. Without a schema, roles are checked by the kind of value given and the look blocks against
-  the ranges built into `ardia`. `--json` prints
+  the ranges built into `nilla-browser`. `--json` prints
   `{"ok", "files": [{"file", "problems": [{"key", "message"}]}], "warnings"}`.
-- `ardia theme new NAME [--from THEME]` writes `themes/NAME.json` with every role and every look key that has a
-  default (so no `type.family`, `metrics.sidebarWidth` or `layout.newTab`), from Ardia's defaults or from another
-  theme, whose values win key by key. The file passes `ardia theme check`. It never overwrites.
-- `ardia theme use NAME|none` sets `theme` in `config.json`, creating it first if needed.
-- `ardia theme list [--json]` lists the themes and marks the active one.
-- `ardia theme check [NAME|FILE] [--json]` checks a theme (default: the active one).
-- `ardia theme set KEY VALUE [--theme NAME]` writes one key to the active theme (or NAME), the way `config set`
+- `nilla-browser theme new NAME [--from THEME]` writes `themes/NAME.json` with every role and every look key that has a
+  default (so no `type.family`, `metrics.sidebarWidth` or `layout.newTab`), from Nilla's defaults or from another
+  theme, whose values win key by key. The file passes `nilla-browser theme check`. It never overwrites.
+- `nilla-browser theme use NAME|none` sets `theme` in `config.json`, creating it first if needed.
+- `nilla-browser theme list [--json]` lists the themes and marks the active one.
+- `nilla-browser theme check [NAME|FILE] [--json]` checks a theme (default: the active one).
+- `nilla-browser theme set KEY VALUE [--theme NAME]` writes one key to the active theme (or NAME), the way `config set`
   does: VALUE is parsed as JSON, else taken as a string, the whole theme is checked with the new value, and a
   problem under that key refuses it and leaves the file as it was (problems elsewhere in the file don't block it).
   KEY is a dotted path whose first part is the block: `dark.accent`, `type.sizes.body`, `metrics.radius.row`,
   `layout.hide`. Under `icons` everything after `icons.` is one SF Symbol name (`icons.chevron.down`). Missing
   blocks are created; the file keeps its key order and is rewritten even when the value is unchanged, so a running
-  Ardia re-applies it. With no active theme and no `--theme`, it creates `themes/custom.json` (`$schema` plus the
+  Nilla re-applies it. With no active theme and no `--theme`, it creates `themes/custom.json` (`$schema` plus the
   key) and makes it the active theme, saying so on stderr. Without a schema it writes unchecked and says so.
-- `ardia theme get [KEY] [--theme NAME] [--json]` prints one key from the theme, or the whole file. A key the file
-  doesn't set exits 1 with Ardia's default when the schema has one.
-- `ardia theme unset KEY [--theme NAME]` removes the key and the blocks it leaves empty, so Ardia's own value comes
+- `nilla-browser theme get [KEY] [--theme NAME] [--json]` prints one key from the theme, or the whole file. A key the file
+  doesn't set exits 1 with Nilla's default when the schema has one.
+- `nilla-browser theme unset KEY [--theme NAME]` removes the key and the blocks it leaves empty, so Nilla's own value comes
   back. A key the file doesn't set is a no-op (exit 0). `get` and `unset` exit 1 when no theme is active and no
   `--theme` is given, and a theme name that doesn't exist names the closest ones.
 

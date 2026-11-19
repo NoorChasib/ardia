@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 const { useBrowser } = await import("../browser/store.ts");
-const { Clock, compact, emptyScope, syncScope } = await import("@ardia/sync");
+const { Clock, compact, emptyScope, syncScope } = await import("@nilla/sync");
 const pinnedArea = await import("./pinned.ts");
 const previous = await import("./fixtures/pinned-v0.2.40.ts");
 const openTabs = await import("./openTabs.ts");

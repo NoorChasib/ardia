@@ -5,9 +5,9 @@
 #include "AppModule.h"
 #include "IntroMusic.h"
 
-namespace Ardia {
+namespace Nilla {
 
-REACT_MODULE(IntroMusicModule, L"ArdiaIntroMusic")
+REACT_MODULE(IntroMusicModule, L"NillaIntroMusic")
 struct IntroMusicModule {
   REACT_METHOD(play)
   void play(bool muted) noexcept {

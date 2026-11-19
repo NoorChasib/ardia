@@ -30,7 +30,7 @@ watchRelaunches();
 openLaunchLinks();
 startUpdateChecks();
 
-const windowsHost = () => TurboModuleRegistry.getEnforcing<WindowsHostModule>("ArdiaWindowsHost");
+const windowsHost = () => TurboModuleRegistry.getEnforcing<WindowsHostModule>("NillaWindowsHost");
 const secureHex = (byteCount: number) => windowsHost().secureRandomHex(byteCount);
 
 if (windowsHost().getConstants?.()?.selfCheck) {

@@ -77,7 +77,7 @@ export function ExpoSyncPage() {
         </Section>
       ) : null}
       {status.attention === "folder" ? (
-        <Section footer={<Text>Choose the Ardia Sync folder again.</Text>}>
+        <Section footer={<Text>Choose the Nilla Sync folder again.</Text>}>
           <Button label="Choose Folder…" onPress={() => void chooseFolder()} />
         </Section>
       ) : null}
@@ -111,7 +111,7 @@ export function ExpoSyncPage() {
             </Button>
           </Section>
           {devices.length ? (
-            <Section title="Devices" footer={noReceivers ? <Text>Update Ardia on your Mac to send tabs to it.</Text> : undefined}>
+            <Section title="Devices" footer={noReceivers ? <Text>Update Nilla on your Mac to send tabs to it.</Text> : undefined}>
               {devices.map((device) => {
                 const seen = deviceSeen(device, now);
                 return (
@@ -125,7 +125,7 @@ export function ExpoSyncPage() {
           <DeviceName current={status.deviceName} />
           <Section title="Sync Folder" footer={folderError ? <Text modifiers={[foregroundStyle(theme.destructive)]}>{folderError}</Text> : <Text>Encrypted so only your devices can read it.</Text>}>
             <LabeledContent label="Folder">
-              <Text>{status.folderName ?? "Ardia Sync"}</Text>
+              <Text>{status.folderName ?? "Nilla Sync"}</Text>
             </LabeledContent>
             <Button label="Change Folder…" onPress={() => void chooseFolder()} />
           </Section>

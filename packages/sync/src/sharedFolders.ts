@@ -1,4 +1,5 @@
 import { requireOptionalNativeModule } from "expo-modules-core";
+import { ownSharedFoldersOnly } from "./upstreamSyncFolder.ts";
 
 export type SharedListingEntry =
   | { kind: "link"; file: string; text: string }
@@ -27,4 +28,4 @@ type SharedFoldersNative = {
   addListener(name: "onChange", listener: (event: { paths: string[] }) => void): { remove(): void };
 };
 
-export const SharedFoldersNative = requireOptionalNativeModule<SharedFoldersNative>("ArdiaSharedFolders");
+export const SharedFoldersNative = ownSharedFoldersOnly(requireOptionalNativeModule<SharedFoldersNative>("NillaSharedFolders"));

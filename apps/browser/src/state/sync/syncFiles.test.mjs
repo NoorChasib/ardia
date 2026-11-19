@@ -4,7 +4,7 @@ import { test } from "node:test";
 globalThis.__DEV__ = false;
 let sealHook = null;
 globalThis.acTestNativeModules = {
-  ArdiaSync: {
+  NillaSync: {
     sealLocal: async (text) => (sealHook ? sealHook(text) : `sealed:${text}`),
     openLocal: async (sealed) => (sealed.startsWith("sealed:") ? sealed.slice(7) : null),
   },
@@ -13,7 +13,7 @@ globalThis.acTestNativeModules = {
 const shell = await import("../../test-native/index.ts");
 const { syncFiles } = await import("./syncFiles.ts");
 const { emptyDoc } = await import("./syncDoc.ts");
-const { emptyScope, Clock, putBase, putRecord } = await import("@ardia/sync");
+const { emptyScope, Clock, putBase, putRecord } = await import("@nilla/sync");
 
 const realNow = Date.now;
 const HOUR = 60 * 60_000;

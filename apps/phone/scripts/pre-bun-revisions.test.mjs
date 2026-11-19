@@ -28,7 +28,7 @@ function fakeBun(file, version, log) {
 }
 
 function tree(root, packageManager, { bunfig = false } = {}) {
-  write(path.join(root, "apps/phone/package.json"), `{\n  "name": "ardia-phone",\n  "packageManager": "${packageManager}"\n}\n`);
+  write(path.join(root, "apps/phone/package.json"), `{\n  "name": "nilla-phone",\n  "packageManager": "${packageManager}"\n}\n`);
   if (bunfig) write(path.join(root, "apps/phone/bunfig.toml"), "[install]\nlinker = \"hoisted\"\n");
   return root;
 }

@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import ExpoModulesCore
 import Foundation
 import PhoneSync
@@ -8,13 +8,13 @@ import SwiftData
 enum LegacyPaths {
   static let migratedPrefixes = ["blocking.", "browsing.", "filters.", "library.", "reader.", "settings.", "tabs."]
   static let nativePrefixes = ["blocking.", "browsing.", "filters."]
-  static let pagesSuite = "ardia.phone.pages"
+  static let pagesSuite = "nilla.phone.pages"
 
   static var storeFolder: URL {
     if let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: BrowserStore.appGroupIdentifier) {
       return group.appending(path: "Library/Application Support", directoryHint: .isDirectory)
     }
-    return URL.applicationSupportDirectory.appending(path: "Ardia", directoryHint: .isDirectory)
+    return URL.applicationSupportDirectory.appending(path: "Nilla", directoryHint: .isDirectory)
   }
 
   static var store: URL { storeFolder.appending(path: "Browser.store") }
@@ -358,7 +358,7 @@ public final class LegacyModule: Module {
   }
 
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneLegacy")
+    Name("NillaPhoneLegacy")
 
     AsyncFunction("source") { () -> [String: Any] in
       LegacyReader.source()

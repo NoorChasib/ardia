@@ -12,15 +12,17 @@ import { font, monoFace, proseLineHeight, radius, space } from "../ui/tokens";
 import { ChoiceCard } from "./ChoiceCard";
 import { SetupLines } from "./SetupLines";
 import { keyText } from "../../state/commands/keyText";
+import { setupCodesOffered } from "../../state/app/siteServices";
 
 const CODE_FIELD_HEIGHT = 44;
 
 const BRINGS = ["Where your tabs and address bar go", `What ${keyText("⌘T")} and ${keyText("⌘L")} open`, "Light or dark, and your color", "The apps you pinned"];
 
 export function SetupCodeLink({ onPress }: { onPress: () => void }) {
+  if (!setupCodesOffered()) return null;
   return (
     <View mouseDownCanMoveWindow={false} style={{ marginLeft: "auto", height: onboardingButton.height, justifyContent: "center" }}>
-      <Button variant="text" look="link" tone="textSecondary" label="Have a setup code from ardia.dev?" title="Have a setup code?" onPress={onPress} />
+      <Button variant="text" look="link" tone="textSecondary" label="Have a setup code from the demo?" title="Have a setup code?" onPress={onPress} />
     </View>
   );
 }
@@ -42,7 +44,7 @@ export function SetupCodeStep({ onBack }: { onBack: () => void }) {
       <StepLayout
         pageKey="setupCodeApplied"
         title="You're set up"
-        subtitle="Ardia now looks the way you made it on ardia.dev. Search and privacy are still yours to choose, so those come next."
+        subtitle="Nilla now looks the way you made it in the demo. Search and privacy are still yours to choose, so those come next."
         actions={
           <>
             <PrimaryButton title="Continue" icon="arrow.right" onPress={() => goToStep("searchPrivacy")} />
@@ -56,7 +58,7 @@ export function SetupCodeStep({ onBack }: { onBack: () => void }) {
   return (
     <StepLayout
       pageKey="setupCode"
-      title="Have a setup code from ardia.dev?"
+      title="Have a setup code from the demo?"
       subtitle="Paste the code from the demo. It brings the layout, look and pinned apps you picked there."
       actions={
         <>

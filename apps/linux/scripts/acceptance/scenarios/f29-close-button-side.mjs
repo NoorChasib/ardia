@@ -44,7 +44,7 @@ const exists = (title) => `Object.values(s.tabs).some((tab) => (tab.customTitle 
 const SETUP = `
   const id = (title) => Object.keys(s.tabs).find((k) => s.tabs[k].title === title);
   s.pinTabs([id("Close Pinned"), id("Close Pinned Right"), id(${js(HOME)}), id("Close Text")], true, true);
-  s.updateTab(id("Close Text"), { customIcon: "symbol:ardia:no-icon", customTitle: "Close Text Pin" });
+  s.updateTab(id("Close Text"), { customIcon: "symbol:nilla:no-icon", customTitle: "Close Text Pin" });
   s.groupTabs([id("Close Member"), id("Close Other")], { name: "Close Group" });
   for (const pair of ${js(Object.values(PANES))}) s.createSplit(pair.map(id));
   s.activate(id("Close Active"));
@@ -53,7 +53,7 @@ const SETUP = `
 
 const LIVE_FOLDERS = `
   const profileId = s.windows[windowId].profileId;
-  return { docs: ardiaLinux.live.newFolder(profileId, "documents"), prs: ardiaLinux.live.newFolder(profileId, "pullRequests") };
+  return { docs: nillaLinux.live.newFolder(profileId, "documents"), prs: nillaLinux.live.newFolder(profileId, "pullRequests") };
 `;
 
 const LIVE_ITEMS = (folders) => `
@@ -64,7 +64,7 @@ const LIVE_ITEMS = (folders) => `
   const pr = (title, mergeable) => ({ id: title, source: "github", url: page(title), title, subtitle: "", icon: null, updatedAt: now, section: "authored", pr: { number: 7, repo: "a/b", author: "x", authorAvatar: null, draft: false, headRef: title, baseRef: "main", review: null, mergeable, checks: [], comments: 0, unresolvedThreads: 0, additions: 1, deletions: 1, changedFiles: 1 } });
   const docs = [doc(${js(LIVE.docLeft)}), doc(${js(LIVE.docRight)})];
   const prs = [pr(${js(LIVE.prLeft)}, "mergeable"), pr(${js(LIVE.prRight)}, "mergeable"), pr(${js(LIVE.away)}, "conflicting")];
-  ardiaLinux.live.store.setState((l) => ({ items: { ...l.items, [folders.docs]: docs, [folders.prs]: prs } }));
+  nillaLinux.live.store.setState((l) => ({ items: { ...l.items, [folders.docs]: docs, [folders.prs]: prs } }));
   const tabs = {};
   for (const [folderId, item] of [[folders.docs, docs[0]], [folders.docs, docs[1]], [folders.prs, prs[2]]]) {
     const tab = s.newTab(windowId, { url: item.url, background: true });

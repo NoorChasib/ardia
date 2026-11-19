@@ -18,7 +18,7 @@ export type PlatformCopy = {
   chooseFolderDetail: string;
   historyClears: string;
   privacy: string;
-  ardiaCredit: string;
+  nillaCredit: string;
   cantScanTitle: string;
   alreadyPinnedToast: string;
   filterRulesUnsupported: string;
@@ -42,7 +42,7 @@ export type PlatformCopy = {
 const ANDROID: PlatformCopy = {
   importFailed: {
     title: "Couldn’t Bring Over Your Tabs",
-    body: "Ardia couldn’t bring over the tabs and settings from the previous version. They’re still on this phone.",
+    body: "Nilla couldn’t bring over the tabs and settings from the previous version. They’re still on this phone.",
     tryAgain: "Try Again",
     tryingAgain: "Trying Again…",
     startWithout: "Start Without Them",
@@ -56,17 +56,17 @@ const ANDROID: PlatformCopy = {
   syncFeatureFooter: "End-to-end encrypted, in a folder you choose.",
   phraseStays: "Your recovery phrase stays on this phone.",
   keySaveFailed: "Couldn’t save the sync key on this phone.",
-  folderUnavailable: "Ardia can’t open this folder. Choose the Ardia Sync folder your Mac syncs to.",
-  chooseFolderDetail: "Choose the Ardia Sync folder your Mac syncs to.",
+  folderUnavailable: "Nilla can’t open this folder. Choose the Nilla Sync folder your Mac syncs to.",
+  chooseFolderDetail: "Choose the Nilla Sync folder your Mac syncs to.",
   historyClears: "History clears from this phone. Your Mac’s history stays on your Mac.",
   privacy: "No accounts. Your data stays on your devices and in the sync folder you choose.",
-  ardiaCredit: "This app, and the Mac browser it syncs with.",
+  nillaCredit: "This app, and the Mac browser it syncs with.",
   cantScanTitle: "Can’t Scan on This Phone",
   alreadyPinnedToast: "Pinned to Your Mac",
-  filterRulesUnsupported: "Some rules need features Ardia can’t run.",
+  filterRulesUnsupported: "Some rules need features Nilla can’t run.",
   readerSerif: { label: "Serif", family: "serif" },
   readerSans: { label: "Sans Serif", family: "sans-serif" },
-  voicePermission: "Allow Microphone for Ardia in Settings to search with your voice.",
+  voicePermission: "Allow Microphone for Nilla in Settings to search with your voice.",
   defaultBrowserInstructions: null,
   offersDefaultBrowserAlways: true,
   offersPasteAndGo: true,
@@ -84,7 +84,7 @@ const ANDROID: PlatformCopy = {
 const IOS: PlatformCopy = {
   importFailed: {
     title: "Couldn’t Bring Over Your Tabs",
-    body: "Ardia couldn’t bring over the tabs and settings from the previous version. They’re still on this iPhone.",
+    body: "Nilla couldn’t bring over the tabs and settings from the previous version. They’re still on this iPhone.",
     tryAgain: "Try Again",
     tryingAgain: "Trying Again…",
     startWithout: "Start Without Them",
@@ -98,22 +98,22 @@ const IOS: PlatformCopy = {
   syncFeatureFooter: "End-to-end encrypted, in your own iCloud Drive.",
   phraseStays: "Your recovery phrase stays in this iPhone’s Keychain.",
   keySaveFailed: "Couldn’t save the sync key in your Keychain.",
-  folderUnavailable: "Ardia can’t open this folder. Choose the Ardia Sync folder in iCloud Drive.",
-  chooseFolderDetail: "Choose the Ardia Sync folder in iCloud Drive.",
+  folderUnavailable: "Nilla can’t open this folder. Choose the Nilla Sync folder in iCloud Drive.",
+  chooseFolderDetail: "Choose the Nilla Sync folder in iCloud Drive.",
   historyClears: "History clears from this iPhone. Your Mac’s history stays on your Mac.",
   privacy: "No accounts. Your data stays on your devices and in your iCloud Drive.",
-  ardiaCredit: "This app, and the Mac browser it syncs with.",
+  nillaCredit: "This app, and the Mac browser it syncs with.",
   cantScanTitle: "Can’t Scan on This iPhone",
   alreadyPinnedToast: "Already Pinned to Your Mac",
   filterRulesUnsupported: "Some rules need features Safari can’t run.",
   readerSerif: { label: "New York", family: "ui-serif" },
   readerSans: { label: "San Francisco", family: "ui-sans-serif" },
-  voicePermission: "Allow Microphone and Speech Recognition for Ardia in Settings to search with your voice.",
+  voicePermission: "Allow Microphone and Speech Recognition for Nilla in Settings to search with your voice.",
   defaultBrowserInstructions: {
     title: "How to change your default browser",
-    subtitle: "Open links from other apps in Ardia.",
-    steps: ["Open Ardia in Settings", "Tap on “Default Browser App”", "Select Ardia"],
-    action: "Open Ardia in Settings",
+    subtitle: "Open links from other apps in Nilla.",
+    steps: ["Open Nilla in Settings", "Tap on “Default Browser App”", "Select Nilla"],
+    action: "Open Nilla in Settings",
   },
   offersDefaultBrowserAlways: false,
   offersPasteAndGo: false,
@@ -134,9 +134,9 @@ let current: PlatformCopy = ANDROID;
 
 export const copyTable = (platform: CopyPlatform): PlatformCopy => TABLES[platform];
 
-const SYNC_FREE: Record<CopyPlatform, Pick<PlatformCopy, "historyClears" | "privacy" | "ardiaCredit">> = {
-  android: { historyClears: "History clears from this phone.", privacy: "No accounts. Your data stays on this phone.", ardiaCredit: "This app." },
-  ios: { historyClears: "History clears from this iPhone.", privacy: "No accounts. Your data stays on this iPhone.", ardiaCredit: "This app." },
+const SYNC_FREE: Record<CopyPlatform, Pick<PlatformCopy, "historyClears" | "privacy" | "nillaCredit">> = {
+  android: { historyClears: "History clears from this phone.", privacy: "No accounts. Your data stays on this phone.", nillaCredit: "This app." },
+  ios: { historyClears: "History clears from this iPhone.", privacy: "No accounts. Your data stays on this iPhone.", nillaCredit: "This app." },
 };
 
 export function selectCopy(os: string, offersSync = true) {

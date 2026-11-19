@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { describeCliInstall, installCliInBackground, useCli } from "../../../state/app/cliControl";
+import { cliInstallerAvailable, describeCliInstall, installCliInBackground, useCli } from "../../../state/app/cliControl";
 import { useSettings } from "../../../state/browser/hooks";
 import { updateSettings } from "../../../state/settings/actions";
 import { openChromeSettings } from "../../../state/pages/urls";
@@ -64,7 +64,7 @@ function memorySaverLevel(s: MemorySaverKeys): MemorySaverLevel {
 
 function customDescription(s: MemorySaverKeys) {
   const tabs = MEMORY_SAVER_LEVELS[s.memorySaverMode].description().split(". ")[0];
-  const load = s.loadProfilesWhenOpened ? " Profiles load when you first open them." : " Every profile loads when Ardia opens.";
+  const load = s.loadProfilesWhenOpened ? " Profiles load when you first open them." : " Every profile loads when Nilla opens.";
   return `${tabs}.${load}${s.unloadProfilesAfter === "never" ? "" : profilesUnload(UNLOAD_AFTER[s.unloadProfilesAfter])} Pick a level to use its settings instead.`;
 }
 
@@ -133,6 +133,7 @@ function PerformanceSection() {
 function CommandLineSection() {
   const on = useSettings((s) => s.cliControl);
   const cli = useCli();
+  const [installable] = useState(cliInstallerAvailable);
   const ruleRows = useAutomationRuleRows();
   const server = cli.server;
   const serverNote =
@@ -144,34 +145,37 @@ function CommandLineSection() {
           ? server.connections
             ? `Connected now: ${server.connections === 1 ? "1 session" : `${server.connections} sessions`}.`
             : "On. Nothing is connected."
-          : "Installs the ardia command and lets it open, read and act in every page you're signed in to. It stays on after you quit.";
-  const failed = !!cli.error && !cli.installing;
+          : installable
+            ? "Installs the nilla-browser command and lets it open, read and act in every page you're signed in to. It stays on after you quit."
+            : "Lets the nilla-browser command, installed separately, open, read and act in every page you're signed in to. This build of Nilla doesn't install it. It stays on after you quit.";
+  const failed = installable && !!cli.error && !cli.installing;
+  const installNote = installable ? describeCliInstall(cli) : cli.installedVersion ? describeCliInstall({ ...cli, error: null }) : null;
   const setOn = (next: boolean) => {
     updateSettings({ cliControl: next });
-    if (next && !cli.installing && (!cli.installedVersion || cli.error)) void installCliInBackground("settings");
+    if (next && installable && !cli.installing && (!cli.installedVersion || cli.error)) void installCliInBackground("settings");
   };
   return (
     <>
       <SectionHeader title="Command line and automation" />
       <Group>
         <Row
-          anchor="advanced.ardiaCommand"
+          anchor="advanced.nillaCommand"
           description={
             <View>
               <Text size="caption" tone="textSecondary" style={NOTE()}>
                 {serverNote}
               </Text>
-              {on || cli.installedVersion || cli.installing || failed ? (
+              {installNote && (on || cli.installedVersion || cli.installing || failed) ? (
                 <Text selectable size="caption" tone={failed ? "destructive" : "textSecondary"} style={NOTE()}>
-                  {describeCliInstall(cli)}
+                  {installNote}
                 </Text>
               ) : null}
             </View>
           }
         >
           {on && failed ? <Button title="Try Again" onPress={() => void installCliInBackground("settings")} /> : null}
-          {on && !failed && cli.installedVersion && !cli.installing ? <Button title="Reinstall" onPress={() => void installCliInBackground("settings")} /> : null}
-          <Toggle value={on} accessibilityLabel="ardia command" onChange={setOn} />
+          {on && installable && !failed && cli.installedVersion && !cli.installing ? <Button title="Reinstall" onPress={() => void installCliInBackground("settings")} /> : null}
+          <Toggle value={on} accessibilityLabel="nilla-browser command" onChange={setOn} />
         </Row>
         <SettingToggle anchor="advanced.compactCliPill" />
         {ruleRows}

@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 
-using namespace ardia_pip_zoom;
+using namespace nilla_pip_zoom;
 
 static int failures = 0;
 #define CHECK(cond)                                                \

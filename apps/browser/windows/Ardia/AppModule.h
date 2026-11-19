@@ -33,7 +33,7 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "advapi32.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 inline winrt::Microsoft::ReactNative::JSValue LaunchSnapshot(AppLaunch::Config const &config) noexcept {
   using winrt::Microsoft::ReactNative::JSValue;
@@ -370,7 +370,7 @@ struct SystemInfo {
   std::optional<double> bootTime;
 };
 
-REACT_MODULE(AppModule, L"ArdiaApp")
+REACT_MODULE(AppModule, L"NillaApp")
 struct AppModule {
   REACT_CONSTANT(windowsApiVersion)
   const int windowsApiVersion = 24;
@@ -395,10 +395,10 @@ struct AppModule {
     AppDiagnostics::ExecutableVersion const &version = AppDiagnostics::Version();
 
     SystemInfo info;
-    info.appName = "Ardia";
+    info.appName = "Nilla";
     info.appVersion = version.version;
     info.appBuild = version.build;
-    info.bundleId = "com.ardia.browser";
+    info.bundleId = "com.nilladigital.nilla";
 #if _DEBUG
     info.configuration = "Debug";
 #else
@@ -433,7 +433,7 @@ struct AppModule {
   void openExternalURL(std::string url, winrt::Microsoft::ReactNative::ReactPromise<bool> promise) noexcept {
     if (!AppShell::IsExternalURL(url)) return promise.Resolve(false);
     if (AppLaunch::Background()) {
-      AppLaunch::Note(L"ArdiaApp: background instance, not opening an external URL");
+      AppLaunch::Note(L"NillaApp: background instance, not opening an external URL");
       return promise.Resolve(true);
     }
     std::wstring target = Paths::Wide(url);

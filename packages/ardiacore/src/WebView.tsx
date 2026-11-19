@@ -1,9 +1,9 @@
-import { toAppUrl, toEngineUrl } from "@ardia/core";
+import { toAppUrl, toEngineUrl } from "@nilla/core";
 import { requireNativeViewManager } from "expo-modules-core";
 import { forwardRef, useImperativeHandle, useRef } from "react";
 import { findNodeHandle, type NativeSyntheticEvent } from "react-native";
 import type { FaviconImage } from "./favicons";
-import { ArdiaError, ardiaError } from "@ardia/core";
+import { NillaError, nillaError } from "@nilla/core";
 import { deliverPageEvent, isPageEventProp, pageEventOf, type NativeProps, type PageEvent } from "./pageEvents";
 import type { DiscardOutcome, DiscardRefusal, WebViewHandle, WebViewProps } from "./pageTypes";
 import type { PageCookie } from "./webkit";
@@ -22,9 +22,9 @@ type NativeHandle = Omit<
   sleepIfHidden(seconds: number): Promise<DiscardRefusal[]>;
 };
 
-const NativeWebView = requireNativeViewManager<NativeProps>("ArdiaWebView");
+const NativeWebView = requireNativeViewManager<NativeProps>("NillaWebView");
 let NativeWebKitView: typeof NativeWebView | undefined;
-const webKitView = () => (NativeWebKitView ??= requireNativeViewManager<NativeProps>("ArdiaWebKit"));
+const webKitView = () => (NativeWebKitView ??= requireNativeViewManager<NativeProps>("NillaWebKit"));
 
 const VIEW_RETRIES = 3;
 const NO_PAGE_TO_DISCARD: DiscardRefusal = -1;
@@ -42,7 +42,7 @@ export const WebView = forwardRef<WebViewHandle, WebViewProps>(function WebView(
         try {
           return await fn(view);
         } catch (error) {
-          if (!isViewMissing(error)) throw ardiaError(error);
+          if (!isViewMissing(error)) throw nillaError(error);
           if (attempt >= VIEW_RETRIES || native.current !== view) return fallback;
           await new Promise((resolve) => setTimeout(resolve, 16 * (attempt + 1)));
         }
@@ -74,7 +74,7 @@ export const WebView = forwardRef<WebViewHandle, WebViewProps>(function WebView(
         try {
           return JSON.parse(json) as T;
         } catch {
-          throw new ArdiaError("ERR_BAD_REPLY", "the page's result isn't JSON");
+          throw new NillaError("ERR_BAD_REPLY", "the page's result isn't JSON");
         }
       },
       navigationEntries: async () => (await call([], (n) => n.navigationEntries())).map((e) => ({ ...e, url: toAppUrl(e.url) })),

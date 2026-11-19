@@ -5,7 +5,7 @@ final class NotificationHub: NSObject, UNUserNotificationCenterDelegate {
   static let shared = NotificationHub()
 
   private var pending: [(String, String, [String: Any])] = []
-  private static let dismissibleCategory = "ardia.dismissible"
+  private static let dismissibleCategory = "nilla.dismissible"
   private static let engineNotificationIdKey = "notificationId"
   private static let ownCategories: Set<UNNotificationCategory> = [
     UNNotificationCategory(identifier: dismissibleCategory, actions: [], intentIdentifiers: [], options: [.customDismissAction]),

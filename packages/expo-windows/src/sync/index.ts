@@ -1,5 +1,6 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
-import type { FolderInfo, SealedLogin } from "@ardia/sync";
+import type { FolderInfo, SealedLogin } from "@nilla/sync";
+import { isUpstreamSyncFolder, ownSyncFoldersOnly, UpstreamSyncFolderError } from "@nilla/sync/src/upstreamSyncFolder.ts";
 import { originalProfile } from "../engine/domains/calling";
 import type { DialogsModule, SystemModule, WindowsHostModule, WindowsSyncModule } from "../nativeModuleTypes";
 import { base32 } from "./base32";
@@ -8,9 +9,9 @@ import { base64, grayscalePng } from "./png";
 import { qrCode, utf8 } from "./qr";
 import { syncVault, type FileCounts, type SyncContract } from "./vault";
 
-export const NATIVE_SYNC = "ArdiaWindowsSync";
+export const NATIVE_SYNC = "NillaWindowsSync";
 
-const FOLDER_NAME = "Ardia Sync";
+const FOLDER_NAME = "Nilla Sync";
 const QR_SCALE = 8;
 const QR_BORDER = 1;
 
@@ -35,9 +36,9 @@ function qrDataUrl(words: string[]): string {
 export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "takeFileCounts">>) | null {
   const native = TurboModuleRegistry.get<WindowsSyncModule>(NATIVE_SYNC);
   if (!native) return null;
-  const dialogs = () => TurboModuleRegistry.get<TurboModule & DialogsModule>("ArdiaDialogs");
-  const system = () => TurboModuleRegistry.get<TurboModule & SystemModule>("ArdiaSystem");
-  const host = () => TurboModuleRegistry.get<TurboModule & WindowsHostModule>("ArdiaWindowsHost");
+  const dialogs = () => TurboModuleRegistry.get<TurboModule & DialogsModule>("NillaDialogs");
+  const system = () => TurboModuleRegistry.get<TurboModule & SystemModule>("NillaSystem");
+  const host = () => TurboModuleRegistry.get<TurboModule & WindowsHostModule>("NillaWindowsHost");
   const constants: ReturnType<WindowsSyncModule["getConstants"]> = native.getConstants?.() ?? {};
   const text = (value: unknown) => (typeof value === "string" ? value : "");
   const oneDrive = text(constants.oneDriveFolder);
@@ -47,9 +48,16 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
   const counts: FileCounts = { placeholders: 0, busy: 0 };
   const vault = syncVault(native, counts);
 
+  const leadsToOwnFolder = async (path: string) =>
+    !isUpstreamSyncFolder(path) &&
+    (await native.folderState(path).then(
+      (state) => state.resolved !== false,
+      () => false,
+    ));
+
   const kitBytes = (words: string[], format: "pdf" | "text") => (format === "text" ? utf8(kitText(words, new Date(), deviceName)) : kitPdf(words, new Date(), deviceName));
 
-  return {
+  return ownSyncFoldersOnly({
     async folderInfo(path: string | null): Promise<FolderInfo> {
       const chosen = path ?? defaultFolder;
       const state = await native.folderState(chosen);
@@ -63,7 +71,12 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
         hasSyncData: state.exists && state.hasSyncData,
       };
     },
-    chooseFolder: async (current) => (await dialogs()?.pickFolder(current, "Use Folder")) ?? null,
+    async chooseFolder(current) {
+      const start = current && (await leadsToOwnFolder(current)) ? current : null;
+      const picked = (await dialogs()?.pickFolder(start, "Use Folder")) ?? null;
+      if (picked && !(await leadsToOwnFolder(picked))) throw new UpstreamSyncFolderError();
+      return picked;
+    },
     newDeviceId() {
       const hex = host()?.secureRandomHex(16) ?? "";
       if (hex.length !== 32) throw new Error("no random bytes for a device id");
@@ -114,5 +127,5 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
       counts.busy = 0;
       return taken;
     },
-  };
+  });
 }

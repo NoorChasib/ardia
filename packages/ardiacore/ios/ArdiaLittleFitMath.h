@@ -4,7 +4,7 @@
 #include <cmath>
 #include <vector>
 
-namespace ardia_little_fit {
+namespace nilla_little_fit {
 
 struct Size {
   double w, h;

@@ -20,7 +20,7 @@ export type TargetEntry = TargetLink | TargetDir;
 export type TargetLevel = { entries: TargetEntry[]; dropped: Dropped[]; remote: RemoteLevel | null };
 
 export const LINK_EXTENSION = ".webloc";
-export const MANIFEST = ".ardia-folder.json";
+export const MANIFEST = ".nilla-folder.json";
 const MANIFEST_VERSION = 1;
 const MAX_NAME_BYTES = 200;
 

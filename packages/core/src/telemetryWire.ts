@@ -10,7 +10,7 @@ export type OtlpLogRecord = {
 
 export type QueuedEvent = { uuid: string; event: string; distinct_id: string; timestamp: string; properties: Record<string, unknown> };
 
-export const EVENTS_SCOPE = "ardia.analytics";
+export const EVENTS_SCOPE = "nilla.analytics";
 export const LOGS_SCOPE = "ardia.app";
 
 function otlpValue(value: unknown): OtlpValue | null {

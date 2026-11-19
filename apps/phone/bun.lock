@@ -5,9 +5,9 @@
     "": {
       "name": "@ardia/phone",
       "dependencies": {
-        "@ardia/core": "link:../../packages/core",
-        "@ardia/phone-native": "workspace:*",
         "@expo/ui": "~58.0.28",
+        "@nilla/core": "link:../../packages/core",
+        "@nilla/phone-native": "workspace:*",
         "expo": "~58.0.25",
         "expo-clipboard": "~58.0.4",
         "expo-constants": "~58.0.16",
@@ -38,7 +38,7 @@
       },
     },
     "../../packages/phone": {
-      "name": "@ardia/phone-native",
+      "name": "@nilla/phone-native",
       "version": "0.0.0",
       "peerDependencies": {
         "@expo/ui": "*",
@@ -51,10 +51,6 @@
   "trustedDependencies": [],
   "packages": {
     "2g": ["2g@1.0.1", "", { "peerDependencies": { "typescript": ">=5.8.0" }, "optionalPeers": ["typescript"], "bin": { "2g": "bin/cli.js" } }, "sha512-+uViadKOS/wwR4pFu5g8TPn3QHpKqoX19JHCnp8k/3cLpImdcXozwvZA6Q/5PeW3AcU8neL8faaMidBcv7o8CA=="],
-
-    "@ardia/core": ["@ardia/core@link:../../packages/core", {}],
-
-    "@ardia/phone-native": ["@ardia/phone-native@workspace:../../packages/phone"],
 
     "@asamuzakjp/css-color": ["@asamuzakjp/css-color@3.2.0", "", { "dependencies": { "@csstools/css-calc": "2.1.4", "@csstools/css-color-parser": "3.1.0", "@csstools/css-parser-algorithms": "3.0.5", "@csstools/css-tokenizer": "3.0.4", "lru-cache": "10.4.3" } }, "sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw=="],
 
@@ -369,6 +365,10 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.6.0", "", {}, "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "3.1.3", "@jridgewell/sourcemap-codec": "1.6.0" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@nilla/core": ["@nilla/core@link:../../packages/core", {}],
+
+    "@nilla/phone-native": ["@nilla/phone-native@workspace:../../packages/phone"],
 
     "@noxcturnal/noxcturnal-darwin-arm64": ["@noxcturnal/noxcturnal-darwin-arm64@0.1.13", "", { "os": "darwin", "cpu": "arm64" }, "sha512-E5cnyssAYGiVgHhDx2jUSmC8RBdBjP33yOpfRg3qDnIXtaDGrpQO5G7tuY+KOBwP1gKI3PfcEJu9uqEuCgl3Qg=="],
 

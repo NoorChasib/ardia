@@ -8,7 +8,7 @@
 
 #include "SyncCrypto.h"
 
-namespace Ardia::SyncLogins {
+namespace Nilla::SyncLogins {
 
 using SyncCrypto::WipedString;
 

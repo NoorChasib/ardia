@@ -36,8 +36,8 @@ import { notePasswordListShown } from "../../../state/telemetry/exportCounts";
 function passwordManagerAppsNote() {
   const apps = `1Password, Bitwarden, KeePassXC and Proton Pass extensions connect to their ${PLATFORM_TERMS.computer} apps.`;
   return systemInfo().inApplicationsFolder === false
-    ? `${apps} For 1Password, move Ardia to your Applications folder and reopen it (1Password only connects to browsers there), then in the 1Password app open Settings › Browser › Add Browser and choose it.`
-    : `${apps} For 1Password, add Ardia once: in the 1Password app, open Settings › Browser › Add Browser and choose Ardia.`;
+    ? `${apps} For 1Password, move Nilla to your Applications folder and reopen it (1Password only connects to browsers there), then in the 1Password app open Settings › Browser › Add Browser and choose it.`
+    : `${apps} For 1Password, add Nilla once: in the 1Password app, open Settings › Browser › Add Browser and choose Nilla.`;
 }
 
 export function PasswordsSection({ profileId }: { profileId: string }) {

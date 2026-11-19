@@ -1,22 +1,22 @@
 #import "ArdiaChromeWindowHost.h"
 #import "ArdiaInternal.h"
 
-@interface ArdiaPageDrawWait : NSObject
+@interface NillaPageDrawWait : NSObject
 + (void)tab:(ArdiaCoreTab *)tab draws:(NSInteger (^)(BOOL fullScreen, BOOL fills))test then:(void (^)(void))done;
 @end
 
-@interface ArdiaPageCover : NSView
+@interface NillaPageCover : NSView
 @property(readonly, weak) ArdiaCoreTab *tab;
-+ (void)coverTabs:(NSArray<ArdiaCoreTab *> *)tabs then:(void (^)(NSArray<ArdiaPageCover *> *covers))then;
++ (void)coverTabs:(NSArray<ArdiaCoreTab *> *)tabs then:(void (^)(NSArray<NillaPageCover *> *covers))then;
 - (void)repicture;
 - (void)uncover:(BOOL)fade;
 @end
 
-@interface ArdiaPopupOriginStrip : NSView
+@interface NillaPopupOriginStrip : NSView
 - (void)showURL:(NSString *)url security:(NSString *)level;
 @end
 
-@interface ArdiaWindowFullScreen : NSObject
+@interface NillaWindowFullScreen : NSObject
 + (instancetype)ofWindow:(ArdiaCoreWindow *)coreWindow create:(BOOL)create;
 - (void)tab:(ArdiaCoreTab *)tab fullScreen:(BOOL)fullScreen tell:(void (^)(void))tell;
 - (BOOL)seen;
@@ -31,9 +31,9 @@
 - (BOOL)enteredForPage;
 @end
 
-namespace ardia_window {
+namespace nilla_window {
 
-NSMapTable<NSWindow *, ArdiaWindowController *> *Controllers();
+NSMapTable<NSWindow *, NillaWindowController *> *Controllers();
 extern BOOL (^gRefusesUnhandledKey)(NSWindow *, NSEvent *);
 
 void ConfigureWindow(NSWindow *window);

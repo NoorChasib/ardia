@@ -2,23 +2,23 @@
   "name": "browser-agents-2026-11",
   "repeats": 3,
   "tasks": "all",
-  "app": "~/ardia-scratch/bench-proper/app/Ardia.app",
+  "app": "~/nilla-scratch/bench-proper/app/Nilla.app",
   "port": 9371,
   "cli": "dev",
-  "ardia_test": "cdpTabsVisible",
+  "nilla_test": "cdpTabsVisible",
   "contenders": [
     {
-      "id": "ardia-claude",
-      "label": "Ardia + Claude Code (Opus 5.5)",
-      "kind": "ardia",
+      "id": "nilla-claude",
+      "label": "Nilla + Claude Code (Opus 5.5)",
+      "kind": "nilla",
       "agent": "claude",
       "model": "claude-opus-5-5",
       "effort": "high"
     },
     {
-      "id": "ardia-codex",
-      "label": "Ardia + Codex (GPT-6.1 Sol)",
-      "kind": "ardia",
+      "id": "nilla-codex",
+      "label": "Nilla + Codex (GPT-6.1 Sol)",
+      "kind": "nilla",
       "agent": "codex",
       "model": "gpt-6.1-sol",
       "effort": "high"

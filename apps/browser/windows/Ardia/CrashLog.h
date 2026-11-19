@@ -10,7 +10,7 @@
 
 #pragma comment(lib, "dbghelp.lib")
 
-namespace Ardia {
+namespace Nilla {
 
 struct CrashLog {
   static void Install() noexcept {

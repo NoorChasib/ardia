@@ -38,7 +38,7 @@ import { refreshHiddenDeck } from "./state/browse/deckHold";
 import { noteScreenLayoutName, noteWindowShape } from "./state/app/landscapeCount";
 import { DUO_CANVAS, reportScreenLayout, useScreenLayout } from "./state/app/screenLayout";
 import { DuoBrowsing } from "./components/duo/DuoBrowsing";
-import { ScreenLayoutProbe } from "@ardia/phone-native";
+import { ScreenLayoutProbe } from "@nilla/phone-native";
 import { handleSystemBack, startPageUi } from "./state/page/actions";
 import { VoiceSearchView } from "./components/search/VoiceSearchView";
 import { useVoicePresented } from "./state/voice/store";

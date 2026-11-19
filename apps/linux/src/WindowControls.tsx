@@ -13,7 +13,7 @@ export const WindowControls = memo(function WindowControls(props: WindowControls
   if (!behaviour.rendered) return null;
   return (
     <div
-      className="ardia-window-controls"
+      className="nilla-window-controls"
       style={{ display: "contents" }}
       inert={behaviour.inert || undefined}
       onMouseDown={(event) => {

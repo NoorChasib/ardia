@@ -3,7 +3,7 @@
 Where a launch of 0.2.27 (`dist/0.2.27/export/Ardia.app`) spends its time, from the process starting to the
 window with its content, the command bar usable and the restored tab painted, and what to cut. Measured 2026-10-06
 by the sprint's launch agent; companion to [sprint-baseline.md](sprint-baseline.md) (the journey numbers) and
-[sprint.md](sprint.md).
+[sprint.md](../history/ardia/perf/sprint.md).
 
 ## Headline
 

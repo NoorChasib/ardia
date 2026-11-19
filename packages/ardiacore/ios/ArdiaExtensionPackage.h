@@ -2,7 +2,7 @@
 
 #import <Foundation/Foundation.h>
 
-namespace ardia_extensions {
+namespace nilla_extensions {
 
 bool IsExtensionId(NSString *s);
 

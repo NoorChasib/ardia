@@ -1,5 +1,4 @@
 import type { Adapter } from "../../platform/sync";
-import { inTodaysNames } from "./adapters";
 import { groupLooksAdapter } from "./groupLooksAdapter";
 import { applyPinned } from "./pinnedApply";
 import { extractPinned } from "./pinnedExtract";
@@ -14,8 +13,8 @@ export function pinnedAreaAdapters(profileId: string): Adapter[] {
     pinnedRowsAdapter(profileId),
     pinnedOrderAdapter(profileId),
     groupLooksAdapter(profileId),
-    inTodaysNames(pinnedHomesAdapter(profileId)),
-    inTodaysNames(pinnedAdapter(profileId)),
+    pinnedHomesAdapter(profileId),
+    pinnedAdapter(profileId),
   ];
 }
 

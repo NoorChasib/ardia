@@ -18,7 +18,7 @@ enum Refusal: String {
 }
 
 enum PasteRefusal {
-  static let pasteboardTextMissing = Notification.Name("ArdiaPasteboardTextMissing")
+  static let pasteboardTextMissing = Notification.Name("NillaPasteboardTextMissing")
 
   private static let sessionLimit = 50
   private static let typeLimit = 24

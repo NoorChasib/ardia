@@ -9,8 +9,8 @@
 
 #include <cmath>
 
-using namespace ardia_window;
-using namespace ardia_runtime;
+using namespace nilla_window;
+using namespace nilla_runtime;
 
 namespace {
 
@@ -25,7 +25,7 @@ NSPoint WindowPoint(NSWindow *window, NSString *spec) {
   NSArray<NSString *> *n = [spec componentsSeparatedByString:@","];
   if (n.count < 2) return NSMakePoint(-1, -1);
   const CGFloat x = n[0].doubleValue, y = n[1].doubleValue;
-  NSView *root = [ArdiaInterfaceScale rootOfWindow:window] ?: [ArdiaChromeWindowHost rootViewOfWindow:window];
+  NSView *root = [NillaInterfaceScale rootOfWindow:window] ?: [NillaChromeWindowHost rootViewOfWindow:window];
   if (!root) return NSMakePoint(x, window.contentView.superview.bounds.size.height - y);
   const NSRect bounds = root.bounds;
   const NSPoint local = NSMakePoint(NSMinX(bounds) + x, root.isFlipped ? NSMinY(bounds) + y : NSMaxY(bounds) - y);
@@ -98,7 +98,7 @@ NSString *SnapshotFrameView(NSWindow *window, NSString *path) {
 }
 
 NSString *FullScreen(NSWindow *window, NSString *argument) {
-  ArdiaCoreWindow *coreWindow = [ArdiaWindowController forNSWindow:window].coreWindow;
+  ArdiaCoreWindow *coreWindow = [NillaWindowController forNSWindow:window].coreWindow;
   if (!coreWindow) return @"not an ArdiaCore window";
   if (argument) {
     NSArray<NSString *> *parts = Fields(argument);
@@ -111,7 +111,7 @@ NSString *FullScreen(NSWindow *window, NSString *argument) {
     @"acted" : @(objc_getAssociatedObject(window, kActedFullScreenKey) != nil),
     @"chromeCounts" : @(coreWindow.actedFullScreen),
   } mutableCopy];
-  if (ArdiaWindowFullScreen *page = [ArdiaWindowFullScreen ofWindow:coreWindow create:NO]) state[@"pageFullScreen"] = [page state];
+  if (NillaWindowFullScreen *page = [NillaWindowFullScreen ofWindow:coreWindow create:NO]) state[@"pageFullScreen"] = [page state];
   return JSONText(state, @"{}");
 }
 
@@ -327,7 +327,7 @@ NSString *WindowInfo(NSWindow *window, NSString *) {
   info[@"frame"] = NSStringFromRect(window.frame);
   info[@"contentView"] = [NSString stringWithFormat:@"%@ %@", window.contentView.className, NSStringFromRect(window.contentView.frame)];
   info[@"frameView"] = [NSString stringWithFormat:@"%@ %@", window.contentView.superview.className, NSStringFromRect(window.contentView.superview.frame)];
-  info[@"root"] = NSStringFromRect([ArdiaChromeWindowHost rootViewOfWindow:window].frame);
+  info[@"root"] = NSStringFromRect([NillaChromeWindowHost rootViewOfWindow:window].frame);
   info[@"styleMask"] = @(window.styleMask);
   info[@"minSize"] = NSStringFromSize(window.minSize);
   info[@"opaque"] = @(window.opaque);
@@ -355,7 +355,7 @@ NSString *WindowInfo(NSWindow *window, NSString *) {
     info[@"sheetText"] = texts;
   }
   NSMutableArray *effects = [NSMutableArray array];
-  NSMutableArray *walk = [NSMutableArray arrayWithObject:[ArdiaChromeWindowHost rootViewOfWindow:window] ?: window.contentView];
+  NSMutableArray *walk = [NSMutableArray arrayWithObject:[NillaChromeWindowHost rootViewOfWindow:window] ?: window.contentView];
   while (walk.count) {
     NSView *v = walk.lastObject;
     [walk removeLastObject];
@@ -391,7 +391,7 @@ NSString *TabViews(NSWindow *window, NSString *) {
   while (queue.count) {
     NSView *v = queue.lastObject;
     [queue removeLastObject];
-    if ([v isKindOfClass:ArdiaWebView.class] || [v isKindOfClass:NSClassFromString(@"ArdiaCore.WebKitTab")]) {
+    if ([v isKindOfClass:NillaWebView.class] || [v isKindOfClass:NSClassFromString(@"ArdiaCore.WebKitTab")]) {
       if (v.hiddenOrHasHiddenAncestor) continue;
       NSMutableArray *subs = [NSMutableArray array];
       for (NSView *sub in v.subviews)
@@ -437,13 +437,13 @@ NSDictionary<NSString *, DevHandler> *DevHandlers() {
       gPageCoverOff = ![on isEqualToString:@"1"];
       return @(!gPageCoverOff).stringValue;
     },
-    @"fullScreenProbe" : ^NSString *(NSWindow *w, NSString *ms) { return [ArdiaChromeWindowHost devFullScreenProbe:ms window:w]; },
+    @"fullScreenProbe" : ^NSString *(NSWindow *w, NSString *ms) { return [NillaChromeWindowHost devFullScreenProbe:ms window:w]; },
     @"fakeFullScreenOcclusionMs" : ^NSString *(NSWindow *, NSString *ms) {
       gActedOcclusionGap = ms.doubleValue == -1 ? NAN : ms.doubleValue / 1000;
       return [NSString stringWithFormat:@"%.0f", ms.doubleValue];
     },
     @"fakeAppActive" : ^NSString *(NSWindow *, NSString *on) {
-      ardia_host::SetAppActive([on isEqualToString:@"1"]);
+      nilla_host::SetAppActive([on isEqualToString:@"1"]);
       return @(NSApp.isActive).stringValue;
     },
     @"postNotification" : ^NSString *(NSWindow *w, NSString *a) { return PostNotification(w, a); },
@@ -471,10 +471,10 @@ NSDictionary<NSString *, DevHandler> *DevHandlers() {
     @"fakeActiveClicks" : ^NSString *(NSWindow *w, NSString *a) { return FakeActiveClicks(w, a); },
     @"click" : ^NSString *(NSWindow *w, NSString *a) { return Click(w, a); },
     @"mouse" : ^NSString *(NSWindow *w, NSString *a) { return MouseEvent(w, a); },
-    @"pageMove" : ^NSString *(NSWindow *w, NSString *a) { return ardia_host::PageMoveAt(w, WindowPoint(w, a)); },
-    @"focusState" : ^NSString *(NSWindow *, NSString *) { return ardia_host::FocusState(); },
-    @"hoverProbe" : ^NSString *(NSWindow *w, NSString *a) { return ardia_host::HoverProbeDev(w, a); },
-    @"pageCursor" : ^NSString *(NSWindow *w, NSString *a) { return ardia_host::PageCursorDev(w, a); },
+    @"pageMove" : ^NSString *(NSWindow *w, NSString *a) { return nilla_host::PageMoveAt(w, WindowPoint(w, a)); },
+    @"focusState" : ^NSString *(NSWindow *, NSString *) { return nilla_host::FocusState(); },
+    @"hoverProbe" : ^NSString *(NSWindow *w, NSString *a) { return nilla_host::HoverProbeDev(w, a); },
+    @"pageCursor" : ^NSString *(NSWindow *w, NSString *a) { return nilla_host::PageCursorDev(w, a); },
     @"drag" : ^NSString *(NSWindow *w, NSString *a) { return Drag(w, a); },
     @"type" : ^NSString *(NSWindow *w, NSString *a) { return TypeText(w, a); },
     @"reserved" : ^NSString *(NSWindow *w, NSString *a) { return Reserved(w, a); },
@@ -508,7 +508,7 @@ NSDictionary<NSString *, DevHandler> *DevHandlers() {
       return @"ok";
     },
     @"root" : ^NSString *(NSWindow *w, NSString *to) {
-      [ArdiaChromeWindowHost rootViewOfWindow:w].hidden = [to isEqualToString:@"hide"];
+      [NillaChromeWindowHost rootViewOfWindow:w].hidden = [to isEqualToString:@"hide"];
       return @"ok";
     },
     @"opaque" : ^NSString *(NSWindow *w, NSString *on) {
@@ -540,11 +540,11 @@ NSDictionary<NSString *, DevHandler> *DevHandlers() {
 
 }
 
-@implementation ArdiaChromeWindowHost (Dev)
+@implementation NillaChromeWindowHost (Dev)
 
 + (NSString *)devAction:(NSString *)action window:(NSWindow *)window {
   if (!window) return nil;
-  if (!ArdiaLaunchConfig.shared.testInstance) return @"test instances only";
+  if (!NillaLaunchConfig.shared.testInstance) return @"test instances only";
   const NSRange colon = [action rangeOfString:@":"];
   NSString *name = colon.location == NSNotFound ? action : [action substringToIndex:colon.location];
   NSString *argument = colon.location == NSNotFound ? nil : [action substringFromIndex:NSMaxRange(colon)];

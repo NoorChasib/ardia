@@ -23,7 +23,7 @@ const ASSET = /\.(png|jpe?g|gif|webp|svg)$/;
 function commonJsRequires(): Plugin {
   const scope = [`${repo}apps/browser/src/`, `${repo}packages/`];
   return {
-    name: "ardia-demo:requires",
+    name: "nilla-demo:requires",
     enforce: "pre",
     transform(code, id) {
       if (!/\.(t|j)sx?$/.test(id) || !scope.some((dir) => id.startsWith(dir)) || !code.includes("require(")) return null;
@@ -48,15 +48,15 @@ const LAZY_COMPONENTS: Record<string, string[]> = {
   [`${repo}apps/browser/src/components/extensions/SidePanel.tsx`]: ["ExtensionSidePanel"],
   [`${repo}apps/browser/src/components/bookmarks/BookmarkDialog.tsx`]: ["BookmarkDialog"],
   [`${repo}apps/browser/src/components/bookmarks/EditBookmarkDialog.tsx`]: ["EditBookmarkDialog"],
-  [`${repo}apps/browser/src/components/littleArdia/LittleArdiaWindow.tsx`]: ["LittleArdiaWindow"],
+  [`${repo}apps/browser/src/components/littleNilla/LittleNillaWindow.tsx`]: ["LittleNillaWindow"],
 };
 
-const LAZY_PREFIX = "\0ardia-lazy:";
-const EAGER_QUERY = "?ardia-eager";
+const LAZY_PREFIX = "\0nilla-lazy:";
+const EAGER_QUERY = "?nilla-eager";
 
 function lazyComponents(): Plugin {
   return {
-    name: "ardia-demo:lazy-components",
+    name: "nilla-demo:lazy-components",
     enforce: "pre",
     async resolveId(source, importer, options) {
       if (!importer || source.endsWith(EAGER_QUERY) || importer.startsWith(LAZY_PREFIX)) return null;
@@ -104,8 +104,9 @@ export default defineConfig({
       { find: /^react-native(-macos)?$/, replacement: `${shims}react-native.tsx` },
       { find: /^expo-modules-core$/, replacement: `${shims}expo-modules-core.ts` },
       { find: /^(?:\.\.\/)+platform\/webDemo$/, replacement: `${shims}webDemo.ts` },
-      { find: /^@ardia\/(shell|ardiacore|shaders|sync|import)$/, replacement: `${shims}$1.tsx` },
-      ...Object.entries(realPackages).map(([name, path]) => ({ find: new RegExp(`^@ardia-real/${name}$`), replacement: path })),
+      { find: /^@nilla\/(shell|shaders|sync|import)$/, replacement: `${shims}$1.tsx` },
+      { find: /^@ardia\/ardiacore$/, replacement: `${shims}ardiacore.tsx` },
+      ...Object.entries(realPackages).map(([name, path]) => ({ find: new RegExp(`^@nilla-real/${name}$`), replacement: path })),
     ],
   },
   optimizeDeps: {

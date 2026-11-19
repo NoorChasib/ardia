@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Cross-browser benchmark: Ardia against Dia, Helium and Google Chrome on the release gate's rows that every Chromium
+// Cross-browser benchmark: Nilla against Dia, Helium and Google Chrome on the release gate's rows that every Chromium
 // browser can be measured on the same way. One harness drives all four from outside the app, over CDP, with the same
 // local pages, window size, fresh profile per run and number of runs, interleaved browser by browser (A B C D, then
 // rotated). Method, fairness rules and results: docs/perf/vs-browsers.md.
@@ -11,13 +11,13 @@
 //   node apps/browser/scripts/perf/xbench.mjs signin --browsers dia --base dia=<home>   open the browser on that HOME, in
 //                        view, for the owner to sign in by hand; returns when they quit it (or at --deadline)
 //   node apps/browser/scripts/perf/xbench.mjs prepare-bg --browsers <a,b>    make <apps>/<name>-bg/: the copy with LSBackgroundOnly
-//                        set (it can't become the active app, as Ardia's test instances can't), signed ad hoc with its
+//                        set (it can't become the active app, as Nilla's test instances can't), signed ad hoc with its
 //                        entitlements and without the hardened runtime; run it as the browser <name>-bg
 //
-//     --browsers <a,b>     ardia,dia,helium,chrome (default: all four, in that order)
-//     --apps <dir>         where the copies live (default /tmp/ac-xbench/apps): ardia/Ardia.app, dia/Dia.app,
+//     --browsers <a,b>     nilla,dia,helium,chrome (default: all four, in that order)
+//     --apps <dir>         where the copies live (default /tmp/ac-xbench/apps): nilla/Nilla.app, dia/Dia.app,
 //                          helium/Helium.app, chrome/Google Chrome.app. Never a bundle in /Applications.
-//     --app <name>=<path>  repeatable: another copy for one browser (Ardia built from main, say)
+//     --app <name>=<path>  repeatable: another copy for one browser (Nilla built from main, say)
 //     --rounds <n>         rounds (default 3). A round is every launch, then every session, browser by browser
 //     --launches <n>       launches of each kind per browser per round (default 2)
 //     --rows <a,b>         link,restore,session,size (default all). session = idle, memory, newtab, switch, newwindow
@@ -30,8 +30,8 @@
 //                          moment input comes. off: run now, with the Mac in use (competitors' windows show on screen)
 //     --away <secs>        idle time that counts as away (default 600)
 //     --window <x,y>       the windows' top-left corner (default 40,80)
-//     --env <name>=K=V     repeatable: extra environment for one browser's instances (ardia=ARDIA_INSTANCE=chromiumSwitches=…)
-//     --launch-tab on|off  Ardia's template session names its active tab as launchTab, as a user's session written
+//     --env <name>=K=V     repeatable: extra environment for one browser's instances (nilla=ARDIA_INSTANCE=chromiumSwitches=…)
+//     --launch-tab on|off  Nilla's template session names its active tab as launchTab, as a user's session written
 //                          with that kill switch on does (default on)
 //     --allow-focus        record a browser making itself the active app instead of stopping (only for an A/B the
 //                          owner agreed to, run while they're away)
@@ -40,7 +40,7 @@
 //     --dmg <name>=<file|url>  repeatable: the download whose size the size row reports
 //     --version-label <name>=<text>  report: show this instead of the app's version (a dev build, say)
 //     --json <file>, --md <file>  report: where the results JSON and the markdown table go (default <out>/bench.json, stdout)
-//     --rivals-from <file> report: measure only some browsers (--browsers ardia) and take every other browser's rows from
+//     --rivals-from <file> report: measure only some browsers (--browsers nilla) and take every other browser's rows from
 //                          this bench.json, each keeping its own version and measured date. Refuses when the machine's
 //                          model or chip, or the harness revision, differ from the file's; warns (never fails) when a kept
 //                          rival is over 60 days old or the copy in /Applications is a new major or minor version
@@ -48,10 +48,10 @@
 //
 // What every instance gets: its own copy of a template profile (made once per browser by one launch that opens the
 // test page, settles 90 s and quits), HOME and CFFIXED_USER_HOME pointed into it (nothing reaches the real
-// ~/Library), the CDP port, and Ardia's background-mode switches for all: --disable-backgrounding-occluded-windows
+// ~/Library), the CDP port, and Nilla's background-mode switches for all: --disable-backgrounding-occluded-windows
 // --mute-audio. Chromium browsers: --user-data-dir --no-first-run --no-default-browser-check --password-store=basic
-// --use-mock-keychain --window-size --window-position. Chrome and Helium also --restore-last-session (Ardia and Dia
-// restore by default). Ardia: ARDIA_BACKGROUND=1, ARDIA_DATA_DIR, ARDIA_REMOTE_DEBUGGING_PORT, onboarding done.
+// --use-mock-keychain --window-size --window-position. Chrome and Helium also --restore-last-session (Nilla and Dia
+// restore by default). Nilla: ARDIA_BACKGROUND=1, ARDIA_DATA_DIR, ARDIA_REMOTE_DEBUGGING_PORT, onboarding done.
 //
 // Rows:
 //   launch → page painted (link)  link     `open -a <app> <url>` with the browser closed: the URL's first-contentful-paint
@@ -81,7 +81,7 @@ const { values: opt, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     out: { type: "string", default: "/tmp/ac-xbench/out" },
-    browsers: { type: "string", default: "ardia,dia,helium,chrome" },
+    browsers: { type: "string", default: "nilla,dia,helium,chrome" },
     apps: { type: "string", default: "/tmp/ac-xbench/apps" },
     app: { type: "string", multiple: true, default: [] },
     rounds: { type: "string", default: "3" },
@@ -128,7 +128,7 @@ const SETTLE_TEMPLATE_MS = 90_000;
 const HARNESS = 1;
 
 const BROWSERS = {
-  ardia: { name: "Ardia", bundle: "ardia/Ardia.app", hidden: true },
+  nilla: { name: "Nilla", bundle: "nilla/Nilla.app", hidden: true },
   dia: { name: "Dia", bundle: "dia/Dia.app", readOnly: true, guardPrefs: true, downloadUrl: (i) => `https://releases.diabrowser.com/release/Dia-${i.version}-${i.build}.dmg` },
   helium: { name: "Helium", bundle: "helium/Helium.app", restoreSwitch: true, downloadUrl: (i) => `https://github.com/imputnet/helium-macos/releases/download/${i.version}/helium_${i.version}_arm64-macos.dmg` },
   chrome: { name: "Google Chrome", bundle: "chrome/Google Chrome.app", restoreSwitch: true, downloadUrl: () => "https://dl.google.com/chrome/mac/universal/stable/GGRO/googlechrome.dmg" },
@@ -136,7 +136,7 @@ const BROWSERS = {
 
 const baseOf = (name) => name.split("-")[0];
 const spec = (name) => BROWSERS[baseOf(name)];
-const isArdia = (name) => baseOf(name) === "ardia";
+const isNilla = (name) => baseOf(name) === "nilla";
 
 const toolDir = join(out, ".tools");
 function compiled(name, source) {
@@ -471,18 +471,18 @@ class Instance {
   }
   env() {
     const env = { HOME: this.home, CFFIXED_USER_HOME: this.home };
-    if (isArdia(this.name)) {
+    if (isNilla(this.name)) {
       Object.assign(env, { ARDIA_BACKGROUND: "1", ARDIA_DATA_DIR: join(this.home, "data"), ARDIA_REMOTE_DEBUGGING_PORT: String(port),
         ...launchVariables({ instance: { updateFeed: `${base()}/appcast.xml` } }) });
     }
     const extra = opt.env.filter((e) => e.startsWith(`${this.name}=`)).map((e) => e.slice(this.name.length + 1))
       .map((e) => ({ [e.slice(0, e.indexOf("="))]: e.slice(e.indexOf("=") + 1) }));
     const merged = mergeLaunchEnv(env, ...extra);
-    return isArdia(this.name) ? appEnv(this.app, merged) : merged;
+    return isNilla(this.name) ? appEnv(this.app, merged) : merged;
   }
   args() {
     const shared = ["--no-first-run", "--no-default-browser-check", "--password-store=basic", "--disable-backgrounding-occluded-windows", "--mute-audio"];
-    if (isArdia(this.name)) return [...shared, "-NSAppSleepDisabled", "YES"];
+    if (isNilla(this.name)) return [...shared, "-NSAppSleepDisabled", "YES"];
     return [`--user-data-dir=${join(this.home, "udd")}`, `--remote-debugging-port=${port}`, "--remote-allow-origins=*", ...shared,
       "--use-mock-keychain", `--window-size=${WIN.w},${WIN.h}`, `--window-position=${WIN.x},${WIN.y}`, ...(this.b.restoreSwitch ? ["--restore-last-session"] : [])];
   }
@@ -632,7 +632,7 @@ async function makeTemplate(name) {
   const baseHome = opt.base.find((b) => b.startsWith(`${name}=`))?.slice(name.length + 1);
   if (baseHome) execFileSync("cp", ["-Rc", resolve(baseHome), join(dir, "home")]);
   else mkdirSync(join(dir, "home"), { recursive: true });
-  if (isArdia(name)) {
+  if (isNilla(name)) {
     mkdirSync(join(dir, "home/data"), { recursive: true });
     writeFileSync(join(dir, "home/data/onboarding.json"), JSON.stringify({ version: 1, completedAt: 1 }));
   }
@@ -651,12 +651,12 @@ async function makeTemplate(name) {
   } finally {
     await app.quit();
   }
-  if (isArdia(name)) fixArdiaSession(join(dir, "home/data/session.json"));
+  if (isNilla(name)) fixNillaSession(join(dir, "home/data/session.json"));
   for (const f of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) rmSync(join(dir, "home/udd", f), { force: true });
   log(`${name} template: ${version.Browser}`);
 }
 
-function fixArdiaSession(file) {
+function fixNillaSession(file) {
   const session = JSON.parse(readFileSync(file, "utf8"));
   const { h } = probe("screen");
   const blank = new Set(session.tabs.filter((t) => !t.url).map((t) => t.id));
@@ -885,7 +885,7 @@ async function sizeItem(name) {
   const app = bundleOf(name);
   const i = info(app);
   const given = opt.dmg.find((d) => d.startsWith(`${name}=`))?.slice(name.length + 1);
-  const local = isArdia(name) ? join(repoRoot, `dist/${i.version}/Ardia-${i.version}.dmg`) : null;
+  const local = isNilla(name) ? join(repoRoot, `dist/${i.version}/Nilla-${i.version}.dmg`) : null;
   const source = given ?? (local && existsSync(local) ? local : spec(name).downloadUrl?.(i));
   let download = NaN;
   if (source && /^https?:/.test(source)) {
@@ -1022,7 +1022,7 @@ async function check(names) {
       const baseHome = opt.base.find((b) => b.startsWith(`${name}=`))?.slice(name.length + 1);
       mkdirSync(baseHome ? dir : join(dir, "home"), { recursive: true });
       if (baseHome) execFileSync("cp", ["-Rc", resolve(baseHome), join(dir, "home")]);
-      if (isArdia(name)) mkdirSync(join(dir, "home/data"), { recursive: true }), writeFileSync(join(dir, "home/data/onboarding.json"), JSON.stringify({ version: 1, completedAt: 1 }));
+      if (isNilla(name)) mkdirSync(join(dir, "home/data"), { recursive: true }), writeFileSync(join(dir, "home/data/onboarding.json"), JSON.stringify({ version: 1, completedAt: 1 }));
       const app = new Instance(name, dir);
       const report = { name, version: app.info.version, window: opt.window };
       const prefs = prefsStamp(name);
@@ -1043,7 +1043,7 @@ async function check(names) {
         report.cover = probe("cover", String(app.pid));
         report.focusTaken = app.focusTaken();
         report.processes = app.ownPids().map((p) => `${p.kind}${p.inTree ? "" : " (outside the tree)"}`);
-        report.uddUsed = isArdia(name) ? existsSync(join(app.home, "data/Chromium/Default")) : existsSync(join(app.home, "udd/Default")) || existsSync(join(app.home, "udd/User Data/Default"));
+        report.uddUsed = isNilla(name) ? existsSync(join(app.home, "data/Chromium/Default")) : existsSync(join(app.home, "udd/Default")) || existsSync(join(app.home, "udd/User Data/Default"));
         report.homeLibrary = existsSync(join(app.home, "Library")) ? readdirSync(join(app.home, "Library")) : [];
       } catch (e) {
         report.error = e.message;
@@ -1148,9 +1148,9 @@ function chromiumOf(app, template) {
 const NOTES = [
   "One harness drives all four from outside the app over CDP, the same local test pages served from 127.0.0.1, one instance at a time, browsers interleaved per run and rotated each round.",
   "Every run starts from its own copy of a template profile made once per browser (one launch, the test page open, 90 s to settle, quit), with HOME pointed into it; default settings, built-in ad blockers as shipped.",
-  "Chrome and Helium get --restore-last-session so all four restore the same one-tab session (Ardia and Dia restore by default).",
-  "Window 1280×800 at the same place for every browser that takes --window-size; Ardia's window frame is set in its session to the same size; Dia ignores --window-size and opens full-screen-sized (1512×949).",
-  "Chrome and Helium run as shipped: they bring themselves to the front at launch and on a tab switch, and fetch their Finch (variations) seed and components as usual. Dia runs in view without taking focus, signed in with a throwaway account. Ardia runs in its background test mode: it can't become the active app, its windows sit behind the owner's and report themselves as not occluded, and App Nap is off for it.",
+  "Chrome and Helium get --restore-last-session so all four restore the same one-tab session (Nilla and Dia restore by default).",
+  "Window 1280×800 at the same place for every browser that takes --window-size; Nilla's window frame is set in its session to the same size; Dia ignores --window-size and opens full-screen-sized (1512×949).",
+  "Chrome and Helium run as shipped: they bring themselves to the front at launch and on a tab switch, and fetch their Finch (variations) seed and components as usual. Dia runs in view without taking focus, signed in with a throwaway account. Nilla runs in its background test mode: it can't become the active app, its windows sit behind the owner's and report themselves as not occluded, and App Nap is off for it.",
   "Memory is phys_footprint summed over every process of the browser (app, helpers, GPU, renderers, utilities, anything running from its bundle); CPU and wakeups are rusage over the same processes.",
   "Measured on the owner's working Mac, in normal use: browsers interleaved run by run and rotated each round so the owner's activity falls on all of them alike; each figure is the median of the runs, with min–max and n.",
   "Median, min–max and n over runs; a row is a win when the ranges don't overlap.",

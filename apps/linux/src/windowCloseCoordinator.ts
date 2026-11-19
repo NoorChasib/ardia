@@ -1,4 +1,4 @@
-import type { ConfirmOptions, DialogsNative } from "@ardia-real/shell";
+import type { ConfirmOptions, DialogsNative } from "@nilla-real/shell";
 import type { ManagedCloseReason } from "../../browser/src/platform/windowClose";
 import type { WindowCloseDecision } from "../../browser/src/state/windows/windowClose";
 import type { DialogSuspension } from "./hostDialogs";

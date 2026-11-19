@@ -1,4 +1,4 @@
-import { breadcrumb } from "@ardia/core";
+import { breadcrumb } from "@nilla/core";
 import { Button, WindowBackdrop, ink, PageCoverGate, Panel, PinchArea, pinchFollow, pinchSettle, reduceMotion, reduceMotionKnown, type PinchMotion } from "../ui";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
@@ -9,7 +9,7 @@ import { useActiveTabId, useSettings, useTab } from "../../state/browser/hooks";
 import { useFullscreenTab } from "../../state/tabs/pageState";
 import type { Peek } from "../../state/peek/peek";
 import { PEEK_MOTION, PEEK_SCRIM } from "./tokens";
-import { PageLabel, SMALL_BAR_BUTTON, SMALL_INSET, SMALL_WINDOW_FRAME, SmallBar, smallWindowRadius, type SmallBarButton } from "../littleArdia/SmallChrome";
+import { PageLabel, SMALL_BAR_BUTTON, SMALL_INSET, SMALL_WINDOW_FRAME, SmallBar, smallWindowRadius, type SmallBarButton } from "../littleNilla/SmallChrome";
 import { shadow, space } from "../ui/tokens";
 import type { PeekButtons } from "../../state/settings/settings";
 import { dismissPeek, finishPeek, openPeekAsTab, openPeekInSplit, registerPeekMotion } from "../../state/peek/actions";

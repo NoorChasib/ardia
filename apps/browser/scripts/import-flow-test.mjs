@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Drives the import window through every flow against fake browser data, never a real profile.
 //
-//   node apps/browser/scripts/import-flow-test.mjs <Debug Ardia.app> <scratch dir> [flow…] [--record <file>] [--compare <file>] [--keep]
+//   node apps/browser/scripts/import-flow-test.mjs <Debug Nilla.app> <scratch dir> [flow…] [--record <file>] [--compare <file>] [--keep]
 //
 //   <scratch dir>     home/ is a copy of packages/import/fixtures/home (the fake Chrome, Arc, Dia, Firefox, Safari… data)
 //                     and data/ the instance's ARDIA_DATA_DIR; both are wiped first; Dia's fixture windows get a pinned
@@ -65,7 +65,7 @@ for (const window of diaWindows)
 const diaWindowsFile = join(exportsDir, "dia-windows.json");
 writeFileSync(diaWindowsFile, JSON.stringify(diaWindows));
 
-const FAKE_DIA_ID = "dev.ardia.fixture.dia";
+const FAKE_DIA_ID = "com.nilladigital.nilla.fixture.dia";
 const fakeDia = join(scratch, "FakeDia.app");
 const LSREGISTER = "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister";
 rmSync(fakeDia, { recursive: true, force: true });
@@ -206,13 +206,13 @@ const CHECKS = {
     assert.deepEqual(a.rules, [
       ["contains", "meet.google.com", null, "tab"],
       ["contains", "jira.example/browse", "Work", "tab"],
-      ["contains", "https://www.docs.example/", null, "littleArdia"],
-      ["equals", "calendar.example", "Personal", "littleArdia"],
+      ["contains", "https://www.docs.example/", null, "littleNilla"],
+      ["equals", "calendar.example", "Personal", "littleNilla"],
     ], `Arc's Air Traffic Control rules arrive in order: ${JSON.stringify(a.rules)}`);
     assert.ok(r.notes.some((n) => n.startsWith("5 Air Traffic Control rules from Arc stayed behind")), `the deleted space's rule and the unreadable ones are named: ${JSON.stringify(r.notes)}`);
     assert.deepEqual([r.counts.rules, r.counts.archived, r.counts.settings], [4, 4, 2], JSON.stringify(r.counts));
     assert.equal(a.fallback, null);
-    assert.equal(a.openLinksInLittleArdia, false, "Arc's links from other apps went to the most recent space, not Little Arc");
+    assert.equal(a.openLinksInLittleNilla, false, "Arc's links from other apps went to the most recent space, not Little Arc");
     assert.equal(a.cleanUpMinutes, 7 * 24 * 60, "Arc's archive-after-7-days becomes the clean-up setting");
     assert.deepEqual(a.cleaned, [
       ["https://ghost.example/", "Personal", null],
@@ -280,7 +280,7 @@ const arcSummary = `const s = ac.store.getState(); const name = (id) => (id === 
   const pages = (profile) => ac.favicons.useFavicons.getState().profiles[ac.favicons.cacheKey(profile)]?.pages ?? {};
   const personal = Object.values(s.profiles).find((p) => p.name === "Personal")?.id;
   return { rules: atc.rules.map((r) => [r.when.kind, r.when.text ?? r.when.pattern ?? r.when.host ?? null, name(r.profileId), r.open]), fallback: atc.fallback,
-    openLinksInLittleArdia: s.settings.openLinksInLittleArdia, cleanUpMinutes: s.settings.cleanUpInactiveTabsAfterMinutes,
+    openLinksInLittleNilla: s.settings.openLinksInLittleNilla, cleanUpMinutes: s.settings.cleanUpInactiveTabsAfterMinutes,
     cleaned: s.cleanedTabs.map((c) => [c.tab.url, name(c.tab.profileId), c.tab.customTitle]).sort(),
     icons: Object.fromEntries(["https://calendar.example/", "https://today.example/", "https://blog.example/post"].map((p) => [p, personal ? (pages(personal)[p] ?? null) : null])) };`;
 const ARC_ICON = (id) => readFileSync(join(home, "Library/Application Support/Arc/SidebarItemsFaviconCache", createHash("md5").update(id).digest("hex"))).toString("base64");
@@ -311,7 +311,7 @@ try {
     ready: { timeout: 90_000, test: "return ac.store.getState().windowOrder.length > 0" },
   });
   rep.log("pid", app.pid, "cdp", app.port, "log", app.log);
-  const listed = await run(`return globalThis.expo.modules.ArdiaImport.listBrowsers().then((j) => (typeof j === "string" ? JSON.parse(j) : j).map((b) => b.id));`);
+  const listed = await run(`return globalThis.expo.modules.NillaImport.listBrowsers().then((j) => (typeof j === "string" ? JSON.parse(j) : j).map((b) => b.id));`);
   rep.log("listed:", JSON.stringify(listed));
   for (const name of wanted) {
     await rep.check(name, async () => {

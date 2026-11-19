@@ -98,9 +98,9 @@ function homeOf(to: Pick<ArcLinkDestination, "spaceId" | "spaceName">, homes: Ar
 
 export function arcLinkTarget(to: ArcLinkDestination, homes: ArcHomes): AirTrafficTarget | null {
   if (to.kind === "mostRecent") return { profileId: null, open: "tab" };
-  if (!to.spaceId) return to.kind === "littleArc" ? { profileId: null, open: "littleArdia" } : null;
+  if (!to.spaceId) return to.kind === "littleArc" ? { profileId: null, open: "littleNilla" } : null;
   const home = homeOf(to, homes);
-  return home ? { profileId: home, open: to.kind === "littleArc" ? "littleArdia" : "tab" } : null;
+  return home ? { profileId: home, open: to.kind === "littleArc" ? "littleNilla" : "tab" } : null;
 }
 
 export function arcLinkCondition(rule: Pick<ArcLinkRule, "match" | "text">): LinkCondition | null {
@@ -133,9 +133,9 @@ async function importArcFallback(to: ArcLinkDestination | undefined, homes: ArcH
   const target = arcLinkTarget(to, homes);
   if (!target) return "unresolved";
   const usual = target.profileId === null && target.open === "tab";
-  if (usual ? !useBrowser.getState().settings.openLinksInLittleArdia : sameTarget(currentAirTraffic().fallback, target)) return "same";
-  if (fallbackChosen(currentAirTraffic()) || settingSet("openLinksInLittleArdia")) return "kept";
-  if (usual) return savedSetting({ openLinksInLittleArdia: false });
+  if (usual ? !useBrowser.getState().settings.openLinksInLittleNilla : sameTarget(currentAirTraffic().fallback, target)) return "same";
+  if (fallbackChosen(currentAirTraffic()) || settingSet("openLinksInLittleNilla")) return "kept";
+  if (usual) return savedSetting({ openLinksInLittleNilla: false });
   return setAirTrafficFallback(target) ? "applied" : "unsaved";
 }
 
@@ -210,14 +210,14 @@ export async function importArcArchive(archive: ArcArchive, homes: ArcHomes, now
 export function arcNotes(routed: RoutingImported | null, archived: ArchiveImported | null): string[] {
   const notes: string[] = [];
   if (routed?.skipped)
-    notes.push(`${plural(routed.skipped, "Air Traffic Control rule")} from Arc stayed behind: ${routed.skipped === 1 ? "its space or condition doesn't" : "their spaces or conditions don't"} have an exact match in Ardia.`);
+    notes.push(`${plural(routed.skipped, "Air Traffic Control rule")} from Arc stayed behind: ${routed.skipped === 1 ? "its space or condition doesn't" : "their spaces or conditions don't"} have an exact match in Nilla.`);
   if (routed?.unsaved) notes.push(`${plural(routed.unsaved, "Air Traffic Control rule")} from Arc couldn't be saved. Try the import again.`);
   if (routed?.fallback === "unsaved" || archived?.cleanUp === "unsaved") notes.push("Some of Arc's settings may not have been saved. Check Settings, or try the import again.");
   if (routed?.fallback === "kept") notes.push("Arc's choice for links from other apps wasn't imported, because you've already chosen where they open.");
   if (routed?.fallback === "unresolved") notes.push("Arc's choice for links from other apps wasn't imported: the space it named didn't come over.");
   if (archived?.overQuota) notes.push(`${plural(archived.overQuota, "archived tab")} stayed in Arc: Recently Cleaned keeps the newest ${MAX_CLEANED} for a week.`);
   if (archived?.unresolved) notes.push(`${plural(archived.unresolved, "archived tab")} from spaces that didn't come over stayed in Arc.`);
-  if (archived?.dropped) notes.push(`${plural(archived.dropped, "older archived tab")} ${archived.dropped === 1 ? "wasn't" : "weren't"} read: Ardia reads Arc's newest ${ARC_ARCHIVE_READ.toLocaleString("en-US")}.`);
-  if (archived?.cleanUp === "kept") notes.push("Arc's archive timing wasn't imported, because you've already set when Ardia cleans up tabs.");
+  if (archived?.dropped) notes.push(`${plural(archived.dropped, "older archived tab")} ${archived.dropped === 1 ? "wasn't" : "weren't"} read: Nilla reads Arc's newest ${ARC_ARCHIVE_READ.toLocaleString("en-US")}.`);
+  if (archived?.cleanUp === "kept") notes.push("Arc's archive timing wasn't imported, because you've already set when Nilla cleans up tabs.");
   return notes;
 }

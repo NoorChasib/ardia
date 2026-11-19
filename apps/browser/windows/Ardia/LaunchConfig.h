@@ -12,7 +12,7 @@
 #include "Paths.h"
 #include "TestGate.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace AppLaunch {
 
@@ -68,7 +68,7 @@ inline std::vector<std::string_view> const &TestKeys() noexcept {
       "externalProtocolNoLaunch", "externalProtocolApp", "mediaRouteProvider", "systemMediaPermission", "applyProfileGate", "contextMenu",
       "loginsDelay", "loginsReleaseAfter", "cdpTabsVisible",
       "pipSelfTest", "pipHover", "selfCheckOnly", "meadowWebGL", "meadowReadyMs", "introStartDelayMs", "fakeFullScreenMs", "shadersKeyWindow", "peekStrict", "importSecret", "importDiaBundleId", "importDiaWindows",
-      "cliInstallScript", "legacySource", "legacyCrashAfter", "bangsUrl", "onboarding", "whatsNew", "telemetry",
+      "cliInstallScript", "services", "bangsUrl", "onboarding", "whatsNew", "telemetry",
       "liveMock", "calendarFixture", "appMenu", "appDialog", "loginsTimeout", "externalAppLaunch", "nativeDragRefused", "httpPages", "selfCheckStage",
       "keyHold", "keyHoldReadyMs",
   };
@@ -78,7 +78,7 @@ inline std::vector<std::string_view> const &TestKeys() noexcept {
 inline std::vector<std::string_view> const &KeysWhoseValuesHoldCommas() noexcept {
   static const std::vector<std::string_view> keys{
       "chromiumSwitches", "downloadsDir", "updateFeed", "cliHome", "cliBinDir", "cliUrl", "syncFolder", "sharedFolders", "importSourceDir",
-      "importSafariHome", "importSecret", "cliInstallScript", "legacySource", "bangsUrl", "liveMock",
+      "importSafariHome", "importSecret", "cliInstallScript", "services", "bangsUrl", "liveMock",
   };
   return keys;
 }
@@ -172,8 +172,14 @@ inline std::filesystem::path ChosenConfigDirectory(bool testInstance) noexcept {
     if (clash.empty()) return Paths::Ensured(requested);
     Note(L"ARDIA_CONFIG_DIR ignored: " + clash);
   }
-  if (Paths::HasCustomDataDirectory()) return Paths::Ensured(Paths::DataDirectory() / L"config");
-  return Paths::Ensured(Paths::UserFolder(FOLDERID_RoamingAppData, L"APPDATA") / L"Ardia");
+  if (Paths::HasCustomDataDirectory()) {
+    std::filesystem::path besideData = Paths::DataDirectory() / L"config";
+    std::wstring clash = TestGate::UpstreamClash({besideData}, L"the config folder");
+    if (clash.empty()) clash = TestGate::UpstreamClash({Paths::Ensured(besideData)}, L"the config folder");
+    if (clash.empty()) return besideData;
+    Note(L"config folder ignored: " + clash);
+  }
+  return Paths::Ensured(Paths::UserFolder(FOLDERID_RoamingAppData, L"APPDATA") / L"Nilla");
 }
 
 inline std::optional<std::wstring> &EngineTestGate() noexcept {
@@ -182,7 +188,7 @@ inline std::optional<std::wstring> &EngineTestGate() noexcept {
 }
 
 inline std::wstring TestGateRefusal(bool isolated) noexcept {
-  if (EngineTestGate()) return *EngineTestGate();
+  if (EngineTestGate() && !EngineTestGate()->empty()) return *EngineTestGate();
   return isolated ? TestGate::Refusal() : std::wstring{L"no scratch ARDIA_DATA_DIR"};
 }
 
@@ -203,7 +209,10 @@ inline Config Read() noexcept {
   config.trace = AreaEntries(Paths::Utf8(Paths::Environment(L"ARDIA_TRACE")));
   config.test = KeyedEntries(Paths::Utf8(Paths::Environment(L"ARDIA_TEST")), TestKeys(), L"ARDIA_TEST");
   config.feedbackURL = Paths::Utf8(Paths::Environment(L"ARDIA_FEEDBACK_URL"));
-  if (config.testInstance) return config;
+  if (config.testInstance) {
+    Note(L"app test gate: a test instance");
+    return config;
+  }
   bool asked = !config.trace.empty() || !config.test.empty() || !Paths::Environment(L"ARDIA_CONFIG_DIR").empty();
   for (std::string_view key : TestOnlyInstanceKeys()) asked = config.instance.erase(std::string{key}) > 0 || asked;
   config.trace.clear();

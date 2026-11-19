@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <vector>
 
-namespace ardia_window_sight {
+namespace nilla_window_sight {
 
 struct Rect {
   double x, y, width, height;

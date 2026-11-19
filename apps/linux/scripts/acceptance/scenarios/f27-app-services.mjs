@@ -27,7 +27,7 @@ async function regularShells(app, count) {
 
 async function launchClaims(shells) {
   const steps = await shells[0].eval("window.__ardiaHost.invoke('ArdiaShell.launchSteps', { args: [] })");
-  const marks = await Promise.all(shells.map((s) => s.eval("sessionStorage.getItem('ardia.linux.app-launch')")));
+  const marks = await Promise.all(shells.map((s) => s.eval("sessionStorage.getItem('nilla.linux.app-launch')")));
   return { steps, marks };
 }
 

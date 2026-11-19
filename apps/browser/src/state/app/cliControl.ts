@@ -136,6 +136,8 @@ export function noteSocketServing(serving: boolean) {
   updateIndicator(useCli.getState());
 }
 
+export const cliInstallerAvailable = () => canInstallCliUnattended();
+
 let running: Promise<CliInstallResult> | null = null;
 
 export function installCliInBackground(reason: CliInstallReason): Promise<CliInstallResult> {
@@ -286,7 +288,7 @@ export function startCliControl() {
   });
   useCli.subscribe(pushActiveTab);
   usePages.subscribe(pushActiveTab);
-  if (PLATFORM_FEATURES.ardiaCommand) afterFirstWindow(() => setTimeout(installOrUpgrade, UPGRADE_DELAY_MS));
+  if (PLATFORM_FEATURES.nillaCommand) afterFirstWindow(() => setTimeout(installOrUpgrade, UPGRADE_DELAY_MS));
 }
 
 if (__DEV__) (globalThis as { acCli?: unknown }).acCli = { store: useCli, indicator: useCliIndicator, install: installCliInBackground, installOrUpgrade };

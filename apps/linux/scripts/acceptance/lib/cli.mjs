@@ -1,6 +1,6 @@
 import { isAbsolute, resolve } from "node:path";
 
-export const USAGE = `Ardia Linux native acceptance suite
+export const USAGE = `Nilla Linux native acceptance suite
 
 Usage: bun run acceptance:linux <executable> [uiDir] [options]
 
@@ -11,7 +11,7 @@ repository root, or against apps/linux when run there. Under a runner that sets
 INIT_CWD (npm), they resolve against INIT_CWD.
 
 Runs each feature issue's runtime acceptance scenarios headlessly against a packaged
-Linux Ardia build with throwaway profiles, and prints per-issue results as JSON.
+Linux Nilla build with throwaway profiles, and prints per-issue results as JSON.
 
 Options:
   --only F01,F03,#33   Run only these findings or issue numbers
@@ -53,6 +53,6 @@ export function parseArgs(argv, { cwd = process.env.INIT_CWD || process.cwd() } 
   const [executable, uiDir] = positional.map((p) => (isAbsolute(p) ? p : resolve(cwd, p)));
   options.executable = executable ?? null;
   options.uiDir = uiDir ?? null;
-  if (!options.help && !options.list && !options.executable) throw new UsageError("Pass the packaged Linux Ardia executable");
+  if (!options.help && !options.list && !options.executable) throw new UsageError("Pass the packaged Linux Nilla executable");
   return options;
 }

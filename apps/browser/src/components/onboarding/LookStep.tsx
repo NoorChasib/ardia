@@ -1,7 +1,7 @@
 import { appIcons, currentAppIcon, setAppIcon, type AppIcon } from "../../state/app/appSettings";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
-import { space } from "../ui/tokens";
+import { Image, Pressable, View } from "react-native";
+import { concentric, ink, radius, space } from "../ui/tokens";
 import { PROFILE_COLORS } from "../ui/theme";
 import { useWindowProfileValue } from "../../state/profiles/hooks";
 import type { Settings } from "../../state/settings/settings";
@@ -12,9 +12,10 @@ import { liquidGlass, previewColor, previewLive, previewTheme, setOnboardingExtr
 import { keysOf } from "../../state/onboarding/questions";
 import { change, Page, useQuestion } from "./LayoutSteps";
 import { OptionCard } from "./OptionCard";
-import { OptionRow, useOnboardingCard } from "./Parts";
+import { OptionRow, useOnboardingCard, useOnboardingColors } from "./Parts";
+import { ChoiceCard } from "./ChoiceCard";
 import { Slider } from "../settings/ThemeControls";
-import { Text } from "../ui";
+import { Text, useHover } from "../ui";
 import { noteOnboardingStyle } from "../../state/telemetry/usage";
 import { PAGE_FRAME, pageFrameInset } from "../../lib/windowLayout";
 import { PLATFORM_TERMS } from "../../lib/platformTerms";
@@ -183,10 +184,9 @@ export function LookStep() {
       >
         <View style={{ gap: space.m }}>
           {icons.list.length > 1 ? (
-            <OptionRow
-              title="App icon"
+            <AppIconGrid
+              icons={icons.list}
               value={appIcon ?? icons.current ?? icons.list[0]!.id}
-              options={icons.list.map((i) => ({ value: i.id, title: i.name, image: i.preview }))}
               onChange={(id) => setOnboardingExtras({ appIcon: id })}
             />
           ) : null}
@@ -206,5 +206,65 @@ export function LookStep() {
     <Page id="color" title="Pick a color" subtitle="It tints the sidebar and the window." patch={{}} picked={name ? [`${name} theme`] : []} preview={preview}>
       <ThemePicker windowId={windowId} size={32} gap={space.xs} onPreset={previewColor} onTheme={previewTheme} />
     </Page>
+  );
+}
+
+const ICON_SWATCH = { box: 26, image: 22 } as const;
+const ICON_CARD = { gap: space.s, paddingVertical: space.s, paddingHorizontal: space.l } as const;
+const ICON_HEADER = { flexDirection: "row", alignItems: "center", gap: space.ml, minHeight: 20 } as const;
+const ICON_GRID = { flexDirection: "row", flexWrap: "wrap", gap: space.xxs } as const;
+const ICON_IMAGE = { width: ICON_SWATCH.image, height: ICON_SWATCH.image } as const;
+
+function AppIconGrid({ icons, value, onChange }: { icons: AppIcon[]; value: string; onChange: (id: string) => void }) {
+  const colors = useOnboardingColors();
+  const name = icons.find((icon) => icon.id === value)?.name;
+  return (
+    <ChoiceCard mouseDownCanMoveWindow={false} radius={radius.panel} style={ICON_CARD}>
+      <View style={ICON_HEADER}>
+        <Text size="small" weight="medium" color={colors.title} style={{ flex: 1 }}>
+          App icon
+        </Text>
+        {name ? (
+          <Text size="small" color={colors.subtitle} lines={1}>
+            {name}
+          </Text>
+        ) : null}
+      </View>
+      <View style={ICON_GRID} accessibilityRole="radiogroup" accessibilityLabel="App icon">
+        {icons.map((icon) => (
+          <IconSwatch key={icon.id} icon={icon} selected={icon.id === value} onPress={() => onChange(icon.id)} />
+        ))}
+      </View>
+    </ChoiceCard>
+  );
+}
+
+function IconSwatch({ icon, selected, onPress }: { icon: AppIcon; selected: boolean; onPress: () => void }) {
+  const colors = useOnboardingColors();
+  const { hovered, hoverProps } = useHover();
+  return (
+    <View {...hoverProps} tooltip={icon.name}>
+      <Pressable onPress={onPress} accessibilityRole="radio" accessibilityState={{ selected }} accessibilityLabel={icon.name}>
+        {({ pressed }) => (
+          <ChoiceCard
+            mouseDownCanMoveWindow={false}
+            radius={concentric(radius.tile, space.xxs)}
+            raised
+            plain={!selected}
+            fill={selected ? colors.card : hovered ? colors.outlinedHover : ink.clear}
+            border={selected ? colors.rowBorder : null}
+            style={{
+              width: ICON_SWATCH.box,
+              height: ICON_SWATCH.box,
+              alignItems: "center",
+              justifyContent: "center",
+              transform: [{ scale: pressed ? 0.96 : 1 }],
+            }}
+          >
+            {icon.preview ? <Image source={{ uri: icon.preview }} style={ICON_IMAGE} /> : null}
+          </ChoiceCard>
+        )}
+      </Pressable>
+    </View>
   );
 }

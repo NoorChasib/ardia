@@ -2,7 +2,7 @@ import { act, type ReactTestInstance } from "react-test-renderer";
 import { renderSurface, unmount, withTabs } from "../../test/render/harness";
 import { idOf, itemOf, mockNative, resetNativeMenus, titles, type NativeItem } from "./nativeMenusMock";
 
-jest.mock("@ardia/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@ardia/phone-native")));
+jest.mock("@nilla/phone-native", () => require("./nativeMenusMock").nativeMenusModule(jest.requireActual("@nilla/phone-native")));
 
 const { ArchiveView } = require("../components/tabs/ArchiveView") as typeof import("../components/tabs/ArchiveView");
 const { PickerRow } = require("../components/settings/SettingsKit") as typeof import("../components/settings/SettingsKit");

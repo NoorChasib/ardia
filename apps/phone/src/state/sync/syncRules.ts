@@ -72,11 +72,11 @@ export function connectMessage(result: ConnectResult): string | null {
     case "noSyncData":
       return "There’s no synced data in this folder yet. Choose the folder your other devices sync to, or wait for it to finish downloading.";
     case "folderUnavailable":
-      return copy().folderUnavailable;
+      return result.problem ?? copy().folderUnavailable;
     case "keyStoreFailed":
       return copy().keySaveFailed;
     case "busy":
-      return "Ardia is still turning off sync. Try again in a moment.";
+      return "Nilla is still turning off sync. Try again in a moment.";
   }
 }
 
@@ -197,7 +197,7 @@ export function inboxNotice(status: SyncStatus): { message: string; footer: stri
   return { message: problem, footer: INBOX_RETRY };
 }
 
-export const SCAN_REJECTED = "Not an Ardia sync code.";
+export const SCAN_REJECTED = "Not a Nilla sync code.";
 
 export type ScanVerdict = { kind: "accept"; phrase: string } | { kind: "reject" } | { kind: "repeat" };
 

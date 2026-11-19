@@ -457,7 +457,7 @@ test("picking a colour from a live folder's menu saves it, Neutral clears it, No
   const { openLiveFolderMenu } = await import("../sidebar/liveMenus.ts");
   const { takeLiveHideCounts } = await import("../telemetry/liveHides.ts");
   const id = createFolder("p", "pullRequests", []);
-  const shell = shellNativeModules.ArdiaMenus;
+  const shell = shellNativeModules.NillaMenus;
   const real = shell.showMenu;
   takeLiveHideCounts();
   const pick = async (title) => {

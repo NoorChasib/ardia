@@ -2,7 +2,7 @@ import { emitNativeEvent, provideNativeModule } from "../../expo-modules-core";
 import { currentPointer, watchPointer, type PointerSample } from "./pointer";
 
 const REACH = 24;
-const WINDOW_SELECTOR = ".ardia-window";
+const WINDOW_SELECTOR = ".nilla-window";
 
 type Watch = { hold: number; right: boolean };
 
@@ -42,11 +42,11 @@ function check(pointer: PointerSample | null = currentPointer()) {
     const x = pointer?.clientX ?? -1;
     const y = pointer?.clientY ?? -1;
     const point: [number, number] = frame ? [x - frame.left, y - frame.top] : [x, y];
-    emitNativeEvent("ArdiaAppWindows", "onWindowEvent", { type: "sidebarEdge", id, over: now, point });
+    emitNativeEvent("NillaAppWindows", "onWindowEvent", { type: "sidebarEdge", id, over: now, point });
   }
 }
 
-const HOLDING_CLASS = "ardia-pointer-hold";
+const HOLDING_CLASS = "nilla-pointer-hold";
 
 function holdPagePointer() {
   const holding = [...watched.values()].some((w) => w.hold > 0);
@@ -81,6 +81,6 @@ export function watchSidebarEdge(id: string, on: boolean, hold: number, right: b
   if (watched.size) check();
 }
 
-provideNativeModule("ArdiaAppWindows", {
+provideNativeModule("NillaAppWindows", {
   watchSidebarEdge: async (id: string, on: boolean, hold: number, right: boolean) => watchSidebarEdge(id, on, hold, right),
 });

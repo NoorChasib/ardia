@@ -5,7 +5,7 @@ import ExpoModulesCore
 
 public class AppModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaApp")
+    Name("NillaApp")
     Constant("apiVersion") { () -> Int in 76 }
 
     OnCreate {
@@ -57,7 +57,7 @@ public class AppModule: Module {
       let configuration = "Release"
       #endif
       return [
-        "appName": info["CFBundleName"] as? String ?? "Ardia",
+        "appName": info["CFBundleName"] as? String ?? "Nilla",
         "appVersion": info["CFBundleShortVersionString"] as? String ?? "",
         "appBuild": info["CFBundleVersion"] as? String ?? "",
         "bundleId": Bundle.main.bundleIdentifier ?? "",
@@ -68,17 +68,17 @@ public class AppModule: Module {
         "model": String(cString: model),
         "memoryGB": Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824,
         "locale": Locale.current.identifier,
-        "feedbackURL": Self.infoString("ACFeedbackURL") as Any,
+        "feedbackURL": Self.infoString("NLFeedbackURL") as Any,
         "feedbackEmail": Self.infoString("ACFeedbackEmail") as Any,
         "videoTourURL": Self.infoString("ACVideoTourURL") as Any,
-        "releaseNotesURL": Self.infoString("ACReleaseNotesURL") as Any,
+        "releaseNotesURL": ServicesConfig.releaseNotesURL?.absoluteString as Any,
         "isolatedInstance": config.isolated,
         "forceReleaseNotes": config.instanceFlag("releaseNotes"),
         "processStart": Self.processStart as Any,
         "bootTime": Self.bootTime as Any,
-        "launchMarks": ArdiaHost.launchMarks,
-        "launchedHidden": ArdiaHost.launchedHidden as Any,
-        "launchSource": ArdiaHost.launchSource as Any,
+        "launchMarks": NillaHost.launchMarks,
+        "launchedHidden": NillaHost.launchedHidden as Any,
+        "launchSource": NillaHost.launchSource as Any,
         "loadAverage1m": Self.loadAverage1m as Any,
         "inApplicationsFolder": Self.inApplicationsFolder,
         "updatePrewarm": UserDefaults.standard.dictionary(forKey: UpdatePrewarm.lastRunKey) as Any,
@@ -97,7 +97,7 @@ public class AppModule: Module {
     AsyncFunction("playIntroMusic") { (cues: [String: Double], muted: Bool) in IntroMusic.shared.play(cues: cues, muted: muted) }.runOnQueue(.main)
     AsyncFunction("setIntroMusicMuted") { (muted: Bool) in IntroMusic.shared.setMuted(muted) }.runOnQueue(.main)
     AsyncFunction("stopIntroMusic") { (fade: Double) in IntroMusic.shared.stop(fade: fade) }.runOnQueue(.main)
-    Function("launchConfig") { () -> [String: Any] in LaunchConfig.shared.snapshot }
+    Function("launchConfig") { () -> [String: Any] in LaunchConfig.shared.snapshot.merging(["services": ServicesConfig.forJavaScript]) { current, _ in current } }
   }
 
   private static func infoString(_ key: String) -> String? {

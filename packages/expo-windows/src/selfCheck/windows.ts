@@ -3,7 +3,7 @@ import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 
 
-const windows = () => requireNativeModule<Pick<AppWindowsModule, "windowIds" | "windowFrame" | "setWindowTitle" | "openWindow" | "closeWindow" | "requestClose" | "animateWindowClose" | "debugWindowFade">>("ArdiaAppWindows");
+const windows = () => requireNativeModule<Pick<AppWindowsModule, "windowIds" | "windowFrame" | "setWindowTitle" | "openWindow" | "closeWindow" | "requestClose" | "animateWindowClose" | "debugWindowFade">>("NillaAppWindows");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const MAIN_EXIT_MS = 180;
@@ -72,7 +72,7 @@ export const checks: Check[] = [
         const took = await goneWithin(id, CLOSED_BY_REQUEST_MS);
         if (took === null) await windows().closeWindow(id);
         expectTrue(took !== null, `the ${kind} window was still open ${CLOSED_BY_REQUEST_MS} ms after a user's close`);
-        console.info(`[ardia windows] a ${kind} window closed ${took} ms after a user's close`);
+        console.info(`[nilla windows] a ${kind} window closed ${took} ms after a user's close`);
       }
     },
   },

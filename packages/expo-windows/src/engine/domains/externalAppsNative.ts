@@ -1,13 +1,13 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
-import type { DocumentsNative } from "@ardia/shell";
+import type { DocumentsNative } from "@nilla/shell";
 import type { ExternalAppsModule } from "../../nativeModuleTypes";
 import { answerExternalAppsWith, externalAppDropped, externalAppStillAsked } from "../pages";
 import { readExternalAppAsk, windowsExternalApps, type ExternalApps } from "./externalApps";
 
 export function nativeExternalApps(): ExternalApps {
   const apps = windowsExternalApps(
-    () => TurboModuleRegistry.get<TurboModule & ExternalAppsModule>("ArdiaExternalApps"),
-    () => TurboModuleRegistry.get<TurboModule & DocumentsNative>("ArdiaDocuments"),
+    () => TurboModuleRegistry.get<TurboModule & ExternalAppsModule>("NillaExternalApps"),
+    () => TurboModuleRegistry.get<TurboModule & DocumentsNative>("NillaDocuments"),
     externalAppStillAsked,
     externalAppDropped,
   );

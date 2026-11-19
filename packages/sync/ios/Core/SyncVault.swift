@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 
 public final class SyncVault {
-  public static let fileExtension = "nns"
+  public static let fileExtension = "nls"
 
   public let folder: URL
   let keys: SyncKeys
@@ -18,12 +18,13 @@ public final class SyncVault {
   func scopeURL(_ scope: String) -> URL { chainURL.appendingPathComponent(keys.scopeTag(scope), isDirectory: true) }
 
   public func chainExists() -> Bool {
+    guard case .own = UpstreamSyncFolder.check(chainURL.path) else { return false }
     var isDirectory: ObjCBool = false
     return fileManager.fileExists(atPath: chainURL.path, isDirectory: &isDirectory) && isDirectory.boolValue
   }
 
   public func createChain() throws {
-    try fileManager.createDirectory(at: chainURL, withIntermediateDirectories: true)
+    try fileManager.createDirectory(at: try UpstreamSyncFolder.ownURL(chainURL), withIntermediateDirectories: true)
   }
 
   @discardableResult
@@ -35,7 +36,7 @@ public final class SyncVault {
 
   func write(scope: String, payload: Data, fileId id: String, nonce: AES.GCM.Nonce) throws {
     let sealed = try keys.seal(payload, scopeTag: keys.scopeTag(scope), fileId: id, nonce: nonce)
-    let directory = scopeURL(scope)
+    let directory = try UpstreamSyncFolder.ownURL(scopeURL(scope))
     try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
     let destination = directory.appendingPathComponent("\(id).\(Self.fileExtension)")
     let staging = try fileManager.url(for: .itemReplacementDirectory, in: .userDomainMask, appropriateFor: directory, create: true)
@@ -53,7 +54,7 @@ public final class SyncVault {
   }
 
   public func remove(scope: String, ids: [String]) throws {
-    let directory = scopeURL(scope)
+    let directory = try UpstreamSyncFolder.ownURL(scopeURL(scope))
     var failed: [String] = []
     var firstError: Error?
     for id in ids {
@@ -79,6 +80,7 @@ public final class SyncVault {
 
   public func deleteChain() throws {
     guard chainExists() else { return }
+    _ = try UpstreamSyncFolder.ownURL(chainURL)
     try coordinate(writing: chainURL, options: .forDeleting) { url in try self.fileManager.removeItem(at: url) }
   }
 
@@ -97,7 +99,7 @@ public final class SyncVault {
 
   public func read(scope: String, skipping known: Set<String>) throws -> Listing {
     var listing = Listing()
-    let directory = scopeURL(scope)
+    let directory = try UpstreamSyncFolder.ownURL(scopeURL(scope))
     let keysToRead: [URLResourceKey] = [.isUbiquitousItemKey, .ubiquitousItemDownloadingStatusKey, .contentModificationDateKey]
     let names: [String]
     do {
@@ -112,6 +114,8 @@ public final class SyncVault {
       if name.hasPrefix("."), name.hasSuffix("\(suffix).icloud") {
         let id = String(name.dropFirst().dropLast(suffix.count + ".icloud".count))
         guard Base32.isTag(id), !present.contains(id) else { continue }
+        guard UpstreamSyncFolder.entryKind(directory.appendingPathComponent(name)) == .file,
+              UpstreamSyncFolder.entryKind(directory.appendingPathComponent("\(id)\(suffix)")) != .other else { continue }
         present.insert(id)
         listing.present.append(id)
         if !known.contains(id) {
@@ -123,9 +127,10 @@ public final class SyncVault {
       guard name.hasSuffix(suffix) else { continue }
       let id = String(name.dropLast(suffix.count))
       guard Base32.isTag(id) else { continue }
+      let url = directory.appendingPathComponent(name)
+      guard UpstreamSyncFolder.entryKind(url) == .file else { continue }
       if present.insert(id).inserted { listing.present.append(id) }
       if known.contains(id) { continue }
-      let url = directory.appendingPathComponent(name)
       let values = try? url.resourceValues(forKeys: Set(keysToRead))
       if values?.isUbiquitousItem == true, let status = values?.ubiquitousItemDownloadingStatus, status != .current {
         listing.pending.append(id)
@@ -133,11 +138,13 @@ public final class SyncVault {
         continue
       }
       do {
-        let data = try coordinate(reading: url) { try Data(contentsOf: $0) }
+        let data = try coordinate(reading: url) { try UpstreamSyncFolder.readEntry($0) }
         listing.files.append(File(id: id, payload: try keys.open(data, scopeTag: scopeTag, fileId: id)))
       } catch is SyncCoordination.TimedOut {
         listing.timedOut = true
         return listing
+      } catch is UpstreamSyncFolder.Refused {
+        continue
       } catch {
         let modified = values?.contentModificationDate ?? Date()
         listing.damaged.append((id, max(0, Date().timeIntervalSince(modified))))

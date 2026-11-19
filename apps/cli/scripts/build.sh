@@ -1,15 +1,19 @@
 #!/bin/sh
-# Builds the ardia CLI tarball: a relocatable CPython 3.13 with ardia_cli, its pinned dependencies, esbuild and axe-core.
+# Builds the nilla-browser CLI tarball: a relocatable CPython 3.13 with nilla_browser_cli, its pinned dependencies,
+# esbuild and axe-core.
 #
 #   apps/cli/scripts/build.sh <version> <out dir> [--platform macos-arm64|linux-x64]
 #   apps/cli/scripts/build.sh -h | --help
 #
-# Writes <out dir>/ardia-cli-<version>-<platform>.tar.gz and its .sha256 (sha256sum format). The platform defaults to
+# Writes <out dir>/ardia-cli-<version>-<platform>.tar.gz and its .sha256 (sha256sum format). The tarball's top folder
+# is ardia-cli-<version>/ and its launcher bin/ardia until Layer 2, with bin/nilla-browser beside it, and licenses/
+# holds LICENSE, LICENSE.Apache-2.0 and NOTICE from the repo root, CPython's licence and the licences of esbuild,
+# websockets and axe-core; the build checks they are packed. The platform defaults to
 # the host's (macos-arm64 on Apple silicon, linux-x64 on Linux x86_64) and must be the host's: the bundled Python
 # installs the wheels and runs the checks. Needs the network (python-build-standalone from GitHub, wheels from PyPI,
 # esbuild and axe-core from npm) and uv (~/.local/bin/uv or on PATH). The Python, esbuild and axe-core downloads are pinned by
-# sha256 (the npm ones also by npm's sha512 integrity) and cached in ~/Library/Caches/ardia-cli-build on macOS and
-# ${XDG_CACHE_HOME:-~/.cache}/ardia-cli-build on Linux. requirements.lock carries the hashes for both platforms.
+# sha256 (the npm ones also by npm's sha512 integrity) and cached in ~/Library/Caches/nilla-cli-build on macOS and
+# ${XDG_CACHE_HOME:-~/.cache}/nilla-cli-build on Linux. requirements.lock carries the hashes for both platforms.
 set -eu
 
 python_release=20261013
@@ -20,6 +24,8 @@ axe_sha256=0f2b4d7dcdf7d1219df8d1959ad68e565f51d14c3f0d88bb71cd59abeb956292
 axe_sha512=Xm7bpRXnDSX2YE2YFfBk2FnF0ep6tmG7xPh8iHee8MIcrgq762Nkce856dYtJYLkuIoYZvGfTs/PbZhideTcEg==
 axe_asset=axe-core-$axe_version.tgz
 axe_url=https://registry.npmjs.org/axe-core/-/$axe_asset
+esbuild_license_sha256=e045f94c235c7adc50e77ba2a579c7bec41b496b6b47c3a7845f7c1e19959a88
+esbuild_license_sha512=HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==
 
 case ${1:-} in
   -h|--help) awk 'NR == 1 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "$0"; exit 0 ;;
@@ -71,21 +77,24 @@ python_asset=cpython-$python_version+$python_release-$python_triple-install_only
 python_url=https://github.com/astral-sh/python-build-standalone/releases/download/$python_release/$(printf %s "$python_asset" | sed 's/+/%2B/')
 esbuild_asset=esbuild-$esbuild_platform-$esbuild_version.tgz
 esbuild_url=https://registry.npmjs.org/@esbuild/$esbuild_platform/-/$esbuild_platform-$esbuild_version.tgz
+esbuild_license_asset=esbuild-$esbuild_version.tgz
+esbuild_license_url=https://registry.npmjs.org/esbuild/-/$esbuild_license_asset
 
 if [ "$platform" = linux-x64 ]; then
   case ${XDG_CACHE_HOME:-} in
-    /*) cache=$XDG_CACHE_HOME/ardia-cli-build ;;
-    *) cache=$HOME/.cache/ardia-cli-build ;;
+    /*) cache=$XDG_CACHE_HOME/nilla-cli-build ;;
+    *) cache=$HOME/.cache/nilla-cli-build ;;
   esac
   sha256() { sha256sum "$@"; }
   sha512_base64() { openssl dgst -sha512 -binary "$1" | base64 -w 0; }
 else
-  cache=$HOME/Library/Caches/ardia-cli-build
+  cache=$HOME/Library/Caches/nilla-cli-build
   sha256() { shasum -a 256 "$@"; }
   sha512_base64() { openssl dgst -sha512 -binary "$1" | base64; }
 fi
 
 cli_dir=$(cd "$(dirname "$0")/.." && pwd)
+repo=$(cd "$cli_dir/../.." && pwd)
 uv=$(command -v uv 2>/dev/null || true)
 [ -n "$uv" ] || uv=$HOME/.local/bin/uv
 [ -x "$uv" ] || { echo "build.sh: uv not found" >&2; exit 1; }
@@ -114,8 +123,16 @@ actual=$(sha256 "$cache/$axe_asset" | awk '{ print $1 }')
 [ "$actual" = "$axe_sha256" ] || { echo "build.sh: $axe_asset checksum mismatch ($actual)" >&2; exit 1; }
 actual=$(sha512_base64 "$cache/$axe_asset")
 [ "$actual" = "$axe_sha512" ] || { echo "build.sh: $axe_asset sha512 mismatch ($actual)" >&2; exit 1; }
+if ! [ -f "$cache/$esbuild_license_asset" ] || [ "$(sha256 "$cache/$esbuild_license_asset" | awk '{ print $1 }')" != "$esbuild_license_sha256" ]; then
+  curl -fsSL --proto =https -o "$cache/$esbuild_license_asset.part" "$esbuild_license_url"
+  mv "$cache/$esbuild_license_asset.part" "$cache/$esbuild_license_asset"
+fi
+actual=$(sha256 "$cache/$esbuild_license_asset" | awk '{ print $1 }')
+[ "$actual" = "$esbuild_license_sha256" ] || { echo "build.sh: $esbuild_license_asset checksum mismatch ($actual)" >&2; exit 1; }
+actual=$(sha512_base64 "$cache/$esbuild_license_asset")
+[ "$actual" = "$esbuild_license_sha512" ] || { echo "build.sh: $esbuild_license_asset sha512 mismatch ($actual)" >&2; exit 1; }
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/ardia-cli-build.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/nilla-cli-build.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 root=$work/ardia-cli-$version
 mkdir -p "$root/bin"
@@ -127,19 +144,35 @@ site=$lib/site-packages
 
 UV_CACHE_DIR=$cache/uv "$uv" pip install --quiet --python "$python" --break-system-packages --link-mode copy \
   --no-build --require-hashes -r "$cli_dir/requirements.lock"
-cp -R "$cli_dir/ardia_cli" "$site/ardia_cli"
-printf '__version__ = "%s"\n' "$version" >"$site/ardia_cli/__init__.py"
-mkdir "$work/esbuild" "$site/ardia_cli/bin"
+cp -R "$cli_dir/nilla_browser_cli" "$site/nilla_browser_cli"
+printf '__version__ = "%s"\n' "$version" >"$site/nilla_browser_cli/__init__.py"
+mkdir "$work/esbuild" "$site/nilla_browser_cli/bin"
 tar -xzf "$cache/$esbuild_asset" -C "$work/esbuild" package/bin/esbuild
-cp "$work/esbuild/package/bin/esbuild" "$site/ardia_cli/bin/esbuild"
-chmod 755 "$site/ardia_cli/bin/esbuild"
+cp "$work/esbuild/package/bin/esbuild" "$site/nilla_browser_cli/bin/esbuild"
+chmod 755 "$site/nilla_browser_cli/bin/esbuild"
 rm -rf "$work/esbuild"
-mkdir "$work/axe" "$site/ardia_cli/vendor"
+mkdir "$work/axe" "$site/nilla_browser_cli/vendor"
 tar -xzf "$cache/$axe_asset" -C "$work/axe" package/axe.min.js package/LICENSE
-cp "$work/axe/package/axe.min.js" "$site/ardia_cli/vendor/axe.min.js"
-cp "$work/axe/package/LICENSE" "$site/ardia_cli/vendor/axe-core-LICENSE"
+cp "$work/axe/package/axe.min.js" "$site/nilla_browser_cli/vendor/axe.min.js"
+cp "$work/axe/package/LICENSE" "$site/nilla_browser_cli/vendor/axe-core-LICENSE"
 rm -rf "$work/axe"
-[ "$("$site/ardia_cli/bin/esbuild" --version)" = "$esbuild_version" ] || { echo "build.sh: the bundled esbuild doesn't run" >&2; exit 1; }
+[ "$("$site/nilla_browser_cli/bin/esbuild" --version)" = "$esbuild_version" ] || { echo "build.sh: the bundled esbuild doesn't run" >&2; exit 1; }
+
+licenses=$root/licenses
+mkdir "$licenses" "$work/esbuild-license"
+cp "$repo/LICENSE" "$repo/LICENSE.Apache-2.0" "$repo/NOTICE" "$licenses/"
+cp "$lib/LICENSE.txt" "$licenses/python-LICENSE.txt"
+tar -xzf "$cache/$esbuild_license_asset" -C "$work/esbuild-license" package/LICENSE.md
+cp "$work/esbuild-license/package/LICENSE.md" "$licenses/esbuild-LICENSE.md"
+rm -rf "$work/esbuild-license"
+websockets_license=$(find "$site" -path '*/websockets-*.dist-info/*' -type f \( -name 'LICENSE*' -o -name 'COPYING*' \) | sort | head -n 1)
+[ -n "$websockets_license" ] || { echo "build.sh: no licence file in the websockets wheel" >&2; exit 1; }
+cp "$websockets_license" "$licenses/websockets-LICENSE"
+cp "$site/nilla_browser_cli/vendor/axe-core-LICENSE" "$licenses/axe-core-LICENSE"
+chmod 644 "$licenses"/*
+for name in LICENSE LICENSE.Apache-2.0 NOTICE; do
+  cmp -s "$repo/$name" "$licenses/$name" || { echo "build.sh: licenses/$name differs from the repo's" >&2; exit 1; }
+done
 
 rm -rf "$lib/test" "$lib/idlelib" "$lib/tkinter" "$lib/turtledemo" "$lib/ensurepip" "$lib/lib2to3" \
   "$lib/turtle.py" "$lib/pydoc_data" "$lib"/config-* "$lib/lib-dynload"/_tkinter* \
@@ -157,7 +190,7 @@ find "$root" -type l | while IFS= read -r link; do
     /*|..|../*|*/../*|*/..) rm -f "$link" ;;
   esac
 done
-"$python" -I -c 'import ardia_cli.cli, ardia_cli.computer, ardia_cli.browse.cli, ardia_cli.browse.daemon, ardia_cli.scripts_cli, ardia_cli.scripts_test, ardia_cli.scripts_store, ardia_cli.browsing, ardia_cli.wsclient, websockets.asyncio.server, sqlite3, ssl, zoneinfo, ctypes, lzma; from ardia_cli.userscript import find_esbuild; assert find_esbuild().endswith("ardia_cli/bin/esbuild"); from ardia_cli.browse.audit import axe_source; assert "axe" in axe_source()[:4000]' >/dev/null
+"$python" -I -c 'import nilla_browser_cli.cli, nilla_browser_cli.computer, nilla_browser_cli.browse.cli, nilla_browser_cli.browse.daemon, nilla_browser_cli.scripts_cli, nilla_browser_cli.scripts_test, nilla_browser_cli.scripts_store, nilla_browser_cli.browsing, nilla_browser_cli.wsclient, websockets.asyncio.server, sqlite3, ssl, zoneinfo, ctypes, lzma; from nilla_browser_cli.userscript import find_esbuild; assert find_esbuild().endswith("nilla_browser_cli/bin/esbuild"); from nilla_browser_cli.browse.audit import axe_source; assert "axe" in axe_source()[:4000]' >/dev/null
 
 cat >"$root/bin/ardia" <<'EOF'
 #!/bin/sh
@@ -170,11 +203,13 @@ while [ -L "$self" ]; do
   esac
 done
 root=$(cd -P "$(dirname "$self")/.." && pwd -P)
-exec "$root/python/bin/python3" -I -m ardia_cli "$@"
+exec "$root/python/bin/python3" -I -m nilla_browser_cli "$@"
 EOF
 chmod 755 "$root/bin/ardia"
+ln -s ardia "$root/bin/nilla-browser"
 mkdir "$root/.leases"
 "$root/bin/ardia" --version >/dev/null
+[ "$("$root/bin/nilla-browser" --version)" = "nilla-browser $version" ] || { echo "build.sh: bin/nilla-browser --version doesn't print nilla-browser $version" >&2; exit 1; }
 find "$root" -name __pycache__ -type d -prune -exec rm -rf {} +
 
 tarball=ardia-cli-$version-$platform.tar.gz
@@ -185,6 +220,11 @@ else
   COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs --uid 0 --gid 0 --uname root --gname wheel \
     -czf "$out/$tarball.part" -C "$work" "ardia-cli-$version"
 fi
+tar -tzf "$out/$tarball.part" >"$work/entries"
+for entry in bin/ardia bin/nilla-browser licenses/LICENSE licenses/LICENSE.Apache-2.0 licenses/NOTICE licenses/python-LICENSE.txt \
+  licenses/esbuild-LICENSE.md licenses/websockets-LICENSE licenses/axe-core-LICENSE; do
+  grep -qx "ardia-cli-$version/$entry" "$work/entries" || { echo "build.sh: the tarball has no ardia-cli-$version/$entry" >&2; exit 1; }
+done
 mv "$out/$tarball.part" "$out/$tarball"
 (cd "$out" && sha256 "$tarball" >"$tarball.sha256")
 printf '%s\n' "$out/$tarball"

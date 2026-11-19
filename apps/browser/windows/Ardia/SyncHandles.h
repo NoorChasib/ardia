@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -14,7 +15,7 @@
 
 #pragma comment(lib, "ntdll.lib")
 
-namespace Ardia::SyncHandles {
+namespace Nilla::SyncHandles {
 
 constexpr ULONG OpenExisting = 0x1;
 constexpr ULONG CreateNew = 0x2;
@@ -181,6 +182,28 @@ inline SyncFiles::Read ReadAt(HANDLE directory, std::wstring const &name) {
   return SyncFiles::ReadOpened(opened.handle.get());
 }
 
+inline bool SameFile(HANDLE first, HANDLE second) noexcept {
+  FILE_ID_INFO a{};
+  FILE_ID_INFO b{};
+  if (!GetFileInformationByHandleEx(first, FileIdInfo, &a, sizeof(a)) || !GetFileInformationByHandleEx(second, FileIdInfo, &b, sizeof(b))) return false;
+  return a.VolumeSerialNumber == b.VolumeSerialNumber && memcmp(&a.FileId, &b.FileId, sizeof(a.FileId)) == 0;
+}
+
+inline bool FetchAt(HANDLE directory, std::wstring const &name) {
+  Opened pinned = OpenAt(directory, name, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE, OpenExisting, FileOnly | NoFollow | NoRecall);
+  if (!pinned.handle) return false;
+  std::optional<FILE_ATTRIBUTE_TAG_INFO> tag = TagOf(pinned.handle.get());
+  if (!tag || IsLinkTag(*tag)) return false;
+  Opened file = OpenAt(directory, name, GENERIC_READ | FILE_READ_ATTRIBUTES, ShareAll, OpenExisting, FileOnly | SequentialOnly);
+  if (!file.handle || !SameFile(pinned.handle.get(), file.handle.get())) return false;
+  std::vector<char> buffer(64 * 1024);
+  DWORD done = 0;
+  while (::ReadFile(file.handle.get(), buffer.data(), static_cast<DWORD>(buffer.size()), &done, nullptr) && done > 0) {
+  }
+  std::optional<FILE_ATTRIBUTE_TAG_INFO> after = TagOf(pinned.handle.get());
+  return after && !SyncFiles::IsPlaceholder(after->FileAttributes);
+}
+
 using SetInformation = NTSTATUS(NTAPI *)(HANDLE, PIO_STATUS_BLOCK, PVOID, ULONG, ULONG);
 constexpr ULONG FileRenameInformationClass = 10;
 
@@ -295,6 +318,43 @@ inline bool RemoveFolderAt(HANDLE parent, std::wstring const &name) {
   Writable(folder.handle.get());
   FILE_DISPOSITION_INFO gone{TRUE};
   return SetFileInformationByHandle(folder.handle.get(), FileDispositionInfo, &gone, sizeof(gone)) && emptied;
+}
+
+constexpr std::wstring_view UpstreamFolderName = L"Ardia Sync";
+constexpr char UpstreamRefusal[] = "That folder is Ardia's Sync folder. Nilla keeps its sync data apart from Ardia's, so choose another folder.";
+constexpr char UnresolvedRefusal[] = "Nilla couldn't tell where that sync folder leads, so it won't use it. Choose a folder on this PC or a network share.";
+
+enum class Owner { Own, Upstream, Unresolved };
+
+inline bool IsUpstreamName(std::wstring_view part) noexcept {
+  while (!part.empty() && part.front() == L' ') part.remove_prefix(1);
+  while (!part.empty() && (part.back() == L' ' || part.back() == L'.')) part.remove_suffix(1);
+  return part.size() == UpstreamFolderName.size() &&
+         CompareStringOrdinal(part.data(), static_cast<int>(part.size()), UpstreamFolderName.data(), static_cast<int>(UpstreamFolderName.size()), TRUE) == CSTR_EQUAL;
+}
+
+inline bool NamesUpstream(std::wstring_view path) noexcept {
+  size_t start = 0;
+  while (start <= path.size()) {
+    size_t end = path.find_first_of(L"\\/", start);
+    if (end == std::wstring_view::npos) end = path.size();
+    if (IsUpstreamName(path.substr(start, end - start))) return true;
+    start = end + 1;
+  }
+  return false;
+}
+
+inline Owner OwnerOf(std::wstring const &folder) noexcept {
+  if (NamesUpstream(folder)) return Owner::Upstream;
+  std::optional<std::wstring> resolved = Paths::Resolved(std::filesystem::path{folder}, VOLUME_NAME_DOS);
+  if (!resolved) return Owner::Unresolved;
+  return NamesUpstream(*resolved) ? Owner::Upstream : Owner::Own;
+}
+
+inline Owner OwnerOfOpened(HANDLE folder) noexcept {
+  std::optional<std::wstring> final = Paths::FinalPathOf(folder, VOLUME_NAME_DOS);
+  if (!final) return Owner::Unresolved;
+  return NamesUpstream(*final) ? Owner::Upstream : Owner::Own;
 }
 
 }

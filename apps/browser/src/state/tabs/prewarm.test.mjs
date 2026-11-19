@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 
 globalThis.__DEV__ = false;
-const { docs } = await import("../../test-native/index.ts");
-const ks = await import("../../platform/killSwitches.ts");
+const { launch } = await import("../../test-native/index.ts");
+const { reloadLaunchConfigForTests } = await import("../../platform/launchConfig.ts");
 
 mock.timers.enable({ apis: ["setTimeout"] });
 const preload = await import("./prewarm.ts");
 const setSwitches = (switches) => {
-  docs.set("switches-cache.json", JSON.stringify({ version: 1, switches }));
-  ks.reloadSwitches();
+  launch.switches = switches;
+  reloadLaunchConfigForTests();
 };
 
 test("no page is made ahead until a moment after launch", () => {

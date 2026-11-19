@@ -1,4 +1,4 @@
-import type { ArcArchive, ArcRouting, SpaceSuggestion, SpaceSummary } from "@ardia/import";
+import type { ArcArchive, ArcRouting, SpaceSuggestion, SpaceSummary } from "@nilla/import";
 import { parseArcSidebar, type ArcSidebar } from "./arcSidebar";
 import { ARC_ARCHIVE_FILE, ARC_ROUTING_FILE, ARCHIVE_BYTES, changesFallback, parseArcArchive, parseArcRouting, ROUTING_BYTES } from "./arcExtras";
 import { exists, join, type ImportHost } from "./host";

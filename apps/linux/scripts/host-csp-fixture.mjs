@@ -7,7 +7,7 @@ import { build } from "vite";
 import { shellContentSecurityPolicy } from "./shell-csp.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const scratch = await mkdtemp(join(tmpdir(), "ardia-symbol-csp-"));
+const scratch = await mkdtemp(join(tmpdir(), "nilla-symbol-csp-"));
 const output = join(scratch, "dist");
 await build({
   root,
@@ -50,7 +50,7 @@ window.__ardiaHost = {
     if(method==='ArdiaShell.completeLaunchStep'){const fresh=!__ardiaCspFixture.launchSteps.includes(args.args[0]);if(fresh)__ardiaCspFixture.launchSteps.push(args.args[0]);return fresh;}
     if(method==='ArdiaShell.readDocument')return null;
     if(method==='ArdiaSearch.cancelSuggest')return null;
-    if(method==='ArdiaSearch.suggest'){__ardiaCspFixture.suggestRequests.push(args.args[0]);return {body:JSON.stringify(['ardia csp',['ardia csp fixture']])};}
+    if(method==='ArdiaSearch.suggest'){__ardiaCspFixture.suggestRequests.push(args.args[0]);return {body:JSON.stringify(['nilla csp',['nilla csp fixture']])};}
     if(method==='session.read')return null;
     if(method==='session.write')return;
     if(method==='ArdiaExtensions.list')return {extensions:[]};
@@ -67,7 +67,7 @@ window.__ardiaHost = {
 window.addEventListener('pagehide', () => { for(const listener of closing)listener(); });
 `;
 const styles = (await readdir(join(output, "assets"))).filter((name) => name.endsWith(".css"));
-const html = `<!doctype html><html><head><meta charset="utf-8"><title>Ardia Trusted Types fixture</title>${styles.map((name) => `<link rel="stylesheet" href="/assets/${name}">`).join("")}</head><body><div id="root"></div><div id="symbol-fixture" style="position:absolute;left:-2000px;top:0;width:1000px"></div><script src="/fixture-host.js"></script><script type="module" src="/assets/host-csp-entry.js"></script></body></html>`;
+const html = `<!doctype html><html><head><meta charset="utf-8"><title>Nilla Trusted Types fixture</title>${styles.map((name) => `<link rel="stylesheet" href="/assets/${name}">`).join("")}</head><body><div id="root"></div><div id="symbol-fixture" style="position:absolute;left:-2000px;top:0;width:1000px"></div><script src="/fixture-host.js"></script><script type="module" src="/assets/host-csp-entry.js"></script></body></html>`;
 const mime = { ".js": "application/javascript", ".css": "text/css", ".png": "image/png", ".svg": "image/svg+xml", ".wav": "audio/wav" };
 const server = http.createServer(async (request, response) => {
   response.setHeader("Content-Security-Policy", policy);
@@ -89,7 +89,7 @@ const server = http.createServer(async (request, response) => {
     response.writeHead(404).end();
   }
 });
-server.listen(0, "127.0.0.1", () => console.log(`Ardia CSP fixture http://127.0.0.1:${server.address().port}/`));
+server.listen(0, "127.0.0.1", () => console.log(`Nilla CSP fixture http://127.0.0.1:${server.address().port}/`));
 const stop = () => {
   server.closeAllConnections();
   server.close(() => void rm(scratch, { recursive: true, force: true }).then(() => process.exit(0)));

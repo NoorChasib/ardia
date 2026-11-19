@@ -3,7 +3,7 @@ export type { BarFieldMarks } from "./barMarks";
 
 const SLOW_SUGGESTIONS_MS = 8;
 
-const mark = (line: string) => console.info(`[ardia windows] bar ${line}`);
+const mark = (line: string) => console.info(`[nilla windows] bar ${line}`);
 
 export const barFieldMarks: BarFieldMarks = {
   change: (variant, eventCount, length) => mark(`change ${variant} #${eventCount} len ${length}`),

@@ -2,7 +2,7 @@ import io
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 
-from ardia_cli.printable import complain, say, well_formed
+from nilla_browser_cli.printable import complain, say, well_formed
 
 
 class WellFormed(unittest.TestCase):

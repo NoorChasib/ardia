@@ -8,7 +8,7 @@ export type MacMouseEvent = {
 
 export type MouseHandler = (e: MacMouseEvent) => void;
 
-const WINDOW_SELECTOR = ".ardia-window";
+const WINDOW_SELECTOR = ".nilla-window";
 
 export function macEvent(node: HTMLElement, e: PointerSample): MacMouseEvent {
   const r = node.getBoundingClientRect();

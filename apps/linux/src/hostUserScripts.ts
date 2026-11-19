@@ -1,11 +1,11 @@
-export const USER_SCRIPTS_LOCK = "ardia-user-scripts";
+export const USER_SCRIPTS_LOCK = "nilla-user-scripts";
 
 export type UserScriptsLocks = {
   request(name: string, callback: () => Promise<void>): Promise<unknown>;
 };
 
 export function leadUserScripts(options: { locks?: UserScriptsLocks; start: () => void; report?: (error: unknown) => void }) {
-  const { locks, start, report = (error) => console.warn("[ardia linux] userscripts lock", error) } = options;
+  const { locks, start, report = (error) => console.warn("[nilla linux] userscripts lock", error) } = options;
   if (!locks) return start();
   let started = false;
   const lead = () => {

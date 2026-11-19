@@ -3,7 +3,7 @@
 
 #import <objc/runtime.h>
 
-using namespace ardia_web_view;
+using namespace nilla_web_view;
 
 namespace {
 
@@ -17,17 +17,17 @@ const int kNewTabLinkTries = 8;
 const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
 }
 
-@interface ArdiaStashedPageReports : NSObject {
+@interface NillaStashedPageReports : NSObject {
  @public
   NSString *url;
-  ArdiaPageReports reports;
+  NillaPageReports reports;
 }
 @end
 
-@implementation ArdiaStashedPageReports
+@implementation NillaStashedPageReports
 @end
 
-@implementation ArdiaWebView (Tab)
+@implementation NillaWebView (Tab)
 
 - (ArdiaCoreAdoption)windowTakes:(ArdiaCoreTab *)tab {
   ArdiaCoreWindow *coreWindow = _standalone ? nil : self.controller.coreWindow;
@@ -37,23 +37,23 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
 - (BOOL)holdTransferOf:(ArdiaCoreTab *)tab {
   const ArdiaCoreAdoption adoption = [self windowTakes:tab];
   if (adoption == ArdiaCoreAdoptionBusy) {
-    __weak ArdiaWebView *weakSelf = self;
+    __weak NillaWebView *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
       [weakSelf ensureTab];
     });
   } else if (adoption == ArdiaCoreAdoptionRefused) {
     [self waitForWindow];
-    [self emit:@"transferRefused" payload:@{@"from" : [ArdiaWindowController holding:tab].appWindowId ?: @""}];
+    [self emit:@"transferRefused" payload:@{@"from" : [NillaWindowController holding:tab].appWindowId ?: @""}];
   }
   return adoption != ArdiaCoreAdoptionAdopted;
 }
 
 - (ArdiaCoreAdoption)adoptIntoWindow {
   if (_standalone) return ArdiaCoreAdoptionAdopted;
-  ArdiaWindowController *controller = self.controller;
+  NillaWindowController *controller = self.controller;
   if (!controller.coreWindow) return ArdiaCoreAdoptionAdopted;
   if ([[controller.coreWindow tabsForProfile:_tab.profile] containsObject:_tab]) return ArdiaCoreAdoptionAdopted;
-  ArdiaWindowController *source = [ArdiaWindowController holding:_tab];
+  NillaWindowController *source = [NillaWindowController holding:_tab];
   _life.moving = YES;
   controller.hostChanges++;
   source.hostChanges++;
@@ -69,13 +69,13 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
   ArdiaCoreTab *tab = _tab;
   const ArdiaCoreAdoption adoption = [self adoptIntoWindow];
   if (adoption == ArdiaCoreAdoptionBusy) {
-    __weak ArdiaWebView *weakSelf = self;
+    __weak NillaWebView *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-      ArdiaWebView *view = weakSelf;
+      NillaWebView *view = weakSelf;
       if (view && view->_tab == tab && view.window) [view adoptMovedPage];
     });
   } else if (adoption == ArdiaCoreAdoptionRefused) {
-    [self emit:@"transferRefused" payload:@{@"from" : [ArdiaWindowController holding:tab].appWindowId ?: @""}];
+    [self emit:@"transferRefused" payload:@{@"from" : [NillaWindowController holding:tab].appWindowId ?: @""}];
   }
 }
 
@@ -83,13 +83,13 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
   NSAssert(_life.canAttach(_tab != nil), @"a closed view, or one that has a tab, was given another tab");
   if (!_life.canAttach(_tab != nil) || [self windowTakes:tab] != ArdiaCoreAdoptionAdopted) return;
   if (TraceVisibility()) NSLog(@"[ardiacore-vis] %@ attach tab=%d visible=%d", _transferKey, (int)tab.tabId, _visible);
-  const BOOL shownEarly = [ArdiaEarlyWindow holdsPage:tab];
+  const BOOL shownEarly = [NillaEarlyWindow holdsPage:tab];
   [LiveViews() addObject:self];
   InstallControlPressMonitor();
   _tab = tab;
   _life.attached();
   tab.delegate = self;
-  [ArdiaTabRegistry setView:self forTab:tab];
+  [NillaTabRegistry setView:self forTab:tab];
   [self markTemporary];
   [self pushPeekModifier];
   [self pushSelectionPopover];
@@ -102,7 +102,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
   if (page.superview != self) {
     if (!page.window || page.window != self.window) [page removeFromSuperview];
     [self addSubview:page];
-    [ArdiaEarlyWindow pageMoved:tab];
+    [NillaEarlyWindow pageMoved:tab];
   }
   if (NSView *devtools = tab.devToolsView) [self devToolsChanged:devtools];
   [self layoutPage];
@@ -120,26 +120,26 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
     _life.pendingURL = nil;
   }
   [self emit:@"ready" payload:@{}];
-  ardia_host::ReleaseHeldEvents(tab);
+  nilla_host::ReleaseHeldEvents(tab);
   [self emitNavigation];
   if (_extensionHost.length && tab && tab.preferredSize.width > 0)
     [self tab:tab preferredSizeDidChange:tab.preferredSize];
   [self emitMedia];
   [self tabDidChangeFavicon:tab];
   if (_tabIndex >= 0) [self placeTab];
-  if (ArdiaWindowController *controller = self.controller)
-    [ArdiaTabStrip changedInWindow:controller profile:tab.profile cause:NSNull.null];
+  if (NillaWindowController *controller = self.controller)
+    [NillaTabStrip changedInWindow:controller profile:tab.profile cause:NSNull.null];
   [self settleFirstShowFocus];
 }
 
 - (void)detach {
   if (!_tab) return;
   if (TraceVisibility()) NSLog(@"[ardiacore-vis] %@ detach tab=%d", _transferKey, (int)_tab.tabId);
-  [self showHeldPage:ArdiaHeldPageEnd::Detached];
+  [self showHeldPage:NillaHeldPageEnd::Detached];
   _firstPaint.created = NO;
   if (_tab.delegate == self) _tab.delegate = nil;
-  [ArdiaTabRegistry setView:nil forTab:_tab];
-  [ArdiaWebView noteShown:_tab];
+  [NillaTabRegistry setView:nil forTab:_tab];
+  [NillaWebView noteShown:_tab];
   [self stashPageReports];
   AcceptDrops(_tab.view, YES);
   if (_tab.view.superview == self) [_tab.view removeFromSuperview];
@@ -154,7 +154,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
   _tab = nil;
   _life.detached();
   _focus.onActivate = NO;
-  _focus.page = ArdiaPageFocus::Unknown;
+  _focus.page = NillaPageFocus::Unknown;
   _focus.devTools = nil;
   _life.handingOff = NO;
   _leave.active = NO;
@@ -162,7 +162,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
 }
 
 - (void)stashPageReports {
-  ArdiaStashedPageReports *stash = [ArdiaStashedPageReports new];
+  NillaStashedPageReports *stash = [NillaStashedPageReports new];
   stash->url = _tab.url ?: @"";
   stash->reports = _reports;
   if (!_tab.closed) objc_setAssociatedObject(_tab, &kPageReportsKey, stash, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -170,19 +170,19 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
 }
 
 - (void)takePageReports {
-  ArdiaStashedPageReports *stash = objc_getAssociatedObject(_tab, &kPageReportsKey);
+  NillaStashedPageReports *stash = objc_getAssociatedObject(_tab, &kPageReportsKey);
   objc_setAssociatedObject(_tab, &kPageReportsKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
   [self takeReports:stash && [stash->url isEqual:_tab.url ?: @""] ? stash : nil];
 }
 
-- (void)takeReports:(ArdiaStashedPageReports *)stash {
+- (void)takeReports:(NillaStashedPageReports *)stash {
   const BOOL seen = _reports.seenByUser;
-  _reports = stash ? stash->reports : ArdiaPageReports{};
+  _reports = stash ? stash->reports : NillaPageReports{};
   if (!stash) _reports.seenByUser = seen;
 }
 
 - (void)placeTab {
-  ArdiaWindowController *controller = self.controller;
+  NillaWindowController *controller = self.controller;
   if (!_tab || !controller.coreWindow) return;
   controller.hostChanges++;
   [controller.coreWindow placeTab:_tab index:(int)_tabIndex pinned:_pinned];
@@ -203,7 +203,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
 
 - (void)openedPopupTab:(ArdiaCoreTab *)tab {
   objc_setAssociatedObject(tab, &kPopupTabKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-  [self announceOpenedTab:tab adoptId:[ArdiaTabRegistry offerTab:tab] disposition:@"foreground" link:NO tries:0];
+  [self announceOpenedTab:tab adoptId:[NillaTabRegistry offerTab:tab] disposition:@"foreground" link:NO tries:0];
 }
 
 - (void)openedTab:(ArdiaCoreTab *)tab adoptId:(NSString *)adoptId disposition:(NSString *)disposition {
@@ -226,7 +226,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
   if (tab.closed) return;
   NSString *url = tab.url;
   if ((!url.length || [url isEqualToString:@"about:blank"]) && tries < 20) {
-    __weak ArdiaWebView *weakSelf = self;
+    __weak NillaWebView *weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 25 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
       [weakSelf announceOpenedTab:tab adoptId:adoptId disposition:disposition link:link tries:tries + 1];
     });
@@ -246,7 +246,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
   NSString *clicked = _tab ? [self takeNewTabLinkFor:@[ firstURL, tab.url ?: @"" ]] : nil;
   if (!clicked && hidden && _tab) clicked = [self takeNewTabLinkNoted:kHiddenNewTabLinkSeconds];
   if (clicked && self.opensNewTabLinksInPlace) {
-    if ([ArdiaTabRegistry takeOffered:adoptId] == tab) [tab close];
+    if ([NillaTabRegistry takeOffered:adoptId] == tab) [tab close];
     [self emit:@"openWindow" payload:@{@"url" : clicked, @"disposition" : @"current", @"userGesture" : @YES, @"linkWait" : @"matched"}];
     return;
   }
@@ -264,7 +264,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
     });
   if (clicked) return [self emitOpenedTab:tab adoptId:adoptId disposition:disposition clicked:YES linkWait:@"matched"];
   if (retry) {
-    __weak ArdiaWebView *weakSelf = self;
+    __weak NillaWebView *weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 25 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
       [weakSelf matchLinkTab:tab adoptId:adoptId disposition:disposition firstURL:firstURL hidden:hidden tries:tries + 1];
     });
@@ -321,7 +321,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
     @"postBody" : @NO,
     @"fromClick" : @(clicked),
   } mutableCopy];
-  if (tab.profile.offTheRecord) payload[@"profile"] = ardia_host::OriginalProfileNameOf(tab.profile);
+  if (tab.profile.offTheRecord) payload[@"profile"] = nilla_host::OriginalProfileNameOf(tab.profile);
   if (clicked) payload[@"point"] = RecentClickPoint(self);
   if (linkWait) payload[@"linkWait"] = linkWait;
   if ([disposition isEqualToString:@"window"] && TakeShiftClick(self)) payload[@"shiftClick"] = @YES;
@@ -336,9 +336,9 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
   if (_life.moving || _life.closed() || !_tab) return;
   {
     ArdiaCoreTab *removed = _tab;
-    __weak ArdiaWebView *weakSelf = self;
+    __weak NillaWebView *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
-      ArdiaWebView *view = weakSelf;
+      NillaWebView *view = weakSelf;
       if (view && view->_tab == removed && removed.closed) [view detach];
     });
   }
@@ -374,7 +374,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
 }
 
 - (void)tabWillClose:(ArdiaCoreTab *)tab {
-  [ArdiaEarlyWindow dropPage:tab];
+  [NillaEarlyWindow dropPage:tab];
   if (_life.closed() || tab != _tab) return;
   [self detach];
   [self emit:@"windowClose" payload:@{}];
@@ -417,7 +417,7 @@ const CFTimeInterval kHiddenNewTabLinkSeconds = 1;
 - (BOOL)unloadKeepingHistory {
   if (self.keptFromUnloadingBy) return NO;
   ArdiaCoreTab *tab = _tab;
-  ArdiaWindowController *controller = [ArdiaWindowController holding:tab];
+  NillaWindowController *controller = [NillaWindowController holding:tab];
   controller.hostChanges++;
   [self detach];
   const BOOL unloaded = [tab unloadKeepingHistory];

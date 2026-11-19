@@ -8,7 +8,7 @@ import { expectEqual, expectTrue, type Check } from "./check";
 import { holdOnStage } from "./stage";
 
 
-const swipe = () => requireNativeModule<Pick<SwipeModule, "switchPager" | "stepPager" | "pagerState">>("ArdiaSwipe");
+const swipe = () => requireNativeModule<Pick<SwipeModule, "switchPager" | "stepPager" | "pagerState">>("NillaSwipe");
 const settled = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const ORDER = ["self-check-a", "self-check-b", "self-check-c"];
@@ -29,7 +29,7 @@ async function staged(key: string) {
   const positions: number[] = [];
   const states: PagerStateEvent[] = [];
   const release = await holdOnStage(
-    createElement(viewNamed<NativeSwipeAreaProps>("ArdiaSwipe"), {
+    createElement(viewNamed<NativeSwipeAreaProps>("NillaSwipe"), {
       style: { width: 200, height: 40 },
       canSwipeBack: false,
       canSwipeForward: true,
@@ -38,7 +38,7 @@ async function staged(key: string) {
       onPagerPosition: (event: { nativeEvent: { position: number } }) => positions.push(event.nativeEvent.position),
       onPagerState: (event: { nativeEvent: PagerStateEvent }) => states.push(event.nativeEvent),
     }),
-    "ArdiaSwipe with a pager",
+    "NillaSwipe with a pager",
   );
   return { positions, states, release };
 }
@@ -75,7 +75,7 @@ export const checks: Check[] = [
         const moved = positions.slice(start);
         expectEqual(moved[moved.length - 1], 2, "the last position");
         if (off) {
-          console.info("[ardia windows] self-check: animations are off, so the pager jumped");
+          console.info("[nilla windows] self-check: animations are off, so the pager jumped");
         } else {
           expectTrue(moved.length >= MIN_FRAMES, `only ${moved.length} position frames: ${JSON.stringify(moved)}`);
           for (let i = 1; i < moved.length; i += 1) {

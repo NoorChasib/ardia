@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-globalThis.acTestNativeModules = { ArdiaSharedFolders: { location: () => ({ path: "/scratch", iCloudAvailable: true, iCloudPath: "/scratch" }) } };
+globalThis.acTestNativeModules = { NillaSharedFolders: { location: () => ({ path: "/scratch", iCloudAvailable: true, iCloudPath: "/scratch" }) } };
 const { useBrowser } = await import("../browser/store.ts");
 const model = await import("../browser/model.ts");
 const { menuState } = await import("../commands/menuState.ts");
@@ -83,7 +83,7 @@ test("in a private window Clear Recently Closed is off and clears nothing, not t
   assert.equal(closedIn(work), 3);
 });
 
-test("from Little Ardia Clear Recently Closed clears Little Ardia's own list and leaves the front and the main windows alone", () => {
+test("from Little Nilla Clear Recently Closed clears Little Nilla's own list and leaves the front and the main windows alone", () => {
   const main = S().createWindow({ url: "https://little-main.example/" });
   const work = S().createProfile({ name: "Little Work" });
   const little = S().createWindow({ kind: "small", url: "https://little.example/", profileId: work });
@@ -121,7 +121,7 @@ test("with no window open Clear Recently Closed is off and keeps the window the 
   assert.equal(lastWindowToRestore(S()), kept);
 });
 
-test("Little Ardia's Clear keeps the window the Dock brings back while that window is past the shown list, and clears it once it's shown", () => {
+test("Little Nilla's Clear keeps the window the Dock brings back while that window is past the shown list, and clears it once it's shown", () => {
   for (const id of Object.keys(S().windows)) S().closeWindow(id);
   const last = S().createWindow({ url: "https://dock.example/" });
   S().closeWindow(last, { keepsLastWindow: true });
@@ -140,7 +140,7 @@ test("Little Ardia's Clear keeps the window the Dock brings back while that wind
   for (let i = 0; i < 11; i++) S().closeWindow(S().createWindow({ kind: "small", url: `https://dock-${i}.example/` }));
   const littleAgain = S().createWindow({ kind: "small", url: "https://dock-little-again.example/" });
   S().setFocusedWindow(littleAgain);
-  assert.ok(!menuState(S()).recentlyClosed.some((e) => e.id === keptAgain.id), "eleven Little Ardia pages closed after it push it past the ten shown");
+  assert.ok(!menuState(S()).recentlyClosed.some((e) => e.id === keptAgain.id), "eleven Little Nilla pages closed after it push it past the ten shown");
   S().clearRecentlyClosed(littleAgain);
   assert.equal(lastWindowToRestore(S()), keptAgain);
   assert.equal(menuState(S()).recentlyClosed.length, 1);
@@ -159,7 +159,7 @@ test("the sidebar overflow's Recently Closed lists exactly what its Clear remove
   S().closeWindow(spare);
   S().setFocusedWindow(w);
   takeRecentlyClosedCounts();
-  const shell = shellNativeModules.ArdiaMenus;
+  const shell = shellNativeModules.NillaMenus;
   const real = shell.showMenu;
   let listed = [];
   shell.showMenu = (shown) => {

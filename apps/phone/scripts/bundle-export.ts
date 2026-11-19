@@ -9,7 +9,7 @@
 // runs bun install --offline --frozen-lockfile in the phone's workspace there (with this checkout's
 // apps/phone/bunfig.toml for a commit from before Bun, which has none), wraps the Metro config of a commit without
 // metro-nested-modules.js with this checkout's, so Metro finds the packages Bun nests inside the phone's install,
-// and prints {"dir": …, "commit": …}. Pass the dir to Gradle as -PardiaBundleExport=DIR. remove deletes a folder
+// and prints {"dir": …, "commit": …}. Pass the dir to Gradle as -PnillaBundleExport=DIR. remove deletes a folder
 // that create made, and refuses anything else.
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
@@ -28,8 +28,8 @@ export const exportPaths = [
   "packages/core",
 ];
 
-export const EXPORT_PREFIX = "ardia-bundle-";
-export const EXPORT_RECORD = ".ardia-bundle.json";
+export const EXPORT_PREFIX = "nilla-bundle-";
+export const EXPORT_RECORD = ".nilla-bundle.json";
 
 export type BundleExport = { dir: string; commit: string };
 

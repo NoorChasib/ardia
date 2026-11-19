@@ -7,7 +7,7 @@ let cases = 0;
 
 async function freshModule({ draws = true } = {}) {
   const native = { gradient: draws };
-  turboModules.ArdiaMaterials = {
+  turboModules.NillaMaterials = {
     capabilities: () => ({ build: 22631, systemBackdrop: true, systemBackdropSupported: true, inWindowBlur: true, gradient: native.gradient, background: true }),
   };
   const capabilities = await import(`${MODULE}?case=${++cases}`);

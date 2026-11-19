@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-40 -90 1831 990" width="366" height="198" color="#2B3550">
+<title>Nilla</title>
+<style>@media (prefers-color-scheme: dark){svg{color:#EEF0E2}}</style>
+<g transform="translate(38.6 630) scale(0.92)">
+<path d="M0,0 V-720 L540,0 V-720 M740,-500 V0 M940,-720 V0 M1140,-720 V0 M1340,-250 A250,250 0 1 0 1840,-250 A250,250 0 1 0 1340,-250 M1840,-500 V0" fill="none" stroke="currentColor" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
+<g fill="currentColor"><circle cx="740" cy="-700" r="52"/></g>
+</g>
+</svg>

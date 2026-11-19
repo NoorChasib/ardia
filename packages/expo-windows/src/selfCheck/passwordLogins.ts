@@ -1,13 +1,13 @@
-import type { AppNative } from "@ardia/shell";
+import type { AppNative } from "@nilla/shell";
 import { engineAvailable, engineCallJson } from "../engine/host";
 import { isFields, type Fields } from "../engine/domains/calling";
 import { requireNativeModule } from "../modules";
 import { expectEqual, expectTrue, type Check } from "./check";
 import { linkPeekStage } from "./engineLinkPeekStage";
 
-const ONE = { origin: "https://ardia-self-check-one.example", username: "one", password: "self-check-one" };
-const TWO = { origin: "https://ardia-self-check-two.example", username: "two", password: "self-check-two" };
-const OURS = "ardia-self-check-";
+const ONE = { origin: "https://nilla-self-check-one.example", username: "one", password: "self-check-one" };
+const TWO = { origin: "https://nilla-self-check-two.example", username: "two", password: "self-check-two" };
+const OURS = "nilla-self-check-";
 
 const call = async (name: string, args: object = {}): Promise<Fields> => {
   const reply: unknown = JSON.parse(await engineCallJson(name, "", JSON.stringify(args)));
@@ -96,6 +96,6 @@ const stages: Record<string, Check[]> = {
 export const checks: Check[] = engineAvailable() ? savedChecks : [];
 
 export function stageChecks(): Check[] | null {
-  const stage = requireNativeModule<Pick<AppNative, "launchConfig">>("ArdiaApp").launchConfig().test?.selfCheckStage;
+  const stage = requireNativeModule<Pick<AppNative, "launchConfig">>("NillaApp").launchConfig().test?.selfCheckStage;
   return typeof stage === "string" && stage ? (stages[stage] ?? []) : null;
 }

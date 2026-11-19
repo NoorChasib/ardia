@@ -18,7 +18,7 @@
 #include "SyncVault.h"
 #include "WindowManager.h"
 
-namespace Ardia {
+namespace Nilla {
 
 namespace SyncModuleParts {
 
@@ -71,7 +71,7 @@ inline void RemoveTemporaryKits() noexcept {
 
 }
 
-REACT_MODULE(SyncModule, L"ArdiaWindowsSync")
+REACT_MODULE(SyncModule, L"NillaWindowsSync")
 struct SyncModule {
   REACT_INIT(Initialize)
   void Initialize(winrt::Microsoft::ReactNative::ReactContext const &context) noexcept {
@@ -247,7 +247,10 @@ struct SyncModule {
   void folderState(std::string path, winrt::Microsoft::ReactNative::ReactPromise<winrt::Microsoft::ReactNative::JSValue> promise) noexcept {
     std::thread([path, promise]() noexcept {
       std::wstring folder = Paths::Wide(path);
-      bool exists = SyncFiles::IsDirectory(folder);
+      bool usable = SyncFiles::IsUsableFolder(folder);
+      SyncHandles::Owner owner = usable ? SyncHandles::OwnerOf(folder) : SyncHandles::Owner::Unresolved;
+      if (owner == SyncHandles::Owner::Upstream) return promise.Reject(SyncHandles::UpstreamRefusal);
+      bool exists = owner == SyncHandles::Owner::Own && SyncFiles::IsDirectory(folder);
       HANDLE probe = exists ? CreateFileW(folder.c_str(), FILE_ADD_FILE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr)
                             : INVALID_HANDLE_VALUE;
       bool writable = probe != INVALID_HANDLE_VALUE;
@@ -256,6 +259,7 @@ struct SyncModule {
       state["exists"] = exists;
       state["writable"] = writable;
       state["hasSyncData"] = exists && SyncFiles::HasTagFolder(folder);
+      state["resolved"] = owner == SyncHandles::Owner::Own;
       promise.Resolve(winrt::Microsoft::ReactNative::JSValue{std::move(state)});
     }).detach();
   }

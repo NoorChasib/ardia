@@ -229,9 +229,9 @@ export function TabsStep() {
       <Page
         id={id}
         title="When you quit and come back?"
-        subtitle="What Ardia opens to."
+        subtitle="What Nilla opens to."
         patch={{ restoreSession: values.restoreSession }}
-        picked={values.restoreSession ? [] : ["Ardia starts fresh each launch"]}
+        picked={values.restoreSession ? [] : ["Nilla starts fresh each launch"]}
         preview={preview}
       >
         <ChoiceList options={QUIT_CHOICES} value={values.restoreSession} onChange={(restoreSession) => change({ restoreSession })} mock={focus} />

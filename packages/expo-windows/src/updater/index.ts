@@ -1,21 +1,19 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
-import type { AppNative, ConfirmOptions, DialogsNative, DocumentsNative, UpdateChannel, UpdaterNative, UpdaterState } from "@ardia/shell";
+import type { AppNative, ConfirmOptions, DialogsNative, DocumentsNative, UpdateChannel, UpdaterNative, UpdaterState } from "@nilla/shell";
 import type { AppWindowsModule, WindowsUpdateConstants, WindowsUpdateModule } from "../nativeModuleTypes";
-import { failureText, feedNotPublished, folderOf, megabytes, offered, readBuild, readManifest, type BuildIdentity } from "./manifest";
+import { failureText, feedNotPublished, megabytes, offered, readBuild, readManifest, type BuildIdentity } from "./manifest";
 
-const PUBLISHED_UNDER = "https://github.com/ardia-browser/ardia/releases/download/";
-const FEED = `${PUBLISHED_UNDER}windows-alpha/windows-update.json`;
 const PREFERENCES = "windows-updates.json";
 const FIRST_CHECK_AFTER_MS = 30_000;
 const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 
 type Preferences = Pick<Extract<UpdaterState, { available: true }>, "automaticChecks" | "automaticDownloads" | "lastCheck">;
 
-const native = () => TurboModuleRegistry.get<WindowsUpdateModule>("ArdiaWindowsUpdate");
-const constants = (): WindowsUpdateConstants => native()?.getConstants?.() ?? {};
-const dialogs = () => TurboModuleRegistry.get<TurboModule & Pick<DialogsNative, "confirm">>("ArdiaDialogs");
-const documents = () => TurboModuleRegistry.get<TurboModule & Pick<DocumentsNative, "readDocument" | "writeDocument">>("ArdiaDocuments");
-const launch = () => TurboModuleRegistry.get<TurboModule & Pick<AppNative, "launchConfig">>("ArdiaApp")?.launchConfig?.();
+const native = () => TurboModuleRegistry.get<WindowsUpdateModule>("NillaWindowsUpdate");
+const constants = (): WindowsUpdateConstants & { feed?: unknown; publishedUnder?: unknown } => native()?.getConstants?.() ?? {};
+const dialogs = () => TurboModuleRegistry.get<TurboModule & Pick<DialogsNative, "confirm">>("NillaDialogs");
+const documents = () => TurboModuleRegistry.get<TurboModule & Pick<DocumentsNative, "readDocument" | "writeDocument">>("NillaDocuments");
+const launch = () => TurboModuleRegistry.get<TurboModule & Pick<AppNative, "launchConfig">>("NillaApp")?.launchConfig?.();
 
 let identityRead: BuildIdentity | null | undefined;
 let preferencesRead: Preferences | undefined;
@@ -35,11 +33,12 @@ export function stampedSystemInfo(info: unknown): unknown {
   return { ...info, appVersion: stamped.version, appBuild: String(stamped.build) };
 }
 
-const feedOverride = () => (typeof constants().feedOverride === "string" ? (constants().feedOverride as string) : "");
-const feed = () => feedOverride() || FEED;
-const publishedUnder = () => (feedOverride() ? folderOf(feedOverride()) : PUBLISHED_UNDER);
-const configured = () => !!native() && constants().installed === true && identity() !== null;
-const named = (version: string, build: number) => `${version}, Windows alpha ${build}`;
+const text = (value: unknown) => (typeof value === "string" ? value : "");
+const feedOverride = () => text(constants().feedOverride);
+const feed = () => text(constants().feed);
+const publishedUnder = () => text(constants().publishedUnder);
+const configured = () => !!native() && constants().installed === true && identity() !== null && feed() !== "" && publishedUnder() !== "";
+const named = (version: string, build: number) => `${version}, Windows build ${build}`;
 
 function preferences(): Preferences {
   if (preferencesRead) return preferencesRead;
@@ -86,9 +85,9 @@ async function check(asked: boolean) {
       feedText = await update.fetchText(feed());
     } catch (error) {
       if (!feedNotPublished(error) || feedOverride()) throw error;
-      console.info(`[ardia windows] update check failed: ${reason(error)}`);
-      const keepsChecking = checksByItself() ? " Ardia keeps checking by itself." : "";
-      if (asked) await tell("No Windows update published yet", `No Windows build of Ardia has been published for updates yet. You have ${named(current.version, current.build)}.${keepsChecking}`);
+      console.info(`[nilla windows] update check failed: ${reason(error)}`);
+      const keepsChecking = checksByItself() ? " Nilla keeps checking by itself." : "";
+      if (asked) await tell("No Windows update published yet", `No Windows build of Nilla has been published for updates yet. You have ${named(current.version, current.build)}.${keepsChecking}`);
       return;
     }
     const manifest = readManifest(feedText, publishedUnder());
@@ -96,14 +95,14 @@ async function check(asked: boolean) {
     remember({ lastCheck: Date.now() });
     const installer = offered(manifest, String(constants().cpu), current.build);
     if (!installer) {
-      if (asked) await tell("Ardia is up to date", `You have ${named(current.version, current.build)}.`);
+      if (asked) await tell("Nilla is up to date", `You have ${named(current.version, current.build)}.`);
       return;
     }
     if (!asked && declinedBuild === manifest.build) return;
     const newer = named(manifest.version, manifest.build);
     if (asked || !preferences().automaticDownloads) {
       const download = await ask({
-        title: "A newer Ardia is available",
+        title: "A newer Nilla is available",
         message: `${newer} is available. You have ${named(current.version, current.build)}. Download it now (${megabytes(installer.bytes)} MB)?`,
         confirmTitle: "Download",
         cancelTitle: "Later",
@@ -114,10 +113,10 @@ async function check(asked: boolean) {
       }
     }
     const path = await update.download(installer.url, installer.sha256, installer.bytes);
-    console.info(`[ardia windows] update ${manifest.build} downloaded`);
+    console.info(`[nilla windows] update ${manifest.build} downloaded`);
     const install = await ask({
       title: "The update is ready to install",
-      message: `Ardia closes, installs ${newer} and opens again.`,
+      message: `Nilla closes, installs ${newer} and opens again.`,
       confirmTitle: "Install and Restart",
       cancelTitle: "Later",
     });
@@ -126,12 +125,12 @@ async function check(asked: boolean) {
       return;
     }
     if (await update.install(path, installer.sha256)) {
-      console.info(`[ardia windows] update ${manifest.build} is installing`);
-      await TurboModuleRegistry.get<TurboModule & Pick<AppWindowsModule, "quit">>("ArdiaAppWindows")?.quit();
+      console.info(`[nilla windows] update ${manifest.build} is installing`);
+      await TurboModuleRegistry.get<TurboModule & Pick<AppWindowsModule, "quit">>("NillaAppWindows")?.quit();
     }
   } catch (error) {
-    console.info(`[ardia windows] update check failed: ${reason(error)}`);
-    if (asked) await tell("Ardia couldn't check for updates", reason(error));
+    console.info(`[nilla windows] update check failed: ${reason(error)}`);
+    if (asked) await tell("Nilla couldn't check for updates", reason(error));
   } finally {
     checking = false;
   }

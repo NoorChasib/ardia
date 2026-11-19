@@ -12,15 +12,12 @@ latest release of the package into a global cache and run that, unpinned.
 | Target | Tool | Entry point | Output compared with the build from before Bun |
 |---|---|---|---|
 | `apps/linux` (the Linux UI) | Vite 7 | `bun run --cwd apps/linux build`, `dev`, `preview` | `dist` byte-identical (72 files) |
-| `packages/demo` (the site's demo) | Vite 7 | `bun run --cwd packages/demo build`, `dev` | `dist` byte-identical (71 files) |
+| `packages/demo` (the web demo) | Vite 7 | `bun run --cwd packages/demo build`, `dev` | `dist` byte-identical (71 files) |
 | `packages/shaders` meadow | esbuild (JS API) | `bun run --cwd packages/shaders meadow`, `test`, `meadow --check` | `--check` passes under Node and Bun |
-| `apps/site` | Astro | `bun run --cwd apps/site build`, `dev`, `check`; `infra/site/deploy.sh build` | `astro check` 0 errors |
-| `apps/dashboard` | Vite 8 + TanStack Start | `bun run --cwd apps/dashboard build`, `dev`; its Docker image installs and builds with Bun | image serves `GET /` |
 | macOS app JS (`apps/browser`) | Metro + Hermes | `bun run dev` (Metro), `bun x --no-install react-native bundle …`; Xcode's bundle phase | bundle byte-identical |
 | Windows app JS | Metro + Hermes | `bun run --cwd apps/browser bundle:windows`; `bun x --no-install react-native run-windows …` | bundle byte-identical |
 | Phone (Expo) | Metro | `bun run --cwd apps/phone dev`; the bundle export installs with `bun install --offline` | same modules, name@version for name@version |
-| `apps/videos` | Remotion (webpack) | `bun run --cwd apps/videos render <id>`, `studio`; `deliver.sh` | `check` 0 errors |
-| `ardia` userscripts | an esbuild binary `apps/cli/scripts/build.sh` pins | the `ardia` command, on the user's machine | userscript tests pass |
+| `nilla-browser` userscripts | an esbuild binary `apps/cli/scripts/build.sh` pins | the `nilla-browser` command, on the user's machine | userscript tests pass |
 | `apps/cli/bench` fixtures | `bun x esbuild@<pinned>` | `node apps/cli/bench/tasks/build.mjs` | n/a |
 
 ## Vite 7 for `apps/linux` and `packages/demo`
@@ -33,7 +30,7 @@ for:
   how a shared module gets its Linux adapter while the adapter still imports the original.
 - **Chained transforms of shared sources.** `transform` hooks rewrite already-loaded shared modules on every load
   (`linuxShortcutText` and the wording plugins), after the other plugins have run.
-- **Virtual modules.** The `\0ardia-lazy:` modules.
+- **Virtual modules.** The `\0nilla-lazy:` modules.
 - **Resolution rules.** `resolve.dedupe`, and the extension order `.linux` before `.web`.
 
 `apps/linux`'s `test:graph` also calls Vite's `build()` and reads Rollup's module info.
@@ -79,15 +76,10 @@ Hermes bytecode, and the bundle phases of Xcode (`react-native-xcode.sh`) and MS
 Each is its own build system on Vite or webpack (server and SPA output, content collections, Remotion's webpack config
 with `require.context`). Each is started through `bun run` and runs on Node.
 
-- `apps/site`'s `astro check` uses the TypeScript 6 API: `@astrojs/check` needs it, so the site aliases `typescript` to
-  `@typescript/typescript6`.
-- `apps/dashboard`'s `check` first runs `scripts/route-tree.mjs`, which calls `vite.resolveConfig` so TanStack's router
-  generator writes the gitignored `routeTree.gen.ts`. Its Docker image installs, builds and prunes with Bun
-  (`bun prune --production`) and serves on Node.
 
 ## The CLI's userscript bundler
 
-`ardia` bundles user scripts on the user's machine, which has no Bun, with the esbuild binary it ships
+`nilla-browser` bundles user scripts on the user's machine, which has no Bun, with the esbuild binary it ships
 (`apps/cli/scripts/build.sh`). It stays esbuild.
 
 ## What still isn't Bun
@@ -103,12 +95,12 @@ with `require.context`). Each is started through `bun run` and runs on Node.
   `Bundle.props` defaults `BundleCliCommand` to `npx @react-native-community/cli bundle`. The app doesn't override it,
   so that one step goes through npm's `npx`. Setting
   `<BundleCliCommand>bun x --no-install @react-native-community/cli bundle</BundleCliCommand>` in
-  `apps/browser/windows/Ardia/Ardia.vcxproj` waits for a Windows run that can prove it.
+  `apps/browser/windows/Ardia/Nilla.vcxproj` waits for a Windows run that can prove it.
 - **corex's Bun.** `apps/phone/scripts/corex-bun` installs the pinned Bun with `npm install bun@<version>` into the
   build folder on corex.
 - **The tools' bins.** Vite, Metro, Astro, Remotion and jest have Node shebangs and run on Node under `bun run`.
 - **TypeScript 6 and 5 where an API needs them.** The test loader, `page-operations.mjs` and three browser tests use
   the TypeScript 6 API (`@typescript/typescript6`), because TypeScript 7 has no JavaScript API. The site's
-  `astro check` uses it too. The Raycast extension (`extras/raycast-ardia`) stays on TypeScript 5 with Raycast's
+  `astro check` uses it too. The Raycast extension (`extras/raycast-nilla`) stays on TypeScript 5 with Raycast's
   `ray` tooling. `scripts/typescript-version.test.mjs` checks that the root's `tsc` and the phone's, the dashboard's and
   the videos' are TypeScript 7.

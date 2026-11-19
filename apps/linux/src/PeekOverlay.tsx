@@ -6,12 +6,12 @@ import { PageOverlayRegion } from "./PageOverlayRegion";
 
 export * from "../../browser/src/components/peek/PeekOverlay";
 
-const PEEK_STACK = { ardiaPageStack: "peek" };
+const PEEK_STACK = { nillaPageStack: "peek" };
 
 export function PeekOverlay(props: ComponentProps<typeof BrowserPeekOverlay>) {
   const shown = useBrowser((s) => !!shownPeek(s, props.windowId));
   return (
-    <PageOverlayRegion testID="ardia-peek" dataSet={PEEK_STACK} capturing={shown}>
+    <PageOverlayRegion testID="nilla-peek" dataSet={PEEK_STACK} capturing={shown}>
       <BrowserPeekOverlay {...props} />
     </PageOverlayRegion>
   );

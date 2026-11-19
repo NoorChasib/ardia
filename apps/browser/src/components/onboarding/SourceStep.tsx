@@ -17,7 +17,7 @@ import { useImageRing } from "./GlassBacking";
 import { PLATFORM_TERMS } from "../../lib/platformTerms";
 import { PLATFORM_FEATURES } from "../../lib/platformFeatures";
 import { importModule } from "../../state/import/importApi";
-import { sourceTiles, type SourceCandidate, type SourceTile } from "./sourceTiles";
+import { listedSourceTiles, sourceTiles, type SourceCandidate, type SourceTile } from "./sourceTiles";
 
 const ICON = require("../../../assets/app-icon.png");
 
@@ -40,12 +40,8 @@ export function SourceStep() {
 
   useEffect(() => {
     if (!BY_APP_BUNDLE) {
-      void importModule()
-        .listBrowsers()
-        .then((list) => {
-          const ids = new Set(list.map((b) => b.id));
-          setTiles(detect((c) => ids.has(c.importId ?? c.id)));
-        })
+      void listedSourceTiles(importModule().listBrowsers, PLATFORM_FEATURES)
+        .then(setTiles)
         .catch(() => {});
       return;
     }
@@ -77,7 +73,7 @@ export function SourceStep() {
   return (
     <StepLayout
       title="Where are you coming from?"
-      subtitle="Ardia sets itself up the way you're used to."
+      subtitle="Nilla sets itself up the way you're used to."
       actions={
         <>
           <StepActions

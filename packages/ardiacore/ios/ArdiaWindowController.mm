@@ -2,13 +2,13 @@
 #import "ArdiaServices.h"
 #import "ArdiaWebViewInternal.h"
 
-using namespace ardia_window;
+using namespace nilla_window;
 
-namespace ardia_window {
+namespace nilla_window {
 
 BOOL (^gRefusesUnhandledKey)(NSWindow *, NSEvent *);
 
-NSMapTable<NSWindow *, ArdiaWindowController *> *Controllers() {
+NSMapTable<NSWindow *, NillaWindowController *> *Controllers() {
   static NSMapTable *controllers = [NSMapTable weakToStrongObjectsMapTable];
   return controllers;
 }
@@ -23,33 +23,33 @@ void AnnounceStrayTab(ArdiaCoreTab *tab, int tries) {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 25 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{ AnnounceStrayTab(tab, tries + 1); });
     return;
   }
-  if (![ArdiaEvents listens:@"extensions"]) return;
-  [ArdiaEvents emit:@"extensions.tabs"
+  if (![NillaEvents listens:@"extensions"]) return;
+  [NillaEvents emit:@"extensions.tabs"
                data:@{
-                 @"action" : @"adopt", @"url" : url ?: @"", @"profile" : ardia_host::ProfileName(tab.profile),
-                 @"adoptId" : [ArdiaTabRegistry offerTab:tab prefix:@"tab"]
+                 @"action" : @"adopt", @"url" : url ?: @"", @"profile" : nilla_host::ProfileName(tab.profile),
+                 @"adoptId" : [NillaTabRegistry offerTab:tab prefix:@"tab"]
                }];
 }
 
 void HandOffTab(ArdiaCoreTab *tab) {
   ArdiaCoreProfile *profile = tab.profile;
   if (!profile) return (void)dispatch_async(dispatch_get_main_queue(), ^{ [tab closeNow]; });
-  ArdiaWebView *view = [ArdiaWindowController hostingViewForProfile:profile];
+  NillaWebView *view = [NillaWindowController hostingViewForProfile:profile];
   if (view || !profile.offTheRecord) {
-    if (view && (view.visible || ![ArdiaEvents listens:@"extensions"]) &&
-        ([view.profile isEqualToString:ardia_host::ProfileName(profile)] || ardia_host::IsOffTheRecordOf(profile, view.profile)))
-      [view openedTab:tab adoptId:[ArdiaTabRegistry offerTab:tab prefix:@"tab"] disposition:@"foreground"];
+    if (view && (view.visible || ![NillaEvents listens:@"extensions"]) &&
+        ([view.profile isEqualToString:nilla_host::ProfileName(profile)] || nilla_host::IsOffTheRecordOf(profile, view.profile)))
+      [view openedTab:tab adoptId:[NillaTabRegistry offerTab:tab prefix:@"tab"] disposition:@"foreground"];
     else
       AnnounceStrayTab(tab, 0);
     return;
   }
-  if (!(view = [ArdiaWindowController hostingViewForProfile:nil])) return;
-  [view openedTab:tab adoptId:[ArdiaTabRegistry offerTab:tab prefix:@"tab"] disposition:@"incognito"];
+  if (!(view = [NillaWindowController hostingViewForProfile:nil])) return;
+  [view openedTab:tab adoptId:[NillaTabRegistry offerTab:tab prefix:@"tab"] disposition:@"incognito"];
 }
 
 }
 
-@implementation ArdiaWindowController {
+@implementation NillaWindowController {
   NSHashTable<ArdiaCoreTab *> *_closing;
   NSString *_chromeToken;
   BOOL _awaitingApp;
@@ -60,33 +60,33 @@ void HandOffTab(ArdiaCoreTab *tab) {
 }
 
 + (BOOL)userSees:(NSWindow *)window {
-  ArdiaWindowController *controller = [self forNSWindow:window];
+  NillaWindowController *controller = [self forNSWindow:window];
   if (!controller || controller.stray || controller.standalone) return YES;
-  return [[ArdiaWindowFullScreen ofWindow:controller.coreWindow create:YES] seen];
+  return [[NillaWindowFullScreen ofWindow:controller.coreWindow create:YES] seen];
 }
 
 + (void)reconsiderSightOf:(NSWindow *)window {
-  ArdiaWindowController *controller = [self forNSWindow:window];
+  NillaWindowController *controller = [self forNSWindow:window];
   if (!controller || controller.stray || controller.standalone) return;
-  [[ArdiaWindowFullScreen ofWindow:controller.coreWindow create:YES] reconsiderSight];
+  [[NillaWindowFullScreen ofWindow:controller.coreWindow create:YES] reconsiderSight];
 }
 
 + (BOOL)userSeesOnlyThroughWindowServer:(NSWindow *)window {
-  ArdiaWindowController *controller = [self forNSWindow:window];
+  NillaWindowController *controller = [self forNSWindow:window];
   if (!controller || controller.stray || controller.standalone) return NO;
-  return [[ArdiaWindowFullScreen ofWindow:controller.coreWindow create:YES] seenOnlyByWindowServer];
+  return [[NillaWindowFullScreen ofWindow:controller.coreWindow create:YES] seenOnlyByWindowServer];
 }
 
 + (instancetype)strayWindowForProfile:(ArdiaCoreProfile *)profile {
   ArdiaCoreWindow *coreWindow = [[ArdiaCoreWindow alloc] initWithContentRect:NSMakeRect(0, 0, 800, 600)];
   if (!coreWindow.window) return nil;
-  ArdiaWindowController *controller = [[ArdiaWindowController alloc] initWithCoreWindow:coreWindow];
+  NillaWindowController *controller = [[NillaWindowController alloc] initWithCoreWindow:coreWindow];
   controller->_stray = YES;
   [Controllers() setObject:controller forKey:coreWindow.window];
   return controller;
 }
 
-NSMutableDictionary<NSString *, ArdiaWindowController *> *ChromeMadeWindows() {
+NSMutableDictionary<NSString *, NillaWindowController *> *ChromeMadeWindows() {
   static NSMutableDictionary *windows = [NSMutableDictionary dictionary];
   return windows;
 }
@@ -96,12 +96,12 @@ NSMutableDictionary<NSString *, ArdiaWindowController *> *ChromeMadeWindows() {
   NSWindow *window = coreWindow.window;
   if (!window) return nil;
   ConfigureWindow(window);
-  ArdiaWindowController *controller = [[ArdiaWindowController alloc] initWithCoreWindow:coreWindow];
+  NillaWindowController *controller = [[NillaWindowController alloc] initWithCoreWindow:coreWindow];
   controller->_chromeToken = NSUUID.UUID.UUIDString;
   controller->_awaitingApp = YES;
   [Controllers() setObject:controller forKey:window];
   ChromeMadeWindows()[controller->_chromeToken] = controller;
-  __weak ArdiaWindowController *weakController = controller;
+  __weak NillaWindowController *weakController = controller;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 20 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
     [weakController stopAwaitingApp];
   });
@@ -109,7 +109,7 @@ NSMutableDictionary<NSString *, ArdiaWindowController *> *ChromeMadeWindows() {
 }
 
 + (instancetype)claimChromeMadeWindow:(NSString *)token {
-  ArdiaWindowController *controller = token.length ? ChromeMadeWindows()[token] : nil;
+  NillaWindowController *controller = token.length ? ChromeMadeWindows()[token] : nil;
   if (!controller) return nil;
   [ChromeMadeWindows() removeObjectForKey:token];
   if (!controller->_awaitingApp || !controller.coreWindow.window) return nil;
@@ -123,71 +123,71 @@ NSMutableDictionary<NSString *, ArdiaWindowController *> *ChromeMadeWindows() {
   [ChromeMadeWindows() removeObjectForKey:_chromeToken];
   _stray = YES;
   NSArray<ArdiaCoreTab *> *tabs = @[];
-  for (ArdiaCoreProfile *profile in ardia_host::LoadedProfiles())
+  for (ArdiaCoreProfile *profile in nilla_host::LoadedProfiles())
     tabs = [tabs arrayByAddingObjectsFromArray:[_coreWindow tabsForProfile:profile]];
   if (!tabs.count) return [_coreWindow close];
   for (ArdiaCoreTab *tab in tabs)
-    if (![ArdiaTabRegistry viewForTab:tab]) HandOffTab(tab);
+    if (![NillaTabRegistry viewForTab:tab]) HandOffTab(tab);
 }
 
 - (void)announceChromeMadeTab:(ArdiaCoreTab *)tab tries:(int)tries {
   if (_stray || tab.closed || ![[_coreWindow tabsForProfile:tab.profile] containsObject:tab]) return;
-  NSString *moving = [ArdiaTabRegistry viewForTab:tab].transferKey;
+  NSString *moving = [NillaTabRegistry viewForTab:tab].transferKey;
   NSString *url = tab.url;
   const BOOL blank = !moving.length && (!url.length || [url isEqualToString:@"about:blank"]);
-  if ((blank && tries < 20) || (![ArdiaEvents listens:@"extensions"] && tries < 400)) {
-    __weak ArdiaWindowController *weakSelf = self;
+  if ((blank && tries < 20) || (![NillaEvents listens:@"extensions"] && tries < 400)) {
+    __weak NillaWindowController *weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 25 * NSEC_PER_MSEC), dispatch_get_main_queue(), ^{
       [weakSelf announceChromeMadeTab:tab tries:tries + 1];
     });
     return;
   }
-  if (![ArdiaEvents listens:@"extensions"]) return;
+  if (![NillaEvents listens:@"extensions"]) return;
   NSDictionary *request;
   if (moving.length) {
     request = @{@"action" : @"moveInto", @"chromeWindow" : _chromeToken, @"tabId" : moving, @"focused" : @(!_showInactive)};
-  } else if ([ArdiaTabRegistry viewForTab:tab]) {
+  } else if ([NillaTabRegistry viewForTab:tab]) {
     return;
   } else {
     request = @{
-      @"action" : @"adoptInto", @"chromeWindow" : _chromeToken, @"adoptId" : [ArdiaTabRegistry offerTab:tab prefix:@"tab"],
-      @"url" : url ?: @"", @"profile" : ardia_host::ProfileName(tab.profile), @"active" : @(!_chromeActive || _chromeActive == tab),
+      @"action" : @"adoptInto", @"chromeWindow" : _chromeToken, @"adoptId" : [NillaTabRegistry offerTab:tab prefix:@"tab"],
+      @"url" : url ?: @"", @"profile" : nilla_host::ProfileName(tab.profile), @"active" : @(!_chromeActive || _chromeActive == tab),
       @"focused" : @(!_showInactive)
     };
   }
   _announced = YES;
-  [ArdiaEvents emit:@"extensions.tabs" data:request];
+  [NillaEvents emit:@"extensions.tabs" data:request];
 }
 
 - (void)window:(ArdiaCoreWindow *)window showRequestedActive:(BOOL)active {
   if (_awaitingApp) _showInactive = !active;
 }
 
-NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
+NSMapTable<ArdiaCoreProfile *, NillaWindowController *> *StandaloneWindows() {
   static NSMapTable *windows = [NSMapTable weakToStrongObjectsMapTable];
   return windows;
 }
 
 + (instancetype)standaloneWindowForProfile:(ArdiaCoreProfile *)profile {
-  NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *windows = StandaloneWindows();
-  ArdiaWindowController *controller = [windows objectForKey:profile];
+  NSMapTable<ArdiaCoreProfile *, NillaWindowController *> *windows = StandaloneWindows();
+  NillaWindowController *controller = [windows objectForKey:profile];
   if (controller && controller.coreWindow.window) return controller;
   ArdiaCoreWindow *coreWindow = [[ArdiaCoreWindow alloc] initWithContentRect:NSMakeRect(0, 0, 800, 600)];
   if (!coreWindow.window) return nil;
   coreWindow.internal = YES;
-  controller = [[ArdiaWindowController alloc] initWithCoreWindow:coreWindow];
+  controller = [[NillaWindowController alloc] initWithCoreWindow:coreWindow];
   controller->_standalone = YES;
   [Controllers() setObject:controller forKey:coreWindow.window];
   [windows setObject:controller forKey:profile];
   return controller;
 }
 
-+ (ArdiaWebView *)hostingViewForProfile:(ArdiaCoreProfile *)profile {
-  ArdiaWebView *any = nil;
++ (NillaWebView *)hostingViewForProfile:(ArdiaCoreProfile *)profile {
+  NillaWebView *any = nil;
   for (NSWindow *window in NSApp.orderedWindows) {
-    ArdiaWindowController *c = [Controllers() objectForKey:window];
+    NillaWindowController *c = [Controllers() objectForKey:window];
     if (!c || c.stray || c.standalone) continue;
-    if (ArdiaWebView *view = profile ? [c anyShownViewForProfile:profile] : nil) return view;
+    if (NillaWebView *view = profile ? [c anyShownViewForProfile:profile] : nil) return view;
     any = any ?: [c anyView];
   }
   return profile.offTheRecord ? nil : any;
@@ -196,7 +196,7 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
 + (instancetype)holding:(ArdiaCoreTab *)tab {
   ArdiaCoreProfile *profile = tab.profile;
   if (!profile) return nil;
-  for (ArdiaWindowController *c in Controllers().objectEnumerator)
+  for (NillaWindowController *c in Controllers().objectEnumerator)
     if ([[c.coreWindow tabsForProfile:profile] containsObject:tab]) return c;
   return nil;
 }
@@ -204,10 +204,10 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
 - (void)noteClosing:(ArdiaCoreTab *)tab {
   if (!_closing) _closing = [NSHashTable weakObjectsHashTable];
   [_closing addObject:tab];
-  __weak ArdiaWindowController *weakSelf = self;
+  __weak NillaWindowController *weakSelf = self;
   __weak ArdiaCoreTab *weakTab = tab;
   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 3 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
-    ArdiaWindowController *c = weakSelf;
+    NillaWindowController *c = weakSelf;
     ArdiaCoreTab *t = weakTab;
     if (c && t) [c->_closing removeObject:t];
   });
@@ -221,7 +221,7 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
   return window ? [Controllers() objectForKey:window] : nil;
 }
 
-+ (NSArray<ArdiaWindowController *> *)all {
++ (NSArray<NillaWindowController *> *)all {
   return Controllers().objectEnumerator.allObjects;
 }
 
@@ -229,12 +229,12 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
   if ((self = [super init])) {
     _coreWindow = coreWindow;
     coreWindow.delegate = self;
-    __weak ArdiaWindowController *weakSelf = self;
+    __weak NillaWindowController *weakSelf = self;
     _willCloseObserver = [NSNotificationCenter.defaultCenter addObserverForName:NSWindowWillCloseNotification
                                                                          object:coreWindow.window
                                                                           queue:nil
                                                                      usingBlock:^(NSNotification *) {
-                                                                       if (ArdiaWindowController *c = weakSelf) [ArdiaTabStrip windowClosed:c];
+                                                                       if (NillaWindowController *c = weakSelf) [NillaTabStrip windowClosed:c];
                                                                      }];
   }
   return self;
@@ -244,71 +244,71 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
   if (_willCloseObserver) [NSNotificationCenter.defaultCenter removeObserver:_willCloseObserver];
 }
 
-- (ArdiaWebView *)viewFor:(ArdiaCoreTab *)tab {
-  return tab ? [ArdiaTabRegistry viewForTab:tab] : nil;
+- (NillaWebView *)viewFor:(ArdiaCoreTab *)tab {
+  return tab ? [NillaTabRegistry viewForTab:tab] : nil;
 }
 
-- (ArdiaWebView *)anyShownViewForProfile:(ArdiaCoreProfile *)profile {
+- (NillaWebView *)anyShownViewForProfile:(ArdiaCoreProfile *)profile {
   for (ArdiaCoreTab *tab in [_coreWindow tabsForProfile:profile]) {
-    ArdiaWebView *view = [ArdiaTabRegistry viewForTab:tab];
+    NillaWebView *view = [NillaTabRegistry viewForTab:tab];
     if (view.visible) return view;
   }
   return nil;
 }
 
-- (ArdiaWebView *)anyView {
-  for (ArdiaCoreProfile *profile in ardia_host::LoadedProfiles())
+- (NillaWebView *)anyView {
+  for (ArdiaCoreProfile *profile in nilla_host::LoadedProfiles())
     for (ArdiaCoreTab *tab in [_coreWindow tabsForProfile:profile])
-      if (ArdiaWebView *view = [ArdiaTabRegistry viewForTab:tab]) return view;
+      if (NillaWebView *view = [NillaTabRegistry viewForTab:tab]) return view;
   return nil;
 }
 
 - (void)window:(ArdiaCoreWindow *)window didInsertTab:(ArdiaCoreTab *)tab opener:(ArdiaCoreTab *)opener disposition:(NSString *)disposition {
-  [ArdiaTabStrip changedInWindow:self profile:tab.profile];
+  [NillaTabStrip changedInWindow:self profile:tab.profile];
   if (_hostChanges > 0) return;
   if (_awaitingApp) {
-    __weak ArdiaWindowController *weakSelf = self;
+    __weak NillaWindowController *weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{ [weakSelf announceChromeMadeTab:tab tries:0]; });
     return;
   }
-  if ([ArdiaTabRegistry viewForTab:tab]) return;
+  if ([NillaTabRegistry viewForTab:tab]) return;
   if (_stray) return HandOffTab(tab);
-  ArdiaWebView *openerView = [self viewFor:opener];
+  NillaWebView *openerView = [self viewFor:opener];
   if ([disposition isEqualToString:@"popup"]) {
-    return ardia_host::OpenPopupWindow(tab, openerView);
+    return nilla_host::OpenPopupWindow(tab, openerView);
   }
   if (openerView) {
-    [openerView openedLinkTab:tab adoptId:[ArdiaTabRegistry offerTab:tab] disposition:ardia_host::AppDisposition(disposition)];
-  } else if (ArdiaWebView *view = [self anyShownViewForProfile:tab.profile]) {
-    [view openedTab:tab adoptId:[ArdiaTabRegistry offerTab:tab prefix:@"tab"] disposition:@"foreground"];
+    [openerView openedLinkTab:tab adoptId:[NillaTabRegistry offerTab:tab] disposition:nilla_host::AppDisposition(disposition)];
+  } else if (NillaWebView *view = [self anyShownViewForProfile:tab.profile]) {
+    [view openedTab:tab adoptId:[NillaTabRegistry offerTab:tab prefix:@"tab"] disposition:@"foreground"];
   } else {
     HandOffTab(tab);
   }
 }
 
 - (void)window:(ArdiaCoreWindow *)window didRemoveTab:(ArdiaCoreTab *)tab {
-  [ArdiaTabStrip removed:tab fromWindow:self];
-  if (ArdiaCoreProfile *profile = tab.profile) [ArdiaTabStrip changedInWindow:self profile:profile];
+  [NillaTabStrip removed:tab fromWindow:self];
+  if (ArdiaCoreProfile *profile = tab.profile) [NillaTabStrip changedInWindow:self profile:profile];
   [[self viewFor:tab] tabRemovedFromWindow:window];
   if (_stray || _standalone || _awaitingApp) {
-    __weak ArdiaWindowController *weakSelf = self;
+    __weak NillaWindowController *weakSelf = self;
     ArdiaCoreProfile *removedProfile = tab.profile;
     dispatch_async(dispatch_get_main_queue(), ^{
-      ArdiaWindowController *c = weakSelf;
+      NillaWindowController *c = weakSelf;
       if (!c) return;
-      NSMutableArray<ArdiaCoreProfile *> *profiles = [ardia_host::LoadedProfiles() mutableCopy];
+      NSMutableArray<ArdiaCoreProfile *> *profiles = [nilla_host::LoadedProfiles() mutableCopy];
       if (removedProfile) [profiles addObject:removedProfile];
       for (ArdiaCoreProfile *p in profiles)
         if ([c.coreWindow tabsForProfile:p].count) return;
       if (c->_awaitingApp) {
         c->_awaitingApp = NO;
         [ChromeMadeWindows() removeObjectForKey:c->_chromeToken];
-        if (c->_announced) [ArdiaEvents emit:@"extensions.tabs" data:@{@"action" : @"closeWindow", @"chromeWindow" : c->_chromeToken}];
+        if (c->_announced) [NillaEvents emit:@"extensions.tabs" data:@{@"action" : @"closeWindow", @"chromeWindow" : c->_chromeToken}];
       } else if (!c.stray && !c.standalone) {
         return;
       }
       if (c.standalone) {
-        NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *windows = StandaloneWindows();
+        NSMapTable<ArdiaCoreProfile *, NillaWindowController *> *windows = StandaloneWindows();
         for (ArdiaCoreProfile *p in windows.keyEnumerator.allObjects)
           if ([windows objectForKey:p] == c) [windows removeObjectForKey:p];
       }
@@ -320,8 +320,8 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
 
 - (void)window:(ArdiaCoreWindow *)window didActivateTab:(ArdiaCoreTab *)tab {
   if (_awaitingApp) _chromeActive = tab;
-  [ArdiaTabStrip activated:tab inWindow:self];
-  [ArdiaTabStrip changedInWindow:self profile:tab.profile];
+  [NillaTabStrip activated:tab inWindow:self];
+  [NillaTabStrip changedInWindow:self profile:tab.profile];
   [[self viewFor:tab] tabActivatedByChrome:!self.appChanging];
 }
 
@@ -331,19 +331,19 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
 
 - (void)window:(ArdiaCoreWindow *)window tab:(ArdiaCoreTab *)tab didChangeFullscreen:(BOOL)fullscreen {
   [FullScreenChanges() setObject:@([FullScreenChanges() objectForKey:tab].unsignedIntegerValue + 1) forKey:tab];
-  __weak ArdiaWindowController *weakSelf = self;
+  __weak NillaWindowController *weakSelf = self;
   __weak ArdiaCoreTab *weakTab = tab;
   void (^tell)(void) = ^{
     ArdiaCoreTab *t = weakTab;
     if (t) [[weakSelf viewFor:t] emit:@"fullscreen" payload:@{@"fullscreen" : @(fullscreen)}];
   };
   if (_stray || _standalone) return tell();
-  [[ArdiaWindowFullScreen ofWindow:window create:YES] tab:tab fullScreen:fullscreen tell:tell];
+  [[NillaWindowFullScreen ofWindow:window create:YES] tab:tab fullScreen:fullscreen tell:tell];
 }
 
 - (void)window:(ArdiaCoreWindow *)window passwordPrompt:(NSDictionary<NSString *, id> *)prompt forTab:(ArdiaCoreTab *)tab {
-  ArdiaWebView *view = [self viewFor:tab];
-  if (view) ardia_host::NotePasswordPromptSource(view, nil);
+  NillaWebView *view = [self viewFor:tab];
+  if (view) nilla_host::NotePasswordPromptSource(view, nil);
   [view emit:@"passwordPrompt" payload:prompt];
 }
 
@@ -352,16 +352,16 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
 }
 
 - (BOOL)windowShouldClose:(ArdiaCoreWindow *)window {
-  return [ArdiaChromeWindowHost windowShouldClose:window.window];
+  return [NillaChromeWindowHost windowShouldClose:window.window];
 }
 
 - (void)windowDidCancelClose:(ArdiaCoreWindow *)window {
   NSLog(@"[ardiacore] window close cancelled");
-  [ArdiaWebView retryPagesInWindow:self];
+  [NillaWebView retryPagesInWindow:self];
 }
 
 - (void)windowCanTakeTabs:(ArdiaCoreWindow *)window {
-  [ArdiaWebView retryPagesInWindow:self];
+  [NillaWebView retryPagesInWindow:self];
 }
 
 - (void)window:(ArdiaCoreWindow *)window confirmCloseWithDownloads:(int)count completion:(void (^)(BOOL))completion {
@@ -370,10 +370,10 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
 
 - (BOOL)window:(ArdiaCoreWindow *)window preHandleKeyEvent:(NSEvent *)event {
   if (KeepsReservedKeyInDevTools(window.window, event)) {
-    if (event.type == NSEventTypeKeyDown && !event.isARepeat) [ArdiaEvents emit:@"engine.devToolsKeyKept" data:@{}];
+    if (event.type == NSEventTypeKeyDown && !event.isARepeat) [NillaEvents emit:@"engine.devToolsKeyKept" data:@{}];
     return NO;
   }
-  return ArdiaPerformReservedKey(event);
+  return NillaPerformReservedKey(event);
 }
 
 - (BOOL)window:(ArdiaCoreWindow *)window handleKeyEvent:(NSEvent *)event {
@@ -381,10 +381,10 @@ NSMapTable<ArdiaCoreProfile *, ArdiaWindowController *> *StandaloneWindows() {
   const NSEventModifierFlags mods = event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask;
   if (event.type == NSEventTypeKeyDown && event.keyCode == 53 && !(mods & (NSEventModifierFlagCommand | NSEventModifierFlagOption | NSEventModifierFlagControl))) {
     NSResponder *focused = window.window.firstResponder;
-    ArdiaWebView *target = nil;
-    for (ArdiaCoreProfile *profile in ardia_host::LoadedProfiles()) {
+    NillaWebView *target = nil;
+    for (ArdiaCoreProfile *profile in nilla_host::LoadedProfiles()) {
       for (ArdiaCoreTab *tab in [window tabsForProfile:profile]) {
-        ArdiaWebView *view = [ArdiaTabRegistry viewForTab:tab];
+        NillaWebView *view = [NillaTabRegistry viewForTab:tab];
         if (view.visible && [focused isKindOfClass:NSView.class] && [(NSView *)focused isDescendantOf:tab.view]) target = view;
       }
       if (target) break;

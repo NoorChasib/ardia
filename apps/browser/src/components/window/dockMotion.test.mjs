@@ -255,9 +255,10 @@ test("a peek from the right edge covers the page from its left edge to the windo
 
 test("Arc's layout keeps the address bar in a hidden sidebar (no toolbar on the card); Dia's layout and the switch off don't", async () => {
   const { addressBarInSidebar } = await import("../../state/windows/layout.ts");
-  const { reloadSwitches } = await import("../../platform/killSwitches.ts");
+  const { reloadLaunchConfigForTests } = await import("../../platform/launchConfig.ts");
   stub.docs.clear();
-  reloadSwitches();
+  stub.launch.switches = {};
+  reloadLaunchConfigForTests();
   S().hydrate({});
   const w = S().createWindow({ url: "a.com" });
   S().updateSettings({ addressBar: "sidebar", tabLayout: "sidebar" });
@@ -267,13 +268,14 @@ test("Arc's layout keeps the address bar in a hidden sidebar (no toolbar on the 
   S().updateSettings({ addressBar: "toolbar" });
   assert.equal(addressBarInSidebar(S(), w), false, "Dia's layout: the toolbar's");
   S().updateSettings({ addressBar: "sidebar" });
-  stub.docs.set("switches-cache.json", JSON.stringify({ version: 1, switches: { sidebarSlide: false } }));
-  reloadSwitches();
+  stub.launch.switches = { sidebarSlide: false };
+  reloadLaunchConfigForTests();
   assert.equal(addressBarInSidebar(S(), w), false, "switch off: a hidden sidebar's bar moves to the card, as before");
   S().toggleSidebar(w);
   assert.equal(addressBarInSidebar(S(), w), true, "switch off, shown: in the sidebar");
   stub.docs.clear();
-  reloadSwitches();
+  stub.launch.switches = {};
+  reloadLaunchConfigForTests();
 });
 
 test("the dock is fullscreen, docked, peeking, hiding or away, and a still sidebar that isn't docked watches the left edge, also over a full-screen page (#1041)", () => {

@@ -2,11 +2,12 @@
 
 End-to-end-encrypted sync with no server, no account and no Apple entitlement. Every Mac reads
 and writes sealed files in a folder the user picks; any service that syncs a folder carries them
-between Macs. The default is `iCloud Drive › Ardia Sync`
-(`~/Library/Mobile Documents/com~apple~CloudDocs/Ardia Sync`: iCloud Drive syncs any folder
+between Macs. The default is `iCloud Drive › Nilla Sync`
+(`~/Library/Mobile Documents/com~apple~CloudDocs/Nilla Sync`: iCloud Drive syncs any folder
 under it, with no CloudKit container and no entitlement). Dropbox, a NAS or a USB drive work
-the same way. A Mac that turned sync on before the rename keeps `Netnyahoo Sync`, and one setting up after it is
-offered that folder while it holds the data (`SyncModule.defaultFolder`).
+the same way. A test instance (`ARDIA_DATA_DIR`) uses `Nilla Sync` inside its data folder instead
+(`SyncModule.defaultFolder`). The app Nilla forked has its own sync folder, and Nilla refuses to use it
+(`packages/sync/src/upstreamSyncFolder.ts`).
 
 The UX follows Dia's sync (Settings › Account › Sync in Dia 1.50.1; its strings are quoted from
 its binary below). Dia's data sits on its servers and devices pair with a 6-character code; here
@@ -19,7 +20,7 @@ Code:
   - `SyncVault.swift`: the folder, with file coordination and partial files.
   - `SyncKeyStore.swift`: Keychain.
   - `RecoveryKit.swift`: PDF, text sheet and QR code.
-- `packages/sync/ios/SyncModule.swift`: the Expo module (`ArdiaSync`). It also reads this app's saved passwords.
+- `packages/sync/ios/SyncModule.swift`: the Expo module (`NillaSync`). It also reads this app's saved passwords.
 - `packages/sync/src`: the merge, in TypeScript with no dependencies.
   - `scope.ts`: replica, logs, snapshots, compaction.
   - `hlc.ts`: hybrid logical clocks.
@@ -53,8 +54,8 @@ Apple, Dropbox, whoever has the NAS or finds the USB drive, malware that reads c
   (CRIME-style).
 
 What they do see (metadata): how many profiles sync (one folder each) and how many devices; when
-and how much each writes (file count, times, sizes to 1 KiB); and that it's Ardia sync data
-(the `NNS1` magic and `.nns` extension).
+and how much each writes (file count, times, sizes to 1 KiB); and that it's Nilla sync data
+(the `NLS1` magic and `.nls` extension).
 
 What they can do: delete or withhold files (denial of service). Withheld files show as
 "waiting for N files to download". They can also replay an old file under its own name, which is
@@ -65,9 +66,9 @@ within a file, or move data between profiles.
 Not protected against:
 - Someone with the phrase. The phrase is the key, like Dia's.
 - Someone with the unlocked Mac. They have the data in the clear anyway.
-- A compromised Ardia binary.
+- A compromised Nilla binary.
 
-The phrase's entropy is in each Mac's login Keychain (`Ardia Sync Key`, this device only,
+The phrase's entropy is in each Mac's login Keychain (`Nilla Sync Key`, this device only,
 never iCloud Keychain). Losing every Mac and the Recovery Kit loses the synced data. There's no
 reset by email, because there's no one to email.
 
@@ -81,13 +82,14 @@ reset by email, because there's no one to email.
   are all accepted.
 - The wordlist is the standard one; a test checks its SHA-256
   (`2f5eed53…dbda`) and Trezor's reference vectors.
-- Keys: HKDF-SHA256 over the entropy, salt `netnyahoo-sync/v1`. The magic and the salt keep the app's old name
-  for good: every Mac on any version reads the same files (`LegacyName` in `packages/sync/ios/Core/LegacyMigration.swift`).
+- Keys: HKDF-SHA256 over the entropy, salt `nilla-sync/v1` (`SyncCrypto.swift`). The magic and the salt are Nilla's
+  own, so Nilla never opens the sync files of the app it forked, even under the same phrase. Linux's engine still
+  has the upstream constants, and Linux sync is off in Layer 1.
   - `file-key` (AES-256-GCM) seals every file.
   - `name-key` (HMAC-SHA256) names folders: the chain tag is `HMAC("chain")` and a scope's tag
     is `HMAC("scope/<scope id>")`, each cut to 128 bits and written in base32.
   - The phrase already has 256 bits of entropy, so no password stretching is needed.
-- Where the entropy is kept: the login Keychain, as a generic password (`Ardia Sync Key`,
+- Where the entropy is kept: the login Keychain, as a generic password (`Nilla Sync Key`,
   account = this device's sync id, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`, not
   synchronizable).
   - Test instances (`ARDIA_DATA_DIR`) keep it in a 0600 file in their data folder instead,
@@ -101,8 +103,8 @@ reset by email, because there's no one to email.
   authentication (Touch ID or the login password). A success is good for 60 s, like the
   Passwords pane; Stop Syncing ends it early. Cancelling returns nothing and changes nothing.
   The kit preview in the sheet is drawn with dots instead of the words. Hidden test instances
-  never prompt: `ARDIA_TEST=reauth=granted` grants, anything else denies (#241).
-- The temporary kit for Copy and Share (`$TMPDIR/Ardia Recovery Kit/`) is deleted at launch.
+  never prompt: `ARDIA_TEST=reauth=granted` grants, anything else denies.
+- The temporary kit for Copy and Share (`$TMPDIR/Nilla Recovery Kit/`) is deleted at launch.
 
 A wrong phrase is caught in one of two ways. A typo fails the checksum. A valid but different
 phrase derives a chain tag that isn't in the folder: "This recovery phrase doesn’t match the
@@ -114,11 +116,11 @@ synced data in this folder".
 <sync folder>/
   <chain tag>/                 one per phrase (several people can share one folder)
     <scope tag>/               "app" (settings, profiles, devices) or "p:<profile sync id>"
-      <file id>.nns            128 random bits, base32
+      <file id>.nls            128 random bits, base32
 ```
 
-A file is `"NNS1" | nonce (12) | AES-GCM ciphertext | tag (16)`.
-- AAD: `"NNS1" + "<chain>/<scope>/<file>"`.
+A file is `"NLS1" | nonce (12) | AES-GCM ciphertext | tag (16)`.
+- AAD: `"NLS1" + "<chain>/<scope>/<file>"`.
 - Plaintext: `length (u32 BE) | UTF-8 JSON | zero padding` to the next 1024 bytes.
 
 The JSON is one of:
@@ -154,7 +156,7 @@ Writing:
   saved when quitting began (tested).
 
 Reading (`SyncVault.read`) handles files that aren't there in full yet:
-- iCloud placeholders (`.<id>.nns.icloud` stubs, or dataless files whose
+- iCloud placeholders (`.<id>.nls.icloud` stubs, or dataless files whose
   `ubiquitousItemDownloadingStatus` isn't current) are reported as pending, and
   `startDownloadingUbiquitousItem` is asked for them.
 - Files mid-copy (Dropbox, SMB) and empty files fail to open. They're reported as damaged, with
@@ -162,7 +164,7 @@ Reading (`SyncVault.read`) handles files that aren't there in full yet:
   back (no damage, no download counted), but every pull still asks for it and reads it once it opens, so a file that
   arrives whole later is applied like a late file. A given-up file used to be skipped for good: a Mac that joined
   while the other Mac's files couldn't be read for a day paired on its own and never listed that Mac's profiles,
-  while the other Mac listed its Personal (#514, tested in `fileHealth.test.ts` and `sharedData.test.mjs`).
+  while the other Mac listed its Personal (tested in `fileHealth.test.ts` and `sharedData.test.mjs`).
 - Everything else is read in a coordinated read.
 - Nothing half-arrived is ever applied.
 
@@ -202,7 +204,7 @@ Each scope holds a replica: `key → { h: HLC, v: value | null, o: [device, seq]
   more than 40 and either reach 400 or weigh a quarter of that snapshot. Files an earlier snapshot already
   covers, waiting out their hour, don't count, nor do logs past a gap that no snapshot can retire. A snapshot
   is the whole replica (a profile with full history is about 3 MB), so this keeps a day of browsing, a log
-  per 15-second cycle, to a few snapshots instead of one every 10 minutes (#1118; tested in
+  per 15-second cycle, to a few snapshots instead of one every 10 minutes (tested in
   `scope.test.ts`: 8 hours of steady edits write 5, not 48). With no snapshot yet, 40 logs are enough.
   Each snapshot goes to the folder once, under a new file name.
 - **What it leaves out.** Tombstones older than 45 days are dropped from the snapshot, and so are
@@ -267,7 +269,7 @@ Profiles).
     records with nothing left downloading or damaged in the app scope. A Mac that joined while the other Mac hadn't
     written its profiles yet, or while iCloud Drive was still downloading that file, used to pair with what it had
     read so far: Personal got an id of its own, received none of the other Mac's Personal data, and both Macs then
-    offered the other's Personal as a new profile (#514). A day after joining it pairs with whatever it has, so a folder
+    offered the other's Personal as a new profile. A day after joining it pairs with whatever it has, so a folder
     whose other devices sync no profile doesn't keep it waiting. Until it pairs, no profile is offered to add. Known
     residuals: once the default record is in, other profiles pair by name with what has arrived, even while a file
     with a later profile is still downloading; and a Mac that paired early before this fix keeps its pairing, with two
@@ -311,10 +313,10 @@ Profiles).
 | `tabs:<device id>` | profile | `{ n (device name), k?, tabs: [{ u, t }] }`: that device's 30 most recent open tabs | only its device writes it. It feeds the overflow menu's "Your Devices". The iPhone adds `k: "phone"`; Macs leave it out and read the kind from `dev:` |
 | `otab:t:<tab key>`, `otab:g:<group key>`, `otab:on` | profile | a regular tab `{ u, t, pos, g, a }` (its page and title, its place in the profile's one order, its innermost regular group's key or `null`, and when it was last selected, to the minute) and a regular group `{ n, i, c, p }` (name, icon, colour, parent group's key or `null`); `otab:on` is `{ on }`, written beside them when the switch goes off or on | only while the profile syncs all open tabs; see All open tabs. The key is the tab's or group's `pinKey`, else its id. No released adapter's prefix starts `otab` (the pinned area's claims `pin…`), so older Macs and the iPhone keep the records in their replica and snapshots and never tombstone them (tested with the 0.2.40 adapters) |
 | `send:<uuid>` | profile | `{ u, t, to (device id), from (device id), at (ms) }`: a tab sent to another device | Send Tab to Device; see below |
-| `pin:t:<tab id>`, `pin:g:<group id>` | profile | pinned tabs `{ g, u, t, i, ti, pos }` and pinned groups `{ n, i, c, pos }` (Dia's pinned container) | they arrive as unloaded tiles in the window showing the profile and load when selected; when no window shows the profile they join its parked pins. A pinned group's members always live in the group's window, and sync never moves a tab between two open windows: a pin synced into a parked group is parked with it, a parked member joins a group open in a window, a group whose member is open in another window moves to that page's window (the mirror then gives the profile's other windows unloaded copies), and a member open in a third window stays there as a regular tab while the group gets an unloaded copy. A key resolves to the profile's pinned tab or pinned-group member; only when there is none does it fall back to a regular tab that still carries the key (a pin unpinned on this Mac, kept open), preferring one with a page, so another Mac's re-pin takes that page back instead of adding a second tab. A tab sync pins as a tile or row leaves any regular group it was in, as pinning it here would. A member whose pinned group has a tombstone (unpinned or deleted elsewhere) becomes a standalone pin, even if a regular group with that id is still here; one whose group has no record yet (its batch hasn't arrived) shows as a standalone pin meanwhile, its record keeps that group and position while local edits to its other fields (a rename, a new icon) still publish, and it joins the group when the group arrives. A missing group counts as not arrived only when this Mac never had it, has no record of it, and first saw the wait less than 90 days ago, by its own clock (the deadline is saved with the session), as long as a gap holds tombstones (Compaction). Past it the member publishes as a standalone pin, checked on every sync, so an idle Mac gets there too (tested). A tombstone removes only what is still in the pinned container: a group or tab this Mac already kept as regular stays. A pinned group record for a group this Mac keeps as regular (it unpinned it, and another Mac restyled or re-pinned the pinned one) becomes a separate pinned group, so the regular group keeps its name, style and tabs (tested); a member record that names such a group while its pinned group has a tombstone leaves the regular member where it is. One conflict is left: a page change on a member made while another Mac unpins its group can win the member's record. Depending on which Mac syncs first, the member then either follows the unpin, or stays pinned on its own and the unpinning Mac's regular group goes if that was its only tab; both Macs agree and the tab is kept (tested). Settling it needs placement times in the records. Pinning, unpinning into or out of a pinned group, moving a tab between tiles, rows and groups, re-pinning a group or moving a pin to another profile records a pending placement choice (`pinChoices`, like the row choices), so the next sync republishes that record with a fresh timestamp even when its value is unchanged and a later explicit choice outranks an older edit still in transit. A pin's page is published as 0.2.38 does: a member sends the page its copy shows, a tile sends its home URL, both send the copy's title, and applying a record sets the page of a copy that isn't loaded. The copy published is the one in the profile's frontmost window. Known residual: two Macs with the same pin loaded at different pages keep sending their own page on each sync, so the record moves back and forth between them (tested). Nothing is lost, and it stops once either copy unloads or both show the same page. Earlier builds held a page back until it changed locally, but every version of that (a per-copy baseline) let a real navigation go unsent in some case, so it's gone. The group a member waits for and its deadline live in `pinSync`, a side table by profile and pin key saved with the session and pruned like `pinChoices`, so parking, reopening, mirroring and relaunching keep them. Unpinning on one Mac removes the tile on the others. A record's key is matched only to that profile's tabs and groups: when the id is already another profile's tab or group on this Mac (a pin moved between profiles), the pin gets a new local id with the key kept as `pinKey`, so neither profile's records touch the other's pin. A group's `c`, here and in a nested pinned group's `pinn:g:` record, is `null` for Neutral or one of Chrome's nine colours, the values every released version can draw; a group set to None (no background or outline, issue #206) sends `null` there and its None in a `pgc:` record |
+| `pin:t:<tab id>`, `pin:g:<group id>` | profile | pinned tabs `{ g, u, t, i, ti, pos }` and pinned groups `{ n, i, c, pos }` (Dia's pinned container) | they arrive as unloaded tiles in the window showing the profile and load when selected; when no window shows the profile they join its parked pins. A pinned group's members always live in the group's window, and sync never moves a tab between two open windows: a pin synced into a parked group is parked with it, a parked member joins a group open in a window, a group whose member is open in another window moves to that page's window (the mirror then gives the profile's other windows unloaded copies), and a member open in a third window stays there as a regular tab while the group gets an unloaded copy. A key resolves to the profile's pinned tab or pinned-group member; only when there is none does it fall back to a regular tab that still carries the key (a pin unpinned on this Mac, kept open), preferring one with a page, so another Mac's re-pin takes that page back instead of adding a second tab. A tab sync pins as a tile or row leaves any regular group it was in, as pinning it here would. A member whose pinned group has a tombstone (unpinned or deleted elsewhere) becomes a standalone pin, even if a regular group with that id is still here; one whose group has no record yet (its batch hasn't arrived) shows as a standalone pin meanwhile, its record keeps that group and position while local edits to its other fields (a rename, a new icon) still publish, and it joins the group when the group arrives. A missing group counts as not arrived only when this Mac never had it, has no record of it, and first saw the wait less than 90 days ago, by its own clock (the deadline is saved with the session), as long as a gap holds tombstones (Compaction). Past it the member publishes as a standalone pin, checked on every sync, so an idle Mac gets there too (tested). A tombstone removes only what is still in the pinned container: a group or tab this Mac already kept as regular stays. A pinned group record for a group this Mac keeps as regular (it unpinned it, and another Mac restyled or re-pinned the pinned one) becomes a separate pinned group, so the regular group keeps its name, style and tabs (tested); a member record that names such a group while its pinned group has a tombstone leaves the regular member where it is. One conflict is left: a page change on a member made while another Mac unpins its group can win the member's record. Depending on which Mac syncs first, the member then either follows the unpin, or stays pinned on its own and the unpinning Mac's regular group goes if that was its only tab; both Macs agree and the tab is kept (tested). Settling it needs placement times in the records. Pinning, unpinning into or out of a pinned group, moving a tab between tiles, rows and groups, re-pinning a group or moving a pin to another profile records a pending placement choice (`pinChoices`, like the row choices), so the next sync republishes that record with a fresh timestamp even when its value is unchanged and a later explicit choice outranks an older edit still in transit. A pin's page is published as 0.2.38 does: a member sends the page its copy shows, a tile sends its home URL, both send the copy's title, and applying a record sets the page of a copy that isn't loaded. The copy published is the one in the profile's frontmost window. Known residual: two Macs with the same pin loaded at different pages keep sending their own page on each sync, so the record moves back and forth between them (tested). Nothing is lost, and it stops once either copy unloads or both show the same page. Earlier builds held a page back until it changed locally, but every version of that (a per-copy baseline) let a real navigation go unsent in some case, so it's gone. The group a member waits for and its deadline live in `pinSync`, a side table by profile and pin key saved with the session and pruned like `pinChoices`, so parking, reopening, mirroring and relaunching keep them. Unpinning on one Mac removes the tile on the others. A record's key is matched only to that profile's tabs and groups: when the id is already another profile's tab or group on this Mac (a pin moved between profiles), the pin gets a new local id with the key kept as `pinKey`, so neither profile's records touch the other's pin. A group's `c`, here and in a nested pinned group's `pinn:g:` record, is `null` for Neutral or one of Chrome's nine colours, the values every released version can draw; a group set to None (no background or outline) sends `null` there and its None in a `pgc:` record |
 | `pinrow:<tab id>` | profile | `1` for a pinned tab shown as a row, `0` for one this Mac chose as a tile | Rows are pinned tabs: their `pin:t:` record is the same as a tile's (order included), so a Mac on a version before rows shows them as tiles, and since it never writes `pinrow:` keys its edits can't turn a row into a tile. A Mac publishes `0` for a tile once it has seen a mark for it. Each tile or row the user chooses there (pins it, or moves it between tiles and rows) is a pending choice kept per profile and pin key (`pinChoices`, saved with the session, so closing windows, parking and mirroring can't lose it); the next sync republishes its mark with a fresh timestamp even when the value is unchanged (unless that mark is already queued in the scope's outbox or journal, or the scope already holds a record whose HLC is not older than the choice's: each choice is stamped with an HLC from the sync clock when it's made (`editClock.ts`, the clock the cycles run on, which has observed every record pulled, unapplied ones included), so a choice made after seeing a record outranks it even when another Mac's clock runs ahead, and once its own publication or a later edit from another Mac is in, a choice restored with an older session is inert and can't be stamped again over that later edit; tested), and drops the choice only once that batch is on disk, so a later choice outranks an older mark still in transit and survives a crash. A pin moved to another profile takes a new choice there, and the source keeps its own while a window there (or the parked set) still has the pin; a choice goes when its pin is unpinned or its profile deleted (also when loading a session, which also raises the generation counter above every loaded choice); a tile it only received publishes nothing, and a mark for a tab it has never had is never deleted. A mark that arrives before its tab is applied when the tab's `pin:t:` record lands, also when that tab is still open there from before an unpin. Unpinning deletes the mark (the rows adapter runs before `pin:`, so it still sees the tab's `pin:t:` record). A mark deleted by a pull (an unpin on another Mac, or a snapshot that left it out) changes nothing here: the `pin:` adapter applies the unpin, so the tab is never turned into a tile first and sent back over the deletion as a local edit (a pinned row deleted on another Mac while this one was away past tombstone retention came back as a tile; tested). A tab unpinned on an older Mac leaves its mark behind, unused unless that tab id is pinned again |
 | `tilefold:<tab id>`, `tilefold:n:<folder id>` | profile | `{ f }`: the tile folder a pinned tile is in; `{ n }`: a folder's name | Tiles can sit in a folder tile in Top Apps (2026-10-23). A member's `pin:t:` record is a tile's (order included), so a Mac on a released version shows the folder's tabs as plain tiles side by side and loses none of them; it never writes `tilefold:` keys, so its edits (rename, reorder, close) leave the folder alone, and its unpin takes the tab out of the folder here. Member records carry membership only. A folder's name lives in its `tilefold:n:` record alone, so the newest write wins, by the record's sync timestamp like any record. A Mac writes it only for a name chosen on it (a rename, or a new folder given a name); a name it took from sync, or a folder whose name hasn't arrived yet (it shows as "Folder"), writes nothing, so joining, waiting or tidying can never make an older name look newer. Like `pinrow:`, the folder adapter runs before `pin:`: a mark that arrives before its tab files the tab when its `pin:t:` record lands, a mark for a tab never seen is never deleted, and an unpin deletes the mark, here or on any Mac (a released Mac's unpin leaves a `pin:t:` tombstone, and the mark goes with it). A folder's name record is deleted by the Mac that sees the folder go. A folder left with one tab on any Mac becomes that tile again there, parked pins included, and the deleted marks carry that to the others; a member moved to another profile leaves its folder. Tested against the 0.2.38 adapter, delayed files (concurrent renames, a name arriving after its tabs), a Mac joining and parked pins (state/sync/tileFolders.test.mjs) |
-| `pgc:<group key>` | profile | `"none"` while a pinned group (top-level or nested) is set to None | Released top strips look a group's colour up in a table of nine and throw on any other value, so `pin:g:` and `pinn:g:` carry None as `null` (Neutral, which those builds draw, and which since #154 shows no box at rest) and this record says it's None. No released version's prefix starts it, so older Macs keep it unapplied. A group is None here only while its `c` is `null` and this record is live: a colour chosen on an older Mac (a non-null `c`) wins over a stale record, and the next current Mac to sync deletes the record; a rename there sends `null` again and keeps None. The record is deleted when the group here takes any other colour, or when both its group records are deleted; one for a group this Mac doesn't have yet is kept. Its adapter runs before `pin:`, and `pin:` reads it when it applies a group, so a group arriving with its record arrives as None (state/sync/pinned.test.mjs, with the 0.2.40 adapters) |
+| `pgc:<group key>` | profile | `"none"` while a pinned group (top-level or nested) is set to None | Released top strips look a group's colour up in a table of nine and throw on any other value, so `pin:g:` and `pinn:g:` carry None as `null` (Neutral, which those builds draw, and which shows no box at rest) and this record says it's None. No released version's prefix starts it, so older Macs keep it unapplied. A group is None here only while its `c` is `null` and this record is live: a colour chosen on an older Mac (a non-null `c`) wins over a stale record, and the next current Mac to sync deletes the record; a rename there sends `null` again and keeps None. The record is deleted when the group here takes any other colour, or when both its group records are deleted; one for a group this Mac doesn't have yet is kept. Its adapter runs before `pin:`, and `pin:` reads it when it applies a group, so a group arriving with its record arrives as None (state/sync/pinned.test.mjs, with the 0.2.40 adapters) |
 | `pgh:<pin key>` | profile | the home URL of a tab in a pinned group, as a string (the page it was on when it joined, or the one Replace Pin or Edit Pinned Page set) | Tiles and rows keep their home in `pin:t:`'s `u`; a member's `pin:t:` still sends its current page, as 0.2.38 reads it, so this record carries the home beside it. No released version's prefix starts it (their pin adapter claims every `pin…` key, so it can't be one), so older Macs keep the records unapplied in their replica and snapshots and never delete them. The homes adapter runs before `pin:`: a tab that lands in the same pull as its home gets that home, and one already here is updated, unless its home was changed here since the last sync (that edit is published and wins). A Mac that gets a member before its home takes the page as its home, and publishes a home only over its own last synced one or when the scope has no live record for it, and only after a pull with nothing downloading or damaged this session, so a guess never replaces a home chosen elsewhere that it has seen. A member that leaves its pinned groups here deletes the record, and so does an unpin from any Mac, an older one included (its `pin:t:` tombstone). A deletion pulled from elsewhere changes no tab; the `pin:` adapter decides where the tab goes. Known residual: a home chosen in a Mac's first cycle of a session goes out in the batch after its pin's, and a Mac that has read the pin and not that batch, with no download pending, sends its guess (the pin's page, usually the same URL). Tested with a member arriving with its home, an edit, and the 0.2.40 adapters (state/sync/pinned.test.mjs) |
 | `pord:g:<group key>` | profile | `{ a }`: the pin key of the row a top-level pinned group follows in the pinned section, or `null` above every row | Since 0.2.40 rows and pinned groups share one order. The `pin:` records keep the older shape and order (tiles, then rows, then groups, each in the user's order), so Macs on older versions, which sort rows ahead of groups, find nothing to correct and never publish their sorted order back; the interleaving lives only in these records, which they don't read, own or tombstone (no key of theirs starts with `pord`). Applying sorts rows and groups by `pin:` and then puts each group after its row, so an older Mac's reorder among rows or among groups still comes through and the groups follow their rows; a group with no record, or whose row is gone, goes after the last row. Published from the profile's frontmost window, or from its parked pins when no window shows it, and applied to both. A record whose group hasn't arrived yet is kept, and so is one whose row isn't a row here yet: it is never republished while it waits, with no deadline and nothing read from the local clock. The row counts as arrived only as a row (a tile that another Mac turned into a row waits for its `pinrow:` marker), and the wait ends early only on evidence, newer than the order record, that the row stopped being one: its `pin:t:` tombstone, a `pin:t:` record putting it in a group, or a `pinrow:` marker saying it's a tile. Any other change to the row (its title, its icon) and anything older than the order record leave the wait alone. Meanwhile every group whose record names a row this Mac doesn't have goes after the last row, in `pin:` order, so Macs holding the same records show the same order; a group with no record at all keeps the place `pin:` gives it. Only an explicit local choice replaces it: moving a pinned group or row on this Mac (a drag, Move Up/Down, a menu command, pinning or unpinning into a place) marks the groups whose place among the rows changed as chosen (`order:<group>` in `pinChoices`; rows added or removed, sync's own changes and the waiting fallback never do), and the next sync republishes their records with a fresh timestamp and clears the mark. A row deleted for good, whose tombstone was compacted away, leaves its record waiting until someone moves the group. Known and accepted: a Mac that was away past tombstone retention gets that deletion from a snapshot, which leaves no tombstone, so it can't tell the departed row from one still on its way and keeps the group waiting after the last row, so the group can sit in a different place there than on Macs that saw the tombstone, until someone moves it (skipped test in state/sync/adapters.test.mjs). Only the group's own `pin:g:` tombstone removes a record, never not finding it (tested against a pre-0.2.40 adapter, 0.2.38, out-of-order delivery and parked pins) |
 | `pw:<origin>\n<username>` | profile | `{ o, u, p }` | see below |
@@ -327,7 +329,7 @@ synced profile, or Settings › Profiles › the profile › Sync All Open Tabs.
 `ptab:`. Tab sync runs for a profile when it syncs on this Mac, its switch is on and What Syncs › Open Tabs is on here.
 It covers profiles that share another's data (tabs are each profile's own).
 - **What goes.** The profile's regular tabs in its main windows (not pinned, not in a pinned group, not a peek, not a
-  live folder's item) whose page is http or https. Private windows, Little Ardia, blank New Tab pages and `file:` pages
+  live folder's item) whose page is http or https. Private windows, Little Nilla, blank New Tab pages and `file:` pages
   stay local; a tab that navigates to one keeps its last record. Positions are one order per profile, but a Mac keeps a
   position as long as it's in order within that tab's window, so two Macs that spread the same tabs over different
   windows settle instead of resending the order (tested). Collapsed groups, splits, zoom and mute stay local.
@@ -436,14 +438,14 @@ Saved passwords are Chrome's (its password manager).
   can't be wiped; they live until the seal.
 - **All or nothing.** A list reaches the adapter only when the engine answered with one. On the Mac one password that
   doesn't decrypt fails Chrome's whole read (`SkipUndecryptablePasswords` is off there, and nothing is deleted:
-  Chrome never clears undecryptable passwords when `--user-data-dir` is set, which ArdiaHost always sets), and the
+  Chrome never clears undecryptable passwords when `--user-data-dir` is set, which NillaHost always sets), and the
   engine refuses to read at all with that feature on. A store error, the profile going away mid-read, no reply within
   30 s or a malformed entry all give `null`, so the cycle skips passwords and nothing is tombstoned.
-- **Sealed for JS.** Plain passwords never reach JS (#241). The native read gives JS each login's
+- **Sealed for JS.** Plain passwords never reach JS. The native read gives JS each login's
   origin, username, creation time and the password sealed with the sync key (AES-256-GCM, its
   own HKDF key, bound to origin and username). The nonce is an HMAC of the login and password,
   so the same password seals the same on every Mac and the adapter can compare without opening
-  it. Applying a remote password hands the sealed value back to `ArdiaSync.savePassword`, which
+  it. Applying a remote password hands the sealed value back to `NillaSync.savePassword`, which
   opens it for that login only and writes through Chrome's API.
 - **Keys.** Records are `pws:<origin>\n<username>` → `{ o, u, s }`. Builds before this used
   `pw:` with the plain password; new builds ignore `pw:` records and never tombstone them, so a
@@ -457,7 +459,7 @@ Saved passwords are Chrome's (its password manager).
   a folder file is reported as damaged, and a local state or journal file reads as missing while
   `sealLocal` and `write` refuse for the rest of the session, so the files on disk and the
   folder stay as they were and sync shows an error instead of saving a rebuilt state over them.
-- **Writing.** Writes go through Chrome's API (`ArdiaServices.savePassword` from the sync module,
+- **Writing.** Writes go through Chrome's API (`NillaServices.savePassword` from the sync module,
   `deletePassword` in `@ardia/ardiacore`), so Chrome's in-memory store and autofill see them at
   once. A changed password is a delete plus an add, done natively only after the sealed value
   opens: the update API needs the device check.
@@ -488,7 +490,7 @@ Settings › Sync. Dia puts sync in Account › Sync, with the section icon
     lose access to this device.", with "another" underlined.
   - A preview of the page.
   - Buttons: Save…, Close, and Other Options (Copy, Share…, Save as Text…).
-  - The PDF is "Ardia Recovery Kit.pdf", US Letter as Dia's, with the 24 words and a QR code.
+  - The PDF is "Nilla Recovery Kit.pdf", US Letter as Dia's, with the 24 words and a QR code.
 - **Connect with Recovery Phrase.**
   - Dia's copy: "Enter your 24-word recovery phrase to sync with another device.", the
     placeholder "Enter your 24-word recovery phrase", the "%d/%d words" counter, "too many
@@ -560,7 +562,6 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
     - `SyncKeyStoreTests`: saving again replaces the key; a save the keychain refuses keeps the key it would have
       replaced; a test instance's key file is never wider than 0600 and nothing is left beside it.
     - `SharedFolderDirectoryTests`: the shared folders' reads and writes (symlinks, conflicts, size caps, permissions).
-    - `LegacyMigrationTests`, `LegacyKeychainTests`, `LegacyDockTileTests`: the Netnyahoo → Ardia migration.
   - `bun test` (`packages/sync/src/**/*.test.ts`):
     - `scope.test.ts`, `fileHealth.test.ts`: concurrent edits converge in any order; deletes, re-adds and
       edit-after-delete; clock skew; late, out-of-order, half-copied and given-up files; an edit during a read; an
@@ -575,14 +576,13 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
       records through their snapshots; on a framework without the engine calls nothing is published or applied.
     - `companion/companion.test.ts`: the iPhone's adapters and cycle.
   - `apps/phone/scripts/bundle-shared.mjs --check`: the iPhone's bundle of this code is up to date.
-  - `scripts/legacy-migration-e2e.mjs`: the migration tool run end to end on a scratch install.
 - `bun run --cwd apps/browser test` runs `src/state/sync/adapters.test.mjs` (4 tests against the real
   store: delete versus add, concurrent moves that would make a cycle, parked pinned tabs, passwords
   both ways), `src/state/sync/send.test.mjs` (sent tabs: one addressed elsewhere is never touched; it opens once and
   is deleted by its receiver; dropped by its sender after 7 days; waits while it can't open; a crash opens it twice
   rather than losing it, and a sender's crash never sends it again over the deletion; a Mac before this build keeps
   the records and opens its own once it updates; only http and https open), `src/state/sync/pinned.test.mjs` (the pinned area's adapters in their order: a row and a tile folder land as
-  such, an unpin deletes the marks with the pin, the app's old names are read as today's, pinned group tabs' homes go across and
+  such, an unpin deletes the marks with the pin, pinned group tabs' homes go across and
   survive a Mac on the previous version) and `src/state/sync/engine.test.mjs` (the engine against a fake native module: a crash the
   moment a batch lands re-sends the journalled batches byte for byte and numbers the next one after
   them; nothing is published before its journal is on disk; a sent tab opens once in the background of the window
@@ -631,7 +631,7 @@ bookmark, settings, profile or group edit, and on Sync Now. A cycle:
 
 ## iPhone
 
-Ardia for iPhone is one more device in the same chain, with the same file format: it writes `dev:` (`k: "phone"`),
+Nilla for iPhone is one more device in the same chain, with the same file format: it writes `dev:` (`k: "phone"`),
 `tabs:`, history visits by the union rule, bookmarks it adds to Other Bookmarks and `send:` records, and keeps every
 other record untouched. It never compacts. Its side is in `docs/phone.md` › Sync on iPhone.
 

@@ -69,12 +69,13 @@ test("WebKit tabs keep the autoPictureInPicture flag instead of a stub that read
 });
 
 test("WebKit tabs follow the user's sight of their window the way Chromium views do", () => {
-  assert.match(sight, /let seen = visible && ArdiaChromeWindowHost\.userSees\(window\)/);
-  assert.match(sight, /forName: (?:NSNotification\.Name\.)?ArdiaWindowSeenDidChange, object: window/);
+  assert.match(sight, /let seen = visible && NillaChromeWindowHost\.userSees\(window\)/);
+  assert.match(sight, /forName: (?:NSNotification\.Name\.)?NillaWindowSeenDidChange, object: window/);
   assert.match(sight, /let activeCapture = webView\?\.cameraCaptureState == \.active \|\| webView\?\.microphoneCaptureState == \.active/);
   assert.match(sight, /playing: !playingFrames\.isEmpty \|\| activeCapture/);
   assert.match(tab, /override func viewDidMoveToWindow\(\) \{\n    super\.viewDidMoveToWindow\(\)\n    if window != nil \{ followInterfaceScale\(\) \}\n    watchSight\(\)\n  \}/);
-  assert.match(tab, /var visible = true \{ didSet \{ updateHidden\(\); updateSight\(\) \} \}/);
+  assert.match(tab, /var visible = true \{ didSet \{ updateHidden\(\); updateSight\(\); noteShownChanged\(\) \} \}/);
+  assert.match(tab, /var selected = true \{ didSet \{ noteShownChanged\(\) \} \}/);
 });
 
 test("leaving opens picture in picture and returning closes it through the page's own player call", () => {
@@ -107,14 +108,14 @@ test("the rule travels with the page view, so a tab that takes the view over sti
 
 test("ArdiaCore's public window host gives Swift the same sight rule as Chromium views", () => {
   assert.match(windowHostHeader, /\+ \(BOOL\)userSeesWindow:\(nullable NSWindow \*\)window NS_SWIFT_NAME\(userSees\(_:\)\);/);
-  assert.match(windowHostHeader, /extern NSNotificationName const ArdiaWindowSeenDidChange;/);
-  assert.match(windowHost, /\+ \(BOOL\)userSeesWindow:\(NSWindow \*\)window \{\n\s+return \[ArdiaWindowController userSees:window\];/);
+  assert.match(windowHostHeader, /extern NSNotificationName const NillaWindowSeenDidChange;/);
+  assert.match(windowHost, /\+ \(BOOL\)userSeesWindow:\(NSWindow \*\)window \{\n\s+return \[NillaWindowController userSees:window\];/);
 });
 
 test("the leave and return rule opens once per leave and closes on return", (t) => {
   const probe = spawnSync(swiftc, ["--version"], { encoding: "utf8" });
   if (probe.error || probe.status !== 0) return t.skip("swiftc is not available");
-  const dir = mkdtempSync(join(tmpdir(), "ardia-auto-pip-"));
+  const dir = mkdtempSync(join(tmpdir(), "nilla-auto-pip-"));
   try {
     const binary = join(dir, "auto-pip-test");
     const built = spawnSync(
@@ -132,8 +133,8 @@ test("the leave and return rule opens once per leave and closes on return", (t) 
 
 test("automatic picture in picture leaves a paused video where it is", () => {
   const paused = video("paused", { paused: true });
-  const ardia = pageWithVideos([paused]);
-  assert.equal(ardia.pictureInPicture(true, true), "nothingPlaying");
+  const nilla = pageWithVideos([paused]);
+  assert.equal(nilla.pictureInPicture(true, true), "nothingPlaying");
   assert.equal(paused.entered, false);
   assert.equal(pageWithVideos([]).pictureInPicture(true, true), "nothingPlaying");
 });
@@ -149,16 +150,16 @@ test("automatic picture in picture takes the playing video, not the largest", ()
   const big = video("big", { paused: true, width: 1280, height: 720 });
   const small = video("small", { paused: false });
   const done = video("done", { paused: false, ended: true, width: 1920, height: 1080 });
-  const ardia = pageWithVideos([big, done, small]);
-  assert.equal(ardia.pictureInPicture(true, true), true);
+  const nilla = pageWithVideos([big, done, small]);
+  assert.equal(nilla.pictureInPicture(true, true), true);
   assert.deepEqual([big.entered, done.entered, small.entered], [false, false, true]);
 });
 
 test("a picture in picture the user asks for still takes the largest video when none plays", () => {
   const small = video("small", { paused: true });
   const big = video("big", { paused: true, width: 1280, height: 720 });
-  const ardia = pageWithVideos([small, big]);
-  assert.equal(ardia.pictureInPicture(true), true);
+  const nilla = pageWithVideos([small, big]);
+  assert.equal(nilla.pictureInPicture(true), true);
   assert.deepEqual([small.entered, big.entered], [false, true]);
 });
 

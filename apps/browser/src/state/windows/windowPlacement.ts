@@ -12,8 +12,8 @@ export function withWindowFrame(s: BrowserState, id: string, frame: Frame, resto
   const resized = !w.frame || w.frame[2] !== frame[2] || w.frame[3] !== frame[3];
   if (fitted || !resized || !isSmallWindow(w)) return { windows };
   const size: [number, number] = [Math.round(frame[2]), Math.round(frame[3])];
-  const [width, height] = s.settings.littleArdiaSize;
-  return size[0] === width && size[1] === height ? { windows } : { windows, settings: { ...s.settings, littleArdiaSize: size } };
+  const [width, height] = s.settings.littleNillaSize;
+  return size[0] === width && size[1] === height ? { windows } : { windows, settings: { ...s.settings, littleNillaSize: size } };
 }
 
 export function withWindowMaximized(s: BrowserState, id: string, on: boolean): Partial<BrowserState> {

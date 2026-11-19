@@ -6,7 +6,7 @@ const { shellNativeModules } = await import("../../test-native/index.ts");
 
 const S = () => useBrowser.getState();
 const copied = [];
-shellNativeModules.ArdiaShell.copyText = (text) => void copied.push(text);
+shellNativeModules.NillaShell.copyText = (text) => void copied.push(text);
 
 function windowWith(...hosts) {
   S().hydrate({});

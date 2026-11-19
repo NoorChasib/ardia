@@ -1,4 +1,4 @@
-import ArdiaBrowser
+import NillaBrowser
 import ExpoModulesCore
 import UIKit
 import WebKit
@@ -25,7 +25,7 @@ struct RequestAnswerRecord: Record {
 
 public final class PageViewModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhonePageView")
+    Name("NillaPhonePageView")
 
     Constant("obscuresInsets") { true }
 
@@ -55,14 +55,14 @@ public final class PageViewModule: Module {
     Function("appRelease") { () -> [String: Any?] in
       let info = Bundle.main.infoDictionary
       return [
-        "releaseVersion": info?["ArdiaReleaseVersion"] as? String ?? "",
+        "releaseVersion": info?["NillaReleaseVersion"] as? String ?? "",
         "build": info?["CFBundleVersion"] as? String ?? "1",
         "receiptName": Bundle.main.appStoreReceiptURL?.lastPathComponent,
       ]
     }
 
     Function("launchOptions") { () -> [String: Any] in
-      ["lab": PhoneTestBuild.isOn, "pageLab": PhoneTestBuild.flag("ArdiaPageLab"), "syncDemo": PhoneTestBuild.isDemo, "arguments": PhoneTestBuild.launchArguments]
+      ["lab": PhoneTestBuild.isOn, "pageLab": PhoneTestBuild.flag("NillaPageLab"), "syncDemo": PhoneTestBuild.isDemo, "arguments": PhoneTestBuild.launchArguments]
     }
 
     AsyncFunction("openPage") { (pageID: String, setup: PageSetupRecord) in
@@ -327,7 +327,7 @@ public final class PageViewModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("setOpensLinksInApps") { (host: String, opens: Bool?) in
-      MainActor.assumeIsolated { PhonePages.shared.engine.preferences.update(host) { $0.appLinks = opens.map { $0 ? .app : .ardia } } }
+      MainActor.assumeIsolated { PhonePages.shared.engine.preferences.update(host) { $0.appLinks = opens.map { $0 ? .app : .nilla } } }
     }.runOnQueue(.main)
 
     AsyncFunction("siteOpensLinksInApps") { (host: String) -> Bool? in
@@ -339,7 +339,7 @@ public final class PageViewModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("setAppLinksDefault") { (opens: Bool) in
-      MainActor.assumeIsolated { PhonePages.shared.engine.preferences.appLinks = opens ? .app : .ardia }
+      MainActor.assumeIsolated { PhonePages.shared.engine.preferences.appLinks = opens ? .app : .nilla }
     }.runOnQueue(.main)
 
     AsyncFunction("clearWebsiteData") { (kinds: [String], promise: Promise) in
@@ -470,7 +470,7 @@ public final class PageViewModule: Module {
 
 public final class BlockingModule: Module {
   public func definition() -> ModuleDefinition {
-    Name("ArdiaPhoneBlocking")
+    Name("NillaPhoneBlocking")
 
     Events("onBlockingEvent")
 

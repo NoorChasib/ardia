@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace ardia_pip_throw {
+namespace nilla_pip_throw {
 
 struct Point {
   double x, y;

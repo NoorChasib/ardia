@@ -3,9 +3,9 @@
 NS_ASSUME_NONNULL_BEGIN
 
 NS_SWIFT_NAME(LaunchConfig)
-@interface ArdiaLaunchConfig : NSObject
+@interface NillaLaunchConfig : NSObject
 
-@property(class, readonly) ArdiaLaunchConfig *shared;
+@property(class, readonly) NillaLaunchConfig *shared;
 
 - (instancetype)initWithEnvironment:(NSDictionary<NSString *, NSString *> *)environment
               signedForDistribution:(BOOL (^)(void))signedForDistribution NS_DESIGNATED_INITIALIZER;
@@ -19,6 +19,7 @@ NS_SWIFT_NAME(LaunchConfig)
 @property(readonly, nullable) NSString *feedbackURL;
 @property(readonly) BOOL isolated;
 @property(readonly) BOOL testInstance;
+@property(readonly) BOOL remoteSwitchesConfigured;
 
 - (nullable NSString *)instance:(NSString *)key NS_SWIFT_NAME(instance(_:));
 - (BOOL)instanceFlag:(NSString *)key NS_SWIFT_NAME(instanceFlag(_:));

@@ -4,7 +4,7 @@ import { HoverCard as BrowserHoverCard } from "../../browser/src/components/side
 
 export function HoverCard(props: React.ComponentProps<typeof BrowserHoverCard>) {
   return (
-    <PageOverlayRegion testID="ardia-sidebar-hover">
+    <PageOverlayRegion testID="nilla-sidebar-hover">
       <GlassOptIn.Provider value={true}>
         <BrowserHoverCard {...props} />
       </GlassOptIn.Provider>

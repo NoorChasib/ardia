@@ -1,7 +1,7 @@
 import { formatUrl, urlParts } from "../../lib/urlParts";
 import type { LinkSource } from "../../lib/linkSource";
 import { useBrowser } from "../browser/store";
-import { externalLinkOpen } from "../littleArdia/externalLinkOpen";
+import { externalLinkOpen } from "../littleNilla/externalLinkOpen";
 import { lastActiveProfile } from "../windows/small";
 import { traceLink, traceOpening, type LinkTrace, type OpeningTrace } from "../automation/decisions";
 import type { OpenAs } from "./rules";
@@ -30,7 +30,7 @@ export function previewLink(typed: string, source: LinkSource): LinkPreview {
   const decided = settled.by === "usual" ? null : settled.verdict;
   if (decided && "drop" in decided) return { ok: true, url, opening, trace, dropped: true, profileName: "", groupName: null, usedLast: false, open: "tab" };
   const profileId = decided?.profileId ?? lastActiveProfile(s);
-  const open = externalLinkOpen(s.settings.openLinksInLittleArdia, [url], decided?.open ?? null);
+  const open = externalLinkOpen(s.settings.openLinksInLittleNilla, [url], decided?.open ?? null);
   const groupName = decided?.groupKey ? routeGroupName(s, profileId, decided.groupKey) : null;
   return { ok: true, url, opening, trace, dropped: false, profileName: s.profiles[profileId]?.name ?? "", groupName, usedLast: !decided?.profileId, open };
 }

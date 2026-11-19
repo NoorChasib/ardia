@@ -84,7 +84,7 @@ struct ReportViewTraits: Equatable {
 }
 
 enum ReportPageMask {
-  static let pagePictureIdentifier = "ardia.pagePicture"
+  static let pagePictureIdentifier = "nilla.pagePicture"
   static let chromiumContainers: Set<String> = ["BridgedContentView", "ViewsCompositorSuperview", "NativeWidgetMacNSWindowTitledFrame"]
 
   static func verdict(_ traits: ReportViewTraits) -> ReportViewVerdict {

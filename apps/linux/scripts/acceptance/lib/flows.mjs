@@ -41,7 +41,7 @@ export async function navigateTab(shell, tabId, url, { timeout = 25000, match = 
 
 export async function waitCommitted(shell, tabId, match, { timeout = 25000, label = "" } = {}) {
   return until(async () => {
-    const entries = await shell.eval(`(async () => (await ardiaLinux.webviews.get(${js(tabId)})?.navigationEntries()) ?? null)()`).catch(() => null);
+    const entries = await shell.eval(`(async () => (await nillaLinux.webviews.get(${js(tabId)})?.navigationEntries()) ?? null)()`).catch(() => null);
     const current = Array.isArray(entries) ? entries.find((entry) => entry.current) : null;
     return current && match(current.url) ? current : false;
   }, { timeout, label: `Chromium to commit ${label} in tab ${tabId}`, abort: () => shell.app.exitReason() });

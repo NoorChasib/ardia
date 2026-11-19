@@ -1,4 +1,4 @@
-import type { SelfCheck, SelfCheckNative } from "@ardia/shell";
+import type { SelfCheck, SelfCheckNative } from "@nilla/shell";
 
 const registered: SelfCheck[] = [];
 

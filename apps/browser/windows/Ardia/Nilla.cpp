@@ -1,0 +1,267 @@
+#include "pch.h"
+
+#include "AutolinkedNativeModules.g.h"
+
+#include "NativeModules.h"
+
+#include <type_traits>
+
+#include "AppIcon.h"
+#include "AppImage.h"
+#include "CrashLog.h"
+#include "EngineApi.h"
+#include "GradientFailures.h"
+#include "LaunchConfig.h"
+#include "Host.h"
+#include "InstanceLoad.h"
+#include "LaunchLog.h"
+#include "LoggedErrors.h"
+#include "Modules.h"
+#include "PointerLatch.h"
+#include "WindowManager.h"
+
+#pragma comment(linker, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+struct AppPackageProvider : winrt::implements<AppPackageProvider, winrt::Microsoft::ReactNative::IReactPackageProvider> {
+  void CreatePackage(winrt::Microsoft::ReactNative::IReactPackageBuilder const &packageBuilder) noexcept {
+    AddAttributedModules(packageBuilder, true);
+    Nilla::RegisterViews(packageBuilder);
+  }
+};
+
+static std::wstring_view LogLevelName(winrt::Microsoft::ReactNative::LogLevel level) noexcept {
+  switch (level) {
+    case winrt::Microsoft::ReactNative::LogLevel::Trace:
+      return L"trace";
+    case winrt::Microsoft::ReactNative::LogLevel::Info:
+      return L"info";
+    case winrt::Microsoft::ReactNative::LogLevel::Warning:
+      return L"warning";
+    case winrt::Microsoft::ReactNative::LogLevel::Error:
+      return L"error";
+    case winrt::Microsoft::ReactNative::LogLevel::Fatal:
+      return L"fatal";
+  }
+  return L"log";
+}
+
+static constexpr int kNoApartment = 10;
+static constexpr int kEngineMismatch = 11;
+static constexpr int kAlreadyStarted = 12;
+static constexpr int kSetupFailed = 13;
+static constexpr int kNoDataDirectory = 14;
+static constexpr wchar_t kNeedsDataDirectory[] = L"This development build of Nilla runs only with ARDIA_DATA_DIR set. Start it with scripts\\windows\\nilla-dev-run.ps1.";
+
+using PreTranslateMessage = BOOL(__stdcall *)(const MSG *);
+
+static bool &EngineLoopRunning() noexcept {
+  static bool running = false;
+  return running;
+}
+
+static PreTranslateMessage &ContentPreTranslate() noexcept {
+  static PreTranslateMessage preTranslate = nullptr;
+  return preTranslate;
+}
+
+static PreTranslateMessage FindContentPreTranslate() noexcept {
+  HMODULE windowing = GetModuleHandleW(L"Microsoft.UI.Windowing.Core.dll");
+  if (!windowing) {
+    const std::wstring path = Nilla::AppImage::Directory().append(L"\\Microsoft.UI.Windowing.Core.dll");
+    windowing = LoadLibraryExW(path.c_str(), nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
+  }
+  if (!windowing) return nullptr;
+  return reinterpret_cast<PreTranslateMessage>(reinterpret_cast<void *>(GetProcAddress(windowing, "ContentPreTranslateMessage")));
+}
+
+static bool EnterApartment() noexcept {
+  try {
+    winrt::init_apartment(winrt::apartment_type::single_threaded);
+    return true;
+  } catch (...) {
+    return false;
+  }
+}
+
+static std::wstring &StartFailure() noexcept {
+  static std::wstring failure;
+  return failure;
+}
+
+static int Refuse(int code, std::wstring const &why) noexcept {
+  try {
+    StartFailure() = why;
+  } catch (...) {
+  }
+  Nilla::LaunchLog::OpenFromCommandLine();
+  Nilla::LaunchLog::Write(L"error", why);
+  OutputDebugStringW(std::wstring(L"Nilla: ").append(why).append(L"\n").c_str());
+  return code;
+}
+
+static int RefuseWithoutDataDirectory() noexcept {
+  try {
+    StartFailure() = kNeedsDataDirectory;
+  } catch (...) {
+  }
+  OutputDebugStringW(std::wstring(L"Nilla: ").append(kNeedsDataDirectory).append(L"\n").c_str());
+  return kNoDataDirectory;
+}
+
+static int Prepare(const ArdiaEngineApi *engine) {
+  const bool apartment = EnterApartment();
+  SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+
+  Nilla::LaunchLog::OpenFromCommandLine();
+  Nilla::LaunchLog::Write(L"launch", engine ? L"process started inside the engine" : L"process started");
+  if (!apartment) return Refuse(kNoApartment, L"the UI thread is not a single-threaded apartment");
+  Nilla::CrashLog::Install();
+  Nilla::PointerLatch::Install();
+
+  const std::wstring appDirectory = Nilla::AppImage::Directory();
+
+  auto *host = new Nilla::Host();
+  Nilla::Host::Current() = host;
+  host->engine = engine;
+  host->queue = winrt::Microsoft::UI::Dispatching::DispatcherQueueController::CreateOnCurrentThread();
+  Nilla::AppIcon::ClaimAppUserModelId();
+  Nilla::NotificationParts::NotificationHub::Shared().Install();
+
+  auto settings{host->reactHost.InstanceSettings()};
+  settings.Properties().Set(
+      winrt::Microsoft::ReactNative::ReactDispatcherHelper::UIDispatcherProperty(),
+      winrt::Microsoft::ReactNative::ReactDispatcherHelper::UIThreadDispatcher());
+  host->compositor = winrt::Microsoft::UI::Composition::Compositor();
+  winrt::Microsoft::ReactNative::Composition::CompositionUIService::SetCompositor(settings, host->compositor);
+
+  RegisterAutolinkedNativeModulePackages(settings.PackageProviders());
+  settings.PackageProviders().Append(winrt::make<AppPackageProvider>());
+  settings.NativeLogger([](winrt::Microsoft::ReactNative::LogLevel level, winrt::hstring const &message) noexcept {
+    Nilla::LaunchLog::Write(LogLevelName(level), message);
+  });
+  settings.RedBoxHandler(winrt::make<Nilla::LoggedErrors>());
+
+  settings.BundleRootPath(std::wstring(L"file://").append(appDirectory).append(L"\\Bundle\\").c_str());
+  settings.JavaScriptBundleFile(L"index.windows");
+  settings.DebugBundlePath(L"index");
+
+#if BUNDLE
+  settings.UseFastRefresh(false);
+#else
+  settings.UseFastRefresh(true);
+#endif
+#if _DEBUG
+  settings.UseDirectDebugger(true);
+  settings.UseDeveloperSupport(true);
+#else
+  settings.UseDirectDebugger(false);
+  settings.UseDeveloperSupport(false);
+#endif
+
+  Nilla::WindowManager::Shared().Prewarm();
+  Nilla::InstanceLoad::Start();
+  Nilla::LaunchLog::Write(L"launch", L"instance loading");
+  return 0;
+}
+
+static void ShutDown(Nilla::Host &host) {
+  const ULONGLONG flushing = GetTickCount64();
+  Nilla::TelemetryLocalStore::Drain();
+  const bool documentsWritten = Nilla::DocumentStore::Flush(false);
+  Nilla::LaunchLog::Write(L"launch", std::wstring(L"telemetry and documents written in ") + std::to_wstring(GetTickCount64() - flushing) + L" ms" + (documentsWritten ? L"" : L", some documents still staged"));
+  Nilla::Materials::ReportGradientFailuresTo(nullptr);
+  host.engine = nullptr;
+  SetFocus(nullptr);
+  if (host.queue) host.queue.ShutdownQueue();
+  Nilla::LaunchLog::Write(L"launch", L"process ending");
+}
+
+extern "C" {
+
+__declspec(dllexport) int ArdiaAppRun(void) {
+  if (!Nilla::Paths::HasCustomDataDirectory()) return RefuseWithoutDataDirectory();
+  if (Nilla::Host::Current()) return Refuse(kAlreadyStarted, L"the app is already running in this process");
+  const int prepared = Prepare(nullptr);
+  if (prepared != 0) return prepared;
+  Nilla::Host *host = Nilla::Host::Current();
+  host->queue.DispatcherQueue().RunEventLoop();
+  ShutDown(*host);
+  Nilla::Host::Current() = nullptr;
+  delete host;
+  return 0;
+}
+
+__declspec(dllexport) int ArdiaAppStart(const ArdiaEngineApi *engine) {
+  if (!Nilla::Paths::HasCustomDataDirectory()) return RefuseWithoutDataDirectory();
+  if (Nilla::Host::Current()) return Refuse(kAlreadyStarted, L"the app is already running in this process");
+  if (!engine) return Refuse(kEngineMismatch, L"the engine gave no API table");
+  if (engine->version != ARDIA_ENGINE_API_VERSION || engine->size < sizeof(ArdiaEngineApi)) {
+    return Refuse(
+        kEngineMismatch,
+        std::wstring(L"the engine API is version ")
+            .append(std::to_wstring(engine->version))
+            .append(L" with ")
+            .append(std::to_wstring(engine->size))
+            .append(L" bytes, and this app needs version ")
+            .append(std::to_wstring(ARDIA_ENGINE_API_VERSION))
+            .append(L" with at least ")
+            .append(std::to_wstring(sizeof(ArdiaEngineApi)))
+            .append(L" bytes"));
+  }
+  if (!engine->setEventSink || !engine->hostCall || !engine->engineCall || !engine->testGateRefusal) return Refuse(kEngineMismatch, L"the engine API table has an empty entry");
+  const char *engineRefusal = engine->testGateRefusal();
+  Nilla::AppLaunch::EngineTestGate() = Nilla::Paths::Wide(engineRefusal ? engineRefusal : "the engine gave no test gate decision");
+  try {
+    const int prepared = Prepare(engine);
+    if (prepared != 0) return prepared;
+  } catch (winrt::hresult_error const &error) {
+    if (Nilla::Host *host = Nilla::Host::Current()) host->engine = nullptr;
+    return Refuse(kSetupFailed, std::wstring(L"the app could not start inside the engine: ").append(std::wstring_view{error.message()}));
+  } catch (...) {
+    if (Nilla::Host *host = Nilla::Host::Current()) host->engine = nullptr;
+    return Refuse(kSetupFailed, L"the app could not start inside the engine");
+  }
+  ContentPreTranslate() = FindContentPreTranslate();
+  if (!ContentPreTranslate()) Nilla::LaunchLog::Write(L"error", L"ContentPreTranslateMessage was not found, so keys reach the UI untranslated");
+  EngineLoopRunning() = true;
+  return 0;
+}
+
+__declspec(dllexport) int ArdiaAppPreTranslateMessage(const void *message) {
+  const PreTranslateMessage preTranslate = ContentPreTranslate();
+  if (!message || !preTranslate || !EngineLoopRunning()) return 0;
+  return preTranslate(static_cast<const MSG *>(message)) ? 1 : 0;
+}
+
+__declspec(dllexport) const wchar_t *ArdiaAppStartFailure(void) {
+  return StartFailure().c_str();
+}
+
+__declspec(dllexport) void ArdiaAppStop(void) {
+  int dialogsOpen = Nilla::DialogParts::ModalRegistry::Shared().threads.load();
+  int waited = Nilla::DialogParts::StopAllModals();
+  if (dialogsOpen) Nilla::LaunchLog::Write(L"launch", std::to_wstring(dialogsOpen) + L" dialog(s) open at stop, closed in " + std::to_wstring(waited) + L" ms, " + std::to_wstring(Nilla::DialogParts::ModalRegistry::Shared().threads.load()) + L" left");
+  if (!EngineLoopRunning()) return;
+  EngineLoopRunning() = false;
+  Nilla::Host *host = Nilla::Host::Current();
+  if (!host) return;
+  Nilla::EngineHostParts::Detach();
+  try {
+    ShutDown(*host);
+  } catch (...) {
+    Nilla::LaunchLog::Write(L"error", L"the UI queue did not shut down cleanly");
+  }
+}
+
+}
+
+static_assert(std::is_same_v<decltype(&ArdiaAppRun), ArdiaAppRunFunction>);
+static_assert(std::is_same_v<decltype(&ArdiaAppStart), ArdiaAppStartFunction>);
+static_assert(std::is_same_v<decltype(&ArdiaAppPreTranslateMessage), ArdiaAppPreTranslateFunction>);
+static_assert(std::is_same_v<decltype(&ArdiaAppStop), ArdiaAppStopFunction>);
+static_assert(std::is_same_v<decltype(&ArdiaAppStartFailure), ArdiaAppStartFailureFunction>);
+
+BOOL APIENTRY DllMain(HMODULE image, DWORD reason, LPVOID) {
+  if (reason == DLL_PROCESS_ATTACH) Nilla::AppImage::Handle() = image;
+  return TRUE;
+}

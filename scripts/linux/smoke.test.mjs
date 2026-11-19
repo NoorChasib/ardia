@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, readlinkSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
-import { launchArguments, launchEnvironment } from "../../apps/linux/scripts/acceptance/lib/ardia.mjs";
-import { ASSERTIONS, SCRIPT_NAME, SCRIPT_TITLE_PREFIX, USAGE, USER_SCRIPTS_CAPABILITIES, VERSION_PATTERN, appVersionVerdict, cliControlSupport, cliTarball, debLayoutProblems, packageFormat, formatTable, installerRanAgain, launchRefusal, packageStagedFiles, parseArgs, pipeLaunchArguments, splitPipeMessages, summarize, uboSeedProblems, uboTuningProblems, userScriptSource } from "./smoke.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { launchArguments, launchEnvironment } from "../../apps/linux/scripts/acceptance/lib/nilla.mjs";
+import { ASSERTIONS, CLI_COMMAND, cliEnvironment, SCRIPT_NAME, SCRIPT_TITLE_PREFIX, USAGE, USER_SCRIPTS_CAPABILITIES, VERSION_PATTERN, appVersionVerdict, cliControlSupport, cliTarball, debLayoutProblems, packageFormat, formatTable, installerRanAgain, launchRefusal, packageStagedFiles, parseArgs, pipeLaunchArguments, splitPipeMessages, summarize, uboSeedProblems, uboTuningProblems, userScriptSource } from "./smoke.mjs";
 
 test("the package checks are named in the usage and keep the original eight first", () => {
   assert.deepEqual(ASSERTIONS.slice(0, 8), ["ldd", "shell-ui", "bootstrap", "native-tab", "sandbox", "content-blocker", "restart-restore", "staged-install"]);
@@ -97,19 +103,19 @@ test("the packaged uBlock Origin saves its engine soon after a launch and waits 
 });
 
 test("the packaged uBlock Origin carries a seed that its start sequence loads", () => {
-  const start = "µb.isReadyPromise = (async function start() {\n    try {\n        await ardiaSeedFromPackage();\n";
+  const start = "µb.isReadyPromise = (async function start() {\n    try {\n        await nillaSeedFromPackage();\n";
   const seed = JSON.stringify({ storage: { version: "1.76.0b25", selectedFilterLists: ["user-filters", "easylist"], "cache/selfie/staticMain": "a", "cache/selfie/staticNetFilteringEngine": "b" } });
   assert.deepEqual(uboSeedProblems(seed, start), []);
-  assert.deepEqual(uboSeedProblems(null, start), ["no readable ardia-seed/storage.json"]);
+  assert.deepEqual(uboSeedProblems(null, start), ["no readable nilla-seed/storage.json"]);
   assert.deepEqual(uboSeedProblems(seed, "µb.isReadyPromise = (async function start() {"), ["js/start.js doesn't load the seed"]);
   assert.deepEqual(uboSeedProblems(JSON.stringify({ storage: { version: "1.76.0b25", selectedFilterLists: [] } }), start), ["the seed has no cache/selfie/staticMain", "the seed has no cache/selfie/staticNetFilteringEngine"]);
 });
 
 test("the gate takes a tarball, a .deb or an AppImage and refuses anything else", () => {
-  assert.equal(packageFormat("/x/Ardia-0.2.47-linux-x64.tar.xz"), "tar");
-  assert.equal(packageFormat("/x/Ardia-0.2.47-linux-x64.deb"), "deb");
-  assert.equal(packageFormat("/x/Ardia-0.2.47-linux-x64.AppImage"), "appimage");
-  assert.equal(packageFormat("/x/Ardia.zip"), null);
+  assert.equal(packageFormat("/x/Nilla-0.2.47-linux-x64.tar.xz"), "tar");
+  assert.equal(packageFormat("/x/Nilla-0.2.47-linux-x64.deb"), "deb");
+  assert.equal(packageFormat("/x/Nilla-0.2.47-linux-x64.AppImage"), "appimage");
+  assert.equal(packageFormat("/x/Nilla.zip"), null);
   assert.equal(parseArgs(["--package", "a", "--results", "b"]).format, undefined);
   assert.equal(parseArgs(["--package", "a.deb", "--results", "b"]).format, "deb");
 });
@@ -134,4 +140,43 @@ test("a .deb is root-owned with a setuid root helper, the launcher link, the pol
   assert.ok(problems.some((p) => p.includes("chrome-sandbox is not setuid root")));
   assert.ok(problems.some((p) => p.includes("apparmor/ardia is missing")));
   assert.ok(problems.some((p) => p.includes("owned by user/user")));
+});
+
+test("cli-install checks the command the bundled installer links and the version line the CLI prints", () => {
+  const installer = readFileSync(new URL("../../apps/cli/install.sh", import.meta.url), "utf8");
+  const cli = readFileSync(new URL("../../apps/cli/nilla_browser_cli/cli.py", import.meta.url), "utf8");
+  assert.equal(CLI_COMMAND, "nilla-browser");
+  assert.match(installer, new RegExp(`^command_link=\\$bin_dir/${CLI_COMMAND}$`, "m"));
+  assert.ok(cli.includes(`version=f"${CLI_COMMAND} {__version__}"`));
+  for (const command of ["--version", "windows", "browse", "scripts install"]) assert.ok(USAGE.includes(`${CLI_COMMAND} ${command}`), command);
+});
+
+test("the bundled installer accepts the smoke environment's CLI home and links a nilla-browser that runs", { skip: process.platform !== "linux" || process.arch !== "x64" ? "the CLI installs on x86_64 Linux only" : false }, () => {
+  const work = mkdtempSync(join(tmpdir(), "nilla-smoke-cli-"));
+  try {
+    const version = "0.1.0";
+    const installer = fileURLToPath(new URL("../../apps/cli/install.sh", import.meta.url));
+    const executable = /\[ -x "\$staged\/bin\/([^"]+)" \]/.exec(readFileSync(installer, "utf8"))[1];
+    const folder = cliTarball(version).slice(0, -"-linux-x64.tar.gz".length);
+    const tree = join(work, "src", folder, "bin");
+    mkdirSync(tree, { recursive: true });
+    writeFileSync(join(tree, executable), `#!/bin/sh\necho "${CLI_COMMAND} ${version}"\n`);
+    chmodSync(join(tree, executable), 0o755);
+    const tarball = join(work, cliTarball(version));
+    assert.equal(spawnSync("tar", ["-czf", tarball, "-C", join(work, "src"), folder]).status, 0);
+    const digest = createHash("sha256").update(readFileSync(tarball)).digest("hex");
+    const env = cliEnvironment(work);
+    assert.equal(env.ARDIA_CLI_HOME, join(env.XDG_DATA_HOME, "nilla", "cli"));
+    mkdirSync(env.HOME, { recursive: true });
+    const installed = spawnSync("/bin/sh", [installer, "--version", version, "--sha256", digest], { encoding: "utf8", cwd: work, env: { ...env, ARDIA_CLI_URL: pathToFileURL(tarball).href } });
+    const bin = join(env.ARDIA_CLI_BIN_DIR, CLI_COMMAND);
+    assert.equal(installed.status, 0, installed.stdout + installed.stderr);
+    assert.equal(installed.stdout.trim().split("\n").at(-1), `installed ${bin}`);
+    assert.equal(readlinkSync(join(env.ARDIA_CLI_HOME, "current")), version);
+    const reported = spawnSync(bin, ["--version"], { encoding: "utf8", env, cwd: work });
+    assert.equal(reported.status, 0, reported.stderr);
+    assert.equal(reported.stdout.trim(), `${CLI_COMMAND} ${version}`);
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
 });
