@@ -521,7 +521,7 @@ class Log:
                 self._open()
             os.write(self._fd, data)
         except OSError as error:
-            sys.stderr.write(f"nilla hooks: can't write {self.path}: {error.strerror or error}\n{line}")
+            sys.stderr.write(f"nilla-browser hooks: can't write {self.path}: {error.strerror or error}\n{line}")
 
     def close(self) -> None:
         if self._fd is not None:
@@ -1152,7 +1152,7 @@ def service_unit(paths: AgentPaths, path_env: str | None) -> str:
         pinned.append(f"ARDIA_CONFIG_HOME={paths.nilla_config_home}")
     environment = " ".join(systemd_quote(item, expands_variables=False) for item in pinned)
     return f"""[Unit]
-Description=Nilla hooks (nilla hooks run)
+Description=Nilla hooks (nilla-browser hooks run)
 StartLimitIntervalSec=0
 
 [Service]

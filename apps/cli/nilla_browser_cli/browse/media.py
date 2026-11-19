@@ -310,7 +310,7 @@ def unchanged(before: bytes, after: bytes, fmt: str, percent: float) -> bool:
 async def cmd_pdf(ctx, argv):
     options, args = parse(argv, {"--landscape": "bool", "--format": "value"})
     if not args:
-        raise BrowseError("Usage: nilla browse pdf <path>")
+        raise BrowseError("Usage: nilla-browser browse pdf <path>")
     page = await ctx.state.page()
     result = await page.send("Page.printToPDF", {"printBackground": True, "landscape": bool(options.get("landscape"))}, timeout=120)
     target = ctx.path(args[0])
@@ -350,7 +350,7 @@ async def diff_screenshot(ctx, argv):
     options, _ = parse(argv, {"--baseline": "value", "--output": "value", "--threshold": "value", "--selector": "value", "--full": "bool"},
                        {"-b": "--baseline", "-o": "--output", "-t": "--threshold", "-s": "--selector"})
     if not options.get("baseline"):
-        raise BrowseError("Usage: nilla browse diff screenshot --baseline <file> [--output <file>] [--threshold 0.1]")
+        raise BrowseError("Usage: nilla-browser browse diff screenshot --baseline <file> [--output <file>] [--threshold 0.1]")
     baseline = Path(ctx.path(options["baseline"])).read_bytes()
     page = await ctx.state.page()
     clip = None

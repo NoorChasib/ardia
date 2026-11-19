@@ -174,7 +174,7 @@ class Workspace(Base):
         for argv in (["groups", "update", "g-1"], ["groups", "move", "g-1"], ["tabs", "pin", "t", "--row", "--tile"], ["groups", "update", "g-1", "--icon", "🚀", "--reset-icon"]):
             status, _, err = self.run_cli(*argv)
             self.assertEqual(status, 1, argv)
-            self.assertTrue(err.startswith("nilla "), err)
+            self.assertTrue(err.startswith("nilla-browser "), err)
         status, _, _ = self.run_cli("tabs", "move", "t", "--top", "--group", "g")
         self.assertEqual(status, 2)
         self.assertEqual(self.sent(server), [])

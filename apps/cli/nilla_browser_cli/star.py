@@ -53,7 +53,7 @@ def run(args, run=subprocess.run, which=shutil.which, env=None) -> int:
         message = f"★ Starred github.com/{REPO} with the user's GitHub account (through gh). Thanks for the star!"
     elif open_in_nilla(args.data_dir, run):
         outcome, status = "browser", 0
-        message = f"Opened github.com/{REPO} in a new Nilla tab. Ask the user to click Star there; nilla doesn't click it for them."
+        message = f"Opened github.com/{REPO} in a new Nilla tab. Ask the user to click Star there; nilla-browser doesn't click it for them."
     else:
         outcome, status = "manual", 1
         message = f"Couldn't star through gh or open Nilla. Ask the user to open {URL} and click Star."

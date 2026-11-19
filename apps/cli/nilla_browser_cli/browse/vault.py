@@ -110,7 +110,7 @@ def read_password(options: dict, stdin_reader) -> str:
 def save(root, name: str, options: dict, stdin_reader) -> dict:
     paths.check_name("An auth profile name", name)
     if not options.get("url"):
-        raise Usage("Usage: nilla browse auth save <name> --url <https url> --username <user> [--password-stdin]")
+        raise Usage("Usage: nilla-browser browse auth save <name> --url <https url> --username <user> [--password-stdin]")
     origins = [origin_of(options["url"])] + [origin_of(value) for value in options.get("origin") or []]
     password = read_password(options, stdin_reader)
     meta = {
@@ -169,7 +169,7 @@ async def login(ctx, argv):
     options, args = parse(argv, {"--url": "value", "--username-selector": "value", "--password-selector": "value", "--submit-selector": "value",
                                  "--credential-provider": "value", "--item": "value", "--no-humanize": "bool"})
     if not args:
-        raise Usage("Usage: nilla browse auth login <name> [--username-selector S] [--password-selector S] [--submit-selector S]")
+        raise Usage("Usage: nilla-browser browse auth login <name> [--username-selector S] [--password-selector S] [--submit-selector S]")
     name = args[0]
     root = ctx.state.config["data_root"]
     if options.get("credential_provider"):

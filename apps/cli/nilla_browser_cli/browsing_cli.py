@@ -52,20 +52,20 @@ def run(args) -> int:
             rows = browsing.pinned(root)
         else:
             if args.days <= 0:
-                complain("nilla history: --days must be more than 0")
+                complain("nilla-browser history: --days must be more than 0")
                 return 1
             if args.limit < 0:
-                complain("nilla history: --limit can't be negative")
+                complain("nilla-browser history: --limit can't be negative")
                 return 1
             rows = browsing.history(root, days=args.days, limit=args.limit or None, profile=args.profile, domains=args.domains)
     except browsing.NotRunning as error:
-        complain(f"ardia: {error}")
+        complain(f"nilla-browser: {error}")
         return 2
     except browsing.BrowsingDataError as error:
-        complain(f"nilla {args.command}: {error}")
+        complain(f"nilla-browser {args.command}: {error}")
         return 1
     except KeyboardInterrupt:
-        complain(f"nilla {args.command}: interrupted")
+        complain(f"nilla-browser {args.command}: interrupted")
         return 130
     if args.json:
         say(json.dumps(rows, indent=2, ensure_ascii=False))

@@ -727,7 +727,7 @@ def result_for(records: list[dict], options: dict, global_options: dict, extra: 
 def run_local(options: dict, positional: list[str], stdin: str | None, global_options: dict):
     urls = wanted_urls(options, positional, stdin)
     if not urls:
-        raise Usage("Usage: nilla browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
+        raise Usage("Usage: nilla-browser browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
     limit = pages_limit(options, len(urls))
     page_timeout(options)
     if options.get("selector"):
@@ -798,7 +798,7 @@ def scroll_summary(total: int, shown: int, match: str | None, stopped: str, limi
         "limit": f"stopped at --limit {limit}; --limit <n> for more",
         "time": f"stopped after {seconds:g} s before the end of the list; --timeout <ms> for longer",
     }
-    hidden = (f"; the tab is hidden, so the page may not have drawn every row: nilla browse tab {hidden_tab} --show, then read again"
+    hidden = (f"; the tab is hidden, so the page may not have drawn every row: nilla-browser browse tab {hidden_tab} --show, then read again"
               if hidden_tab and stopped == "end" else "")
     return f"[{counted}; {reasons[stopped]}{hidden}]"
 
@@ -964,7 +964,7 @@ async def run(ctx, options: dict, positional: list[str]):
     elif options.get("list"):
         raise Usage("--list goes with --links <pattern>: it prints the links that read would visit")
     if not urls:
-        raise Usage("Usage: nilla browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
+        raise Usage("Usage: nilla-browser browse read <url>... [--stdin] [--links <pattern>] [-s <selector>] [--http]")
     limit = pages_limit(options, named)
     extra = limit_note(len(urls), limit, "--limit")
     urls = urls[:limit]

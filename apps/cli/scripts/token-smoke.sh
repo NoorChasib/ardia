@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-usage="usage: token-smoke.sh <Nilla.app> <nilla command> [metro host:port]
-Runs nilla browse read, open and a refused command against a hidden instance of <Nilla.app> over the real token
-connection (no DevTools port), with the given nilla command. A Debug build needs its Metro as the third argument."
+usage="usage: token-smoke.sh <Nilla.app> <nilla-browser command> [metro host:port]
+Runs nilla-browser browse read, open and a refused command against a hidden instance of <Nilla.app> over the real token
+connection (no DevTools port), with the given nilla-browser command. A Debug build needs its Metro as the third argument."
 case "${1:-}" in -h | --help | "") echo "$usage"; [ -n "${1:-}" ] && exit 0 || exit 64 ;; esac
 app="$(cd "$1" && pwd -P)"
 cli="${2:?$usage}"
@@ -46,26 +46,26 @@ page="http://127.0.0.1:$port/login.html"
 
 read="$(browse read "$page" --json)"
 [ "$(field success <<<"$read")" = true ] && [ "$(field data.pages.0.title <<<"$read")" = "Fixture Login" ] && ok=1 || ok=0
-check "nilla browse read <url> reads a page over the token connection" $ok "$(head -c 300 <<<"$read")"
+check "nilla-browser browse read <url> reads a page over the token connection" $ok "$(head -c 300 <<<"$read")"
 opened="$(browse open "$page" --json)"
 [ "$(field success <<<"$opened")" = true ] && ok=1 || ok=0
-check "nilla browse open <url> opens a tab over the token connection" $ok "$(head -c 300 <<<"$opened")"
+check "nilla-browser browse open <url> opens a tab over the token connection" $ok "$(head -c 300 <<<"$opened")"
 again="$(browse read --json)"
 [ "$(field success <<<"$again")" = true ] && ok=1 || ok=0
-check "nilla browse read reads the session's tab" $ok "$(head -c 300 <<<"$again")"
+check "nilla-browser browse read reads the session's tab" $ok "$(head -c 300 <<<"$again")"
 shot="$work/shot.png"
 browse screenshot "$shot" >/dev/null
 [ "$(head -c 4 "$shot" 2>/dev/null | tail -c 3)" = PNG ] && ok=1 || ok=0
-check "nilla browse screenshot pictures the session's background tab" $ok
+check "nilla-browser browse screenshot pictures the session's background tab" $ok
 viewport="$(browse set viewport 390 844 --json)"
 sized="$(browse eval "innerWidth + 'x' + innerHeight" --json)"
 if [ "$(field success <<<"$viewport")" = true ]; then
   [ "$(field data.result <<<"$sized")" = 390x844 ] && ok=1 || ok=0
-  check "nilla browse set viewport sizes a tab it took off-screen" $ok "$(head -c 300 <<<"$sized")"
+  check "nilla-browser browse set viewport sizes a tab it took off-screen" $ok "$(head -c 300 <<<"$sized")"
   browse set viewport reset >/dev/null
 else
   [ "$(field code <<<"$viewport")" = viewport_needs_hidden_tab ] && [ "$(field data.result <<<"$sized")" != 390x844 ] && ok=1 || ok=0
-  check "nilla browse set viewport is refused on a tab Nilla has shown" $ok "$(head -c 300 <<<"$viewport")"
+  check "nilla-browser browse set viewport is refused on a tab Nilla has shown" $ok "$(head -c 300 <<<"$viewport")"
 fi
 refused="$(browse cookies --json)"
 [ "$(field code <<<"$refused")" = policy_refused ] && [ "$(field data.method <<<"$refused")" = Network.getCookies ] && ok=1 || ok=0

@@ -87,7 +87,7 @@ class Refresh(unittest.TestCase):
         (foreign / "SKILL.md").write_text("---\nname: nilla\ndescription: mine\n---\nmine\n", encoding="utf-8")
         status, out = quiet(skills.install_detected)
         self.assertEqual(status, 0)
-        self.assertIn("not installed by nilla", out)
+        self.assertIn("not installed by nilla-browser", out)
         self.assertEqual((foreign / "SKILL.md").read_text(encoding="utf-8"), "---\nname: nilla\ndescription: mine\n---\nmine\n")
         claude = self.home / ".claude/skills/nilla"
         self.assertTrue((claude / "SKILL.md").is_file())
@@ -174,7 +174,7 @@ class Refresh(unittest.TestCase):
         self.foreign_nilla(folder)
         status, out = quiet(skills.install, ["claude-code"], False)
         self.assertEqual(status, 1)
-        self.assertIn("isn't a copy nilla installed", out)
+        self.assertIn("isn't a copy nilla-browser installed", out)
         self.assertIn("--replace", out)
         self.assertTrue((folder / "sentinel.txt").exists())
         self.assertFalse((folder / skills.MARKER).exists())

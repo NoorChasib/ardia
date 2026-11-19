@@ -66,7 +66,7 @@ async def dispatch(ctx, name, argv):
             raise Usage("auth save|list|show|delete run without the daemon")
         return await vault.login(ctx, argv[1:])
     if name in SKIPPED:
-        raise BrowseError(f"`{name}` isn't part of nilla browse: {SKIPPED[name]}", code="unsupported")
+        raise BrowseError(f"`{name}` isn't part of nilla-browser browse: {SKIPPED[name]}", code="unsupported")
     handler = COMMANDS.get(name)
     if handler is None:
         raise Usage(f"Unknown command: {name}. Run `nilla-browser browse --help`")
@@ -627,7 +627,7 @@ def main():
         daemon = Daemon(config)
         status = asyncio.run(daemon.run())
     except paths.PathError as error:
-        sys.stderr.write(f"nilla browse daemon: {error}\n")
+        sys.stderr.write(f"nilla-browser browse daemon: {error}\n")
         status = 2
     except Exception as error:
         from nilla_browser_cli import telemetry

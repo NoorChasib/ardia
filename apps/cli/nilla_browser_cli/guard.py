@@ -10,7 +10,7 @@ class ForbiddenCommand(RuntimeError):
 def check_method(method) -> None:
     name = getattr(method, "value", method)
     if name in FORBIDDEN_METHODS:
-        raise ForbiddenCommand(f"nilla never sends {name}: it's the user's browser")
+        raise ForbiddenCommand(f"nilla-browser never sends {name}: it's the user's browser")
 
 
 def check_command(command) -> None:
@@ -26,7 +26,7 @@ def check_message(message) -> None:
     try:
         payload = json.loads(message)
     except ValueError:
-        raise ForbiddenCommand("nilla only sends JSON commands") from None
+        raise ForbiddenCommand("nilla-browser only sends JSON commands") from None
     for command in payload if isinstance(payload, list) else [payload]:
         check_command(command)
 

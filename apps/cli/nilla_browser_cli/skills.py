@@ -201,7 +201,7 @@ def install_into(folder: Path, companions: list[str] | None = None, adopt: bool 
             companions = (read_marker(folder) or {}).get("companions")
     elif folder.is_symlink() or folder.exists():
         if not replace:
-            raise FileExistsError(f"{folder} exists and isn't a copy nilla installed; move it away, or replace that folder with --replace")
+            raise FileExistsError(f"{folder} exists and isn't a copy nilla-browser installed; move it away, or replace that folder with --replace")
         if folder.is_symlink() or not folder.is_dir():
             folder.unlink()
         else:
@@ -238,7 +238,7 @@ def install_companion(folder: Path) -> str:
     if folder.is_symlink() or folder.exists():
         owned = None if folder.is_symlink() or not folder.is_dir() else marked_files(folder, CUA_SKILL)
         if owned is None:
-            return f"kept {folder}: a {CUA_SKILL} skill is already there and nilla didn't install it (cua-driver's own installer?)"
+            return f"kept {folder}: a {CUA_SKILL} skill is already there and nilla-browser didn't install it (cua-driver's own installer?)"
         previous = owned
     pack = computer.skill_pack()
     if not folder.exists():
@@ -332,7 +332,7 @@ def install_detected(computer_use: bool = True) -> int:
             print(f"{target}: skipped {folder}: removed after an earlier install")
             continue
         if exists and owned_files(folder) is None:
-            print(f"{target}: skipped {folder}: not installed by nilla")
+            print(f"{target}: skipped {folder}: not installed by nilla-browser")
             continue
         targets.append(target)
     from nilla_browser_cli import telemetry
@@ -350,7 +350,7 @@ def refresh() -> int:
         if not (folder.is_symlink() or folder.exists()):
             continue
         if owned_files(folder) is None:
-            print(f"skipped {folder}: not installed by nilla skills install (no {MARKER} marker)")
+            print(f"skipped {folder}: not installed by nilla-browser skills install (no {MARKER} marker)")
             continue
         kept.append(folder)
         try:

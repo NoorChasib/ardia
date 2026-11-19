@@ -30,7 +30,7 @@ def axe_source() -> str:
     for candidate in candidates:
         if candidate.is_file():
             return candidate.read_text(encoding="utf-8")
-    raise BrowseError("axe-core isn't bundled with this nilla command (apps/cli/scripts/build.sh adds nilla_browser_cli/vendor/axe.min.js)")
+    raise BrowseError("axe-core isn't bundled with this nilla-browser command (apps/cli/scripts/build.sh adds nilla_browser_cli/vendor/axe.min.js)")
 
 
 @command("a11y")

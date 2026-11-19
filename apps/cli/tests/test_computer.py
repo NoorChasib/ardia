@@ -304,7 +304,7 @@ class Passthrough(Sandbox):
         with mock.patch.object(os, "execve") as execve:
             status, _, err = quiet(computer.main, ["mcp"])
         self.assertEqual(status, 1)
-        self.assertIn("nilla computer setup", err)
+        self.assertIn("nilla-browser computer setup", err)
         execve.assert_not_called()
 
     def test_without_setup_other_commands_use_the_bundled_copy(self):
@@ -326,7 +326,7 @@ class Passthrough(Sandbox):
         computer.save_record({"path": str(app), "version": "0.0.9", "cdhash": fake_code_hash(app)})
         with mock.patch.object(os, "execve"):
             _, _, err = quiet(computer.main, ["list-tools"])
-        self.assertIn("nilla computer setup", err)
+        self.assertIn("nilla-browser computer setup", err)
 
     def test_shared_flags_are_refused(self):
         status, _, err = quiet(cli.main, ["--port", "9", "computer", "list-tools"])
@@ -335,7 +335,7 @@ class Passthrough(Sandbox):
 
     def test_help_mentions_computer(self):
         _, out, _ = quiet(cli.main, ["computer", "--help"])
-        self.assertIn("nilla computer setup", out)
+        self.assertIn("nilla-browser computer setup", out)
         self.assertIn(computer.VERSION, out)
         with self.assertRaises(SystemExit):
             quiet(cli.main, ["--help"])
@@ -525,7 +525,7 @@ class Setup(Sandbox):
         with mock.patch.object(computer, "LOCK_TIMEOUT_S", 0.2), computer.applications_lock():
             status, _, err = quiet(computer.setup, ["--no-grant"])
         self.assertEqual(status, 1)
-        self.assertIn("another nilla computer setup", err)
+        self.assertIn("another nilla-browser computer setup", err)
         self.assertFalse(self.dest().exists())
 
     def test_refresh_leaves_a_foreign_app_alone(self):
@@ -584,7 +584,7 @@ class Launcher(Sandbox):
         with mock.patch.dict(os.environ, {"PATH": f"{impostor.parent}:/usr/bin:/bin"}), mock.patch.object(sys, "executable", "/usr/bin/python3"):
             with self.assertRaises(computer.Refused) as caught:
                 computer.link_command()
-        self.assertIn("installed nilla launcher", str(caught.exception))
+        self.assertIn("installed nilla-browser launcher", str(caught.exception))
         self.assertFalse(computer.shim_path().exists())
         self.assertFalse((self.home / "bin" / "cua-driver").exists())
 

@@ -80,7 +80,7 @@ def split_globals(argv: list[str]) -> tuple[dict, list[str]]:
         if name in LAUNCH_HINTS:
             raise Usage(f"{name} is a launch option agent-browser applies when it starts its own browser; {LAUNCH_HINTS[name]}")
         if name in LAUNCH_ONLY:
-            raise Usage(f"{name} doesn't apply to Nilla: nilla browse drives the browser you're running, so launch options have no effect")
+            raise Usage(f"{name} doesn't apply to Nilla: nilla-browser browse drives the browser you're running, so launch options have no effect")
         if command is None and not token.startswith("-"):
             command = token
         rest.append(token)
@@ -224,7 +224,7 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
                                                   "--password-stdin": "bool", "--username-selector": "value", "--password-selector": "value",
                                                   "--submit-selector": "value"})
             if not positional:
-                raise Usage("Usage: nilla browse auth save <name> --url <https url> --username <u> [--password-stdin]")
+                raise Usage("Usage: nilla-browser browse auth save <name> --url <https url> --username <u> [--password-stdin]")
             meta = vault.save(root, positional[0], parsed, lambda: sys.stdin.read())
             return Result(vault.public(meta), f"✓ Saved {positional[0]} for {', '.join(meta['origins'])} (password in the login Keychain)")
         if action == "list":
@@ -232,12 +232,12 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
             return Result({"profiles": rows}, "\n".join(f"{row['name']}  {row.get('username') or '-'}  {row['url']}" for row in rows) or "No saved auth profiles")
         if action == "show":
             if len(args) < 2:
-                raise Usage("Usage: nilla browse auth show <name>")
+                raise Usage("Usage: nilla-browser browse auth show <name>")
             meta = vault.public(vault.load_meta(root, args[1]))
             return Result({"profile": meta}, "\n".join(f"{key}: {value}" for key, value in meta.items() if value is not None))
         if action == "delete":
             if len(args) < 2:
-                raise Usage("Usage: nilla browse auth delete <name>")
+                raise Usage("Usage: nilla-browser browse auth delete <name>")
             vault.delete(root, args[1])
             return Result({"deleted": args[1]}, f"✓ Deleted {args[1]}")
         raise Usage(f"Unknown auth subcommand: {action}")
@@ -246,7 +246,7 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
         if action == "add":
             parsed, positional = parse(args[1:], {"--name": "value", "--capability": "multi"})
             if not positional:
-                raise Usage("Usage: nilla browse plugin add <npm-name[@version] | owner/repo[#ref]> [--name n]")
+                raise Usage("Usage: nilla-browser browse plugin add <npm-name[@version] | owner/repo[#ref]> [--name n]")
             plugin = plugins.add(root, positional[0], parsed.get("name"), parsed.get("capability"))
             return Result({"plugin": plugin}, f"✓ Added {plugin['name']} ({plugin['spec']})")
         if action == "list":
@@ -254,18 +254,18 @@ def run_local(command: str, args: list[str], root: Path, options: dict, dir_fd_f
             return Result({"plugins": rows}, "\n".join(f"{row['name']}  {', '.join(row['capabilities'])}" for row in rows) or "No plugins")
         if action == "show":
             if len(args) < 2:
-                raise Usage("Usage: nilla browse plugin show <name>")
+                raise Usage("Usage: nilla-browser browse plugin show <name>")
             plugin = plugins.find(root, args[1])
             return Result({"plugin": plugin}, json.dumps(plugin, indent=2))
         if action == "remove":
             if len(args) < 2:
-                raise Usage("Usage: nilla browse plugin remove <name>")
+                raise Usage("Usage: nilla-browser browse plugin remove <name>")
             plugins.remove(root, args[1])
             return Result({"removed": args[1]}, f"✓ Removed {args[1]}")
         if action == "run":
             parsed, positional = parse(args[1:], {"--payload": "value"})
             if len(positional) < 2:
-                raise Usage("Usage: nilla browse plugin run <name> <type> [--payload json]")
+                raise Usage("Usage: nilla-browser browse plugin run <name> <type> [--payload json]")
             payload = json.loads(parsed["payload"]) if parsed.get("payload") else {}
             data = plugins.call(root, positional[0], positional[1], payload)
             return Result(data if isinstance(data, dict) else {"result": data}, json.dumps(data, ensure_ascii=False, indent=2))
@@ -411,7 +411,7 @@ def script_source(args: list[str], cwd: str) -> str:
 
     parsed, positional = parse(args, {"--timeout": "value", "--stdin": "bool"})
     if len(positional) > 1:
-        raise Usage("Usage: nilla browse script [file.js] [--timeout 90s]; quote the script in a heredoc on stdin, or put it in a file")
+        raise Usage("Usage: nilla-browser browse script [file.js] [--timeout 90s]; quote the script in a heredoc on stdin, or put it in a file")
     if positional and positional[0] != "-":
         path = Path(cwd, os.path.expanduser(positional[0]))
         try:
@@ -424,7 +424,7 @@ def script_source(args: list[str], cwd: str) -> str:
     elif positional or parsed.get("stdin") or not sys.stdin.isatty():
         source = sys.stdin.read(script.MAX_SOURCE + 1)
     else:
-        raise Usage("nilla browse script reads the script from a file or stdin: nilla browse script <<'EOF' … EOF")
+        raise Usage("nilla-browser browse script reads the script from a file or stdin: nilla-browser browse script <<'EOF' … EOF")
     if len(source) > script.MAX_SOURCE:
         raise Usage(f"The script is over {script.MAX_SOURCE // 1024} KB")
     return source
@@ -475,7 +475,7 @@ def run(argv: list[str]) -> int:
     if rest[0] in ("--version", "-V"):
         from nilla_browser_cli import __version__
 
-        sys.stdout.write(f"nilla browse {__version__}\n")
+        sys.stdout.write(f"nilla-browser browse {__version__}\n")
         return 0
     if "--help" in rest[1:] or "-h" in rest[1:]:
         sys.stdout.write(helptext.command_help(rest[0]) + "\n")

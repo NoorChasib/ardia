@@ -3,9 +3,9 @@ import sys
 from nilla_browser_cli import __version__
 
 DESCRIPTION = (
-    "Control a running Nilla from the terminal. nilla browse drives the browser (nilla browse --help); "
-    "nilla computer operates native Mac apps through the bundled cua-driver (nilla computer --help). "
-    "Agents: skip if a nilla skill is already in your context; otherwise run nilla --skill."
+    "Control a running Nilla from the terminal. nilla-browser browse drives the browser (nilla-browser browse --help); "
+    "nilla-browser computer operates native Mac apps through the bundled cua-driver (nilla-browser computer --help). "
+    "Agents: skip if a nilla skill is already in your context; otherwise run nilla-browser --skill."
 )
 EPILOG = """\
 Shared options go before the command or after it, for the commands that take them:
@@ -16,7 +16,7 @@ Shared options go before the command or after it, for the commands that take the
 A flag wins over its environment variable.
 
 Examples:
-  nilla --port 9222 browse snapshot -i
+  nilla-browser --port 9222 browse snapshot -i
   nilla-browser browse --port 9222 snapshot -i
   nilla-browser windows --json
   nilla-browser tabs --json
@@ -33,21 +33,21 @@ Targets and where they install (user level; --project uses the current directory
   opencode      ~/.config/opencode/skills   ./.opencode/skills
 
 Next to each one it installs cua-driver's own skill (cua-driver, for computer use in native apps through
-nilla-browser computer), pinned to the bundled driver; --no-cua skips it. A cua-driver skill that nilla didn't install, from
+nilla-browser computer), pinned to the bundled driver; --no-cua skips it. A cua-driver skill that nilla-browser didn't install, from
 cua's own installer for one, is left alone.
 
 Installing or updating the CLI runs `nilla-browser skills install --auto`: the skill goes to every coding agent found here
-(Claude Code, Codex, Cursor, opencode; general when none is), never over a folder nilla didn't write, and not again where
+(Claude Code, Codex, Cursor, opencode; general when none is), never over a folder nilla-browser didn't write, and not again where
 the user removed it.
-Nilla remembers where it installed the skill, and each CLI update rewrites those copies (nilla skills refresh).
+Nilla remembers where it installed the skill, and each CLI update rewrites those copies (nilla-browser skills refresh).
 """
 SHARED_VALUE_FLAGS = frozenset({"--port", "--ws", "--data-dir", "--timeout"})
 SHARED_BOOL_FLAGS = frozenset({"--json"})
 BROWSE_SHARED_FLAGS = frozenset({"--port", "--ws", "--data-dir", "--json"})
 REMOVED_COMMANDS = {
     "exec": (
-        "nilla: unknown command 'exec': it was removed. Drive the browser with nilla browse (nilla browse --help); "
-        "nilla pinned and nilla history read favorites and history; nilla run, windows and events reach Nilla's "
+        "nilla-browser: unknown command 'exec': it was removed. Drive the browser with nilla-browser browse (nilla-browser browse --help); "
+        "nilla-browser pinned and nilla-browser history read favorites and history; nilla-browser run, windows and events reach Nilla's "
         "commands, windows and events."
     ),
 }
@@ -119,7 +119,7 @@ def check_takes(parser, path: list[str], hoisted: list[str]) -> None:
 def browse_argv(hoisted: list[str], rest: list[str], env) -> list[str]:
     for name in flag_names(hoisted):
         if name not in BROWSE_SHARED_FLAGS:
-            raise UsageError(f"nilla browse doesn't take {name}")
+            raise UsageError(f"nilla-browser browse doesn't take {name}")
     argv = hoisted + rest
     from nilla_browser_cli.browse.cli import split_globals
     from nilla_browser_cli.browse.errors import Usage
@@ -166,13 +166,13 @@ def run_notes(hoisted: list[str], rest: list[str]) -> int:
 def build_parser():
     import argparse
 
-    parser = argparse.ArgumentParser(prog="nilla", description=DESCRIPTION, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--version", action="version", version=f"nilla {__version__}")
-    parser.add_argument("--skill", action="store_true", help="print the agent skill that ships with this nilla (SKILL.md) and exit; same as nilla skills get")
+    parser = argparse.ArgumentParser(prog="nilla-browser", description=DESCRIPTION, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--version", action="version", version=f"nilla-browser {__version__}")
+    parser.add_argument("--skill", action="store_true", help="print the agent skill that ships with this nilla-browser (SKILL.md) and exit; same as nilla-browser skills get")
     commands = parser.add_subparsers(dest="command", metavar="<command>")
-    commands.add_parser("browse", help="drive the browser with agent-browser's commands (nilla browse --help)", add_help=False)
-    commands.add_parser("notes", help="read and write notes (nilla notes --help)", add_help=False)
-    commands.add_parser("computer", help="operate native Mac apps through the bundled cua-driver: computer use (nilla computer --help)", add_help=False)
+    commands.add_parser("browse", help="drive the browser with agent-browser's commands (nilla-browser browse --help)", add_help=False)
+    commands.add_parser("notes", help="read and write notes (nilla-browser notes --help)", add_help=False)
+    commands.add_parser("computer", help="operate native Mac apps through the bundled cua-driver: computer use (nilla-browser computer --help)", add_help=False)
 
     from nilla_browser_cli import browsing_cli
 
@@ -191,12 +191,12 @@ def build_parser():
     install.add_argument("--target", action="append", choices=sorted(TARGETS), metavar="TARGET", help="general, codex, claude-code, cursor or opencode; repeat for several (default: general)")
     install.add_argument("--project", action="store_true", help="install into the current directory's project folders")
     install.add_argument("--no-cua", action="store_true", help="don't install cua-driver's computer-use skill next to it")
-    install.add_argument("--replace", action="store_true", help="replace a nilla folder that nilla didn't install (only that folder)")
-    install.add_argument("--auto", action="store_true", help="install for every coding agent found on this Mac (or general when none is), skipping folders nilla didn't write and copies the user removed")
+    install.add_argument("--replace", action="store_true", help="replace a nilla skill folder that nilla-browser didn't install (only that folder)")
+    install.add_argument("--auto", action="store_true", help="install for every coding agent found on this Mac (or general when none is), skipping folders nilla-browser didn't write and copies the user removed")
     skill_commands.add_parser("refresh", help="rewrite every copy of the skill installed before with this CLI's version")
-    get = skill_commands.add_parser("get", help="print the skill that ships with this nilla (SKILL.md) to stdout; writes nothing")
+    get = skill_commands.add_parser("get", help="print the skill that ships with this nilla-browser (SKILL.md) to stdout; writes nothing")
     get.add_argument("--full", action="store_true", help="also print every file under references/, each after a --- <path> --- line")
-    skill_commands.add_parser("list", help="name and description of each skill that ships with this nilla")
+    skill_commands.add_parser("list", help="name and description of each skill that ships with this nilla-browser")
 
     from nilla_browser_cli import scripts_cli
 
@@ -240,7 +240,7 @@ def option_names(parser, path: list[str]) -> set[str]:
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
     if argv == ["--version"]:
-        print(f"nilla {__version__}")
+        print(f"nilla-browser {__version__}")
         return 0
     from nilla_browser_cli import printable, telemetry
 
@@ -273,7 +273,7 @@ def run(argv: list[str]) -> int:
     try:
         index = take_shared(argv, 0, leading)
     except UsageError as error:
-        sys.stderr.write(f"ardia: {error}\n")
+        sys.stderr.write(f"nilla-browser: {error}\n")
         return 2
     command = argv[index] if index < len(argv) else None
     if command == "--skill":
@@ -284,7 +284,7 @@ def run(argv: list[str]) -> int:
         return run_notes(leading, argv[index + 1:])
     if command == "computer":
         if leading:
-            sys.stderr.write(f"nilla: computer doesn't take {flag_names(leading)[0]}\n")
+            sys.stderr.write(f"nilla-browser: computer doesn't take {flag_names(leading)[0]}\n")
             return 2
         from nilla_browser_cli import computer
 
@@ -296,11 +296,11 @@ def run(argv: list[str]) -> int:
         if path:
             check_takes(parser, path, hoisted)
     except UsageError as error:
-        sys.stderr.write(f"ardia: {error}\n")
+        sys.stderr.write(f"nilla-browser: {error}\n")
         return 2
     if not path and rest and not rest[0].startswith("-"):
         telemetry.note_error_code("removed_command" if rest[0] in REMOVED_COMMANDS else "unknown_command")
-        sys.stderr.write(REMOVED_COMMANDS.get(rest[0], f"nilla: unknown command '{rest[0]}' (see nilla --help)") + "\n")
+        sys.stderr.write(REMOVED_COMMANDS.get(rest[0], f"nilla-browser: unknown command '{rest[0]}' (see nilla-browser --help)") + "\n")
         return 2
     argv = path + hoisted + rest if path else rest
     from nilla_browser_cli.automation_cli import split_program

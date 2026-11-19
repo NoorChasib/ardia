@@ -282,7 +282,7 @@ class ChangesReport(unittest.TestCase):
         os.chmod(folder / "y.test.md", 0o600)
         state = SimpleNamespace(config={"data_root": str(root)})
         here = changes.arrival_notes(state, view([], url="http://x.test/"), view([], url="http://y.test/a"))
-        self.assertEqual(here, "# notes for y.test (nilla notes): Use the blue button")
+        self.assertEqual(here, "# notes for y.test (nilla-browser notes): Use the blue button")
         self.assertIsNone(changes.arrival_notes(state, view([], url="http://y.test/b"), view([], url="http://y.test/a")))
         report = changes.diff(view([row("e1", "a")], url="http://x.test/"), view([row("e2", "b")], loader="L2", url="http://y.test/a"))
         report["notes"] = here
@@ -804,11 +804,11 @@ class SiteNotes(unittest.TestCase):
         self.assertEqual(caught.exception.code, "notes_too_large")
         self.assertEqual([row["site"] for row in notes.run_request(root, notes.Request("list", None), None).data["notes"]], ["example.com"])
         site, header = notes.header(root, "https://example.com/page")
-        self.assertEqual(header, "# notes for example.com (nilla notes): Line one\n# Line two")
+        self.assertEqual(header, "# notes for example.com (nilla-browser notes): Line one\n# Line two")
         notes.run_request(root, notes.Request("set", "long.example", "y" * 3000), None)
         _, header = notes.header(root, "http://long.example/")
         self.assertLess(len(header), notes.HEADER_LIMIT + 200)
-        self.assertIn("nilla notes get long.example", header)
+        self.assertIn("nilla-browser notes get long.example", header)
         target = root / "elsewhere.md"
         target.write_text("secret")
         os.symlink(target, root / "Notes" / "linked.example.md")

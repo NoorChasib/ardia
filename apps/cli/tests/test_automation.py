@@ -237,7 +237,7 @@ class Discovery(Base):
     def test_missing_socket(self):
         status, _, err = self.run_cli("windows")
         self.assertEqual(status, 2)
-        self.assertEqual(err.strip(), f"ardia: {endpoint.NOT_REACHABLE}")
+        self.assertEqual(err.strip(), f"nilla-browser: {endpoint.NOT_REACHABLE}")
 
     def test_regular_file_is_not_a_socket(self):
         self.socket.write_text("")
@@ -292,7 +292,7 @@ class Discovery(Base):
         sock.close()
         status, _, err = self.run_cli("windows")
         self.assertEqual(status, 2)
-        self.assertEqual(err.strip(), f"ardia: {endpoint.NOT_REACHABLE}")
+        self.assertEqual(err.strip(), f"nilla-browser: {endpoint.NOT_REACHABLE}")
 
     def test_installed_data_dir_without_env(self):
         with mock.patch.dict(os.environ, {"ARDIA_DATA_DIR": ""}):
@@ -1089,7 +1089,7 @@ class LaunchAgent(Base):
             with self.subTest(verb=verb), self.installed_env(), mock.patch.object(hooks, "launchctl", side_effect=stuck):
                 status, _, err = self.run_cli("hooks", verb)
             self.assertEqual(status, 1)
-            self.assertEqual(err.strip().splitlines()[-1], f"nilla hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/{hooks.LABEL}")
+            self.assertEqual(err.strip().splitlines()[-1], f"nilla-browser hooks {verb}: launchctl didn't answer in 20 s; try again, or check launchctl print gui/{os.getuid()}/{hooks.LABEL}")
             self.assertNotIn("Traceback", err)
 
     def test_list_reports_hooks(self):
@@ -1125,7 +1125,7 @@ class Help(Base):
         for argv in (["run", "--help"], ["events", "--help"], ["on", "--help"], ["hooks", "--help"], ["hooks", "install", "--help"], ["commands", "--help"], ["windows", "--help"]):
             status, out, _ = self.run_cli(*argv)
             self.assertEqual(status, 0, argv)
-            self.assertIn("usage: nilla", out)
+            self.assertIn("usage: nilla-browser", out)
 
 
 if __name__ == "__main__":

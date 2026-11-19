@@ -146,7 +146,7 @@ class Browse(unittest.TestCase):
         with clean_env():
             status, _, err = run_cli("--timeout", "5", "browse", "snapshot")
         self.assertEqual(status, 1)
-        self.assertIn("nilla browse doesn't take --timeout", err)
+        self.assertIn("nilla-browser browse doesn't take --timeout", err)
 
 
 class Resolve(unittest.TestCase):
@@ -175,7 +175,7 @@ class RemovedExec(unittest.TestCase):
                 status, out, err = run_cli(*argv)
             self.assertEqual(status, 2, argv)
             self.assertIn("unknown command 'exec'", err)
-            self.assertIn("nilla browse", err)
+            self.assertIn("nilla-browser browse", err)
             self.assertEqual(out, "")
 
     def test_other_unknown_command(self):

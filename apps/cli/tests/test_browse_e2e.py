@@ -114,7 +114,7 @@ class BrowseEndToEnd(unittest.TestCase):
         done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(cls.port), "--data-dir", str(cls.data), "--session", session, *args],
                               capture_output=True, text=True, timeout=timeout, env=env, input=stdin)
         if check and done.returncode:
-            raise AssertionError(f"nilla browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
+            raise AssertionError(f"nilla-browser browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
         return done
 
     def url(self, name):
@@ -214,8 +214,8 @@ class BrowseEndToEnd(unittest.TestCase):
             self.assertEqual(clicked.returncode, 0, clicked.stderr)
         else:
             self.assertEqual(clicked.returncode, 1)
-            self.assertIn(f"use: nilla browse tab {opened['tabId']} --show (or open <url> --show)", clicked.stderr)
-            self.assertIn("use: nilla browse tab", self.browse("open", self.url("probe.html#again"), session=session + "-2").stdout)
+            self.assertIn(f"use: nilla-browser browse tab {opened['tabId']} --show (or open <url> --show)", clicked.stderr)
+            self.assertIn("use: nilla-browser browse tab", self.browse("open", self.url("probe.html#again"), session=session + "-2").stdout)
         self.browse("scroll", "down", "200", session=session)
 
     def drag_report(self, session):
@@ -428,7 +428,7 @@ class BrowseEndToEnd(unittest.TestCase):
         self.assertIn(f"Saved the notes for {site}", self.browse("notes", "set", "Use the Continue button", session=session).stdout)
         self.browse("notes", "append", "-", session=session, stdin="Second line\n")
         snap = self.browse("snapshot", "-i", session=session).stdout
-        self.assertTrue(snap.startswith(f"# notes for {site} (nilla notes): Use the Continue button\n# Second line\n- link"), snap)
+        self.assertTrue(snap.startswith(f"# notes for {site} (nilla-browser notes): Use the Continue button\n# Second line\n- link"), snap)
         data = json.loads(self.browse("snapshot", "--json", session=session).stdout)["data"]
         self.assertEqual(data["notes"]["site"], site)
         folder = self.data / "Notes"
@@ -593,7 +593,7 @@ class BrowseEndToEnd(unittest.TestCase):
         session = "typeahead"
         self.browse("open", self.url("picker.html"), "--show", session=session)
         filled = self.browse("fill", "#guest-input", "Priya R", session=session).stdout
-        self.assertIn("→ 1 suggestion showing, none picked. To pick one: nilla browse select #guest-input 'Priya R'", filled)
+        self.assertIn("→ 1 suggestion showing, none picked. To pick one: nilla-browser browse select #guest-input 'Priya R'", filled)
         ambiguous = self.browse("select", "#guest-input", "Pri", "--json", session=session, check=False)
         self.assertEqual(json.loads(ambiguous.stdout)["code"], "ambiguous")
         picked = self.browse("select", "#guest-input", "Priya Raman", "alex.morgan@northwind.dev", "lena.vogt@kontor.io", session=session).stdout
@@ -1260,7 +1260,7 @@ class BrowseEndToEnd(unittest.TestCase):
         long.send_signal(signal.SIGINT)
         _, err = long.communicate(timeout=30)
         self.assertEqual(long.returncode, 130)
-        self.assertIn("nilla browse script 'return state'", err)
+        self.assertIn("nilla-browser browse script 'return state'", err)
         kept = self.browse("script", session=session, stdin="return state.rows;").stdout
         self.assertIn("[1,2,3]", kept.replace(" ", "").replace("\n", ""))
 
@@ -1554,7 +1554,7 @@ class BrowseTokenPath(unittest.TestCase):
         done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--data-dir", str(cls.data), "--session", session, *args],
                               capture_output=True, text=True, timeout=timeout, env=env, input=stdin)
         if check and done.returncode:
-            raise AssertionError(f"nilla browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
+            raise AssertionError(f"nilla-browser browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
         return done
 
     def url(self, name):
@@ -1673,7 +1673,7 @@ class BrowseTokenPath(unittest.TestCase):
         if "takes input without being shown" in opened:
             self.assertEqual(clicked.returncode, 0, clicked.stderr)
         else:
-            self.assertIn("use: nilla browse tab", opened)
+            self.assertIn("use: nilla-browser browse tab", opened)
             self.assertEqual(clicked.returncode, 1)
             self.assertIn("--show (or open <url> --show)", clicked.stderr)
 
@@ -1709,7 +1709,7 @@ class BrowseTokenPath(unittest.TestCase):
     def control(self, *args):
         done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "--data-dir", str(self.data), *args], capture_output=True, text=True, timeout=60,
                               env=dict(os.environ, PYTHONPATH=str(CLI)))
-        self.assertEqual(done.returncode, 0, f"nilla {' '.join(args)}: {done.stderr}")
+        self.assertEqual(done.returncode, 0, f"nilla-browser {' '.join(args)}: {done.stderr}")
         return done.stdout
 
     def size(self, session):

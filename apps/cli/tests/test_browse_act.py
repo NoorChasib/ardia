@@ -65,7 +65,7 @@ class HelpFallback(unittest.TestCase):
             self.assertLess(len(text), 2500, name)
 
     def test_a_command_without_an_entry_prints_one_line_and_no_flags(self):
-        self.assertEqual(helptext.command_help("pushstate"), "nilla browse back, forward, reload, pushstate <url>\nflags: none")
+        self.assertEqual(helptext.command_help("pushstate"), "nilla-browser browse back, forward, reload, pushstate <url>\nflags: none")
         self.assertIs(helptext.command_help("no-such-command"), helptext.OVERVIEW)
 
     def test_drag_documents_its_sides(self):
@@ -226,7 +226,7 @@ class ActInChrome(unittest.TestCase):
         done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(cls.port), "--data-dir", str(cls.data), "--session", "act",
                                *args], capture_output=True, text=True, timeout=120, env=env, cwd=CLI)
         if check and done.returncode:
-            raise AssertionError(f"nilla browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
+            raise AssertionError(f"nilla-browser browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
         return done
 
     def setUp(self):

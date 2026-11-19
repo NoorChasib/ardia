@@ -262,7 +262,7 @@ class ZeroViewport(unittest.TestCase):
             run(actions.laid_out(page))
         self.assertEqual(caught.exception.code, "no_viewport")
         self.assertIn("no size yet (0×0", caught.exception.message)
-        self.assertIn("nilla browse tab t4 --show", caught.exception.message)
+        self.assertIn("nilla-browser browse tab t4 --show", caught.exception.message)
 
     def test_a_viewport_the_session_set_itself_is_left_alone(self):
         page = ViewportPage([0], gated=False)

@@ -180,7 +180,7 @@ async def cmd_react(ctx, argv):
             lines = [f"commits: {data['commits']}  duration: {data['durationMs']:.0f}ms"]
             lines += [f"{row['count']:>5}  {row['name']}" for row in data["components"][:50]]
             return Result(data, "\n".join(lines))
-        raise Usage("Usage: nilla browse react renders start|stop")
+        raise Usage("Usage: nilla-browser browse react renders start|stop")
     if action == "suspense":
         rows = await react_call(ctx, "window.__ardiaReact.suspense()")
         if options.get("only_dynamic"):

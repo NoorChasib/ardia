@@ -23,7 +23,8 @@ WORK = HOME / "work"
 CODEX_FAKE_HOME = HOME / "codex-home"
 DEV_BIN = HOME / "devbin"
 CLI_ROOT = HOME / "cli"
-INSTALLED_NILLA = Path.home() / ".local/bin/ardia"
+INSTALLED_NILLA = Path.home() / ".local/bin/nilla-browser"
+COMMAND = "nilla-browser"
 DEFAULTS = {
     "app": str(HOME / "app/Nilla.app"),
     "port": 9371,
@@ -76,7 +77,7 @@ def dev_bin(name=""):
 
 def nilla_bin(opts):
     name = dev_name(opts)
-    return str(INSTALLED_NILLA) if name is None else str(dev_bin(name) / "ardia")
+    return str(INSTALLED_NILLA) if name is None else str(dev_bin(name) / COMMAND)
 
 
 def agent_env(opts, extra=None):
@@ -104,9 +105,9 @@ def freeze_cli(src, name=""):
        timeout=300).check_returncode()
     dev_name({"cli": f"dev:{name}" if name else "dev"})
     dev_bin(name).mkdir(parents=True, exist_ok=True)
-    link = dev_bin(name) / "ardia"
+    link = dev_bin(name) / COMMAND
     link.unlink(missing_ok=True)
-    link.symlink_to(dest / "venv/bin/ardia")
+    link.symlink_to(dest / "venv/bin" / COMMAND)
     version = sh([str(link), "--version"]).stdout.strip()
     info = {"path": str(dest), "git": git, "dirty": dirty, "version": version,
             "frozen_at": datetime.datetime.now().astimezone().isoformat(timespec="seconds")}
@@ -118,7 +119,7 @@ def cli_info(opts):
     name = dev_name(opts)
     if name is not None:
         info = read_json(CLI_ROOT / (f"{name}.json" if name else "current.json"))
-        if not info or not (dev_bin(name) / "ardia").exists():
+        if not info or not (dev_bin(name) / COMMAND).exists():
             raise SystemExit(f"no frozen dev CLI; run: bench.py freeze-cli{' --name ' + name if name else ''}")
         return dict(info, kind=f"dev:{name}" if name else "dev")
     return {"kind": "installed", "version": sh([str(INSTALLED_NILLA), "--version"]).stdout.strip()}
@@ -464,4 +465,4 @@ def quit_instance(opts=None):
         log(f"Nilla pid {state['pid']} {'quit' if terminate(state) else 'still running'}")
     instance.unlink(missing_ok=True)
     if stopped:
-        log(f"stopped nilla browse daemons {stopped}")
+        log(f"stopped nilla-browser browse daemons {stopped}")

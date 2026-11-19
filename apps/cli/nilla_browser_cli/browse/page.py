@@ -28,7 +28,7 @@ HEADERS_LIMIT = 64 * 1024
 REQUEST_BYTES = 32 * 1024 * 1024
 HIDDEN_TAB = (
     "[{tab}] is a background tab, and this Nilla doesn't deliver mouse or keyboard input to background tabs. "
-    "use: nilla browse tab {tab} --show (or open <url> --show)"
+    "use: nilla-browser browse tab {tab} --show (or open <url> --show)"
 )
 LIVE_WAIT = 0.5
 DETACHED = "Nilla detached this tab from the nilla-browser command while it was in use (the tab closed, crashed, went to sleep or moved to a window Nilla keeps for itself). Run the command again"
@@ -527,7 +527,7 @@ class Page:
     async def require_visible(self):
         if not await self.takes_input():
             tab = self.state.tab_id(self.target_id)
-            raise BrowseError(self.show_hint(), data={"tabId": tab, "use": f"nilla browse tab {tab} --show"}, code="tab_hidden")
+            raise BrowseError(self.show_hint(), data={"tabId": tab, "use": f"nilla-browser browse tab {tab} --show"}, code="tab_hidden")
 
     async def focus_element(self, element: Element):
         try:

@@ -152,10 +152,10 @@ class SchedulerTest(unittest.TestCase):
             self.assertGreaterEqual(b - a, scheduler.SETTLE_S)
 
     def test_retried_runs_run_again_and_rate_limits_drop_to_one_lane(self):
-        limited = "grid--ardia-codex--r1"
-        s, items, log = simulate(5, retry_ids=["shop--ardia-claude--r1"], rate_limit_ids=[limited])
+        limited = "grid--nilla-codex--r1"
+        s, items, log = simulate(5, retry_ids=["shop--nilla-claude--r1"], rate_limit_ids=[limited])
         starts = [e[2] for e in log if e[0] == "start"]
-        self.assertEqual(starts.count("shop--ardia-claude--r1"), 2)
+        self.assertEqual(starts.count("shop--nilla-claude--r1"), 2)
         self.assertEqual(starts.count(limited), 2)
         self.assertEqual(s.cap("nilla-codex"), 1)
         retried_at = next(e[1] for e in log if e[0] == "retry" and e[2] == limited)

@@ -11,7 +11,7 @@ SKILL = "apps/cli/nilla_browser_cli/skill"
 OUT = Path(__file__).resolve().parents[1] / "nilla_browser_cli" / "skill_hashes.json"
 DESCRIPTION = (
     "Writes nilla_browser_cli/skill_hashes.json: the SHA-256 of every file in each version of the nilla agent skill that "
-    f"installed without a .nilla-skill marker (every commit up to {UNTIL}). nilla skills install adopts an unmarked "
+    f"installed without a .nilla-skill marker (every commit up to {UNTIL}). nilla-browser skills install adopts an unmarked "
     "copy only when its files match one of these versions exactly. The list is frozen: later installs write the "
     "marker. --check exits 1 when the checked-in file differs from what git history gives."
 )

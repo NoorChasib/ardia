@@ -51,30 +51,31 @@ VERSION_DIR = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
 TARGETS = ("general", "claude-code", "codex", "cursor", "opencode")
 DOWNLOAD_TIMEOUT_S = 60
 PINNED_MESSAGE = (
-    f"nilla computer: cua-driver is pinned at {VERSION} and updates with the nilla-browser command "
+    f"nilla-browser computer: cua-driver is pinned at {VERSION} and updates with the nilla-browser command "
     "(the app installs new versions), not through cua's installer"
 )
 REFUSED = {
     "update": PINNED_MESSAGE,
     "channel": PINNED_MESSAGE,
-    "skills": "nilla computer: run `nilla-browser skills install --target <agent>`; it installs cua-driver's skill pinned to this driver next to nilla's",
+    "skills": "nilla-browser computer: run `nilla-browser skills install --target <agent>`; it installs cua-driver's skill pinned to this driver next to nilla-browser's",
 }
 HELP = f"""\
-usage: nilla computer <cua-driver command> [args]
+usage: nilla-browser computer <cua-driver command> [args]
        nilla-browser computer setup
        nilla-browser computer mcp-config [--target general|claude-code|codex|cursor|opencode]
 
 Operates native Mac apps (computer use) through cua-driver {VERSION} (github.com/trycua/cua, MIT), pinned and
-checked by nilla. Use nilla browse for web pages in Nilla.
+checked by nilla-browser. Use nilla-browser browse for web pages in Nilla.
 
   setup        download the pinned driver, put CuaDriver.app in /Applications (macOS ties the Accessibility and
                Screen Recording permissions to it), link a cua-driver command to this one, then ask for the
                permissions
-  mcp-config   print the MCP server entry for an agent, pointing at nilla computer mcp
+  mcp-config   print the MCP server entry for an agent, pointing at nilla-browser computer mcp
   help         cua-driver's own help (every other command goes to cua-driver unchanged)
 
 Common commands: mcp, list-tools, describe <tool>, call <tool> '<json>', permissions status|grant, doctor, stop.
-update, channel and skills are nilla's job here: the driver updates with nilla, and nilla skills install adds its skill.
+update, channel and skills are nilla-browser's job here: the driver updates with nilla-browser, and
+nilla-browser skills install adds its skill.
 """
 
 
@@ -124,7 +125,7 @@ def download(url: str, dest: Path) -> None:
     if not url.startswith("https://"):
         raise Refused(f"refused a download that isn't https: {url}")
     opener = urllib.request.build_opener(HttpsOnly)
-    request = urllib.request.Request(url, headers={"User-Agent": f"nilla/{__version__}"})
+    request = urllib.request.Request(url, headers={"User-Agent": f"nilla-browser/{__version__}"})
     with opener.open(request, timeout=DOWNLOAD_TIMEOUT_S) as response, open(dest, "wb") as out:
         shutil.copyfileobj(response, out, 1 << 20)
 
@@ -257,7 +258,7 @@ def ensure_driver(env=None) -> Path:
         except Inconclusive:
             raise
         except Refused as error:
-            say(f"nilla computer: the cached cua-driver failed verification ({error}); fetching it again")
+            say(f"nilla-browser computer: the cached cua-driver failed verification ({error}); fetching it again")
             remove_path(app)
     home = version_home(env)
     home.mkdir(parents=True, exist_ok=True)
@@ -390,7 +391,7 @@ def applications_lock(env=None):
                 break
             except BlockingIOError:
                 if time.monotonic() >= deadline:
-                    raise Refused(f"another nilla computer setup or refresh is still running (waited {LOCK_TIMEOUT_S} s)") from None
+                    raise Refused(f"another nilla-browser computer setup or refresh is still running (waited {LOCK_TIMEOUT_S} s)") from None
                 time.sleep(0.1)
         yield
     finally:
@@ -438,7 +439,7 @@ def recover(env=None) -> bool:
         try:
             verdict = pending_verdict(dest, record.get("cdhash"))
         except Inconclusive as error:
-            say(f"nilla computer: recovery is pending for {dest} ({error}); the next nilla computer run tries again")
+            say(f"nilla-browser computer: recovery is pending for {dest} ({error}); the next nilla-browser computer run tries again")
             return False
         if verdict == "match":
             save_record({key: value for key, value in record.items() if key not in ("previous", "state")} | {"state": "committed"}, env)
@@ -485,13 +486,13 @@ def place_app(source: Path, env=None) -> str:
     ours = exists and installed_by_nilla(dest, env)
     if exists and not ours:
         version = app_version(dest) or "of unknown version"
-        return f"kept {dest}: CuaDriver.app {version} was put there by something other than nilla (cua's own installer?); nilla computer uses it as is"
+        return f"kept {dest}: CuaDriver.app {version} was put there by something other than nilla-browser (cua's own installer?); nilla-browser computer uses it as is"
     if ours:
         verify_app(dest)
         if app_version(dest) == VERSION:
             return f"current {dest} ({VERSION})"
     if not os.access(APPLICATIONS, os.W_OK):
-        raise Refused(f"can't write to {APPLICATIONS}; run nilla computer setup from an admin account")
+        raise Refused(f"can't write to {APPLICATIONS}; run nilla-browser computer setup from an admin account")
     previous = read_record(env) if ours else None
     try:
         if staging.exists() or staging.is_symlink():
@@ -551,8 +552,8 @@ def nilla_command(env=None) -> str:
     launcher = trusted_launcher(env)
     if launcher is None:
         raise Refused(
-            "can't find the installed nilla launcher ($ARDIA_CLI_HOME/current/bin/ardia), and won't take whatever "
-            "nilla is first on PATH; install the nilla-browser command from Nilla (Settings › Advanced) and run this again"
+            "can't find the installed nilla-browser launcher ($ARDIA_CLI_HOME/current/bin/ardia), and won't take whatever "
+            "nilla-browser is first on PATH; install the nilla-browser command from Nilla (Settings › Advanced) and run this again"
         )
     return str(launcher)
 
@@ -574,7 +575,7 @@ def link_command(env=None) -> str:
     if link.is_symlink() and os.readlink(link) == str(shim):
         return f"current {link}"
     if link.exists() or link.is_symlink():
-        return f"kept {link}: it isn't nilla's; run nilla computer instead of cua-driver"
+        return f"kept {link}: it isn't nilla-browser's; run nilla-browser computer instead of cua-driver"
     link.parent.mkdir(parents=True, exist_ok=True)
     link.symlink_to(shim)
     return f"linked {link} -> {shim}"
@@ -590,11 +591,11 @@ def driver_env(environ) -> dict:
 def setup(argv: list[str]) -> int:
     import argparse
 
-    parser = argparse.ArgumentParser(prog="nilla computer setup", description="Download the pinned cua-driver, put CuaDriver.app in /Applications and ask for its permissions.")
+    parser = argparse.ArgumentParser(prog="nilla-browser computer setup", description="Download the pinned cua-driver, put CuaDriver.app in /Applications and ask for its permissions.")
     parser.add_argument("--no-grant", action="store_true", help="stop before asking for the permissions")
     args = parser.parse_args(argv)
     if not supported():
-        say("nilla computer: computer use through cua-driver needs macOS here")
+        say("nilla-browser computer: computer use through cua-driver needs macOS here")
         return 1
     try:
         with applications_lock():
@@ -603,14 +604,14 @@ def setup(argv: list[str]) -> int:
             print(place_app(ensure_driver()))
         print(link_command())
     except (Refused, OSError, subprocess.CalledProcessError) as error:
-        say(f"nilla computer: {error}")
+        say(f"nilla-browser computer: {error}")
         return 1
     dest = installed_app()
     if quietly_ours(dest) and signed_by_cua(dest):
         if run_driver_quietly(dest / APP_BINARY, "telemetry", "disable") == 0:
             print("cua-driver telemetry off (cua-driver telemetry enable turns it back on)")
     if args.no_grant or not (sys.stdin.isatty() and sys.stdout.isatty()):
-        print("next: nilla computer permissions grant")
+        print("next: nilla-browser computer permissions grant")
         return 0
     print("Asking macOS for Cua Driver's Accessibility and Screen Recording permissions…")
     sys.stdout.flush()
@@ -629,7 +630,7 @@ def refresh() -> int:
                 return 0
             print(place_app(ensure_driver()))
     except (Refused, OSError, subprocess.CalledProcessError) as error:
-        say(f"nilla computer: {error}")
+        say(f"nilla-browser computer: {error}")
         return 1
     return 0
 
@@ -653,13 +654,13 @@ def mcp_config(target: str, env=None) -> str:
 def print_mcp_config(argv: list[str]) -> int:
     import argparse
 
-    parser = argparse.ArgumentParser(prog="nilla computer mcp-config", description="Print the MCP server entry for an agent. It runs nilla computer mcp, so it keeps working across nilla and cua-driver updates.")
+    parser = argparse.ArgumentParser(prog="nilla-browser computer mcp-config", description="Print the MCP server entry for an agent. It runs nilla-browser computer mcp, so it keeps working across nilla and cua-driver updates.")
     parser.add_argument("--target", choices=TARGETS, default="general", help="claude-code and codex print the command that adds it; the others print the JSON to paste (default: general)")
     args = parser.parse_args(argv)
     try:
         print(mcp_config(args.target))
     except Refused as error:
-        say(f"nilla computer: {error}")
+        say(f"nilla-browser computer: {error}")
         return 1
     return 0
 
@@ -673,12 +674,12 @@ def stale_notice(app: Path) -> str | None:
     record = read_record()
     if version == VERSION or record.get("path") != str(app) or record.get("version") != version:
         return None
-    return f"nilla computer: {app} is cua-driver {version}, nilla pins {VERSION}; run nilla computer setup to update it"
+    return f"nilla-browser computer: {app} is cua-driver {version}, nilla-browser pins {VERSION}; run nilla-browser computer setup to update it"
 
 
 def run_driver(argv: list[str]) -> int:
     if not supported():
-        say("nilla computer: computer use through cua-driver needs macOS here")
+        say("nilla-browser computer: computer use through cua-driver needs macOS here")
         return 1
     app = installed_app()
     try:
@@ -686,16 +687,16 @@ def run_driver(argv: list[str]) -> int:
             with applications_lock():
                 recover()
     except (Refused, OSError) as error:
-        say(f"nilla computer: {error}")
+        say(f"nilla-browser computer: {error}")
         return 1
     if app.exists() or app.is_symlink():
         try:
             verify_app(app)
         except Inconclusive as error:
-            say(f"nilla computer: {error}; try again")
+            say(f"nilla-browser computer: {error}; try again")
             return 1
         except Refused as error:
-            say(f"nilla computer: {error}. nilla won't run it: move it away and run nilla computer setup")
+            say(f"nilla-browser computer: {error}. nilla-browser won't run it: move it away and run nilla-browser computer setup")
             return 1
         binary = app / APP_BINARY
         notice = stale_notice(app)
@@ -703,7 +704,7 @@ def run_driver(argv: list[str]) -> int:
             say(notice)
     elif argv and argv[0] in DAEMON_COMMANDS:
         say(
-            f"nilla computer: Cua Driver isn't set up yet. Run nilla computer setup: it puts {APP_NAME} in {APPLICATIONS}, "
+            f"nilla-browser computer: Cua Driver isn't set up yet. Run nilla-browser computer setup: it puts {APP_NAME} in {APPLICATIONS}, "
             "which macOS ties the Accessibility and Screen Recording permissions to"
         )
         return 1
@@ -711,7 +712,7 @@ def run_driver(argv: list[str]) -> int:
         try:
             binary = ensure_driver() / APP_BINARY
         except (Refused, OSError) as error:
-            say(f"nilla computer: {error}")
+            say(f"nilla-browser computer: {error}")
             return 1
     from nilla_browser_cli import telemetry
 

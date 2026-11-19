@@ -138,7 +138,7 @@ class LinuxConfig(Sandbox):
         with mock.patch.dict(os.environ, {"DISPLAY": "", "WAYLAND_DISPLAY": "wayland-1"}), mock.patch("shutil.which", return_value="/usr/bin/xdg-open"), mock.patch("subprocess.call", return_value=0) as call:
             out, _ = self.ok("config", "edit")
         call.assert_called_once_with(["/usr/bin/xdg-open", str(self.folder / "config.json")])
-        self.assertIn("run nilla config check once you've saved it", out)
+        self.assertIn("run nilla-browser config check once you've saved it", out)
         self.assertNotIn("config.json: ok", out)
 
     def test_edit_without_xdg_open_uses_vi(self):
@@ -400,7 +400,7 @@ def fake_tarball(folder: Path, version: str, nilla: str | None = None) -> Path:
         add("")
         add("/bin")
         add("/.leases")
-        add("/bin/ardia", (nilla or f"#!/bin/sh\necho 'nilla {version}'\n").encode())
+        add("/bin/ardia", (nilla or f"#!/bin/sh\necho 'nilla-browser {version}'\n").encode())
         link = tarfile.TarInfo(f"ardia-cli-{version}/bin/python3")
         link.type = tarfile.SYMTYPE
         link.linkname = "nilla"
@@ -469,7 +469,7 @@ class InstallScript(unittest.TestCase):
         self.assertEqual(lines, ["step resolve", "version 0.0.1", "step download", "step verify", "step install", "step link", f"path {self.home / '.zprofile'}", f"installed {self.bin}"])
         self.assertEqual(os.readlink(self.bin), str(self.cli_home / "current" / "bin" / "ardia"))
         self.assertEqual(self.current(), "0.0.1")
-        self.assertEqual(subprocess.run([str(self.bin)], capture_output=True, text=True).stdout.strip(), "nilla 0.0.1")
+        self.assertEqual(subprocess.run([str(self.bin)], capture_output=True, text=True).stdout.strip(), "nilla-browser 0.0.1")
         self.assertEqual((self.home / ".zprofile").read_text(), 'export PATH="$HOME/.local/bin:$PATH"\n')
 
         status, lines, _ = self.install("0.0.1")
@@ -619,7 +619,7 @@ class InstallScript(unittest.TestCase):
     def test_install_runs_the_new_cli_only_to_check_its_version(self):
         self.login_shell("zsh")
         calls = self.temp / "calls"
-        fake_tarball(self.dist, "0.0.1", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{calls}'\necho 'nilla 0.0.1'\n")
+        fake_tarball(self.dist, "0.0.1", f"#!/bin/sh\nprintf '%s\\n' \"$*\" >> '{calls}'\necho 'nilla-browser 0.0.1'\n")
         status, lines, err = self.install("0.0.1")
         self.assertEqual(status, 0, err)
         self.assertEqual(lines[-1], f"installed {self.bin}")

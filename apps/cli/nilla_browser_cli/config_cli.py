@@ -42,7 +42,7 @@ config.json's "theme" picks one; saving the active theme restyles Nilla at once.
 
 Colours: #RGB, #RRGGBB, #RRGGBBAA, rgb(r,g,b) or rgba(r,g,b,a) (r, g, b 0-255, a 0-1). grain and the ...Opacity
 roles take numbers 0-1, the ...Radius roles 0-100, tabSelectedBorder a list of two colours. Ranges and defaults
-for the other blocks are in theme.schema.json; nilla theme check reports each bad key in Nilla's words.
+for the other blocks are in theme.schema.json; nilla-browser theme check reports each bad key in Nilla's words.
 
 Commands:
   new NAME [--from THEME]   write themes/NAME.json with every role and look key (never overwrites)
@@ -100,9 +100,9 @@ FOLDER_SHOWN = f"{endpoint.LINUX_DATA_DIR_SHOWN}/config" if endpoint.LINUX else 
 EDITOR_FALLBACK = "xdg-open (vi with no display)" if endpoint.LINUX else "vi"
 CONFIG_DESCRIPTION = CONFIG_DESCRIPTION.replace("{folder}", FOLDER_SHOWN).replace("{fallback}", EDITOR_FALLBACK)
 EDIT_HELP = (
-    ("open config.json in $VISUAL or $EDITOR and check it, else with xdg-open", "Open config.json (created first if needed) in $VISUAL or $EDITOR, wait for the editor to exit, then\ncheck it like nilla config check. With neither set, in a desktop session it opens the file with xdg-open, which\nreturns at once, so run nilla config check once you've saved it; with no display or no xdg-open it uses vi.")
+    ("open config.json in $VISUAL or $EDITOR and check it, else with xdg-open", "Open config.json (created first if needed) in $VISUAL or $EDITOR, wait for the editor to exit, then\ncheck it like nilla-browser config check. With neither set, in a desktop session it opens the file with xdg-open, which\nreturns at once, so run nilla-browser config check once you've saved it; with no display or no xdg-open it uses vi.")
     if endpoint.LINUX
-    else ("open config.json in $VISUAL, $EDITOR, else vi, then check it", "Open config.json (created first if needed) in $VISUAL, $EDITOR, else vi, wait for the editor to exit, then\ncheck it like nilla config check.")
+    else ("open config.json in $VISUAL, $EDITOR, else vi, then check it", "Open config.json (created first if needed) in $VISUAL, $EDITOR, else vi, wait for the editor to exit, then\ncheck it like nilla-browser config check.")
 )
 DATA_DIR_HELP = f"the Nilla data dir; the config folder is <DIR>/config (default: $ARDIA_DATA_DIR, else {FOLDER_SHOWN})"
 CHANNEL = r"\s*(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\s*"
@@ -239,7 +239,7 @@ def run_config(args, parser) -> int:
     if handler is None:
         parser.parse_args(["config", "--help"])
         return 0
-    return guarded("nilla config", handler, args)
+    return guarded("nilla-browser config", handler, args)
 
 
 def run_theme(args, parser) -> int:
@@ -248,7 +248,7 @@ def run_theme(args, parser) -> int:
     if handler is None:
         parser.parse_args(["theme", "--help"])
         return 0
-    return guarded("nilla theme", handler, args)
+    return guarded("nilla-browser theme", handler, args)
 
 
 def note_error(code: str) -> None:
@@ -297,7 +297,7 @@ def config_init(args, where: Places) -> int:
             files.read_object(source, str(source))
             text = files.read_text(source)
         except FileNotFoundError:
-            complain(f"nilla config: no {name} in {source.parent} yet; Nilla writes it at launch and copies it here")
+            complain(f"nilla-browser config: no {name} in {source.parent} yet; Nilla writes it at launch and copies it here")
             continue
         create(target, text)
     return 0
@@ -321,7 +321,7 @@ def split_key(key: str) -> list[str]:
 def config_schema(where: Places) -> files.Schema:
     found = files.find_schema(where, files.CONFIG_SCHEMA)
     if found.warning:
-        complain(f"nilla config: {found.warning}")
+        complain(f"nilla-browser config: {found.warning}")
     return found
 
 
@@ -385,7 +385,7 @@ def config_set(args, where: Places) -> int:
         first_problems = first_problems or problems
     if chosen is None and first_problems:
         for problem in first_problems:
-            complain(f"nilla config: {problem.message}")
+            complain(f"nilla-browser config: {problem.message}")
         return 1
     if chosen is None:
         chosen = candidates[0]
@@ -404,9 +404,9 @@ def config_set(args, where: Places) -> int:
     document = files.with_key(document, "settings", settings)
     files.save_config(where, document, created)
     if created:
-        complain(f"nilla config: created {where.config}")
+        complain(f"nilla-browser config: created {where.config}")
     if schema.document is None:
-        complain(f"nilla config: no {files.CONFIG_SCHEMA} found (Nilla writes one at launch), so {args.key} was written without checking it")
+        complain(f"nilla-browser config: no {files.CONFIG_SCHEMA} found (Nilla writes one at launch), so {args.key} was written without checking it")
     say(f"{args.key} = {json.dumps(chosen, ensure_ascii=False)}")
     return 0
 
@@ -448,7 +448,7 @@ def config_get(args, where: Places) -> int:
         try:
             text = files.read_text(where.config)
         except FileNotFoundError:
-            raise ConfigError(f"there's no {where.config} yet (nilla config init creates it)") from None
+            raise ConfigError(f"there's no {where.config} yet (nilla-browser config init creates it)") from None
         if args.json:
             try:
                 document = files.parse_json(text)
@@ -470,7 +470,7 @@ def config_get(args, where: Places) -> int:
             default = files.sub(specs.get(parts[0]), "default") if len(parts) == 1 else None
             hint = f" (Nilla's default: {cell(default)})" if len(parts) == 1 and isinstance(specs.get(parts[0]), dict) and "default" in specs[parts[0]] else ""
             note_error("not_set")
-            complain(f"nilla config: config.json doesn't set {args.key}{hint}")
+            complain(f"nilla-browser config: config.json doesn't set {args.key}{hint}")
             return 1
         value = value[part]
     say(json.dumps(value, ensure_ascii=False) if args.json or not isinstance(value, str) else value)
@@ -491,7 +491,7 @@ def config_list(args, where: Places) -> int:
         settings = document.get("settings") or {}
     except ConfigError as error:
         if where.config.exists() or os.path.lexists(where.config):
-            complain(f"nilla config: {error}")
+            complain(f"nilla-browser config: {error}")
         settings = {}
     rows = []
     for key, spec in specs.items():
@@ -507,7 +507,7 @@ def config_list(args, where: Places) -> int:
         if key not in specs:
             rows.append({"key": key, "allowed": "not a setting Nilla reads from the file" if specs or key in files.RESERVED_SETTINGS else "unknown (no schema)", "value": value})
     if schema.document is None:
-        complain(f"nilla config: no {files.CONFIG_SCHEMA} found (Nilla writes one at launch); listing only what config.json sets")
+        complain(f"nilla-browser config: no {files.CONFIG_SCHEMA} found (Nilla writes one at launch); listing only what config.json sets")
     if args.json:
         say(json.dumps({"schema": str(schema.path) if schema.path else None, "settings": rows}, indent=2, ensure_ascii=False))
         return 0
@@ -551,10 +551,10 @@ def config_edit(args, where: Places) -> int:
     except OSError as error:
         raise ConfigError(f"couldn't start {command[0]}: {error.strerror or error}") from None
     if status != 0:
-        complain(f"nilla config: {command[0]} exited with status {status}")
+        complain(f"nilla-browser config: {command[0]} exited with status {status}")
         return 1
     if not waits:
-        say(f"opened {where.config} with {os.path.basename(command[0])}; run nilla config check once you've saved it (set $VISUAL or $EDITOR to edit here)")
+        say(f"opened {where.config} with {os.path.basename(command[0])}; run nilla-browser config check once you've saved it (set $VISUAL or $EDITOR to edit here)")
         return 0
     args.json = False
     return config_check(args, where)
@@ -826,7 +826,7 @@ def config_check(args, where: Places) -> int:
     try:
         document = files.read_json(where.config, files.CONFIG_FILE)
     except FileNotFoundError:
-        raise ConfigError(f"there's no {where.config} yet (nilla config init creates it)") from None
+        raise ConfigError(f"there's no {where.config} yet (nilla-browser config init creates it)") from None
     except ConfigError as error:
         results.append((where.config, files.CONFIG_FILE, [Problem((), str(error))]))
         return report(results, warnings, args.json)
@@ -855,7 +855,7 @@ def theme_new(args, where: Places) -> int:
         raise ConfigError(f"{target} already exists")
     schema = files.find_schema(where, files.THEME_SCHEMA)
     if schema.warning:
-        complain(f"nilla theme: {schema.warning}")
+        complain(f"nilla-browser theme: {schema.warning}")
     if args.source is None and schema.document is None:
         raise ConfigError(f"no {files.THEME_SCHEMA} found, so Nilla's colours aren't known yet; open Nilla once (it writes the schema), or use --from THEME")
     source = {}
@@ -908,7 +908,7 @@ def existing_theme(where: Places, name: str) -> Path:
     files.check_theme_name(name)
     path = where.theme(name)
     if not path.exists():
-        raise ConfigError(f"no theme named {name} in {where.themes}{did_you_mean(name, files.theme_names(where))} (nilla theme new {name} makes one)")
+        raise ConfigError(f"no theme named {name} in {where.themes}{did_you_mean(name, files.theme_names(where))} (nilla-browser theme new {name} makes one)")
     return path
 
 
@@ -917,7 +917,7 @@ def activate(where: Places, name: str | None) -> None:
     document = files.with_key(document, "theme", name, after="$schema")
     files.save_config(where, document, created)
     if created:
-        complain(f"nilla theme: created {where.config}")
+        complain(f"nilla-browser theme: created {where.config}")
 
 
 def active_theme(where: Places):
@@ -933,7 +933,7 @@ def theme_list(args, where: Places) -> int:
     try:
         active = active_theme(where)
     except ConfigError as error:
-        complain(f"nilla theme: {error}")
+        complain(f"nilla-browser theme: {error}")
         active = None
     names = files.theme_names(where)
     missing = active is not None and active not in names
@@ -946,7 +946,7 @@ def theme_list(args, where: Places) -> int:
     if missing:
         say(f"* {active} (missing: no {where.show(where.theme(active))})")
     if not names and not missing:
-        complain(f"nilla theme: no themes in {where.themes} yet (nilla theme new NAME makes one)")
+        complain(f"nilla-browser theme: no themes in {where.themes} yet (nilla-browser theme new NAME makes one)")
     return 0
 
 
@@ -984,7 +984,7 @@ def theme_key(key: str) -> tuple:
 def theme_schema(where: Places) -> files.Schema:
     found = files.find_schema(where, files.THEME_SCHEMA)
     if found.warning:
-        complain(f"nilla theme: {found.warning}")
+        complain(f"nilla-browser theme: {found.warning}")
     return found
 
 
@@ -1056,7 +1056,7 @@ def chosen_theme(args, where: Places) -> str | None:
 def named_theme(args, where: Places) -> tuple[str, Path]:
     name = chosen_theme(args, where)
     if name is None:
-        raise ConfigError("config.json names no theme; pass --theme NAME (nilla theme list shows them)")
+        raise ConfigError("config.json names no theme; pass --theme NAME (nilla-browser theme list shows them)")
     return name, existing_theme(where, name)
 
 
@@ -1069,7 +1069,7 @@ def theme_set(args, where: Places) -> int:
         name = CUSTOM_THEME
         target = where.theme(name)
         if os.path.lexists(target):
-            raise ConfigError(f"config.json names no theme and {where.show(target)} already exists; nilla theme use {name} makes it active, or pass --theme NAME")
+            raise ConfigError(f"config.json names no theme and {where.show(target)} already exists; nilla-browser theme use {name} makes it active, or pass --theme NAME")
         files.load_config(where, create=True)
         document = {"$schema": f"../{files.THEME_SCHEMA}"}
     else:
@@ -1092,7 +1092,7 @@ def theme_set(args, where: Places) -> int:
     if chosen is NO_DEFAULT:
         note_error("invalid_value")
         for problem in first_problems:
-            complain(f"nilla theme: {problem.message}")
+            complain(f"nilla-browser theme: {problem.message}")
         return 1
     if creating:
         where.themes.mkdir(parents=True, exist_ok=True)
@@ -1105,7 +1105,7 @@ def theme_set(args, where: Places) -> int:
         except (ConfigError, OSError):
             remove_if_unchanged(target, updated)
             raise
-        complain(f"nilla theme: no theme was active, so this created {label} and made it the active theme")
+        complain(f"nilla-browser theme: no theme was active, so this created {label} and made it the active theme")
     else:
         files.write_json(target, updated)
         if args.theme is not None:
@@ -1114,9 +1114,9 @@ def theme_set(args, where: Places) -> int:
             except ConfigError:
                 active = name
             if active != name:
-                complain(f"nilla theme: {name} isn't the active theme, so Nilla won't show this until nilla theme use {name}")
+                complain(f"nilla-browser theme: {name} isn't the active theme, so Nilla won't show this until nilla-browser theme use {name}")
     if schema.document is None:
-        complain(f"nilla theme: no {files.THEME_SCHEMA} found (Nilla writes one at launch), so {args.key} was written without checking it")
+        complain(f"nilla-browser theme: no {files.THEME_SCHEMA} found (Nilla writes one at launch), so {args.key} was written without checking it")
     say(f"{args.key} = {json.dumps(chosen, ensure_ascii=False)}")
     return 0
 
@@ -1153,7 +1153,7 @@ def theme_get(args, where: Places) -> int:
         default = look_default(spec) if spec is not None else NO_DEFAULT
         hint = f" (Nilla's default: {cell(default)})" if default is not NO_DEFAULT else ""
         note_error("not_set")
-        complain(f"nilla theme: {label} doesn't set {args.key}{hint}")
+        complain(f"nilla-browser theme: {label} doesn't set {args.key}{hint}")
         return 1
     say(json.dumps(value, ensure_ascii=False) if args.json or not isinstance(value, str) else value)
     return 0

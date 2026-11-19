@@ -253,7 +253,7 @@ def load_config(where: Places, create: bool = False) -> tuple[dict, bool]:
         if os.path.lexists(where.config):
             raise ConfigError(f"{where.config} is a link to {os.readlink(where.config)}, which doesn't exist") from None
         if not create:
-            raise ConfigError(f"there's no {where.config} yet (nilla config init creates it)") from None
+            raise ConfigError(f"there's no {where.config} yet (nilla-browser config init creates it)") from None
         return new_config(), True
     if "settings" in document and not isinstance(document["settings"], dict):
         raise ConfigError(f"{CONFIG_FILE}: settings must be an object")

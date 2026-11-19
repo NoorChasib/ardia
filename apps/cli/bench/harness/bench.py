@@ -33,7 +33,7 @@ Commands:
                                 --side opencode drives a fresh headless Chrome for Testing through OpenCode Browse's MCP;
                                 --side browseruse drives one through Browser Use's `browser-use` CLI and skill;
                                 --side betterwright drives a headless BetterChromium through the `betterwright` CLI and skill;
-                                --side browserharness has Codex write browser-harness code (--browser chrome|cloud|ardia);
+                                --side browserharness has Codex write browser-harness code (--browser chrome|cloud|nilla);
                                 --side browseragent runs Browser Use 1.0's own agent (--browser nilla|chrome);
                                 --side nillacloud drives a Browser Use cloud browser with `nilla-browser browse` (ARDIA_WS);
                                 cloud browsers reach the task servers through temporary cloudflared tunnels
@@ -68,7 +68,7 @@ def main():
     rn.add_argument("--app")
     rn.add_argument("--port", type=int)
     rn.add_argument("--cli")
-    rn.add_argument("--ardia-test")
+    rn.add_argument("--nilla-test")
     rn.add_argument("--model")
     rn.add_argument("--effort")
     rn.add_argument("--deadline-s", type=int)

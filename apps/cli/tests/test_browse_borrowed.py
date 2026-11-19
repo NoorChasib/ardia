@@ -103,7 +103,7 @@ class BorrowedTab(unittest.TestCase):
             with self.assertRaises(BrowseError) as caught:
                 asyncio.run(function(ctx(name), argv))
             self.assertEqual(caught.exception.code, "borrowed_tab", name)
-            self.assertIn("nilla browse tab t", caught.exception.message)
+            self.assertIn("nilla-browser browse tab t", caught.exception.message)
 
     def refused(self, function, argv, name=""):
         with self.assertRaises(BrowseError) as caught:

@@ -91,9 +91,9 @@ def ensure_daemon(dir_fd: int, key: str, config: dict) -> socket.socket:
                 telemetry.note_daemon_start(spawned)
                 return sock
             if not paths.lock_held(f"{key}.lock", dir_fd):
-                raise Unreachable(f"the nilla browse daemon exited before it listened: {log_tail(dir_fd, key) or 'no output'}")
+                raise Unreachable(f"the nilla-browser browse daemon exited before it listened: {log_tail(dir_fd, key) or 'no output'}")
         time.sleep(0.03)
-    raise Unreachable("the nilla browse daemon didn't start in 15 s")
+    raise Unreachable("the nilla-browser browse daemon didn't start in 15 s")
 
 
 def command_of(payload: dict) -> tuple[str, bool]:
@@ -107,8 +107,8 @@ def command_of(payload: dict) -> tuple[str, bool]:
 def gone(payload: dict) -> BrowseError:
     name, mutating = command_of(payload)
     if mutating:
-        return OutcomeUnknown(f"`{name}`", "the nilla browse daemon went away after it took the command (see the session log)")
-    return Unreachable("the nilla browse daemon closed the connection without answering (it may have exited; see the session log)")
+        return OutcomeUnknown(f"`{name}`", "the nilla-browser browse daemon went away after it took the command (see the session log)")
+    return Unreachable("the nilla-browser browse daemon closed the connection without answering (it may have exited; see the session log)")
 
 
 def stalled(payload: dict, seconds: float) -> BrowseError:
@@ -116,7 +116,7 @@ def stalled(payload: dict, seconds: float) -> BrowseError:
 
     telemetry.note_count("daemon_answer_timed_out", True)
     name, mutating = command_of(payload)
-    why = f"the nilla browse daemon didn't answer in {seconds:g} s (see the session log)"
+    why = f"the nilla-browser browse daemon didn't answer in {seconds:g} s (see the session log)"
     if mutating:
         return OutcomeUnknown(f"`{name}`", why)
     return Unreachable(why)
@@ -132,9 +132,9 @@ def request(sock: socket.socket, payload: dict) -> dict:
         try:
             sock.sendall((json.dumps(payload, ensure_ascii=False) + "\n").encode())
         except (BrokenPipeError, ConnectionResetError):
-            raise Unreachable("the nilla browse daemon closed the connection before taking the command (see the session log)") from None
+            raise Unreachable("the nilla-browser browse daemon closed the connection before taking the command (see the session log)") from None
         except TimeoutError:
-            raise Unreachable(f"the nilla browse daemon didn't take the command in {seconds:g} s (see the session log)") from None
+            raise Unreachable(f"the nilla-browser browse daemon didn't take the command in {seconds:g} s (see the session log)") from None
         chunks = []
         size = 0
         while True:

@@ -269,7 +269,7 @@ async def run_test(build: Build, url: str, endpoint: Endpoint, expect: str | Non
     report.warnings.extend(build.meta.warnings + build.warnings)
     if build.meta.world == "ISOLATED":
         report.warnings.append(
-            "@inject-into content: this test runs the script in the page's world (nilla command connections can't "
+            "@inject-into content: this test runs the script in the page's world (nilla-browser connections can't "
             "create isolated worlds); installed, it runs in an isolated world and can't see page globals"
         )
     loop = asyncio.get_running_loop()

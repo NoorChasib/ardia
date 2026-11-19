@@ -14,7 +14,7 @@ from nilla_browser_cli.printable import complain, say, shown
 
 RUN_DESCRIPTION = """\
 Run one of Nilla's commands, exactly as its menu item or shortcut would, in the last focused window or --window.
-ARG is one of the command's variants (nilla commands lists them); COMMAND:ARG works too.
+ARG is one of the command's variants (nilla-browser commands lists them); COMMAND:ARG works too.
 
 Exit status: 0 dispatched, 1 refused, unknown or no such window, 2 Nilla can't be reached (or the connection
 dropped after the request went out, so the command may or may not have run).
@@ -66,16 +66,17 @@ Run hooks from hooks.json in the config folder ({config_folder}, or <data dir>/c
   }
 
 A hook has one trigger (on, at, every or omnibox) and one action (run, command, or a decide answer). Event hooks
-run like nilla on (see nilla on --help); command hooks run a Nilla command in the event's window and tab; decide
-hooks (tab.opening, link.opening, download.deciding, permission.requested) answer before Nilla acts, as rules
-Nilla applies itself or as a program whose stdout is the answer; scheduled hooks get a schedule.fired event.
-Rules that route or rewrite links, pick folders, run decide programs or read the address bar wait for approval in
-Nilla's Settings › Advanced › Automation. run re-reads hooks.json when it changes; an invalid file keeps the hooks
-loaded before. Output goes to {log} (rotated at 5 MB). See docs/automation.md.
+run like nilla-browser on (see nilla-browser on --help); command hooks run a Nilla command in the event's window
+and tab; decide hooks (tab.opening, link.opening, download.deciding, permission.requested) answer before Nilla
+acts, as rules Nilla applies itself or as a program whose stdout is the answer; scheduled hooks get a
+schedule.fired event. Rules that route or rewrite links, pick folders, run decide programs or read the address bar
+wait for approval in Nilla's Settings › Advanced › Automation. run re-reads hooks.json when it changes; an invalid
+file keeps the hooks loaded before. Output goes to {log} (rotated at 5 MB). See docs/automation.md.
 
 Commands:
   run         run the hooks until interrupted
-  install     run them at login: {agent_a} ({agent_name}) that keeps nilla hooks run alive
+  install     run them at login: {agent_a} ({agent_name})
+              that keeps nilla-browser hooks run alive
   uninstall   remove the {agent}
   list        the hooks in hooks.json and whether the {agent} runs
 """
@@ -119,16 +120,16 @@ def add_parsers(commands, formatter):
         return parser
 
     run = data_dir(commands.add_parser("run", help="run one of Nilla's commands", description=RUN_DESCRIPTION, formatter_class=formatter))
-    run.add_argument("command_id", metavar="COMMAND", help="a command id (see nilla commands)")
+    run.add_argument("command_id", metavar="COMMAND", help="a command id (see nilla-browser commands)")
     run.add_argument("arg", nargs="?", metavar="ARG", help="one of the command's variants")
-    run.add_argument("--window", metavar="ID", help="a window id from nilla windows (default: the last focused window)")
-    run.add_argument("--tab", metavar="ID", help="a tab id from nilla windows, for commands that act on a page; never changes focus")
+    run.add_argument("--window", metavar="ID", help="a window id from nilla-browser windows (default: the last focused window)")
+    run.add_argument("--tab", metavar="ID", help="a tab id from nilla-browser windows, for commands that act on a page; never changes focus")
     run.add_argument("--json", action="store_true", help="print the reply as JSON")
 
-    listing = data_dir(commands.add_parser("commands", help="list the commands nilla run can run", description="List the commands nilla run can run: ids, titles and variants."))
+    listing = data_dir(commands.add_parser("commands", help="list the commands nilla-browser run can run", description="List the commands nilla-browser run can run: ids, titles and variants."))
     listing.add_argument("--json", action="store_true", help="print JSON")
 
-    windows = data_dir(commands.add_parser("windows", help="list Nilla's windows and their tabs", description="List Nilla's windows and their tabs (private windows are never included). For each tab's process id, CPU and memory, use nilla tabs --usage."))
+    windows = data_dir(commands.add_parser("windows", help="list Nilla's windows and their tabs", description="List Nilla's windows and their tabs (private windows are never included). For each tab's process id, CPU and memory, use nilla-browser tabs --usage."))
     windows.add_argument("--json", action="store_true", help="print JSON")
 
     events = data_dir(commands.add_parser("events", help="print events as they happen", description=EVENTS_DESCRIPTION, formatter_class=formatter))
@@ -137,7 +138,7 @@ def add_parsers(commands, formatter):
     events.add_argument("--full-urls", action="store_true", help="keep each URL's query and fragment")
     events.add_argument("--idle", metavar="DURATION", help="the threshold for tab.idle, tab.resumed, user.idle and user.active, like 30m")
 
-    on = data_dir(commands.add_parser("on", help="run a program for each event", description=ON_DESCRIPTION, formatter_class=formatter, usage="nilla on [-h] [--data-dir DIR] [--match PATTERN] [--timeout S] [--idle DURATION] [--full-urls] EVENT[,EVENT...] -- PROGRAM [ARGS...]"))
+    on = data_dir(commands.add_parser("on", help="run a program for each event", description=ON_DESCRIPTION, formatter_class=formatter, usage="nilla-browser on [-h] [--data-dir DIR] [--match PATTERN] [--timeout S] [--idle DURATION] [--full-urls] EVENT[,EVENT...] -- PROGRAM [ARGS...]"))
     on.add_argument("events", metavar="EVENT[,EVENT...]", help="event names, comma-separated")
     on.add_argument("--match", action="append", default=[], metavar="PATTERN", help="a match pattern for the event's URL; repeat for several")
     on.add_argument("--timeout", type=float, default=hooks.DEFAULT_TIMEOUT, metavar="S", help="stop a run after this many seconds (default 60)")
@@ -174,10 +175,10 @@ def dispatch(args, parser) -> int:
     try:
         return handler(args)
     except endpoint.DataDirUnset as error:
-        complain(f"nilla {args.command}: {error}")
+        complain(f"nilla-browser {args.command}: {error}")
         return 2
     except KeyboardInterrupt:
-        complain(f"nilla {args.command}: interrupted")
+        complain(f"nilla-browser {args.command}: interrupted")
         return 130
 
 
@@ -221,9 +222,9 @@ def cmd_run(args) -> int:
     except Unreachable as error:
         error.noted()
         if error.sent:
-            complain(f"nilla run: the connection dropped after the request went out, so {command} may or may not have run ({error})")
+            complain(f"nilla-browser run: the connection dropped after the request went out, so {command} may or may not have run ({error})")
         else:
-            complain(f"ardia: {error}")
+            complain(f"nilla-browser: {error}")
         return 2
     if isinstance(result, MethodError):
         hint = ""
@@ -236,7 +237,7 @@ def cmd_run(args) -> int:
                 from nilla_browser_cli.schema_check import did_you_mean
 
                 hint = did_you_mean(arg, variants)
-        complain(f"nilla run: {result.message}{hint}")
+        complain(f"nilla-browser run: {result.message}{hint}")
         return 1
     say(json.dumps(result, ensure_ascii=False) if args.json else f"ran {command}{':' + arg if arg else ''}")
     return 0
@@ -257,7 +258,7 @@ def parse_id(text: str):
 
 def unreachable_exit(error: Unreachable) -> int:
     error.noted()
-    complain(f"ardia: {error}")
+    complain(f"nilla-browser: {error}")
     return 2
 
 
@@ -267,7 +268,7 @@ def cmd_commands(args) -> int:
     except Unreachable as error:
         return unreachable_exit(error)
     except MethodError as error:
-        complain(f"nilla commands: {error.message}")
+        complain(f"nilla-browser commands: {error.message}")
         return 1
     if args.json:
         say(json.dumps(catalog, indent=2, ensure_ascii=False))
@@ -287,7 +288,7 @@ def cmd_windows(args) -> int:
     except Unreachable as error:
         return unreachable_exit(error)
     except MethodError as error:
-        complain(f"nilla windows: {error.message}")
+        complain(f"nilla-browser windows: {error.message}")
         return 1
     if args.json:
         say(json.dumps(windows, indent=2, ensure_ascii=False))
@@ -333,7 +334,7 @@ def cmd_events(args) -> int:
         names = control.check_events(args.events) or ["*"]
         idle = idle_seconds(args.idle)
     except ValueError as error:
-        complain(f"nilla events: {error}")
+        complain(f"nilla-browser events: {error}")
         return 1
     extra = {}
     if args.full_urls:
@@ -347,10 +348,10 @@ def cmd_events(args) -> int:
             event, raw = await connection.next_line()
             behind = connection.take_dropped()
             if behind:
-                complain(f"nilla events: {behind} event{'s' if behind != 1 else ''} dropped before this one because printing fell behind")
+                complain(f"nilla-browser events: {behind} event{'s' if behind != 1 else ''} dropped before this one because printing fell behind")
             dropped = event.get("dropped")
             if isinstance(dropped, int) and not isinstance(dropped, bool) and dropped > 0 and not args.json:
-                complain(f"nilla events: Nilla dropped {dropped} event{'s' if dropped != 1 else ''} before this one")
+                complain(f"nilla-browser events: Nilla dropped {dropped} event{'s' if dropped != 1 else ''} before this one")
             say(raw if args.json else describe_event(event))
 
     try:
@@ -358,7 +359,7 @@ def cmd_events(args) -> int:
     except Unreachable as error:
         return unreachable_exit(error)
     except MethodError as error:
-        complain(f"nilla events: {error.message}")
+        complain(f"nilla-browser events: {error.message}")
         return 1
     except BrokenPipeError:
         return 0
@@ -368,12 +369,12 @@ def cmd_events(args) -> int:
 def cmd_on(args) -> int:
     program = getattr(args, "program", None)
     if not program:
-        complain("nilla on: give the program after --, like: nilla on tab.opened -- ~/bin/hook")
+        complain("nilla-browser on: give the program after --, like: nilla-browser on tab.opened -- ~/bin/hook")
         return 1
     try:
         hook = hooks.make_hook("on", [e for e in args.events.split(",") if e], args.match, program, args.timeout, idle=idle_seconds(args.idle), full_urls=args.full_urls)
     except ValueError as error:
-        complain(f"nilla on: {error}")
+        complain(f"nilla-browser on: {error}")
         return 1
     holder = {}
 
@@ -429,13 +430,13 @@ def hooks_run(args) -> int:
     async def main():
         service = hooks.Service(socket_for(args), log, capture=True, state_path=socket_for(args).parent / hooks.LAUNCH_STATE)
         holder["service"] = service
-        log.write(f"nilla hooks run: watching {path}")
+        log.write(f"nilla-browser hooks run: watching {path}")
         try:
             await asyncio.gather(hooks.watch_hooks(path, service, log), service.run_forever())
         except asyncio.CancelledError:
             raise
         except Exception as error:
-            log.write(f"nilla hooks run stopped: {type(error).__name__}: {error}")
+            log.write(f"nilla-browser hooks run stopped: {type(error).__name__}: {error}")
             raise
 
     try:
@@ -446,13 +447,13 @@ def hooks_run(args) -> int:
 
 def refuse_scratch(args, verb: str) -> bool:
     if args.data_dir or os.environ.get("ARDIA_DATA_DIR"):
-        complain(f"nilla hooks {verb}: refused while --data-dir or $ARDIA_DATA_DIR picks a data dir; the {agent_words()['agent']} is for the installed Nilla only")
+        complain(f"nilla-browser hooks {verb}: refused while --data-dir or $ARDIA_DATA_DIR picks a data dir; the {agent_words()['agent']} is for the installed Nilla only")
         return True
     return False
 
 
 def launchctl_stuck(verb: str, error) -> int:
-    complain(f"nilla hooks {verb}: launchctl didn't answer in {error.timeout:g} s; try again, or check launchctl print {hooks.domain()}/{hooks.LABEL}")
+    complain(f"nilla-browser hooks {verb}: launchctl didn't answer in {error.timeout:g} s; try again, or check launchctl print {hooks.domain()}/{hooks.LABEL}")
     return 1
 
 
@@ -472,15 +473,15 @@ def install_agent(args, launchctl, sleep, systemctl) -> int:
         return 1
     paths = hooks.agent_paths()
     if paths.cli_home is None:
-        complain(f"nilla hooks install: {hooks.CLI_HOME_UNSET}")
+        complain(f"nilla-browser hooks install: {hooks.CLI_HOME_UNSET}")
         return 2
     if not os.path.exists(paths.launcher):
-        complain(f"nilla hooks install: the nilla-browser command isn't installed at {paths.launcher}; turn on \"Let the nilla-browser command control Nilla\" in Nilla's Settings to install it")
+        complain(f"nilla-browser hooks install: the nilla-browser command isn't installed at {paths.launcher}; turn on \"Let the nilla-browser command control Nilla\" in Nilla's Settings to install it")
         return 1
     try:
         paths.owned_launcher()
     except hooks.HooksError as error:
-        complain(f"nilla hooks install: {error}")
+        complain(f"nilla-browser hooks install: {error}")
         return 1
     try:
         hooks.read_hooks(hooks_file(args))
@@ -503,7 +504,7 @@ def install_agent(args, launchctl, sleep, systemctl) -> int:
             break
         sleep(0.5)
     if result.returncode != 0:
-        complain(f"nilla hooks install: launchctl bootstrap failed ({(result.stderr or result.stdout).strip() or result.returncode})")
+        complain(f"nilla-browser hooks install: launchctl bootstrap failed ({(result.stderr or result.stdout).strip() or result.returncode})")
         return 1
     say(f"installed {hooks.LABEL}: {paths.plist}")
     say(f"it runs {paths.launcher} hooks run at login and keeps it alive; output goes to {paths.log}")
@@ -514,7 +515,7 @@ def run_systemctl(systemctl, arguments: list[str]):
     try:
         return systemctl(arguments), None
     except FileNotFoundError:
-        return None, "systemctl isn't installed; nilla hooks needs a systemd user session"
+        return None, "systemctl isn't installed; nilla-browser hooks needs a systemd user session"
     except (OSError, subprocess.TimeoutExpired) as error:
         return None, f"systemctl --user {' '.join(arguments)} failed ({getattr(error, 'strerror', None) or error})"
 
@@ -530,7 +531,7 @@ def service_install(paths, systemctl) -> int:
     try:
         unit = hooks.service_unit(paths, os.environ.get("PATH"))
     except hooks.HooksError as error:
-        complain(f"nilla hooks install: {error}")
+        complain(f"nilla-browser hooks install: {error}")
         return 1
     paths.agents.mkdir(parents=True, exist_ok=True)
     paths.logs.mkdir(parents=True, exist_ok=True)
@@ -540,7 +541,7 @@ def service_install(paths, systemctl) -> int:
         if result is not None and result.returncode != 0:
             problem = systemctl_failure(result, arguments)
         if problem:
-            complain(f"nilla hooks install: {problem}")
+            complain(f"nilla-browser hooks install: {problem}")
             return 1
     say(f"installed {hooks.SERVICE}: {paths.unit}")
     say(f"it runs {paths.launcher} hooks run at login and restarts it when it fails; output goes to {paths.log}")
@@ -609,10 +610,10 @@ def hooks_list(args, launchctl=None, systemctl=None) -> int:
         match = f"  match {' '.join(hook.patterns)}" if hook.patterns else ""
         say(f"{hook.name}  [{hook.kind()}]  {hook.trigger()}{match}  {hook.action()}")
     if problem:
-        complain(f"nilla hooks: {problem}")
+        complain(f"nilla-browser hooks: {problem}")
     if paths.linux:
         if not installed:
-            say(f"systemd user service {hooks.SERVICE}: not installed (nilla hooks install)")
+            say(f"systemd user service {hooks.SERVICE}: not installed (nilla-browser hooks install)")
         elif state.get("loaded") is None:
             say(f"systemd user service {hooks.SERVICE}: installed, state unknown (systemctl --user didn't answer)")
         else:
@@ -620,7 +621,7 @@ def hooks_list(args, launchctl=None, systemctl=None) -> int:
             active = "active" if state.get("active") else f"installed, {state.get('state') or 'not loaded'}"
             say(f"systemd user service {hooks.SERVICE}: {active}{running}")
     elif not installed:
-        say(f"LaunchAgent {hooks.LABEL}: not installed (nilla hooks install)")
+        say(f"LaunchAgent {hooks.LABEL}: not installed (nilla-browser hooks install)")
     else:
         running = f", running (pid {state['pid']})" if state.get("pid") else ""
         loaded = "loaded" if state.get("loaded") else "installed, not loaded"

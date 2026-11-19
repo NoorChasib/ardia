@@ -107,7 +107,7 @@ class ScrollRows(unittest.TestCase):
                          '[2 of 200 rows match "staples"; scrolled to the end of the list]')
         self.assertIn("--limit 50", readpages.scroll_summary(50, 50, None, "limit", 50, 1))
         self.assertIn("--timeout", readpages.scroll_summary(900, 900, None, "time", 1000, 30))
-        self.assertTrue(readpages.scroll_summary(12, 12, None, "end", 1000, 1, "t3").endswith("nilla browse tab t3 --show, then read again]"))
+        self.assertTrue(readpages.scroll_summary(12, 12, None, "end", 1000, 1, "t3").endswith("nilla-browser browse tab t3 --show, then read again]"))
         self.assertNotIn("hidden", readpages.scroll_summary(12, 12, None, "limit", 12, 1, "t3"))
 
     def test_limits(self):
@@ -190,7 +190,7 @@ class ReadListsInChrome(unittest.TestCase):
         done = subprocess.run([sys.executable, "-m", "nilla_browser_cli", "browse", "--port", str(cls.port), "--data-dir", str(cls.data), "--session", "read",
                                *args], capture_output=True, text=True, timeout=120, env=env, cwd=CLI)
         if check and done.returncode:
-            raise AssertionError(f"nilla browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
+            raise AssertionError(f"nilla-browser browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
         return done
 
     def test_grid_reads_as_rows_with_the_virtualized_note(self):

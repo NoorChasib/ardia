@@ -135,7 +135,7 @@ async def app_tab_target(state, app_tab: str) -> dict:
 def temporary_limit():
     from nilla_browser_cli.browse.errors import BrowseError
 
-    return BrowseError(f"Nilla already has {MAX_TEMPORARIES} tabs open for nilla browse reads and scripts; let them finish, or end "
+    return BrowseError(f"Nilla already has {MAX_TEMPORARIES} tabs open for nilla-browser browse reads and scripts; let them finish, or end "
                        "idle sessions with `nilla-browser browse close --all`", code="temporary_limit")
 
 

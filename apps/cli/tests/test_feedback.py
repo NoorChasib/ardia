@@ -164,7 +164,7 @@ class ScrubTest(unittest.TestCase):
             "{'client_secret': 'abc', 'page': 2}": "{'client_secret': <redacted>, 'page': 2}",
             'access_token => "zz9" next': "access_token => <redacted> next",
             "SESSION_ID=abc123; theme=dark": "SESSION_ID=<redacted>; theme=dark",
-            "nilla browse fill @e2 --password hunter2 --session work": "nilla browse fill @e2 --password <redacted> --session work",
+            "nilla-browser browse fill @e2 --password hunter2 --session work": "nilla-browser browse fill @e2 --password <redacted> --session work",
             "token: abc123 then snapshot failed": "token: <redacted> then snapshot failed",
             "export GITHUB_TOKEN=abc123def": "export GITHUB_TOKEN=<redacted>",
             "DB_PASSWORD=hunter2\nSTRIPE_SECRET_KEY=whsec_1": "DB_PASSWORD=<redacted>\nSTRIPE_SECRET_KEY=<redacted>",
@@ -224,13 +224,13 @@ class ScrubTest(unittest.TestCase):
 
     def test_talking_about_sessions_auth_and_tokens_survives(self):
         for text in (
-            "nilla browse session list shows nothing after nilla browse --session work open https://example.com",
-            "nilla browse auth save github failed: the token expired and auth load said no saved state",
+            "nilla-browser browse session list shows nothing after nilla-browser browse --session work open https://example.com",
+            "nilla-browser browse auth save github failed: the token expired and auth load said no saved state",
             "the Bearer token expired; Authorization header missing from the docs",
             "basic usage of --session work is unclear; session cookies vanish after reload",
             "the token didn't refresh\nsnapshot was fine",
             "password fields are skipped by fill, which is right, but the error says element_not_editable",
-            "nilla browse click @e7 on 0.2.44 exited 2 at 16:53 after 1234 ms",
+            "nilla-browser browse click @e7 on 0.2.44 exited 2 at 16:53 after 1234 ms",
         ):
             with self.subTest(text=text):
                 self.assertEqual(self.clean(text), text)
@@ -292,7 +292,7 @@ class TitleAndDescriptionTest(FeedbackCase):
 
     def test_body_matches_the_contract_and_carries_no_raw_length(self):
         write_consent(self.data, lastVersion="0.2.45", lastBuild=245, sessionOpen=True, sessionId=APP_SESSION)
-        self.send("--title", "t", "--kind", "slow", "--command", "nilla browse open https://a.test/x?sid=1", "it took 9 s for bob@example.com")
+        self.send("--title", "t", "--kind", "slow", "--command", "nilla-browser browse open https://a.test/x?sid=1", "it took 9 s for bob@example.com")
         body = self.service.created()["body"]
         self.assertEqual(set(body), {
             "kind", "title", "description", "source", "install_id", "session_id", "app_version", "app_build", "channel",
@@ -303,7 +303,7 @@ class TitleAndDescriptionTest(FeedbackCase):
         self.assertEqual(body["description"], "it took 9 s for <email>")
         self.assertEqual(body["session_id"], APP_SESSION)
         self.assertEqual((body["app_version"], body["app_build"]), ("0.2.45", "245"))
-        self.assertEqual(body["diagnostics"]["about_command"], "nilla browse open https://a.test/x?<redacted>")
+        self.assertEqual(body["diagnostics"]["about_command"], "nilla-browser browse open https://a.test/x?<redacted>")
         self.assertEqual(body["diagnostics"]["agent"], "Claude Code")
         self.assertNotIn("text_chars", json.dumps(body))
         self.assertEqual(body["watch_days"], 0)
@@ -402,7 +402,7 @@ class SendingTest(FeedbackCase):
         cases = [
             ({"DO_NOT_TRACK": "1"}, "DO_NOT_TRACK=1 is set"),
             ({"ARDIA_TELEMETRY": "off"}, "ARDIA_TELEMETRY=off is set"),
-            ({"ARDIA_PORT": "9222"}, "ARDIA_PORT points nilla at a test browser"),
+            ({"ARDIA_PORT": "9222"}, "ARDIA_PORT points nilla-browser at a test browser"),
             ({feedback.TEST_URL_ENV: "https://evil.example/api/feedback"}, "ARDIA_FEEDBACK_URL isn't a loopback http:// URL"),
             ({feedback.TEST_URL_ENV: ""}, "no feedback service is set up for this build"),
         ]
@@ -446,7 +446,7 @@ class SendingTest(FeedbackCase):
         with mock.patch.object(usage, "take_feedback_slot", return_value="busy"):
             status, out, _ = self.send("--title", "t", "busy")
         self.assertEqual(status, 1)
-        self.assertIn("another nilla was updating the report count", out)
+        self.assertIn("another nilla-browser command was updating the report count", out)
         self.assertEqual(self.kept()[0]["description"], "busy")
 
     def test_a_checkout_without_a_cli_home_writes_nothing(self):
@@ -709,7 +709,7 @@ class LocalServiceEndToEndTest(unittest.TestCase):
         print(f"\n[e2e] {done.stdout.strip()}")
 
     def test_sharing_off_gets_a_one_time_id(self):
-        done = self.nilla("--title", "idea", "--kind", "idea", "a --json flag on nilla windows")
+        done = self.nilla("--title", "idea", "--kind", "idea", "a --json flag on nilla-browser windows")
         self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
         reference = re.search(r"Reference (FB-[A-Z0-9]+)", done.stdout).group(1)
         report = json.loads((self.store / "feedback" / reference / "report.json").read_text())

@@ -30,7 +30,7 @@ running in process N. With --json each tab gets "pid", "cpu" and "memory" (bytes
 no process. Tabs that share a process show that process's numbers. The first --usage in a while takes about 2 s,
 since CPU is measured over time.
 
-Ids: tab-… for tabs, g-… for groups, w-… for windows (nilla tabs shows them). --group takes a group's id or its
+Ids: tab-… for tabs, g-… for groups, w-… for windows (nilla-browser tabs shows them). --group takes a group's id or its
 name (case-insensitive, in that window; an exact id wins, and a name two groups share is refused with their ids).
 --before and --after take a tab or a group id.
 
@@ -292,9 +292,9 @@ def note_error(code) -> None:
 def method_failed(command: str, error: MethodError) -> int:
     note_error(error.code)
     if error.code == "unknown_method":
-        complain(f"nilla {command}: this Nilla doesn't know {command} yet; update Nilla")
+        complain(f"nilla-browser {command}: this Nilla doesn't know {command} yet; update Nilla")
     else:
-        complain(f"nilla {command}: {error.message}")
+        complain(f"nilla-browser {command}: {error.message}")
     return 1
 
 
@@ -307,9 +307,9 @@ def apply_ops(args, command: str, ops: list) -> int:
     except Unreachable as error:
         error.noted()
         if error.sent:
-            complain(f"nilla {command}: the connection dropped after the request went out, so it may or may not have run ({error})")
+            complain(f"nilla-browser {command}: the connection dropped after the request went out, so it may or may not have run ({error})")
         else:
-            complain(f"ardia: {error}")
+            complain(f"nilla-browser: {error}")
         return 2
     except MethodError as error:
         return method_failed(command, error)
@@ -326,7 +326,7 @@ def apply_ops(args, command: str, ops: list) -> int:
         message = error.get("message") if isinstance(error, dict) else "it failed"
         ran = reply.get("applied", 0)
         tail = f" ({ran} of {len(ops)} operations ran)" if len(ops) > 1 else ""
-        complain(f"nilla {command}: {message}{tail}")
+        complain(f"nilla-browser {command}: {message}{tail}")
         return 1
     return 0
 
@@ -374,7 +374,7 @@ def cmd_tabs(args) -> int:
         try:
             op = tab_op(args)
         except ValueError as error:
-            complain(f"nilla tabs {args.tabs_command}: {error}")
+            complain(f"nilla-browser tabs {args.tabs_command}: {error}")
             return 1
         return apply_ops(args, f"tabs {args.tabs_command}", [op])
     tree = read_workspace(args, "tabs")
@@ -399,7 +399,7 @@ def cmd_groups(args) -> int:
         try:
             op = group_op(args)
         except ValueError as error:
-            complain(f"nilla groups {args.groups_command}: {error}")
+            complain(f"nilla-browser groups {args.groups_command}: {error}")
             return 1
         return apply_ops(args, f"groups {args.groups_command}", [op])
     tree = read_workspace(args, "groups")
@@ -419,14 +419,14 @@ def cmd_apply(args) -> int:
         text = sys.stdin.read() if args.file in (None, "-") else open(args.file, encoding="utf-8").read()
         doc = json.loads(text)
     except OSError as error:
-        complain(f"nilla apply: {args.file}: {error.strerror or error}")
+        complain(f"nilla-browser apply: {args.file}: {error.strerror or error}")
         return 1
     except ValueError as error:
-        complain(f"nilla apply: that isn't JSON ({error})")
+        complain(f"nilla-browser apply: that isn't JSON ({error})")
         return 1
     ops = doc.get("ops") if isinstance(doc, dict) else doc
     if not isinstance(ops, list) or not ops:
-        complain('nilla apply: give a list of operations, or {"ops": [...]}')
+        complain('nilla-browser apply: give a list of operations, or {"ops": [...]}')
         return 1
     return apply_ops(args, "apply", ops)
 
@@ -440,12 +440,12 @@ def read_workspace(args, command: str):
         return control.call(args.data_dir, "workspace", params)
     except Unreachable as error:
         error.noted()
-        complain(f"ardia: {error}")
+        complain(f"nilla-browser: {error}")
         return 2
     except MethodError as error:
         if usage and error.code == "bad_request" and "not usage" in error.message:
             note_error("unknown_method")
-            complain(f"nilla {command}: this Nilla doesn't know --usage and --pid yet; update Nilla")
+            complain(f"nilla-browser {command}: this Nilla doesn't know --usage and --pid yet; update Nilla")
             return 1
         return method_failed(command, error)
 
@@ -479,12 +479,12 @@ def print_usage(tabs: list) -> None:
 def print_process_tabs(args, tabs: list) -> int:
     if not any(isinstance(tab.get("pid"), int) for tab in tabs):
         note_error("no_pid")
-        complain("nilla tabs: this Nilla doesn't report tab process ids yet; update Nilla (nilla tabs --usage still shows CPU and memory)")
+        complain("nilla-browser tabs: this Nilla doesn't report tab process ids yet; update Nilla (nilla-browser tabs --usage still shows CPU and memory)")
         return 1
     found = by_heat([tab for tab in tabs if tab.get("pid") == args.pid])
     if not found:
         note_error("no_tab")
-        complain(f"nilla tabs: no tab runs in process {args.pid}; it may be Nilla itself, its GPU or a utility process, an extension, or a frame of another site (nilla tabs --usage lists every tab's process)")
+        complain(f"nilla-browser tabs: no tab runs in process {args.pid}; it may be Nilla itself, its GPU or a utility process, an extension, or a frame of another site (nilla-browser tabs --usage lists every tab's process)")
         return 1
     if args.json:
         say(json.dumps(found, indent=2, ensure_ascii=False))
@@ -578,5 +578,5 @@ def run(args, parser) -> int:
     try:
         return handler(args)
     except KeyboardInterrupt:
-        complain(f"nilla {args.command}: interrupted")
+        complain(f"nilla-browser {args.command}: interrupted")
         return 130

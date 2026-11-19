@@ -18,9 +18,9 @@ nilla-browser tabs open https://a.example https://b.example --group Work  # back
 nilla-browser tabs move tab-1 tab-2 --group Work                           # into a group, by name or id
 nilla-browser tabs move tab-3 --top                                        # out of every group
 nilla-browser tabs move tab-4 --after tab-9                                # next to a tab, in its group
-nilla-browser tabs pin tab-5 --row ; nilla tabs sleep tab-6 ; nilla tabs rename tab-7 "Inbox"
+nilla-browser tabs pin tab-5 --row ; nilla-browser tabs sleep tab-6 ; nilla-browser tabs rename tab-7 "Inbox"
 nilla-browser groups create tab-1 tab-2 --name Work --icon 🚀 --color blue --unpinned
-nilla-browser groups update Work --collapse ; nilla groups move Reading --parent Work ; nilla groups ungroup Imported
+nilla-browser groups update Work --collapse ; nilla-browser groups move Reading --parent Work ; nilla-browser groups ungroup Imported
 ```
 
 For a whole layout, send one `nilla-browser apply` (a JSON list on stdin; `$N` is what operation N made: its group, else

@@ -310,8 +310,8 @@ class BackgroundTabTest(unittest.TestCase):
                 asyncio.run(page.require_visible())
         self.assertFalse(state.background_live)
         self.assertEqual(caught.exception.code, "tab_hidden")
-        self.assertIn("use: nilla browse tab t3 --show (or open <url> --show)", caught.exception.message)
-        self.assertEqual(caught.exception.data["use"], "nilla browse tab t3 --show")
+        self.assertIn("use: nilla-browser browse tab t3 --show (or open <url> --show)", caught.exception.message)
+        self.assertEqual(caught.exception.data["use"], "nilla-browser browse tab t3 --show")
 
     def test_one_tab_that_stayed_hidden_does_not_refuse_the_next_one_at_once(self):
         page, state = self.make_page()

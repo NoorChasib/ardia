@@ -104,7 +104,7 @@ def parse(argv: list[str], flags: dict[str, str] | None = None, aliases: dict[st
 
 def need(positionals: list[str], count: int, usage: str):
     if len(positionals) < count:
-        raise Usage(f"Usage: nilla browse {usage}")
+        raise Usage(f"Usage: nilla-browser browse {usage}")
 
 
 def normalize_url(url: str) -> str:
@@ -465,7 +465,7 @@ async def cmd_open(ctx: Ctx, argv):
     options, args = parse(argv, {"--enable": "multi", "--init-script": "multi", "--capture-console": "bool", "--headers": "value", "--label": "value", "--show": "bool",
                                  "--read": "bool"})
     if options.get("headers"):
-        raise Usage("nilla browse can't scope headers to an origin at launch; run `nilla-browser browse set headers <json>` before `open`")
+        raise Usage("nilla-browser browse can't scope headers to an origin at launch; run `nilla-browser browse set headers <json>` before `open`")
     ctx.options.setdefault("enable", []).extend(sum((value.split(",") for value in options.get("enable") or []), []))
     ctx.options.setdefault("init_scripts", []).extend(options.get("init_script") or [])
     if options.get("capture_console"):
@@ -517,7 +517,7 @@ async def cmd_open(ctx: Ctx, argv):
         else:
             where = f"→ Opened in its own background tab [{tab}]"
         if borrowed or not background:
-            text += f"\n{where}; " + ("it takes input without being shown" if background else f"this Nilla doesn't deliver input there. use: nilla browse tab {tab} --show (or open <url> --show)")
+            text += f"\n{where}; " + ("it takes input without being shown" if background else f"this Nilla doesn't deliver input there. use: nilla-browser browse tab {tab} --show (or open <url> --show)")
     if options.get("read"):
         from nilla_browser_cli import command_metrics
 
@@ -750,7 +750,7 @@ async def cmd_fill(ctx: Ctx, argv):
         result.data["suggestions"] = [item["text"] for item in found]
         best = text if actions.unique_match(text, found) else found[0]["text"]
         result.text += (f"\n→ {len(found)} suggestion{'s' if len(found) != 1 else ''} showing, none picked. "
-                        f"To pick one: nilla browse select {args[0]} {shlex.quote(best)}")
+                        f"To pick one: nilla-browser browse select {args[0]} {shlex.quote(best)}")
     result = changes.attach(result, report)
     if (text and not typeahead and not found and stored is None and text_before is not None and only_the_field_changed(report)
             and await is_input(page, element) and await page_text_mark(page, element) == text_before):
@@ -1143,7 +1143,7 @@ async def evaluate_main(page, expression: str, timeout: float = EVAL_TIMEOUT):
         description = (details.get("exception") or {}).get("description") or details.get("text") or "error"
         if "is not a valid selector" in description and UNQUOTED_ATTRIBUTE.search(description):
             description += ('\n  An attribute value with spaces or punctuation needs quotes in CSS: a[href*="/path/"], '
-                            '[aria-label="Two words"]. nilla browse\'s own selectors (click, find, get) quote it for you')
+                            '[aria-label="Two words"]. nilla-browser browse\'s own selectors (click, find, get) quote it for you')
         raise BrowseError(f"Evaluation error: {description}", code="page_script_error")
     remote = result.get("result") or {}
     if remote.get("type") == "undefined":
@@ -1230,7 +1230,7 @@ async def cmd_get(ctx: Ctx, argv):
 
         parts = urlsplit(url)
         if not ctx.state.endpoint.explicit or parts.query or parts.username or parts.password or "token" in url.lower():
-            raise BrowseError("This CDP URL carries a control token, so nilla browse never prints it; drive the page with nilla browse commands (`eval` for JavaScript)")
+            raise BrowseError("This CDP URL carries a control token, so nilla-browser browse never prints it; drive the page with nilla-browser browse commands (`eval` for JavaScript)")
         return Result({"cdpUrl": url}, url)
     page = await ctx.state.page()
     if what == "title":
@@ -1504,7 +1504,7 @@ async def cmd_tab(ctx: Ctx, argv):
         if target_id is None:
             raise BrowseError("This session has no current tab to close")
         if target_id not in state.opened:
-            raise BrowseError(f"Tab [{state.tab_id(target_id)}] is one of the user's tabs; nilla browse only closes tabs this session opened")
+            raise BrowseError(f"Tab [{state.tab_id(target_id)}] is one of the user's tabs; nilla-browser browse only closes tabs this session opened")
         if not state.registry.reserve_close(state.instance, target_id):
             users = state.registry.others(state.instance)[1].get(target_id) or ["another session"]
             raise BrowseError(f"Tab [{state.tab_id(target_id)}] is in use by session {', '.join(users)}, so it stays open", code="tab_in_use")
@@ -1552,7 +1552,7 @@ def tab_line(tab: dict, session: str) -> str:
 async def cmd_window(ctx: Ctx, argv):
     _, args = parse(argv)
     if not args or args[0] != "new":
-        raise Usage("Usage: nilla browse window new [url]")
+        raise Usage("Usage: nilla-browser browse window new [url]")
     page = await new_tab(ctx, args[1] if len(args) > 1 else None, window=True)
     return Result({"tabId": ctx.state.tab_id(page.target_id), "url": page.url}, page.url or "about:blank")
 
@@ -1579,13 +1579,13 @@ async def cmd_frame(ctx: Ctx, argv):
         if not frame_id or frame_id not in page.frames:
             box = await actions.element_box(page, element) if frame_id else None
             if box is None:
-                raise BrowseError(f"{target} isn't an iframe this tab can reach (nilla browse doesn't attach cross-process iframes)")
+                raise BrowseError(f"{target} isn't an iframe this tab can reach (nilla-browser browse doesn't attach cross-process iframes)")
             from nilla_browser_cli import command_metrics
 
             command_metrics.flag("frame_cross_process_box", True)
             left, top, right, bottom = (round(value) for value in box)
             raise BrowseError(
-                f"{target} is a cross-process iframe, which nilla browse can't enter, but the mouse reaches it: it sits at "
+                f"{target} is a cross-process iframe, which nilla-browser browse can't enter, but the mouse reaches it: it sits at "
                 f"{left},{top} to {right},{bottom} in the viewport. Click a point inside it with `mouse move <x> <y>`, "
                 "`mouse down` and `mouse up` (in one batch), then `screenshot` to see what changed",
                 data={"box": [left, top, right, bottom]}, code="cross_process_frame",
@@ -1606,7 +1606,7 @@ async def cmd_dialog(ctx: Ctx, argv):
         return Result({"hasDialog": True, "type": dialog.get("type"), "message": dialog.get("message"), "defaultPrompt": dialog.get("defaultPrompt")},
                       f"Dialog open: {dialog.get('type')} {json.dumps(dialog.get('message', ''), ensure_ascii=False)}", page_content=True)
     if action not in ("accept", "dismiss"):
-        raise Usage("Usage: nilla browse dialog accept [text] | dismiss | status")
+        raise Usage("Usage: nilla-browser browse dialog accept [text] | dismiss | status")
     if not dialog:
         raise BrowseError("No dialog is currently open")
     params = {"accept": action == "accept"}
@@ -1833,7 +1833,7 @@ async def cmd_state(ctx: Ctx, argv):
             return Result({"path": args[1]}, f"✓ State loaded from {args[1]}")
     except Gated as error:
         raise error.during(f"state {args[0]}") from None
-    raise Usage("Usage: nilla browse state save|load <path>")
+    raise Usage("Usage: nilla-browser browse state save|load <path>")
 
 
 async def wait_download(ctx: Ctx, trigger, destination: str | None, timeout: float) -> str:
@@ -1969,7 +1969,7 @@ async def cmd_addinitscript(ctx: Ctx, argv):
     options, args = parse(argv, {"--stdin": "bool"})
     source = ctx.stdin if options.get("stdin") else " ".join(args)
     if not source:
-        raise Usage("Usage: nilla browse addinitscript <js> | --stdin")
+        raise Usage("Usage: nilla-browser browse addinitscript <js> | --stdin")
     page = await ctx.state.page()
     refuse_on_borrowed(ctx, page, "add a script to")
     identifier = await add_init_script(ctx, page, source, None)
@@ -2418,19 +2418,19 @@ def boundary(text: str) -> str:
 
 
 SKIPPED = {
-    "connect": "nilla browse always drives the running Nilla (pick the endpoint with --data-dir, --port or --ws)",
+    "connect": "nilla-browser browse always drives the running Nilla (pick the endpoint with --data-dir, --port or --ws)",
     "inspect": "opening DevTools on the user's tab isn't something the nilla-browser command does",
     "install": "Nilla is the browser; there's nothing to install",
     "upgrade": "Nilla updates the nilla-browser command itself",
     "doctor": "run `nilla-browser browse session info` instead",
-    "dashboard": "not part of nilla browse",
+    "dashboard": "not part of nilla-browser browse",
     "chat": "Nilla has no AI features, by the owner's decision",
-    "mcp": "not part of nilla browse",
-    "profiles": "nilla browse never reads browser profiles",
-    "confirm": "action confirmation (--confirm-actions) isn't part of nilla browse",
-    "deny": "action confirmation (--confirm-actions) isn't part of nilla browse",
+    "mcp": "not part of nilla-browser browse",
+    "profiles": "nilla-browser browse never reads browser profiles",
+    "confirm": "action confirmation (--confirm-actions) isn't part of nilla-browser browse",
+    "deny": "action confirmation (--confirm-actions) isn't part of nilla-browser browse",
     "swipe": "iOS isn't supported",
     "tap": "iOS isn't supported",
     "device": "iOS isn't supported",
-    "skills": "use `nilla --skill` (or `nilla-browser skills get --full`) to print the skill, `nilla-browser skills install` to copy it",
+    "skills": "use `nilla-browser --skill` (or `nilla-browser skills get --full`) to print the skill, `nilla-browser skills install` to copy it",
 }

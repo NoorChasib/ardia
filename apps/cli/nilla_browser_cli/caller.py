@@ -7,7 +7,7 @@ import unicodedata
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-FALLBACK = "nilla"
+FALLBACK = "nilla-browser"
 MAX_NAME = 40
 MAX_APP_PATH = 1024
 MAX_DEPTH = 64

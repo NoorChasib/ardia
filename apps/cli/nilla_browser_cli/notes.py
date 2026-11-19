@@ -14,7 +14,7 @@ ACTIONS = ("get", "set", "append", "list", "rm")
 LABEL = r"[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9_])?"
 HOST = re.compile(rf"^(?:{LABEL}(?:\.{LABEL})*|\[[0-9a-f:.]+\])(?::\d{{1,5}})?$")
 DEFAULT_PORTS = {"http": 80, "https": 443}
-USAGE = "Usage: nilla notes [get|set|append|list|rm] [SITE] [TEXT|-]"
+USAGE = "Usage: nilla-browser notes [get|set|append|list|rm] [SITE] [TEXT|-]"
 
 
 @dataclass
@@ -89,14 +89,14 @@ def parse_args(args: list[str]) -> Request:
     action = positional.pop(0) if positional and positional[0] in ACTIONS else "get"
     if action == "list":
         if positional:
-            raise Usage("Usage: nilla notes list")
+            raise Usage("Usage: nilla-browser notes list")
         return Request(action, None)
     if action in ("get", "rm"):
         if len(positional) > 1:
-            raise Usage(f"Usage: nilla notes {action} [SITE]")
+            raise Usage(f"Usage: nilla-browser notes {action} [SITE]")
         return Request(action, site_of(positional[0]) if positional else None)
     if not positional:
-        raise Usage(f"Usage: nilla notes {action} [SITE] TEXT|-  (- reads stdin)")
+        raise Usage(f"Usage: nilla-browser notes {action} [SITE] TEXT|-  (- reads stdin)")
     if len(positional) >= 2 and looks_like_site(positional[0]):
         return Request(action, site_of(positional[0]), " ".join(positional[1:]))
     return Request(action, None, " ".join(positional))
@@ -178,7 +178,7 @@ def header(root: Path, url: str | None) -> tuple[str | None, str | None]:
         return site, None
     shown = text if len(text) <= HEADER_LIMIT else text[:HEADER_LIMIT] + f"… ({len(text) - HEADER_LIMIT} more characters: `nilla-browser notes get {site}`)"
     lines = shown.splitlines() or [""]
-    rendered = [f"# notes for {site} (nilla notes): {lines[0]}"] + [f"# {line}" for line in lines[1:]]
+    rendered = [f"# notes for {site} (nilla-browser notes): {lines[0]}"] + [f"# {line}" for line in lines[1:]]
     return site, "\n".join(rendered)
 
 

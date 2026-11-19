@@ -117,7 +117,7 @@ RELOAD_SETTLE = 1.5
 @command("network")
 async def cmd_network(ctx, argv):
     if not argv:
-        raise Usage("Usage: nilla browse network route|unroute|requests|request|har ...")
+        raise Usage("Usage: nilla-browser browse network route|unroute|requests|request|har ...")
     action, rest = argv[0], argv[1:]
     if action == "requests":
         return await network_requests(ctx, rest)
@@ -215,7 +215,7 @@ async def network_har(ctx, argv):
         ctx.state.extras["har"] = {"target": page.target_id, "since": time.time() * 1000, "mode": mode, "seen": set(page.requests)}
         return Result({"started": True, "content": mode}, "✓ HAR recording started")
     if args[0] != "stop":
-        raise Usage("Usage: nilla browse network har start|stop [path]")
+        raise Usage("Usage: nilla-browser browse network har start|stop [path]")
     har = ctx.state.extras.pop("har", None)
     ctx.state.leases.discard("har")
     if not har:
@@ -250,7 +250,7 @@ async def network_har(ctx, argv):
             "_resourceType": record.get("resourceType"),
             **({"_error": record["failed"]} if record.get("failed") else {}),
         })
-    document = {"log": {"version": "1.2", "creator": {"name": "nilla browse", "version": "1"}, "pages": [], "entries": entries}}
+    document = {"log": {"version": "1.2", "creator": {"name": "nilla-browser browse", "version": "1"}, "pages": [], "entries": entries}}
     path = ctx.path(args[1]) if len(args) > 1 else os.path.join(os.path.dirname(default_dir(ctx)), f"capture-{int(time.time())}.har")
     from nilla_browser_cli.printable import well_formed
 
@@ -411,7 +411,7 @@ async def tracing(ctx, argv, kind):
         ctx.state.leases.add("trace")
         return Result({"started": True}, "✓ Profiling started" if kind == "profiler" else "✓ Recording started")
     if args[0] != "stop":
-        raise Usage(f"Usage: nilla browse {kind} start|stop [path]")
+        raise Usage(f"Usage: nilla-browser browse {kind} start|stop [path]")
     record = ctx.state.extras.pop("tracing", None)
     if not record:
         raise BrowseError(f"No {kind} is recording")
@@ -597,7 +597,7 @@ async def cmd_stream(ctx, argv):
             await stop_stream(ctx)
         return Result({"enabled": False}, "✓ Streaming disabled")
     if action != "enable":
-        raise Usage("Usage: nilla browse stream enable [--port N] [--input] | disable | status")
+        raise Usage("Usage: nilla-browser browse stream enable [--port N] [--input] | disable | status")
     if stream:
         raise BrowseError(f"Streaming is already on at {stream['url']}")
     page = await ctx.state.page()

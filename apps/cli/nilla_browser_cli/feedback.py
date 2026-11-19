@@ -50,8 +50,8 @@ headers, known key formats, JWTs), along with emails, URL logins and queries, ca
 EPILOG = """\
 Examples:
   nilla-browser feedback --title "snapshot -i hides dialog buttons" "the Save button inside a dialog wasn't listed with a ref"
-  nilla-browser feedback --kind slow --title "open takes 9 s" --command "nilla browse open https://example.com" "it used to take 1 s"
-  echo "fill on a date input typed into the wrong field" | nilla feedback --title "fill misses date inputs"
+  nilla-browser feedback --kind slow --title "open takes 9 s" --command "nilla-browser browse open https://example.com" "it used to take 1 s"
+  echo "fill on a date input typed into the wrong field" | nilla-browser feedback --title "fill misses date inputs"
   nilla-browser feedback --title "click did nothing" --attach shot.png "the button stayed the same after click @e4"
 
 Attach: .mp4 (one recording, 100 MB), .json.gz (one trace, 50 MB), .ips crash reports, and .png .jpg .jpeg .gif .webp
@@ -106,7 +106,7 @@ def clean_title(title: str | None) -> str:
 
     title = " ".join((title or "").split())
     if not title:
-        raise Refused(f'nilla feedback needs --title "…" (1-{MAX_TITLE} characters)')
+        raise Refused(f'nilla-browser feedback needs --title "…" (1-{MAX_TITLE} characters)')
     if len(title) > MAX_TITLE:
         raise Refused(f"the title is {len(title)} characters; keep it to {MAX_TITLE}")
     clean = telemetry_scrub.scrub(title)
@@ -119,7 +119,7 @@ def clean_description(text: str) -> tuple[str, bool]:
     from nilla_browser_cli import telemetry_scrub
 
     if not text.strip():
-        raise Refused('nilla feedback needs a description: nilla feedback --title "…" "what happened, what you expected"')
+        raise Refused('nilla-browser feedback needs a description: nilla-browser feedback --title "…" "what happened, what you expected"')
     clean, truncated = telemetry_scrub.free_text(text.strip(), MAX_DESCRIPTION)
     if telemetry_scrub.only_placeholders(clean):
         raise Refused("nothing is left of the description once secrets and personal data are removed; describe what happened without them")
@@ -143,7 +143,7 @@ def attachment_kind(path: Path, counts: dict) -> tuple[str, int, str]:
         return f"crash-{counts['ips']}.ips", OTHER_FILE_BYTES, "text/plain"
     extension = lower.rsplit(".", 1)[-1] if "." in lower else ""
     if extension not in OTHER_TYPES:
-        raise Refused(f"{path.name}: can't attach this kind of file (see nilla feedback --help for the kinds)")
+        raise Refused(f"{path.name}: can't attach this kind of file (see nilla-browser feedback --help for the kinds)")
     counts["other"] = counts.get("other", 0) + 1
     return f"attachment-{counts['other']}.{extension}", OTHER_FILE_BYTES, OTHER_TYPES[extension]
 
@@ -186,7 +186,7 @@ def feedback_url(env) -> tuple[str | None, str]:
     if not FEEDBACK_URL:
         return None, "no feedback service is set up for this build"
     if telemetry.is_dev_build():
-        return None, f"this nilla is a checkout build ({__version__}), which never sends to a feedback service; set {TEST_URL_ENV} to a local service"
+        return None, f"this nilla-browser is a checkout build ({__version__}), which never sends to a feedback service; set {TEST_URL_ENV} to a local service"
     return FEEDBACK_URL, ""
 
 
@@ -201,7 +201,7 @@ def blocked_reason(env) -> str | None:
         return f"ARDIA_TELEMETRY={sharing} is set"
     for name in telemetry.TEST_ENDPOINT_ENV:
         if env.get(name):
-            return f"{name} points nilla at a test browser"
+            return f"{name} points nilla-browser at a test browser"
     return None
 
 
@@ -320,7 +320,7 @@ def submit(base: str, payload: dict, found: list[Attachment]) -> Outcome:
         return Outcome(False, failure or f"the feedback service answered HTTP {status}")
     reference, token = created.get("id"), created.get("upload_token")
     if not isinstance(reference, str) or not REFERENCE.match(reference) or not isinstance(token, str) or not TOKEN.match(token):
-        return Outcome(False, "the feedback service gave an answer nilla couldn't read")
+        return Outcome(False, "the feedback service gave an answer nilla-browser couldn't read")
     item_url = f"{base}/{quote(reference)}"
     for item in found:
         status, failure = upload(item_url, item, token)
@@ -396,7 +396,7 @@ def run(args, stdin=None, env=None) -> int:
         description, truncated = clean_description(text)
         found = attachments(args.attach)
     except Refused as refused:
-        sys.stderr.write(f"nilla feedback: {refused}\n")
+        sys.stderr.write(f"nilla-browser feedback: {refused}\n")
         return 2
     home = usage.recording_home(env)
     explicit = args.data_dir or env.get("ARDIA_DATA_DIR")
@@ -426,7 +426,7 @@ def run(args, stdin=None, env=None) -> int:
     if slot == "limited":
         return keep(home, entry, f"{DAILY_LIMIT} reports already went out in the last day")
     if slot != "ok":
-        return keep(home, entry, "another nilla was updating the report count (try again)")
+        return keep(home, entry, "another nilla-browser command was updating the report count (try again)")
     outcome = submit(base, payload, found)
     if not outcome.sent:
         if home is not None:

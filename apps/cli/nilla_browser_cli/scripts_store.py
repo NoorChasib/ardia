@@ -207,7 +207,7 @@ class Store:
             except BlockingIOError:
                 if time.monotonic() >= deadline:
                     os.close(fd)
-                    raise StoreError(f"another nilla scripts command or Nilla has held {self.path / '.lock'} for {LOCK_TIMEOUT}s") from None
+                    raise StoreError(f"another nilla-browser scripts command or Nilla has held {self.path / '.lock'} for {LOCK_TIMEOUT}s") from None
                 time.sleep(0.05)
         self.lock_fd = fd
 

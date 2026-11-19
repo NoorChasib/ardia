@@ -78,7 +78,7 @@ class Socket:
 
     async def send(self, message) -> None:
         if not isinstance(message, (str, bytes, bytearray, memoryview)):
-            raise guard.ForbiddenCommand("nilla only sends whole messages, not fragments")
+            raise guard.ForbiddenCommand("nilla-browser only sends whole messages, not fragments")
         guard.check_message(message)
         if self.closed is not None or self.close_sent:
             raise self.closed or Closed()

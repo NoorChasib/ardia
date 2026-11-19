@@ -59,7 +59,7 @@ class Naming(unittest.TestCase):
 
     def test_an_interpreter_running_something_else_is_not_an_agent(self):
         found = caller.from_chain([Process(5, 1, "/usr/bin/python3", ("python3", "-c", "claude"))])
-        self.assertEqual(found, Caller("nilla"))
+        self.assertEqual(found, Caller("nilla-browser"))
 
     def test_the_outermost_app_bundle_names_the_caller(self):
         app = self.bundle("Visual Studio Code.app", CFBundleName="Code")
@@ -83,8 +83,8 @@ class Naming(unittest.TestCase):
 
     def test_no_agent_and_no_app_falls_back_to_nilla(self):
         found = caller.from_chain(chain(("/bin/sh", ["/bin/sh", "-c"]), ("/usr/sbin/sshd", ["sshd-session"])))
-        self.assertEqual(found, Caller("nilla"))
-        self.assertEqual(caller.from_chain([]), Caller("nilla"))
+        self.assertEqual(found, Caller("nilla-browser"))
+        self.assertEqual(caller.from_chain([]), Caller("nilla-browser"))
 
     def test_the_walk_stops_at_launchd_on_a_cycle_and_on_a_gone_process(self):
         reader = FakeReader({10: Process(10, 11, "/bin/zsh"), 11: Process(11, 1, T3)})
@@ -95,7 +95,7 @@ class Naming(unittest.TestCase):
 
     def test_a_reparented_process_names_nothing(self):
         reader = FakeReader({10: Process(10, 1, "/bin/sh", ("/bin/sh", "-c"))})
-        self.assertEqual(caller.from_chain(caller.ancestry(10, reader)), Caller("nilla"))
+        self.assertEqual(caller.from_chain(caller.ancestry(10, reader)), Caller("nilla-browser"))
 
     def test_procfs_reads_parents_paths_and_argv_from_a_proc_tree(self):
         with tempfile.TemporaryDirectory() as proc:

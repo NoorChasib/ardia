@@ -66,7 +66,7 @@ class PagesChecks:
         env = dict(os.environ, PYTHONPATH=str(CLI))
         done = subprocess.run(cls.browse_argv(args, session), capture_output=True, text=True, timeout=timeout, env=env, input=stdin)
         if check and done.returncode:
-            raise AssertionError(f"nilla browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
+            raise AssertionError(f"nilla-browser browse {' '.join(args)} exited {done.returncode}: {done.stderr}{done.stdout}")
         return done
 
     @classmethod

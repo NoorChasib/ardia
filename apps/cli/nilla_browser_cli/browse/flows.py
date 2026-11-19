@@ -43,7 +43,7 @@ RUN_FLAGS = {"--param": "multi", "--fields": "value", "--where": "multi", "--lim
 SITE_FLAGS = {"--site": "value"}
 READ_ONLY = ("Flows are read-only for now: they keep and send GET requests only, and the answer in that range came from {methods}. "
              "Do this task in the page")
-USAGE = ("Usage: nilla browse flow steps [--all] | save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]\n"
+USAGE = ("Usage: nilla-browser browse flow steps [--all] | save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]\n"
          "  | run <name> [--param k=v] [--fields a,b.c] [--where f=v] [--limit n]\n"
          "  | list [site] | show <name> [--site s] | rm <name> [--site s]")
 
@@ -394,7 +394,7 @@ def build_flow(name: str, steps: list[dict], given: dict | None = None, output: 
     flow = {
         "version": VERSION, "name": name, "description": " ".join(str(description or "").split())[:MAX_DESCRIPTION] or None, "site": site,
         "origin": start.origin, "startUrl": start_saved or start.origin + "/", "hosts": sorted(hosts),
-        "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "createdBy": {"tool": "nilla browse", "version": tool_version},
+        "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "createdBy": {"tool": "nilla-browser browse", "version": tool_version},
         "params": params, "output": output or default_output(requests), "verified": True, "steps": saved_steps,
     }
     report = {"requests": [{"id": request["id"], "method": request["method"], "url": request["url"], "kind": request["kind"],
@@ -434,7 +434,7 @@ def validate(flow, site: str | None = None, name: str | None = None) -> dict:
     if not isinstance(flow, dict):
         raise invalid("isn't a JSON object")
     if flow.get("version") != VERSION:
-        raise invalid(f"is version {str(flow.get('version'))[:10]!r}; this nilla reads version {VERSION}.")
+        raise invalid(f"is version {str(flow.get('version'))[:10]!r}; this nilla-browser reads version {VERSION}.")
     unknown = sorted(set(flow) - FIELDS)
     missing = [key for key in REQUIRED if key not in flow]
     if unknown or missing:
@@ -668,14 +668,14 @@ def run_local(root: Path, args: list[str], page_url: str | None = None) -> Resul
     if action == "show":
         options, positional = parse(args[1:], SITE_FLAGS)
         if not positional:
-            raise Usage("Usage: nilla browse flow show <name> [--site s]")
+            raise Usage("Usage: nilla-browser browse flow show <name> [--site s]")
         site = locate(root, positional[0], options.get("site"), page_url)
         flow = load(root, site, positional[0])
         return Result({"flow": flow}, show_text(flow), page_content=True)
     if action in ("rm", "remove", "delete"):
         options, positional = parse(args[1:], SITE_FLAGS)
         if not positional:
-            raise Usage("Usage: nilla browse flow rm <name> [--site s]")
+            raise Usage("Usage: nilla-browser browse flow rm <name> [--site s]")
         site = locate(root, positional[0], options.get("site"), page_url)
         removed = remove(root, site, positional[0])
         return Result({"site": site, "name": positional[0], "removed": removed},
@@ -805,7 +805,7 @@ def save_text(name: str, path: Path, flow: dict, report: dict, secrets=()) -> st
     if report["unkept"]:
         lines.append(f"  not kept: {', '.join(report['unkept'])} requests (flows are read-only)")
     usage = " ".join(f"--param {param['name']}=…" for param in report["params"])
-    lines.append(f"→ nilla browse flow run {name}" + (f" {usage}" if usage else "") + " [--fields a,b] [--where f=v] [--limit n]")
+    lines.append(f"→ nilla-browser browse flow run {name}" + (f" {usage}" if usage else "") + " [--fields a,b] [--where f=v] [--limit n]")
     return "\n".join(lines)
 
 
@@ -824,7 +824,7 @@ async def cmd_flow(ctx, argv):
     if action == "save":
         options, positional = parse(rest, SAVE_FLAGS)
         if len(positional) != 1:
-            raise Usage("Usage: nilla browse flow save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]")
+            raise Usage("Usage: nilla-browser browse flow save <name> [--from n] [--to n] [--param k=v] [--output id] [--description text]")
         steps = save_range(log, seq_of(options.get("from"), "--from"), seq_of(options.get("to"), "--to"))
         flow, report = build_flow(positional[0], steps, parse_params(options.get("param")), options.get("output"), options.get("description"), __version__,
                                   log.known_secrets())
@@ -841,7 +841,7 @@ async def cmd_flow(ctx, argv):
 
         options, positional = parse(rest, RUN_FLAGS)
         if len(positional) != 1:
-            raise Usage("Usage: nilla browse flow run <name> [--param k=v] [--fields a,b.c] [--where f=v] [--limit n]")
+            raise Usage("Usage: nilla-browser browse flow run <name> [--param k=v] [--fields a,b.c] [--where f=v] [--limit n]")
         page = state.pages.get(state.current) if state.current else None
         site = locate(root, positional[0], options.get("site"), page.url if page else None)
         flow = load(root, site, positional[0])

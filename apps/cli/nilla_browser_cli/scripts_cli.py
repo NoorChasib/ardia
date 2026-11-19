@@ -37,7 +37,7 @@ and in iframes, and the --expect value. After the script ran and the page loaded
 reports an unhandled promise rejection about a second late), retrying --expect (a JavaScript expression, awaited,
 in the page's world) until it's truthy. The tab closes at the end unless --keep.
 
-@inject-into content runs in the page's world here (nilla command connections can't create isolated worlds), with
+@inject-into content runs in the page's world here (nilla-browser connections can't create isolated worlds), with
 a warning.
 
 Exit status: 0 the script ran without uncaught exceptions and --expect was truthy, 1 otherwise (build error, the
@@ -107,7 +107,7 @@ def add_parser(commands, formatter):
     install.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
 
     uninstall = sub.add_parser("uninstall", help="remove an installed script", description="Remove an installed script by its @name or id. Exit status as for install.")
-    uninstall.add_argument("name", metavar="NAME", help="the script's @name or id (see nilla scripts list)")
+    uninstall.add_argument("name", metavar="NAME", help="the script's @name or id (see nilla-browser scripts list)")
     uninstall.add_argument("--data-dir", metavar="DIR", help="the Nilla data dir (default: $ARDIA_DATA_DIR, else the installed app's)")
 
     listing = sub.add_parser("list", help="list the installed scripts", description="List the installed scripts and what Nilla last reported about them.")
@@ -128,7 +128,7 @@ def run(args, parser) -> int:
     try:
         return run_command(args, parser)
     except DataDirUnset as error:
-        complain(f"nilla scripts: {error}")
+        complain(f"nilla-browser scripts: {error}")
         return 2
 
 
@@ -160,7 +160,7 @@ def new(args) -> int:
 
     name = args.name.strip()
     if not name or "\n" in name:
-        complain("nilla scripts new: give the script a name")
+        complain("nilla-browser scripts new: give the script a name")
         return 1
     stem = name if all(c.isalnum() or c in "-_." for c in name) else slug(name)
     path = Path.cwd() / f"{stem}.user.ts"
@@ -169,17 +169,17 @@ def new(args) -> int:
         for pattern in patterns:
             check_match(pattern, "match")
     except ScriptError as error:
-        complain(f"nilla scripts new: {error}")
+        complain(f"nilla-browser scripts new: {error}")
         return 1
     matches = "".join(f"// @match       {pattern}\n" for pattern in patterns)
     try:
         with open(path, "x", encoding="utf-8") as handle:
             handle.write(NEW_TEMPLATE.format(name=name, matches=matches, quoted=json.dumps(name)))
     except FileExistsError:
-        complain(f"nilla scripts new: {path} already exists")
+        complain(f"nilla-browser scripts new: {path} already exists")
         return 1
     except OSError as error:
-        complain(f"nilla scripts new: {error}")
+        complain(f"nilla-browser scripts new: {error}")
         return 1
     say(str(path))
     return 0
@@ -207,13 +207,13 @@ def test(args) -> int:
         endpoint = resolve(ws=args.ws, port=args.port, data_dir=args.data_dir)
         report = asyncio.run(scripts_test.run_test(built, url, endpoint, args.expect, args.wait, args.screenshot, args.keep))
     except EndpointError as error:
-        complain(f"ardia: {error}")
+        complain(f"nilla-browser: {error}")
         return 2
     except KeyboardInterrupt:
-        complain("nilla scripts test: interrupted")
+        complain("nilla-browser scripts test: interrupted")
         return 130
     except asyncio.CancelledError:
-        complain("nilla scripts test: terminated")
+        complain("nilla-browser scripts test: terminated")
         return 143
     if args.json:
         say(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
@@ -226,7 +226,7 @@ def report_build_error(args, message: str) -> int:
     if getattr(args, "json", False):
         say(json.dumps({"ok": False, "ran": False, "script": args.file, "error": message}, indent=2, ensure_ascii=False))
     else:
-        complain(f"nilla scripts: {message}")
+        complain(f"nilla-browser scripts: {message}")
     return 1
 
 
@@ -241,17 +241,17 @@ def change(args) -> int:
         try:
             built = build(args.file, data_dirs=[root])
         except ScriptError as error:
-            complain(f"nilla scripts: {error}")
+            complain(f"nilla-browser scripts: {error}")
             return 1
         for warning in built.meta.warnings + built.warnings:
             say(f"warning: {warning}")
         if not built.meta.matches and not built.meta.includes:
-            complain("nilla scripts: add an @match or @include line so the script runs somewhere")
+            complain("nilla-browser scripts: add an @match or @include line so the script runs somewhere")
             return 1
     try:
         require_control(root)
     except EndpointError as error:
-        complain(f"ardia: {error}")
+        complain(f"nilla-browser: {error}")
         return 2
     store = Store(root)
     try:
@@ -263,7 +263,7 @@ def change(args) -> int:
                 found = store.find(args.name)
                 if found is None:
                     names = ", ".join(m.get("name", m["id"]) for m in store.installed()) or "none"
-                    complain(f"nilla scripts: no installed script is named {args.name!r} (installed: {names})")
+                    complain(f"nilla-browser scripts: no installed script is named {args.name!r} (installed: {names})")
                     return 1
                 record, generation = store.apply(remove=found["id"])
                 summary = f"uninstalled {record.get('name')} ({record['id']})"
@@ -280,7 +280,7 @@ def change(args) -> int:
 
         outcome, status = store.wait_status(generation, alive)
     except (StoreError, OSError) as error:
-        complain(f"nilla scripts: {error}")
+        complain(f"nilla-browser scripts: {error}")
         return 1
     finally:
         store.close()
@@ -288,7 +288,7 @@ def change(args) -> int:
         say("Nilla quit (or control was turned off) before applying it; it applies the change on its next launch")
         return 0
     if outcome == "timeout":
-        say(f"Nilla hasn't reported generation {generation} after 10 s: the outcome is unknown, it may still be applying it (see nilla scripts list)")
+        say(f"Nilla hasn't reported generation {generation} after 10 s: the outcome is unknown, it may still be applying it (see nilla-browser scripts list)")
         return UNKNOWN_EXIT
     if outcome == "superseded":
         say(f"a newer change (generation {status.get('generation')}) replaced this one; Nilla reported that one:")
@@ -348,7 +348,7 @@ def listing(args) -> int:
         try:
             note = repair_if_present(root)
         except (StoreError, OSError) as error:
-            complain(f"nilla scripts: can't check the installed scripts ({error})")
+            complain(f"nilla-browser scripts: can't check the installed scripts ({error})")
             return 1
         if note and not args.json:
             say(f"repaired: {note}")
@@ -360,7 +360,7 @@ def listing(args) -> int:
         status = store.status()
         removed = generation > 0 and not store.extension_present()
     except (StoreError, OSError) as error:
-        complain(f"nilla scripts: {error}")
+        complain(f"nilla-browser scripts: {error}")
         return 1
     finally:
         store.close()

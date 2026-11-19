@@ -852,7 +852,7 @@ class ThemeKeys(Sandbox):
         self.assertIsNone(self.config()["theme"])
         self.write_theme({"dark": {}}, "custom", active=False)
         _, err = self.fails("theme", "set", "metrics.rowHeight", "40")
-        self.assertIn("nilla theme use custom", err)
+        self.assertIn("nilla-browser theme use custom", err)
         self.assertEqual(self.theme("custom"), {"dark": {}})
 
     def test_get_and_unset_need_a_theme(self):
@@ -977,7 +977,7 @@ class NoConnection(Sandbox):
         for argv in (["config", "--help"], ["theme", "--help"], ["config", "set", "--help"], ["theme", "new", "--help"], ["theme", "set", "--help"], ["theme", "get", "--help"], ["theme", "unset", "--help"]):
             status, out, _ = self.run_cli(*argv)
             self.assertEqual(status, 0)
-            self.assertIn("usage: nilla", out)
+            self.assertIn("usage: nilla-browser", out)
 
 
 if __name__ == "__main__":

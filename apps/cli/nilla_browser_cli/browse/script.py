@@ -16,7 +16,7 @@ CONTROL_TIMEOUT = 20.0
 SOURCE_URL = "nilla-script.js"
 REFUSED = ("close", "script", "batch")
 FATAL = ("outcome_unknown", "connection_lost")
-TITLE = "nilla browse script"
+TITLE = "nilla-browser browse script"
 
 CONTROLLER = r"""
 (() => {
@@ -484,7 +484,7 @@ async def run(ctx, source: str, seconds: float):
     from nilla_browser_cli.browse.commands import Result
 
     if not source.strip():
-        raise Usage("Usage: nilla browse script [file.js] (or the script on stdin: nilla browse script <<'EOF' … EOF)")
+        raise Usage("Usage: nilla-browser browse script [file.js] (or the script on stdin: nilla-browser browse script <<'EOF' … EOF)")
     if len(source) > MAX_SOURCE:
         raise Usage(f"The script is over {MAX_SOURCE // 1024} KB")
     from nilla_browser_cli.browse import temptabs
