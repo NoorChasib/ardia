@@ -305,7 +305,7 @@ try {
   await sync("A", "B", "A", "B", "A", "B");
   check("steady state: no files written while nothing changes", (await seqs()) === before);
 
-  const list = () => execSync(`find ${FOLDER} -name '*.nns' -type f`).toString().trim().split("\n");
+  const list = () => execSync(`find ${FOLDER} -name '*.nls' -type f`).toString().trim().split("\n");
   const known = new Set(list());
   await ev("A", `ac.store.getState().addBookmark({ profileId: "default", url: "${W}/alpha.html?nne2e=partial1", title: "ACE2E Partial One" }); return acSync.syncNow()`);
   const first = list().find((f) => !known.has(f));
@@ -330,8 +330,8 @@ try {
   const files = execSync(`find ${FOLDER} -mindepth 1`).toString().trim().split("\n");
   const needles = ["ACE2E", "nne2e", "hunter2", "127.0.0.1", "alpha.html", "Bookmark", "duckduckgo", "appearance", "MacBook", "https", "default", "pw:", "bm:"];
   const leaks = needles.filter((n) => files.some((f) => f.slice(FOLDER.length).includes(n) || (fs.statSync(f).isFile() && fs.readFileSync(f).includes(n))));
-  check(`no plaintext in the sync folder (${files.filter((f) => f.endsWith(".nns")).length} files; ${needles.length} strings searched)`, leaks.length === 0, leaks.join(", "));
-  check("every file is padded to 1 KiB steps", files.filter((f) => f.endsWith(".nns")).every((f) => (fs.statSync(f).size - 32) % 1024 === 0));
+  check(`no plaintext in the sync folder (${files.filter((f) => f.endsWith(".nls")).length} files; ${needles.length} strings searched)`, leaks.length === 0, leaks.join(", "));
+  check("every file is padded to 1 KiB steps", files.filter((f) => f.endsWith(".nls")).every((f) => (fs.statSync(f).size - 32) % 1024 === 0));
   const local = ["A", "B"].flatMap((n) => ["sync.json", "sync-state.nns", "sync-journal.nns"].map((f) => `${DEV[n].dir}/${f}`)).filter((f) => fs.existsSync(f));
   check("this Mac's own sync state holds no plaintext password", local.every((f) => !fs.readFileSync(f).includes("ACE2E-concurrent-B")));
 

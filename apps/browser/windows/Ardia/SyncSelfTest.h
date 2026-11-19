@@ -170,7 +170,7 @@ inline std::string FileSteps(std::string const &folder) {
   SyncHandles::OpenedFolder scope = SyncHandles::OpenFolderAt(held.handle.get(), L"scope", true);
   note("scope", std::to_string(static_cast<int>(scope.state)));
   if (scope.state != SyncHandles::Folder::Directory) return report + "}";
-  std::wstring name = L"aaaaaaaaaaaaaaaaaaaaaaaaaa.nns";
+  std::wstring name = L"aaaaaaaaaaaaaaaaaaaaaaaaaa.nls";
   try {
     SyncHandles::PublishAt(scope.handle.get(), name, "hello");
     note("publish", "ok");

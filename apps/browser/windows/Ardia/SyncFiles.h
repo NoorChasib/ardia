@@ -19,7 +19,7 @@
 namespace Nilla::SyncFiles {
 
 constexpr DWORD PlaceholderAttributes = FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS | FILE_ATTRIBUTE_RECALL_ON_OPEN | FILE_ATTRIBUTE_OFFLINE;
-constexpr std::wstring_view VaultExtension = L".nns";
+constexpr std::wstring_view VaultExtension = L".nls";
 constexpr uint64_t LargestFile = 256ull * 1024 * 1024;
 constexpr size_t LongestHydrateQueue = 64;
 constexpr DWORD FirstCloudFileError = 358;

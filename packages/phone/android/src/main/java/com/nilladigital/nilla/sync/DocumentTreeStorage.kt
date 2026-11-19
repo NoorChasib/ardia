@@ -254,7 +254,7 @@ class DocumentTreeStorage(
 
         fun isStaging(name: String): Boolean = name.startsWith(".") && name.endsWith(STAGING_SUFFIX)
 
-        fun isSealed(name: String): Boolean = !name.startsWith(".") && name.endsWith(".nns")
+        fun isSealed(name: String): Boolean = !name.startsWith(".") && name.endsWith(".nls")
 
         fun placeholder(name: String): String = ".$name.icloud"
 

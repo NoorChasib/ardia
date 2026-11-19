@@ -70,7 +70,7 @@ final class SyncVaultTests: XCTestCase {
       let id = try vault.write(scope: scope, payload: payload)
       let scopePath = "\(keys.chainTag)/\(keys.scopeTag(scope))"
       expectedPaths.insert(scopePath)
-      expectedPaths.insert("\(scopePath)/\(id).nns")
+      expectedPaths.insert("\(scopePath)/\(id).nls")
     }
     let files = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil)!.compactMap { $0 as? URL }
     let folderPath = folder.resolvingSymlinksInPath().path + "/"

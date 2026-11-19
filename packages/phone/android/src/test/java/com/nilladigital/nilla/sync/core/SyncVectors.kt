@@ -120,19 +120,19 @@ internal object SyncVectors {
             val vault = SyncVault(storage, keys)
             vault.createChain()
             vault.write(file.string("scope"), inputs.payload(file.string("payload")), file.string("id"), hex(file.string("nonce")))
-            Entry(file.string("entropy"), file.string("scope"), file.string("payload"), file.string("id"), vaultPath(keys, file.string("scope"), "${file.string("id")}.nns"))
+            Entry(file.string("entropy"), file.string("scope"), file.string("payload"), file.string("id"), vaultPath(keys, file.string("scope"), "${file.string("id")}.nls"))
         }
         val damaged = inputs.json.objects("damaged").map { file ->
             val keys = inputs.keys(file.string("entropy"))
             val sealed = keys.seal(inputs.payload(file.string("payload")), keys.scopeTag(file.string("scope")), file.string("id"), hex(file.string("nonce")))
             val flip = file.string("flipByte").toInt()
             sealed[flip] = (sealed[flip].toInt() xor 1).toByte()
-            val path = vaultPath(keys, file.string("scope"), "${file.string("id")}.nns")
+            val path = vaultPath(keys, file.string("scope"), "${file.string("id")}.nls")
             File(root, path).apply { parentFile.mkdirs() }.writeBytes(sealed)
             Entry(file.string("entropy"), file.string("scope"), file.string("payload"), file.string("id"), path)
         }
         val pending = inputs.json.objects("pending").map { file ->
-            val path = vaultPath(inputs.keys(file.string("entropy")), file.string("scope"), ".${file.string("id")}.nns.icloud")
+            val path = vaultPath(inputs.keys(file.string("entropy")), file.string("scope"), ".${file.string("id")}.nls.icloud")
             File(root, path).apply { parentFile.mkdirs() }.writeBytes(ByteArray(0))
             Entry(file.string("entropy"), file.string("scope"), null, file.string("id"), path)
         }
@@ -150,7 +150,7 @@ internal object SyncVectors {
                 val id = vault.write(scope, inputs.payload(name))
                 buildJsonObject {
                     put("id", id)
-                    put("path", vaultPath(keys, scope, "$id.nns"))
+                    put("path", vaultPath(keys, scope, "$id.nls"))
                     put("payload", name)
                     put("scope", scope)
                 }

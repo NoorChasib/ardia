@@ -184,7 +184,7 @@ import Testing
     let file = scopeFolder.appendingPathComponent(added)
     let whole = try Data(contentsOf: file)
     try whole.prefix(whole.count / 2).write(to: file)
-    try Data(repeating: 7, count: 2048).write(to: scopeFolder.appendingPathComponent("\(String(repeating: "a", count: 26)).nns"))
+    try Data(repeating: 7, count: 2048).write(to: scopeFolder.appendingPathComponent("\(String(repeating: "a", count: 26)).nls"))
 
     await service.syncNow()
     #expect(service.phase == .updated)

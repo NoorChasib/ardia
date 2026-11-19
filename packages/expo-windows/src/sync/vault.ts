@@ -1,7 +1,7 @@
 import type { Listing, SyncNative } from "@nilla/sync";
 import { isTag } from "./base32";
 
-export const FILE_EXTENSION = ".nns";
+export const FILE_EXTENSION = ".nls";
 
 export type VaultEntry = { name: string; dir: boolean; modified: number; placeholder: boolean };
 

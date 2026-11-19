@@ -2,7 +2,7 @@ import CryptoKit
 import Foundation
 
 public final class SyncVault {
-  public static let fileExtension = "nns"
+  public static let fileExtension = "nls"
 
   public let folder: URL
   let keys: SyncKeys

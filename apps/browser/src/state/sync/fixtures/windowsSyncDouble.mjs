@@ -130,7 +130,7 @@ export function nativeDouble(keys, { busy = new Set(), placeholders = new Set() 
   const scopePath = (folder, scope) => join(chainPath(folder), keys.scopeTag(scope));
   const filePath = (folder, scope, id) => {
     if (!isTag(id)) throw new Error("not a sync file id");
-    return join(scopePath(folder, scope), `${id}.nns`);
+    return join(scopePath(folder, scope), `${id}.nls`);
   };
   const isDirectory = (path) => existsSync(path) && statSync(path).isDirectory();
   return {
@@ -161,7 +161,7 @@ export function nativeDouble(keys, { busy = new Set(), placeholders = new Set() 
     },
     async open(folder, scope, id) {
       const path = filePath(folder, scope, id);
-      if (busy.has(`${id}.nns`)) return { state: "busy" };
+      if (busy.has(`${id}.nls`)) return { state: "busy" };
       if (!existsSync(path)) return { state: "missing" };
       return keys.opened(keys.scopeTag(scope), id, readFileSync(path));
     },
@@ -171,8 +171,8 @@ export function nativeDouble(keys, { busy = new Set(), placeholders = new Set() 
       const id = base32(randomBytes(16));
       const dir = scopePath(folder, scope);
       mkdirSync(dir, { recursive: true });
-      writeFileSync(join(dir, `.${id}.nns.partial`), keys.sealFile(keys.scopeTag(scope), id, payload), { flag: "wx" });
-      renameSync(join(dir, `.${id}.nns.partial`), join(dir, `${id}.nns`));
+      writeFileSync(join(dir, `.${id}.nls.partial`), keys.sealFile(keys.scopeTag(scope), id, payload), { flag: "wx" });
+      renameSync(join(dir, `.${id}.nls.partial`), join(dir, `${id}.nls`));
       return id;
     },
     async remove(folder, scope, id) {

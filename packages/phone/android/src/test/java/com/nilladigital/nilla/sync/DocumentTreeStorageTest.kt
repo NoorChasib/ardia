@@ -167,7 +167,7 @@ class DocumentTreeStorageTest {
                 assertEquals("$name, renames $renames", emptyList<String>(), scopeNames(tree))
                 tree.keeps = { it }
                 val id = vault.write("app", "{\"batch\":7}".toByteArray())
-                assertEquals(listOf("$id.nns"), scopeNames(tree))
+                assertEquals(listOf("$id.nls"), scopeNames(tree))
                 assertEquals("{\"batch\":7}", String(SyncVault(storage(tree), keys).read("app", emptySet()).files.single().payload))
             }
         }
@@ -205,7 +205,7 @@ class DocumentTreeStorageTest {
         tree.lateReads = 2
         tree.reads = 0
         val id = vault.write("app", "{\"late\":1}".toByteArray())
-        assertEquals(listOf("$id.nns"), scopeNames(tree))
+        assertEquals(listOf("$id.nls"), scopeNames(tree))
         assertEquals(DocumentTreeStorage.PROOF_WAITS_MS.take(2), pauses)
         assertEquals(4, tree.reads)
     }
@@ -240,7 +240,7 @@ class DocumentTreeStorageTest {
         assertEquals("{\"hello\":1}", String(again.files.single().payload))
         assertTrue(again.pending.isEmpty())
         assertTrue(again.damaged.isEmpty())
-        assertEquals(listOf("$id.nns"), tree.namesIn(tree.path("Nilla Sync", keys.chainTag, keys.scopeTag("app"))!!))
+        assertEquals(listOf("$id.nls"), tree.namesIn(tree.path("Nilla Sync", keys.chainTag, keys.scopeTag("app"))!!))
     }
 
     @Test
@@ -251,14 +251,14 @@ class DocumentTreeStorageTest {
         writer.createChain()
         val id = writer.write("app", "{\"late\":true}".toByteArray())
         val scope = tree.path("Nilla Sync", keys.chainTag, keys.scopeTag("app"))!!
-        tree.nodes.getValue(tree.find(scope, "$id.nns")!!).pending = true
+        tree.nodes.getValue(tree.find(scope, "$id.nls")!!).pending = true
         val reader = SyncVault(storage(tree), keys)
         val waiting = reader.read("app", emptySet())
         assertEquals(listOf(id), waiting.pending)
         assertEquals(listOf(id), waiting.present)
         assertTrue(waiting.files.isEmpty())
         assertTrue(waiting.damaged.isEmpty())
-        tree.nodes.getValue(tree.find(scope, "$id.nns")!!).pending = false
+        tree.nodes.getValue(tree.find(scope, "$id.nls")!!).pending = false
         assertEquals(listOf(id), reader.read("app", emptySet()).files.map { it.id })
     }
 
@@ -272,9 +272,9 @@ class DocumentTreeStorageTest {
         val seenDuringWrite = ArrayList<List<String>>()
         tree.duringWrite = { written -> seenDuringWrite += tree.namesIn(tree.nodes.getValue(written).parent!!) }
         val id = vault.write("app", "{\"whole\":true}".toByteArray())
-        assertTrue(seenDuringWrite.single().none { it == "$id.nns" })
+        assertTrue(seenDuringWrite.single().none { it == "$id.nls" })
         assertTrue(seenDuringWrite.single().single().let { DocumentTreeStorage.isStaging(it) })
-        assertEquals(listOf("$id.nns"), storage.names(listOf(keys.chainTag, keys.scopeTag("app"))))
+        assertEquals(listOf("$id.nls"), storage.names(listOf(keys.chainTag, keys.scopeTag("app"))))
     }
 
     @Test
@@ -305,7 +305,7 @@ class DocumentTreeStorageTest {
         vault.createChain()
         val id = vault.write("app", "{\"inPlace\":1}".toByteArray())
         assertEquals("{\"inPlace\":1}", String(SyncVault(storage(tree), keys).read("app", emptySet()).files.single { it.id == id }.payload))
-        assertEquals(listOf("$id.nns"), tree.namesIn(tree.path("Nilla Sync", keys.chainTag, keys.scopeTag("app"))!!))
+        assertEquals(listOf("$id.nls"), tree.namesIn(tree.path("Nilla Sync", keys.chainTag, keys.scopeTag("app"))!!))
     }
 
     @Test
@@ -329,7 +329,7 @@ class DocumentTreeStorageTest {
         val folder = syncFolder(tree)
         val chain = tree.add(folder, keys.chainTag, directory = true)
         val scope = tree.add(chain, keys.scopeTag("app"), directory = true)
-        tree.add(scope, ".${"a".repeat(26)}.nns.1234${DocumentTreeStorage.STAGING_SUFFIX}", bytes = ByteArray(10))
+        tree.add(scope, ".${"a".repeat(26)}.nls.1234${DocumentTreeStorage.STAGING_SUFFIX}", bytes = ByteArray(10))
         tree.add(scope, ".DS_Store")
         val storage = storage(tree)
         val path = listOf(keys.chainTag, keys.scopeTag("app"))
@@ -389,7 +389,7 @@ class DocumentTreeStorageTest {
         vault.remove("app", listOf(id))
         vault.remove("app", listOf(id))
         assertEquals(emptyList<String>(), storage.names(listOf(keys.chainTag, keys.scopeTag("app"))))
-        val path = listOf(keys.chainTag, keys.scopeTag("app"), "missing.nns")
+        val path = listOf(keys.chainTag, keys.scopeTag("app"), "missing.nls")
         assertFalse(storage.remove(path))
         assertNull(storage.ageMillis(path))
     }
@@ -417,11 +417,11 @@ class DocumentTreeStorageTest {
         val storage = storage(tree)
         storage.makeDirectory(listOf("a", "b"))
         val bytes = ByteArray(5000) { (it * 7).toByte() }
-        storage.write(listOf("a", "b", "x.nns"), bytes)
-        assertArrayEquals(bytes, storage.read(listOf("a", "b", "x.nns")))
-        assertEquals(0L, storage.ageMillis(listOf("a", "b", "x.nns")))
+        storage.write(listOf("a", "b", "x.nls"), bytes)
+        assertArrayEquals(bytes, storage.read(listOf("a", "b", "x.nls")))
+        assertEquals(0L, storage.ageMillis(listOf("a", "b", "x.nls")))
         try {
-            storage.makeDirectory(listOf("a", "b", "x.nns"))
+            storage.makeDirectory(listOf("a", "b", "x.nls"))
             fail("a file isn't a folder")
         } catch (expected: IOException) {
         }

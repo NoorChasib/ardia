@@ -247,7 +247,7 @@ class SyncEndToEndTest {
             val file = java.io.File(scopeFolder, added)
             val whole = file.readBytes()
             file.writeBytes(whole.copyOf(whole.size / 2))
-            java.io.File(scopeFolder, "${"a".repeat(26)}.nns").writeBytes(ByteArray(2048) { 7 })
+            java.io.File(scopeFolder, "${"a".repeat(26)}.nls").writeBytes(ByteArray(2048) { 7 })
             service.syncNow()
             assertEquals(SyncPhase.Updated, service.phase)
             assertFalse(service.snapshot.defaultProfile!!.bookmarks.any { it.title == "Late" })

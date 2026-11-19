@@ -57,7 +57,7 @@ export const checks: Check[] = [
       const wanted = { root: "0", scope: "0", publish: "ok", inScope: "yes", inWorkingFolder: "no", read: "0:hello", remove: "removed", afterRemove: "gone", removeFolder: "ok" };
       const got = Object.fromEntries(Object.keys(wanted).map((key) => [key, report[key]]));
       expectEqual(got, wanted, `file steps (${JSON.stringify(report)})`);
-      expectTrue(report.list?.includes('"name":"aaaaaaaaaaaaaaaaaaaaaaaaaa.nns"'), `the listing was ${report.list}`);
+      expectTrue(report.list?.includes('"name":"aaaaaaaaaaaaaaaaaaaaaaaaaa.nls"'), `the listing was ${report.list}`);
     },
   },
   {

@@ -190,7 +190,7 @@ class SyncVectorsTest {
             assertEquals(mine.map { inputs.payloads.getValue(it.string("payload")) }.sorted(), listing.files.map { base64String(it.payload) }.sorted())
             for (file in mine) {
                 val id = file.string("id")
-                assertEquals(SyncVectors.vaultPath(keys, scope, "$id.nns"), file.string("path"))
+                assertEquals(SyncVectors.vaultPath(keys, scope, "$id.nls"), file.string("path"))
                 val sealed = File(folder, file.string("path")).readBytes()
                 assertArrayEquals(SyncKeys.MAGIC, sealed.copyOf(4))
                 assertArrayEquals(inputs.payload(file.string("payload")), keys.open(sealed, keys.scopeTag(scope), id))

@@ -87,6 +87,6 @@ class SyncVault(val storage: SyncStorage, val keys: SyncKeys) {
     }
 
     companion object {
-        const val EXTENSION = "nns"
+        const val EXTENSION = "nls"
     }
 }
