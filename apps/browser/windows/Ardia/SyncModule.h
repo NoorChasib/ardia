@@ -247,7 +247,10 @@ struct SyncModule {
   void folderState(std::string path, winrt::Microsoft::ReactNative::ReactPromise<winrt::Microsoft::ReactNative::JSValue> promise) noexcept {
     std::thread([path, promise]() noexcept {
       std::wstring folder = Paths::Wide(path);
-      bool exists = SyncFiles::IsDirectory(folder);
+      bool usable = SyncFiles::IsUsableFolder(folder);
+      SyncHandles::Owner owner = usable ? SyncHandles::OwnerOf(folder) : SyncHandles::Owner::Unresolved;
+      if (owner == SyncHandles::Owner::Upstream) return promise.Reject(SyncHandles::UpstreamRefusal);
+      bool exists = owner == SyncHandles::Owner::Own && SyncFiles::IsDirectory(folder);
       HANDLE probe = exists ? CreateFileW(folder.c_str(), FILE_ADD_FILE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr)
                             : INVALID_HANDLE_VALUE;
       bool writable = probe != INVALID_HANDLE_VALUE;

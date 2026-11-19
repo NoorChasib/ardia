@@ -297,4 +297,41 @@ inline bool RemoveFolderAt(HANDLE parent, std::wstring const &name) {
   return SetFileInformationByHandle(folder.handle.get(), FileDispositionInfo, &gone, sizeof(gone)) && emptied;
 }
 
+constexpr std::wstring_view UpstreamFolderName = L"Ardia Sync";
+constexpr char UpstreamRefusal[] = "That folder is Ardia's Sync folder. Nilla keeps its sync data apart from Ardia's, so choose another folder.";
+constexpr char UnresolvedRefusal[] = "Nilla couldn't tell where that sync folder leads, so it won't use it. Choose a folder on this PC or a network share.";
+
+enum class Owner { Own, Upstream, Unresolved };
+
+inline bool IsUpstreamName(std::wstring_view part) noexcept {
+  while (!part.empty() && part.front() == L' ') part.remove_prefix(1);
+  while (!part.empty() && (part.back() == L' ' || part.back() == L'.')) part.remove_suffix(1);
+  return part.size() == UpstreamFolderName.size() &&
+         CompareStringOrdinal(part.data(), static_cast<int>(part.size()), UpstreamFolderName.data(), static_cast<int>(UpstreamFolderName.size()), TRUE) == CSTR_EQUAL;
+}
+
+inline bool NamesUpstream(std::wstring_view path) noexcept {
+  size_t start = 0;
+  while (start <= path.size()) {
+    size_t end = path.find_first_of(L"\\/", start);
+    if (end == std::wstring_view::npos) end = path.size();
+    if (IsUpstreamName(path.substr(start, end - start))) return true;
+    start = end + 1;
+  }
+  return false;
+}
+
+inline Owner OwnerOf(std::wstring const &folder) noexcept {
+  if (NamesUpstream(folder)) return Owner::Upstream;
+  std::optional<std::wstring> resolved = Paths::Resolved(std::filesystem::path{folder}, VOLUME_NAME_DOS);
+  if (!resolved) return Owner::Unresolved;
+  return NamesUpstream(*resolved) ? Owner::Upstream : Owner::Own;
+}
+
+inline Owner OwnerOfOpened(HANDLE folder) noexcept {
+  std::optional<std::wstring> final = Paths::FinalPathOf(folder, VOLUME_NAME_DOS);
+  if (!final) return Owner::Unresolved;
+  return NamesUpstream(*final) ? Owner::Upstream : Owner::Own;
+}
+
 }

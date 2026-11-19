@@ -1368,6 +1368,11 @@ if ($Part -ne "gate" -and $withEngineForEdge -and -not $NoInput -and $httpPagesU
 }
 
 $env:ARDIA_DATA_DIR = New-DataDirectory "self-check-data"
+$syncAliases = Join-Path $env:ARDIA_DATA_DIR "sync-aliases"
+$upstreamSync = Join-Path $syncAliases "Ardia Sync"
+New-Item -ItemType Directory -Force -Path $upstreamSync, (Join-Path $syncAliases "Nilla Sync") | Out-Null
+New-Item -ItemType Junction -Path (Join-Path $syncAliases "junction") -Target $upstreamSync | Out-Null
+try { New-Item -ItemType SymbolicLink -Path (Join-Path $syncAliases "symlink") -Target $upstreamSync -ErrorAction Stop | Out-Null } catch { Write-Host "sync aliases: no symbolic link to Ardia Sync here ($($_.Exception.Message))" }
 $importFixtures = Join-Path $env:ARDIA_DATA_DIR "import-fixtures"
 $fixtureProfiles = Join-Path $PSScriptRoot "..\..\packages\import\fixtures\home\Library\Application Support"
 foreach ($fixture in @(@("firefox", "Firefox\Profiles\abcd1234.default-release"), @("work", "Firefox\Profiles\zzzz9999.work"), @("zen", "zen\Profiles\zen12345.Default (release)"), @("chrome", "Google\Chrome\Default"))) {

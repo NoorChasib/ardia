@@ -77,11 +77,23 @@ inline std::shared_ptr<Keys const> KeysFrom(WipedBytes const &entropy) {
   return std::make_shared<Keys const>(std::move(*keys));
 }
 
+inline void RefuseUnlessOwn(SyncHandles::Owner owner) {
+  if (owner == SyncHandles::Owner::Upstream) throw Failure(SyncHandles::UpstreamRefusal);
+  if (owner == SyncHandles::Owner::Unresolved) throw Failure(SyncHandles::UnresolvedRefusal);
+}
+
 inline std::wstring Folder(std::string const &folder) {
   std::wstring wide = Paths::Wide(folder);
   while (wide.size() > 3 && (wide.back() == L'\\' || wide.back() == L'/')) wide.pop_back();
   if (!SyncFiles::IsUsableFolder(wide)) throw Failure("not a sync folder path");
+  RefuseUnlessOwn(SyncHandles::OwnerOf(wide));
   return wide;
+}
+
+inline SyncHandles::OpenedFolder OpenOwnRoot(std::string const &folder) {
+  SyncHandles::OpenedFolder root = SyncHandles::OpenRoot(Folder(folder));
+  if (root.state == SyncHandles::Folder::Directory) RefuseUnlessOwn(SyncHandles::OwnerOfOpened(root.handle.get()));
+  return root;
 }
 
 inline std::wstring ChainPath(std::string const &folder, Keys const &keys) { return Folder(folder) + L"\\" + Paths::Wide(keys.ChainTag()); }
@@ -100,13 +112,13 @@ inline std::wstring FilePath(std::wstring const &scopePath, std::string const &i
 inline std::wstring Name(std::string const &tag) { return Paths::Wide(tag); }
 
 inline SyncHandles::Handle RootOf(std::string const &folder) {
-  SyncHandles::OpenedFolder root = SyncHandles::OpenRoot(Folder(folder));
+  SyncHandles::OpenedFolder root = OpenOwnRoot(folder);
   if (root.state != SyncHandles::Folder::Directory) throw Failure("the sync folder isn't reachable");
   return std::move(root.handle);
 }
 
 inline std::string ChainStatus(std::string const &folder, Keys const &keys) {
-  SyncHandles::OpenedFolder root = SyncHandles::OpenRoot(Folder(folder));
+  SyncHandles::OpenedFolder root = OpenOwnRoot(folder);
   if (root.state != SyncHandles::Folder::Directory) return "unavailable";
   switch (SyncHandles::OpenFolderAt(root.handle.get(), Name(keys.ChainTag()), false).state) {
     case SyncHandles::Folder::Directory: return "ok";

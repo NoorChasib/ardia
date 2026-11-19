@@ -1,6 +1,6 @@
 import { TurboModuleRegistry, type TurboModule } from "react-native";
 import type { FolderInfo, SealedLogin } from "@nilla/sync";
-import { ownSyncFoldersOnly } from "@nilla/sync/src/upstreamSyncFolder.ts";
+import { isUpstreamSyncFolder, ownSyncFoldersOnly, UpstreamSyncFolderError } from "@nilla/sync/src/upstreamSyncFolder.ts";
 import { originalProfile } from "../engine/domains/calling";
 import type { DialogsModule, SystemModule, WindowsHostModule, WindowsSyncModule } from "../nativeModuleTypes";
 import { base32 } from "./base32";
@@ -48,6 +48,13 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
   const counts: FileCounts = { placeholders: 0, busy: 0 };
   const vault = syncVault(native, counts);
 
+  const leadsToOwnFolder = async (path: string) =>
+    !isUpstreamSyncFolder(path) &&
+    (await native.folderState(path).then(
+      () => true,
+      () => false,
+    ));
+
   const kitBytes = (words: string[], format: "pdf" | "text") => (format === "text" ? utf8(kitText(words, new Date(), deviceName)) : kitPdf(words, new Date(), deviceName));
 
   return ownSyncFoldersOnly({
@@ -64,7 +71,12 @@ export function windowsSync(): (SyncContract & Required<Pick<SyncContract, "take
         hasSyncData: state.exists && state.hasSyncData,
       };
     },
-    chooseFolder: async (current) => (await dialogs()?.pickFolder(current, "Use Folder")) ?? null,
+    async chooseFolder(current) {
+      const start = current && (await leadsToOwnFolder(current)) ? current : null;
+      const picked = (await dialogs()?.pickFolder(start, "Use Folder")) ?? null;
+      if (picked && !(await leadsToOwnFolder(picked))) throw new UpstreamSyncFolderError();
+      return picked;
+    },
     newDeviceId() {
       const hex = host()?.secureRandomHex(16) ?? "";
       if (hex.length !== 32) throw new Error("no random bytes for a device id");
