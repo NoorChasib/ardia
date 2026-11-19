@@ -67,6 +67,14 @@ if [ "$ISOLATE_DISPLAY" = 1 ]; then
   export DISPLAY=:42
 fi
 
+export ISOLATE_ORIG_CWD=$(pwd)
+mkdir -p "$run/cwd"
+case "$1" in
+  /*) ;;
+  */*) set -- "$ISOLATE_ORIG_CWD/$1" "${@:2}" ;;
+esac
+cd "$run/cwd" || die "can't enter $run/cwd"
+
 set +e
 "$@"
 status=$?

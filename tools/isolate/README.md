@@ -145,3 +145,5 @@ The least-privileged design that still logs every attempt:
   step's URL; `windows` with neither variable must exit 2 with the data-folder refusal. `pinned`, `feedback`,
   `browse get url` through the control file and `browse --port N tab active` are recorded only: on this Linux build
   no `ArdiaControl.json` is written, so the control-file routes report that Nilla isn't running.
+
+The command starts in `<run>/cwd`, never in the directory nilla-isolate was called from, so relative writes stay inside the run. A relative command path is resolved against the calling directory first, which is exported as `ISOLATE_ORIG_CWD`.
