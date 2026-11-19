@@ -1,8 +1,9 @@
 $pinnedPackageLicenses = [ordered]@{
-  "react-native-windows-LICENSE" = [ordered]@{ package = "react-native-windows"; license = "MIT"; text = "LICENSE"; holder = "Microsoft Corporation" }
+  "react-native-windows-LICENSE" = [ordered]@{
+    package = "react-native-windows"; license = "MIT"; text = "LICENSE"
+    sha256 = [ordered]@{ "0.81.38" = "815994EBE648433A0E06FE9C91320985C686B5CE8D1235F62FE427FB5B82DD69" }
+  }
 }
-$mitGrant = "Permission is hereby granted, free of charge, to any person obtaining a copy"
-$mitDisclaimer = 'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND'
 
 function Get-PackageFolders([string]$Repository, [string]$Package) {
   return @(
@@ -30,10 +31,10 @@ function Get-PinnedPackageLicenses([string]$Repository) {
       if ("$($package.license)" -ne $wanted.license) { throw "$($wanted.package) $pin in $folder declares the licence '$($package.license)', not $($wanted.license)" }
       $source = Join-Path $folder $wanted.text
       if (-not (Test-Path -LiteralPath $source -PathType Leaf)) { throw "$($wanted.package) $pin in $folder has no $($wanted.text)" }
-      $text = [System.IO.File]::ReadAllText($source)
-      foreach ($part in @($wanted.holder, $mitGrant, $mitDisclaimer)) {
-        if (-not $text.Contains($part)) { throw "$source is not the full $($wanted.license) notice of $($wanted.package): it lacks '$part'" }
-      }
+      $recorded = $wanted.sha256[$pin]
+      if (-not $recorded) { throw "package-licenses.ps1 records no $($wanted.text) digest for $($wanted.package) $pin; read that version's $($wanted.text), check it is the full $($wanted.license) notice, and add its SHA-256" }
+      $digest = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash
+      if ($digest -ne $recorded) { throw "$source is not the full $($wanted.license) notice recorded for $($wanted.package) ${pin}: its SHA-256 is $digest, not $recorded" }
       $found[$name] = [ordered]@{ package = $wanted.package; version = $pin; license = $wanted.license; source = (Resolve-Path -LiteralPath $source).Path }
       break
     }

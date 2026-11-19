@@ -12,9 +12,13 @@ function Refusal([scriptblock]$Run) {
 $repository = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $entry = $pinnedPackageLicenses["react-native-windows-LICENSE"]
 Check "the pinned package manifest ships React Native for Windows' notice as Licenses\react-native-windows-LICENSE" ($null -ne $entry -and $entry.package -eq "react-native-windows" -and $entry.license -eq "MIT" -and $entry.text -eq "LICENSE")
+$mitGrant = "Permission is hereby granted, free of charge, to any person obtaining a copy"
+$mitDisclaimer = 'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND'
 
 $pin = "$((Get-Content -LiteralPath ([System.IO.Path]::Combine($repository, "apps", "browser", "package.json")) -Raw | ConvertFrom-Json -AsHashtable).dependencies['react-native-windows'])"
+Check "a LICENSE digest is recorded for the pinned version $pin" ($entry.sha256.Contains($pin) -and $entry.sha256[$pin] -match '^[0-9A-F]{64}$') "$($entry.sha256.Keys -join ', ')"
 $resolved = $null
+$fullBytes = $null
 $problem = Refusal { $script:resolved = Get-PinnedPackageLicenses $repository }
 Check "this checkout resolves React Native for Windows' licence at the version apps/browser/package.json pins" (-not $problem -and $resolved.Contains("react-native-windows-LICENSE")) $problem
 if ($resolved -and $resolved.Contains("react-native-windows-LICENSE")) {
@@ -23,20 +27,15 @@ if ($resolved -and $resolved.Contains("react-native-windows-LICENSE")) {
   $folder = Split-Path -Parent $shipped.source
   $package = Get-Content -LiteralPath (Join-Path $folder "package.json") -Raw | ConvertFrom-Json -AsHashtable
   Check "the notice comes from the react-native-windows package of that version" ($package.name -eq "react-native-windows" -and $package.version -eq $pin -and (Split-Path -Leaf $shipped.source) -eq "LICENSE") $shipped.source
-  $text = [System.IO.File]::ReadAllText($shipped.source)
+  $fullBytes = [System.IO.File]::ReadAllBytes($shipped.source)
+  $text = [System.Text.Encoding]::UTF8.GetString($fullBytes)
   Check "the notice is the full MIT text with Microsoft's copyright" ($text.StartsWith("The MIT License") -and $text.Contains("Copyright (c) Microsoft Corporation") -and $text.Contains($mitGrant) -and $text.Contains("The above copyright notice and this permission notice shall be included") -and $text.Contains($mitDisclaimer))
 }
-
-$fullText = @"
-The MIT License (MIT)
-
-Copyright (c) Microsoft Corporation and contributors. All rights reserved.
-
-$mitGrant
-of this software.
-
-$mitDisclaimer.
-"@
+if ($null -eq $fullBytes) {
+  $failures += "the refusal cases need this checkout's react-native-windows $pin LICENSE, which didn't resolve"
+  $fullBytes = [byte[]]@()
+}
+$fullText = [System.Text.Encoding]::UTF8.GetString($fullBytes)
 function New-FakeRepository([string]$Pin) {
   $root = Join-Path ([System.IO.Path]::GetTempPath()) ("nilla-licences-" + [guid]::NewGuid().ToString("N"))
   $app = [System.IO.Path]::Combine($root, "apps", "browser")
@@ -45,10 +44,11 @@ function New-FakeRepository([string]$Pin) {
   return $root
 }
 function Add-Package([string]$Root, [string[]]$Where, [string]$Version, [string]$License = "MIT", [string]$Text = $fullText, [switch]$NoText) {
+  $bytes = if ($Text -ceq $fullText) { $fullBytes } else { [System.Text.Encoding]::UTF8.GetBytes($Text) }
   $folder = [System.IO.Path]::Combine([string[]](@($Root) + $Where + @("react-native-windows")))
   New-Item -ItemType Directory -Force -Path $folder | Out-Null
   [ordered]@{ name = "react-native-windows"; version = $Version; license = $License } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $folder "package.json") -Encoding utf8NoBOM
-  if (-not $NoText) { Set-Content -LiteralPath (Join-Path $folder "LICENSE") -Value $Text -NoNewline -Encoding utf8NoBOM }
+  if (-not $NoText) { [System.IO.File]::WriteAllBytes((Join-Path $folder "LICENSE"), $bytes) }
   return $folder
 }
 
@@ -88,12 +88,28 @@ try {
   $problem = Refusal { Get-PinnedPackageLicenses $fake }
   Check "a package with no LICENSE file is refused" ($problem -like "*has no LICENSE*") $problem
 
-  foreach ($cut in @(@($mitDisclaimer, "the warranty disclaimer"), @($mitGrant, "the permission grant"), @("Microsoft Corporation", "Microsoft's copyright"))) {
+  $sentences = @($fullText -split '(?<=\.)\s+' | Where-Object { $_.Trim() })
+  $cuts = @(
+    @($fullText.Replace($mitDisclaimer, ""), "without the warranty disclaimer"),
+    @($fullText.Replace($mitGrant, ""), "without the permission grant"),
+    @($fullText.Replace("Microsoft Corporation", ""), "without Microsoft's copyright"),
+    @($fullText.Substring(0, [Math]::Floor($fullText.Length / 2)), "cut in half"),
+    @((($sentences | Select-Object -SkipLast 1) -join " "), "without its last sentence, the grant and disclaimer still in place"),
+    @("The MIT License (MIT)`n`nCopyright (c) Microsoft Corporation`n`n$mitGrant of this software.`n`n$mitDisclaimer.`n", "abbreviated to the copyright, the grant's first line and the disclaimer's first line"),
+    @($fullText.Replace("`n", "`r`n"), "with its line endings changed"),
+    @(($fullText + "`n"), "with a byte added")
+  )
+  foreach ($cut in $cuts) {
     $fake = New-FakeRepository "0.81.38"; $fakes += $fake
-    $null = Add-Package $fake @("node_modules") "0.81.38" "MIT" ($fullText.Replace($cut[0], ""))
+    $null = Add-Package $fake @("node_modules") "0.81.38" "MIT" $cut[0]
     $problem = Refusal { Get-PinnedPackageLicenses $fake }
-    Check "a notice without $($cut[1]) is not the full text and is refused" ($problem -like "*is not the full MIT notice*") $problem
+    Check "a notice $($cut[1]) is not the recorded full text and is refused" ($problem -like "*is not the full MIT notice recorded for react-native-windows 0.81.38*") $problem
   }
+
+  $fake = New-FakeRepository "0.81.39"; $fakes += $fake
+  $null = Add-Package $fake @("node_modules") "0.81.39"
+  $problem = Refusal { Get-PinnedPackageLicenses $fake }
+  Check "a newly pinned version whose LICENSE digest isn't recorded yet is refused, even with the same text" ($problem -like "*records no LICENSE digest for react-native-windows 0.81.39*") $problem
 } finally {
   foreach ($fake in $fakes) { Remove-Item -LiteralPath $fake -Recurse -Force -ErrorAction SilentlyContinue }
 }
