@@ -48,7 +48,8 @@ export const LINUX_WORDING: readonly Wording[] = [
     file: "state/telemetry/copy.ts",
     replacements: [
       ["how many tab changes this Mac sent,", "how many tab changes this computer sent,"],
-      ["Sent to ardia.dev with a random ID made on this Mac, and kept", "Sent to ardia.dev with a random ID made on this computer, and kept"],
+      ["with a random ID made on this Mac. This build has none, so nothing leaves this Mac.", "with a random ID made on this computer. This build has none, so nothing leaves this computer."],
+      ["so it never sends them. What it records stays on this Mac.", "so it never sends them. What it records stays on this computer."],
       [`keptOnThisMac: "Kept on this Mac"`, `keptOnThisMac: "Kept on this computer"`],
       ["browsing data removed from this Mac and", "browsing data removed from this computer and"],
       ["switched Auto-hide tabs on or off on this Mac,", "switched Auto-hide tabs on or off on this computer,"],
@@ -58,15 +59,6 @@ export const LINUX_WORDING: readonly Wording[] = [
       [
         "whether macOS returned an error, whether Ardia or the app that opened it was asked, whether System Settings opened, and how long it took.",
         "whether Evolution Data Server returned an error, and how long it took.",
-      ],
-      ["app version, update channel, macOS version, chip,", "app version, update channel, operating system version, chip,"],
-      [
-        `dailyCountShort: "Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID."`,
-        `dailyCountShort: "Either way, Ardia sends one anonymous “opened today” count a day, with its version and operating system version and no persistent ID."`,
-      ],
-      [
-        "change it any time in Settings › Privacy & Security. Either way, Ardia sends one anonymous “opened today” count a day, with its version and macOS version and no persistent ID.",
-        "change it any time in Settings › Privacy & Security. Either way, Ardia sends one anonymous “opened today” count a day, with its version and operating system version and no persistent ID.",
       ],
       [
         "After a crash: the exception type and name (never its message), and the function names where it was thrown and on the crashing thread, from this app's crash report",
