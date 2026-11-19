@@ -1,11 +1,39 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { REPO } from "./repo.mjs";
 
 const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const checkout = fileURLToPath(new URL("../../", import.meta.url));
+const engineRepo = () => /^ENGINE_REPO="([^"]+)"$/m.exec(read("scripts/lib/releases.sh"))?.[1];
 
 test("every place that names the GitHub repo names the same one", () => {
   assert.equal(/^REPO="([^"]+)"$/m.exec(read("scripts/lib/releases.sh"))?.[1], REPO);
   assert.match(read("scripts/windows/publish-alpha.sh"), /^repo="\$REPO"$/m);
+});
+
+test("the engine repo is the upstream one the engine fetches default to, never Nilla's own", () => {
+  const engine = engineRepo();
+  assert.ok(engine, "scripts/lib/releases.sh sets ENGINE_REPO");
+  assert.notEqual(engine, REPO);
+  assert.equal(/^repo=\$\{ARDIACORE_PREBUILT_REPO:-([^}]+)\}$/m.exec(read("scripts/linux/fetch-engine.sh"))?.[1], engine);
+  for (const workflow of [".github/workflows/linux.yml", ".github/workflows/release.yml"]) {
+    const defaults = [...read(workflow).matchAll(/ARDIACORE_PREBUILT_REPO: \$\{\{ vars\.ARDIACORE_PREBUILT_REPO \|\| '([^']+)' \}\}/g)].map((match) => match[1]);
+    assert.ok(defaults.length > 0, `${workflow} sets ARDIACORE_PREBUILT_REPO`);
+    for (const fetched of defaults) assert.equal(fetched, engine, workflow);
+  }
+  assert.match(read(".github/workflows/windows.yml"), new RegExp(`vars\\.WINDOWS_ENGINE_REPO \\|\\| '${engine.replace("/", "\\/")}'`));
+  assert.match(/^repo=\$\{ARDIACORE_PREBUILT_REPO:-([^}]+)\}$/m.exec(read("packages/ardiacore/scripts/fetch-engine.sh"))?.[1] ?? "", /^(?:ardia-browser|mantrakp04)\/ardia$/);
+});
+
+test("the Linux engine publisher never uploads without a repo named on the command line", () => {
+  const publisher = spawnSync("python3", ["-I", "scripts/linux/publish_engine.py", "--out", "/nonexistent/out", "--source", "/nonexistent/source", "--upload"], {
+    cwd: checkout,
+    env: { PATH: process.env.PATH, ARDIACORE_PREBUILT_REPO: "ardia-browser/ardia" },
+    encoding: "utf8",
+  });
+  assert.equal(publisher.status, 64, publisher.stderr);
+  assert.match(publisher.stderr, /--upload needs --repo/);
 });

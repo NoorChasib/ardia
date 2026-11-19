@@ -12,7 +12,7 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
 | [`.github/actions/linux-setup`](../.github/actions/linux-setup/action.yml) | Ubuntu packages for the fixtures (clang, dbus, NSS tools, gnome-keyring, PyGObject), Bun from `package.json`'s `packageManager` and Node 24 through [`.github/actions/bun-install`](../.github/actions/bun-install/action.yml), its cache of `~/.bun/install/cache`, and `bun install --frozen-lockfile` |
 | [`scripts/linux/ci-checks.sh`](../scripts/linux/ci-checks.sh) | The engine-free checks; the `engine/ardiacore-linux/tests` modules run in parallel because the suite takes well over five minutes serially |
 | [`scripts/linux/publish-engine.sh`](../scripts/linux/publish-engine.sh) | Builder side: stages, strips and archives an engine from a Chromium out dir; `--upload` publishes it and adds its table row |
-| [`packages/ardiacore/prebuilt-engines-linux.tsv`](../packages/ardiacore/prebuilt-engines-linux.tsv) | `key<TAB>tag<TAB>sha256` for each Linux engine published in NoorChasib/nilla |
+| [`packages/ardiacore/prebuilt-engines-linux.tsv`](../packages/ardiacore/prebuilt-engines-linux.tsv) | `key<TAB>tag<TAB>sha256` for each Linux engine Nilla uses; in Layer 1 they are Ardia's, published in ardia-browser/ardia |
 | `packages/ardiacore/scripts/fetch-engine.sh --arch linux-x86_64` | Dispatches to [`scripts/linux/fetch-engine.sh`](../scripts/linux/fetch-engine.sh); the Mac path is unchanged |
 | [`scripts/linux/runtime_files.py`](../scripts/linux/runtime_files.py) | The one runtime allowlist used by publishing, fetching and packaging, and the safe archive unpacker |
 | [`scripts/linux/smoke.mjs`](../scripts/linux/smoke.mjs) | Strict smoke gate for a packaged tarball |
@@ -30,9 +30,10 @@ Hosted CI never runs `gclient sync`, GN or a Chromium build.
 - **Archive.** `ArdiaCore-<key12>-linux-x64.tar.xz` holds one directory, `ardiacore-linux-x64/`. It contains the
   allowlisted runtime files and a `manifest.json` (format 2): engine key, source commit, Chromium version, `args.gn` hash,
   chrome hash and build ID, and build and packaging times.
-- **Where it's published.** It is attached to the `engine-<key12>` prerelease in NoorChasib/nilla, with a `.sha256`
-  beside it; the Mac engine of the same key lives on the same prerelease. The scripts and workflows default to
-  NoorChasib/nilla; `ARDIACORE_PREBUILT_REPO` (an environment variable, or a repository variable for the workflows)
+- **Where it's published.** It is attached to the `engine-<key12>` prerelease in ardia-browser/ardia, with a `.sha256`
+  beside it; the Mac engine of the same key lives on the same prerelease. Nilla publishes no engines in Layer 1: the
+  fetch scripts and workflows default to ardia-browser/ardia, and `publish-engine.sh --upload` refuses to run without
+  an explicit `--repo`. `ARDIACORE_PREBUILT_REPO` (an environment variable, or a repository variable for the workflows)
   points them elsewhere. The engines published earlier on the contributor fork aren't used.
 - **What it ships.** The allowlist ships only what Chromium loads at runtime. It leaves out `.so.TOC` files, the mock
   Vulkan driver, the Vulkan validation layer and `locales/*.pak.info`.

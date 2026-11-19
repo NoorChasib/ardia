@@ -1,6 +1,6 @@
 REPO="NoorChasib/nilla"
 REPO_URL="https://github.com/$REPO"
-ENGINE_REPO="NoorChasib/nilla"
+ENGINE_REPO="ardia-browser/ardia"
 LATEST_DOWNLOAD_URL="$REPO_URL/releases/latest/download"
 RELEASE_NOTES_URL="${RELEASE_NOTES_URL:-}"
 APPCAST_PY="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/scripts/release/appcast.py"

@@ -18,7 +18,6 @@ sys.path.insert(0, str(HERE))
 import runtime_files
 
 TABLE = CHECKOUT / 'packages/ardiacore/prebuilt-engines-linux.tsv'
-DEFAULT_REPO = 'ardia-browser/ardia'
 LOCK_WAIT = '30'
 HEX40 = re.compile(r'^[0-9a-f]{40}$')
 
@@ -319,10 +318,13 @@ def main():
     parser.add_argument('--out', type=pathlib.Path, required=True)
     parser.add_argument('--source', type=pathlib.Path, required=True)
     parser.add_argument('--dest', type=pathlib.Path)
-    parser.add_argument('--repo', default=os.environ.get('ARDIACORE_PREBUILT_REPO') or DEFAULT_REPO)
+    parser.add_argument('--repo')
     parser.add_argument('--upload', action='store_true')
     parser.add_argument('--stage-into', type=pathlib.Path, help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if args.upload and not args.repo:
+        print('publish-engine.sh: --upload needs --repo OWNER/NAME: Nilla publishes no engines yet, and the fetch default is the upstream repo the engines come from', file=sys.stderr)
+        sys.exit(64)
     out, source = args.out.resolve(), args.source.resolve()
     try:
         if args.stage_into is not None:

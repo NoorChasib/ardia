@@ -16,8 +16,9 @@ plain copy beside a <source>.commit file.
   --source DIR     the Nilla source tree the engine was built from
   --dest DIR       where the archive goes (default: a new temporary dir);
                    existing archives are never overwritten
-  --repo SLUG      the GitHub repo for --upload (default: $ARDIACORE_PREBUILT_REPO
-                   or ardia-browser/ardia)
+  --repo SLUG      the GitHub repo for --upload; required with --upload, because
+                   Nilla publishes no engines yet and never uploads to the
+                   upstream repo its fetches default to
   --upload         create the engine-<key12> prerelease if needed, upload both
                    archives and their .sha256 files, and add the row to
                    packages/ardiacore/prebuilt-engines-linux.tsv (not committed)

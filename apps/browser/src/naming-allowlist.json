@@ -1384,6 +1384,36 @@
    "why": "The upstream engine-fetch defaults (naming.md 4.8): prebuilt engines still come from upstream in Layer 1."
   },
   {
+   "id": "V-engine-repo",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "(?<=^ENGINE_REPO=\")ardia-browser/ardia(?=\"$)",
+   "scope": [
+    "scripts/lib/releases.sh"
+   ],
+   "why": "ENGINE_REPO in scripts/lib/releases.sh: the upstream repo the prebuilt engines, their Corresponding Source and their symbols come from in Layer 1 (release.sh, symbolicate-crash.sh). repo.test.mjs asserts it differs from REPO and equals the fetch defaults (council C1)."
+  },
+  {
+   "id": "V-engine-repo-test",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "\\(\\?:ardia-browser\\|mantrakp04\\)\\\\/ardia|ardia-browser/ardia",
+   "scope": [
+    "scripts/lib/repo.test.mjs"
+   ],
+   "why": "repo.test.mjs names the upstream engine repo the fetch defaults must equal, and passes it to the Linux publisher to prove --upload ignores it (council C1)."
+  },
+  {
+   "id": "V-linux-ci-engine-source",
+   "class": "never",
+   "mechanism": "never",
+   "regex": "ardia-browser/ardia|(?<=in Layer 1 they are )Ardia's",
+   "scope": [
+    "docs/linux-ci.md"
+   ],
+   "why": "docs/linux-ci.md says the Linux engines Layer 1 fetches are Ardia's, published in ardia-browser/ardia, and that Nilla publishes none (council C1)."
+  },
+  {
    "id": "R-engine-basenames",
    "class": "R",
    "mechanism": "basename",
@@ -1878,8 +1908,8 @@
    "files": 508,
    "occurrences": 1889,
    "decision": "class",
-   "protectedOccurrences": 337,
-   "renamedOccurrences": 1552,
+   "protectedOccurrences": 340,
+   "renamedOccurrences": 1549,
    "notRsFiles": 680,
    "coveredBy": [
     "N-cli-artifacts",
@@ -1894,6 +1924,7 @@
     "P-windows-engine-files",
     "R-engine-paths",
     "V-engine-fetch-lines",
+    "V-linux-ci-engine-source",
     "F-oauth",
     "K-staging",
     "H-linux-same-words",
